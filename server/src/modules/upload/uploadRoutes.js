@@ -71,7 +71,7 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
     // Ensure `person` and `person.Id` are valid
     if (!person || !Array.isArray(person.Id) || person.Id.length === 0) {
       console.warn('Invalid person data or missing IDs:', person);
-      return createShortCompetitorHash(classId, person);
+      return fallbackToNameHash(classId, person);
     }
 
     // Handle "registration" key type
@@ -88,7 +88,7 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
 
       if (id) return id; // Return ID if available
       console.warn('No valid registration ID found for person:', person);
-      return createShortCompetitorHash(classId, person);
+      return fallbackToNameHash(classId, person);
     }
 
     // Handle "system" key type
@@ -103,19 +103,38 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
 
       if (id) return id; // Return ID if available
       console.warn('No valid system ID found for person:', person);
-      return createShortCompetitorHash(classId, person);
+      return fallbackToNameHash(classId, person);
     }
 
     // Handle unknown key types
     else {
       console.error(`Unknown keyType "${keyType}" provided.`);
-      return createShortCompetitorHash(classId, person);
+      return fallbackToNameHash(classId, person);
     }
   } catch (error) {
     // Catch unexpected errors and log them
     console.error('Error in getCompetitorKey:', error);
-    return createShortCompetitorHash(classId, person);
+    return fallbackToNameHash(classId, person);
   }
+}
+
+// Fallback function to generate a competitor hash using names
+/**
+* 
+* @param {string} classId - The class ID associated with the competitor.
+* @param {Object} person - The person object containing identification and name details.
+ * @returns {string} - Unique competitor's id
+ */
+function fallbackToNameHash(classId, person) {
+  const familyName = person?.Name?.[0]?.Family?.[0] || '';
+  const givenName = person?.Name?.[0]?.Given?.[0] || '';
+  if (!familyName || !givenName) {
+    console.warn(
+      'Missing family or given name for fallback hash generation:',
+      person,
+    );
+  }
+  return createShortCompetitorHash(classId, familyName, givenName);
 }
 
 /**
