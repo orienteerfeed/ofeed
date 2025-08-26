@@ -153,7 +153,7 @@
           "Title": "O Checklist propojení",
           "Description": "Naskenuj QR kód pro automatické načtení url, id závodu a hesla do nastavení připojení k O-Feedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí foťák.",
           "ApiBaseUrl": "Url",
-          "EventId": "Id",
+          "EventId": "Id akce",
           "EventPassword": "Heslo",
           "EventName": "Název",
           "EventDate": "Datum",
