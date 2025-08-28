@@ -17,7 +17,7 @@ export const QrCodeCredentialsCard = ({
 }) => {
   const qrCodeRef = useRef(null); // Reference to the QR code canvas
   // Format the service credentials
-  const serviceCredentials = `orienteerfeed://url:${apiEventsEndpoint};auth:basic;id:${eventId};pwd:${eventPassword};;`;
+  const serviceCredentials = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${eventId}&pwd=${eventPassword}`;
   const codeSize = 200; // Set the size you want for the QR code
   const errorCorrectionLevel = 'L'; // Set the desired error correction level - values L, M, Q, H,
 
