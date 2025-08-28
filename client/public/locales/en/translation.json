@@ -153,7 +153,7 @@
           "Title": "O Checklist connection",
           "Description": "Scan the QR code to set url, event id and password into the settings of O Feed connection. Click on the QR code icon in the settings in the app to launch the camera.",
           "ApiBaseUrl": "Url",
-          "EventId": "Event ID",
+          "EventId": "Event id",
           "EventPassword": "Event Password",
           "EventName": "Name",
           "EventDate": "Date",

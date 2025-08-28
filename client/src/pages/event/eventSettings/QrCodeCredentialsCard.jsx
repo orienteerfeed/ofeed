@@ -4,6 +4,7 @@ import { AiOutlinePrinter } from 'react-icons/ai';
 import { LuSend } from 'react-icons/lu';
 import { Button } from '../../../atoms';
 import { Card } from '../../../organisms';
+import { EventPasswordForm } from '..';
 
 export const QrCodeCredentialsCard = ({
   t,
@@ -222,6 +223,10 @@ export const QrCodeCredentialsCard = ({
       description={t('Pages.Event.QrCode.Card.Description')}
     >
       <div className="flex flex-col gap-4 justify-between">
+        <p>
+          <strong>{t('Pages.Event.QrCode.Card.EventId')}: </strong>
+          {eventId}
+        </p>
         <div className="flex justify-center">
           <QRCodeCanvas
             value={serviceCredentials}
