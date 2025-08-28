@@ -70,7 +70,7 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
   try {
     // Ensure `person` and `person.Id` are valid
     if (!person || !Array.isArray(person.Id) || person.Id.length === 0) {
-      console.warn('Invalid person data or missing IDs:', person);
+      console.warn('Invalid person data or missing IDs:', JSON.stringify(person, null, 2));
       return fallbackToNameHash(classId, person);
     }
 
@@ -373,8 +373,8 @@ async function upsertCompetitor(
     nationality: person.Nationality?.[0].ATTR.code,
     registration: registration,
     license: dbCompetitorResponse?.license || null,
-    organisation: organisation.Name?.[0],
-    shortName: organisation.ShortName?.[0],
+    organisation: organisation?.Name?.[0],
+    shortName: organisation?.ShortName?.[0],
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber.shift())
       : start?.BibNumber
@@ -764,8 +764,16 @@ async function processClassResults(
         await Promise.all(
           classResult.PersonResult.map(async (competitorResult) => {
             const person = competitorResult.Person.shift();
-            const organisation = competitorResult.Organisation.shift();
-            const result = competitorResult.Result.shift();
+            // const organisation = competitorResult.Organisation?.shift();
+
+            const organisation = Array.isArray(competitorResult.Organisation) && competitorResult.Organisation.length > 0
+              ? competitorResult.Organisation.shift()
+              : null;
+
+            const result = Array.isArray(competitorResult.Result) && competitorResult.Result.length > 0
+              ? competitorResult.Result.shift()
+              : null;
+
             const { id: competitorId, updated } = await upsertCompetitor(
               eventId,
               classId,
