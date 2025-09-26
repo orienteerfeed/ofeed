@@ -4,6 +4,7 @@ import { AiOutlinePrinter } from 'react-icons/ai';
 import { LuSend } from 'react-icons/lu';
 import { Button } from '../../../atoms';
 import { Card } from '../../../organisms';
+import { EventPasswordForm } from '..';
 
 export const QrCodeCredentialsCard = ({
   t,
@@ -16,7 +17,7 @@ export const QrCodeCredentialsCard = ({
 }) => {
   const qrCodeRef = useRef(null); // Reference to the QR code canvas
   // Format the service credentials
-  const serviceCredentials = `orienteerfeed://url:${apiEventsEndpoint};auth:basic;id:${eventId};pwd:${eventPassword};;`;
+  const serviceCredentials = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${eventId}&pwd=${eventPassword}`;
   const codeSize = 200; // Set the size you want for the QR code
   const errorCorrectionLevel = 'L'; // Set the desired error correction level - values L, M, Q, H,
 
@@ -222,6 +223,10 @@ export const QrCodeCredentialsCard = ({
       description={t('Pages.Event.QrCode.Card.Description')}
     >
       <div className="flex flex-col gap-4 justify-between">
+        <p>
+          <strong>{t('Pages.Event.QrCode.Card.EventId')}: </strong>
+          {eventId}
+        </p>
         <div className="flex justify-center">
           <QRCodeCanvas
             value={serviceCredentials}

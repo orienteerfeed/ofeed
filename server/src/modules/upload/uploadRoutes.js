@@ -67,7 +67,14 @@ async function fetchIOFXmlSchema() {
  * @returns {string} - The competitor key, either an ID or a hash created from the family and given names.
  */
 function getCompetitorKey(classId, person, keyType = 'registration') {
-  if (Array.isArray(person.Id) && person.Id.length > 0) {
+  try {
+    // Ensure `person` and `person.Id` are valid
+    if (!person || !Array.isArray(person.Id) || person.Id.length === 0) {
+      console.warn('Invalid person data or missing IDs:', person);
+      return fallbackToNameHash(classId, person);
+    }
+
+    // Handle "registration" key type
     if (keyType === 'registration') {
       // Use the first valid ID with type "CZE" or any other ID if "CZE" is not available
       const id =
@@ -78,18 +85,55 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
             sourceId._.trim() !== '',
         )?._ ||
         person.Id.find((sourceId) => sourceId._ && sourceId._.trim() !== '')?._;
-      if (id) return id; // Use ID if available
-    } else if (keyType === 'system') {
-      // Use the system ID with type "QuickEvent"
-      const id =
-        person.Id.find((sourceId) => sourceId.ATTR?.type === 'QuickEvent')?._ ||
-        person.Id[0];
-      if (id) return id; // Use ID if available
+
+      if (id) return id; // Return ID if available
+      console.warn('No valid registration ID found for person:', person);
+      return fallbackToNameHash(classId, person);
     }
+
+    // Handle "system" key type
+    else if (keyType === 'system') {
+      // Prioritize the ID with type "QuickEvent", fallback to other IDs
+      const quickEventId = person.Id.find(
+        (sourceId) => sourceId.ATTR?.type === 'QuickEvent',
+      );
+      const orisId = person.Id.find((sourceId) => sourceId.ATTR?.type === 'ORIS');
+      const id =
+        quickEventId?._ || orisId?._ || person.Id[0]?._; // Prioritize QuickEvent, then ORIS, then fallback to the first ID
+
+      if (id) return id; // Return ID if available
+      console.warn('No valid system ID found for person:', person);
+      return fallbackToNameHash(classId, person);
+    }
+
+    // Handle unknown key types
+    else {
+      console.error(`Unknown keyType "${keyType}" provided.`);
+      return fallbackToNameHash(classId, person);
+    }
+  } catch (error) {
+    // Catch unexpected errors and log them
+    console.error('Error in getCompetitorKey:', error);
+    return fallbackToNameHash(classId, person);
   }
-  // Fallback to concatenation of Family and Given names if ID is not present
-  const familyName = person?.Name[0]?.Family[0] || '';
-  const givenName = person?.Name[0]?.Given[0] || '';
+}
+
+// Fallback function to generate a competitor hash using names
+/**
+* 
+* @param {string} classId - The class ID associated with the competitor.
+* @param {Object} person - The person object containing identification and name details.
+ * @returns {string} - Unique competitor's id
+ */
+function fallbackToNameHash(classId, person) {
+  const familyName = person?.Name?.[0]?.Family?.[0] || '';
+  const givenName = person?.Name?.[0]?.Given?.[0] || '';
+  if (!familyName || !givenName) {
+    console.warn(
+      'Missing family or given name for fallback hash generation:',
+      person,
+    );
+  }
   return createShortCompetitorHash(classId, familyName, givenName);
 }
 
@@ -334,8 +378,8 @@ async function upsertCompetitor(
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber.shift())
       : start?.BibNumber
-      ? parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber
-      : null,
+        ? parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber
+        : null,
     startTime:
       (result?.StartTime?.shift() || start?.StartTime?.shift()) ??
       (dbCompetitorResponse?.startTime || null),
@@ -347,8 +391,8 @@ async function upsertCompetitor(
     card: result?.ControlCard
       ? parseInt(result.ControlCard.shift())
       : start?.ControlCard
-      ? parseInt(start.ControlCard.shift())
-      : dbCompetitorResponse?.card ?? null,
+        ? parseInt(start.ControlCard.shift())
+        : dbCompetitorResponse?.card ?? null,
     status:
       result?.Status?.toString() ??
       (dbCompetitorResponse?.status || 'Inactive'),
@@ -389,7 +433,7 @@ async function upsertCompetitor(
       ({ key, type }) =>
         competitorData[key] !== undefined &&
         normalizeValue(type, competitorData[key]) !==
-          normalizeValue(type, dbCompetitorResponse[key]),
+        normalizeValue(type, dbCompetitorResponse[key]),
     );
 
     if (isDifferent) {
@@ -651,8 +695,8 @@ async function processClassStarts(
 
         await Promise.all(
           classStart.TeamStart.map(async (teamStart) => {
-            const organisation = teamResult.Organisation
-              ? [...teamResult.Organisation].shift()
+            const organisation = teamStart.Organisation
+              ? [...teamStart.Organisation].shift()
               : null; // Organisation details
 
             const teamId = await upsertTeam(

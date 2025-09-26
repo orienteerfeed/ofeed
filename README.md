@@ -98,7 +98,6 @@ npx prisma migrate dev --name your_migration_name
 ```
 
 ## Docker compose
-
 ```bash
 # Create server and client env files
 Create server/.env from the template in server/.env.example and fill in the credentials to your database and keys to 3rd party.
