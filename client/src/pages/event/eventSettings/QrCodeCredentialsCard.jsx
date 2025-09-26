@@ -1,10 +1,9 @@
-import React, { useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { useRef } from 'react';
 import { AiOutlinePrinter } from 'react-icons/ai';
 import { LuSend } from 'react-icons/lu';
 import { Button } from '../../../atoms';
 import { Card } from '../../../organisms';
-import { EventPasswordForm } from '..';
 
 export const QrCodeCredentialsCard = ({
   t,
