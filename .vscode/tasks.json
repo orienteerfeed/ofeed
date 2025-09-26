@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "client:start",
+      "type": "shell",
+      "command": "pnpm -F ofeed-client start",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          { "regexp": ".+", "file": 1, "line": 1, "column": 1, "message": 0 }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting the development server",
+          "endsPattern": "You can now view"
+        }
+      }
+    },
+    {
+      "label": "server:start:dev",
+      "type": "shell",
+      "command": "pnpm -F ofeed-server start:dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": "$tsc-watch"
+    },
+    {
+      "label": "install",
+      "type": "shell",
+      "command": "pnpm install",
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "build:all",
+      "type": "shell",
+      "command": "pnpm -r build",
+      "options": { "cwd": "${workspaceFolder}" }
+    }
+  ]
+}

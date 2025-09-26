@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "prisma.prisma",
+    "editorconfig.editorconfig",
+    "aaron-bond.better-comments",
+    "irongeek.vscode-env",
+    "dbaeumer.vscode-eslint",
+    "wix.vscode-import-cost",
+    "esbenp.prettier-vscode",
+    "eamodio.gitlens"
+  ]
+}
