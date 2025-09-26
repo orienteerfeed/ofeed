@@ -40,7 +40,7 @@
     "libxmljs2": "^0.37.0",
     "lodash.merge": "^4.6.2",
     "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^2.0.2",
     "node-fetch": "^3.3.0",
     "qrcode.react": "^4.2.0",
     "swagger-jsdoc": "^6.2.8",
