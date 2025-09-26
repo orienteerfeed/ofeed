@@ -25,13 +25,13 @@
     "framer-motion": "^12.4.2",
     "graphql": "^16.10.0",
     "graphql-ws": "^6.0.3",
-    "i18next": "^23.16.8",
+    "i18next": "^25.5.2",
     "i18next-browser-languagedetector": "^8.0.2",
     "i18next-http-backend": "^3.0.2",
     "qrcode.react": "^4.2.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-i18next": "^15.4.0",
+    "react-i18next": "^15.7.3",
     "react-icons": "^5.4.0",
     "react-router-dom": "^7.5.2",
     "react-scripts": "5.0.1",
@@ -66,7 +66,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.4",
     "postcss-loader": "^8.1.1",
     "tailwindcss": "^4.0.6"
   }

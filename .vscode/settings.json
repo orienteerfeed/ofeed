@@ -1,5 +1,26 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "CodeGPT.apiKey": "CodeGPT Plus Beta"
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+  "files.eol": "\n",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "always"
+  },
+  "eslint.workingDirectories": [
+    { "mode": "auto" },
+    { "directory": "." },
+    { "directory": "client" },
+    { "directory": "server" }
+  ],
+  "tailwindCSS.experimental.configFile": "client/tailwind.config.js",
+  "tailwindCSS.includeLanguages": {
+    "javascript": "javascript",
+    "javascriptreact": "javascriptreact"
+  },
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "debug.javascript.codelens.npmScripts": "all",
+  "prisma.useNodeVersion": "bundled"
 }

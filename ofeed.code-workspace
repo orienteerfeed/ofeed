@@ -1,8 +1,48 @@
 {
-  "folders": [
-    {
-      "path": "."
-    }
-  ],
-  "settings": {}
+  "folders": [{ "path": "." }],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[prisma]": {
+      "editor.defaultFormatter": "Prisma.prisma",
+    },
+    "files.eol": "\n",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+    },
+  },
+  "extensions": {
+    "recommendations": [
+      "prisma.prisma",
+      "editorconfig.editorconfig",
+      "aaron-bond.better-comments",
+      "irongeek.vscode-env",
+      "dbaeumer.vscode-eslint",
+      "wix.vscode-import-cost",
+      "esbenp.prettier-vscode",
+      "eamodio.gitlens",
+    ],
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Launch server via nodemon",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npx",
+        "runtimeArgs": ["nodemon", "--inspect"],
+        "program": "${workspaceFolder}/src/index.js",
+        "restart": true,
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "env": {
+          "NODE_ENV": "development",
+        },
+        "outFiles": ["${workspaceFolder}/**/*.js"],
+        "sourceMaps": true,
+        "skipFiles": ["<node_internals>/**"],
+      },
+    ],
+  },
 }

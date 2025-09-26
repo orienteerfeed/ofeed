@@ -3,23 +3,42 @@
   // Hover to view descriptions of existing attributes.
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Dev: Client + Server",
+      "configurations": ["Attach: Server", "Launch: Client (Chrome)"],
+      "preLaunchTask": "install"
+    }
+  ],
   "configurations": [
     {
-      "name": "Launch server.js via nodemon",
+      "name": "Attach: Server",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "timeout": 30000,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "preLaunchTask": "server:start:dev"
+    },
+    {
+      "name": "Launch: Client (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/client",
+      "preLaunchTask": "client:start"
+    },
+    {
+      "name": "Launch: Server (build output)",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["nodemon", "--inspect"],
-      "program": "${workspaceFolder}/src/index.js", // Adjust to your entry file
-      "restart": true,
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
+      "program": "${workspaceFolder}/server/build/index.js",
+      "cwd": "${workspaceFolder}/server",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
       "env": {
-        "NODE_ENV": "development"
-      },
-      "outFiles": ["${workspaceFolder}/**/*.js"],
-      "sourceMaps": true,
-      "skipFiles": ["<node_internals>/**"]
+        "NODE_ENV": "production"
+      }
     }
   ]
 }

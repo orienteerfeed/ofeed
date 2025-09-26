@@ -1,0 +1,69 @@
+# Files and directories to exclude from GitHub Copilot context
+
+# Generated files
+generated/
+dist/
+build/
+*.min.js
+*.min.css
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+volumes/
+*.db
+*.sqlite
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Prisma migrations (keep schema but exclude migration files for cleaner context)
+prisma/migrations/
+
+# Binary files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
