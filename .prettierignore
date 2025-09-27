@@ -1,0 +1,182 @@
+# =============================================================================
+# BUILD OUTPUTS & DEPENDENCIES
+# =============================================================================
+
+# Build directories
+/dist/
+/build/
+/.output/
+/.nuxt/
+/.next/
+/out/
+
+# Dependency directories
+/node_modules/
+/.pnpm-store/
+/.yarn/
+/.pnp.*
+
+# Cache directories
+/.cache/
+/.parcel-cache/
+/.vite/
+/.eslintcache/
+
+# =============================================================================
+# PACKAGE MANAGER LOCK FILES
+# =============================================================================
+
+# Prettier should not format lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# =============================================================================
+# COVERAGE & TEST RESULTS
+# =============================================================================
+
+/coverage/
+/.nyc_output/
+/junit.xml
+/test-results/
+/cypress/screenshots/
+/cypress/videos/
+
+# =============================================================================
+# LOGS & TEMPORARY FILES
+# =============================================================================
+
+*.log
+*.tmp
+*.temp
+.DS_Store
+
+# =============================================================================
+# ENVIRONMENT & CONFIGURATION FILES
+# =============================================================================
+
+# Environment variables (may contain sensitive formatting)
+.env
+.env.*
+!.env.example
+
+# Local configuration overrides
+.local-*
+
+# =============================================================================
+# GIT & VERSION CONTROL
+# =============================================================================
+
+.git/
+.gitignore
+.gitattributes
+
+# =============================================================================
+# EDITOR & IDE CONFIGURATIONS
+# =============================================================================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =============================================================================
+# TAILWIND SPECIFIC
+# =============================================================================
+
+# Tailwind CSS cache
+.tailwind/
+
+# =============================================================================
+# MONOREPO SPECIFIC (if using)
+# =============================================================================
+
+# Apps build outputs
+/apps/*/dist/
+/apps/*/build/
+/apps/*/node_modules/
+
+# Packages build outputs
+/packages/*/dist/
+/packages/*/build/
+/packages/*/node_modules/
+
+# =============================================================================
+# TYPESCRIPT SPECIFIC
+# =============================================================================
+
+# TypeScript declaration files (generated)
+*.d.ts
+
+# TypeScript build outputs
+/tsconfig.tsbuildinfo
+
+# =============================================================================
+# PUBLIC & STATIC ASSETS
+# =============================================================================
+
+/public/
+/static/
+/assets/images/
+/assets/fonts/
+
+# =============================================================================
+# DOCUMENTATION
+# =============================================================================
+
+/docs/
+/documentation/
+/changelog.md
+/version.txt
+
+# =============================================================================
+# SPECIFIC FILE TYPES
+# =============================================================================
+
+# Binary files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.woff
+*.woff2
+*.ttf
+*.eot
+*.pdf
+
+# Archives
+*.zip
+*.tar
+*.gz
+
+# =============================================================================
+# PROJECT SPECIFIC EXCLUSIONS
+# =============================================================================
+
+# Prisma database files
+/prisma/migrations/
+*.db
+*.sqlite
+
+# Uploads and user-generated content
+/uploads/
+/temp/
+
+# =============================================================================
+# OS SPECIFIC FILES
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~

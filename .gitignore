@@ -1,5 +1,271 @@
-/node_modules/
-.codegpt
+# =============================================================================
+# DEPENDENCIES
+# =============================================================================
+
+# Package manager directories
+node_modules/
+*/node_modules/
+**/node_modules/
+.pnpm-store/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Lock files (committed, but ignore accidental changes)
+# Note: pnpm-lock.yaml should be committed for pnpm
+*.lock
+
+# =============================================================================
+# BUILD OUTPUTS
+# =============================================================================
+
+# Build directories
+dist/
+build/
+*/dist/
+*/build/
+**/dist/
+**/build/
+.out/
+.output/
+.next/
+.nuxt/
+.gatsby/
+
+# Production builds
+/.out/
+/.output/
+
+# =============================================================================
+# CACHE DIRECTORIES
+# =============================================================================
+
+# Build caches
+.cache/
+.parcel-cache/
+.vite/
+.eslintcache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# TypeScript cache
+.tsbuildinfo
+
+# Tailwind cache
+.tailwind/
+
+# =============================================================================
+# RUNTIME DATA & LOGS
+# =============================================================================
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
+
+# Environment variables (except example files)
 .env
-mysql-data/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+
+# Keep example environment files
+!.env.example
+!.env.local.example
+
+# =============================================================================
+# IDE & EDITOR DIRECTORIES
+# =============================================================================
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# =============================================================================
+# TESTING
+# =============================================================================
+
+# Test results
+test-results/
+junit.xml
+coverage/
+.nyc_output/
+
+# Playwright
+playwright-report/
+playwright/.cache/
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+
+# =============================================================================
+# MONOREPO SPECIFIC
+# =============================================================================
+
+# Turbo build cache
+.turbo/
+
+# Lerna
+lerna-debug.log
+
+# =============================================================================
+# DATABASES
+# =============================================================================
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Prisma
+!prisma/schema.prisma
+
+# =============================================================================
+# UPLOADS & TEMPORARY FILES
+# =============================================================================
+
+# Uploaded media
+uploads/
+temp/
+tmp/
+
+# =============================================================================
+# PACKAGE MANAGER SPECIFIC
+# =============================================================================
+
+# pnpm
+node_modules/.pnpm/
+node_modules/.modules.yaml
+node_modules/.cache/
+
+# =============================================================================
+# TYPE SPECIFIC
+# =============================================================================
+
+# TypeScript declaration files (generated)
+*.tsbuildinfo
+
+# Compiled binary addons
+*.node
+
+# =============================================================================
+# SERVERLESS & DEPLOYMENT
+# =============================================================================
+
+.serverless/
+.serverless_nextjs/
+
+# =============================================================================
+# MISCELANEOUS
+# =============================================================================
+
+# ESLint cache
+.eslintcache
+
+# Stylelint cache
+.stylelintcache
+
+# Microbundle
+*.d.ts
+*.d.ts.map
+
+# Svelte
+.svelte-kit/
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+
+# API keys and secrets
+secrets.json
+*.key
+*.pem
+*.crt
+
+# =============================================================================
+# PROJECT SPECIFIC
+# =============================================================================
+
+# Vite specific
+*.local
+
+# Storybook
+.storybook/
+storybook-static/
+
+# Misc
+.codegpt
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+
+# Docker
+.docker/
+mysql-data/
+
+# =============================================================================
+# BERKELEY DB
+# =============================================================================
+
+# Berkeley DB files
+*.db/
+
+# =============================================================================
+# EXCEPTIONS (files that SHOULD be tracked)
+# =============================================================================
+
+# Keep these directories (empty placeholder files)
+!.gitkeep
+!.keep
+
+# Keep configuration files
+!.vscode/settings.json.example
+!.vscode/extensions.json

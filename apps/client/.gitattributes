@@ -1,0 +1,34 @@
+# Basic .gitattributes for Vite + TypeScript project
+* text=auto eol=lf
+
+# Source files
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.js text diff=javascript
+*.jsx text diff=javascript
+*.json text diff=json
+*.css text diff=css
+*.html text diff=html
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+
+# Lock files
+pnpm-lock.yaml binary
+package-lock.json binary
+yarn.lock binary
+
+# Ignore for language stats
+node_modules/ linguist-vendored
+dist/ linguist-vendored
+build/ linguist-vendored
+
+# OS files
+.DS_Store binary
+Thumbs.db binary

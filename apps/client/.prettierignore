@@ -11,4 +11,3 @@ yarn.lock
 *.log
 .DS_Store
 Thumbs.db
-package.json

@@ -9,6 +9,8 @@
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "always"
   },
+  "eslint.useFlatConfig": true,
+  "eslint.validate": ["typescript", "typescriptreact"],
   "eslint.workingDirectories": [
     { "mode": "auto" },
     { "directory": "." },
@@ -21,6 +23,8 @@
     "javascriptreact": "javascriptreact"
   },
   "terminal.integrated.defaultProfile.osx": "zsh",
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.suggest.autoImports": true,
   "debug.javascript.codelens.npmScripts": "all",
   "prisma.useNodeVersion": "bundled"
 }

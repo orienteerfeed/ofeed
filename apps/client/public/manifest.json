@@ -1,0 +1,30 @@
+{
+  "name": "OrienteerFeed",
+  "short_name": "Ofeed",
+  "description": "Modern orienteering event management and results platform",
+  "version": "1.0.0",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["sports", "navigation", "events"],
+  "screenshots": [],
+  "icons": [],
+  "shortcuts": [],
+  "related_applications": [
+    {
+      "platform": "web",
+      "url": "https://ofeed.example.com"
+    }
+  ],
+  "prefer_related_applications": false,
+  "iarc_rating_id": "",
+  "features": ["Cross-platform", "Fast", "Offline Capabilities"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
