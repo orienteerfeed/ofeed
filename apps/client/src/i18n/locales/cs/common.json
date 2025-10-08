@@ -1,0 +1,37 @@
+{
+  "Back": "Zpět",
+  "Or": "Nebo",
+  "And": "a",
+  "Table": {
+    "NoData": "Tabulka neobsahuje žádná data"
+  },
+  "Operations": {
+    "Submit": "Potvrdit",
+    "Submitting": "Zpracovávání...",
+    "Success": "V pořádku",
+    "Error": "Chyba"
+  },
+  "Settings": "Nastavení",
+  "Loading": "Načítání...",
+  "Error": "Chyba",
+  "ErrorMessage": "Ooh! Něco se pokazilo.",
+  "UploadFail": "Nahrání se nezdařilo",
+  "Orienteering": {
+    "Class": "Kategorie"
+  },
+  "Timer": {
+    "Days": "dnů",
+    "Hours": "hodin",
+    "Minutes": "minut",
+    "Seconds": "vteřin"
+  },
+  "Share": "Sdílet",
+  "Print": "Tisk",
+  "Copy": "Kopírovat",
+  "Public": "Veřejné",
+  "Private": "Soukromé",
+  "Search": "Hledat",
+  "Close": "Zavřít",
+  "NoResults": "Žádné výsledky",
+  "TypeAtLeastNCharacters": "Napište alespoň {{n}} znaků…"
+}

@@ -256,6 +256,7 @@
   "Molecules": {
     "DragDrop": {
       "ClickToUpload": "Click to upload",
+      "Delete": "Delete",
       "OrdDragAndDrop": "or drag and drop",
       "SupportedFormats": "Supported formats:",
       "Done": "Done",

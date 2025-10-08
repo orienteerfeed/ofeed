@@ -1,0 +1,37 @@
+{
+  "Back": "Atrás",
+  "Or": "O",
+  "And": "y",
+  "Table": {
+    "NoData": "No hay datos disponibles en la tabla"
+  },
+  "Operations": {
+    "Submit": "Enviar",
+    "Submitting": "Enviando...",
+    "Success": "Éxito",
+    "Error": "Error"
+  },
+  "Settings": "Configuraciones",
+  "Loading": "Cargando...",
+  "Error": "Error",
+  "ErrorMessage": "Ups! Algo ha salido mal.",
+  "UploadFail": "Carga fallida",
+  "Orienteering": {
+    "Class": "Categoría"
+  },
+  "Timer": {
+    "Days": "dias",
+    "Hours": "horas",
+    "Minutes": "minutos",
+    "Seconds": "segundos"
+  },
+  "Share": "Compartir",
+  "Print": "Imprimir",
+  "Copy": "Copiar",
+  "Public": "Público",
+  "Private": "Privado",
+  "Search": "Buscar",
+  "Close": "Cerrar",
+  "NoResults": "No hay resultados",
+  "TypeAtLeastNCharacters": "Escriba al menos {{n}} caracteres…"
+}

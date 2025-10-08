@@ -256,6 +256,7 @@
   "Molecules": {
     "DragDrop": {
       "ClickToUpload": "Pro nahrání klikni",
+      "Delete": "Smazat",
       "OrdDragAndDrop": "nebo drag & drop",
       "SupportedFormats": "Podporované formáty:",
       "Done": "Hotovo",
