@@ -1,15 +1,18 @@
-import * as React from 'react'
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { AppProviders } from '@/providers';
+import { createRootRoute, Outlet } from '@tanstack/react-router';
 
 export const Route = createRootRoute({
   component: RootComponent,
-})
+  notFoundComponent: () => {
+    return <p>vošukat karla found!</p>;
+  },
+});
 
 function RootComponent() {
   return (
-    <React.Fragment>
-      <div>Hello "__root"!</div>
+    <AppProviders>
+      {/* Outlet renderuje aktuální stránku */}
       <Outlet />
-    </React.Fragment>
-  )
+    </AppProviders>
+  );
 }

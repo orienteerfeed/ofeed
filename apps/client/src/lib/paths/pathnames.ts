@@ -21,6 +21,7 @@ export const pathnames = {
     params: { eventId, classId } as const,
   }),
   profile: () => ({ to: '/profile', params: {} as const }),
+  blog: () => ({ to: '/blog', params: {} as const }),
   settings: () => ({ to: '/settings', params: {} as const }),
   signIn: () => ({ to: '/signin', params: {} as const }),
   resetPassword: () => ({ to: '/reset-password', params: {} as const }),

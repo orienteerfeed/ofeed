@@ -58,7 +58,7 @@ export const Footer: React.FC<FooterProps> = ({ t }) => {
           </li>
           <li>
             <Link
-              to="/blog" // Assuming you have a blog route
+              {...PATHNAMES.blog()}
               className="text-base hover:underline font-medium text-gray-600 dark:text-gray-400 hover:text-gray-600"
             >
               {t('Organisms.Footer.Blog')}

@@ -3,6 +3,7 @@ import PATHNAMES from '@/lib/paths/pathnames';
 import { Link, useLocation } from '@tanstack/react-router';
 import { Bell, Menu } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { Badge, Button } from '../atoms';
 import {
@@ -12,17 +13,20 @@ import {
   UserAvatar,
 } from '../molecules';
 
-interface Route {
+// Definice chybějících typů
+type TFunction = ReturnType<typeof useTranslation>['t'];
+
+interface RouteItem {
   name: string;
   path: string;
   layout?: string;
 }
 
 interface NavbarProps {
-  routes: Route[];
+  routes: RouteItem[];
   onOpenSidenav: () => void;
-  pageName?: string;
-  t: (key: string) => string;
+  pageName?: string | undefined;
+  t: TFunction;
 }
 
 interface CurrentRoute {
@@ -47,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     getActiveRoute(routes);
   }, [location.pathname, routes]);
 
-  const getActiveRoute = (routes: Route[]) => {
+  const getActiveRoute = (routes: RouteItem[]) => {
     for (const route of routes) {
       if (window.location.href.includes(route.path)) {
         setCurrentRoute({ name: route.name, path: route.path });
@@ -81,13 +85,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               to={currentRoute.path}
               className="transition-colors hover:text-foreground/80"
             >
-              {pageName || currentRoute.name}
+              {pageName || currentRoute.name}{' '}
+              {/* pageName může být undefined */}
             </Link>
           </h1>
         </div>
       </div>
 
-      {/* Search and Actions */}
+      {/* Zbytek kódu zůstává stejný... */}
       <div className="flex flex-1 items-center justify-end gap-2 md:flex-initial md:gap-4">
         {/* Search Box */}
         <div className="hidden sm:flex flex-1 max-w-sm">
