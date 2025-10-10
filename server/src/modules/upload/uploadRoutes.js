@@ -1,21 +1,21 @@
+import { PrismaClient } from '@prisma/client';
 import { Router } from 'express';
 import { check, validationResult } from 'express-validator';
-import multer from 'multer';
-import { Parser } from 'xml2js';
 import libxmljs from 'libxmljs2';
-import { PrismaClient } from '@prisma/client';
+import multer from 'multer';
 import fetch from 'node-fetch';
+import { Parser } from 'xml2js';
 
-import { validation, error, success } from '../../utils/responseApi.js';
 import { formatErrors } from '../../utils/errors.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
-import { normalizeValue } from '../../utils/normalize.js';
-import {
-  publishUpdatedCompetitors,
-  publishUpdatedCompetitor,
-} from '../../utils/subscriptionUtils.js';
-import { calculateCompetitorRankingPoints } from '../../utils/ranking.js';
 import { verifyJwtToken } from '../../utils/jwtToken.js';
+import { normalizeValue } from '../../utils/normalize.js';
+import { calculateCompetitorRankingPoints } from '../../utils/ranking.js';
+import { error, success, validation } from '../../utils/responseApi.js';
+import {
+  publishUpdatedCompetitor,
+  publishUpdatedCompetitors,
+} from '../../utils/subscriptionUtils.js';
 import { notifyWinnerChanges } from './../event/winnerCache.js';
 import { storeCzechRankingData } from './uploadService.js';
 
@@ -70,7 +70,10 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
   try {
     // Ensure `person` and `person.Id` are valid
     if (!person || !Array.isArray(person.Id) || person.Id.length === 0) {
-      console.warn('Invalid person data or missing IDs:', JSON.stringify(person, null, 2));
+      console.warn(
+        'Invalid person data or missing IDs:',
+        JSON.stringify(person, null, 2),
+      );
       return fallbackToNameHash(classId, person);
     }
 
@@ -97,9 +100,10 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
       const quickEventId = person.Id.find(
         (sourceId) => sourceId.ATTR?.type === 'QuickEvent',
       );
-      const orisId = person.Id.find((sourceId) => sourceId.ATTR?.type === 'ORIS');
-      const id =
-        quickEventId?._ || orisId?._ || person.Id[0]?._; // Prioritize QuickEvent, then ORIS, then fallback to the first ID
+      const orisId = person.Id.find(
+        (sourceId) => sourceId.ATTR?.type === 'ORIS',
+      );
+      const id = quickEventId?._ || orisId?._ || person.Id[0]?._; // Prioritize QuickEvent, then ORIS, then fallback to the first ID
 
       if (id) return id; // Return ID if available
       console.warn('No valid system ID found for person:', person);
@@ -120,9 +124,9 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
 
 // Fallback function to generate a competitor hash using names
 /**
-* 
-* @param {string} classId - The class ID associated with the competitor.
-* @param {Object} person - The person object containing identification and name details.
+ *
+ * @param {string} classId - The class ID associated with the competitor.
+ * @param {Object} person - The person object containing identification and name details.
  * @returns {string} - Unique competitor's id
  */
 function fallbackToNameHash(classId, person) {
@@ -378,8 +382,8 @@ async function upsertCompetitor(
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber.shift())
       : start?.BibNumber
-        ? parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber
-        : null,
+      ? parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber
+      : null,
     startTime:
       (result?.StartTime?.shift() || start?.StartTime?.shift()) ??
       (dbCompetitorResponse?.startTime || null),
@@ -391,8 +395,8 @@ async function upsertCompetitor(
     card: result?.ControlCard
       ? parseInt(result.ControlCard.shift())
       : start?.ControlCard
-        ? parseInt(start.ControlCard.shift())
-        : dbCompetitorResponse?.card ?? null,
+      ? parseInt(start.ControlCard.shift())
+      : dbCompetitorResponse?.card ?? null,
     status:
       result?.Status?.toString() ??
       (dbCompetitorResponse?.status || 'Inactive'),
@@ -408,6 +412,22 @@ async function upsertCompetitor(
     const dbCompetitorInsert = await prisma.competitor.create({
       data: competitorData,
     });
+    try {
+      await prisma.protocol.create({
+        data: {
+          eventId: eventId,
+          competitorId: dbCompetitorInsert.id,
+          origin: 'IT',
+          type: 'competitor_create',
+          previousValue: null,
+          newValue: competitorData.lastname + ' ' + competitorData.firstname,
+          authorId: 1,
+        },
+      });
+    } catch (err) {
+      console.error('Error creating protocol record:', err);
+    }
+
     return { id: dbCompetitorInsert.id, updated: true };
   } else {
     // Compare existing data with new data (excluding preserved fields)
@@ -429,12 +449,45 @@ async function upsertCompetitor(
       { key: 'leg', type: 'number' },
     ];
 
-    const isDifferent = keysToCompare.some(
-      ({ key, type }) =>
-        competitorData[key] !== undefined &&
-        normalizeValue(type, competitorData[key]) !==
-        normalizeValue(type, dbCompetitorResponse[key]),
-    );
+    // Collect changes to be added to the protocol
+    const changes = [];
+
+    // Define a mapping of competitorData keys to their corresponding protocol types
+    const keyToTypeMap = {
+      classId: 'class_change',
+      firstname: 'firstname_change',
+      lastname: 'lastname_change',
+      nationality: 'nationality_change',
+      registration: 'registration_change',
+      organisation: 'organisation_change',
+      shortName: 'short_name_change',
+      bibNumber: 'bibNumber_change',
+      startTime: 'start_time_change',
+      finishTime: 'finish_time_change',
+      time: 'time_change',
+      card: 'si_card_change',
+      status: 'status_change',
+      teamId: 'team_change',
+      leg: 'leg_change',
+    };
+
+    // Check for differences and collect changes
+    const isDifferent = keysToCompare.some(({ key, type }) => {
+      const currentValue = normalizeValue(type, competitorData[key]);
+      const previousValue = normalizeValue(type, dbCompetitorResponse[key]);
+      const hasChanged =
+        competitorData[key] !== undefined && currentValue !== previousValue;
+
+      if (hasChanged && keyToTypeMap[key]) {
+        changes.push({
+          type: keyToTypeMap[key],
+          previousValue: dbCompetitorResponse[key]?.toString() || null,
+          newValue: competitorData[key]?.toString() || null,
+        });
+      }
+
+      return hasChanged;
+    });
 
     if (isDifferent) {
       // Update only if there is a difference
@@ -442,6 +495,26 @@ async function upsertCompetitor(
         where: { id: dbCompetitorResponse.id },
         data: competitorData,
       });
+
+      // Add records to protocol
+      try {
+        for (const change of changes) {
+          await prisma.protocol.create({
+            data: {
+              eventId: eventId,
+              competitorId: dbCompetitorResponse.id,
+              origin: 'IT',
+              type: change.type,
+              previousValue: change.previousValue,
+              newValue: change.newValue,
+              authorId: 1,
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Failed to create protocol records:', err);
+      }
+
       const updatedCompetitorData = {
         ...competitorData,
         id: dbCompetitorResponse.id,
@@ -766,13 +839,17 @@ async function processClassResults(
             const person = competitorResult.Person.shift();
             // const organisation = competitorResult.Organisation?.shift();
 
-            const organisation = Array.isArray(competitorResult.Organisation) && competitorResult.Organisation.length > 0
-              ? competitorResult.Organisation.shift()
-              : null;
+            const organisation =
+              Array.isArray(competitorResult.Organisation) &&
+              competitorResult.Organisation.length > 0
+                ? competitorResult.Organisation.shift()
+                : null;
 
-            const result = Array.isArray(competitorResult.Result) && competitorResult.Result.length > 0
-              ? competitorResult.Result.shift()
-              : null;
+            const result =
+              Array.isArray(competitorResult.Result) &&
+              competitorResult.Result.length > 0
+                ? competitorResult.Result.shift()
+                : null;
 
             const { id: competitorId, updated } = await upsertCompetitor(
               eventId,
