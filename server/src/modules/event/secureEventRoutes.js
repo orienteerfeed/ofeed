@@ -3,32 +3,33 @@ import { body, check, query, validationResult } from 'express-validator';
 
 import {
   AuthenticationError,
-  ValidationError,
   DatabaseError,
+  ValidationError,
 } from '../../exceptions/index.js';
 import {
-  validation as validationResponse,
   error as errorResponse,
   success as successResponse,
+  validation as validationResponse,
 } from '../../utils/responseApi.js';
 
-import validateEvent from '../../utils/validateEvent.js';
-import { formatErrors } from '../../utils/errors.js';
-import { encrypt, encodeBase64 } from '../../utils/cryptoUtils.js';
 import prisma from '../../utils/context.js';
+import { encodeBase64, encrypt } from '../../utils/cryptoUtils.js';
+import { formatErrors } from '../../utils/errors.js';
+import validateEvent from '../../utils/validateEvent.js';
 
-import {
-  changeCompetitorStatus,
-  storeCompetitor,
-  updateCompetitor,
-  getDecryptedEventPassword,
-  deleteEventCompetitors,
-  deleteAllEventData,
-} from './eventService.js';
 import {
   validateCreateCompetitor,
   validateUpdateCompetitor,
 } from '../../utils/validateCompetitor.js';
+import {
+  changeCompetitorStatus,
+  deleteAllEventData,
+  deleteEventCompetitor,
+  deleteEventCompetitors,
+  getDecryptedEventPassword,
+  storeCompetitor,
+  updateCompetitor,
+} from './eventService.js';
 
 const router = Router();
 
@@ -780,9 +781,9 @@ router.get('/:eventId/password', async (req, res) => {
     // Check if eventPassword exists, if not, return an empty data object
     const responseData = eventPassword
       ? {
-          password: eventPassword.password,
-          expiresAt: eventPassword.expiresAt,
-        }
+        password: eventPassword.password,
+        expiresAt: eventPassword.expiresAt,
+      }
       : {}; // Empty object if eventPassword is null or undefined
     return res.status(200).json(
       successResponse(
@@ -2033,6 +2034,91 @@ router.delete(
 
       // Call deleteEventCompetitors function
       const deleteMessage = await deleteEventCompetitors(eventId);
+
+      return res
+        .status(200)
+        .json(successResponse('OK', { data: deleteMessage }, res.statusCode));
+    } catch (error) {
+      console.error(error);
+      if (error instanceof DatabaseError) {
+        return res
+          .status(500)
+          .json(errorResponse(error.message, res.statusCode));
+      }
+      return res
+        .status(500)
+        .json(errorResponse('Internal Server Error', res.statusCode));
+    }
+  },
+);
+
+/**
+ * @swagger
+ * /rest/v1/events/{eventId}/competitors/{competitorId}:
+ *  delete:
+ *    summary: Delete a single competitor for an event
+ *    description: Remove a competitor and associated protocol records for a given event ID and competitor ID.
+ *    tags:
+ *       - Events
+ *    security:
+ *       - bearerAuth: []  # Require user login with Bearer token
+ *    parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         description: ID of the event for which the competitor should be deleted.
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: competitorId
+ *         required: true
+ *         description: ID of the competitor to be deleted.
+ *         schema:
+ *           type: string
+ *    responses:
+ *        200:
+ *          description: Successfully deleted competitor and protocol records
+ *        401:
+ *          description: Not authenticated
+ *        403:
+ *          description: Not authorized
+ *        404:
+ *          description: Competitor not found
+ *        422:
+ *          description: Validation Error
+ *        500:
+ *          description: Internal Server Error
+ */
+router.delete(
+  '/:eventId/competitors/:competitorId',
+  [
+    check('eventId').not().isEmpty().isString(),
+    check('competitorId').not().isEmpty().isInt(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json(validationResponse(formatErrors(errors)));
+    }
+    const { eventId } = req.params;
+    const competitorId = parseInt(req.params.competitorId, 10);
+    const { userId } = req.jwtDecoded;
+
+    try {
+      // Check user permissions
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { authorId: true },
+      });
+
+      if (!event || event.authorId !== userId) {
+        return res
+          .status(403)
+          .json(errorResponse('Not authorized', res.statusCode));
+      }
+
+      // Call deleteCompetitor function
+      const deleteMessage = await deleteEventCompetitor(eventId, competitorId);
 
       return res
         .status(200)
