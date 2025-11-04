@@ -2056,7 +2056,7 @@ router.delete(
  * @swagger
  * /rest/v1/events/{eventId}/competitors/{competitorId}:
  *  delete:
- *    summary: Delete a single competitor for an event
+ *    summary: Delete competitor
  *    description: Remove a competitor and associated protocol records for a given event ID and competitor ID.
  *    tags:
  *       - Events
@@ -2119,6 +2119,100 @@ router.delete(
 
       // Call deleteCompetitor function
       const deleteMessage = await deleteEventCompetitor(eventId, competitorId);
+
+      return res
+        .status(200)
+        .json(successResponse('OK', { data: deleteMessage }, res.statusCode));
+    } catch (error) {
+      console.error(error);
+      if (error instanceof DatabaseError) {
+        return res
+          .status(500)
+          .json(errorResponse(error.message, res.statusCode));
+      }
+      return res
+        .status(500)
+        .json(errorResponse('Internal Server Error', res.statusCode));
+    }
+  },
+);
+
+/**
+ * @swagger
+ * /rest/v1/events/{eventId}/competitors/{competitorExternalId}/external-id:
+ *  delete:
+ *    summary: Delete competitor by external id
+ *    description: Remove a competitor and associated protocol records for a given event ID and competitor external ID (useful when you don't know the internal competitor ID in OFeed).
+ *    tags:
+ *       - Events
+ *    parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         description: String ID of the event.
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: competitorExternalId
+ *         required: true
+ *         description: External ID of the competitor to delete.
+ *         schema:
+ *           type: string
+ *    responses:
+ *        200:
+ *          description: Competitor successfully deleted
+ *        404:
+ *          description: Competitor not found
+ *        401:
+ *          description: Not authenticated
+ *        500:
+ *          description: Internal Server Error
+ */
+router.delete(
+  '/:eventId/competitors/:competitorExternalId/external-id',
+  check('eventId').not().isEmpty().isString(),
+  check('competitorExternalId').not().isEmpty().isString(),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json(validationResponse(formatErrors(errors)));
+    }
+
+    const { eventId, competitorExternalId } = req.params;
+    const { userId } = req.jwtDecoded;
+
+    try {
+      // Check user permissions
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { authorId: true },
+      });
+
+      if (!event || event.authorId !== userId) {
+        return res
+          .status(403)
+          .json(errorResponse('Not authorized', res.statusCode));
+      }
+
+      // Get competitor id
+      const dbCompetitorResponse = await prisma.competitor.findFirst({
+        where: {
+          class: { eventId: eventId },
+          externalId: competitorExternalId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!dbCompetitorResponse) {
+        return res
+          .status(404)
+          .json(errorResponse('Competitor not found', res.statusCode));
+      }
+
+      // Call deleteCompetitor by externalId function
+      const deleteMessage = await deleteEventCompetitor(eventId, dbCompetitorResponse.id);
 
       return res
         .status(200)
