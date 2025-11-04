@@ -1286,7 +1286,7 @@ const handleValidateAndUpdateCompetitor = async (req, res, competitorId) => {
  * /rest/v1/events/{eventId}/competitors/{competitorId}:
  *  put:
  *    summary: Update competitor's data
- *    description: Change competitor data by internal id
+ *    description: Change competitor's data by internal id
  *    tags:
  *       - Events
  *    parameters:
@@ -1471,7 +1471,7 @@ router.put(
  * @swagger
  * /rest/v1/events/{eventId}/competitors/{competitorExternalId}/external-id:
  *  put:
- *    summary: Update competitor's data
+ *    summary: Update competitor's data using external id
  *    description: Change competitor data by the external ID (for cases that you don't know the competitor's ID in OrienteerFeed).
  *    tags:
  *       - Events
