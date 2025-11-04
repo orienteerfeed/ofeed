@@ -3,32 +3,32 @@ import { body, check, query, validationResult } from 'express-validator';
 
 import {
   AuthenticationError,
-  DatabaseError,
   ValidationError,
+  DatabaseError,
 } from '../../exceptions/index.js';
 import {
+  validation as validationResponse,
   error as errorResponse,
   success as successResponse,
-  validation as validationResponse,
 } from '../../utils/responseApi.js';
 
-import prisma from '../../utils/context.js';
-import { encodeBase64, encrypt } from '../../utils/cryptoUtils.js';
-import { formatErrors } from '../../utils/errors.js';
 import validateEvent from '../../utils/validateEvent.js';
+import { formatErrors } from '../../utils/errors.js';
+import { encrypt, encodeBase64 } from '../../utils/cryptoUtils.js';
+import prisma from '../../utils/context.js';
 
+import {
+  changeCompetitorStatus,
+  storeCompetitor,
+  updateCompetitor,
+  getDecryptedEventPassword,
+  deleteEventCompetitors,
+  deleteAllEventData,
+} from './eventService.js';
 import {
   validateCreateCompetitor,
   validateUpdateCompetitor,
 } from '../../utils/validateCompetitor.js';
-import {
-  changeCompetitorStatus,
-  deleteAllEventData,
-  deleteEventCompetitors,
-  getDecryptedEventPassword,
-  storeCompetitor,
-  updateCompetitor,
-} from './eventService.js';
 
 const router = Router();
 
@@ -780,9 +780,9 @@ router.get('/:eventId/password', async (req, res) => {
     // Check if eventPassword exists, if not, return an empty data object
     const responseData = eventPassword
       ? {
-        password: eventPassword.password,
-        expiresAt: eventPassword.expiresAt,
-      }
+          password: eventPassword.password,
+          expiresAt: eventPassword.expiresAt,
+        }
       : {}; // Empty object if eventPassword is null or undefined
     return res.status(200).json(
       successResponse(
