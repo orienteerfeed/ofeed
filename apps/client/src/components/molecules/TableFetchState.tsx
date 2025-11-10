@@ -10,7 +10,7 @@ export type TableFetchStateProps = {
   error?: string | Error | React.ReactNode;
 };
 
-export function TableFetchState({ isLoading, error }: TableFetchStateProps) {
+export const TableFetchState = ({ isLoading, error }: TableFetchStateProps) => {
   if (isLoading) return <TableLoadingProgress />;
 
   if (error) {
@@ -20,6 +20,6 @@ export function TableFetchState({ isLoading, error }: TableFetchStateProps) {
   }
 
   return <TableNoDataAvailable />;
-}
+};
 
 export default TableFetchState;

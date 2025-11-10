@@ -21,6 +21,7 @@
         "Login": "Přihlásit",
         "DontHaveAnAccount": "Ještě nemáš svůj účet?",
         "CreateAnAccount": "Vytvořit účet",
+        "EnterYourInformation": "Zadej své údaje níže pro vytvoření účtu",
         "EnterYourEmailToSignIn": "Vlož svůj e-mail pro přihlášení do svého účtu",
         "ClickConsent": "Kliknutím na tlačítko souhlasíte s",
         "TermsOfService": "Podmínkami služby",
@@ -32,7 +33,17 @@
       "RequestPasswordResetPage": {
         "ForgottenPassword": "Zapomenuté heslo",
         "EnterYourEmail": "Vlož svůj e-mail pro zaslání odkazu pro obnovu hesla",
-        "ResetPassword": "Obnovit heslo"
+        "ResetPassword": "Obnovit heslo",
+        "SendResetLink": "Poslat odkaz pro obnovení",
+        "Sending": "Odesílám...",
+        "BackToSignIn": "Zpět na přihlášení",
+        "CheckYourEmail": "Zkontroluj svůj e-mail",
+        "PasswordResetLinkSent": "Odkaz pro obnovení hesla odeslán"
+      },
+      "SignUpPage": {
+        "AlreadyHaveAnAccount": "Už máš účet?",
+        "CreateAccount": "Vytvořit účet",
+        "CreatingAccount": "Vytvářím účet..."
       },
       "PasswordResetEmailSentPage": {
         "CheckYourEmail": "Zkontrolujte svůj e-mail",
@@ -41,30 +52,59 @@
         "PasswordResetInstructions3": "Pokud jste o obnovení hesla nepožádali, můžete tento e-mail ignorovat."
       },
       "PasswordResetPage": {
-        "EnterYourNewPassword": "Zadej tvoje nové heslo"
+        "EnterYourNewPassword": "Zadej tvoje nové heslo",
+        "ResetYourPassword": "Obnovit tvoje heslo",
+        "NewPassword": "Nové heslo",
+        "ResettingPassword": "Obnovuji heslo...",
+        "ResetPassword": "Obnovit heslo"
       }
     },
     "Event": {
       "Description": "Přehled všech událostí",
       "CompetitorsList": "Seznam závodníků",
+      "MyEvents": "Moje události",
+      "MyEventsDescription": "Přehled všech vámi založených událostí",
       "NoCompetitorsFound": "Kategorie neobsahuje žádné závodníky.",
-      "Oprations": {
+      "Classes": "Kategorie",
+      "OrganizedBy": "Organizuje",
+      "Operations": {
         "EditEvent": "Upravit závod",
         "EditDescription": "Upravit detaily závodu",
         "CreateEvent": "Přidat závod",
         "CreateDescription": "Vyplň formulář daty nového závodu ",
-        "DeleteEvent": "Odstranit závod"
+        "DeleteEvent": "Odstranit závod",
+        "SelectClass": "Vyber kategorii"
       },
       "Tables": {
         "Name": "Název",
-        "Organiser": "Pořadatel",
+        "Organizer": "Pořadatel",
+        "Location": "Lokalita",
         "Date": "Datum",
-        "MyEvents": "Moje události",
-        "Today": "Dnes",
-        "Recent": "Nedávné",
-        "Upcoming": "Plánované",
         "Visibility": "Viditelnost",
-        "Edit": "Upravit"
+        "Actions": "Akce",
+        "Format": "Formát",
+        "Status": "Stav",
+        "Sport": "Sport",
+        "Country": "Země",
+        "Entries": "Přihlášky",
+        "Competitors": "Závodníků"
+      },
+      "Tabs": {
+        "All": "Všechny",
+        "Today": "Dnes",
+        "Ongoing": "Probíhající",
+        "Recent": "Nedávné",
+        "Past": "Uskutečněné",
+        "Upcoming": "Plánované",
+        "Results": "Výsledky",
+        "Splits": "Mezičasy",
+        "Detail": "Detail",
+        "Info": "Info",
+        "Cards": "Dlaždice",
+        "List": "Seznam",
+        "Cat": "Kat",
+        "Club": "Klub",
+        "Live": "Živě"
       },
       "Alert": {
         "DemoTitle": "Zkušební provoz",
@@ -77,7 +117,7 @@
         "Sport": "Sport",
         "Date": "Datum konání",
         "Timezone": "Časová zóna",
-        "Organiser": "Pořadatel",
+        "Organizer": "Pořadatel",
         "Location": "Lokalita",
         "Latitude": "Zeměpisná šířka",
         "Longitude": "Zeměpisná délka",
@@ -94,6 +134,7 @@
           "Longitude": "Zadej gps délku (např., 14.4378)"
         },
         "Toast": {
+          "CreateSuccess": "Závod byl úspěšně založen!",
           "EditSuccess": "Závod byl úspěšně aktualizován!"
         }
       },
@@ -132,16 +173,17 @@
           "Description": "Použij tuto funkci pro rychlé sdílení odkazu na událost – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k živým výsledkům.",
           "Navigator": {
             "Title": "OrienteerFeed",
-            "Text": "Událost",
+            "Event": "Událost",
             "Location": "Lokalita",
             "Date": "Datum",
-            "UrlTitle": "Zobrazit online výsledky",
+            "EventUri": "Odkaz na událost",
             "UrlDescription": "Naskenuj QR kód a okamžitě máš online výsledky v telefonu!"
           }
         },
         "PrintWindow": {
           "Title": "QR kód - OrienteerFeed online vsledky",
           "Header": "ORIENTEERFEED",
+          "EventQR": "QR KÓD NA UDÁLOST",
           "Info": "Naskenuj QR kód pro zobrazení online vsledků."
         },
         "Toast": {
@@ -172,7 +214,8 @@
       },
       "Visibility": {
         "Card": {
-          "Title": "Viditelnost"
+          "Title": "Viditelnost",
+          "Description": "Určuje, zda bude událost veřejná nebo privátní. Veřejné události se zobrazují v seznamu na hlavní stránce aplikace, zatímco privátní události jsou viditelné pouze pro jejich organizátora."
         },
         "Toast": {
           "UpdateSuccess": "Událost je nyní {{status}}!",
@@ -181,26 +224,36 @@
       },
       "DangerZone": {
         "Title": "Nebezpečná zóna",
-        "Description": "Odstraň trvale všechny závodníky a kategorie v tvojí události.",
+        "Description": "Nevratné akce, které trvale vymažou data. Postupujte s maximální opatrností.",
+        "Footer": "Tyto akce nelze vrátit zpět. Ujistěte se, že máte k dispozici příslušné zálohy.",
         "DeleteCompetitors": {
           "Title": "Smazat závodníky",
           "Description": "Pokud nahraješ startovku nebo výsledky do špatné události, tak můžeš všechny závodníky smazat a začít znovu. Toto tlačítko odstraní úplně všechny závodníky (startovku & výsledky).",
-          "Button": "Smazat"
+          "Button": "Smazat",
+          "ConfirmTitle": "Smazat všechny závodníky",
+          "ConfirmDescription": "Opravdu chcete smazat všechny závodníky? Tuto akci nelze vrátit zpět.",
+          "ConfirmButton": "Smazat závodníky"
         },
         "DeleteAllEventData": {
           "Title": "Smazat všechna data závodu",
           "Description": "Pokud potřebuješ odstranit všechna data závodu (závodníky, kategorie a výsledky), tak použij toto tlačítko. Pozor, operace je nevratná!",
-          "Button": "Smazat"
+          "Button": "Smazat",
+          "ConfirmTitle": "Smazat všechna data události",
+          "ConfirmDescription": "Opravdu chcete smazat všechna data události? Tím odstraníte všechny výsledky a akci nelze vrátit zpět.",
+          "ConfirmButton": "Smazat všechna data"
         },
         "DeleteEvent": {
           "Title": "Smazat událost",
           "Description": "Všechna data události budou smazána. Smazání je trvalé a nelze vrátit zpět!",
-          "Button": "Smazat"
+          "Button": "Smazat",
+          "ConfirmTitle": "Smazat událost",
+          "ConfirmDescription": "Opravdu chcete smazat celou tuto událost? Tuto akci nelze vrátit zpět.",
+          "ConfirmButton": "Smazat událost"
         },
         "TroublesShooting": {
-          "Title": "Něco ti nefunguje?",
-          "Description1": "Popiš nám situaci na",
-          "Description2": ", prosíme přilož případně problémové soubory."
+          "Title": "Potřebujete pomoc nebo máte dotazy?",
+          "Description1": "Náš tým podpory je připraven vám pomoci s jakýmikoli problémy nebo dotazy. Kontaktujte nás na adrese",
+          "Description2": "prosíme přilož případně problémové soubory."
         },
         "Toast": {
           "DeleteFailTitle": "Chyba při mazání dat",
@@ -208,22 +261,61 @@
         }
       }
     },
+    "Home": {
+      "Hero": {
+        "Subtitle": "Živé výsledky a závody v orientačním běhu. Synchronizujte závody, sledujte běžce a mějte vše na jednom místě.",
+        "LiveResults": "Živé výsledky",
+        "SplitAnalysis": "Detailní analýza mezičasů",
+        "RealTimeEventControl": "Přehled změn v reálném čase"
+      }
+    },
     "Profile": {
-      "OAuth2CredentialsForm": {
-        "Card": {
-          "Title": "OAuth2 Credentials",
-          "Description": "Vygeneruj credentials a ulož si je na bezpečné místo. Jelikož jde o citlivou informaci, nebude možné si je znovu zobrazit."
-        },
-        "Regenerate": "Přegenerovat Secret",
-        "Revoke": "Zneplatnit",
+      "MyEntries": {
+        "Title": "Moje přihlášky",
+        "Description": "Zde najdete všechny své přihlášky a změny v registracích na události. Můžete je prohlížet, upravovat nebo sledovat jejich stav."
+      },
+      "PersonalInfo": {
+        "Title": "Osobní údaje",
+        "Description": "Zde můžete zobrazit a upravit své osobní údaje, kontaktní informace a další nastavení profilu.",
+        "SiCardNumber": "Číslo Sportident čipu",
+        "EmergencyContact": "Kontakt pro případ nouze"
+      },
+      "OAuth2": {
+        "Title": "OAuth2 přístup k API",
+        "Description": "Vygenerujte si údaje pro přístup k API pomocí OAuth2. Budete potřebovat Client ID a Client Secret.",
         "ClientId": "ID klienta",
-        "ClientSecret": "Secret klienta",
+        "ClientSecret": "Tajný klíč klienta (Client Secret)",
+        "Generate": "Vygenerovat nový Client Secret",
+        "Regenerate": "Přegenerovat Client Secret",
+        "SecretWarning": "Důležité upozornění",
+        "SecretWarningDescription": "Client Secret je citlivý údaj. Nikomu ho nesdílejte, bezpečně si ho uložte. Po opuštění nebo obnovení této stránky už nebude znovu zobrazen.",
+        "Revoke": "Zneplatnit",
         "Toast": {
-          "GenerateSuccessDescription": "OAuth2 credentials byly úspěšně vygenerované!",
+          "GenerateSuccessDescription": "OAuth2 přístupové údaje byly úspěšně vygenerované!",
           "GenerateFailTitle": "Něco se pokazilo, zkus operaci opakovat.",
-          "RevokeSuccessDescription": "Zneplatení credentials bylo úspěšné!",
-          "RevokeFailTitle": "Nezdařilo se zneplatnit credentials"
+          "RevokeSuccessDescription": "Zneplatnění přístupových údajů bylo úspěšné!",
+          "RevokeFailTitle": "Nezdařilo se zneplatnit přístupové údaje"
+        },
+        "HowToUse": {
+          "Title": "Jak OAuth2 použít",
+          "Description": "Použijte své Client ID a Client Secret v požadavku s grant_type=client_credentials na endpoint /auth/oauth2/token. Níže je ukázka požadavku pomocí curl."
         }
+      },
+      "OtherIntegrations": {
+        "Title": "Další integrace",
+        "Description": "Propojte svůj účet s dalšími službami a nástroji. Nové integrace zde budou průběžně přibývat."
+      },
+      "Security": {
+        "PasswordDescription": "Zde můžete změnit své heslo k účtu. Doporučujeme použít silné a jedinečné heslo.",
+        "CurrentPassword": "Aktuální heslo",
+        "NewPassword": "Nové heslo",
+        "ConfirmNewPassword": "Potvrdit nové heslo",
+        "UpdatePassword": "Změnit heslo"
+      },
+      "Tabs": {
+        "Profile": "Profil",
+        "Integrations": "Integrace",
+        "Security": "Zabezpečení"
       }
     }
   },
@@ -258,7 +350,8 @@
       "Docs": "Dokumentace",
       "Donate": "Podpořit",
       "Blog": "Blog",
-      "LicensedUnderGnuGpl3": "Publikováno pod licencí GNU GPL v3.0."
+      "MadeWith": "Vytvořeno s",
+      "ForOrienteering": "pro orientační sporty"
     }
   },
   "Molecules": {
@@ -285,6 +378,10 @@
         "ProcessingError": "Chyba zpracování souboru"
       }
     },
+    "LanguageSelector": {
+      "Title": "Jazyk",
+      "SelectLanguage": "Vybrat jazyk"
+    },
     "SearchBox": {
       "SearchResults": "Výsledky hledání"
     }
@@ -301,8 +398,10 @@
       "Home": "Domů",
       "Events": "Události",
       "About": "O nás",
+      "Docs": "Dokumentace",
       "Contact": "Kontakty",
-      "MRB": "MyResultBoard"
+      "MRB": "MyResultBoard",
+      "GitHub": "GitHub"
     }
   },
   "Validations": {

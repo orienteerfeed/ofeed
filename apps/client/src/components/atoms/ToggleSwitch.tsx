@@ -17,7 +17,7 @@ export const ToggleSwitch = React.forwardRef<
   return (
     <ShadSwitch
       ref={ref}
-      className={cn(className)} // nechává výchozí shadcn styly
+      className={cn(className)}
       {...(checked !== undefined ? { checked } : {})}
       {...(onCheckedChange ? { onCheckedChange } : {})}
       {...props}

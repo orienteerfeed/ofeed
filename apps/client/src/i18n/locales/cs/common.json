@@ -9,7 +9,12 @@
     "Submit": "Potvrdit",
     "Submitting": "Zpracovávání...",
     "Success": "V pořádku",
-    "Error": "Chyba"
+    "Error": "Chyba",
+    "Create": "Vytvořit",
+    "Update": "Upravit",
+    "Cancel": "Zrušit",
+    "Save": "Uložit",
+    "Configure": "Konfigurovat"
   },
   "Settings": "Nastavení",
   "Loading": "Načítání...",
@@ -33,5 +38,9 @@
   "Search": "Hledat",
   "Close": "Zavřít",
   "NoResults": "Žádné výsledky",
-  "TypeAtLeastNCharacters": "Napište alespoň {{n}} znaků…"
+  "TypeAtLeastNCharacters": "Napište alespoň {{n}} znaků…",
+  "View": "Zobrazit",
+  "ComingSoon": "Již brzy k dispozici",
+  "NotImplementedTitle": "Zatím není implementováno",
+  "NotImplementedDescription": "Zatím není k dispozici. Pracujeme na této funkci."
 }

@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
+@import 'flag-icons/css/flag-icons.min.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -125,5 +126,34 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* PWA specific enhancements */
+@media (display-mode: standalone) {
+  body {
+    background-color: white;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
+  /* Add safe area insets for notched devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Print styles for results */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break-after {
+    page-break-after: always;
   }
 }

@@ -8,10 +8,10 @@ export type TableLoadingProgressProps = {
   className?: string;
 };
 
-export function TableLoadingProgress({
+export const TableLoadingProgress = ({
   label = 'Loading data…',
   className,
-}: TableLoadingProgressProps) {
+}: TableLoadingProgressProps) => {
   return (
     <span
       className={cn(
@@ -26,4 +26,4 @@ export function TableLoadingProgress({
       {label}
     </span>
   );
-}
+};

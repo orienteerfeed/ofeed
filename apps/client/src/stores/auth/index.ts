@@ -1,8 +1,9 @@
 export {
-  useAuthActions,
   useAuthStore,
   useIsAuthenticated,
+  useSignin,
+  useSignout,
   useToken,
   useUser,
 } from './auth-store';
-export type { AuthState, AuthStore, User } from './types';
+export type { AuthState, AuthStore } from './types';

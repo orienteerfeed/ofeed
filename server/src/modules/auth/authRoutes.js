@@ -1,30 +1,30 @@
-import { Router } from 'express';
-import { check, validationResult } from 'express-validator';
-import bodyParser from 'body-parser';
 import OAuth2Server from '@node-oauth/oauth2-server';
 import argon2 from 'argon2';
+import bodyParser from 'body-parser';
 import crypto from 'crypto';
+import { Router } from 'express';
+import { check, validationResult } from 'express-validator';
 
-import {
-  authenticateUser,
-  signupUser,
-  passwordResetRequest,
-  passwordResetConfirm,
-} from './authService.js';
 import {
   AuthenticationError,
   ValidationError,
 } from '../../exceptions/index.js';
+import { formatErrors } from '../../utils/errors.js';
 import {
+  error as errorResponse,
   success as successResponse,
   validation as validationResponse,
-  error as errorResponse,
 } from '../../utils/responseApi.js';
-import { formatErrors } from '../../utils/errors.js';
+import {
+  authenticateUser,
+  passwordResetConfirm,
+  passwordResetRequest,
+  signupUser,
+} from './authService.js';
 
+import prisma from '../../utils/context.js';
 import { verifyJwtToken } from '../../utils/jwtToken.js';
 import { generateRandomHex } from '../../utils/randomUtils.js';
-import prisma from '../../utils/context.js';
 
 import { oauth2Model } from './oauth2Model.js';
 
@@ -584,7 +584,7 @@ router.get('/oauth2-credentials', async (req, res) => {
       successResponse(
         'OK',
         {
-          data: { ...oAuth2Credentials },
+          data: { client_id: oAuth2Credentials.clientId },
         },
         res.statusCode,
       ),

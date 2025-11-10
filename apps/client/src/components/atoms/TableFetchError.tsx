@@ -9,7 +9,7 @@ export type TableFetchErrorProps = {
   className?: string;
 };
 
-export function TableFetchError({ error, className }: TableFetchErrorProps) {
+export const TableFetchError = ({ error, className }: TableFetchErrorProps) => {
   const content = React.useMemo<React.ReactNode>(() => {
     if (React.isValidElement(error)) return error;
     if (error instanceof Error) return error.message;
@@ -30,4 +30,4 @@ export function TableFetchError({ error, className }: TableFetchErrorProps) {
       {content}
     </span>
   );
-}
+};

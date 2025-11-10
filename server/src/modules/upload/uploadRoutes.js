@@ -1,21 +1,22 @@
+import { PrismaClient } from '@prisma/client';
 import { Router } from 'express';
 import { check, validationResult } from 'express-validator';
-import multer from 'multer';
-import { Parser } from 'xml2js';
 import libxmljs from 'libxmljs2';
-import { PrismaClient } from '@prisma/client';
+import multer from 'multer';
 import fetch from 'node-fetch';
+import { Parser } from 'xml2js';
+import zlib from 'zlib';
 
-import { validation, error, success } from '../../utils/responseApi.js';
 import { formatErrors } from '../../utils/errors.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
-import { normalizeValue } from '../../utils/normalize.js';
-import {
-  publishUpdatedCompetitors,
-  publishUpdatedCompetitor,
-} from '../../utils/subscriptionUtils.js';
-import { calculateCompetitorRankingPoints } from '../../utils/ranking.js';
 import { verifyJwtToken } from '../../utils/jwtToken.js';
+import { normalizeValue } from '../../utils/normalize.js';
+import { calculateCompetitorRankingPoints } from '../../utils/ranking.js';
+import { error, success, validation } from '../../utils/responseApi.js';
+import {
+  publishUpdatedCompetitor,
+  publishUpdatedCompetitors,
+} from '../../utils/subscriptionUtils.js';
 import { notifyWinnerChanges } from './../event/winnerCache.js';
 import { storeCzechRankingData } from './uploadService.js';
 
@@ -120,7 +121,7 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
 
 // Fallback function to generate a competitor hash using names
 /**
-* 
+*
 * @param {string} classId - The class ID associated with the competitor.
 * @param {Object} person - The person object containing identification and name details.
  * @returns {string} - Unique competitor's id
@@ -140,17 +141,17 @@ function fallbackToNameHash(classId, person) {
 /**
  * Parses the XML content from the request file buffer.
  *
- * @param {Object} req - The request object containing the file buffer.
+ * @param {Object} buffer - The buffer object containing the file buffer.
  * @returns {Promise<Object>} - A promise that resolves to the parsed XML object.
  * @throws {Error} - Throws an error if parsing fails.
  */
-async function parseXml(req) {
+async function parseXml(buffer) {
   /** This function takes in two parameters, a request object and a callback function.
    * It attempts to parse the buffer of the file contained in the request object using the parser.parseStringPromise() method.
    * If successful, it calls the callback function with null as the first parameter and iofXml3 as the second parameter.
    * If an error occurs, it logs it to the console and calls the callback function with err as its only parameter.  */
   try {
-    return await parser.parseStringPromise(req.file.buffer.toString());
+    return await parser.parseStringPromise(buffer.toString());
   } catch (err) {
     console.error(err);
     throw new Error('Error parsing file: ' + err.message);
@@ -889,9 +890,14 @@ async function handleIofXmlUpload(req, res) {
     return res.status(422).json(validation('No file uploaded', res.statusCode));
   }
 
+  // Process uploaded XML file (compressed or uncompressed)
+  // Automatically detects gzip compression and decompresses if needed
+  // Returns Buffer containing the raw XML data ready for parsing
+  const xmlBuffer = maybeGunzip(req.file);
+
   if (typeof validateXml === 'undefined' || validateXml !== 'false') {
     const xsd = await fetchIOFXmlSchema();
-    const iofXmlValidation = validateIofXml(req.file.buffer.toString(), xsd);
+    const iofXmlValidation = validateIofXml(xmlBuffer.toString(), xsd);
     if (!iofXmlValidation.state) {
       return res
         .status(422)
@@ -923,7 +929,7 @@ async function handleIofXmlUpload(req, res) {
 
   let iofXml3;
   try {
-    iofXml3 = await parseXml(req);
+    iofXml3 = await parseXml(xmlBuffer);
   } catch (err) {
     return res.status(500).json(error(err.message, res.statusCode));
   }
@@ -1023,6 +1029,31 @@ async function handleIofXmlUpload(req, res) {
         res.statusCode,
       ),
     );
+}
+
+/**
+ * Detects and decompresses gzipped files if necessary
+ *
+ * Checks for gzip compression using both magic number detection (first two bytes: 0x1F 0x8B)
+ * and file metadata hints (MIME type or file extension). If gzip is detected,
+ * the file is automatically decompressed synchronously.
+ *
+ * @param file - The file object containing buffer and metadata
+ * @param file.buffer - The file content as Buffer
+ * @param file.mimetype - MIME type of the file (e.g., 'application/gzip')
+ * @param file.originalname - Original filename (e.g., 'data.xml.gz')
+ * @returns Buffer - Decompressed content if gzipped, original buffer otherwise
+ *
+ * @throws {Error} If gzip decompression fails (corrupted or invalid gzip data)
+ */
+function maybeGunzip(file) {
+  const buf = file.buffer;
+  const looksGzip = buf?.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
+  const hintedGzip = /application\/(x-)?gzip/i.test(file.mimetype || '') || /\.gz$/i.test(file.originalname || '');
+  if (looksGzip || hintedGzip) {
+    return zlib.gunzipSync(buf); // nebo async variantu: await gunzip(...)
+  }
+  return buf;
 }
 
 // Link all submodules here

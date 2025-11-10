@@ -21,6 +21,7 @@
         "Login": "Iniciar sesión",
         "DontHaveAnAccount": "¿No tienes una cuenta?",
         "CreateAnAccount": "Crear una cuenta",
+        "EnterYourInformation": "Introduzca su información a continuación para crear su cuenta",
         "EnterYourEmailToSignIn": "Introduzca su correo electrónico para acceder a su cuenta",
         "ClickConsent": "Al hacer clic en continuar, acepta nuestros",
         "TermsOfService": "Términos del servicio",
@@ -30,10 +31,20 @@
         "WelcomeBack": "Bienvenido de nuevo"
       }
     },
+    "SignUpPage": {
+      "AlreadyHaveAnAccount": "¿Ya tienes una cuenta?",
+      "CreateAccount": "Crear cuenta",
+      "CreatingAccount": "Creando cuenta..."
+    },
     "RequestPasswordResetPage": {
       "ForgottenPassword": "¿Ha olvidado su contraseña?",
       "EnterYourEmail": "Introduzca su correo electrónico para recibir un enlace y restablecer su contraseña",
-      "ResetPassword": "Restablecer contraseña"
+      "ResetPassword": "Restablecer contraseña",
+      "SendResetLink": "Enviar enlace de restablecimiento",
+      "Sending": "Enviando...",
+      "BackToSignIn": "Volver a iniciar sesión",
+      "CheckYourEmail": "Revise su correo electrónico",
+      "PasswordResetLinkSent": "Enlace para restablecer la contraseña enviado"
     },
     "PasswordResetEmailSentPage": {
       "CheckYourEmail": "Revise su correo electrónico",
@@ -42,31 +53,59 @@
       "PasswordResetInstructions3": "Si no ha solicitado el restablecimiento de la contraseña, puede ignorar este correo."
     },
     "PasswordResetPage": {
-      "EnterYourNewPassword": "Introduzca una nueva contraseña"
+      "EnterYourNewPassword": "Introduzca una nueva contraseña",
+      "ResetYourPassword": "Restablecer su contraseña",
+      "NewPassword": "Nueva contraseña",
+      "ResettingPassword": "Restableciendo la contraseña...",
+      "ResetPassword": "Restablecer contraseña"
     }
   },
   "Event": {
     "Description": "Resumen de eventos",
     "CompetitorsList": "Lista de competidores",
+    "MyEvents": "Mis eventos",
+    "MyEventsDescription": "Resumen de todos los eventos que has creado",
     "NoCompetitorsFound": "No se han encontrado competidores para la clase seleccionada.",
-    "Oprations": {
+    "Classes": "Clases",
+    "OrganizedBy": "Organizado por",
+    "Operations": {
       "EditEvent": "Editar evento",
       "EditDescription": "Edite los detalles del evento existente",
       "CreateEvent": "Crear evento",
       "CreateDescription": "Rellene el formulario para crear un nuevo evento",
-      "DeleteEvent": "Eliminar evento"
+      "DeleteEvent": "Eliminar evento",
+      "SelectClass": "Seleccionar clase"
     }
   },
   "Tables": {
     "Name": "Nombre",
-    "Organiser": "Organizador",
+    "Organizer": "Organizador",
     "Date": "Fecha",
-    "MyEvents": "Mis eventos",
-    "Today": "Hoy",
-    "Recent": "Recientes",
-    "Upcoming": "Próximos",
     "Visibility": "Visibilidad",
-    "Edit": "Editar"
+    "Actions": "Acciones",
+    "Format": "Formato",
+    "Status": "Estado",
+    "Sport": "Sport",
+    "Country": "País",
+    "Entries": "Entradas",
+    "Competitors": "Competidores"
+  },
+  "Tabs": {
+    "All": "Todo",
+    "Today": "Hoy",
+    "Ongoing": "En curso",
+    "Recent": "Recientes",
+    "Past": "Pasado",
+    "Upcoming": "Próximos",
+    "Results": "Resultados",
+    "Splits": "Parciales",
+    "Detail": "Detalle",
+    "Info": "Información",
+    "Cards": "Tarjetas",
+    "List": "Lista",
+    "Cat": "Cat",
+    "Club": "Club",
+    "Live": "En vivo"
   },
   "Alert": {
     "DemoTitle": "Esta es una aplicación de demostración",
@@ -79,7 +118,7 @@
     "Sport": "Deporte",
     "Date": "Fecha",
     "Timezone": "Zona horaria",
-    "Organiser": "Organizador",
+    "Organizer": "Organizador",
     "Location": "Ubicación",
     "Latitude": "Latitud GPS",
     "Longitude": "Longitud GPS",
@@ -96,6 +135,7 @@
       "Longitude": "Introduzca la longitud (p.ej., 14.4378)"
     },
     "Toast": {
+      "CreateSuccess": "¡El evento se ha creado correctamente!",
       "EditSuccess": "¡El evento se ha actualizado correctamente!"
     }
   },
@@ -134,16 +174,17 @@
       "Description": "Utilice esta función para compartir rápidamente un enlace a un evento: puede copiarlo, compartirlo o imprimir el código QR para un acceso sencillo a los resultados en vivo.",
       "Navigator": {
         "Title": "OrienteerFeed",
-        "Text": "Evento",
+        "Event": "Evento",
         "Location": "Ubicación",
         "Date": "Fecha",
-        "UrlTitle": "Ver resultados en directo",
+        "EventUri": "Ver resultados en directo",
         "UrlDescription": "¡Escanee el código QR para acceder al momento a los resultados en directo!"
       }
     },
     "PrintWindow": {
       "Title": "Código QR - Resultados en vivo de OrienteerFeed",
       "Header": "ORIENTEERFEED",
+      "EventQR": "CÓDIGO QR DEL EVENTO",
       "Info": "Escanee este código QR para ver los resultados en vivo en línea."
     },
     "Toast": {
@@ -174,7 +215,8 @@
   },
   "Visibility": {
     "Card": {
-      "Title": "Visibilidad"
+      "Title": "Visibilidad",
+      "Description": "Determina si el evento será público o privado. Los eventos públicos se muestran en la lista de la página principal de la aplicación, mientras que los eventos privados solo son visibles para su organizador."
     },
     "Toast": {
       "UpdateSuccess": "¡El evento ahora está {{status}}!",
@@ -183,48 +225,97 @@
   },
   "DangerZone": {
     "Title": "Zona de peligro",
-    "Description": "Eilimine de forma permanente todos los competidores y clases relacionados con su evento.",
+    "Description": "Acciones irreversibles que eliminarán los datos de forma permanente. Proceda con extrema precaución.",
+    "Footer": "Estas acciones no se pueden deshacer. Asegúrese de tener las copias de seguridad adecuadas.",
     "DeleteCompetitors": {
       "Title": "Eliminar competidores",
       "Description": "Si ha subido la lista de salida o resultados para un evento incorrecto, puede eliminar todos los competidores y comenzar de nuevo. Este botón elimina todos los corredores (lista de salida y resultados).",
-      "Button": "Eliminar competidores"
+      "Button": "Eliminar competidores",
+      "ConfirmTitle": "Eliminar todos los competidores",
+      "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los competidores? Esta acción no se puede deshacer.",
+      "ConfirmButton": "Eliminar competidores"
     },
     "DeleteAllEventData": {
       "Title": "Eliminar todos los datos del evento",
       "Description": "Si necesita eliminar completamente todos los datos del evento, incluidos corredores, clases y resultados, utilice este botón. Tenga precaución, ya que esta acción es irreversible.",
-      "Button": "Eliminar todos los datos del evento"
+      "Button": "Eliminar todos los datos del evento",
+      "ConfirmTitle": "Eliminar todos los datos del evento",
+      "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los datos del evento? Esto eliminará todos los resultados y no se puede deshacer.",
+      "ConfirmButton": "Eliminar todos los datos"
     },
     "DeleteEvent": {
       "Title": "Eliminar evento",
       "Description": "Todos los datos del evento serán eliminados. Esta acción no se puede deshacer.",
-      "Button": "Eliminar evento"
+      "Button": "Eliminar evento",
+      "ConfirmTitle": "Eliminar evento",
+      "ConfirmDescription": "¿Estás seguro de que quieres eliminar este evento completo? Esta acción no se puede deshacer.",
+      "ConfirmButton": "Eliminar evento"
     },
     "TroublesShooting": {
-      "Title": "¿Experimenta problemas?",
-      "Description1": "Describa sus dificultades a",
-      "Description2": ", por favor incluya cualquier archivo relevante."
+      "Title": "¿Necesita ayuda o tiene alguna pregunta?",
+      "Description1": "Nuestro equipo de asistencia está listo para ayudarle con cualquier problema o pregunta. Póngase en contacto con nosotros en",
+      "Description2": "por favor incluya cualquier archivo relevante."
     },
     "Toast": {
       "DeleteFailTitle": "Error al eliminar datos",
       "DeleteSuccessDescription": "Datos eliminados correctamente"
     }
   },
+  "Home": {
+    "Hero": {
+      "Subtitle": "Resultados y eventos de orientación en vivo. Sincroniza carreras, sigue atletas y consulta todo en un lugar.",
+      "LiveResults": "Resultados en vivo",
+      "SplitAnalysis": "Análisis detallado de parciales",
+      "RealTimeEventControl": "Control del evento en tiempo real"
+    }
+  },
   "Profile": {
-    "OAuth2CredentialsForm": {
-      "Card": {
-        "Title": "Credenciales OAuth2",
-        "Description": "Por favor, genere las credenciales y asegúrese de guardarlas, ya que el secreto es confidencial y no se podrá mostrar de nuevo."
-      },
-      "Regenerate": "Regenerar secreto",
-      "Revoke": "Anular",
-      "ClientId": "ID del cliente",
-      "ClientSecret": "Secreto del cliente",
+    "MyEntries": {
+      "Title": "Mis entradas",
+      "Description": "Aquí encontrarás todos tus registros y elementos enviados. Puedes verlos, editarlos o seguir su estado."
+    },
+    "PersonalInfo": {
+      "Title": "Información personal",
+      "Description": "Aquí puedes ver y actualizar tus datos personales, tu información de contacto y otros ajustes de tu perfil.",
+      "SiCardNumber": "Número de tarjeta Sportident",
+      "EmergencyContact": "Contacto de emergencia"
+    },
+    "OAuth2": {
+      "Title": "Acceso a la API con OAuth2",
+      "Description": "Genera credenciales para acceder a la API mediante OAuth2. Necesitarás un Client ID y un Client Secret.",
+      "ClientId": "ID de cliente",
+      "ClientSecret": "Secreto de cliente (Client Secret)",
+      "Generate": "Generar nuevo Client Secret",
+      "Regenerate": "Regenerar secreto de cliente",
+      "SecretWarning": "Aviso importante",
+      "SecretWarningDescription": "Tu Client Secret es información sensible. No la compartas con nadie y guárdala de forma segura. No se mostrará de nuevo después de salir o actualizar esta página.",
+      "Revoke": "Revocar",
       "Toast": {
-        "GenerateSuccessDescription": "¡Credenciales OAuth2 generadas correctamente!",
-        "GenerateFailTitle": "Algo salió mal, por favor inténtelo de nuevo.",
-        "RevokeSuccessDescription": "¡Credenciales anuladas correctamente!",
-        "RevokeFailTitle": "No se pudieron anular las credenciales"
+        "GenerateSuccessDescription": "¡Las credenciales OAuth2 se han generado correctamente!",
+        "GenerateFailTitle": "Ha ocurrido un error, intente repetir la operación",
+        "RevokeSuccessDescription": "¡Las credenciales se han invalidado correctamente!",
+        "RevokeFailTitle": "No se han podido invalidar las credenciales"
+      },
+      "HowToUse": {
+        "Title": "Cómo usar OAuth2",
+        "Description": "Usa tu Client ID y Client Secret en una petición con grant_type=client_credentials al endpoint /auth/oauth2/token. Debajo tienes un ejemplo de petición usando curl."
       }
+    },
+    "OtherIntegrations": {
+      "Title": "Otras integraciones",
+      "Description": "Conecta tu cuenta con servicios y herramientas adicionales. Nuevas integraciones irán apareciendo aquí con el tiempo."
+    },
+    "Security": {
+      "PasswordDescription": "Aquí puedes cambiar la contraseña de tu cuenta. Te recomendamos usar una contraseña fuerte y única.",
+      "CurrentPassword": "Contraseña actual",
+      "NewPassword": "Nueva contraseña",
+      "ConfirmNewPassword": "Confirmar nueva contraseña",
+      "UpdatePassword": "Actualizar contraseña"
+    },
+    "Tabs": {
+      "Profile": "Perfil",
+      "Integrations": "Integraciones",
+      "Security": "Seguridad"
     }
   },
   "Organisms": {
@@ -258,7 +349,8 @@
       "Docs": "Documentación",
       "Donate": "Donar",
       "Blog": "Blog",
-      "LicensedUnderGnuGpl3": "Licenciado bajo la GNU GPL v3.0."
+      "MadeWith": "Fabricado con",
+      "ForOrienteering": "para orientación"
     }
   },
   "Molecules": {
@@ -285,6 +377,10 @@
         "ProcessingError": "Error al procesar el archivo"
       }
     },
+    "LanguageSelector": {
+      "Title": "Idioma",
+      "SelectLanguage": "Seleccionar idioma"
+    },
     "SearchBox": {
       "SearchResults": "Resultados de búsqueda"
     }
@@ -301,8 +397,10 @@
       "Home": "Inicio",
       "Events": "Eventos",
       "About": "Acerca de",
+      "Docs": "Documentación",
       "Contact": "Contacto",
-      "MRB": "Mi tablero de resultados"
+      "MRB": "Mi tablero de resultados",
+      "GitHub": "GitHub"
     }
   },
   "Validations": {

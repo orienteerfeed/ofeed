@@ -47,11 +47,11 @@ export type SearchBoxProps = {
   debounceMs?: number;
 };
 
-export function SearchBox({
+export const SearchBox = ({
   className,
   minChars = 3,
   debounceMs = 250,
-}: SearchBoxProps) {
+}: SearchBoxProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [input, setInput] = React.useState('');
@@ -160,6 +160,6 @@ export function SearchBox({
       </PopoverContent>
     </Popover>
   );
-}
+};
 
 export default SearchBox;

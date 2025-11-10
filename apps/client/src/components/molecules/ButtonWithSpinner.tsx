@@ -4,10 +4,10 @@ import { FC } from 'react';
 import { Button, type ButtonProps } from '../atoms';
 
 export interface ButtonWithSpinnerProps extends ButtonProps {
-  /** Zobrazí loading spinner a disablene tlačítko */
-  isSubmitting?: boolean;
-  /** Pozice spinneru (default: 'left') */
-  spinnerPosition?: 'left' | 'right';
+  /** Shows loading spinner and disables the button */
+  isSubmitting?: boolean | undefined;
+  /** Spinner position (default: 'left') */
+  spinnerPosition?: 'left' | 'right' | undefined;
 }
 
 export const ButtonWithSpinner: FC<ButtonWithSpinnerProps> = ({
@@ -18,13 +18,15 @@ export const ButtonWithSpinner: FC<ButtonWithSpinnerProps> = ({
   disabled,
   ...props
 }) => {
+  const isDisabled = isSubmitting || disabled;
+
   return (
     <Button
       {...props}
-      disabled={isSubmitting || disabled}
+      disabled={isDisabled}
       className={cn(
         'inline-flex items-center justify-center',
-        isSubmitting && 'cursor-wait',
+        isDisabled && '!cursor-not-allowed opacity-50',
         className
       )}
     >

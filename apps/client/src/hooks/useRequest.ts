@@ -4,6 +4,7 @@ import type {
   RequestOptions,
   RequestState,
   UseRequestReturn,
+  ValidationApiResponse,
 } from '@/types/api';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from '../utils';
@@ -51,11 +52,11 @@ export const useRequest = <T = any>(
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState((prev: RequestState<T>) => ({ ...prev, error: null }));
   }, []);
 
   const clearData = useCallback(() => {
-    setState(prev => ({ ...prev, data: null }));
+    setState((prev: RequestState<T>) => ({ ...prev, data: null }));
   }, []);
 
   const request = useCallback(
@@ -78,7 +79,7 @@ export const useRequest = <T = any>(
 
       log(`${method} ${url}`, options);
 
-      setState(prev => ({
+      setState((prev: RequestState<T>) => ({
         ...prev,
         isLoading: true,
         error: null,
@@ -132,23 +133,38 @@ export const useRequest = <T = any>(
         }
 
         if (!response.ok) {
+          // Handle validation errors - use type assertion for ValidationApiResponse
+          const validationData = data as ValidationApiResponse;
+          if (validationData.errors) {
+            throw new Error(
+              validationData.errors
+                .map(
+                  (err: { msg: string; param: string }) =>
+                    `${err.msg}: ${err.param}`
+                )
+                .join(', ')
+            );
+          }
+
+          // Handle other errors
           throw new Error(
-            data.errors
-              ? data.errors.map(err => `${err.msg}: ${err.param}`).join(', ')
-              : data.message || `Request failed with status ${response.status}`
+            data.message || `Request failed with status ${response.status}`
           );
         }
 
         log(`${method} ${url} success`, data);
 
-        setState(prev => ({
+        // Extract data from the response - your API uses 'results' for success
+        const responseData = 'results' in data ? data.results : data;
+
+        setState((prev: RequestState<T>) => ({
           ...prev,
-          data: (data.data || data) as T,
+          data: responseData as T,
           isLoading: false,
           error: null,
         }));
 
-        onSuccess?.((data.data || data) as T);
+        onSuccess?.(responseData as T);
       } catch (error: any) {
         // Ignore abort errors
         if (error.name === 'AbortError') {
@@ -159,7 +175,7 @@ export const useRequest = <T = any>(
 
         log(`${method} ${url} error`, error);
 
-        setState(prev => ({
+        setState((prev: RequestState<T>) => ({
           ...prev,
           isLoading: false,
           error: errorMessage,

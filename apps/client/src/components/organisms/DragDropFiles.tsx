@@ -9,7 +9,7 @@ import { DragDropContainer } from '../molecules/DragDropContainer';
 export const DragDropFile: React.FC<DragDropFileProps> = ({
   eventId,
   onUploadSuccess,
-  maxFiles = 2,
+  maxFiles = 1,
   allowedFormats = ['xml'],
 }) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -92,9 +92,15 @@ export const DragDropFile: React.FC<DragDropFileProps> = ({
     const formData = new FormData();
     formData.append('eventId', eventId);
 
-    files.forEach(file => {
-      formData.append('files', file.blob, file.name);
-    });
+    // Use for...of loop
+    for (const file of files) {
+      const asFile =
+        file.blob instanceof File
+          ? file.blob
+          : new File([file.blob], file.name, { type: file.type });
+      const toSend = await gzipBlobToFile(asFile, asFile.name);
+      formData.append('file', toSend, toSend.name);
+    }
 
     try {
       await request.request(ENDPOINTS.uploadIofXml(), {
@@ -162,3 +168,19 @@ export const DragDropFile: React.FC<DragDropFileProps> = ({
     </div>
   );
 };
+
+// Helper: gzip -> File .gz (fallback: no compression)
+async function gzipBlobToFile(blob: Blob, origName: string): Promise<File> {
+  // Modern browsers: CompressionStream('gzip')
+  if (typeof (window as any).CompressionStream === 'function') {
+    const cs = new (window as any).CompressionStream('gzip');
+    const gzStream = blob.stream().pipeThrough(cs);
+    const gzBlob = await new Response(gzStream).blob();
+    const name = origName.endsWith('.gz') ? origName : `${origName}.gz`;
+    return new File([gzBlob], name, { type: 'application/gzip' });
+  }
+  // Fallback (you can replace with pako library if you need gzip in older browsers)
+  return new File([blob], origName, {
+    type: blob.type || 'application/octet-stream',
+  });
+}

@@ -25,30 +25,23 @@ export interface BadgeProps extends Omit<ShadcnBadgeProps, 'ref'> {
 /**
  * Badge atom component - wrapper around shadcn/ui Badge
  * Preserves all default styles and adds useful features
- *
- * @example
- * <Badge variant="default">New</Badge>
- *
- * @example
- * <Badge
- *   variant="destructive"
- *   icon={<AlertCircle className="h-3 w-3" />}
- *   count={5}
- * />
  */
 export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
-  ({
-    className,
-    icon,
-    trailingIcon,
-    iconPosition = 'left',
-    isLoading = false,
-    count,
-    maxCount = 99,
-    dot = false,
-    children,
-    ...props
-  }) => {
+  (
+    {
+      className,
+      icon,
+      trailingIcon,
+      iconPosition = 'left',
+      isLoading = false,
+      count,
+      maxCount = 99,
+      dot = false,
+      children,
+      ...props
+    },
+    ref
+  ) => {
     // Processing count for badge with number
     const displayCount = useMemo(() => {
       if (dot) return null;
@@ -61,6 +54,8 @@ export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
     if (isLoading) {
       return (
         <ShadcnBadge
+          // @ts-expect-error - ref is valid but types don't match
+          ref={ref}
           className={cn('animate-pulse bg-muted text-transparent', className)}
           {...props}
         >
@@ -71,6 +66,8 @@ export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
 
     return (
       <ShadcnBadge
+        // @ts-expect-error - ref is valid but types don't match
+        ref={ref}
         className={cn('inline-flex items-center gap-1', className)}
         {...props}
       >

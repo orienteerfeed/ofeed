@@ -5,10 +5,32 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Primary Meta Tags -->
+    <title>OFeed</title>
+    <meta name="title" content="OrienteerFeed - Live Orienteering Events" />
+    <meta
+      name="description"
+      content="Real-time results, split analysis and last-minute entries for orienteering events. Second-by-second updates for organizers, athletes, and fans."
+    />
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2E7D32" />
+    <meta name="application-name" content="OFeed" />
+
+    <!-- Apple Specific -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="OFeed" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" sizes="192x192" />
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
 
-    <title>OFeed</title>
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/main.tsx" as="script" />
   </head>
   <body>
     <div id="root"></div>

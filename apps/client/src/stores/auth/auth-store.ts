@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { AuthStore, User } from './types';
+import type { User } from '../../types';
+import type { AuthStore } from './types';
 
 const initialState = {
   token: null,
@@ -34,7 +35,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'orienteerfeed-auth',
+      name: 'ofeed-auth',
       storage: createJSONStorage(() => localStorage),
       // Optional: migrate old storage format
       migrate: (persistedState: any, version: number) => {
@@ -52,6 +53,6 @@ export const useAuthStore = create<AuthStore>()(
 export const useToken = () => useAuthStore(state => state.token);
 export const useUser = () => useAuthStore(state => state.user);
 export const useIsAuthenticated = () =>
-  useAuthStore(state => state.isAuthenticated());
-export const useAuthActions = () =>
-  useAuthStore(state => ({ signin: state.signin, signout: state.signout }));
+  useAuthStore(s => Boolean(s.token && s.user && s.user.id && s.user.email));
+export const useSignin = () => useAuthStore(s => s.signin);
+export const useSignout = () => useAuthStore(s => s.signout);

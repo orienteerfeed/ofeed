@@ -17,7 +17,7 @@ export type TooltipProps = {
   sideOffset?: ContentProps['sideOffset'];
 };
 
-const Tooltip: React.FC<TooltipProps> = ({
+export const Tooltip: React.FC<TooltipProps> = ({
   children,
   content,
   side,

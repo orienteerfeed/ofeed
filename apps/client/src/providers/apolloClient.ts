@@ -1,3 +1,4 @@
+// lib/apollo-client.ts
 import {
   ApolloClient,
   ApolloLink,
@@ -9,6 +10,7 @@ import { ErrorLink } from '@apollo/client/link/error';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
+import { getGraphQLUrls, getToken } from '../lib/api/apollo-client-helper';
 
 export type ApolloUrls = {
   httpUrl: string;
@@ -35,7 +37,7 @@ function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
     credentials: 'include',
   });
 
-  // --- Auth headers using SetContextLink (updated approach due to deprecation)
+  // --- Auth headers using SetContextLink
   const authLink = new SetContextLink((_, previousContext) => {
     const token = getToken();
     return {
@@ -112,7 +114,6 @@ export function createApolloClient(
       Query: {
         fields: {
           // Add your type policies here
-          // events: relayStylePagination(),
         },
       },
     },
@@ -123,3 +124,13 @@ export function createApolloClient(
     cache,
   });
 }
+
+const { httpUrl, wsUrl } = getGraphQLUrls();
+
+export const apolloClient = createApolloClient(
+  {
+    httpUrl,
+    wsUrl,
+  },
+  getToken
+);

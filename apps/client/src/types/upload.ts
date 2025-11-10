@@ -3,7 +3,7 @@ export interface UploadedFile {
   data: string; // base64 data URL
   type: string; // mime type
   size: number; // bytes
-  blob: Blob;
+  blob: Blob | File;
 }
 
 export interface DragDropFileProps {

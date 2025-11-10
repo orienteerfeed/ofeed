@@ -1,222 +1,198 @@
-import { Card, CardContent } from '@/components/ui/card';
-import PATHNAMES from '@/lib/paths/pathnames';
-import { Link, useLocation } from '@tanstack/react-router';
-import { Bell, Menu } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../hooks/useAuth';
-import { Badge, Button } from '../atoms';
+import { Button } from '@/components/ui/button';
 import {
-  Dropdown,
-  SearchBox,
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { useIsAuthenticated, useUser } from '@/stores/auth/auth-store';
+import { Link } from '@tanstack/react-router';
+import { TFunction } from 'i18next';
+import { Menu, User } from 'lucide-react';
+import { useState } from 'react';
+import { NavLink } from '../../templates/MainPageLayout';
+import { ExternalLink } from '../atoms';
+import {
+  EventSearchDialog,
+  LanguageSelector,
+  NotificationBell,
   ThemeToggleButton,
-  UserAvatar,
+  UserMenu,
 } from '../molecules';
 
-// Definice chybějících typů
-type TFunction = ReturnType<typeof useTranslation>['t'];
-
-interface RouteItem {
-  name: string;
-  path: string;
-  layout?: string;
-}
-
 interface NavbarProps {
-  routes: RouteItem[];
-  onOpenSidenav: () => void;
-  pageName?: string | undefined;
+  navLinks: NavLink[];
   t: TFunction;
 }
 
-interface CurrentRoute {
-  name: string;
-  path: string;
-}
+export function Navbar({ navLinks, t }: NavbarProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const isLoggedIn = useIsAuthenticated();
+  const user = useUser();
 
-export const Navbar: React.FC<NavbarProps> = ({
-  routes,
-  onOpenSidenav,
-  pageName,
-  t,
-}) => {
-  const location = useLocation();
-  const { token, user, signout } = useAuth();
-  const [currentRoute, setCurrentRoute] = useState<CurrentRoute>({
-    name: '',
-    path: PATHNAMES.home().to,
-  });
+  // Generate initials from user name
+  const getInitials = (...parts: Array<string | undefined | null>) => {
+    const letters = parts
+      .flatMap(p => (p ?? '').trim().split(/\s+/)) // rozdělit víceslovná jména
+      .filter(Boolean)
+      .map(s => s[0] as string);
 
-  useEffect(() => {
-    getActiveRoute(routes);
-  }, [location.pathname, routes]);
-
-  const getActiveRoute = (routes: RouteItem[]) => {
-    for (const route of routes) {
-      if (window.location.href.includes(route.path)) {
-        setCurrentRoute({ name: route.name, path: route.path });
-        break;
-      }
-    }
+    return letters.join('').toUpperCase().slice(0, 2);
   };
 
+  // Use with separately stored first and last names
+  const userWithInitials = user
+    ? {
+        ...user,
+        initials: getInitials(user.firstname, user.lastname),
+      }
+    : undefined;
+
   return (
-    <nav className="sticky top-4 z-40 flex items-center justify-between rounded-xl border bg-background/80 p-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 md:p-4">
-      {/* Breadcrumb - Hidden on mobile */}
-      <div className="hidden md:flex items-center gap-2">
-        <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-          <Link
-            {...PATHNAMES.home()}
-            className="transition-colors hover:text-foreground"
-          >
-            {t('Organisms.Navbar.Pages')}
-          </Link>
-          <span className="text-muted-foreground/60">/</span>
-          <Link
-            to={currentRoute.path}
-            className="capitalize transition-colors hover:text-foreground"
-          >
-            {currentRoute.name}
-          </Link>
-        </div>
-        <div className="ml-4">
-          <h1 className="text-2xl font-bold tracking-tight">
-            <Link
-              to={currentRoute.path}
-              className="transition-colors hover:text-foreground/80"
-            >
-              {pageName || currentRoute.name}{' '}
-              {/* pageName může být undefined */}
-            </Link>
-          </h1>
-        </div>
-      </div>
-
-      {/* Zbytek kódu zůstává stejný... */}
-      <div className="flex flex-1 items-center justify-end gap-2 md:flex-initial md:gap-4">
-        {/* Search Box */}
-        <div className="hidden sm:flex flex-1 max-w-sm">
-          <SearchBox />
-        </div>
-
-        {/* Mobile menu button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="xl:hidden"
-          onClick={onOpenSidenav}
+    <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm">
+      <div className="container mx-auto flex items-center justify-between px-4 py-3">
+        {/* Logo - vlevo */}
+        <Link
+          to="/"
+          className="flex shrink-0 items-center gap-2"
+          activeProps={{
+            className: 'text-primary',
+          }}
         >
-          <Menu className="h-5 w-5" />
-        </Button>
-
-        {/* Theme Toggle */}
-        <ThemeToggleButton />
-
-        {/* Notifications */}
-        <Dropdown
-          trigger={
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <Badge
-                className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
-                variant="destructive"
-              >
-                3
-              </Badge>
-            </Button>
-          }
-          className="w-80"
-        >
-          <div className="flex flex-col gap-3 p-1">
-            <div className="flex items-center justify-between px-2 py-1">
-              <p className="text-base font-bold text-foreground">
-                Notification
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-auto p-0 text-sm font-bold"
-              >
-                Mark all read
-              </Button>
-            </div>
-
-            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-              <CardContent className="p-3">
-                <div className="flex items-start space-x-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-b from-primary to-primary/60 text-primary-foreground">
-                    <Bell className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-bold text-foreground">
-                      New Update: Notifications for selected competitors and
-                      classes
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      ... coming soon
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="text-2xl font-bold tracking-tight md:text-3xl">
+            <span className="text-primary">O</span>FEED
           </div>
-        </Dropdown>
+        </Link>
 
-        {/* User Menu */}
-        {token ? (
-          <Dropdown
-            trigger={
-              <Button variant="ghost" className="p-0 h-auto">
-                <UserAvatar
-                  firstName={user?.firstname}
-                  lastName={user?.lastname}
-                />
+        {/* Desktop Navigation - uprostřed */}
+        <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
+          {navLinks.map(link =>
+            link.external ? (
+              <ExternalLink key={link.path} href={link.path}>
+                {link.label}
+              </ExternalLink>
+            ) : (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="text-sm font-medium transition-colors hover:text-primary"
+                activeProps={{
+                  className: 'text-primary font-semibold',
+                }}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+        </nav>
+
+        {/* Desktop Actions - vpravo */}
+        <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-1 sm:flex">
+            <EventSearchDialog />
+            {isLoggedIn && <NotificationBell />}
+            <LanguageSelector />
+            <ThemeToggleButton />
+          </div>
+
+          {/* User Menu / Sign In */}
+          {isLoggedIn && userWithInitials ? (
+            <UserMenu user={userWithInitials} t={t} />
+          ) : (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/auth/signin">
+                <User className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Sign In</span>
+              </Link>
+            </Button>
+          )}
+
+          {/* Mobile Menu Trigger - vpravo v mobilním zobrazení */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="sm" className="ml-2">
+                <Menu className="h-5 w-5" />
               </Button>
-            }
-            className="w-56"
-          >
-            <div className="flex flex-col p-1">
-              <div className="p-2">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-foreground">
-                    👋 Hey, {user?.firstname}
-                  </p>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-64">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <div className="flex flex-col gap-6">
+                {/* Mobile Actions */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <EventSearchDialog />
+                    {isLoggedIn && <NotificationBell />}
+                    <LanguageSelector />
+                    <ThemeToggleButton />
+                  </div>
                 </div>
-              </div>
-              <div className="h-px bg-border my-1" />
 
-              <div className="flex flex-col space-y-1 p-1">
-                <Button
-                  variant="ghost"
-                  className="justify-start h-auto py-2 px-2 text-sm"
-                  asChild
-                >
-                  <Link {...PATHNAMES.profile()}>
-                    {t('Organisms.Navbar.MyProfile')}
-                  </Link>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="justify-start h-auto py-2 px-2 text-sm"
-                >
-                  Notification Settings
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="justify-start h-auto py-2 px-2 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={signout}
-                >
-                  {t('Organisms.Navbar.LogOut')}
-                </Button>
+                {/* Mobile Navigation - roztažený obsah */}
+                <nav className="flex flex-col gap-4">
+                  {navLinks.map(link =>
+                    link.external ? (
+                      <a
+                        key={link.path}
+                        href={link.path}
+                        className="flex items-center justify-between py-2 text-lg font-medium transition-colors hover:text-primary"
+                        onClick={() => setIsOpen(false)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {link.label}
+                        <span className="text-xs text-muted-foreground">
+                          ↗
+                        </span>
+                      </a>
+                    ) : (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        className="flex items-center justify-between py-2 text-lg font-medium transition-colors hover:text-primary"
+                        activeProps={{
+                          className: 'text-primary font-semibold',
+                        }}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {link.label}
+                      </Link>
+                    )
+                  )}
+                </nav>
+
+                {/* User Info / Sign In v mobilním menu */}
+                {isLoggedIn && userWithInitials ? (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                        {userWithInitials.initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {userWithInitials.firstname}{' '}
+                          {userWithInitials.lastname}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {userWithInitials.club}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-t pt-4">
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link to="/auth/signin" onClick={() => setIsOpen(false)}>
+                        <User className="mr-2 h-4 w-4" />
+                        Sign In
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </div>
-            </div>
-          </Dropdown>
-        ) : (
-          <Button asChild variant="default" size="sm">
-            <Link {...PATHNAMES.signIn()}>{t('Organisms.Navbar.SignIn')}</Link>
-          </Button>
-        )}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
-    </nav>
+    </header>
   );
-};
+}

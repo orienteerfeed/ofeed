@@ -3,6 +3,9 @@ export const typeDef = /* GraphQL */ `
     competitorById(id: Int!): Competitor!
     competitorsByClass(id: Int!): [Competitor!]
     competitorsByTeam(id: Int!): [Competitor!]
+    competitorsByOrganisation(eventId: String!, organisation: String!): [Competitor!]
+    organisations(eventId: String!): [Organisation!]!
+    searchOrganisations(eventId: String!, q: String!): [Organisation!]!
   }
   extend type Mutation {
     competitorStatusChange(input: StatusChange!): ResponseMessage!
@@ -47,6 +50,10 @@ export const typeDef = /* GraphQL */ `
     externalId: String
     updatedAt: String!
     splits: [Split!]
+  }
+  type Organisation {
+    name: String!
+    competitors: Int!
   }
   input StatusChange {
     eventId: ID!

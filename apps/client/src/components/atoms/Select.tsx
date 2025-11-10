@@ -25,6 +25,8 @@ export type SelectProps = Omit<
   className?: string;
   contentClassName?: string;
   disabled?: boolean;
+  /** Tailwind class for max height, e.g. "max-h-60" */
+  maxHeightClass?: string;
 };
 
 export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
@@ -37,6 +39,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
       className,
       contentClassName,
       disabled,
+      maxHeightClass = 'max-h-100',
       ...props
     },
     ref
@@ -56,7 +59,11 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
 
-        <SelectContent className={cn(contentClassName)}>
+        <SelectContent
+          // Important: last class wins → overflow-auto přebije base overflow-hidden
+          className={cn('overflow-auto', maxHeightClass, contentClassName)}
+          position="popper"
+        >
           {options.map(opt => (
             <SelectItem
               key={opt.value}

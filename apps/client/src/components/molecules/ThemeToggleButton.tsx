@@ -5,13 +5,19 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms';
 
-export function ThemeToggleButton() {
+export const ThemeToggleButton = () => {
   const { t } = useTranslation('common');
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className="w-9 h-9">
+        <Sun className="h-4 w-4" />
+      </Button>
+    );
+  }
 
   const isDark = resolvedTheme === 'dark';
   const label = t('Theme.Toggle', { defaultValue: 'Toggle theme' });
@@ -38,6 +44,6 @@ export function ThemeToggleButton() {
       </motion.div>
     </AnimatePresence>
   );
-}
+};
 
 export default ThemeToggleButton;

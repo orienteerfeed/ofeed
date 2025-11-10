@@ -7,28 +7,28 @@ import { cn } from '@/lib/utils';
 import * as React from 'react';
 
 export type DropdownProps = {
-  /** Obsah spouštěče (tlačítko, ikona, cokoliv) */
+  /** Trigger content (button, icon, anything) */
   trigger: React.ReactNode;
-  /** Obsah menu: použij shadcn položky (DropdownMenuItem, Label, Separator, …) */
+  /** Menu content: use shadcn items (DropdownMenuItem, Label, Separator, …) */
   children: React.ReactNode;
-  /** Extra class pro obsah (Content) – shadcn defaulty zůstávají zachovány */
+  /** Extra class for the content (Content) – shadcn defaults remain intact */
   className?: string;
-  /** Zarovnání obsahu vůči triggeru (shadcn/Radix prop) */
+  /** Alignment of the content relative to the trigger (shadcn/Radix prop) */
   align?: 'start' | 'center' | 'end';
-  /** Strana, na které se menu objeví (shadcn/Radix prop) */
+  /** Side on which the menu appears (shadcn/Radix prop) */
   side?: 'top' | 'right' | 'bottom' | 'left';
-  /** Offset od triggeru (px) */
+  /** Offset from the trigger (px) */
   sideOffset?: number;
-  /** Zda použít `asChild` pro trigger (užitečné pro vlastní buttony) */
+  /** Whether to use `asChild` for the trigger (useful for custom buttons) */
   asChildTrigger?: boolean;
 };
 
 /**
  * Dropdown (Molecule)
- * - Lehký obal nad shadcn/ui DropdownMenu.
- * - Řeší trigger a content; položky menu předej v `children`.
+ * - Lightweight wrapper around shadcn/ui DropdownMenu.
+ * - Handles trigger and content; pass menu items through `children`.
  */
-export function Dropdown({
+export const Dropdown = ({
   trigger,
   children,
   className,
@@ -36,16 +36,16 @@ export function Dropdown({
   side = 'bottom',
   sideOffset = 4,
   asChildTrigger = true,
-}: DropdownProps) {
+}: DropdownProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild={asChildTrigger}>
-        {/* Když nepoužiješ asChild, Radix vyrenderuje <button> */}
+        {/* If you don't use asChild, Radix will render a <button> */}
         {asChildTrigger ? (
-          // když `trigger` je např. <button> nebo <div>, projde beze změny
+          // if `trigger` is e.g. a <button> or <div>, it passes through unchanged
           <>{trigger}</>
         ) : (
-          // fallback – zabalení triggeru do <button>
+          // fallback – wrap trigger in a <button>
           <button type="button">{trigger}</button>
         )}
       </DropdownMenuTrigger>
@@ -60,4 +60,5 @@ export function Dropdown({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+Dropdown.displayName = 'Dropdown';

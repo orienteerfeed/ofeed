@@ -1,13 +1,13 @@
-import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/use/ws';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
+import cors from 'cors';
+import express from 'express';
+import { useServer } from 'graphql-ws/use/ws';
+import morgan from 'morgan';
+import path from 'path';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import path from 'path';
+import { WebSocketServer } from 'ws';
 
 import restRoutes from './restRoutes.js';
 import { error, success } from './utils/responseApi.js';
@@ -25,7 +25,12 @@ const app = express();
 app.use(morgan('tiny'));
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',  // nebo (origin, cb) => cb(null, true) pro dynamiku
+  credentials: true,                // pokud používáš cookies
+  methods: ['GET','POST','PUT','DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+}));
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use('/mrb/assets', express.static('mrb/assets', { fallthrough: false }));
@@ -104,14 +109,14 @@ app.use(
     context: ({ req }) => {
       // Get the Authorization header
       const authHeader = req.headers.authorization || '';
-      
+
       let token = null;
       let basicAuthCredentials = null;
 
       // Check if it's a Bearer token
       if (authHeader.startsWith('Bearer ')) {
         token = authHeader.replace(/^Bearer\s/, '');
-      } 
+      }
       // Check if it's Basic Auth
       else if (authHeader.startsWith('Basic ')) {
         const base64Credentials = authHeader.replace(/^Basic\s/, '');

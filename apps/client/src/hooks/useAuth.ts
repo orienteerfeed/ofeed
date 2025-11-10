@@ -1,9 +1,11 @@
 import {
-  useAuthActions,
   useIsAuthenticated,
+  useSignin,
+  useSignout,
   useToken,
   useUser,
 } from '@/stores/auth';
+import { useMemo } from 'react';
 
 /**
  * Main auth hook that provides authentication state and actions
@@ -12,18 +14,22 @@ export const useAuth = () => {
   const token = useToken();
   const user = useUser();
   const isAuthenticated = useIsAuthenticated();
-  const { signin, signout } = useAuthActions();
+  const signin = useSignin();
+  const signout = useSignout();
 
-  return {
-    token,
-    user,
-    isAuthenticated,
-    signin,
-    signout,
-    // Utility functions
-    hasRole: (role: string) => user?.role === role,
-    isAdmin: () => user?.role === 'admin',
-  };
+  // (volitelné) stabilizuj návratovou hodnotu
+  return useMemo(
+    () => ({
+      token,
+      user,
+      isAuthenticated,
+      signin,
+      signout,
+      hasRole: (role: string) => user?.role === role,
+      isAdmin: () => user?.role === 'admin',
+    }),
+    [token, user, isAuthenticated, signin, signout]
+  );
 };
 
 /**
@@ -31,8 +37,7 @@ export const useAuth = () => {
  */
 export const useAuthForRequest = () => {
   const token = useToken();
-  const { signout } = useAuthActions();
-
+  const { signout } = useAuth();
   return {
     token,
     logout: signout,
@@ -40,9 +45,10 @@ export const useAuthForRequest = () => {
 };
 
 export {
-  useAuthActions,
   useAuthStore,
   useIsAuthenticated,
+  useSignin,
+  useSignout,
   useToken,
   useUser,
 } from '@/stores/auth';

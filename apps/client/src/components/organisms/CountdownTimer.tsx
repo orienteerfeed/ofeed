@@ -80,15 +80,25 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
 };
 
 const TimerElement: React.FC<TimerElementProps> = ({ label, value }) => {
+  const s = value.toString().padStart(2, '0');
+
   return (
     <div className="flex flex-col items-center">
-      <div className="relative bg-primary rounded-md px-2 py-1 min-w-[50px]">
-        {/* Vertical line in the middle */}
-        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-white z-10" />
-        <h3 className="text-lg text-white text-center tracking-[0.2em] font-mono tabular-nums">
-          {value.toString().padStart(2, '0')}
-        </h3>
+      <div className="relative bg-primary rounded-md min-w-[56px] h-10 px-3">
+        {/* vertical dividing line in the middle of the box */}
+        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-white/80 z-10" />
+
+        {/* two cells, each digit exactly in the middle of its half */}
+        <div className="grid grid-cols-2 h-full w-full place-items-center gap-x-2">
+          <span className="font-mono tabular-nums text-lg leading-none text-white z-20">
+            {s[0]}
+          </span>
+          <span className="font-mono tabular-nums text-lg leading-none text-white z-20">
+            {s[1]}
+          </span>
+        </div>
       </div>
+
       <p className="text-sm font-normal text-gray-900 dark:text-white mt-1 text-center">
         {label}
       </p>

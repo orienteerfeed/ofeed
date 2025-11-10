@@ -3,32 +3,32 @@ import { body, check, query, validationResult } from 'express-validator';
 
 import {
   AuthenticationError,
-  ValidationError,
   DatabaseError,
+  ValidationError,
 } from '../../exceptions/index.js';
 import {
-  validation as validationResponse,
   error as errorResponse,
   success as successResponse,
+  validation as validationResponse,
 } from '../../utils/responseApi.js';
 
-import validateEvent from '../../utils/validateEvent.js';
-import { formatErrors } from '../../utils/errors.js';
-import { encrypt, encodeBase64 } from '../../utils/cryptoUtils.js';
 import prisma from '../../utils/context.js';
+import { encodeBase64, encrypt } from '../../utils/cryptoUtils.js';
+import { formatErrors } from '../../utils/errors.js';
+import validateEvent from '../../utils/validateEvent.js';
 
-import {
-  changeCompetitorStatus,
-  storeCompetitor,
-  updateCompetitor,
-  getDecryptedEventPassword,
-  deleteEventCompetitors,
-  deleteAllEventData,
-} from './eventService.js';
 import {
   validateCreateCompetitor,
   validateUpdateCompetitor,
 } from '../../utils/validateCompetitor.js';
+import {
+  changeCompetitorStatus,
+  deleteAllEventData,
+  deleteEventCompetitors,
+  getDecryptedEventPassword,
+  storeCompetitor,
+  updateCompetitor,
+} from './eventService.js';
 
 const router = Router();
 
@@ -145,6 +145,7 @@ const generatePassword = (wordCount = 3) => {
  *              - location
  *              - zeroTime
  *              - sportId
+ *              - countryCode
  *            properties:
  *              name:
  *                type: string
@@ -173,7 +174,7 @@ const generatePassword = (wordCount = 3) => {
  *                format: float
  *                description: "Geographical longitude of the event location, ranging from -180 to 180 degrees."
  *                example: 14.4378
- *              country:
+ *              countryCode:
  *                type: string
  *                description: Optional 2-character country code. Must exist in the table of countries.
  *                minLength: 2
@@ -234,7 +235,7 @@ router.post('/', validateEvent, async (req, res) => {
     location,
     latitude,
     longitude,
-    country,
+    countryCode,
     zeroTime,
     ranking,
     coefRanking,
@@ -261,7 +262,7 @@ router.post('/', validateEvent, async (req, res) => {
         location,
         latitude,
         longitude,
-        countryId: country,
+        countryId: countryCode,
         zeroTime: new Date(zeroTime),
         ranking,
         coefRanking,

@@ -9,7 +9,12 @@
     "Submit": "Enviar",
     "Submitting": "Enviando...",
     "Success": "Éxito",
-    "Error": "Error"
+    "Error": "Error",
+    "Create": "Crear",
+    "Update": "Actualizar",
+    "Cancel": "Cancelar",
+    "Save": "Guardar",
+    "Configure": "Configurar"
   },
   "Settings": "Configuraciones",
   "Loading": "Cargando...",
@@ -33,5 +38,9 @@
   "Search": "Buscar",
   "Close": "Cerrar",
   "NoResults": "No hay resultados",
-  "TypeAtLeastNCharacters": "Escriba al menos {{n}} caracteres…"
+  "TypeAtLeastNCharacters": "Escriba al menos {{n}} caracteres…",
+  "View": "Vista",
+  "ComingSoon": "Próximamente",
+  "NotImplementedTitle": "Todavía no implementado",
+  "NotImplementedDescription": "Aún no está disponible. Estamos trabajando en esta función."
 }

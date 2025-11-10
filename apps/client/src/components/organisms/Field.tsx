@@ -2,10 +2,10 @@ import { useField } from '@tanstack/react-form';
 import React from 'react';
 import { InputWithHelper } from '../molecules/InputWithHelper';
 
-// Simplified approach - define props more directly
 export type FieldProps = {
   name: string;
   validate?: (value: any) => string | undefined;
+  form?: any;
 } & (
   | {
       type: 'select';
@@ -21,25 +21,43 @@ export type FieldProps = {
     }
 );
 
-export function Field(props: FieldProps): React.JSX.Element {
-  const { name, validate, type = 'text', ...inputProps } = props;
+export const Field = (props: FieldProps): React.JSX.Element => {
+  const { name, validate, type = 'text', form, ...inputProps } = props;
+  const [localError, setLocalError] = React.useState<string | undefined>();
+  const validationTimeoutRef = React.useRef<number | null>(null);
 
+  // Use the field without explicit typing UseFieldOptions
   const field = useField({
-    name,
+    name: name as any,
+    form: form,
     validators: {
-      onChange: validate
-        ? ({ value }: { value: any }) => validate(value)
-        : undefined,
-      onBlur: validate
-        ? ({ value }: { value: any }) => validate(value)
-        : undefined,
+      onBlur: validate ? ({ value }) => validate(value) : undefined,
     },
-  } as any);
+  });
 
-  const error: string | undefined =
-    field.state.meta.errors.length > 0
-      ? field.state.meta.errors.join(', ')
-      : undefined;
+  const handleLocalValidation = (value: string) => {
+    if (!validate) return;
+
+    // Clear previous timeout
+    if (validationTimeoutRef.current) {
+      clearTimeout(validationTimeoutRef.current);
+    }
+
+    // Debounce validation - spustí se po 500ms od poslední změny
+    validationTimeoutRef.current = setTimeout(() => {
+      const error = validate(value);
+      setLocalError(error);
+    }, 500);
+  };
+
+  const handleBlur = (): void => {
+    // Validate immediately when leaving the field
+    if (validate) {
+      const error = validate(field.state.value as string);
+      setLocalError(error);
+    }
+    field.handleBlur();
+  };
 
   // Handle different input types
   const handleValueChange = (value: string): void => {
@@ -47,12 +65,41 @@ export function Field(props: FieldProps): React.JSX.Element {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    field.handleChange(e.target.value);
+    const value = e.target.value;
+    field.handleChange(value);
+    handleLocalValidation(value);
   };
 
   const handleCheckboxChange = (checked: boolean | 'indeterminate'): void => {
-    field.handleChange(checked === true);
+    const value = checked === true;
+    field.handleChange(value);
+    if (validate) {
+      const error = validate(value);
+      setLocalError(error);
+    }
   };
+
+  const displayError =
+    localError ||
+    (field.state.meta.errors.length > 0
+      ? field.state.meta.errors.join(', ')
+      : undefined);
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Reset local error when field is reset
+  React.useEffect(() => {
+    if (!field.state.value) {
+      setLocalError(undefined);
+    }
+  }, [field.state.value]);
 
   // Render based on type
   if (type === 'select') {
@@ -62,8 +109,8 @@ export function Field(props: FieldProps): React.JSX.Element {
         name={name}
         value={(field.state.value as string) ?? ''}
         onValueChange={handleValueChange}
-        onBlur={field.handleBlur}
-        error={error}
+        onBlur={handleBlur}
+        error={displayError}
         {...(inputProps as any)}
       />
     );
@@ -76,8 +123,8 @@ export function Field(props: FieldProps): React.JSX.Element {
         name={name}
         checked={Boolean(field.state.value)}
         onCheckedChange={handleCheckboxChange}
-        onBlur={field.handleBlur}
-        error={error}
+        onBlur={handleBlur}
+        error={displayError}
         {...(inputProps as any)}
       />
     );
@@ -90,9 +137,9 @@ export function Field(props: FieldProps): React.JSX.Element {
       name={name}
       value={(field.state.value as string) ?? ''}
       onChange={handleInputChange}
-      onBlur={field.handleBlur}
-      error={error}
+      onBlur={handleBlur}
+      error={displayError}
       {...(inputProps as any)}
     />
   );
-}
+};

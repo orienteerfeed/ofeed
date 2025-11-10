@@ -1,4 +1,3 @@
-// src/components/atoms/AlertDescription.tsx
 import { AlertDescription as ShadAlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import * as React from 'react';

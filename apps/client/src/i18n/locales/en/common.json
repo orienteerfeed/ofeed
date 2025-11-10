@@ -9,7 +9,12 @@
     "Submit": "Submit",
     "Submitting": "Submitting...",
     "Success": "Success",
-    "Error": "Error"
+    "Error": "Error",
+    "Create": "Create",
+    "Update": "Update",
+    "Cancel": "Cancel",
+    "Save": "Save",
+    "Configure": "Configure"
   },
   "Settings": "Settings",
   "Loading": "Loading...",
@@ -33,5 +38,9 @@
   "Search": "Search",
   "Close": "Close",
   "NoResults": "No results",
-  "TypeAtLeastNCharacters": "Type at least {{n}} characters…"
+  "TypeAtLeastNCharacters": "Type at least {{n}} characters…",
+  "View": "View",
+  "ComingSoon": "Coming soon",
+  "NotImplementedTitle": "Not implemented yet",
+  "NotImplementedDescription": "Function is not available yet. We are working on this feature."
 }

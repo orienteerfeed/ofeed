@@ -1,4 +1,3 @@
-// src/components/atoms/VisibilityBadge.tsx
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +7,10 @@ export type VisibilityBadgeProps = {
   className?: string;
 };
 
-export function VisibilityBadge({ isPublic, className }: VisibilityBadgeProps) {
+export const VisibilityBadge = ({
+  isPublic,
+  className,
+}: VisibilityBadgeProps) => {
   const { t } = useTranslation('common');
 
   return (
@@ -21,4 +23,4 @@ export function VisibilityBadge({ isPublic, className }: VisibilityBadgeProps) {
       {isPublic ? t('Public') : t('Private')}
     </Badge>
   );
-}
+};

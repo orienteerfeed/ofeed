@@ -28,13 +28,15 @@ interface PaginationParams extends QueryParams {
 }
 
 // Strongly-typed route builders
-export const endpoints = {
+export const ENDPOINTS = {
   // Auth endpoints
   signIn: (): string => `${apiPrefix}/auth/signin`,
   signUp: (): string => `${apiPrefix}/auth/signup`,
   fetchOAuth2Credentials: (): string => `${apiPrefix}/auth/oauth2-credentials`,
   generateOAuth2Credentials: (): string =>
     `${apiPrefix}/auth/generate-oauth2-credentials`,
+  revokeOAuth2Credentials: (): string =>
+    `${apiPrefix}/auth/revoke-oauth2-credentials`,
 
   // My events endpoints
   myEvents: (params?: PaginationParams): string =>
@@ -56,11 +58,11 @@ export const endpoints = {
   uploadIofXml: (): string => `${apiPrefix}/upload/iof`,
 } as const;
 
-export type EndpointKey = keyof typeof endpoints;
+export type EndpointKey = keyof typeof ENDPOINTS;
 
 // Type for endpoint function parameters
 export type EndpointParams<K extends EndpointKey> = Parameters<
-  (typeof endpoints)[K]
+  (typeof ENDPOINTS)[K]
 >;
 
 /** Build absolute URL using configured API base */
@@ -68,7 +70,7 @@ export function apiUrl<K extends EndpointKey>(
   key: K,
   ...args: EndpointParams<K>
 ): string {
-  const endpointFn = endpoints[key] as (...args: unknown[]) => string;
+  const endpointFn = ENDPOINTS[key] as (...args: unknown[]) => string;
   const relativePath = endpointFn(...args);
 
   // Remove trailing slashes from base URL and combine with path
@@ -77,4 +79,4 @@ export function apiUrl<K extends EndpointKey>(
 }
 
 // Export endpoints as default
-export default endpoints;
+export default ENDPOINTS;

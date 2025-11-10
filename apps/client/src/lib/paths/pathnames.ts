@@ -1,43 +1,36 @@
-export const pathnames = {
+export const PATHNAMES = {
   home: () => ({ to: '/', params: {} as const }),
   about: () => ({ to: '/about', params: {} as const }),
   contact: () => ({ to: '/contact', params: {} as const }),
   event: () => ({ to: '/event', params: {} as const }),
   myEvents: () => ({ to: '/my-events', params: {} as const }),
   eventDetail: (eventId: string) => ({
-    to: '/event/$eventId',
+    to: '/events/$eventId',
     params: { eventId } as const,
+    url: `/events/${eventId}`,
   }),
   eventReport: (eventId: string) => ({
-    to: '/event/$eventId/report',
+    to: '/events/$eventId/report',
     params: { eventId } as const,
   }),
   eventSettings: (eventId: string) => ({
-    to: '/event/$eventId/settings',
+    to: '/events/$eventId/settings',
     params: { eventId } as const,
   }),
   classDetail: (eventId: string, classId: string) => ({
-    to: '/event/$eventId/class/$classId',
+    to: '/events/$eventId/class/$classId',
     params: { eventId, classId } as const,
   }),
   profile: () => ({ to: '/profile', params: {} as const }),
   blog: () => ({ to: '/blog', params: {} as const }),
   settings: () => ({ to: '/settings', params: {} as const }),
-  signIn: () => ({ to: '/signin', params: {} as const }),
-  resetPassword: () => ({ to: '/reset-password', params: {} as const }),
-  passwordResetConfirmation: (userHash: string) => ({
-    to: '/password-reset-confirmation/$userHash',
-    params: { userHash } as const,
+  signIn: () => ({ to: '/auth/signin', params: {} as const }),
+  forgotPassword: () => ({ to: '/auth/forgot-password', params: {} as const }),
+  resetPassword: (token: string) => ({
+    to: '/auth/reset-password/$token',
+    params: { token } as const,
   }),
-  buyMeCoffee: () => ({
-    to: 'https://buymeacoffee.com/ofeed',
-    params: {} as const,
-  }),
-  discord: () => ({ to: 'https://discord.gg/YWURC23tHZ', params: {} as const }),
-  github: () => ({
-    to: 'https://github.com/orienteerfeed/ofeed',
-    params: {} as const,
-  }),
+  getResetPassword: () => ({ to: '/auth/reset-password', params: {} as const }),
 } as const;
 
-export default pathnames;
+export default PATHNAMES;

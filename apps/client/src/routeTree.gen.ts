@@ -9,16 +9,25 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as EventsRouteImport } from './routes/events'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
+import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
+import { Route as AuthResetPasswordTokenRouteImport } from './routes/auth/reset-password/$token'
 
-const EventsRoute = EventsRouteImport.update({
-  id: '/events',
-  path: '/events',
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyEventsRoute = MyEventsRouteImport.update({
+  id: '/my-events',
+  path: '/my-events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -31,11 +40,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EventsEventIdRoute = EventsEventIdRouteImport.update({
-  id: '/$eventId',
-  path: '/$eventId',
-  getParentRoute: () => EventsRoute,
-} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -46,74 +50,130 @@ const AuthSigninRoute = AuthSigninRouteImport.update({
   path: '/auth/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
+  id: '/events/$eventId/',
+  path: '/events/$eventId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsEventIdSettingsRoute = EventsEventIdSettingsRouteImport.update({
+  id: '/events/$eventId/settings',
+  path: '/events/$eventId/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordTokenRoute = AuthResetPasswordTokenRouteImport.update({
+  id: '/auth/reset-password/$token',
+  path: '/auth/reset-password/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/events': typeof EventsRouteWithChildren
+  '/my-events': typeof MyEventsRoute
+  '/profile': typeof ProfileRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
+  '/events/$eventId': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/events': typeof EventsRouteWithChildren
+  '/my-events': typeof MyEventsRoute
+  '/profile': typeof ProfileRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
+  '/events/$eventId': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/events': typeof EventsRouteWithChildren
+  '/my-events': typeof MyEventsRoute
+  '/profile': typeof ProfileRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
+  '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
-    | '/events'
+    | '/my-events'
+    | '/profile'
+    | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/auth/reset-password/$token'
+    | '/events/$eventId/settings'
     | '/events/$eventId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
-    | '/events'
+    | '/my-events'
+    | '/profile'
+    | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/auth/reset-password/$token'
+    | '/events/$eventId/settings'
     | '/events/$eventId'
   id:
     | '__root__'
     | '/'
     | '/about'
-    | '/events'
+    | '/my-events'
+    | '/profile'
+    | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
-    | '/events/$eventId'
+    | '/auth/reset-password/$token'
+    | '/events/$eventId/settings'
+    | '/events/$eventId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  EventsRoute: typeof EventsRouteWithChildren
+  MyEventsRoute: typeof MyEventsRoute
+  ProfileRoute: typeof ProfileRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
+  EventsEventIdSettingsRoute: typeof EventsEventIdSettingsRoute
+  EventsEventIdIndexRoute: typeof EventsEventIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/events': {
-      id: '/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof EventsRouteImport
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-events': {
+      id: '/my-events'
+      path: '/my-events'
+      fullPath: '/my-events'
+      preLoaderRoute: typeof MyEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -130,13 +190,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/events/$eventId': {
-      id: '/events/$eventId'
-      path: '/$eventId'
-      fullPath: '/events/$eventId'
-      preLoaderRoute: typeof EventsEventIdRouteImport
-      parentRoute: typeof EventsRoute
-    }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/auth/signup'
@@ -151,26 +204,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId/': {
+      id: '/events/$eventId/'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId/settings': {
+      id: '/events/$eventId/settings'
+      path: '/events/$eventId/settings'
+      fullPath: '/events/$eventId/settings'
+      preLoaderRoute: typeof EventsEventIdSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reset-password/$token': {
+      id: '/auth/reset-password/$token'
+      path: '/auth/reset-password/$token'
+      fullPath: '/auth/reset-password/$token'
+      preLoaderRoute: typeof AuthResetPasswordTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
-
-interface EventsRouteChildren {
-  EventsEventIdRoute: typeof EventsEventIdRoute
-}
-
-const EventsRouteChildren: EventsRouteChildren = {
-  EventsEventIdRoute: EventsEventIdRoute,
-}
-
-const EventsRouteWithChildren =
-  EventsRoute._addFileChildren(EventsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  EventsRoute: EventsRouteWithChildren,
+  MyEventsRoute: MyEventsRoute,
+  ProfileRoute: ProfileRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
+  AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
+  EventsEventIdSettingsRoute: EventsEventIdSettingsRoute,
+  EventsEventIdIndexRoute: EventsEventIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

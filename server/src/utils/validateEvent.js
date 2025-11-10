@@ -1,7 +1,7 @@
 import { check, validationResult } from 'express-validator';
+import prisma from './context.js';
 import { formatErrors } from './errors.js';
 import { validation as validationResponse } from './responseApi.js';
-import prisma from './context.js';
 
 // Middleware pro validaci
 const validateEvent = [
@@ -143,9 +143,10 @@ const validateEvent = [
     )
     .default(null),
 
-  // Validate 'country' - must exist in the 'country' table by its primary key 'countryCode'
-  check('country')
-    .optional()
+  // Validate 'countryCode' - must exist in the 'country' table by its primary key 'countryCode'
+  check('countryCode')
+    .not()
+    .isEmpty()
     .isString()
     .withMessage('Country must be a string')
     .custom(async (value) => {

@@ -77,7 +77,7 @@ async function toBase64(file: File): Promise<string> {
   });
 }
 
-export function DragDropContainer({
+export const DragDropContainer = ({
   uploadedFiles = [],
   onUpload,
   onDelete,
@@ -85,7 +85,7 @@ export function DragDropContainer({
   count,
   formats,
   className,
-}: DragDropContainerProps) {
+}: DragDropContainerProps) => {
   const { t } = useTranslation();
   const [dragging, setDragging] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
@@ -291,4 +291,4 @@ export function DragDropContainer({
       )}
     </>
   );
-}
+};
