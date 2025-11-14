@@ -13,8 +13,13 @@ services:
       - app-network
   api:
     image: ofeed-server
+    container_name: ofeed-server
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+      args:
+        NODE_ENV: production
     env_file: ./apps/server/.env
-    build: ./apps/server
     ports:
       - "${SERVER_PORT:-3001}:3001"
     environment:
@@ -36,8 +41,17 @@ services:
       start_period: 5s
   frontend:
     image: ofeed-client
+    container_name: ofeed-client
+    build:
+      context: .
+      dockerfile: ./apps/client/Dockerfile
+      args:
+        NODE_ENV: production
+      secrets:
+        - client_env
     env_file: ./apps/client/.env
-    build: ./apps/client
+    environment:
+      API_URL: http://api:3001
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     restart: unless-stopped
@@ -46,6 +60,9 @@ services:
     depends_on:
       - mysql
       - api
+secrets:
+  client_env:
+    file: ./apps/client/.env
 networks:
   app-network:
     driver: bridge

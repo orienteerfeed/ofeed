@@ -4,22 +4,30 @@
 FROM node:22.20.0-alpine AS builder
 
 # Set working directory
-WORKDIR /app
+WORKDIR /repo
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@10.17.1 --activate
+# Pin pnpm version from the monorepo
+ARG PNPM_VERSION=10.20.0
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Speed up repeated installs
+ENV PNPM_STORE_DIR=/pnpm/store
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Copy monorepo manifests (lock + workspace + all package.json files)
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+# Copy client package.json
+COPY apps/client/package.json apps/client/package.json
+
+# Install only what the client app (and its local deps) needs
+RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
+  pnpm install --frozen-lockfile --filter ./apps/client...
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN pnpm run build
+RUN --mount=type=secret,id=client_env,target=/repo/apps/client/.env \
+    pnpm --filter ./apps/client... build
 
 # =============================================================================
 # PRODUCTION STAGE (NGINX)
@@ -29,21 +37,26 @@ FROM nginx:1.29.1-alpine AS production
 # Install curl for health checks
 RUN apk add --no-cache curl
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy built app to nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Create required nginx runtime dirs
+RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run/nginx
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nginxuser -u 1001
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nginxuser -u 1001
 
-# Set ownership
-RUN chown -R nginxuser:nodejs /usr/share/nginx/html && \
-    chown -R nginxuser:nodejs /var/cache/nginx && \
-    chown -R nginxuser:nodejs /var/log/nginx && \
-    chown -R nginxuser:nodejs /etc/nginx/conf.d
+# Set permissions on required nginx directories
+RUN chown -R nginxuser:nodejs \
+    /usr/share/nginx \
+    /var/cache/nginx \
+    /var/log/nginx \
+    /var/run/nginx \
+    /etc/nginx
+
+# Copy custom nginx configuration
+COPY apps/client/nginx.conf /etc/nginx/nginx.conf
+
+# Copy built app to nginx
+COPY --from=builder /repo/apps/client/dist /usr/share/nginx/html
 
 # Switch to non-root user
 USER nginxuser

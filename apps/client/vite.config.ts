@@ -18,7 +18,18 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}', '**/pwa-*.png'],
+        globIgnores: ['**/images/placeholders/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 24 * 60 * 60 }, // 60 days
+            },
+          },
+        ],
       },
       manifest: {
         name: 'OrienteerFeed - Live Orienteering Platform',
@@ -75,5 +86,20 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // Reduce that ~1.56 MB chunk by splitting vendors
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('react')) return 'react';
+          if (id.includes('@tanstack')) return 'tanstack';
+          if (id.includes('@radix-ui')) return 'radix';
+          if (id.includes('recharts')) return 'recharts';
+          if (id.includes('@apollo')) return 'apollo';
+          return 'vendor';
+        },
+      },
+    },
   },
 });

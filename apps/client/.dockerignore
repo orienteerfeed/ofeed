@@ -83,6 +83,13 @@ docker-compose*
 # =============================================================================
 # MONOREPO SPECIFIC
 # =============================================================================
-apps/api/
+apps/server/
 packages/
 tooling/
+
+# Vite
+.vite
+
+# Testing
+playwright
+playwright.config.ts
