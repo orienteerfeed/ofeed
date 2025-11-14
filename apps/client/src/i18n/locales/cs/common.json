@@ -42,5 +42,8 @@
   "View": "Zobrazit",
   "ComingSoon": "Již brzy k dispozici",
   "NotImplementedTitle": "Zatím není implementováno",
-  "NotImplementedDescription": "Zatím není k dispozici. Pracujeme na této funkci."
+  "NotImplementedDescription": "Zatím není k dispozici. Pracujeme na této funkci.",
+  "Theme": {
+    "Toggle": "Přepnout barevný režim"
+  }
 }

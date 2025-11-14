@@ -42,5 +42,8 @@
   "View": "View",
   "ComingSoon": "Coming soon",
   "NotImplementedTitle": "Not implemented yet",
-  "NotImplementedDescription": "Function is not available yet. We are working on this feature."
+  "NotImplementedDescription": "Function is not available yet. We are working on this feature.",
+  "Theme": {
+    "Toggle": "Toggle theme"
+  }
 }

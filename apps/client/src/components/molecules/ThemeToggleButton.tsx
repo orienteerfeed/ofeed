@@ -20,7 +20,7 @@ export const ThemeToggleButton = () => {
   }
 
   const isDark = resolvedTheme === 'dark';
-  const label = t('Theme.Toggle', { defaultValue: 'Toggle theme' });
+  const label = t('Theme.Toggle', { ns: 'common' });
   const toggle = () => setTheme(isDark ? 'light' : 'dark');
 
   return (
