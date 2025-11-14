@@ -1,1 +1,0 @@
-export { EventDetailPage } from './EventDetailPage';

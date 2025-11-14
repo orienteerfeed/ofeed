@@ -123,7 +123,7 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
         </div>
 
         {/* Event Stats */}
-        {/* TODO: refactor needed */}
+        {/* TODO: refactor needed
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="text-center p-4 bg-muted rounded-lg">
             <div className="text-2xl font-bold text-primary">
@@ -151,7 +151,7 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
             </div>
             <div className="text-sm text-muted-foreground">Ranking</div>
           </div>
-        </div>
+        </div> */}
       </section>
 
       {/* Event Detail Tabs */}

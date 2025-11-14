@@ -18,7 +18,8 @@ import {
   YAxis,
 } from 'recharts';
 
-// Stejné typy jako ve SplitTable
+// TODO: Refactor type definitions - move to shared types file
+// TODO: Define STATUS_PRIORITY in shared constants
 interface Split {
   controlCode: string;
   time: number;
@@ -49,20 +50,16 @@ interface ChartPoint {
   [key: string]: number | string | undefined;
 }
 
-interface RechartsTooltipEntry {
-  payload: ChartPoint;
-  dataKey?: string;
-  value?: number;
-}
-
+// TODO: Use proper Recharts tooltip types from their definitions
 interface RechartsCustomTooltipProps {
   active?: boolean;
-  payload?: RechartsTooltipEntry[];
+  payload?: any[];
   label?: string | number;
 }
 
 type PositionsByLeg = Array<Record<string, number>>;
 
+// TODO: Move to shared constants - used in both SplitTable and SplitChart
 const STATUS_PRIORITY = {
   OK: 0,
   Active: 1,
@@ -76,22 +73,21 @@ const STATUS_PRIORITY = {
   DidNotStart: 9,
 } as const;
 
-// Pomocná – jméno závodníka
+// Helper function - competitor display name
 const getCompetitorLabel = (c: Competitor) =>
   `${c.firstname} ${c.lastname}${c.organisation ? ` (${c.organisation})` : ''}`;
 
-// Custom tooltip pro Recharts
+// Custom tooltip for Recharts - fixed types
 const makeCustomTooltip =
   (
     competitorsById: Record<string, Competitor>,
     positionsByLeg: PositionsByLeg
   ) =>
   ({ active, payload }: RechartsCustomTooltipProps) => {
-    // payload?.length ošetří i undefined i prázdné pole
+    // Check if tooltip should be displayed
     if (!active || !payload?.length) return null;
 
-    // po tomhle guardu víme, že payload[0] existuje -> použijeme pomocnou proměnnou + !
-    const first = payload[0]!;
+    const first = payload[0];
     const data = first.payload as ChartPoint;
 
     const legIndex = data.legIndex as number;
@@ -104,13 +100,14 @@ const makeCustomTooltip =
           Leg {legIndex} ({controlCode})
         </div>
         <div className="space-y-1">
-          {payload.map((entry: RechartsTooltipEntry) => {
+          {payload.map((entry: any) => {
             if (!entry.dataKey) return null;
 
             const competitorId = entry.dataKey;
             const competitor = competitorsById[competitorId];
             const lossSeconds = entry.value;
 
+            // Skip if competitor not found or no loss data
             if (!competitor || lossSeconds == null) return null;
 
             const position = positionMap[competitorId];
@@ -143,7 +140,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   isLoading = false,
   error,
 }) => {
-  // seřadíme stejně jako v tabulce (OK, čas, atd.)
+  // Sort competitors same as in SplitTable (by status priority, then time)
   const sortedCompetitors = useMemo(() => {
     return [...competitors].sort((a, b) => {
       const statusA =
@@ -155,15 +152,16 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     });
   }, [competitors]);
 
+  // Extract control codes from first competitor's splits
   const controlCodes = useMemo(() => {
     return sortedCompetitors[0]?.splits.map(s => s.controlCode) ?? [];
   }, [sortedCompetitors]);
 
-  // map závodník -> viditelnost (checkbox)
+  // Competitor visibility state for checkboxes
   const [visible, setVisible] = useState<Record<string, boolean>>({});
 
+  // Initialize visibility state when competitors change
   useEffect(() => {
-    // Při změně seznamu závodníků pro jednoduchost nastavíme vše na true
     const initial: Record<string, boolean> = {};
     sortedCompetitors.forEach(c => {
       initial[c.id] = true;
@@ -171,12 +169,13 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     setVisible(initial);
   }, [sortedCompetitors]);
 
+  // Filter competitors based on visibility
   const visibleCompetitors = useMemo(
     () => sortedCompetitors.filter(c => visible[c.id]),
     [sortedCompetitors, visible]
   );
 
-  // Přepočet dat pro graf: loss na nejlepšího + pozice na každém mezičase
+  // Calculate chart data: loss to leader and positions for each leg
   const { chartData, positionsByLeg, competitorsById } = useMemo(() => {
     const competitorsById: Record<string, Competitor> = {};
     sortedCompetitors.forEach(c => {
@@ -187,7 +186,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     const chartData: ChartPoint[] = [];
 
     controlCodes.forEach((code, idx) => {
-      // Závodníci s časem na tomto mezičase
+      // Competitors with time at this split
       const legResults: Array<{ id: string; time: number }> = [];
 
       sortedCompetitors.forEach(c => {
@@ -197,12 +196,14 @@ export const SplitChart: React.FC<SplitChartProps> = ({
         }
       });
 
+      // Skip if no results for this leg
       if (legResults.length === 0) return;
 
+      // Sort by time to find leader and positions
       legResults.sort((a, b) => a.time - b.time);
-
       const leaderTime = legResults[0]?.time ?? null;
 
+      // Calculate positions (handle ties)
       const positionMap: Record<string, number> = {};
       let currentPosition = 1;
       let lastTime: number | null = null;
@@ -217,14 +218,16 @@ export const SplitChart: React.FC<SplitChartProps> = ({
 
       positionsByLeg.push(positionMap);
 
+      // Create chart data point for this leg
       const point: ChartPoint = {
         legIndex: idx + 1,
         controlCode: code,
       };
 
+      // Calculate loss to leader for each competitor
       legResults.forEach(res => {
         if (leaderTime !== null) {
-          point[res.id] = res.time - leaderTime; // loss na nejlepšího
+          point[res.id] = res.time - leaderTime;
         }
       });
 
@@ -234,38 +237,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     return { chartData, positionsByLeg, competitorsById };
   }, [sortedCompetitors, controlCodes]);
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-          <span>Loading split chart...</span>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          Error loading split chart: {error.message}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (!chartData.length || !controlCodes.length) {
-    return (
-      <Alert>
-        <AlertDescription>
-          No split data available to display the chart.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // předpřipravené barvy (stačí pár, pak se recyklují)
+  // Predefined colors for chart lines
   const lineColors = [
     '#2563eb', // blue-600
     '#16a34a', // green-600
@@ -277,10 +249,45 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     '#db2777', // pink-600
   ];
 
+  // Memoized custom tooltip component
   const customTooltip = useMemo(
     () => makeCustomTooltip(competitorsById, positionsByLeg),
     [competitorsById, positionsByLeg]
   );
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+          <span>Loading split chart...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          Error loading split chart: {error.message}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Empty state
+  if (!chartData.length || !controlCodes.length) {
+    return (
+      <Alert>
+        <AlertDescription>
+          No split data available to display the chart.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <Card className="w-full">
@@ -294,7 +301,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-6 lg:flex-row">
-        {/* Graf vlevo */}
+        {/* Chart on the left */}
         <div className="h-[320px] flex-1">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -314,7 +321,8 @@ export const SplitChart: React.FC<SplitChartProps> = ({
                   `+${formatSecondsToTime(Math.max(0, value as number))}`
                 }
               />
-              <RechartsTooltip content={customTooltip} />
+              {/* TODO: Fix TypeScript types for Recharts Tooltip content prop */}
+              <RechartsTooltip content={customTooltip as any} />
               <Legend />
 
               {visibleCompetitors.map((c, idx) => (
@@ -333,7 +341,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
           </ResponsiveContainer>
         </div>
 
-        {/* Panel závodníků vpravo */}
+        {/* Competitor selection panel on the right */}
         <div className="w-full lg:w-72 border-l border-border/60 lg:pl-4 lg:ml-2 pt-4 lg:pt-0">
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>Runners</span>
