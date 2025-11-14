@@ -1,0 +1,49 @@
+{
+  "Back": "Back",
+  "Or": "Or",
+  "And": "and",
+  "Table": {
+    "NoData": "No data available in the table"
+  },
+  "Operations": {
+    "Submit": "Submit",
+    "Submitting": "Submitting...",
+    "Success": "Success",
+    "Error": "Error",
+    "Create": "Create",
+    "Update": "Update",
+    "Cancel": "Cancel",
+    "Save": "Save",
+    "Configure": "Configure"
+  },
+  "Settings": "Settings",
+  "Loading": "Loading...",
+  "Error": "Error",
+  "ErrorMessage": "Ooh! Something went wrong.",
+  "UploadFail": "Upload failed",
+  "Orienteering": {
+    "Class": "Class"
+  },
+  "Timer": {
+    "Days": "days",
+    "Hours": "hours",
+    "Minutes": "minutes",
+    "Seconds": "seconds"
+  },
+  "Share": "Share",
+  "Print": "Print",
+  "Copy": "Copy",
+  "Public": "Public",
+  "Private": "Private",
+  "Search": "Search",
+  "Close": "Close",
+  "NoResults": "No results",
+  "TypeAtLeastNCharacters": "Type at least {{n}} characters…",
+  "View": "View",
+  "ComingSoon": "Coming soon",
+  "NotImplementedTitle": "Not implemented yet",
+  "NotImplementedDescription": "Function is not available yet. We are working on this feature.",
+  "Theme": {
+    "Toggle": "Toggle theme"
+  }
+}

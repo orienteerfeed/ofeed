@@ -1,22 +1,27 @@
 name: ofeed
 services:
   mysql:
-    env_file: ./server/.env
+    env_file: ./apps/server/.env
     image: mysql:latest
     container_name: mysql
     restart: always
     ports:
-      - '3306:3306'
+      - "3306:3306"
     volumes:
       - ./mysql-data:/var/lib/mysql
     networks:
       - app-network
   api:
     image: ofeed-server
-    env_file: ./server/.env
-    build: ./server
+    container_name: ofeed-server
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+      args:
+        NODE_ENV: production
+    env_file: ./apps/server/.env
     ports:
-      - '${SERVER_PORT:-3001}:3001'
+      - "${SERVER_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -27,8 +32,8 @@ services:
     healthcheck:
       test:
         [
-          'CMD-SHELL',
-          'curl -f http://localhost:${SERVER_PORT:-3001}/readyz || exit 1',
+          "CMD-SHELL",
+          "curl -f http://localhost:${SERVER_PORT:-3001}/readyz || exit 1",
         ]
       interval: 10s
       timeout: 5s
@@ -36,16 +41,28 @@ services:
       start_period: 5s
   frontend:
     image: ofeed-client
-    env_file: ./client/.env
-    build: ./client
+    container_name: ofeed-client
+    build:
+      context: .
+      dockerfile: ./apps/client/Dockerfile
+      args:
+        NODE_ENV: production
+      secrets:
+        - client_env
+    env_file: ./apps/client/.env
+    environment:
+      API_URL: http://api:3001
     ports:
-      - '${FRONTEND_PORT:-3000}:80'
+      - "${FRONTEND_PORT:-3000}:80"
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
       - mysql
       - api
+secrets:
+  client_env:
+    file: ./apps/client/.env
 networks:
   app-network:
     driver: bridge

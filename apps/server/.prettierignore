@@ -1,0 +1,14 @@
+# Minimal .prettierignore
+/dist/
+/build/
+/node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+package.json
