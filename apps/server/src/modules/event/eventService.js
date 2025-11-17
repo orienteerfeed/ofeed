@@ -1,6 +1,6 @@
 import { DatabaseError, ValidationError } from '../../exceptions/index.js';
 import prisma from '../../utils/context.js';
-import { decrypt, decodeBase64 } from '../../utils/cryptoUtils.js';
+import { decodeBase64, decrypt } from '../../utils/cryptoUtils.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import {
   publishUpdatedCompetitor,
@@ -495,7 +495,7 @@ export const storeCompetitor = async (
 /**
  * Deletes all protocols, splits, and competitors related to event classes.
  *
- * @param {number} eventId - The event ID.
+ * @param {string} eventId - The event ID.
  * @throws {DatabaseError} If any deletion fails.
  */
 export const deleteEventCompetitorsAndProtocols = async (eventId) => {
@@ -544,10 +544,61 @@ export const deleteEventCompetitorsAndProtocols = async (eventId) => {
 };
 
 /**
+ * Delete single competitor.
+ *
+ * @param {string} eventId - The event ID.
+ * @param {number} competitorId - The competitor ID.
+ * @throws {DatabaseError} If any deletion fails.
+ */
+export const deleteEventCompetitorAndProtocols = async (eventId, competitorId) => {
+  try {
+    // 1. Verify that the competitor belongs to the given event
+    const competitor = await prisma.competitor.findUnique({
+      where: { id: competitorId },
+      select: { classId: true },
+    });
+
+    if (!competitor) {
+      console.warn(`Competitor ${competitorId} not found.`);
+      return;
+    }
+
+    // 2. Check if the competitor's class is associated with the event
+    const classExists = await prisma.class.findFirst({
+      where: { id: competitor.classId, eventId: eventId },
+    });
+
+    if (!classExists) {
+      console.warn(`Competitor ${competitorId} does not belong to event ${eventId}.`);
+      return;
+    }
+
+    // 3. Delete Protocols linked to the competitor
+    await prisma.protocol.deleteMany({
+      where: { competitorId: competitorId },
+    });
+
+    // 4. Delete Splits linked to the competitor
+    await prisma.split.deleteMany({
+      where: { competitorId: competitorId },
+    });
+
+    // 5. Delete the Competitor
+    await prisma.competitor.delete({
+      where: { id: competitorId },
+    });
+
+  } catch (err) {
+    console.error('Failed to delete competitor or protocols:', err);
+    throw new DatabaseError('Error deleting competitor or related data');
+  }
+};
+
+/**
  * Deletes all records from the protocol table for a given eventId
  * and removes all competitors associated with that eventId.
  *
- * @param {number} eventId - The ID of the event for which records should be deleted.
+ * @param {string} eventId - The ID of the event for which records should be deleted.
  * @throws {DatabaseError} If there is an error deleting records from the database.
  * @returns {string} Success message indicating the data has been deleted.
  */
@@ -561,10 +612,27 @@ export const deleteEventCompetitors = async (eventId) => {
 };
 
 /**
+ * Rremoves single competitor associated with that eventId
+ *
+ * @param {string} eventId - The ID of the event for which record should be deleted.
+ * @param {number} competitorId - The ID of the competitor for which record should be deleted.
+ * @throws {DatabaseError} If there is an error deleting record from the database.
+ * @returns {string} Success message indicating the data has been deleted.
+ */
+export const deleteEventCompetitor = async (eventId, competitorId) => {
+  try {
+    await deleteEventCompetitorAndProtocols(eventId, competitorId);
+  } catch (err) {
+    throw err; // already handled inside
+  }
+  return `The competitor ${competitorId} for event ${eventId} has been successfully deleted.`;
+};
+
+/**
  * Deletes all records from the protocol table for a given eventId
  * and removes all competitors, classes, and event password associated with that eventId.
  *
- * @param {number} eventId - The ID of the event for which records should be deleted.
+ * @param {string} eventId - The ID of the event for which records should be deleted.
  * @throws {DatabaseError} If there is an error deleting records from the database.
  * @returns {string} Success message indicating the data has been deleted.
  */
