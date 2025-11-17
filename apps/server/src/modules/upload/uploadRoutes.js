@@ -1,4 +1,3 @@
-import Prisma from '@prisma/client';
 import { DOMParser } from '@xmldom/xmldom';
 import { Router } from 'express';
 import { check, validationResult } from 'express-validator';
@@ -8,6 +7,7 @@ import { Parser } from 'xml2js';
 import { validateXML } from "xmllint-wasm";
 import zlib from 'zlib';
 
+import prisma from '../../utils/context.js';
 import { formatErrors } from '../../utils/errors.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import { verifyJwtToken } from '../../utils/jwtToken.js';
@@ -22,7 +22,6 @@ import { notifyWinnerChanges } from './../event/winnerCache.js';
 import { storeCzechRankingData } from './uploadService.js';
 
 const router = Router();
-const prisma = new Prisma.PrismaClient();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).single('file');
 const parser = new Parser({ attrkey: 'ATTR', trim: true });

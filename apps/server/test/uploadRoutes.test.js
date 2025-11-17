@@ -1,11 +1,11 @@
-import Prisma from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { parseXmlForTesting } from '../src/modules/upload/uploadRoutes.js';
 
 const { upsertCompetitor } = parseXmlForTesting;
 
-const prisma = new Prisma.PrismaClient();
+const prisma = new PrismaClient();
 
 describe('upsertCompetitor', () => {
   let findFirstStub, createStub, updateStub;
