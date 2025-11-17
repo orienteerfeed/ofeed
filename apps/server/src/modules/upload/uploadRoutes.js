@@ -206,9 +206,9 @@ const validateIofXml = async (xmlString, xsdString) => {
     }
 
     // Validate against XSD using xmllint-wasm
-    const result = await validateXML({
-      xml: xmlString,
-      schema: xsdString
+ const result = await validateXML({
+      xml: [{ fileName: 'iof.xml', contents: xmlString }],
+      schema: [xsdString]
     });
 
     if (result.valid) {
