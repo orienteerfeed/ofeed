@@ -22,15 +22,11 @@ if (typeof secretKey === 'undefined' || !secretKey) {
  */
 export function encrypt(text) {
   const iv = CryptoJS.lib.WordArray.random(16);
-  const encrypted = CryptoJS.AES.encrypt(
-    text,
-    CryptoJS.enc.Hex.parse(secretKey),
-    {
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7,
-    },
-  );
+  const encrypted = CryptoJS.AES.encrypt(text, CryptoJS.enc.Hex.parse(secretKey), {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
 
   return {
     iv: iv.toString(CryptoJS.enc.Hex),
@@ -48,27 +44,23 @@ export function encrypt(text) {
  * @throws {Error} If decryption fails due to invalid input or incorrect secret key.
  */
 export function decrypt(hash) {
-  const decrypted = CryptoJS.AES.decrypt(
-    hash.content,
-    CryptoJS.enc.Hex.parse(secretKey),
-    {
-      iv: CryptoJS.enc.Hex.parse(hash.iv),
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7,
-    },
-  );
+  const decrypted = CryptoJS.AES.decrypt(hash.content, CryptoJS.enc.Hex.parse(secretKey), {
+    iv: CryptoJS.enc.Hex.parse(hash.iv),
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
 
   return decrypted.toString(CryptoJS.enc.Utf8);
 }
 
 // Function to Base64 encode the entire encrypted object
-export const encodeBase64 = (data) => {
+export const encodeBase64 = data => {
   const jsonString = JSON.stringify(data); // Convert object to JSON string
   return Buffer.from(jsonString).toString('base64'); // Encode JSON string in Base64
 };
 
 // Function to decode a Base64 string and convert it back to the original object
-export const decodeBase64 = (base64String) => {
+export const decodeBase64 = base64String => {
   const jsonString = Buffer.from(base64String, 'base64').toString(); // Decode Base64 string into JSON string
   return JSON.parse(jsonString); // Parse JSON string back into an object
 };

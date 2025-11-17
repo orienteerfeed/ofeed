@@ -9,14 +9,12 @@ import { error as errorResponse } from './responseApi.js';
  * @throws {UnauthorizedError} If no token is provided or the token is invalid.
  * @throws {ForbiddenError} If the token does not include the required scope.
  */
-export const checkRequiredScope = (requiredScope) => {
+export const checkRequiredScope = requiredScope => {
   return (req, res, next) => {
     const tokenWithBearer = req.headers['authorization'];
 
     if (!tokenWithBearer) {
-      return res
-        .status(401)
-        .json(errorResponse('No token provided', res.statusCode));
+      return res.status(401).json(errorResponse('No token provided', res.statusCode));
     }
 
     const token = tokenWithBearer.split(' ')[1];
@@ -25,17 +23,13 @@ export const checkRequiredScope = (requiredScope) => {
       const jwtDecoded = verifyToken(token);
 
       if (!jwtDecoded.scope || !jwtDecoded.scope.includes(requiredScope)) {
-        return res
-          .status(403)
-          .json(errorResponse('Forbidden: Insufficient scope', res.statusCode));
+        return res.status(403).json(errorResponse('Forbidden: Insufficient scope', res.statusCode));
       }
 
       next();
     } catch (error) {
       console.error(error);
-      return res
-        .status(401)
-        .json(errorResponse('Invalid token', res.statusCode));
+      return res.status(401).json(errorResponse('Invalid token', res.statusCode));
     }
   };
 };

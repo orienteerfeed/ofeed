@@ -36,7 +36,7 @@ export const signup = async (_, { input }, context) => {
       password,
       firstname,
       lastname,
-      context.activationUrl,
+      context.activationUrl
     );
     return {
       token: signUpPayload.token,
@@ -58,14 +58,10 @@ export const requestPasswordReset = async (_, { email }, context) => {
 
   // Get password reset base URL from headers
   const passwordResetBaseUrl = context.resetPasswordUrl;
-  if (!passwordResetBaseUrl)
-    throw new Error('Missing password reset URL in headers');
+  if (!passwordResetBaseUrl) throw new Error('Missing password reset URL in headers');
 
   try {
-    const passwordResetPayload = await passwordResetRequest(
-      email,
-      passwordResetBaseUrl,
-    );
+    const passwordResetPayload = await passwordResetRequest(email, passwordResetBaseUrl);
     return {
       success: passwordResetPayload.success,
       message: passwordResetPayload.message,

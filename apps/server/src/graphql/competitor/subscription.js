@@ -1,8 +1,4 @@
-import {
-  pubsub,
-  COMPETITORS_BY_CLASS_UPDATED,
-  COMPETITOR_UPDATED,
-} from '../../utils/pubsub.js';
+import { pubsub, COMPETITORS_BY_CLASS_UPDATED, COMPETITOR_UPDATED } from '../../utils/pubsub.js';
 import { getCompetitorsByClass } from './shared.js';
 
 export const competitorsByClassUpdated = {
@@ -23,7 +19,7 @@ export const competitorsByClassUpdated = {
       yield payload;
     }
   },
-  resolve: (payload) => {
+  resolve: payload => {
     // Process and return the payload
     return payload.competitorsByClassUpdated;
   },

@@ -4,7 +4,7 @@ import { check, validationResult } from 'express-validator';
 import multer from 'multer';
 import fetch from 'node-fetch';
 import { Parser } from 'xml2js';
-import { validateXML } from "xmllint-wasm";
+import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
 
 import prisma from '../../utils/context.js';
@@ -71,10 +71,7 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
   try {
     // Ensure `person` and `person.Id` are valid
     if (!person || !Array.isArray(person.Id) || person.Id.length === 0) {
-      console.warn(
-        'Invalid person data or missing IDs:',
-        JSON.stringify(person, null, 2),
-      );
+      console.warn('Invalid person data or missing IDs:', JSON.stringify(person, null, 2));
       return fallbackToNameHash(classId, person);
     }
 
@@ -83,12 +80,8 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
       // Use the first valid ID with type "CZE" or any other ID if "CZE" is not available
       const id =
         person.Id.find(
-          (sourceId) =>
-            sourceId.ATTR?.type === 'CZE' &&
-            sourceId._ &&
-            sourceId._.trim() !== '',
-        )?._ ||
-        person.Id.find((sourceId) => sourceId._ && sourceId._.trim() !== '')?._;
+          sourceId => sourceId.ATTR?.type === 'CZE' && sourceId._ && sourceId._.trim() !== ''
+        )?._ || person.Id.find(sourceId => sourceId._ && sourceId._.trim() !== '')?._;
 
       if (id) return id; // Return ID if available
       console.warn('No valid registration ID found for person:', person);
@@ -98,12 +91,8 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
     // Handle "system" key type
     else if (keyType === 'system') {
       // Prioritize the ID with type "QuickEvent", fallback to other IDs
-      const quickEventId = person.Id.find(
-        (sourceId) => sourceId.ATTR?.type === 'QuickEvent',
-      );
-      const orisId = person.Id.find(
-        (sourceId) => sourceId.ATTR?.type === 'ORIS',
-      );
+      const quickEventId = person.Id.find(sourceId => sourceId.ATTR?.type === 'QuickEvent');
+      const orisId = person.Id.find(sourceId => sourceId.ATTR?.type === 'ORIS');
       const id = quickEventId?._ || orisId?._ || person.Id[0]?._; // Prioritize QuickEvent, then ORIS, then fallback to the first ID
 
       if (id) return id; // Return ID if available
@@ -125,19 +114,16 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
 
 // Fallback function to generate a competitor hash using names
 /**
-*
-* @param {string} classId - The class ID associated with the competitor.
-* @param {Object} person - The person object containing identification and name details.
+ *
+ * @param {string} classId - The class ID associated with the competitor.
+ * @param {Object} person - The person object containing identification and name details.
  * @returns {string} - Unique competitor's id
  */
 function fallbackToNameHash(classId, person) {
   const familyName = person?.Name?.[0]?.Family?.[0] || '';
   const givenName = person?.Name?.[0]?.Given?.[0] || '';
   if (!familyName || !givenName) {
-    console.warn(
-      'Missing family or given name for fallback hash generation:',
-      person,
-    );
+    console.warn('Missing family or given name for fallback hash generation:', person);
   }
   return createShortCompetitorHash(classId, familyName, givenName);
 }
@@ -171,7 +157,7 @@ async function parseXml(buffer) {
  * @returns {string} return[].jsonKey - The key in the JSON object that matches the XML type.
  * @returns {any} return[].jsonValue - The value associated with the matching key in the JSON object.
  */
-const checkXmlType = (json) => {
+const checkXmlType = json => {
   /**
    * checkXmlType() is a function that takes in a JSON object as an argument and returns an array of objects.
    * The function checks if the JSON object contains any of the values in the iofXmlTypes array, and if so,
@@ -206,24 +192,28 @@ const validateIofXml = async (xmlString, xsdString) => {
     }
 
     // Validate against XSD using xmllint-wasm
- const result = await validateXML({
+    const result = await validateXML({
       xml: [{ fileName: 'iof.xml', contents: xmlString }],
-      schema: [xsdString]
+      schema: [xsdString],
     });
 
     if (result.valid) {
       returnState.state = true;
     } else {
       // Convert xmllint errors to ValidationError format
-      returnState.errors = result.errors ? result.errors.map(error => ({
-        param: 'xml',
-        msg: typeof error === 'string' ? error : error.message || 'Validation error',
-        type: 'schema'
-      })) : [{
-        param: 'xml',
-        msg: 'Validation failed',
-        type: 'schema'
-      }];
+      returnState.errors = result.errors
+        ? result.errors.map(error => ({
+            param: 'xml',
+            msg: typeof error === 'string' ? error : error.message || 'Validation error',
+            type: 'schema',
+          }))
+        : [
+            {
+              param: 'xml',
+              msg: 'Validation failed',
+              type: 'schema',
+            },
+          ];
       console.log(returnState.message);
     }
   } catch (err) {
@@ -250,9 +240,7 @@ async function getEventById(eventId) {
     });
   } catch (err) {
     console.error(err);
-    throw new Error(
-      `Event with ID ${eventId} does not exist in the database: ${err.message}`,
-    );
+    throw new Error(`Event with ID ${eventId} does not exist in the database: ${err.message}`);
   }
 }
 
@@ -288,22 +276,14 @@ async function getClassLists(eventId) {
  * @param {Object} [additionalData={}] - Additional data to be included in the class record.
  * @returns {Promise<string>} - The ID of the upserted class.
  */
-async function upsertClass(
-  eventId,
-  classDetails,
-  dbClassLists,
-  additionalData = {},
-) {
+async function upsertClass(eventId, classDetails, dbClassLists, additionalData = {}) {
   const sourceClassId = classDetails.Id?.shift();
   const className = classDetails.Name.shift();
   const classIdentifier = sourceClassId || className;
-  const existingClass = dbClassLists.find(
-    (cls) => cls.externalId === classIdentifier,
-  );
+  const existingClass = dbClassLists.find(cls => cls.externalId === classIdentifier);
 
   // Determine sex based on the first letter of the class name
-  const sex =
-    className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
+  const sex = className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
 
   if (!existingClass) {
     const dbClassInsert = await prisma.class.create({
@@ -355,7 +335,7 @@ async function upsertCompetitor(
   start = null,
   result = null,
   teamId = null,
-  leg = null,
+  leg = null
 ) {
   const registration = getCompetitorKey(classId, person, 'registration');
   const externalId = getCompetitorKey(classId, person, 'system');
@@ -399,24 +379,19 @@ async function upsertCompetitor(
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber.shift())
       : start?.BibNumber
-      ? parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber
-      : null,
+        ? (parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber)
+        : null,
     startTime:
       (result?.StartTime?.shift() || start?.StartTime?.shift()) ??
       (dbCompetitorResponse?.startTime || null),
-    finishTime:
-      result?.FinishTime?.shift() ?? (dbCompetitorResponse?.finishTime || null),
-    time: result?.Time
-      ? parseInt(result.Time[0])
-      : dbCompetitorResponse?.time ?? null,
+    finishTime: result?.FinishTime?.shift() ?? (dbCompetitorResponse?.finishTime || null),
+    time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitorResponse?.time ?? null),
     card: result?.ControlCard
       ? parseInt(result.ControlCard.shift())
       : start?.ControlCard
-      ? parseInt(start.ControlCard.shift())
-      : dbCompetitorResponse?.card ?? null,
-    status:
-      result?.Status?.toString() ??
-      (dbCompetitorResponse?.status || 'Inactive'),
+        ? parseInt(start.ControlCard.shift())
+        : (dbCompetitorResponse?.card ?? null),
+    status: result?.Status?.toString() ?? (dbCompetitorResponse?.status || 'Inactive'),
     lateStart: dbCompetitorResponse?.lateStart || false,
     team: teamId ? { connect: { id: teamId } } : undefined,
     leg: leg ? parseInt(leg) : undefined,
@@ -492,8 +467,7 @@ async function upsertCompetitor(
     const isDifferent = keysToCompare.some(({ key, type }) => {
       const currentValue = normalizeValue(type, competitorData[key]);
       const previousValue = normalizeValue(type, dbCompetitorResponse[key]);
-      const hasChanged =
-        competitorData[key] !== undefined && currentValue !== previousValue;
+      const hasChanged = competitorData[key] !== undefined && currentValue !== previousValue;
 
       if (hasChanged && keyToTypeMap[key]) {
         changes.push({
@@ -579,18 +553,14 @@ async function upsertSplits(competitorId, result) {
 
   const splitTimes = result.SplitTime || [];
   const incomingSplits = splitTimes
-    .map((split) => ({
-      controlCode: split.ControlCode?.[0]
-        ? parseInt(split.ControlCode[0])
-        : null,
+    .map(split => ({
+      controlCode: split.ControlCode?.[0] ? parseInt(split.ControlCode[0]) : null,
       time: split.Time?.[0] ? parseInt(split.Time[0]) : null,
     }))
-    .filter((split) => split.controlCode !== null);
+    .filter(split => split.controlCode !== null);
 
   // Create a map of existing splits for quick lookup
-  const existingSplitsMap = new Map(
-    dbSplitResponse.map((split) => [split.controlCode, split]),
-  );
+  const existingSplitsMap = new Map(dbSplitResponse.map(split => [split.controlCode, split]));
 
   // Track splits to create, update, and delete
   const splitsToCreate = [];
@@ -620,7 +590,7 @@ async function upsertSplits(competitorId, result) {
   }
 
   const splitsToDelete = dbSplitResponse.filter(
-    (split) => !existingControlCodes.has(split.controlCode),
+    split => !existingControlCodes.has(split.controlCode)
   );
 
   if (splitsToDelete.length > 0) {
@@ -629,16 +599,14 @@ async function upsertSplits(competitorId, result) {
 
   // Perform database operations
   await Promise.all([
-    ...splitsToCreate.map((split) => prisma.split.create({ data: split })),
-    ...splitsToUpdate.map((split) =>
+    ...splitsToCreate.map(split => prisma.split.create({ data: split })),
+    ...splitsToUpdate.map(split =>
       prisma.split.update({
         where: { id: split.id },
         data: { time: split.time },
-      }),
+      })
     ),
-    ...splitsToDelete.map((split) =>
-      prisma.split.delete({ where: { id: split.id } }),
-    ),
+    ...splitsToDelete.map(split => prisma.split.delete({ where: { id: split.id } })),
   ]);
 
   return {
@@ -665,9 +633,7 @@ async function upsertSplits(competitorId, result) {
 async function upsertTeam(eventId, classId, teamResult, organisation) {
   // Extract team details from the input object
   const teamName = teamResult.Name.shift(); // Shift removes the first element from the array
-  const bibNumber = teamResult.BibNumber
-    ? parseInt(teamResult.BibNumber.shift())
-    : null; // Convert BibNumber to integer
+  const bibNumber = teamResult.BibNumber ? parseInt(teamResult.BibNumber.shift()) : null; // Convert BibNumber to integer
 
   // Check if the team already exists in the database based on event class and bib number
   const dbRelayResponse = await prisma.team.findFirst({
@@ -718,14 +684,9 @@ async function upsertTeam(eventId, classId, teamResult, organisation) {
  * @param {Object} dbResponseEvent - The database response event.
  * @returns {Promise<void>} A promise that resolves when the processing is complete.
  */
-async function processClassStarts(
-  eventId,
-  classStarts,
-  dbClassLists,
-  dbResponseEvent,
-) {
+async function processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent) {
   await Promise.all(
-    classStarts.map(async (classStart) => {
+    classStarts.map(async classStart => {
       const classDetails = classStart.Class.shift();
 
       let length = null,
@@ -734,12 +695,8 @@ async function processClassStarts(
         controlsCount = null;
 
       if (classStart.Course && classStart.Course.length > 0) {
-        length = classStart.Course[0].Length
-          ? parseInt(classStart.Course[0].Length)
-          : null;
-        climb = climb = classStart.Course[0].Climb
-          ? parseInt(classStart.Course[0].Climb)
-          : null;
+        length = classStart.Course[0].Length ? parseInt(classStart.Course[0].Length) : null;
+        climb = climb = classStart.Course[0].Climb ? parseInt(classStart.Course[0].Climb) : null;
         controlsCount = classStart.Course[0].NumberOfControls
           ? parseInt(classStart.Course[0].NumberOfControls)
           : null;
@@ -753,55 +710,34 @@ async function processClassStarts(
         controlsCount: controlsCount,
       };
 
-      const classId = await upsertClass(
-        eventId,
-        classDetails,
-        dbClassLists,
-        additionalData,
-      );
+      const classId = await upsertClass(eventId, classDetails, dbClassLists, additionalData);
 
       if (!dbResponseEvent.relay) {
         // Process Individual Starts
-        if (!classStart.PersonStart || classStart.PersonStart.length === 0)
-          return;
+        if (!classStart.PersonStart || classStart.PersonStart.length === 0) return;
         await Promise.all(
-          classStart.PersonStart.map(async (competitorStart) => {
+          classStart.PersonStart.map(async competitorStart => {
             const person = competitorStart.Person.shift();
             const organisation = competitorStart.Organisation.shift();
             const start = competitorStart.Start.shift();
-            await upsertCompetitor(
-              eventId,
-              classId,
-              person,
-              organisation,
-              start,
-              null,
-            );
-          }),
+            await upsertCompetitor(eventId, classId, person, organisation, start, null);
+          })
         );
       } else {
         // Process Relay Starts
         if (!classStart.TeamStart || classStart.TeamStart.length === 0) return;
 
         await Promise.all(
-          classStart.TeamStart.map(async (teamStart) => {
+          classStart.TeamStart.map(async teamStart => {
             const organisation = teamStart.Organisation
               ? [...teamStart.Organisation].shift()
               : null; // Organisation details
 
-            const teamId = await upsertTeam(
-              eventId,
-              classId,
-              teamStart,
-              organisation,
-            );
+            const teamId = await upsertTeam(eventId, classId, teamStart, organisation);
             // Process Team Member Starts
-            if (
-              teamStart.TeamMemberStart &&
-              teamStart.TeamMemberStart.length > 0
-            ) {
+            if (teamStart.TeamMemberStart && teamStart.TeamMemberStart.length > 0) {
               await Promise.all(
-                teamStart.TeamMemberStart.map(async (teamMemberStart) => {
+                teamStart.TeamMemberStart.map(async teamMemberStart => {
                   const person = teamMemberStart.Person[0];
                   const start = [...teamMemberStart.Start].shift();
                   const leg = [...start.Leg].shift();
@@ -814,15 +750,15 @@ async function processClassStarts(
                     start,
                     null,
                     teamId,
-                    leg,
+                    leg
                   );
-                }),
+                })
               );
             }
-          }),
+          })
         );
       }
-    }),
+    })
   );
 }
 
@@ -835,24 +771,18 @@ async function processClassStarts(
  * @param {Object} dbResponseEvent - The database response event.
  * @returns {Promise<Array>} - A promise that resolves to an array of updated class IDs.
  */
-async function processClassResults(
-  eventId,
-  classResults,
-  dbClassLists,
-  dbResponseEvent,
-) {
+async function processClassResults(eventId, classResults, dbClassLists, dbResponseEvent) {
   const updatedClasses = new Set(); // Unique class IDs that had changes
   await Promise.all(
-    classResults.map(async (classResult) => {
+    classResults.map(async classResult => {
       const classDetails = classResult.Class.shift();
       const classId = await upsertClass(eventId, classDetails, dbClassLists);
 
       if (!dbResponseEvent.relay) {
         // Process Individual Results
-        if (!classResult.PersonResult || classResult.PersonResult.length === 0)
-          return;
+        if (!classResult.PersonResult || classResult.PersonResult.length === 0) return;
         await Promise.all(
-          classResult.PersonResult.map(async (competitorResult) => {
+          classResult.PersonResult.map(async competitorResult => {
             const person = competitorResult.Person.shift();
             // const organisation = competitorResult.Organisation?.shift();
 
@@ -863,8 +793,7 @@ async function processClassResults(
                 : null;
 
             const result =
-              Array.isArray(competitorResult.Result) &&
-              competitorResult.Result.length > 0
+              Array.isArray(competitorResult.Result) && competitorResult.Result.length > 0
                 ? competitorResult.Result.shift()
                 : null;
 
@@ -874,14 +803,11 @@ async function processClassResults(
               person,
               organisation,
               null,
-              result,
+              result
             );
-            const { changeMade: updatedSplits } = await upsertSplits(
-              competitorId,
-              result,
-            );
+            const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
             if (updated || updatedSplits) updatedClasses.add(classId);
-          }),
+          })
         );
         if (dbResponseEvent.ranking) {
           const rankingCalculation = calculateCompetitorRankingPoints(eventId);
@@ -891,69 +817,53 @@ async function processClassResults(
         }
       } else {
         // Process Relay Results
-        if (!classResult.TeamResult || classResult.TeamResult.length === 0)
-          return;
+        if (!classResult.TeamResult || classResult.TeamResult.length === 0) return;
 
         await Promise.all(
-          classResult.TeamResult.map(async (teamResult) => {
+          classResult.TeamResult.map(async teamResult => {
             const organisation = teamResult.Organisation
               ? [...teamResult.Organisation].shift()
               : null; // Organisation details
 
-            const teamId = await upsertTeam(
-              eventId,
-              classId,
-              teamResult,
-              organisation,
-            );
+            const teamId = await upsertTeam(eventId, classId, teamResult, organisation);
             // Process Team Member Results
-            if (
-              teamResult.TeamMemberResult &&
-              teamResult.TeamMemberResult.length > 0
-            ) {
+            if (teamResult.TeamMemberResult && teamResult.TeamMemberResult.length > 0) {
               if (
                 Array.isArray(teamResult.TeamMemberResult) &&
                 teamResult.TeamMemberResult.length > 0
               ) {
                 await Promise.all(
-                  teamResult.TeamMemberResult.map(async (teamMemberResult) => {
+                  teamResult.TeamMemberResult.map(async teamMemberResult => {
                     if (!teamMemberResult?.Person?.[0]) return;
                     const person = teamMemberResult.Person[0];
                     const result = [...teamMemberResult.Result].shift();
                     const leg = [...result.Leg].shift();
 
                     if (!person || !result || !leg) {
-                      console.warn(
-                        'Skipping incomplete TeamMemberResult:',
-                        teamMemberResult,
-                      );
+                      console.warn('Skipping incomplete TeamMemberResult:', teamMemberResult);
                       return;
                     }
 
-                    const { id: competitorId, updated } =
-                      await upsertCompetitor(
-                        eventId,
-                        classId,
-                        person,
-                        organisation,
-                        null,
-                        result,
-                        teamId,
-                        leg,
-                      );
-                    const { changeMade: updatedSplits } = await upsertSplits(
-                      competitorId,
+                    const { id: competitorId, updated } = await upsertCompetitor(
+                      eventId,
+                      classId,
+                      person,
+                      organisation,
+                      null,
                       result,
+                      teamId,
+                      leg
                     );
+                    const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
                     if (updated || updatedSplits) updatedClasses.add(classId);
-                  }),
+                  })
                 );
               }
             }
-          }),
+          })
         );
       }
-    }),
+    })
   );
   return [...updatedClasses];
 }
@@ -992,9 +902,7 @@ async function handleIofXmlUpload(req, res) {
     const xsd = await fetchIOFXmlSchema();
     const iofXmlValidation = await validateIofXml(xmlBuffer.toString(), xsd);
     if (!iofXmlValidation.state) {
-      return res
-        .status(422)
-        .json(validation(iofXmlValidation.errors));
+      return res.status(422).json(validation(iofXmlValidation.errors));
     }
   }
 
@@ -1012,12 +920,7 @@ async function handleIofXmlUpload(req, res) {
   if (dbResponseEvent.authorId !== userId) {
     return res
       .status(403)
-      .json(
-        error(
-          'You are not authorized to upload data for this event',
-          res.statusCode,
-        ),
-      );
+      .json(error('You are not authorized to upload data for this event', res.statusCode));
   }
 
   let iofXml3;
@@ -1038,7 +941,7 @@ async function handleIofXmlUpload(req, res) {
   const eventName = iofXml3[Object.keys(iofXml3)[0]]['Event'][0]['Name'];
 
   await Promise.all(
-    iofXmlType.map(async (type) => {
+    iofXmlType.map(async type => {
       if (type.jsonKey === 'ResultList') {
         const classResults = iofXml3.ResultList.ClassResult;
         if (classResults && classResults.length > 0) {
@@ -1046,29 +949,21 @@ async function handleIofXmlUpload(req, res) {
             eventId,
             classResults,
             dbClassLists,
-            dbResponseEvent,
+            dbResponseEvent
           );
           notifyWinnerChanges(eventId);
           for (const classId of updatedClasses) {
             try {
               await publishUpdatedCompetitors(classId); // Process sequentially
             } catch (err) {
-              console.error(
-                `Error publishing competitors update for classId ${classId}:`,
-                err,
-              );
+              console.error(`Error publishing competitors update for classId ${classId}:`, err);
             }
           }
         }
       } else if (type.jsonKey === 'StartList') {
         const classStarts = iofXml3.StartList.ClassStart;
         if (classStarts && classStarts.length > 0) {
-          await processClassStarts(
-            eventId,
-            classStarts,
-            dbClassLists,
-            dbResponseEvent,
-          );
+          await processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent);
         }
       } else if (type.jsonKey === 'CourseData') {
         // Process CourseData
@@ -1088,7 +983,7 @@ async function handleIofXmlUpload(req, res) {
 
         const courseData = iofXml3.CourseData.RaceCourseData[0].Course;
         await Promise.all(
-          courseData.map(async (course) => {
+          courseData.map(async course => {
             const classDetails = {
               Name: [course.Name[0]],
               Id: [],
@@ -1097,31 +992,19 @@ async function handleIofXmlUpload(req, res) {
             const additionalData = {
               length: course.Length && parseInt(course.Length[0]),
               climb: course.Climb && parseInt(course.Climb[0]),
-              controlsCount:
-                course.CourseControl && course.CourseControl.length - 2,
+              controlsCount: course.CourseControl && course.CourseControl.length - 2,
             };
 
-            await upsertClass(
-              eventId,
-              classDetails,
-              dbClassLists,
-              additionalData,
-            );
-          }),
+            await upsertClass(eventId, classDetails, dbClassLists, additionalData);
+          })
         );
       }
-    }),
+    })
   );
 
   return res
     .status(200)
-    .json(
-      success(
-        'OK',
-        { data: 'Iof xml uploaded successfully: ' + eventName },
-        res.statusCode,
-      ),
-    );
+    .json(success('OK', { data: 'Iof xml uploaded successfully: ' + eventName }, res.statusCode));
 }
 
 /**
@@ -1142,7 +1025,8 @@ async function handleIofXmlUpload(req, res) {
 function maybeGunzip(file) {
   const buf = file.buffer;
   const looksGzip = buf?.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
-  const hintedGzip = /application\/(x-)?gzip/i.test(file.mimetype || '') || /\.gz$/i.test(file.originalname || '');
+  const hintedGzip =
+    /application\/(x-)?gzip/i.test(file.mimetype || '') || /\.gz$/i.test(file.originalname || '');
   if (looksGzip || hintedGzip) {
     return zlib.gunzipSync(buf); // nebo async variantu: await gunzip(...)
   }
@@ -1181,11 +1065,8 @@ router.use(verifyJwtToken);
 router.post(
   '/iof',
   upload,
-  [
-    check('eventId').not().isEmpty().isString(),
-    check('validateXml').isBoolean().optional(),
-  ],
-  handleIofXmlUpload,
+  [check('eventId').not().isEmpty().isString(), check('validateXml').isBoolean().optional()],
+  handleIofXmlUpload
 );
 
 /**
@@ -1223,28 +1104,19 @@ router.post('/czech-ranking', upload, async (req, res) => {
     console.error('File is too large');
     return res
       .status(422)
-      .json(
-        validation(
-          'File is too large. Allowed size is up to 2MB',
-          res.statusCode,
-        ),
-      );
+      .json(validation('File is too large. Allowed size is up to 2MB', res.statusCode));
   }
 
   try {
-    const processedRankingData = await storeCzechRankingData(
-      req.file.buffer.toString(),
-    );
+    const processedRankingData = await storeCzechRankingData(req.file.buffer.toString());
     return res.status(200).json(
       success(
         'OK',
         {
-          data:
-            'Csv ranking Czech data uploaded successfully: ' +
-            processedRankingData,
+          data: 'Csv ranking Czech data uploaded successfully: ' + processedRankingData,
         },
-        res.statusCode,
-      ),
+        res.statusCode
+      )
     );
   } catch (err) {
     console.error(err);

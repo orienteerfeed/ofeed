@@ -1,8 +1,4 @@
-import {
-  DatabaseError,
-  NotFoundError,
-  ValidationError,
-} from '../exceptions/index.js';
+import { DatabaseError, NotFoundError, ValidationError } from '../exceptions/index.js';
 import prisma from './context.js';
 
 const CZ_INDIVIDUAL_START = 0.0;
@@ -18,7 +14,7 @@ const EXCLUDED_COMPETITOR_STATUSES_FROM_RANKING = [
   'Cancelled',
 ]; // List of statuses to exclude
 
-export const calculateCompetitorRankingPoints = async (eventId) => {
+export const calculateCompetitorRankingPoints = async eventId => {
   let dbEventResponse;
   try {
     dbEventResponse = await prisma.event.findUnique({
@@ -46,23 +42,19 @@ export const calculateCompetitorRankingPoints = async (eventId) => {
 
   if (!dbEventResponse) {
     throw new NotFoundError(
-      `An error occurred: Event with ID ${eventId} was not found in the database.`,
+      `An error occurred: Event with ID ${eventId} was not found in the database.`
     );
   }
 
   if (!dbEventResponse.ranking && !dbEventResponse.relay) {
-    throw new ValidationError(
-      `Event with ID ${eventId} is not marked as ranking event.`,
-    );
+    throw new ValidationError(`Event with ID ${eventId} is not marked as ranking event.`);
   }
 
   if (dbEventResponse.countryId === 'CZ') {
     const eventCoefRanking = parseFloat(dbEventResponse.coefRanking) || 1.0;
     const rankingClasses = filterCzechRankingClasses(dbEventResponse.classes);
     if (!rankingClasses) {
-      throw new ValidationError(
-        `No ranking classes found in the event with ID ${eventId}.`,
-      );
+      throw new ValidationError(`No ranking classes found in the event with ID ${eventId}.`);
     }
 
     let startCoef;
@@ -114,21 +106,17 @@ export const calculateCompetitorRankingPoints = async (eventId) => {
         },
       });
 
-      const medianTimeOfTopThree = calculateMedianOfTopThreeTimes(
-        dbCompetitorsResponse,
-      );
+      const medianTimeOfTopThree = calculateMedianOfTopThreeTimes(dbCompetitorsResponse);
       if (medianTimeOfTopThree === null) continue; // Skip if no median time
 
       const top5RankingIndexes = await fetchTopRankings(
         dbEventResponse.countryId,
-        dbCompetitorsResponse,
+        dbCompetitorsResponse
       );
       if (top5RankingIndexes === null) continue; // Skip if no top rankings
 
       // Filter competitors based on criteria
-      const ratedCompetitors = calculateCompetitorPositionBasedOnTime(
-        dbCompetitorsResponse,
-      );
+      const ratedCompetitors = calculateCompetitorPositionBasedOnTime(dbCompetitorsResponse);
       // Count of rated competitors
       const totalNumberOfRatedCompetitors = ratedCompetitors.length;
       if (totalNumberOfRatedCompetitors < 0) continue; // Skip if no competitor in finish yet
@@ -136,23 +124,20 @@ export const calculateCompetitorRankingPoints = async (eventId) => {
       for (const competitor of dbCompetitorsResponse) {
         let competitorRankingPoints = null;
         const competitorResult = ratedCompetitors.find(
-          (ratedCompetitor) => ratedCompetitor.id === competitor.id,
+          ratedCompetitor => ratedCompetitor.id === competitor.id
         );
         if (competitorResult) {
           competitorRankingPoints =
             (2 - competitorResult.time / medianTimeOfTopThree) *
             top5RankingIndexes *
             (1 -
-              (startCoef * (competitorResult.position - 1)) /
-                (totalNumberOfRatedCompetitors - 1)) *
+              (startCoef * (competitorResult.position - 1)) / (totalNumberOfRatedCompetitors - 1)) *
             eventCoefRanking;
           competitorRankingPoints =
-            competitorRankingPoints > 0
-              ? Math.round(competitorRankingPoints)
-              : 0;
+            competitorRankingPoints > 0 ? Math.round(competitorRankingPoints) : 0;
         }
         const rankingRecord = czechRankingData.find(
-          (record) => record.registration === competitor.registration,
+          record => record.registration === competitor.registration
         );
         const averageRankingPoints = rankingRecord
           ? Math.round(rankingRecord.points / CZ_RANKING_RACES_COUNT)
@@ -174,22 +159,20 @@ export const calculateCompetitorRankingPoints = async (eventId) => {
   return true;
 };
 
-const filterCzechRankingClasses = (classes) => {
-  return classes.filter((cls) =>
-    CZ_PREFIX_RANKING_CLASSES_REGEX.test(cls.name),
-  );
+const filterCzechRankingClasses = classes => {
+  return classes.filter(cls => CZ_PREFIX_RANKING_CLASSES_REGEX.test(cls.name));
 };
 
-const calculateMedianOfTopThreeTimes = (data) => {
+const calculateMedianOfTopThreeTimes = data => {
   // Filter out null times, sort times in ascending order, and slice the top three
   const topThreeTimes = data
     .filter(
-      (entry) =>
+      entry =>
         entry.time !== null &&
         entry.status === 'OK' &&
-        CZ_REGISTRATION_REGEX.test(entry.registration.toUpperCase()),
+        CZ_REGISTRATION_REGEX.test(entry.registration.toUpperCase())
     )
-    .map((entry) => entry.time)
+    .map(entry => entry.time)
     .sort((a, b) => a - b)
     .slice(0, 3);
 
@@ -203,8 +186,8 @@ const calculateMedianOfTopThreeTimes = (data) => {
 const fetchTopRankings = async (country, data) => {
   if (country === 'CZ') {
     const validRegistrations = data
-      .filter((entry) => CZ_REGISTRATION_REGEX.test(entry.registration))
-      .map((entry) => entry.registration);
+      .filter(entry => CZ_REGISTRATION_REGEX.test(entry.registration))
+      .map(entry => entry.registration);
     try {
       const topRankings = await prisma.rankingCzech.findMany({
         where: {
@@ -229,8 +212,7 @@ const fetchTopRankings = async (country, data) => {
       }
 
       const averageRanking =
-        topRankings.reduce((acc, curr) => acc + curr.rankIndex, 0) /
-        topRankings.length;
+        topRankings.reduce((acc, curr) => acc + curr.rankIndex, 0) / topRankings.length;
       return averageRanking;
     } catch (error) {
       console.error('Error fetching rankings:', error);
@@ -239,12 +221,10 @@ const fetchTopRankings = async (country, data) => {
   return null;
 };
 
-const calculateCompetitorPositionBasedOnTime = (competitors) => {
+const calculateCompetitorPositionBasedOnTime = competitors => {
   // Filter out participants who did not finish (time is null)
   const ratedCompetitors = competitors
-    .filter(
-      (competitor) => competitor.time !== null && competitor.status === 'OK',
-    )
+    .filter(competitor => competitor.time !== null && competitor.status === 'OK')
     .sort((a, b) => a.time - b.time)
     .map((competitor, index) => ({
       ...competitor,

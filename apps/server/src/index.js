@@ -15,7 +15,7 @@ import { error, success } from './utils/responseApi.js';
 import { schemaWithDirectives } from './graphql/executableSchema.js';
 import prisma from './utils/context.js';
 
-import packageJson from '../package.json' with { type: "json" };
+import packageJson from '../package.json' with { type: 'json' };
 
 const { PORT = 3001 } = process.env;
 
@@ -26,12 +26,14 @@ app.use(morgan('tiny'));
 
 app.use(express.json());
 //TODO: adjust CORS settings for production
-app.use(cors({
-  origin: 'http://localhost:3000',  // nebo (origin, cb) => cb(null, true) pro dynamiku
-  credentials: true,                // pokud používáš cookies
-  methods: ['GET','POST','PUT','DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // nebo (origin, cb) => cb(null, true) pro dynamiku
+    credentials: true, // pokud používáš cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use('/mrb/assets', express.static('mrb/assets', { fallthrough: false }));
@@ -44,9 +46,9 @@ const swaggerOptions = {
       version: '1.1.0',
       description:
         'This is a REST API application made with Express. It includes competitor data updates and real-time results for orienteering events.',
-        contact: {
-          email: 'martin.krivda@kobchocen.cz',
-        },
+      contact: {
+        email: 'martin.krivda@kobchocen.cz',
+      },
     },
     components: {
       securitySchemes: {
@@ -128,14 +130,13 @@ app.use(
 
       return {
         prisma: prisma,
-        activationUrl:
-          req.headers['x-orienteerfeed-app-activate-user-url'] || 'localhost',
-          token: token,
-          basicAuthCredentials: basicAuthCredentials,
+        activationUrl: req.headers['x-orienteerfeed-app-activate-user-url'] || 'localhost',
+        token: token,
+        basicAuthCredentials: basicAuthCredentials,
         resetPasswordUrl: req.headers['x-ofeed-app-reset-password-url'] || 'localhost',
       };
     },
-  }),
+  })
 );
 
 // API ENDPOINTS
@@ -160,7 +161,7 @@ const server = app.listen(PORT, () =>
   console.log(`
 🚀 Server ready at: http://localhost:${PORT}
 ⭐️ See sample requests: http://localhost:${PORT}/api-docs
-🔢 Running version: ${packageJson.version}`),
+🔢 Running version: ${packageJson.version}`)
 );
 
 // Attach WebSocket server for subscriptions
@@ -177,7 +178,7 @@ wsServer.on('connection', () => {
   console.log('New WebSocket connection established');
 });
 
-wsServer.on('error', (err) => {
+wsServer.on('error', err => {
   console.error('WebSocket server error:', err);
 });
 
@@ -189,7 +190,7 @@ wsServer.on('close', () => {
 const serverCleanup = useServer(
   {
     schema: schemaWithDirectives,
-    context: async (ctx) => {
+    context: async ctx => {
       console.log('WebSocket context initialized');
       return { prisma };
     },

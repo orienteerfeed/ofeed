@@ -7,13 +7,7 @@ import {
   publishUpdatedCompetitors,
 } from '../../utils/subscriptionUtils.js';
 
-export const changeCompetitorStatus = async (
-  eventId,
-  competitorId,
-  origin,
-  status,
-  userId,
-) => {
+export const changeCompetitorStatus = async (eventId, competitorId, origin, status, userId) => {
   let dbResponseCompetitor;
   try {
     dbResponseCompetitor = await prisma.competitor.findFirst({
@@ -32,8 +26,7 @@ export const changeCompetitorStatus = async (
 
   if (!dbResponseCompetitor) {
     throw new ValidationError(
-      `Competitor with ID ${competitorId} does not exist in the database` +
-        err.message,
+      `Competitor with ID ${competitorId} does not exist in the database` + err.message
     );
   }
 
@@ -44,14 +37,8 @@ export const changeCompetitorStatus = async (
   if (origin === 'START') {
     //TODO: implement logic, to check if is it possible to make status change, what if the competitor has status NotCompeting??
     // It is forbidden to change the status of the runner after they have finished.
-    if (
-      !['Inactive', 'DidNotStart', 'Active'].includes(
-        dbResponseCompetitor.status,
-      )
-    ) {
-      throw new ValidationError(
-        `Could not change status of runner that has already finished`,
-      );
+    if (!['Inactive', 'DidNotStart', 'Active'].includes(dbResponseCompetitor.status)) {
+      throw new ValidationError(`Could not change status of runner that has already finished`);
     }
     // If the new status is 'LateStart', update the status to 'Active' and set lateStart to true.
     if (status === 'LateStart') {
@@ -121,7 +108,7 @@ export const changeCompetitorStatus = async (
  * @throws {ValidationError} If the event is not found or the user does not have permissions.
  * @throws {Error} If Prisma query fails or decryption encounters an error.
  */
-export const getDecryptedEventPassword = async (eventId) => {
+export const getDecryptedEventPassword = async eventId => {
   try {
     // Fetch the event based on eventId
     const event = await prisma.event.findUnique({
@@ -135,9 +122,7 @@ export const getDecryptedEventPassword = async (eventId) => {
 
     // Validate if the event exists and the current user has permission
     if (!event) {
-      throw new ValidationError(
-        'Event not found or you don’t have the permissions.',
-      );
+      throw new ValidationError('Event not found or you don’t have the permissions.');
     }
 
     // Fetch the event password if available
@@ -174,13 +159,7 @@ export const getDecryptedEventPassword = async (eventId) => {
   }
 };
 
-export const updateCompetitor = async (
-  eventId,
-  competitorId,
-  origin,
-  updateData,
-  userId,
-) => {
+export const updateCompetitor = async (eventId, competitorId, origin, updateData, userId) => {
   let dbResponseCompetitor;
   try {
     dbResponseCompetitor = await prisma.competitor.findFirst({
@@ -222,22 +201,15 @@ export const updateCompetitor = async (
 
   if (!dbResponseCompetitor) {
     throw new ValidationError(
-      `Competitor with ID ${competitorId} does not exist in the database` +
-        err.message,
+      `Competitor with ID ${competitorId} does not exist in the database` + err.message
     );
   }
 
   if (origin === 'START') {
     //TODO: implement logic, to check if is it possible to make status change, what if the competitor has status NotCompeting??
     // It is forbidden to change the state of the runner after he has finished
-    if (
-      !['Inactive', 'DidNotStart', 'Active'].includes(
-        dbResponseCompetitor.status,
-      )
-    ) {
-      throw new ValidationError(
-        `Could not change status of runner that has already finished`,
-      );
+    if (!['Inactive', 'DidNotStart', 'Active'].includes(dbResponseCompetitor.status)) {
+      throw new ValidationError(`Could not change status of runner that has already finished`);
     }
   }
 
@@ -270,7 +242,7 @@ export const updateCompetitor = async (
   };
 
   // Iterate over keys in updateData
-  Object.keys(updateData).forEach((key) => {
+  Object.keys(updateData).forEach(key => {
     if (keyToTypeMap[key]) {
       changes.push({
         type: keyToTypeMap[key],
@@ -355,22 +327,8 @@ export const updateCompetitor = async (
   };
 };
 
-export const storeCompetitor = async (
-  eventId,
-  competitorData,
-  userId,
-  origin,
-) => {
-  const {
-    classId,
-    firstname,
-    lastname,
-    registration,
-    status,
-    card,
-    note,
-    splits,
-  } = competitorData;
+export const storeCompetitor = async (eventId, competitorData, userId, origin) => {
+  const { classId, firstname, lastname, registration, status, card, note, splits } = competitorData;
 
   // Check if the class exists before proceeding
   let existingClass;
@@ -396,23 +354,15 @@ export const storeCompetitor = async (
         firstname,
         lastname,
         nationality: competitorData.nationality || null,
-        registration:
-          registration ||
-          createShortCompetitorHash(classId, lastname, firstname),
+        registration: registration || createShortCompetitorHash(classId, lastname, firstname),
         license: competitorData.license || null,
         ranking: competitorData.ranking || null,
         organisation: competitorData.organisation || null,
         shortName: competitorData.shortName || null,
         card: card ? parseInt(card) : null,
-        bibNumber: competitorData.bibNumber
-          ? parseInt(competitorData.bibNumber)
-          : null,
-        startTime: competitorData.startTime
-          ? new Date(competitorData.startTime)
-          : null,
-        finishTime: competitorData.finishTime
-          ? new Date(competitorData.finishTime)
-          : null,
+        bibNumber: competitorData.bibNumber ? parseInt(competitorData.bibNumber) : null,
+        startTime: competitorData.startTime ? new Date(competitorData.startTime) : null,
+        finishTime: competitorData.finishTime ? new Date(competitorData.finishTime) : null,
         time: competitorData.time || null,
         status: status || 'Inactive', // Default to Inactive if not provided
         lateStart: competitorData.lateStart || false,
@@ -436,8 +386,8 @@ export const storeCompetitor = async (
               controlCode,
               time: time ?? null,
             },
-          }),
-        ),
+          })
+        )
       );
     } catch (err) {
       console.error('Error storing splits:', err);
@@ -498,7 +448,7 @@ export const storeCompetitor = async (
  * @param {string} eventId - The event ID.
  * @throws {DatabaseError} If any deletion fails.
  */
-export const deleteEventCompetitorsAndProtocols = async (eventId) => {
+export const deleteEventCompetitorsAndProtocols = async eventId => {
   try {
     // 1. Find all class IDs associated with the eventId
     const classIds = await prisma.class.findMany({
@@ -506,7 +456,7 @@ export const deleteEventCompetitorsAndProtocols = async (eventId) => {
       select: { id: true },
     });
 
-    const classIdList = classIds.map((cls) => cls.id);
+    const classIdList = classIds.map(cls => cls.id);
 
     if (classIdList.length === 0) {
       console.warn(`No classes found for event ${eventId}.`);
@@ -519,7 +469,7 @@ export const deleteEventCompetitorsAndProtocols = async (eventId) => {
       select: { id: true },
     });
 
-    const competitorIdList = competitors.map((c) => c.id);
+    const competitorIdList = competitors.map(c => c.id);
 
     if (competitorIdList.length > 0) {
       // 3. Delete Protocols linked to competitors
@@ -587,7 +537,6 @@ export const deleteEventCompetitorAndProtocols = async (eventId, competitorId) =
     await prisma.competitor.delete({
       where: { id: competitorId },
     });
-
   } catch (err) {
     console.error('Failed to delete competitor or protocols:', err);
     throw new DatabaseError('Error deleting competitor or related data');
@@ -602,7 +551,7 @@ export const deleteEventCompetitorAndProtocols = async (eventId, competitorId) =
  * @throws {DatabaseError} If there is an error deleting records from the database.
  * @returns {string} Success message indicating the data has been deleted.
  */
-export const deleteEventCompetitors = async (eventId) => {
+export const deleteEventCompetitors = async eventId => {
   try {
     await deleteEventCompetitorsAndProtocols(eventId);
   } catch (err) {
@@ -636,7 +585,7 @@ export const deleteEventCompetitor = async (eventId, competitorId) => {
  * @throws {DatabaseError} If there is an error deleting records from the database.
  * @returns {string} Success message indicating the data has been deleted.
  */
-export const deleteAllEventData = async (eventId) => {
+export const deleteAllEventData = async eventId => {
   try {
     // Step 1: Delete competitors, protocols, splits
     await deleteEventCompetitorsAndProtocols(eventId);

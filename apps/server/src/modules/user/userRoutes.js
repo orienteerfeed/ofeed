@@ -1,10 +1,7 @@
 import { Router } from 'express';
 
 import { verifyJwtToken } from '../../utils/jwtToken.js';
-import {
-  error as errorResponse,
-  success as successResponse,
-} from '../../utils/responseApi.js';
+import { error as errorResponse, success as successResponse } from '../../utils/responseApi.js';
 
 import prisma from '../../utils/context.js';
 
@@ -49,13 +46,9 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    return res
-      .status(500)
-      .json(errorResponse(`An error occurred` + err.message));
+    return res.status(500).json(errorResponse(`An error occurred` + err.message));
   } finally {
-    return res
-      .status(200)
-      .json(successResponse('OK', { data: dbResponse }, res.statusCode));
+    return res.status(200).json(successResponse('OK', { data: dbResponse }, res.statusCode));
   }
 });
 

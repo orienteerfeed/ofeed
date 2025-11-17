@@ -59,17 +59,12 @@ export const typeDef = /* GraphQL */ `
     eventId: ID!
     competitorId: Int!
     origin: String! @constraint(pattern: "^START$", maxLength: 32)
-    status: String!
-      @constraint(
-        pattern: "^(Active|Inactive|DidNotStart|LateStart)$"
-        maxLength: 32
-      )
+    status: String! @constraint(pattern: "^(Active|Inactive|DidNotStart|LateStart)$", maxLength: 32)
   }
   input UpdateCompetitorInput {
     eventId: ID!
     competitorId: Int!
-    origin: String!
-      @constraint(pattern: "^(START|FINISH|IT|OFFICE)$", maxLength: 32)
+    origin: String! @constraint(pattern: "^(START|FINISH|IT|OFFICE)$", maxLength: 32)
     classId: Int
     firstname: String
     lastname: String

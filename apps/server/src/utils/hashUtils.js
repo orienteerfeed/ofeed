@@ -14,7 +14,7 @@ export const createShortCompetitorHash = (classId, familyName, givenName) => {
   return Math.abs(hash).toString().slice(0, 10);
 };
 
-export const generateResetPasswordToken = (userId) => {
+export const generateResetPasswordToken = userId => {
   const salt = crypto.randomBytes(16).toString('hex'); // Generate a random salt
   const rawToken = `${userId}.${salt}`; // Combine user ID with salt
   const resetToken = crypto.createHash('sha256').update(rawToken).digest('hex'); // Hash it

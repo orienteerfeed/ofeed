@@ -1,6 +1,6 @@
 import prisma from '../../utils/context.js';
 
-export const getCompetitorsByClass = async (classId) => {
+export const getCompetitorsByClass = async classId => {
   try {
     return await prisma.competitor.findMany({
       where: { classId },

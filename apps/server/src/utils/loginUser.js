@@ -13,7 +13,7 @@ export const getLoginSuccessPayload = async ({ userId, prisma }) => {
 
   const dbPrivilegesResponse = await hasPrivilege(userId, prisma);
 
-  const privileges = dbPrivilegesResponse.map((privilege) => privilege.name);
+  const privileges = dbPrivilegesResponse.map(privilege => privilege.name);
 
   const loginSuccessPayload = {
     token,

@@ -12,7 +12,7 @@ const validateEvent = [
     .withMessage('Sport ID is required')
     .isNumeric()
     .withMessage('Sport ID must be a number')
-    .custom(async (value) => {
+    .custom(async value => {
       const sport = await prisma.sport.findUnique({
         where: { id: value },
       });
@@ -39,13 +39,11 @@ const validateEvent = [
     .withMessage('Date is required')
     .isISO8601()
     .withMessage('Date must be a valid ISO 8601 date')
-    .custom((value) => {
+    .custom(value => {
       const dateObj = new Date(value);
       if (isNaN(dateObj.getTime()) || value.length > 10) {
         // Ensures only date without time is provided
-        throw new Error(
-          'Date must be in YYYY-MM-DD format (no time component)',
-        );
+        throw new Error('Date must be in YYYY-MM-DD format (no time component)');
       }
       return true;
     }),
@@ -99,11 +97,7 @@ const validateEvent = [
     .withMessage('ZeroTime must be a valid datetime'),
 
   // Validate 'relay' - must be a boolean, defaults to false
-  check('relay')
-    .optional()
-    .isBoolean()
-    .withMessage('Relay must be a boolean')
-    .default(false),
+  check('relay').optional().isBoolean().withMessage('Relay must be a boolean').default(false),
 
   // Validate 'hundredthPrecision' - must be a boolean
   check('hundredthPrecision')
@@ -119,28 +113,20 @@ const validateEvent = [
     .default(false),
 
   // Validate 'ranking' - must be a boolean, defaults to false
-  check('ranking')
-    .optional()
-    .isBoolean()
-    .withMessage('Ranking must be a boolean')
-    .default(false),
+  check('ranking').optional().isBoolean().withMessage('Ranking must be a boolean').default(false),
 
   // Validate 'startMode' - must be one of the allowed values
   check('startMode')
     .optional()
     .isIn(['Individual', 'Mass', 'Handicap', 'Pursuit', 'Wave', 'ScoreO'])
-    .withMessage(
-      'Start mode must be one of Individual, Mass, Handicap, Pursuit, Wave, ScoreO',
-    )
+    .withMessage('Start mode must be one of Individual, Mass, Handicap, Pursuit, Wave, ScoreO')
     .default('Individual'),
 
   // Validate 'coefRanking' - must be a float, optional, defaults to null
   check('coefRanking')
     .optional({ nullable: true })
     .isFloat({ min: 0 })
-    .withMessage(
-      'Coefficient ranking must be a float value greater than or equal to 0',
-    )
+    .withMessage('Coefficient ranking must be a float value greater than or equal to 0')
     .default(null),
 
   // Validate 'countryCode' - must exist in the 'country' table by its primary key 'countryCode'
@@ -149,7 +135,7 @@ const validateEvent = [
     .isEmpty()
     .isString()
     .withMessage('Country must be a string')
-    .custom(async (value) => {
+    .custom(async value => {
       const country = await prisma.country.findUnique({
         where: { countryCode: value },
       });

@@ -1,12 +1,6 @@
 import prisma from '../../utils/context.js';
 export const events = async (_, { input = {} }) => {
-  const {
-    filter = 'ALL',
-    sportId,
-    search,
-    first = 12,
-    after
-  } = input;
+  const { filter = 'ALL', sportId, search, first = 12, after } = input;
 
   const useMockData = process.env.USE_MOCK_EVENTS === 'true' || false;
 
@@ -16,7 +10,7 @@ export const events = async (_, { input = {} }) => {
 
   // Build where clause based on filters
   const where = {
-    published: true
+    published: true,
   };
 
   // Sport filter
@@ -29,7 +23,7 @@ export const events = async (_, { input = {} }) => {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
       { location: { contains: search, mode: 'insensitive' } },
-      { organizer: { contains: search, mode: 'insensitive' } }
+      { organizer: { contains: search, mode: 'insensitive' } },
     ];
   }
 
@@ -48,18 +42,18 @@ export const events = async (_, { input = {} }) => {
     case 'TODAY':
       where.date = {
         gte: todayStart,
-        lte: todayEnd
+        lte: todayEnd,
       };
       break;
     case 'UPCOMING':
       where.date = {
-        gt: now
+        gt: now,
       };
       break;
     case 'RECENT':
       where.date = {
         lt: now,
-        gte: thirtyDaysAgo
+        gte: thirtyDaysAgo,
       };
       break;
     // ALL shows all events without date filtering
@@ -77,7 +71,7 @@ export const events = async (_, { input = {} }) => {
       // Pro reálná data použijeme ID jako cursor
       cursorClause = {
         cursor: { id: after },
-        skip: 1
+        skip: 1,
       };
     }
   }
@@ -88,15 +82,12 @@ export const events = async (_, { input = {} }) => {
       where,
       take: first + 1, // Get one extra to check if there's more
       ...cursorClause,
-      orderBy: [
-        { date: 'asc' },
-        { id: 'asc' }
-      ],
+      orderBy: [{ date: 'asc' }, { id: 'asc' }],
       include: {
         sport: true,
         country: true,
-        classes: true
-      }
+        classes: true,
+      },
     });
 
     // Check if there are more events
@@ -108,7 +99,7 @@ export const events = async (_, { input = {} }) => {
     // Get edges with cursors
     const edges = events.map(event => ({
       node: event,
-      cursor: event.id // Použijeme skutečné ID jako cursor
+      cursor: event.id, // Použijeme skutečné ID jako cursor
     }));
 
     // Page info
@@ -116,12 +107,12 @@ export const events = async (_, { input = {} }) => {
       hasNextPage,
       hasPreviousPage: false,
       startCursor: edges.length > 0 ? edges[0].cursor : null,
-      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
+      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
     };
 
     return {
       edges,
-      pageInfo
+      pageInfo,
     };
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -178,9 +169,9 @@ function generateMockEvents(first, after, filter) {
     const event = {
       id: `mock-event-${i}`, // ID bude použito jako cursor
       name: `Mock Event ${i} - ${['World Cup', 'Championship', 'Local Race', 'Training'][i % 4]}`,
-      organizer: `Organizer ${i % 10 + 1}`,
+      organizer: `Organizer ${(i % 10) + 1}`,
       date: eventDate.getTime().toString(), // timestamp jako string
-      location: `Location ${i % 20 + 1}, City`,
+      location: `Location ${(i % 20) + 1}, City`,
       countryId: ['CZ', 'SK', 'DE', 'PL', 'AT'][i % 5],
       sportId: 1,
       timezone: 'Europe/Prague',
@@ -189,13 +180,13 @@ function generateMockEvents(first, after, filter) {
       updatedAt: new Date(now.getTime() - (100 - i) * 24 * 60 * 60 * 1000).getTime().toString(),
       sport: {
         id: 1,
-        name: 'Orienteering' // Pozor: musí sedět s konvertorem na frontendu
+        name: 'Orienteering', // Pozor: musí sedět s konvertorem na frontendu
       },
       classes: [
         { id: i * 10 + 1, name: 'H21E' },
         { id: i * 10 + 2, name: 'D21E' },
-        { id: i * 10 + 3, name: 'H35' }
-      ]
+        { id: i * 10 + 3, name: 'H35' },
+      ],
     };
 
     mockEvents.push(event);
@@ -218,18 +209,18 @@ function generateMockEvents(first, after, filter) {
 
   const edges = paginatedEvents.map(event => ({
     node: event,
-    cursor: event.id // Použijeme ID jako cursor
+    cursor: event.id, // Použijeme ID jako cursor
   }));
 
   const pageInfo = {
     hasNextPage: endIndex < mockEvents.length,
     hasPreviousPage: startIndex > 0,
     startCursor: edges.length > 0 ? edges[0].cursor : null,
-    endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
+    endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
   };
 
   return {
     edges,
-    pageInfo
+    pageInfo,
   };
 }

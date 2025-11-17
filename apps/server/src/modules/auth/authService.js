@@ -3,11 +3,7 @@ import crypto from 'crypto';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import {
-  AuthenticationError,
-  DatabaseError,
-  ValidationError,
-} from '../../exceptions/index.js';
+import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
 import prisma from '../../utils/context.js';
 import { generateJwtTokenForLink } from '../../utils/jwtToken.js';
 import { getLoginSuccessPayload } from '../../utils/loginUser.js';
@@ -68,13 +64,7 @@ export const authenticateUser = async (username, password) => {
 };
 
 // Function to sign up a user and send a registration confirmation email
-export const signupUser = async (
-  email,
-  password,
-  firstname,
-  lastname,
-  app_base_url,
-) => {
+export const signupUser = async (email, password, firstname, lastname, app_base_url) => {
   try {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -119,10 +109,10 @@ export const signupUser = async (
         confirm_link: registrationConfirmFeAppLink,
         year: new Date().getFullYear(),
       })
-      .then((result) => {
+      .then(result => {
         emailTemplate = result;
       })
-      .catch((err) => {
+      .catch(err => {
         throw new ValidationError('Error Rendering email template: ' + err);
       });
 
@@ -132,7 +122,7 @@ export const signupUser = async (
       subject: 'Orienteering Cloud Data Hub - registration',
       emailTo: email,
       onSuccess: () => console.log('Email sent successfully!'),
-      onError: (error) => {
+      onError: error => {
         throw new Error('Failed to send email:' + error);
       },
     });
@@ -151,8 +141,7 @@ export const signupUser = async (
 export const passwordResetRequest = async (email, app_base_url) => {
   const successResponse = {
     success: true,
-    message:
-      'Please check your inbox and follow the instructions to reset your password.',
+    message: 'Please check your inbox and follow the instructions to reset your password.',
   };
   try {
     // Check if user already exists
@@ -180,10 +169,7 @@ export const passwordResetRequest = async (email, app_base_url) => {
     // Prepare and send the email
     let emailTemplate;
     // Calculate the path to the ejs file
-    const templatePath = path.join(
-      __dirname,
-      '../../views/emails/password-reset.ejs',
-    );
+    const templatePath = path.join(__dirname, '../../views/emails/password-reset.ejs');
 
     await ejs
       .renderFile(templatePath, {
@@ -191,10 +177,10 @@ export const passwordResetRequest = async (email, app_base_url) => {
         password_reset_link: resetPasswordAppLink,
         year: new Date().getFullYear(),
       })
-      .then((result) => {
+      .then(result => {
         emailTemplate = result;
       })
-      .catch((err) => {
+      .catch(err => {
         throw new ValidationError('Error Rendering email template: ' + err);
       });
 
@@ -204,7 +190,7 @@ export const passwordResetRequest = async (email, app_base_url) => {
       subject: 'OrienteerFeed - forgotten password',
       emailTo: email,
       onSuccess: () => console.log('Email sent successfully!'),
-      onError: (error) => {
+      onError: error => {
         throw new Error('Failed to send email:' + error);
       },
     });

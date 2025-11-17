@@ -31,7 +31,7 @@ export const error = (message, statusCode) => {
   const codes = [200, 201, 400, 401, 404, 403, 422, 500];
 
   // Get matched code
-  const findCode = codes.find((code) => code == statusCode);
+  const findCode = codes.find(code => code == statusCode);
 
   if (!findCode) statusCode = 500;
   else statusCode = findCode;
@@ -48,7 +48,7 @@ export const error = (message, statusCode) => {
  *
  * @param   {object | array} errors
  */
-export const validation = (errors) => {
+export const validation = errors => {
   return {
     message: 'Validation errors',
     error: true,

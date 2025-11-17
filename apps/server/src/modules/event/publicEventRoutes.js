@@ -43,9 +43,7 @@ router.get('/', async (req, res) => {
     console.error(err);
     return res.status(500).json(error(`Database error` + err.message));
   } finally {
-    return res
-      .status(200)
-      .json(success('OK', { data: dbResponse }, res.statusCode));
+    return res.status(200).json(success('OK', { data: dbResponse }, res.statusCode));
   }
 });
 
@@ -72,67 +70,51 @@ router.get('/', async (req, res) => {
  *      500:
  *        description: Internal server error
  */
-router.get(
-  '/:eventId',
-  [check('eventId').not().isEmpty().isString()],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json(validation(formatErrors(errors)));
-    }
-    const { eventId } = req.params;
-    // Everything went fine.
-    let dbResponse;
-    try {
-      dbResponse = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: {
-          id: true,
-          name: true,
-          date: true,
-          timezone: true,
-          location: true,
-          latitude: true,
-          longitude: true,
-          country: true,
-          organizer: true,
-          relay: true,
-          ranking: true,
-          coefRanking: true,
-          sport: true,
-          zeroTime: true,
-          hundredthPrecision: true,
-          classes: true,
-        },
-      });
-    } catch (err) {
-      console.error(err);
-      return res
-        .status(500)
-        .json(
-          error(
-            `Event with ID ${eventId} does not exist in the database` +
-              err.message,
-          ),
-        );
-    }
-
-    if (!dbResponse) {
-      return res
-        .status(422)
-        .json(
-          validation(
-            `Event with ID ${eventId} does not exist in the database`,
-            422,
-          ),
-        );
-    }
-
+router.get('/:eventId', [check('eventId').not().isEmpty().isString()], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json(validation(formatErrors(errors)));
+  }
+  const { eventId } = req.params;
+  // Everything went fine.
+  let dbResponse;
+  try {
+    dbResponse = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        name: true,
+        date: true,
+        timezone: true,
+        location: true,
+        latitude: true,
+        longitude: true,
+        country: true,
+        organizer: true,
+        relay: true,
+        ranking: true,
+        coefRanking: true,
+        sport: true,
+        zeroTime: true,
+        hundredthPrecision: true,
+        classes: true,
+      },
+    });
+  } catch (err) {
+    console.error(err);
     return res
-      .status(200)
-      .json(success('OK', { data: dbResponse }, res.statusCode));
-  },
-);
+      .status(500)
+      .json(error(`Event with ID ${eventId} does not exist in the database` + err.message));
+  }
+
+  if (!dbResponse) {
+    return res
+      .status(422)
+      .json(validation(`Event with ID ${eventId} does not exist in the database`, 422));
+  }
+
+  return res.status(200).json(success('OK', { data: dbResponse }, res.statusCode));
+});
 
 /**
  * @swagger
@@ -203,23 +185,13 @@ router.get(
       console.error(err);
       return res
         .status(500)
-        .json(
-          error(
-            `Event with ID ${eventId} does not exist in the database` +
-              err.message,
-          ),
-        );
+        .json(error(`Event with ID ${eventId} does not exist in the database` + err.message));
     }
 
     if (!dbResponseEvent) {
       return res
         .status(422)
-        .json(
-          validation(
-            `Event with ID ${eventId} does not exist in the database`,
-            422,
-          ),
-        );
+        .json(validation(`Event with ID ${eventId} does not exist in the database`, 422));
     }
 
     let eventData;
@@ -339,28 +311,19 @@ router.get(
         console.error(err);
         return res
           .status(500)
-          .json(
-            error(
-              `Event with ID ${eventId} does not exist in the database` +
-                err.message,
-            ),
-          );
+          .json(error(`Event with ID ${eventId} does not exist in the database` + err.message));
       }
-      const teamClassesResults = dbRelayResponse.classes.map((classes) => {
+      const teamClassesResults = dbRelayResponse.classes.map(classes => {
         //TODO: if teams is array
-        const teams = classes.teams.map((team) => {
+        const teams = classes.teams.map(team => {
           const notAllInactiveCompetitors = !team.competitors.every(
-            (competitor) => competitor.status === 'Inactive',
+            competitor => competitor.status === 'Inactive'
           );
           let status;
           if (notAllInactiveCompetitors) {
-            status = team.competitors.some(
-              (competitor) => competitor.status !== 'OK',
-            )
+            status = team.competitors.some(competitor => competitor.status !== 'OK')
               ? team.competitors.find(
-                  (competitor) =>
-                    competitor.status !== 'OK' ||
-                    competitor.status !== 'Inactive',
+                  competitor => competitor.status !== 'OK' || competitor.status !== 'Inactive'
                 ).status
               : 'OK';
           } else {
@@ -368,11 +331,11 @@ router.get(
           }
           const totalTime = team.competitors.reduce(
             (accumulator, currentValue) => accumulator + currentValue.time,
-            0,
+            0
           );
           const competitors = team.competitors
             .sort((a, b) => a.leg - b.leg)
-            .map((competitor) => {
+            .map(competitor => {
               return {
                 ...competitor,
                 bibNumber: team.bibNumber + '.' + competitor.leg,
@@ -393,10 +356,8 @@ router.get(
       });
       eventData = { ...dbRelayResponse, classes: teamClassesResults };
     }
-    return res
-      .status(200)
-      .json(success('OK', { data: eventData }, res.statusCode));
-  },
+    return res.status(200).json(success('OK', { data: eventData }, res.statusCode));
+  }
 );
 
 /**
@@ -430,10 +391,7 @@ router.get(
  */
 router.get(
   '/:eventId/competitors/:competitorId',
-  [
-    check('eventId').not().isEmpty().isString(),
-    check('competitorId').not().isEmpty().isNumeric(),
-  ],
+  [check('eventId').not().isEmpty().isString(), check('competitorId').not().isEmpty().isNumeric()],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -458,12 +416,7 @@ router.get(
     if (!dbResponseEvent) {
       return res
         .status(422)
-        .json(
-          validation(
-            `Event with ID ${eventId} does not exist in the database`,
-            422,
-          ),
-        );
+        .json(validation(`Event with ID ${eventId} does not exist in the database`, 422));
     }
 
     let competitorData;
@@ -523,8 +476,8 @@ router.get(
           .json(
             error(
               `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-                err.message,
-            ),
+                err.message
+            )
           );
       }
       competitorData = dbIndividualResponse;
@@ -590,16 +543,14 @@ router.get(
           .json(
             error(
               `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-                err.message,
-            ),
+                err.message
+            )
           );
       }
       competitorData = dbRelayResponse;
     }
-    return res
-      .status(200)
-      .json(success('OK', { data: competitorData }, res.statusCode));
-  },
+    return res.status(200).json(success('OK', { data: competitorData }, res.statusCode));
+  }
 );
 
 router.post('/:eventId/ranking', async (req, res) => {
@@ -607,9 +558,7 @@ router.post('/:eventId/ranking', async (req, res) => {
 
   const { eventId } = req.params;
   calculateCompetitorRankingPoints(eventId);
-  return res
-    .status(200)
-    .json(success('OK', { data: 'Calculate ranking' }, res.statusCode));
+  return res.status(200).json(success('OK', { data: 'Calculate ranking' }, res.statusCode));
 });
 
 export default router;

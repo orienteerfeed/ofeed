@@ -3,7 +3,7 @@ import { parse } from 'csv-parse/sync';
 import { DatabaseError } from '../../exceptions/index.js';
 import prisma from '../../utils/context.js';
 
-export const storeCzechRankingData = async (csvData) => {
+export const storeCzechRankingData = async csvData => {
   // Parsing CSV string into an array of objects
   const records = parse(csvData, {
     from_line: 2, // Start parsing from the second line

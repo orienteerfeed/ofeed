@@ -36,13 +36,10 @@ export const competitorsByOrganisation = async (_, { eventId, organisation }) =>
   return prisma.competitor.findMany({
     where: {
       class: { is: { eventId } },
-      OR: [
-        { organisation: { equals: organisation } },
-        { shortName:   { equals: organisation } },
-      ],
+      OR: [{ organisation: { equals: organisation } }, { shortName: { equals: organisation } }],
     },
     include: {
-      class: true
+      class: true,
     },
     orderBy: [{ lastname: 'asc' }, { firstname: 'asc' }],
   });
@@ -72,7 +69,7 @@ export const searchOrganisations = async (_, { eventId, q }) => {
     distinct: ['organisation'],
     take: 20,
   });
-  return rows.filter(r => r.organisation?.trim())
-             .map(r => ({ name: r.organisation, competitors: 0 }));
+  return rows
+    .filter(r => r.organisation?.trim())
+    .map(r => ({ name: r.organisation, competitors: 0 }));
 };
-

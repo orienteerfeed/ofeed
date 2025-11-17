@@ -19,7 +19,7 @@ export const competitorStatusChange = async (_, { input }, context) => {
     jwtDecoded = await verifyBasicAuth(
       context.basicAuthCredentials.username,
       context.basicAuthCredentials.password,
-      input.eventId,
+      input.eventId
     );
     if (!jwtDecoded) {
       throw new Error('Unauthorized: Invalid or expired password');
@@ -48,7 +48,7 @@ export const competitorStatusChange = async (_, { input }, context) => {
       competitorId,
       origin,
       status,
-      userId,
+      userId
     );
     return {
       message: statusChangeMessage,
@@ -132,7 +132,7 @@ export const competitorUpdate = async (_, { input }, context) => {
       competitorId,
       origin,
       updateData,
-      userId,
+      userId
     );
     return {
       message: updateCompetitorMessage.message,
@@ -172,12 +172,7 @@ export const competitorCreate = async (_, { input }, context) => {
     }
 
     // Store competitor
-    const storeCompetitorResponse = await storeCompetitor(
-      eventId,
-      competitorData,
-      userId,
-      origin,
-    );
+    const storeCompetitorResponse = await storeCompetitor(eventId, competitorData, userId, origin);
 
     return {
       message: 'Competitor successfully added',

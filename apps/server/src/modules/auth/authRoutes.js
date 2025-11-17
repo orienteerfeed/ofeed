@@ -5,10 +5,7 @@ import crypto from 'crypto';
 import { Router } from 'express';
 import { check, validationResult } from 'express-validator';
 
-import {
-  AuthenticationError,
-  ValidationError,
-} from '../../exceptions/index.js';
+import { AuthenticationError, ValidationError } from '../../exceptions/index.js';
 import { formatErrors } from '../../utils/errors.js';
 import {
   error as errorResponse,
@@ -35,12 +32,7 @@ const Response = OAuth2Server.Response;
 const oauth = new OAuth2Server({
   debug: true,
   model: oauth2Model, // Implement this file based on your storage (e.g., DB).
-  grants: [
-    'authorization_code',
-    'password',
-    'refresh_token',
-    'client_credentials',
-  ],
+  grants: ['authorization_code', 'password', 'refresh_token', 'client_credentials'],
   accessTokenLifetime: 3600,
   allowBearerTokensInQueryString: true,
 });
@@ -81,16 +73,11 @@ router.use(bodyParser.json());
  */
 router.post(
   '/signin',
-  [
-    check('username').not().isEmpty().trim().isEmail(),
-    check('password').not().isEmpty().trim(),
-  ],
+  [check('username').not().isEmpty().trim().isEmail(), check('password').not().isEmpty().trim()],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .json(validationResponse(formatErrors(errors), res.statusCode));
+      return res.status(422).json(validationResponse(formatErrors(errors), res.statusCode));
     }
     const {
       body: { username, password },
@@ -100,24 +87,16 @@ router.post(
       const loginSuccessPayload = await authenticateUser(username, password);
       return res
         .status(200)
-        .json(
-          successResponse('OK', { data: loginSuccessPayload }, res.statusCode),
-        );
+        .json(successResponse('OK', { data: loginSuccessPayload }, res.statusCode));
     } catch (error) {
       if (error instanceof ValidationError) {
-        return res
-          .status(422)
-          .json(validationResponse(error.message, res.statusCode));
+        return res.status(422).json(validationResponse(error.message, res.statusCode));
       } else if (error instanceof AuthenticationError) {
-        return res
-          .status(401)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(401).json(errorResponse(error.message, res.statusCode));
       }
-      return res
-        .status(500)
-        .json(errorResponse('Internal Server Error', res.statusCode));
+      return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -174,9 +153,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .json(validationResponse(formatErrors(errors), res.statusCode));
+      return res.status(422).json(validationResponse(formatErrors(errors), res.statusCode));
     }
 
     const {
@@ -189,7 +166,7 @@ router.post(
         password,
         firstname,
         lastname,
-        req.headers['x-orienteerfeed-app-activate-user-url'] || 'localhost',
+        req.headers['x-orienteerfeed-app-activate-user-url'] || 'localhost'
       );
       return res
         .status(200)
@@ -197,18 +174,16 @@ router.post(
           successResponse(
             'OK',
             { data: signUpPayload, message: 'User successfuly created' },
-            res.statusCode,
-          ),
+            res.statusCode
+          )
         );
     } catch (error) {
       if (error instanceof ValidationError) {
-        return res
-          .status(422)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(422).json(errorResponse(error.message, res.statusCode));
       }
       return res.status(500).json(errorResponse(error.message, res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -245,9 +220,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .json(validationResponse(formatErrors(errors), res.statusCode));
+      return res.status(422).json(validationResponse(formatErrors(errors), res.statusCode));
     }
 
     const {
@@ -257,7 +230,7 @@ router.post(
     try {
       const passwordResetPayload = await passwordResetRequest(
         email,
-        req.headers['x-ofeed-app-reset-password-url'] || 'localhost',
+        req.headers['x-ofeed-app-reset-password-url'] || 'localhost'
       );
 
       return res
@@ -266,18 +239,16 @@ router.post(
           successResponse(
             'OK',
             { data: signUpPayload, message: passwordResetPayload.message },
-            res.statusCode,
-          ),
+            res.statusCode
+          )
         );
     } catch (error) {
       if (error instanceof ValidationError) {
-        return res
-          .status(422)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(422).json(errorResponse(error.message, res.statusCode));
       }
       return res.status(500).json(errorResponse(error.message, res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -318,9 +289,7 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .json(validationResponse(formatErrors(errors), res.statusCode));
+      return res.status(422).json(validationResponse(formatErrors(errors), res.statusCode));
     }
 
     const {
@@ -328,10 +297,7 @@ router.post(
     } = req;
 
     try {
-      const passwordResetPayload = await passwordResetConfirm(
-        token,
-        newPassword,
-      );
+      const passwordResetPayload = await passwordResetConfirm(token, newPassword);
 
       return res.status(200).json(
         successResponse(
@@ -344,18 +310,16 @@ router.post(
             },
             message: passwordResetPayload.message,
           },
-          res.statusCode,
-        ),
+          res.statusCode
+        )
       );
     } catch (error) {
       if (error instanceof ValidationError) {
-        return res
-          .status(422)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(422).json(errorResponse(error.message, res.statusCode));
       }
       return res.status(500).json(errorResponse(error.message, res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -491,14 +455,12 @@ router.post('/oauth2/token', async (req, res) => {
           error: 'invalid_request',
           error_description: 'Missing or invalid authorization header',
         },
-        res.statusCode,
+        res.statusCode
       );
     }
 
     const base64Credentials = authHeader.split(' ')[1];
-    const credentials = Buffer.from(base64Credentials, 'base64').toString(
-      'ascii',
-    );
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
     const [client_id, client_secret] = credentials.split(':');
 
     if (!client_id || !client_secret) {
@@ -507,7 +469,7 @@ router.post('/oauth2/token', async (req, res) => {
           error: 'invalid_client',
           error_description: 'Invalid client credentials format',
         },
-        res.statusCode,
+        res.statusCode
       );
     }
 
@@ -519,7 +481,7 @@ router.post('/oauth2/token', async (req, res) => {
           error: 'invalid_grant',
           error_description: 'Unsupported grant_type',
         },
-        res.statusCode,
+        res.statusCode
       );
     }
 
@@ -533,7 +495,7 @@ router.post('/oauth2/token', async (req, res) => {
           error: 'unauthorized_client',
           error_description: 'Invalid client credentials',
         },
-        res.statusCode,
+        res.statusCode
       );
     }
 
@@ -543,24 +505,22 @@ router.post('/oauth2/token', async (req, res) => {
           error: 'invalid_scope',
           error_description: 'Invalid scope requested',
         },
-        res.statusCode,
+        res.statusCode
       );
     }
 
     oauth
       .token(request, response)
-      .then((token) => {
+      .then(token => {
         const accessTokenResponse = {
           access_token: token.accessToken,
           token_type: 'Bearer',
-          expires_in: Math.floor(
-            (token.accessTokenExpiresAt.getTime() - Date.now()) / 1000,
-          ),
+          expires_in: Math.floor((token.accessTokenExpiresAt.getTime() - Date.now()) / 1000),
           scope: scope,
         };
         return res.status(200).json(accessTokenResponse, res.statusCode);
       })
-      .catch((err) => {
+      .catch(err => {
         console.error(err);
         return res.status(err.code || 500).json(errorResponse(err, err.code));
       });
@@ -586,8 +546,8 @@ router.get('/oauth2-credentials', async (req, res) => {
         {
           data: { client_id: oAuth2Credentials.clientId },
         },
-        res.statusCode,
-      ),
+        res.statusCode
+      )
     );
   } catch (error) {
     console.error('Error creating client:', error);
@@ -610,13 +570,9 @@ router.post(
     const { grants, redirectUris, scopes } = req.body;
     const { userId } = req.jwtDecoded;
 
-    const grantArray = grants.split(',').map((grant) => grant.trim());
-    const redirectUriArray = redirectUris
-      ? redirectUris.split(',').map((uri) => uri.trim())
-      : [];
-    const scopeArray = scopes
-      ? scopes.split(',').map((scope) => scope.trim())
-      : [];
+    const grantArray = grants.split(',').map(grant => grant.trim());
+    const redirectUriArray = redirectUris ? redirectUris.split(',').map(uri => uri.trim()) : [];
+    const scopeArray = scopes ? scopes.split(',').map(scope => scope.trim()) : [];
 
     // Generate client_id and client_secret
     const clientId = generateRandomHex(32);
@@ -632,19 +588,19 @@ router.post(
         clientSecret: hashedSecret,
         userId: userId,
         grants: {
-          create: grantArray.map((grant) => ({ grantType: grant })),
+          create: grantArray.map(grant => ({ grantType: grant })),
         },
       };
 
       if (redirectUriArray.length > 0) {
         clientData.redirectUris = {
-          create: redirectUriArray.map((uri) => ({ uri: uri })),
+          create: redirectUriArray.map(uri => ({ uri: uri })),
         };
       }
 
       if (scopeArray.length > 0) {
         clientData.scopes = {
-          create: scopeArray.map((scope) => ({ scope: scope })),
+          create: scopeArray.map(scope => ({ scope: scope })),
         };
       }
 
@@ -667,14 +623,14 @@ router.post(
             },
             message: 'OAuth2 Client successfuly created',
           },
-          res.statusCode,
-        ),
+          res.statusCode
+        )
       );
     } catch (error) {
       console.error('Error creating client:', error);
       return res.status(500).json(errorResponse(error.message, res.statusCode));
     }
-  },
+  }
 );
 
 export default router;

@@ -32,9 +32,9 @@ export const oauth2Model = {
         clientId: client.clientId,
         clientSecret: client.clientSecret,
         userId: client.userId,
-        grants: client.grants.map((grant) => grant.grantType), // Assuming Grants have a 'GrantType' field
-        redirectUris: client.redirectUris.map((redirectUri) => redirectUri.uri), // Assuming RedirectUri have a 'Uri' field
-        scopes: client.scopes.map((scope) => scope.scope), // Assuming Scope have a 'Scope' field
+        grants: client.grants.map(grant => grant.grantType), // Assuming Grants have a 'GrantType' field
+        redirectUris: client.redirectUris.map(redirectUri => redirectUri.uri), // Assuming RedirectUri have a 'Uri' field
+        scopes: client.scopes.map(scope => scope.scope), // Assuming Scope have a 'Scope' field
       };
 
       // Destructure secret hash from the found user object.
@@ -101,19 +101,19 @@ export const oauth2Model = {
         clientId: clientId,
         clientSecret: hashedSecret,
         grants: {
-          create: grants.map((grant) => ({ grantType: grant })),
+          create: grants.map(grant => ({ grantType: grant })),
         },
       };
 
       if (typeof redirectUris !== 'undefined' && redirectUris.length > 0) {
         clientData.redirectUris = {
-          create: redirectUris.map((uri) => ({ uri: uri })),
+          create: redirectUris.map(uri => ({ uri: uri })),
         };
       }
 
       if (typeof scopes !== 'undefined' && scopes.length > 0) {
         clientData.scopes = {
-          create: scopes.map((scope) => ({ scope: scope })),
+          create: scopes.map(scope => ({ scope: scope })),
         };
       }
 
@@ -127,7 +127,7 @@ export const oauth2Model = {
       throw error;
     }
   },
-  getAccessToken: async (accessToken) => {
+  getAccessToken: async accessToken => {
     try {
       const token = await prisma.oAuthAccessToken.findUnique({
         where: {
@@ -159,14 +159,12 @@ export const oauth2Model = {
       throw error;
     }
   },
-  getRefreshToken: async (refreshToken) => {
+  getRefreshToken: async refreshToken => {
     // Implement refresh token lookup logic here
     const mockRefreshTokens = [];
     try {
       // Lookup the refresh token in the database or cache
-      const token = await mockRefreshTokens.find(
-        (token) => token.refreshToken === refreshToken,
-      );
+      const token = await mockRefreshTokens.find(token => token.refreshToken === refreshToken);
 
       if (token) {
         // Check if the token is expired
@@ -194,7 +192,7 @@ export const oauth2Model = {
       return null;
     }
   },
-  revokeToken: async (revokeToken) => {
+  revokeToken: async revokeToken => {
     try {
       const token = await prisma.oAuthRefreshToken.findUnique({
         where: {
@@ -220,7 +218,7 @@ export const oauth2Model = {
       return false;
     }
   },
-  getUserFromClient: async (client) => {
+  getUserFromClient: async client => {
     // Assuming each client has an associated user in the clients array
     try {
       console.log('Fetching user for client:', client.clientId);
@@ -247,7 +245,7 @@ export const oauth2Model = {
     }
   },
   validateRequestedScopes: function (requestedScopes, clientScopes) {
-    return requestedScopes.every((scope) => clientScopes.includes(scope));
+    return requestedScopes.every(scope => clientScopes.includes(scope));
   },
   generateAccessToken: function (client, user, scope) {
     const payload = {

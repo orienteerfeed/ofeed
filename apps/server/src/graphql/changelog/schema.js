@@ -1,6 +1,6 @@
 export const typeDef = /* GraphQL */ `
   extend type Query {
-    changelogByEvent(eventId: String!): [Changelog!]
+    changelogByEvent(eventId: String!, origin: String, classId: Int, since: String): [Changelog!]
   }
   type Changelog {
     id: Int!

@@ -1,11 +1,7 @@
 import { Router } from 'express';
 import { body, check, query, validationResult } from 'express-validator';
 
-import {
-  AuthenticationError,
-  DatabaseError,
-  ValidationError,
-} from '../../exceptions/index.js';
+import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
 import {
   error as errorResponse,
   success as successResponse,
@@ -33,26 +29,20 @@ import {
 const router = Router();
 
 const validInputOrigin = ['START'];
-const validInputStatus = [
-  'Inactive',
-  'Active',
-  'DidNotStart',
-  'Cancelled',
-  'LateStart',
-];
+const validInputStatus = ['Inactive', 'Active', 'DidNotStart', 'Cancelled', 'LateStart'];
 
 const validateStateChangeInputs = [
   check('eventId').not().isEmpty().isString(),
   check('competitorId').not().isEmpty().isNumeric(),
   body('origin').not().isEmpty().isString(),
   check('status').not().isEmpty(),
-  body('origin').custom((value) => {
+  body('origin').custom(value => {
     if (!validInputOrigin.includes(value)) {
       throw new Error('Invalid origin');
     }
     return true; // Indicate that the validation succeeded
   }),
-  check('status').custom((value) => {
+  check('status').custom(value => {
     if (!validInputStatus.includes(value)) {
       throw new Error('Invalid status');
     }
@@ -114,9 +104,7 @@ const generatePassword = (wordCount = 3) => {
 
   const randomNumber = Math.floor(Math.random() * 100);
   const symbols = '!@#$%^&*';
-  const randomSymbol = symbols.charAt(
-    Math.floor(Math.random() * symbols.length),
-  );
+  const randomSymbol = symbols.charAt(Math.floor(Math.random() * symbols.length));
 
   return `${password}${randomNumber}${randomSymbol}`;
 };
@@ -274,20 +262,14 @@ router.post('/', validateEvent, async (req, res) => {
         authorId: userId,
       },
     });
-    return res
-      .status(200)
-      .json(successResponse('OK', { data: insertedEventId }, res.statusCode));
+    return res.status(200).json(successResponse('OK', { data: insertedEventId }, res.statusCode));
   } catch (error) {
     if (error instanceof ValidationError) {
-      return res
-        .status(422)
-        .json(validationResponse(error.message, res.statusCode));
+      return res.status(422).json(validationResponse(error.message, res.statusCode));
     } else if (error instanceof AuthenticationError) {
       return res.status(401).json(errorResponse(error.message, res.statusCode));
     }
-    return res
-      .status(500)
-      .json(errorResponse('Internal Server Error', res.statusCode));
+    return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
 });
 
@@ -429,28 +411,20 @@ router.put('/:eventId', validateEvent, async (req, res) => {
     });
 
     if (!event) {
-      return res
-        .status(404)
-        .json(errorResponse('Event not found', res.statusCode));
+      return res.status(404).json(errorResponse('Event not found', res.statusCode));
     }
 
     if (event.authorId !== userId) {
-      return res
-        .status(403)
-        .json(errorResponse('Not authorized', res.statusCode));
+      return res.status(403).json(errorResponse('Not authorized', res.statusCode));
     }
 
     // TODO: Add permission checks to ensure the user is allowed to edit the event
 
     // 🔥 Normalize latitude and longitude
     const dbLatitude =
-      latitude === '' || latitude === null || Number(latitude) === 0
-        ? null
-        : Number(latitude);
+      latitude === '' || latitude === null || Number(latitude) === 0 ? null : Number(latitude);
     const dbLongitude =
-      longitude === '' || longitude === null || Number(longitude) === 0
-        ? null
-        : Number(longitude);
+      longitude === '' || longitude === null || Number(longitude) === 0 ? null : Number(longitude);
 
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
@@ -473,20 +447,14 @@ router.put('/:eventId', validateEvent, async (req, res) => {
       },
     });
 
-    return res
-      .status(200)
-      .json(successResponse('OK', { data: updatedEvent }, res.statusCode));
+    return res.status(200).json(successResponse('OK', { data: updatedEvent }, res.statusCode));
   } catch (error) {
     if (error instanceof ValidationError) {
-      return res
-        .status(422)
-        .json(validationResponse(error.message, res.statusCode));
+      return res.status(422).json(validationResponse(error.message, res.statusCode));
     } else if (error instanceof AuthenticationError) {
       return res.status(401).json(errorResponse(error.message, res.statusCode));
     }
-    return res
-      .status(500)
-      .json(errorResponse('Internal Server Error', res.statusCode));
+    return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
 });
 
@@ -539,9 +507,7 @@ router.delete('/:eventId', async (req, res) => {
     });
 
     if (!event || event.authorId !== userId) {
-      return res
-        .status(403)
-        .json(errorResponse('Event not found', res.statusCode));
+      return res.status(403).json(errorResponse('Event not found', res.statusCode));
     }
 
     // TODO: Check if the user has the right permissions to delete this event
@@ -551,20 +517,14 @@ router.delete('/:eventId', async (req, res) => {
       where: { id: eventId },
     });
 
-    return res
-      .status(200)
-      .json(successResponse('Event successfully deleted', {}, res.statusCode));
+    return res.status(200).json(successResponse('Event successfully deleted', {}, res.statusCode));
   } catch (error) {
     if (error instanceof ValidationError) {
-      return res
-        .status(422)
-        .json(validationResponse(error.message, res.statusCode));
+      return res.status(422).json(validationResponse(error.message, res.statusCode));
     } else if (error instanceof AuthenticationError) {
       return res.status(401).json(errorResponse(error.message, res.statusCode));
     }
-    return res
-      .status(500)
-      .json(errorResponse('Internal Server Error', res.statusCode));
+    return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
 });
 
@@ -606,9 +566,7 @@ router.post('/generate-password', async (req, res) => {
 
   // Encrypt the password and passphrase
   const encryptedPassword =
-    typeof eventPassword !== 'undefined'
-      ? encodeBase64(encrypt(eventPassword))
-      : undefined;
+    typeof eventPassword !== 'undefined' ? encodeBase64(encrypt(eventPassword)) : undefined;
 
   try {
     const event = await prisma.event.findUnique({
@@ -618,12 +576,7 @@ router.post('/generate-password', async (req, res) => {
     if (!event || event.authorId !== userId) {
       return res
         .status(403)
-        .json(
-          errorResponse(
-            'Event not found or you don`t have a permissions',
-            res.statusCode,
-          ),
-        );
+        .json(errorResponse('Event not found or you don`t have a permissions', res.statusCode));
     }
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
@@ -650,14 +603,12 @@ router.post('/generate-password', async (req, res) => {
         successResponse(
           'OK',
           { data: { password: eventPassword, expiresAt: expiresAt } },
-          res.statusCode,
-        ),
+          res.statusCode
+        )
       );
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json(errorResponse('Internal Server Error', res.statusCode));
+    return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
 });
 
@@ -703,12 +654,7 @@ router.post('/revoke-password', async (req, res) => {
     if (!event || event.authorId !== userId) {
       return res
         .status(404)
-        .json(
-          errorResponse(
-            'Event not found or you don`t have a permissions',
-            res.statusCode,
-          ),
-        );
+        .json(errorResponse('Event not found or you don`t have a permissions', res.statusCode));
     }
 
     const deletedEventPassword = await prisma.eventPassword.delete({
@@ -717,18 +663,10 @@ router.post('/revoke-password', async (req, res) => {
 
     return res
       .status(200)
-      .json(
-        successResponse(
-          'OK',
-          { data: { ...deletedEventPassword } },
-          res.statusCode,
-        ),
-      );
+      .json(successResponse('OK', { data: { ...deletedEventPassword } }, res.statusCode));
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json(errorResponse('Internal Server Error', res.statusCode));
+    return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
 });
 
@@ -770,9 +708,7 @@ router.get('/:eventId/password', async (req, res) => {
   });
 
   if (event.authorId !== userId) {
-    return res
-      .status(403)
-      .json(errorResponse('Not authorized', res.statusCode));
+    return res.status(403).json(errorResponse('Not authorized', res.statusCode));
   }
 
   try {
@@ -791,20 +727,16 @@ router.get('/:eventId/password', async (req, res) => {
         {
           data: responseData,
         },
-        res.statusCode,
-      ),
+        res.statusCode
+      )
     );
   } catch (error) {
     if (error instanceof ValidationError) {
-      return res
-        .status(422)
-        .json(validationResponse(error.message, res.statusCode));
+      return res.status(422).json(validationResponse(error.message, res.statusCode));
     } else if (error instanceof AuthenticationError) {
       return res.status(401).json(errorResponse(error.message, res.statusCode));
     }
-    return res
-      .status(500)
-      .json(errorResponse('Internal Server Error', res.statusCode));
+    return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
 });
 
@@ -869,9 +801,7 @@ router.post(
     });
 
     if (event.authorId !== userId) {
-      return res
-        .status(403)
-        .json(errorResponse('Not authorized', res.statusCode));
+      return res.status(403).json(errorResponse('Not authorized', res.statusCode));
     }
 
     // Everything went fine.
@@ -881,28 +811,20 @@ router.post(
         parseInt(competitorId),
         origin,
         status,
-        userId,
+        userId
       );
       return res
         .status(200)
-        .json(
-          successResponse('OK', { data: statusChangeMessage }, res.statusCode),
-        );
+        .json(successResponse('OK', { data: statusChangeMessage }, res.statusCode));
     } catch (error) {
       if (error instanceof ValidationError) {
-        return res
-          .status(422)
-          .json(validationResponse(error.message, res.statusCode));
+        return res.status(422).json(validationResponse(error.message, res.statusCode));
       } else if (error instanceof AuthenticationError) {
-        return res
-          .status(401)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(401).json(errorResponse(error.message, res.statusCode));
       }
-      return res
-        .status(500)
-        .json(errorResponse('Internal Server Error', res.statusCode));
+      return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -1109,9 +1031,7 @@ router.post(
       }
 
       if (event.authorId !== userId) {
-        return res
-          .status(403)
-          .json(errorResponse('Not authorized to add a competitor', 403));
+        return res.status(403).json(errorResponse('Not authorized to add a competitor', 403));
       }
 
       if (classExternalId) {
@@ -1127,32 +1047,21 @@ router.post(
           });
 
           if (!dbClassResponse) {
-            return res
-              .status(404)
-              .json(errorResponse('Class not found', res.statusCode));
+            return res.status(404).json(errorResponse('Class not found', res.statusCode));
           }
           req.body.classId = dbClassResponse.id;
         } catch (error) {
           console.error(error);
-          return res
-            .status(500)
-            .json(errorResponse('Internal Server Error', res.statusCode));
+          return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
         }
       }
 
       const competitorData = req.body;
 
       // Store competitor
-      const storeCompetitorMessage = await storeCompetitor(
-        eventId,
-        competitorData,
-        userId,
-        origin,
-      );
+      const storeCompetitorMessage = await storeCompetitor(eventId, competitorData, userId, origin);
 
-      return res
-        .status(200)
-        .json(successResponse('OK', { data: storeCompetitorMessage }, 200));
+      return res.status(200).json(successResponse('OK', { data: storeCompetitorMessage }, 200));
     } catch (error) {
       console.error(error);
 
@@ -1166,7 +1075,7 @@ router.post(
 
       return res.status(500).json(errorResponse('Internal Server Error', 500));
     }
-  },
+  }
 );
 
 /**
@@ -1194,9 +1103,7 @@ const handleValidateAndUpdateCompetitor = async (req, res, competitorId) => {
   });
 
   if (!event || event.authorId !== userId) {
-    return res
-      .status(403)
-      .json(errorResponse('Not authorized', res.statusCode));
+    return res.status(403).json(errorResponse('Not authorized', res.statusCode));
   }
 
   // Everything went fine.
@@ -1238,9 +1145,7 @@ const handleValidateAndUpdateCompetitor = async (req, res, competitorId) => {
             acc[field] = new Date(req.body[field]);
             break;
           case 'array':
-            acc[field] = Array.isArray(req.body[field])
-              ? req.body[field]
-              : [req.body[field]];
+            acc[field] = Array.isArray(req.body[field]) ? req.body[field] : [req.body[field]];
             break;
           default:
             acc[field] = req.body[field];
@@ -1254,31 +1159,21 @@ const handleValidateAndUpdateCompetitor = async (req, res, competitorId) => {
       competitorId,
       origin,
       updateData,
-      userId,
+      userId
     );
     return res
       .status(200)
-      .json(
-        successResponse(
-          'OK',
-          { data: updateCompetitorMessage },
-          res.statusCode,
-        ),
-      );
+      .json(successResponse('OK', { data: updateCompetitorMessage }, res.statusCode));
   } catch (error) {
     console.error(error);
     if (error instanceof ValidationError) {
-      return res
-        .status(422)
-        .json(validationResponse(error.message, res.statusCode));
+      return res.status(422).json(validationResponse(error.message, res.statusCode));
     } else if (error instanceof AuthenticationError) {
       return res.status(401).json(errorResponse(error.message, res.statusCode));
     } else if (error instanceof DatabaseError) {
       return res.status(500).json(errorResponse(error.message, res.statusCode));
     }
-    return res
-      .status(500)
-      .json(errorResponse('Internal Server Error', res.statusCode));
+    return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
 };
 
@@ -1287,7 +1182,7 @@ const handleValidateAndUpdateCompetitor = async (req, res, competitorId) => {
  * /rest/v1/events/{eventId}/competitors/{competitorId}:
  *  put:
  *    summary: Update competitor's data
- *    description: Change competitor status. For example from the start procecudere set status Active or DidNotStart
+ *    description: Change competitor's data by internal id
  *    tags:
  *       - Events
  *    parameters:
@@ -1465,14 +1360,14 @@ router.put(
     }
     const { competitorId } = req.params;
     handleValidateAndUpdateCompetitor(req, res, competitorId);
-  },
+  }
 );
 
 /**
  * @swagger
  * /rest/v1/events/{eventId}/competitors/{competitorExternalId}/external-id:
  *  put:
- *    summary: Update competitor's data
+ *    summary: Update competitor's data using external id
  *    description: Change competitor data by the external ID (for cases that you don't know the competitor's ID in OrienteerFeed).
  *    tags:
  *       - Events
@@ -1652,18 +1547,13 @@ router.put(
   '/:eventId/competitors/:competitorExternalId/external-id',
   check('eventId').not().isEmpty().isString(),
   check('competitorExternalId').not().isEmpty().isString(),
-  check('classExternalId')
-    .optional({ nullable: true })
-    .isString()
-    .isLength({ max: 191 }),
+  check('classExternalId').optional({ nullable: true }).isString().isLength({ max: 191 }),
   check('useExternalId').not().isEmpty().isBoolean(),
   body().custom((value, { req }) => {
     const { classId, classExternalId } = req.body;
 
     if (classId && classExternalId) {
-      throw new Error(
-        'Only one of classId or classExternalId should be provided, not both.',
-      );
+      throw new Error('Only one of classId or classExternalId should be provided, not both.');
     }
 
     return true;
@@ -1680,12 +1570,7 @@ router.put(
     if (!useExternalId) {
       return res
         .status(422)
-        .json(
-          errorResponse(
-            'The useExternalId parameter must be set to true',
-            res.statusCode,
-          ),
-        );
+        .json(errorResponse('The useExternalId parameter must be set to true', res.statusCode));
     }
 
     let dbCompetitorResponse;
@@ -1701,15 +1586,11 @@ router.put(
       });
     } catch (error) {
       console.error(error);
-      return res
-        .status(500)
-        .json(errorResponse('Internal Server Error', res.statusCode));
+      return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
 
     if (!dbCompetitorResponse) {
-      return res
-        .status(404)
-        .json(errorResponse('Competitor not found', res.statusCode));
+      return res.status(404).json(errorResponse('Competitor not found', res.statusCode));
     }
 
     if (classExternalId) {
@@ -1725,20 +1606,16 @@ router.put(
         });
 
         if (!dbClassResponse) {
-          return res
-            .status(404)
-            .json(errorResponse('Class not found', res.statusCode));
+          return res.status(404).json(errorResponse('Class not found', res.statusCode));
         }
         req.body.classId = dbClassResponse.id;
       } catch (error) {
         console.error(error);
-        return res
-          .status(500)
-          .json(errorResponse('Internal Server Error', res.statusCode));
+        return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
       }
     }
     handleValidateAndUpdateCompetitor(req, res, dbCompetitorResponse.id);
-  },
+  }
 );
 
 /**
@@ -1800,10 +1677,7 @@ router.get(
   '/:eventId/changelog',
   [
     check('eventId').not().isEmpty().isString(),
-    query('since')
-      .optional()
-      .isISO8601()
-      .withMessage('since must be a valid ISO 8601 datetime'),
+    query('since').optional().isISO8601().withMessage('since must be a valid ISO 8601 datetime'),
     query('origin').optional().isIn(['START', 'FINISH', 'IT', 'OFFICE']),
     query('group').optional().isBoolean().toBoolean(),
     query('classId')
@@ -1818,8 +1692,7 @@ router.get(
               eventId: req.params.eventId,
             },
           });
-          if (!existingClass)
-            throw new Error('Class ID does not exist in the database');
+          if (!existingClass) throw new Error('Class ID does not exist in the database');
         }
         return true;
       }),
@@ -1840,9 +1713,7 @@ router.get(
     });
 
     if (!event || event.authorId !== userId) {
-      return res
-        .status(403)
-        .json(errorResponse('Not authorized', res.statusCode));
+      return res.status(403).json(errorResponse('Not authorized', res.statusCode));
     }
 
     // Everything went fine.
@@ -1857,20 +1728,13 @@ router.get(
       });
     } catch (err) {
       console.error(err);
-      return res
-        .status(500)
-        .json(errorResponse(`An error occurred: ` + err.message));
+      return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
     }
 
     if (!dbResponseEvent) {
       return res
         .status(422)
-        .json(
-          errorResponse(
-            `Event with ID ${eventId} does not exist in the database`,
-            422,
-          ),
-        );
+        .json(errorResponse(`Event with ID ${eventId} does not exist in the database`, 422));
     }
 
     // Build filters for the query
@@ -1925,9 +1789,7 @@ router.get(
       });
     } catch (err) {
       console.error(err);
-      return res
-        .status(500)
-        .json(errorResponse(`An error occurred: ` + err.message));
+      return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
     }
 
     if (shouldGroup) {
@@ -1957,21 +1819,13 @@ router.get(
 
       return res
         .status(200)
-        .json(
-          successResponse(
-            'OK',
-            { data: Object.values(grouped) },
-            res.statusCode,
-          ),
-        );
+        .json(successResponse('OK', { data: Object.values(grouped) }, res.statusCode));
     }
 
     return res
       .status(200)
-      .json(
-        successResponse('OK', { data: dbProtocolResponse }, res.statusCode),
-      );
-  },
+      .json(successResponse('OK', { data: dbProtocolResponse }, res.statusCode));
+  }
 );
 
 /**
@@ -2027,29 +1881,21 @@ router.delete(
       });
 
       if (!event || event.authorId !== userId) {
-        return res
-          .status(403)
-          .json(errorResponse('Not authorized', res.statusCode));
+        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
       }
 
       // Call deleteEventCompetitors function
       const deleteMessage = await deleteEventCompetitors(eventId);
 
-      return res
-        .status(200)
-        .json(successResponse('OK', { data: deleteMessage }, res.statusCode));
+      return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
       console.error(error);
       if (error instanceof DatabaseError) {
-        return res
-          .status(500)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(500).json(errorResponse(error.message, res.statusCode));
       }
-      return res
-        .status(500)
-        .json(errorResponse('Internal Server Error', res.statusCode));
+      return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -2091,10 +1937,7 @@ router.delete(
  */
 router.delete(
   '/:eventId/competitors/:competitorId',
-  [
-    check('eventId').not().isEmpty().isString(),
-    check('competitorId').not().isEmpty().isInt(),
-  ],
+  [check('eventId').not().isEmpty().isString(), check('competitorId').not().isEmpty().isInt()],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -2112,29 +1955,21 @@ router.delete(
       });
 
       if (!event || event.authorId !== userId) {
-        return res
-          .status(403)
-          .json(errorResponse('Not authorized', res.statusCode));
+        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
       }
 
       // Call deleteCompetitor function
       const deleteMessage = await deleteEventCompetitor(eventId, competitorId);
 
-      return res
-        .status(200)
-        .json(successResponse('OK', { data: deleteMessage }, res.statusCode));
+      return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
       console.error(error);
       if (error instanceof DatabaseError) {
-        return res
-          .status(500)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(500).json(errorResponse(error.message, res.statusCode));
       }
-      return res
-        .status(500)
-        .json(errorResponse('Internal Server Error', res.statusCode));
+      return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -2189,9 +2024,7 @@ router.delete(
       });
 
       if (!event || event.authorId !== userId) {
-        return res
-          .status(403)
-          .json(errorResponse('Not authorized', res.statusCode));
+        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
       }
 
       // Get competitor id
@@ -2206,29 +2039,21 @@ router.delete(
       });
 
       if (!dbCompetitorResponse) {
-        return res
-          .status(404)
-          .json(errorResponse('Competitor not found', res.statusCode));
+        return res.status(404).json(errorResponse('Competitor not found', res.statusCode));
       }
 
       // Call deleteCompetitor by externalId function
       const deleteMessage = await deleteEventCompetitor(eventId, dbCompetitorResponse.id);
 
-      return res
-        .status(200)
-        .json(successResponse('OK', { data: deleteMessage }, res.statusCode));
+      return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
       console.error(error);
       if (error instanceof DatabaseError) {
-        return res
-          .status(500)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(500).json(errorResponse(error.message, res.statusCode));
       }
-      return res
-        .status(500)
-        .json(errorResponse('Internal Server Error', res.statusCode));
+      return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
-  },
+  }
 );
 
 /**
@@ -2284,35 +2109,25 @@ router.delete(
       });
 
       if (!event) {
-        return res
-          .status(404)
-          .json(errorResponse('Event not found', res.statusCode));
+        return res.status(404).json(errorResponse('Event not found', res.statusCode));
       }
 
       if (event.authorId !== userId) {
-        return res
-          .status(403)
-          .json(errorResponse('Not authorized', res.statusCode));
+        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
       }
 
       // Call deleteEventData function
       const deleteMessage = await deleteAllEventData(eventId);
 
-      return res
-        .status(200)
-        .json(successResponse('OK', { data: deleteMessage }, res.statusCode));
+      return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
       console.error(error);
       if (error instanceof DatabaseError) {
-        return res
-          .status(500)
-          .json(errorResponse(error.message, res.statusCode));
+        return res.status(500).json(errorResponse(error.message, res.statusCode));
       }
-      return res
-        .status(500)
-        .json(errorResponse('Internal Server Error', res.statusCode));
+      return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
-  },
+  }
 );
 
 export default router;

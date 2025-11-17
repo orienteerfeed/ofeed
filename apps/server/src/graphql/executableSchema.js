@@ -1,44 +1,23 @@
 import merge from 'lodash.merge';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import {
-  constraintDirective,
-  constraintDirectiveTypeDefs,
-} from 'graphql-constraint-directive';
+import { constraintDirective, constraintDirectiveTypeDefs } from 'graphql-constraint-directive';
 
 // Import type definitions and resolvers for Events.
-import {
-  typeDef as Event,
-  resolvers as eventResolvers,
-} from './event/index.js';
+import { typeDef as Event, resolvers as eventResolvers } from './event/index.js';
 // Import type definitions and resolvers for Classes.
-import {
-  typeDef as Class,
-  resolvers as classResolvers,
-} from './class/index.js';
+import { typeDef as Class, resolvers as classResolvers } from './class/index.js';
 // Import type definitions and resolvers for Sports.
-import {
-  typeDef as Sport,
-  resolvers as sportResolvers,
-} from './sport/index.js';
+import { typeDef as Sport, resolvers as sportResolvers } from './sport/index.js';
 // Import type definitions and resolvers for Competitors.
-import {
-  typeDef as Competitor,
-  resolvers as competitorResolvers,
-} from './competitor/index.js';
+import { typeDef as Competitor, resolvers as competitorResolvers } from './competitor/index.js';
 // Import type definitions and resolvers for Teams.
 import { typeDef as Team, resolvers as teamResolvers } from './team/index.js';
 // Import type definitions and resolvers for Users.
 import { typeDef as User, resolvers as userResolvers } from './user/index.js';
 // Import type definitions and resolvers for Changelog.
-import {
-  typeDef as Changelog,
-  resolvers as changelogResolvers,
-} from './changelog/index.js';
+import { typeDef as Changelog, resolvers as changelogResolvers } from './changelog/index.js';
 // Import type definitions and resolvers for Country.
-import {
-  typeDef as Country,
-  resolvers as countryResolvers,
-} from './country/index.js';
+import { typeDef as Country, resolvers as countryResolvers } from './country/index.js';
 
 // Import type definitions and resolvers for EventPassword.
 import {
@@ -47,10 +26,7 @@ import {
 } from './eventPassword/index.js';
 
 // Import type definitions and resolvers for Split.
-import {
-  typeDef as Split,
-  resolvers as splitResolvers,
-} from './split/index.js';
+import { typeDef as Split, resolvers as splitResolvers } from './split/index.js';
 
 // based on - https://www.apollographql.com/blog/backend/schema-design/modularizing-your-graphql-schema-code/
 // Basic query and mutation typeDefs
@@ -104,7 +80,7 @@ const schema = makeExecutableSchema({
     changelogResolvers,
     countryResolvers,
     eventPasswordResolvers,
-    splitResolvers,
+    splitResolvers
   ),
 });
 

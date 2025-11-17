@@ -11,13 +11,12 @@ const commonValidations = [
     .optional({ nullable: true })
     .isNumeric()
     .withMessage('Class ID must be a number')
-    .custom(async (value) => {
+    .custom(async value => {
       if (value) {
         const existingClass = await prisma.class.findUnique({
           where: { id: value },
         });
-        if (!existingClass)
-          throw new Error('Class ID does not exist in the database');
+        if (!existingClass) throw new Error('Class ID does not exist in the database');
       }
       return true;
     }),
@@ -78,10 +77,7 @@ const commonValidations = [
     .isLength({ max: 10 })
     .withMessage('Short name can be at most 10 characters long'),
 
-  check('card')
-    .optional({ nullable: true })
-    .isInt()
-    .withMessage('Card must be an integer'),
+  check('card').optional({ nullable: true }).isInt().withMessage('Card must be an integer'),
 
   check('startTime')
     .optional({ nullable: true })
@@ -93,30 +89,23 @@ const commonValidations = [
     .isISO8601()
     .withMessage('Finish time must be a valid datetime'),
 
-  check('time')
-    .optional({ nullable: true })
-    .isInt()
-    .withMessage('Time must be an integer'),
+  check('time').optional({ nullable: true }).isInt().withMessage('Time must be an integer'),
 
   check('teamId')
     .optional({ nullable: true })
     .isInt()
     .withMessage('Team ID must be an integer')
-    .custom(async (value) => {
+    .custom(async value => {
       if (value) {
         const existingTeam = await prisma.team.findUnique({
           where: { id: value },
         });
-        if (!existingTeam)
-          throw new Error('Team ID does not exist in the database');
+        if (!existingTeam) throw new Error('Team ID does not exist in the database');
       }
       return true;
     }),
 
-  check('leg')
-    .optional({ nullable: true })
-    .isInt()
-    .withMessage('Leg must be an integer'),
+  check('leg').optional({ nullable: true }).isInt().withMessage('Leg must be an integer'),
 
   check('status')
     .optional()
@@ -138,13 +127,10 @@ const commonValidations = [
       'Cancelled',
     ])
     .withMessage(
-      'Status must be one of OK, Finished, MissingPunch, Disqualified, DidNotFinish, Active, Inactive, OverTime, SportingWithdrawal, NotCompeting, Moved, MovedUp, DidNotStart, DidNotEnter, Cancelled',
+      'Status must be one of OK, Finished, MissingPunch, Disqualified, DidNotFinish, Active, Inactive, OverTime, SportingWithdrawal, NotCompeting, Moved, MovedUp, DidNotStart, DidNotEnter, Cancelled'
     ),
 
-  check('lateStart')
-    .optional()
-    .isBoolean()
-    .withMessage('Late start must be a boolean'),
+  check('lateStart').optional().isBoolean().withMessage('Late start must be a boolean'),
 
   check('note')
     .optional({ nullable: true })
@@ -167,7 +153,7 @@ const commonValidations = [
 
   body('splits.*.time')
     .optional({ nullable: true })
-    .custom((value) => {
+    .custom(value => {
       if (value === null || value === undefined) return true;
       if (Number.isInteger(value)) return true;
       throw new Error('Each split.time must be an integer, null, or undefined');
@@ -193,16 +179,14 @@ export const validateCreateCompetitor = [
         .isLength({ max: 191 })
         .withMessage('Class External ID must be a string of max length 191'),
     ],
-    'Either classId or classExternalId must be provided',
+    'Either classId or classExternalId must be provided'
   ),
 
   body().custom((value, { req }) => {
     const { classId, classExternalId } = req.body;
 
     if (classId && classExternalId) {
-      throw new Error(
-        'Only one of classId or classExternalId should be provided, not both.',
-      );
+      throw new Error('Only one of classId or classExternalId should be provided, not both.');
     }
 
     return true;

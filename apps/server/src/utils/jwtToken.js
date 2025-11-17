@@ -22,7 +22,7 @@ export const getJwtToken = (payload, expiresIn = null) => {
   return jwt.sign(payload, JWT_TOKEN_SECRET_KEY, options);
 };
 
-export const generateJwtTokenForLink = (userId) => {
+export const generateJwtTokenForLink = userId => {
   const token = jwt.sign({ id: userId }, JWT_TOKEN_SECRET_KEY, {
     expiresIn: '48h',
   });
@@ -47,23 +47,16 @@ export const verifyJwtToken = async (req, res, next) => {
       req.jwtDecoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY); // Verify JWT token
 
       // Optional: Check if it's an OAuth client token
-      if (
-        typeof req.jwtDecoded.clientId !== 'undefined' &&
-        req.jwtDecoded.clientId
-      ) {
+      if (typeof req.jwtDecoded.clientId !== 'undefined' && req.jwtDecoded.clientId) {
         const tokenDetails = await oauth2Model.getAccessToken(token);
         if (!tokenDetails) {
-          return res
-            .status(401)
-            .json(error('Invalid or expired access token', res.statusCode));
+          return res.status(401).json(error('Invalid or expired access token', res.statusCode));
         }
       }
       next(); // Continue to the next middleware
     } catch (err) {
       console.error(err);
-      return res
-        .status(401)
-        .json(error('Unauthorized: Invalid JWT.', res.statusCode));
+      return res.status(401).json(error('Unauthorized: Invalid JWT.', res.statusCode));
     }
   } else {
     // Check for Basic Authentication
@@ -90,33 +83,21 @@ export const verifyJwtToken = async (req, res, next) => {
         } else {
           return res
             .status(401)
-            .json(
-              error(
-                'Unauthorized: Invalid eventId or eventPassword.',
-                res.statusCode,
-              ),
-            );
+            .json(error('Unauthorized: Invalid eventId or eventPassword.', res.statusCode));
         }
       } catch (err) {
         console.error(err);
         return res
           .status(401)
-          .json(
-            error(
-              'Unauthorized: Could not validate event credentials.',
-              res.statusCode,
-            ),
-          );
+          .json(error('Unauthorized: Could not validate event credentials.', res.statusCode));
       }
     } else {
-      return res
-        .status(401)
-        .json(error('Missing `authorization` header.', res.statusCode));
+      return res.status(401).json(error('Missing `authorization` header.', res.statusCode));
     }
   }
 };
 
-export const verifyToken = (token) => {
+export const verifyToken = token => {
   if (!token) {
     throw new Error('No token provided');
   }
@@ -155,7 +136,7 @@ export const verifyBasicAuth = async (username, password, eventId) => {
  * @param {string} token - The token to verify.
  * @returns {string} The extracted user ID.
  */
-export const getUserIdFromActivationToken = (token) => {
+export const getUserIdFromActivationToken = token => {
   try {
     const decoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY);
     return decoded.id;

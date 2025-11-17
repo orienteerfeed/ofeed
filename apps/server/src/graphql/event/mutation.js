@@ -1,10 +1,6 @@
 import { verifyToken } from '../../utils/jwtToken.js';
 
-export const updateEventVisibility = async (
-  _,
-  { eventId, published },
-  context,
-) => {
+export const updateEventVisibility = async (_, { eventId, published }, context) => {
   if (!context.token) {
     throw new Error('Unauthorized: No token provided');
   }
@@ -34,9 +30,7 @@ export const updateEventVisibility = async (
     });
 
     return {
-      message: `Event visibility updated to ${
-        published ? 'Public' : 'Private'
-      }`,
+      message: `Event visibility updated to ${published ? 'Public' : 'Private'}`,
       eventResponse,
     };
   } catch (error) {

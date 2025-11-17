@@ -4,7 +4,7 @@ import prisma from '../../utils/context.js';
 // Cache to track event winners
 const winnersCache = new Map(); // Map<eventId, Map<classId, competitorId>>
 
-export const notifyWinnerChanges = async (eventId) => {
+export const notifyWinnerChanges = async eventId => {
   try {
     const latestWinners = await prisma.competitor.findMany({
       where: { class: { eventId }, time: { not: null }, status: 'OK' },
@@ -25,7 +25,7 @@ export const notifyWinnerChanges = async (eventId) => {
     // If no cache exists, initialize it (but DO NOT publish notifications)
     if (!previousWinners) {
       previousWinners = new Map();
-      latestWinners.forEach((winner) => {
+      latestWinners.forEach(winner => {
         previousWinners.set(winner.classId, winner.id);
       });
 
@@ -55,10 +55,8 @@ export const notifyWinnerChanges = async (eventId) => {
     winnersCache.set(eventId, previousWinners);
 
     if (winnerChanges.length > 0) {
-      winnerChanges.forEach((winner) => {
-        console.log(
-          `Publishing WINNER_UPDATED(${eventId}) for class ${winner.className}`,
-        );
+      winnerChanges.forEach(winner => {
+        console.log(`Publishing WINNER_UPDATED(${eventId}) for class ${winner.className}`);
 
         pubsub.publish(WINNER_UPDATED(eventId), {
           winnerUpdated: {
