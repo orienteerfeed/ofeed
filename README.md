@@ -59,6 +59,7 @@ Create .env from the template in .env.example and fill in the credentials to you
 npm install
 # Deploy database schema
 npx prisma migrate deploy
+npx prisma generate
 npx prisma db seed
 # Run the app
 npm run start:dev
@@ -98,6 +99,7 @@ npx prisma migrate dev --name your_migration_name
 ```
 
 ## Docker compose
+
 ```bash
 # Create server and client env files
 Create server/.env from the template in server/.env.example and fill in the credentials to your database and keys to 3rd party.
