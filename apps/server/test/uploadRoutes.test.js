@@ -1,6 +1,6 @@
+import { PrismaClient } from '@prisma/client';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { PrismaClient } from '@prisma/client';
 import { parseXmlForTesting } from '../src/modules/upload/uploadRoutes.js';
 
 const { upsertCompetitor } = parseXmlForTesting;
