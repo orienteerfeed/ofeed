@@ -25,6 +25,7 @@ const app = express();
 app.use(morgan('tiny'));
 
 app.use(express.json());
+//TODO: adjust CORS settings for production
 app.use(cors({
   origin: 'http://localhost:3000',  // nebo (origin, cb) => cb(null, true) pro dynamiku
   credentials: true,                // pokud používáš cookies
