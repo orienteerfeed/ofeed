@@ -3,6 +3,7 @@ import { expressMiddleware } from '@apollo/server/express4';
 import cors from 'cors';
 import express from 'express';
 import { useServer } from 'graphql-ws/use/ws';
+import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 import swaggerJsdoc from 'swagger-jsdoc';
@@ -25,15 +26,37 @@ const app = express();
 app.use(morgan('tiny'));
 
 app.use(express.json());
-//TODO: adjust CORS settings for production
+//TODO: adjust CORS settings for production, and move to environment variables
 app.use(
   cors({
-    origin: 'http://localhost:3000', // nebo (origin, cb) => cb(null, true) pro dynamiku
-    credentials: true, // pokud používáš cookies
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: [
+      'localhost:3000',
+      'http://localhost:3000',
+      'https://orienteerfeed.com',
+      'https://www.orienteerfeed.com',
+    ],
+    credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-orienteerfeed-app-activate-user-url',
+      'x-ofeed-app-reset-password-url',
+    ],
+    maxAge: 86400,
   })
 );
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false,
+  })
+);
+
+// TODO: set up express rate limiters
+
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use('/mrb/assets', express.static('mrb/assets', { fallthrough: false }));
