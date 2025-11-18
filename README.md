@@ -1,4 +1,7 @@
-# Orienteering Cloud Data Hub
+# OFeed
+
+[![Nodejs Version](https://img.shields.io/badge/node.js-22.20%20LTS-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 
 "OrienteerFeed" is designed to be a dynamic and interactive web API platform which is specifically made for the orienteering community. Delivering real-time updates, live tracking, and a continuous stream of information about orienteering events is its key service.
 
@@ -24,7 +27,7 @@ This application is like a digital hub for all things related to orienteering ev
 
 ## Development
 
-We will be using [Node.js](https://nodejs.org/) v22.14.0 (current LTS).
+We will be using [Node.js](https://nodejs.org/) v22.20.0 (current LTS).
 New JavaScript features (ES2015) are "enabled". Can be used with promises, ES6 generators and async/await using [Babel](https://babeljs.io/).
 
 ### NodeJS Express
@@ -34,7 +37,30 @@ New JavaScript features (ES2015) are "enabled". Can be used with promises, ES6 g
 ### Local development
 
 Clone the git repo, install dependencies, and deploy database schema.
-To clone and run this application, you'll need Git and Node.js (which comes with npm) installed on your computer. For consistent development and deployment environments, this project specifies a required Node.js version in the [.nvmrc](./.nvmrc) file. It is recommended to manage your Node.js installation using [Node Version Manager](https://github.com/nvm-sh/nvm) (nvm), which helps ensure that you are using the exact version of Node.js needed for this project. From your command line:
+To clone and run this application, you'll need Git, Node.js (which comes with npm) and pnpm package manager installed on your computer. For consistent development and deployment environments, this project specifies a required Node.js version in the [.nvmrc](./.nvmrc) file. It is recommended to manage your Node.js installation using [Node Version Manager](https://github.com/nvm-sh/nvm) (nvm), which helps ensure that you are using the exact version of Node.js needed for this project. 
+
+> This repo using pnpm as package manager. If you don't have pnpm or
+> have a different version, use Corepack (part of Node ≥16.13;
+> recommended):
+> 
+> ```bash
+> # Enable Corepack and activate the exact pnpm version required by the repo
+> 
+> corepack enable
+> corepack prepare  pnpm@10.20.0  --activate
+> 
+> # Verify
+> pnpm -v  # should print 10.20.0
+> ```
+> 
+> Fallback (not recommended, only if Corepack is unavailable):
+> 
+> ```bash
+> npm i  -g  pnpm@10.20.0
+> pnpm -v
+> ```
+
+**From your command line:**
 
 ```bash
 # Clone this repository
@@ -46,35 +72,38 @@ cd ofeed
 # which are used for code formatting, linting, and maintaining a consistent code style
 # across both the client and server applications. These tools are not needed in production
 # but are essential for a clean and maintainable codebase during development.)
-npm install
+pnpm install
 ```
+> If you are migrating from npm/yarn, delete `package-lock.json`/`yarn.lock` and `node_modules`.
+> The lockfile for pnpm is `pnpm-lock.yaml`.
 
 #### Server
 
 ```bash
 # Go into the app folder
-cd server
-Create .env from the template in .env.example and fill in the credentials to your database and keys to 3rd party.
-# Install dependencies
-npm install
+cd apps/server
+
+# Create .env from template and fill in the credentials to your database and keys to 3rd party.
+cp .env.example .env
+
 # Deploy database schema
-npx prisma migrate deploy
-npx prisma generate
-npx prisma db seed
+pnpm exec prisma migrate deploy
+pnpm exec prisma generate
+pnpm exec prisma db seed
+
 # Run the app
-npm run start:dev
+pnpm start:dev
 ```
 
 #### Client
 
 ```bash
 # Go into the app folder
-cd client
-Create .env from the template in .env.example and fill in the base url for backend api service.
-# Install dependencies
-npm install
+cd apps/client
+# Create .env from template and fill in the base url for backend api service.
+cp .env.example .env
 # Run the app
-npm run start
+pnpm dev
 ```
 
 #### How to update database schema
@@ -95,7 +124,7 @@ model Post {
 2. Generate Migration
 
 ```
-npx prisma migrate dev --name your_migration_name
+pnpm exec prisma migrate dev --name your_migration_name
 ```
 
 ## Docker compose

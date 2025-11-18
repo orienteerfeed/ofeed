@@ -127,6 +127,7 @@ yarn.lock
 /docs/
 /documentation/
 /changelog.md
+/README.md
 /version.txt
 
 # =============================================================================

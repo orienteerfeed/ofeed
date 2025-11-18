@@ -12,15 +12,15 @@ if ! command -v tmux &> /dev/null
 then
   echo "⚠️ concurrently not found, running in separate terminals"
   echo "👉 Open two terminals:"
-  echo "Terminal 1: cd server && npm run start:dev"
-  echo "Terminal 2: cd client && npm run start"
+  echo "Terminal 1: cd apps/server && pnpm start:dev"
+  echo "Terminal 2: cd apps/client && pnpm dev"
 fi
 
 
 # Start tmux session
 SESSION_NAME="dev"
 
-tmux new-session -d -s $SESSION_NAME 'cd server && npm run start:dev'
-tmux split-window -v 'cd client && npm run start'
+tmux new-session -d -s $SESSION_NAME 'cd apps/server && pnpm start:dev'
+tmux split-window -v 'cd apps/client && pnpm dev'
 tmux select-layout even-vertical
 tmux attach -t $SESSION_NAME
