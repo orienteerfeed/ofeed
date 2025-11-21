@@ -108,7 +108,7 @@ pnpm dev
 
 #### How to update database schema
 
-1. Modify your `./server/prisma/schema.prisma` file to reflect the changes you want in your [database schema](https://www.prisma.io/docs/orm/prisma-schema/data-model/models). This could involve adding new models, updating existing models, or deleting models. For example, to add a new model:
+1. Modify your `./apps/server/prisma/schema.prisma` file to reflect the changes you want in your [database schema](https://www.prisma.io/docs/orm/prisma-schema/data-model/models). This could involve adding new models, updating existing models, or deleting models. For example, to add a new model:
 
 ```
 model Post {
@@ -131,8 +131,8 @@ pnpm exec prisma migrate dev --name your_migration_name
 
 ```bash
 # Create server and client env files
-Create server/.env from the template in server/.env.example and fill in the credentials to your database and keys to 3rd party.
-Create client/.env from the template in client/.env.example and fill in the base url for backend api service.
+Create apps/server/.env from the template in apps/server/.env.example and fill in the credentials to your database and keys to 3rd party.
+Create apps/client/.env from the template in apps/client/.env.example and fill in the base url for backend api service.
 # Start the OFeed platform with one command, docker must be running (e.g. Docker Desktop)
 docker compose up -d
 ```
