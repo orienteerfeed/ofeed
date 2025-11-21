@@ -896,7 +896,7 @@ async function handleIofXmlUpload(req, res) {
   // Process uploaded XML file (compressed or uncompressed)
   // Automatically detects gzip compression and decompresses if needed
   // Returns Buffer containing the raw XML data ready for parsing
-  const xmlBuffer = maybeGunzip(req.file);
+  const xmlBuffer = maybeUnzip(req.file);
 
   if (typeof validateXml === 'undefined' || validateXml !== 'false') {
     const xsd = await fetchIOFXmlSchema();
@@ -1008,28 +1008,63 @@ async function handleIofXmlUpload(req, res) {
 }
 
 /**
- * Detects and decompresses gzipped files if necessary
+ * Detects and decompresses gzip or zlib-compressed files when necessary.
  *
- * Checks for gzip compression using both magic number detection (first two bytes: 0x1F 0x8B)
- * and file metadata hints (MIME type or file extension). If gzip is detected,
- * the file is automatically decompressed synchronously.
+ * The function inspects the file buffer to identify gzip (magic bytes 0x1F, 0x8B)
+ * or common zlib header patterns (0x78 followed by typical CMF/FLG values). It also
+ * uses metadata hints such as MIME type and file extension to improve detection.
  *
- * @param file - The file object containing buffer and metadata
- * @param file.buffer - The file content as Buffer
- * @param file.mimetype - MIME type of the file (e.g., 'application/gzip')
- * @param file.originalname - Original filename (e.g., 'data.xml.gz')
- * @returns Buffer - Decompressed content if gzipped, original buffer otherwise
+ * If gzip is detected, the buffer is decompressed using `zlib.gunzipSync()`.
+ * If zlib/deflate is detected, the buffer is decompressed using `zlib.inflateSync()`.
+ * If no compression is recognized, the original buffer is returned unchanged.
  *
- * @throws {Error} If gzip decompression fails (corrupted or invalid gzip data)
+ * @param file - The file object containing buffer and optional metadata.
+ * @param file.buffer - The file contents as a Buffer.
+ * @param file.mimetype - Optional MIME type (e.g., 'application/gzip', 'application/zlib').
+ * @param file.originalname - Optional original filename (e.g., 'data.xml.gz', 'payload.zlib').
+ * @returns Buffer - Decompressed content when gzip/zlib is detected, otherwise the original buffer.
+ *
+ * @throws {Error} If decompression fails due to corrupted or invalid compressed data.
  */
-function maybeGunzip(file) {
+
+function maybeUnzip(file) {
   const buf = file.buffer;
-  const looksGzip = buf?.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
+  if (!buf) return buf;
+
+  const mimetype = file.mimetype || '';
+  const name = file.originalname || '';
+
+  const looksGzip =
+    buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
+
+  const looksZlib =
+    buf.length > 2 && buf[0] === 0x78 &&
+    [0x01, 0x5E, 0x9C, 0xDA].includes(buf[1]);
+  // common CMF/FLG combinations for zlib headers
+
   const hintedGzip =
-    /application\/(x-)?gzip/i.test(file.mimetype || '') || /\.gz$/i.test(file.originalname || '');
-  if (looksGzip || hintedGzip) {
-    return zlib.gunzipSync(buf); // nebo async variantu: await gunzip(...)
+    /application\/(x-)?gzip/i.test(mimetype) || /\.gz$/i.test(name);
+
+  const hintedZlib =
+    /application\/zlib/i.test(mimetype) ||
+    /\.(zz|zlib)$/i.test(name);
+
+  const hintedDeflate = /application\/deflate/i.test(mimetype);
+  try {
+    if (looksGzip || hintedGzip) {
+      return zlib.gunzipSync(buf);
+    }
+    if (looksZlib || hintedZlib) {
+      return zlib.inflateSync(buf);
+    }
+    if (hintedDeflate) {
+      return zlib.inflateRawSync(buf);
+    }
+  } catch (err) {
+    // If detection was wrong or decompression fails, fall back to original buffer
+    console.warn("maybeUnzip: decompression failed", err);
   }
+
   return buf;
 }
 
@@ -1046,21 +1081,28 @@ router.use(verifyJwtToken);
  * /rest/v1/upload/iof:
  *  post:
  *    summary: Upload IOX XML 3
- *    description: Upload data file containing the classes specifications, start list or result list.
+ *    description: |
+ *      Upload a data file containing class specifications, start lists or result lists.  
+ *      
+ *      This endpoint accepts both plain XML files and compressed uploads. Decompression is handled automatically based on:
+ *        - Magic bytes detected in the file buffer  
+ *        - File extension  
+ *        - MIME type information from the **Content-Type** header  
+ *          (e.g., `application/gzip`, `application/x-gzip`, `application/zlib`, `application/deflate`)
  *    parameters:
- *       - in: body
- *         name: eventId
- *         required: true
- *         description: String ID of the event to upload data.
- *         schema:
- *           type: string
+ *      - in: body
+ *        name: eventId
+ *        required: true
+ *        description: String ID of the event to upload data for.
+ *        schema:
+ *          type: string
  *    responses:
  *      200:
- *        description: Iof xml uploaded successfully
+ *        description: Iof XML uploaded successfully.
  *      422:
- *        description: Validation errors
+ *        description: Validation errors.
  *      500:
- *        description: Internal server error
+ *        description: Internal server error.
  */
 router.post(
   '/iof',
