@@ -31,7 +31,10 @@ export const config = {
     import.meta.env.VITE_SUPPORT_EMAIL,
     'support@orienteerfeed.com'
   ),
-  DOCS_URL: optional(import.meta.env.VITE_DOCS_URL, 'https://docs.ofeed.com'),
+  DOCS_URL: optional(
+    import.meta.env.VITE_DOCS_URL,
+    'https://docs.orienteerfeed.com'
+  ),
 
   // Debug flags - all controlled by VITE_DEBUG_LOGGING
   DEBUG_LOGGING: DEBUG,

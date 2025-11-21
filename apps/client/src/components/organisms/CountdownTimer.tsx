@@ -84,16 +84,28 @@ const TimerElement: React.FC<TimerElementProps> = ({ label, value }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative bg-primary rounded-md min-w-[56px] h-10 px-3">
-        {/* vertical dividing line in the middle of the box */}
-        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-white/80 z-10" />
+      <div
+        className="
+    relative rounded-md min-w-[56px] h-10 px-3
+    bg-gray-900 text-white
+    dark:bg-gray-200 dark:text-gray-900
+  "
+      >
+        {/* dividing line */}
+        <div
+          className="
+      absolute inset-y-0 left-1/2 -translate-x-1/2 w-px
+      bg-white/40 dark:bg-black/40
+      z-10
+    "
+        />
 
-        {/* two cells, each digit exactly in the middle of its half */}
+        {/* two digits */}
         <div className="grid grid-cols-2 h-full w-full place-items-center gap-x-2">
-          <span className="font-mono tabular-nums text-lg leading-none text-white z-20">
+          <span className="font-mono tabular-nums text-lg leading-none z-20">
             {s[0]}
           </span>
-          <span className="font-mono tabular-nums text-lg leading-none text-white z-20">
+          <span className="font-mono tabular-nums text-lg leading-none z-20">
             {s[1]}
           </span>
         </div>
