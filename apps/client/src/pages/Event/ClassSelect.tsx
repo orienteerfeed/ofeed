@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -8,6 +7,7 @@ import {
 } from '@/components/ui/sheet';
 import { ChevronDown } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { Button } from '../../components/atoms';
 
 interface Class {
   id: number;
@@ -36,21 +36,6 @@ export const ClassSelect: React.FC<ClassSelectProps> = ({
     return [...classes].sort((a, b) => a.name.localeCompare(b.name));
   }, [classes]);
 
-  // Calculate content height based on number of classes
-  const getSheetHeight = () => {
-    const rowCount = Math.ceil(sortedClasses.length / 2); // 2 columns on mobile
-    const buttonHeight = 64; // h-16 = 4rem = 64px
-    const gap = 12; // gap-3 = 0.75rem = 12px
-    const headerHeight = 80; // Approximate header height
-    const padding = 24; // py-6 = 1.5rem = 24px
-
-    const contentHeight =
-      rowCount * buttonHeight + (rowCount - 1) * gap + headerHeight + padding;
-
-    // Max height 70vh, but not more than content needs
-    return `min(70vh, ${contentHeight}px)`;
-  };
-
   return (
     <>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -66,27 +51,25 @@ export const ClassSelect: React.FC<ClassSelectProps> = ({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="w-full rounded-t-2xl"
-          style={{
-            height: 'auto',
-            maxHeight: getSheetHeight(),
-          }}
+          className="w-full rounded-t-2xl h-[80vh] max-h-[80vh] flex flex-col"
         >
-          <SheetHeader className="text-left pb-4">
+          <SheetHeader className="text-left pb-4 shrink-0">
             <SheetTitle>Select Class</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 pb-6 overflow-y-auto">
-            {sortedClasses.map(classItem => (
-              <ClassButton
-                key={classItem.id}
-                classItem={classItem}
-                isSelected={selectedClass === classItem.id}
-                onSelect={() => {
-                  onClassChange(classItem.id);
-                  setIsSheetOpen(false);
-                }}
-              />
-            ))}
+          <div className="flex-1 overflow-y-auto pb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {sortedClasses.map(classItem => (
+                <ClassButton
+                  key={classItem.id}
+                  classItem={classItem}
+                  isSelected={selectedClass === classItem.id}
+                  onSelect={() => {
+                    onClassChange(classItem.id);
+                    setIsSheetOpen(false);
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </SheetContent>
       </Sheet>
