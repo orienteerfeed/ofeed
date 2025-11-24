@@ -35,6 +35,14 @@ export const config = {
     import.meta.env.VITE_DOCS_URL,
     'https://docs.orienteerfeed.com'
   ),
+  DISCORD_INVITE_URL: optional(
+    import.meta.env.VITE_DISCORD_INVITE_URL,
+    'https://discord.gg/QMvnurgKzU'
+  ),
+  GITHUB_REPO_URL: optional(
+    import.meta.env.VITE_GITHUB_REPO_URL,
+    'https://github.com/orienteerfeed/ofeed'
+  ),
 
   // Debug flags - all controlled by VITE_DEBUG_LOGGING
   DEBUG_LOGGING: DEBUG,

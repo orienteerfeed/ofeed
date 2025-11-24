@@ -250,15 +250,18 @@
           "ConfirmDescription": "Are you sure you want to delete this entire event? This action cannot be undone.",
           "ConfirmButton": "Delete Event"
         },
-        "TroublesShooting": {
-          "Title": "Need Help or Have Questions?",
-          "Description1": "Our support team is ready to assist you with any issues or questions. Reach out to us at",
-          "Description2": "please include any relevant files."
-        },
         "Toast": {
           "DeleteFailTitle": "Error deleting data",
           "DeleteSuccessDescription": "Data successfully deleted"
         }
+      },
+      "TroublesShooting": {
+        "Title": "Need Help or Have Questions?",
+        "Description": "If you encounter an error or need assistance, please do not hesitate to contact us.",
+        "Description1": "Our support team is ready to assist you with any issues or questions. Reach out to us at",
+        "Description2": "please include any relevant files.",
+        "Discord": "Join Discord",
+        "GitHubIssues": "Open GitHub Issues"
       }
     },
     "Home": {

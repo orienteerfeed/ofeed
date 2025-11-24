@@ -62,10 +62,12 @@ export function EventInfoView({ event }: EventInfoViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4">
+          {/* Main event details - responsive grid layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Date Section */}
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <div className="text-sm text-muted-foreground">Date</div>
                 <div className="font-medium">
                   {formatDate(new Date(parseInt(event.date, 10)))}
@@ -79,9 +81,10 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               </div>
             </div>
 
+            {/* Location Section */}
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <div className="text-sm text-muted-foreground">Location</div>
                 <div className="font-medium">{event.location}</div>
                 <div className="flex items-center gap-2 mt-1">
@@ -96,16 +99,20 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               </div>
             </div>
 
+            {/* Organizer Section */}
             {event.organizer && (
               <div className="flex items-start gap-3">
                 <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div>
+                <div className="flex-1">
                   <div className="text-sm text-muted-foreground">Organizer</div>
                   <div className="font-medium">{event.organizer}</div>
                 </div>
               </div>
             )}
+          </div>
 
+          {/* Rest of the content remains in single column */}
+          <div className="grid gap-4 mt-6">
             <div className="flex items-start gap-3">
               <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>

@@ -37,6 +37,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
   const serviceCredentials = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
   const codeSize = 200;
   const errorCorrectionLevel = 'L' as const;
+  const qrBackgroundColor = '#ffffff';
 
   const handleShare = async () => {
     if (navigator.share && qrCodeRef.current) {
@@ -265,12 +266,16 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
         </div>
 
         <div className="flex justify-center">
-          <QRCodeCanvas
-            value={serviceCredentials}
-            size={codeSize}
-            level={errorCorrectionLevel}
-            ref={qrCodeRef}
-          />
+          <div className="p-2 rounded-xl bg-white">
+            <QRCodeCanvas
+              value={serviceCredentials}
+              size={codeSize}
+              level={errorCorrectionLevel}
+              ref={qrCodeRef}
+              bgColor={qrBackgroundColor}
+              marginSize={1}
+            />
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">

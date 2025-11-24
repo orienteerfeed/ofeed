@@ -5,11 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { config } from '@/config';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 import { useNavigate } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
-import { AlertTriangle, Database, Mail, Trash2, Users } from 'lucide-react';
+import { AlertTriangle, Database, Trash2, Users } from 'lucide-react';
 import React from 'react';
 import { Button } from '../../../components/atoms';
 import { ConfirmDialog } from '../../../components/molecules';
@@ -20,6 +19,7 @@ import { toast } from '../../../utils';
 interface DangerZoneCardProps {
   t: TFunction;
   eventId: string;
+  onEventDataDeleted?: () => void;
 }
 
 interface ApiError {
@@ -33,6 +33,7 @@ interface ApiError {
 export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
   t,
   eventId,
+  onEventDataDeleted,
 }) => {
   const navigate = useNavigate();
   const { dialogState, showConfirm, hideConfirm, handleConfirm } =
@@ -98,6 +99,9 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
               ),
               variant: 'default',
             });
+            if (onEventDataDeleted) {
+              onEventDataDeleted();
+            }
           },
           onError: (error: string | ApiError) => {
             console.error('Failed to delete event data:', error);
@@ -287,31 +291,6 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Support Section */}
-          <div className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800 backdrop-blur-sm">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400">
-                <Mail className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-blue-700 dark:text-blue-300 text-sm">
-                  {t('Pages.Event.DangerZone.TroublesShooting.Title')}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  {t('Pages.Event.DangerZone.TroublesShooting.Description1')}{' '}
-                  <a
-                    href={`mailto:${config.SUPPORT_EMAIL}`}
-                    className="text-blue-600 hover:underline dark:text-blue-400 font-medium"
-                  >
-                    {config.SUPPORT_EMAIL}
-                  </a>
-                  {', '}
-                  {t('Pages.Event.DangerZone.TroublesShooting.Description2')}
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Warning Footer */}
