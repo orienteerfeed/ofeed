@@ -11,7 +11,7 @@ export const typeDef = /* GraphQL */ `
     previousValue: String
     newValue: String
     authorId: Int!
-    createdAt: String!
+    createdAt: Date!
     competitor: Competitor!
     event: Event!
     author: User!
