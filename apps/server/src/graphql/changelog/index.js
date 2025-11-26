@@ -1,4 +1,4 @@
-import { DateScalar } from './dateScalar.js';
+import { DateScalar } from '../dateScalar.js';
 import * as mutations from './mutation.js';
 import * as queries from './query.js';
 import { typeDef } from './schema.js';

@@ -1,7 +1,7 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { constraintDirective, constraintDirectiveTypeDefs } from 'graphql-constraint-directive';
 import merge from 'lodash.merge';
-import { DateScalar as DateResolver } from './changelog/dateScalar.js';
+import { DateScalar as DateResolver } from './dateScalar.js';
 
 // Import type definitions and resolvers for Events.
 import { typeDef as Event, resolvers as eventResolvers } from './event/index.js';
