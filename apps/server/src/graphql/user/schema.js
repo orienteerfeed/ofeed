@@ -32,8 +32,8 @@ export const typeDef = /* GraphQL */ `
     organisation: String @constraint(maxLength: 191)
     password: String! @constraint(maxLength: 255)
     active: Boolean
-    createdAt: String!
-    updatedAt: String!
+    createdAt: Date!
+    updatedAt: Date!
   }
   input LoginInput {
     username: String! @constraint(maxLength: 255)

@@ -48,7 +48,7 @@ export const typeDef = /* GraphQL */ `
     lateStart: Boolean!
     note: String
     externalId: String
-    updatedAt: String!
+    updatedAt: Date!
     splits: [Split!]
   }
   type Organisation {
