@@ -3,9 +3,9 @@ export const typeDef = /* GraphQL */ `
     id: String!
     eventId: String!
     password: String!
-    expiresAt: String!
-    createdAt: String!
-    updatedAt: String!
+    expiresAt: DateTime!
+    createdAt: DateTime!
+    updatedAt: DateTime!
     event: Event!
   }
 `;

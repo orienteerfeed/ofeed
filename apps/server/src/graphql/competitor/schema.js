@@ -41,14 +41,14 @@ export const typeDef = /* GraphQL */ `
     organisation: String
     shortName: String
     card: Int
-    startTime: String
-    finishTime: String
+    startTime: DateTime
+    finishTime: DateTime
     time: Int
     status: String
     lateStart: Boolean!
     note: String
     externalId: String
-    updatedAt: Date!
+    updatedAt: DateTime!
     splits: [Split!]
   }
   type Organisation {
@@ -77,8 +77,8 @@ export const typeDef = /* GraphQL */ `
     organisation: String
     shortName: String
     card: Int
-    startTime: String
-    finishTime: String
+    startTime: DateTime
+    finishTime: DateTime
     time: Int
     teamId: Int
     leg: Int
@@ -103,8 +103,8 @@ export const typeDef = /* GraphQL */ `
     organisation: String
     shortName: String
     card: Int
-    startTime: String
-    finishTime: String
+    startTime: DateTime
+    finishTime: DateTime
     time: Int
     teamId: Int
     leg: Int

@@ -69,7 +69,7 @@ export const typeDef = /* GraphQL */ `
     location: String
     latitude: Float
     longitude: Float
-    zeroTime: Date!
+    zeroTime: DateTime!
     relay: Boolean!
     ranking: Boolean!
     coefRanking: Float
@@ -79,8 +79,8 @@ export const typeDef = /* GraphQL */ `
     published: Boolean!
     demo: Boolean!
     authorId: Int
-    createdAt: Date!
-    updatedAt: Date!
+    createdAt: DateTime!
+    updatedAt: DateTime!
     classes: [Class!]
     sport: Sport!
     country: Country

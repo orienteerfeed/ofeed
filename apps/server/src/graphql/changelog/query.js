@@ -1,35 +1,22 @@
 import prisma from '../../utils/context.js';
 
-export const changelogByEvent = (_, { eventId, origin, classId, since }, context) => {
-  const filters = { eventId: eventId };
+export const changelogByEvent = (_, { eventId, origin, classId, since }) => {
+  const filters = { eventId };
 
   if (since) {
-    filters.createdAt = { gte: new Date(since) };
+    filters.createdAt = { gte: since };
   }
 
-  if (origin) {
-    filters.origin = origin;
-  }
+  if (origin) filters.origin = origin;
+  if (classId) filters.competitor = { classId: Number(classId) };
 
-  if (classId) {
-    filters.competitor = { classId: Number(classId) };
-  }
   return prisma.protocol.findMany({
     where: filters,
-    orderBy: [
-      {
-        createdAt: 'asc',
-      },
-    ],
+    orderBy: [{ createdAt: 'asc' }],
     include: {
       competitor: true,
       event: true,
-      author: {
-        select: {
-          firstname: true,
-          lastname: true,
-        },
-      },
+      author: { select: { firstname: true, lastname: true } },
     },
   });
 };
