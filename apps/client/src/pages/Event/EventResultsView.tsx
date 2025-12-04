@@ -418,9 +418,24 @@ const CategoryResultsView = ({
   // Calculate running time for active competitors
   const getRunningTime = (startTime?: string): string => {
     if (!startTime) return '-';
-    const start = parseInt(startTime);
-    const runningTime = Math.floor((currentTime - start) / 1000);
-    return formatSecondsToTime(runningTime);
+
+    try {
+      // Parse ISO 8601 string to timestamp
+      const start = new Date(startTime).getTime();
+
+      // Handle invalid date
+      if (isNaN(start)) return '-';
+
+      // Use currentTime from state instead of Date.now()
+      const runningTime = Math.floor((currentTime - start) / 1000);
+
+      // Ensure runningTime is not negative
+      if (runningTime < 0) return '-';
+
+      return formatSecondsToTime(runningTime);
+    } catch (error) {
+      return '-';
+    }
   };
 
   if (loading && competitors.length === 0) {
@@ -518,7 +533,7 @@ const CategoryResultsView = ({
                   </TableCell>
                   <TableCell className="px-2 py-1 text-xs font-mono hidden md:table-cell">
                     {competitor.startTime &&
-                      formatTimeToHms(new Date(parseInt(competitor.startTime)))}
+                      formatTimeToHms(competitor.startTime)}
                     {competitor.lateStart && <span title="Late start">⚠️</span>}
                   </TableCell>
                   <TableCell
@@ -882,7 +897,7 @@ const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
   // Format start time for display
   const formatStartTime = (startTime?: string) => {
     if (!startTime) return '-';
-    return formatTimeToHms(new Date(parseInt(startTime)));
+    return formatTimeToHms(startTime);
   };
 
   // Get status text color

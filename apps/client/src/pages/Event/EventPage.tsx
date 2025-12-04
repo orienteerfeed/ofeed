@@ -82,7 +82,7 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 <span className="font-mono">
-                  {formatDateWithDay(new Date(parseInt(event.date, 10)))}
+                  {formatDateWithDay(event.date)}
                 </span>
               </div>
               <div className="flex items-center gap-2">

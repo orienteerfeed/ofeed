@@ -89,16 +89,14 @@ export const EventSettingsPage = () => {
         id: data.event.id,
         name: data.event.name,
         sportId: data.event.sportId,
-        date: formatDateForInput(new Date(parseInt(data.event.date, 10))),
+        date: formatDateForInput(data.event.date),
         timezone: data.event.timezone || 'Europe/Prague',
         organizer: data.event.organizer,
         location: data.event.location,
         latitude: data.event.latitude,
         longitude: data.event.longitude,
         countryCode: data.event.country?.countryCode || '',
-        zeroTime: formatDateTimeForInput(
-          new Date(parseInt(data.event.zeroTime ?? '', 10))
-        ),
+        zeroTime: formatDateTimeForInput(data.event.zeroTime ?? ''),
         ranking: data.event.ranking || false,
         coefRanking: data.event.coefRanking,
         relay: data.event.relay || false,
@@ -168,9 +166,7 @@ export const EventSettingsPage = () => {
                   eventId={eventId}
                   eventPassword={password}
                   eventName={data.event.name}
-                  eventDate={formatDate(
-                    new Date(parseInt(data.event.date, 10))
-                  )}
+                  eventDate={formatDate(data.event.date)}
                   apiEventsEndpoint={apiEventsEndpoint}
                   apiBaseUrl={config.BASE_API_URL}
                 />
@@ -191,9 +187,7 @@ export const EventSettingsPage = () => {
                 eventId={initialData?.id || ''}
                 eventName={data.event.name}
                 eventLocation={data.event.location}
-                eventDateFormatted={formatDate(
-                  new Date(parseInt(data.event.date, 10))
-                )}
+                eventDateFormatted={formatDate(data.event.date)}
               />
             </div>
             <div className="break-inside-avoid">

@@ -42,7 +42,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
   // Determine event status based on date and published status
   const getEventStatus = (event: Event): string => {
     const now = new Date();
-    const eventDate = new Date(parseInt(event.date, 10));
+    const eventDate = new Date(event.date);
 
     if (!event.published) return 'draft';
     if (now > eventDate) return 'completed';
@@ -67,13 +67,10 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>
                 <div className="text-sm text-muted-foreground">Date</div>
-                <div className="font-medium">
-                  {formatDate(new Date(parseInt(event.date, 10)))}
-                </div>
+                <div className="font-medium">{formatDate(event.date)}</div>
                 {event.zeroTime && (
                   <div className="text-sm text-muted-foreground mt-1">
-                    Zero time:{' '}
-                    {formatTimeToHms(new Date(parseInt(event.zeroTime, 10)))}
+                    Zero time: {formatTimeToHms(event.zeroTime)}
                   </div>
                 )}
               </div>

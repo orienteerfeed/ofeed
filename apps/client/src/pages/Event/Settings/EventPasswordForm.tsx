@@ -61,7 +61,7 @@ export const EventPasswordForm: React.FC<EventPasswordFormProps> = ({
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [password, setPassword] = useState(initialPassword);
   const [expiration, setExpiration] = useState<Date | null>(
-    expiresAt ? new Date(parseInt(expiresAt, 10)) : null
+    expiresAt ? new Date(expiresAt) : null
   );
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
