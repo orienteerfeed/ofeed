@@ -169,24 +169,6 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
   const searchResults = data?.searchEvents || [];
   const displayEvents = searchQuery.length > 2 ? searchResults : events;
 
-  // Formatting data using your utility functions
-  const getFormattedDate = (dateString: string) => {
-    const timestamp = parseInt(dateString);
-    if (isNaN(timestamp)) {
-      return formatDate(dateString, 'cs'); // fallback for ISO string
-    }
-    return formatDate(timestamp, 'cs');
-  };
-
-  // For a longer format with the day of the week
-  const getFormattedDateWithDay = (dateString: string) => {
-    const timestamp = parseInt(dateString);
-    if (isNaN(timestamp)) {
-      return formatDateWithDay(dateString, 'cs');
-    }
-    return formatDateWithDay(timestamp, 'cs');
-  };
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -254,7 +236,7 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
                       <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                         <div>
                           {event.location}, {event.country.countryName} •{' '}
-                          {getFormattedDate(event.date)}
+                          {formatDate(event.date)}
                         </div>
                         {event.organizer && (
                           <div>Organizer: {event.organizer}</div>
@@ -301,7 +283,7 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
                             <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                               <div>
                                 {event.location}, {event.country.countryName} •{' '}
-                                {getFormattedDateWithDay(event.date)}
+                                {formatDateWithDay(event.date)}
                               </div>
                               {event.organizer && (
                                 <div>Organizer: {event.organizer}</div>

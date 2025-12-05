@@ -64,12 +64,12 @@ export const typeDef = /* GraphQL */ `
     sportId: Int!
     name: String!
     organizer: String
-    date: String!
+    date: Date!
     timezone: String!
     location: String
     latitude: Float
     longitude: Float
-    zeroTime: String!
+    zeroTime: DateTime!
     relay: Boolean!
     ranking: Boolean!
     coefRanking: Float
@@ -79,8 +79,8 @@ export const typeDef = /* GraphQL */ `
     published: Boolean!
     demo: Boolean!
     authorId: Int
-    createdAt: String!
-    updatedAt: String!
+    createdAt: DateTime!
+    updatedAt: DateTime!
     classes: [Class!]
     sport: Sport!
     country: Country

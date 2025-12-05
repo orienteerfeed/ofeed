@@ -1,7 +1,8 @@
-import merge from 'lodash.merge';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { constraintDirective, constraintDirectiveTypeDefs } from 'graphql-constraint-directive';
+import merge from 'lodash.merge';
 
+// feature modules
 // Import type definitions and resolvers for Events.
 import { typeDef as Event, resolvers as eventResolvers } from './event/index.js';
 // Import type definitions and resolvers for Classes.
@@ -27,6 +28,10 @@ import {
 
 // Import type definitions and resolvers for Split.
 import { typeDef as Split, resolvers as splitResolvers } from './split/index.js';
+
+// scalar
+import { typeDef as DateTypeDef, resolvers as dateResolvers } from './scalars/date.js';
+import { typeDef as DateTimeTypeDef, resolvers as dateTimeResolvers } from './scalars/dateTime.js';
 
 // based on - https://www.apollographql.com/blog/backend/schema-design/modularizing-your-graphql-schema-code/
 // Basic query and mutation typeDefs
@@ -57,6 +62,8 @@ const schema = makeExecutableSchema({
     Query,
     Mutation,
     Subscription,
+    DateTypeDef,
+    DateTimeTypeDef,
     Event,
     Class,
     Sport,
@@ -71,6 +78,8 @@ const schema = makeExecutableSchema({
   resolvers: merge(
     {}, // Start with an empty object to avoid mutating the original resolvers
     resolvers,
+    dateResolvers,
+    dateTimeResolvers,
     eventResolvers,
     classResolvers,
     sportResolvers,

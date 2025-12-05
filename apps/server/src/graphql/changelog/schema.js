@@ -1,6 +1,6 @@
 export const typeDef = /* GraphQL */ `
   extend type Query {
-    changelogByEvent(eventId: String!, origin: String, classId: Int, since: String): [Changelog!]
+    changelogByEvent(eventId: String!, origin: String, classId: Int, since: DateTime): [Changelog!]
   }
   type Changelog {
     id: Int!
@@ -11,7 +11,7 @@ export const typeDef = /* GraphQL */ `
     previousValue: String
     newValue: String
     authorId: Int!
-    createdAt: String!
+    createdAt: DateTime!
     competitor: Competitor!
     event: Event!
     author: User!

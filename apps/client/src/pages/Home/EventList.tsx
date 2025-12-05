@@ -5,7 +5,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, formatDateTime } from '@/lib/utils';
 import { Event, EventFilter } from '@/types/event';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
@@ -108,7 +108,7 @@ const EVENTS_QUERY = gql`
 const getEventStatus = (
   dateTimestamp: string
 ): 'upcoming' | 'ongoing' | 'past' => {
-  const eventDate = new Date(parseInt(dateTimestamp));
+  const eventDate = new Date(dateTimestamp);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -127,7 +127,7 @@ const convertGraphQLEventToEvent = (graphqlEvent: GraphQLEvent): Event => {
     .replace(/(^-|-$)+/g, '');
 
   // Formátování data z timestampu pomocí formatDate z utils
-  const formattedDate = formatDate(new Date(parseInt(graphqlEvent.date, 10)));
+  const formattedDate = formatDate(graphqlEvent.date);
 
   // Určení statusu události
   const status = getEventStatus(graphqlEvent.date);
@@ -149,14 +149,14 @@ const convertGraphQLEventToEvent = (graphqlEvent: GraphQLEvent): Event => {
     sportId: graphqlEvent.sport.id,
     sport: graphqlEvent.sport,
     discipline: 'middle',
-    zeroTime: formatDate(parseInt(graphqlEvent.zeroTime)),
+    zeroTime: formatDateTime(graphqlEvent.zeroTime),
     classes: graphqlEvent.classes,
     maxParticipants: 0,
     currentParticipants: 0,
     status,
-    createdAt: formatDate(parseInt(graphqlEvent.createdAt)),
-    updatedAt: formatDate(parseInt(graphqlEvent.updatedAt)),
-    publishedAt: formatDate(parseInt(graphqlEvent.createdAt)),
+    createdAt: formatDateTime(graphqlEvent.createdAt),
+    updatedAt: formatDateTime(graphqlEvent.updatedAt),
+    publishedAt: formatDateTime(graphqlEvent.createdAt),
     relay: false,
     ranking: false,
     published: true,
