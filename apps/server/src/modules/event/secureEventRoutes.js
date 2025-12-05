@@ -20,6 +20,7 @@ import {
 import {
   changeCompetitorStatus,
   deleteAllEventData,
+  deleteEventCompetitor,
   deleteEventCompetitors,
   getDecryptedEventPassword,
   storeCompetitor,
