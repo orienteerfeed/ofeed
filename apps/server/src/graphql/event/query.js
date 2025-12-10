@@ -1,4 +1,5 @@
 import prisma from '../../utils/context.js';
+
 export const events = async (_, { input = {} }) => {
   const { filter = 'ALL', sportId, search, first = 12, after } = input;
 
@@ -13,12 +14,12 @@ export const events = async (_, { input = {} }) => {
     published: true,
   };
 
-  // Sport filter
+  // Apply sport filter if provided
   if (sportId) {
     where.sportId = sportId;
   }
 
-  // Search filter
+  // Apply search filter if provided
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
@@ -27,7 +28,7 @@ export const events = async (_, { input = {} }) => {
     ];
   }
 
-  // Date filters
+  // Date filters configuration
   const now = new Date();
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
@@ -56,19 +57,19 @@ export const events = async (_, { input = {} }) => {
         gte: thirtyDaysAgo,
       };
       break;
-    // ALL shows all events without date filtering
+    // 'ALL' shows all events without date filtering
   }
 
-  // Cursor-based pagination
+  // Cursor-based pagination configuration
   let cursorClause = {};
   if (after) {
-    // Pokud je cursor ve formátu "cursor-11", extrahujeme offset
+    // If cursor is in format "cursor-11", extract offset
     if (after.startsWith('cursor-')) {
       const offset = parseInt(after.split('-')[1]);
-      // Pro mock data - přeskočíme přímo na offset
-      // Pro reálná data potřebujeme jiný přístup
+      // For mock data - skip directly to offset
+      // For real data we need a different approach
     } else {
-      // Pro reálná data použijeme ID jako cursor
+      // For real data use ID as cursor
       cursorClause = {
         cursor: { id: after },
         skip: 1,
@@ -96,13 +97,13 @@ export const events = async (_, { input = {} }) => {
       events.pop(); // Remove the extra event
     }
 
-    // Get edges with cursors
-    const edges = events.map(event => ({
+    // Create edges with cursors
+    const edges = events.map((event) => ({
       node: event,
-      cursor: event.id, // Použijeme skutečné ID jako cursor
+      cursor: event.id, // Use actual ID as cursor
     }));
 
-    // Page info
+    // Page info for pagination
     const pageInfo = {
       hasNextPage,
       hasPreviousPage: false,
@@ -145,16 +146,16 @@ export const searchEvents = async (_, { query }) => {
   `;
 };
 
-// Funkce pro generování mock událostí
+// Function for generating mock events
 function generateMockEvents(first, after, filter) {
   const mockEvents = [];
   const now = new Date();
 
-  // Vytvoříme 100 mock událostí
+  // Create 100 mock events
   for (let i = 1; i <= 100; i++) {
     const eventDate = new Date(now);
 
-    // Rozložení dat pro různé filtry
+    // Distribute dates for different filters
     if (filter === 'TODAY') {
       eventDate.setDate(now.getDate());
     } else if (filter === 'UPCOMING') {
@@ -162,15 +163,15 @@ function generateMockEvents(first, after, filter) {
     } else if (filter === 'RECENT') {
       eventDate.setDate(now.getDate() - Math.floor(Math.random() * 30));
     } else {
-      // ALL - mix minulých a budoucích
+      // ALL - mix of past and future events
       eventDate.setDate(now.getDate() + Math.floor(Math.random() * 60) - 30);
     }
 
     const event = {
-      id: `mock-event-${i}`, // ID bude použito jako cursor
+      id: `mock-event-${i}`, // ID will be used as cursor
       name: `Mock Event ${i} - ${['World Cup', 'Championship', 'Local Race', 'Training'][i % 4]}`,
       organizer: `Organizer ${(i % 10) + 1}`,
-      date: eventDate.getTime().toString(), // timestamp jako string
+      date: eventDate.getTime().toString(), // timestamp as string
       location: `Location ${(i % 20) + 1}, City`,
       countryId: ['CZ', 'SK', 'DE', 'PL', 'AT'][i % 5],
       sportId: 1,
@@ -180,7 +181,7 @@ function generateMockEvents(first, after, filter) {
       updatedAt: new Date(now.getTime() - (100 - i) * 24 * 60 * 60 * 1000).getTime().toString(),
       sport: {
         id: 1,
-        name: 'Orienteering', // Pozor: musí sedět s konvertorem na frontendu
+        name: 'Orienteering', // Note: must match frontend converter
       },
       classes: [
         { id: i * 10 + 1, name: 'H21E' },
@@ -192,14 +193,14 @@ function generateMockEvents(first, after, filter) {
     mockEvents.push(event);
   }
 
-  // Seřadit události podle data pro konzistentní paginaci
+  // Sort events by date for consistent pagination
   mockEvents.sort((a, b) => parseInt(a.date) - parseInt(b.date));
 
-  // Aplikovat paginaci podle cursoru
+  // Apply pagination based on cursor
   let startIndex = 0;
   if (after) {
-    // Najdeme index události podle cursoru (ID)
-    startIndex = mockEvents.findIndex(event => event.id === after);
+    // Find event index by cursor (ID)
+    startIndex = mockEvents.findIndex((event) => event.id === after);
     if (startIndex === -1) startIndex = 0;
     else startIndex += 1; // Skip the cursor itself
   }
@@ -207,9 +208,9 @@ function generateMockEvents(first, after, filter) {
   const endIndex = Math.min(startIndex + first, mockEvents.length);
   const paginatedEvents = mockEvents.slice(startIndex, endIndex);
 
-  const edges = paginatedEvents.map(event => ({
+  const edges = paginatedEvents.map((event) => ({
     node: event,
-    cursor: event.id, // Použijeme ID jako cursor
+    cursor: event.id, // Use ID as cursor
   }));
 
   const pageInfo = {

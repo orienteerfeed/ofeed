@@ -1,16 +1,13 @@
-import jwt from 'jsonwebtoken';
 import dotenvFlow from 'dotenv-flow';
-import basicAuth from 'basic-auth';
+import jwt from 'jsonwebtoken';
 import { oauth2Model } from '../modules/auth/oauth2Model.js';
-import { error } from './responseApi.js';
 import { getDecryptedEventPassword } from '../modules/event/eventService.js';
 import prisma from './context.js';
+import { error } from './responseApi.js';
 
-// Load environment variables from .env file
 dotenvFlow.config();
 const JWT_TOKEN_SECRET_KEY = process.env.JWT_TOKEN_SECRET_KEY;
 
-// generate JWT token with no expiration
 /**
  * Generates a JWT token with an optional expiration.
  * @param {Object} payload - The payload to include in the JWT token.
@@ -22,7 +19,12 @@ export const getJwtToken = (payload, expiresIn = null) => {
   return jwt.sign(payload, JWT_TOKEN_SECRET_KEY, options);
 };
 
-export const generateJwtTokenForLink = userId => {
+/**
+ * Generates a JWT token specifically for activation/reset links with 48-hour expiration.
+ * @param {string} userId - The user ID to include in the token payload.
+ * @returns {string} The generated JWT token.
+ */
+export const generateJwtTokenForLink = (userId) => {
   const token = jwt.sign({ id: userId }, JWT_TOKEN_SECRET_KEY, {
     expiresIn: '48h',
   });
@@ -37,84 +39,62 @@ export const generateJwtTokenForLink = userId => {
  */
 // verify JWT token and save decoded payload into req.jwtDecoded
 export const verifyJwtToken = async (req, res, next) => {
-  const tokenWithBearer = req.headers['authorization'];
+  try {
+    const auth = await buildAuthContextFromRequest(req);
 
-  // Check for Bearer token first
-  if (tokenWithBearer && tokenWithBearer.startsWith('Bearer ')) {
-    const token = tokenWithBearer.slice(7, tokenWithBearer.length); // Remove 'Bearer ' from token
-
-    try {
-      req.jwtDecoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY); // Verify JWT token
-
-      // Optional: Check if it's an OAuth client token
-      if (typeof req.jwtDecoded.clientId !== 'undefined' && req.jwtDecoded.clientId) {
-        const tokenDetails = await oauth2Model.getAccessToken(token);
-        if (!tokenDetails) {
-          return res.status(401).json(error('Invalid or expired access token', res.statusCode));
-        }
-      }
-      next(); // Continue to the next middleware
-    } catch (err) {
-      console.error(err);
-      return res.status(401).json(error('Unauthorized: Invalid JWT.', res.statusCode));
+    if (!auth.isAuthenticated) {
+      return res
+        .status(401)
+        .json(error('Unauthorized: Invalid or missing credentials.', res.statusCode));
     }
-  } else {
-    // Check for Basic Authentication
-    const credentials = basicAuth(req); // Parse the Basic Auth credentials (eventId:eventPassword)
-    if (credentials) {
-      const { name: eventId, pass: eventPassword } = credentials;
 
-      try {
-        // Fetch the stored password for the given eventId
-        const storedPassword = await getDecryptedEventPassword(eventId);
+    // Unified auth object for consistent access
+    req.auth = auth;
 
-        const eventUser = await prisma.event.findUnique({
-          where: { id: eventId },
-          select: {
-            id: true,
-            authorId: true,
-          },
-        });
-        if (storedPassword && eventPassword === storedPassword.password) {
-          req.eventId = eventId; // Attach eventId to request for further use
-          // Initialize req.jwtDecoded if not using JWT and assign userId
-          req.jwtDecoded = { userId: eventUser.authorId };
-          next(); // Continue to the next middleware
-        } else {
-          return res
-            .status(401)
-            .json(error('Unauthorized: Invalid eventId or eventPassword.', res.statusCode));
-        }
-      } catch (err) {
-        console.error(err);
-        return res
-          .status(401)
-          .json(error('Unauthorized: Could not validate event credentials.', res.statusCode));
-      }
-    } else {
-      return res.status(401).json(error('Missing `authorization` header.', res.statusCode));
+    // Backward compatibility:
+    req.jwtDecoded = { userId: auth.userId };
+    if (auth.type === 'eventBasic') {
+      req.eventId = auth.eventId;
     }
+
+    next();
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json(error('Unauthorized', res.statusCode));
   }
 };
 
-export const verifyToken = token => {
+/**
+ * Verifies a JWT token string and returns the decoded payload.
+ * @param {string} token - The JWT token to verify.
+ * @returns {Object} The decoded token payload.
+ * @throws {Error} If token is invalid, expired, or not provided.
+ */
+export const verifyToken = (token) => {
   if (!token) {
     throw new Error('No token provided');
   }
   try {
-    return jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY); // Ensure your JWT secret is safely stored in environment variables
-  } catch (error) {
-    throw new Error('Invalid or expired token: ', error);
+    return jwt.verify(token, JWT_TOKEN_SECRET_KEY);
+  } catch (err) {
+    throw new Error('Invalid or expired token: ' + err.message);
   }
 };
 
+/**
+ * Verifies Basic authentication credentials for event access.
+ * @param {string} username - The username (expected to be event ID).
+ * @param {string} password - The password to verify.
+ * @param {string} eventId - The event ID from the request.
+ * @returns {Object} Object containing userId if authentication succeeds.
+ * @throws {Error} If authentication fails or credentials are invalid.
+ */
 export const verifyBasicAuth = async (username, password, eventId) => {
-  // Example check against environment variables
   if (!username || !password) {
     throw new Error('Unauthorized: No credentials provided');
   }
 
-  // Fetch the stored password for the given eventId
+  // username = eventId (in your implementation)
   const storedPassword = await getDecryptedEventPassword(eventId);
 
   const eventUser = await prisma.event.findUnique({
@@ -124,19 +104,99 @@ export const verifyBasicAuth = async (username, password, eventId) => {
       authorId: true,
     },
   });
+
   if (storedPassword && password === storedPassword.password) {
-    return { userId: eventUser.authorId }; // Mock user object; can be expanded with real data
+    return { userId: eventUser.authorId };
   } else {
     throw new Error('Unauthorized: Invalid username or password');
   }
 };
 
 /**
- * Verifies the token from the link and extracts the user ID.
- * @param {string} token - The token to verify.
- * @returns {string} The extracted user ID.
+ * Common function: builds authentication context from Express request for both REST and GraphQL.
+ *
+ * Result shape:
+ * {
+ *   isAuthenticated: boolean,
+ *   type: 'jwt' | 'eventBasic' | null,
+ *   userId?: string,
+ *   eventId?: string,        // only for Basic event password
+ *   rawToken?: string,
+ *   tokenPayload?: object,   // entire decoded JWT payload
+ * }
+ *
+ * @param {Object} req - The Express request object.
+ * @returns {Promise<Object>} Authentication context object.
  */
-export const getUserIdFromActivationToken = token => {
+export const buildAuthContextFromRequest = async (req) => {
+  const authHeader = req.headers['authorization'] || '';
+
+  if (!authHeader) {
+    return { isAuthenticated: false, type: null };
+  }
+
+  // Bearer <token>
+  if (authHeader.startsWith('Bearer ')) {
+    const rawToken = authHeader.slice(7).trim();
+
+    try {
+      const decoded = verifyToken(rawToken);
+
+      // Optional OAuth clientId check – same logic as before
+      if (decoded.clientId) {
+        const tokenDetails = await oauth2Model.getAccessToken(rawToken);
+        if (!tokenDetails) {
+          return { isAuthenticated: false, type: null };
+        }
+      }
+
+      return {
+        isAuthenticated: true,
+        type: 'jwt',
+        userId: decoded.userId,
+        rawToken,
+        tokenPayload: decoded,
+      };
+    } catch (err) {
+      console.error('JWT verification failed:', err.message);
+      return { isAuthenticated: false, type: null };
+    }
+  }
+
+  // Basic <base64(eventId:password)>
+  if (authHeader.startsWith('Basic ')) {
+    const base64Credentials = authHeader.slice(6).trim();
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
+    const [eventId, password] = credentials.split(':');
+
+    if (!eventId || !password) {
+      return { isAuthenticated: false, type: null };
+    }
+
+    try {
+      const { userId } = await verifyBasicAuth(eventId, password, eventId);
+      return {
+        isAuthenticated: true,
+        type: 'eventBasic',
+        userId,
+        eventId,
+      };
+    } catch (err) {
+      console.error('Basic auth verification failed:', err.message);
+      return { isAuthenticated: false, type: null };
+    }
+  }
+
+  return { isAuthenticated: false, type: null };
+};
+
+/**
+ * Verifies an activation/reset token and extracts the user ID.
+ * @param {string} token - The JWT token to verify.
+ * @returns {string} The extracted user ID from the token payload.
+ * @throws {Error} If the token is invalid or expired.
+ */
+export const getUserIdFromActivationToken = (token) => {
   try {
     const decoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY);
     return decoded.id;

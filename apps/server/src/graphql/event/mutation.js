@@ -1,30 +1,12 @@
-import { verifyToken } from '../../utils/jwtToken.js';
+import { requireEventOwner } from '../../utils/authz.js';
 
 export const updateEventVisibility = async (_, { eventId, published }, context) => {
-  if (!context.token) {
-    throw new Error('Unauthorized: No token provided');
-  }
-  const jwtDecoded = verifyToken(context.token);
-  if (!jwtDecoded) {
-    throw new Error('Unauthorized: Invalid or expired token');
-  }
-  const { userId } = jwtDecoded;
-
   try {
-    // Check if event exists and user is authorized
-    const event = await context.prisma.event.findUnique({
-      where: { id: eventId },
-      select: { authorId: true },
-    });
+    const { prisma, auth } = context;
 
-    if (!event) {
-      throw new Error('Event not found');
-    }
+    await requireEventOwner(prisma, auth, eventId);
 
-    if (event.authorId !== userId) {
-      throw new Error('Not authorized to change event visibility');
-    }
-    const eventResponse = await context.prisma.event.update({
+    const eventResponse = await prisma.event.update({
       where: { id: eventId },
       data: { published, updatedAt: new Date() },
     });
@@ -34,7 +16,7 @@ export const updateEventVisibility = async (_, { eventId, published }, context) 
       eventResponse,
     };
   } catch (error) {
-    console.error('Error updating event:', error);
-    throw new Error('Failed to update event visibility.');
+    console.error('Error updating event visibility:', error);
+    throw new Error(error.message || 'Failed to update event visibility.');
   }
 };

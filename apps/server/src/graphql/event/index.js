@@ -4,8 +4,8 @@ import { typeDef } from './schema.js';
 import * as subscriptions from './subscription.js';
 
 import { getDecryptedEventPassword } from '../../modules/event/eventService.js';
+import { requireEventOwner } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
-import { verifyToken } from '../../utils/jwtToken.js';
 
 export { resolvers, typeDef };
 
@@ -40,15 +40,9 @@ const resolvers = {
         where: { id: parent.authorId },
       });
     },
-    eventPassword(parent, _, context) {
-      if (!context.token) {
-        throw new Error('Unauthorized: No token provided');
-      }
-      const jwtDecoded = verifyToken(context.token);
-      if (!jwtDecoded) {
-        throw new Error('Unauthorized: Invalid or expired token');
-      }
-      const { userId } = jwtDecoded;
+    eventPassword: async (parent, _, context) => {
+      const { prisma, auth } = context;
+      const { userId } = await requireEventOwner(prisma, auth, parent.id);
       const decryptedPassword = getDecryptedEventPassword(parent.id, userId);
       // Return `null` if no password exists
       if (!decryptedPassword) {

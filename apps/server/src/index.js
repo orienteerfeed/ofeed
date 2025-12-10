@@ -15,6 +15,7 @@ import { error, success } from './utils/responseApi.js';
 
 import { schemaWithDirectives } from './graphql/executableSchema.js';
 import prisma from './utils/context.js';
+import { buildAuthContextFromRequest } from './utils/jwtToken.js';
 
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -132,30 +133,14 @@ await gplServer.start();
 app.use(
   '/graphql',
   expressMiddleware(gplServer, {
-    context: ({ req }) => {
+    context: async ({ req }) => {
       // Get the Authorization header
-      const authHeader = req.headers.authorization || '';
-
-      let token = null;
-      let basicAuthCredentials = null;
-
-      // Check if it's a Bearer token
-      if (authHeader.startsWith('Bearer ')) {
-        token = authHeader.replace(/^Bearer\s/, '');
-      }
-      // Check if it's Basic Auth
-      else if (authHeader.startsWith('Basic ')) {
-        const base64Credentials = authHeader.replace(/^Basic\s/, '');
-        const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
-        const [username, password] = credentials.split(':');
-        basicAuthCredentials = { username, password };
-      }
+      const auth = await buildAuthContextFromRequest(req);
 
       return {
         prisma: prisma,
+        auth,
         activationUrl: req.headers['x-orienteerfeed-app-activate-user-url'] || 'localhost',
-        token: token,
-        basicAuthCredentials: basicAuthCredentials,
         resetPasswordUrl: req.headers['x-ofeed-app-reset-password-url'] || 'localhost',
       };
     },
