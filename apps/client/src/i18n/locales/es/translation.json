@@ -75,190 +75,193 @@
       "CreateDescription": "Rellene el formulario para crear un nuevo evento",
       "DeleteEvent": "Eliminar evento",
       "SelectClass": "Seleccionar clase"
-    }
-  },
-  "Tables": {
-    "Name": "Nombre",
-    "Organizer": "Organizador",
-    "Date": "Fecha",
-    "Visibility": "Visibilidad",
-    "Actions": "Acciones",
-    "Format": "Formato",
-    "Status": "Estado",
-    "Sport": "Sport",
-    "Country": "País",
-    "Entries": "Entradas",
-    "Competitors": "Competidores"
-  },
-  "Tabs": {
-    "All": "Todo",
-    "Today": "Hoy",
-    "Ongoing": "En curso",
-    "Recent": "Recientes",
-    "Past": "Pasado",
-    "Upcoming": "Próximos",
-    "Results": "Resultados",
-    "Splits": "Parciales",
-    "Detail": "Detalle",
-    "Info": "Información",
-    "Cards": "Tarjetas",
-    "List": "Lista",
-    "Cat": "Cat",
-    "Club": "Club",
-    "Live": "En vivo"
-  },
-  "Alert": {
-    "DemoTitle": "Esta es una aplicación de demostración",
-    "DemoDescription": "La aplicación OrienteerFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
-    "EventDataNotAvailableTitle": "Datos del evento no disponibles",
-    "EventDataNotAvailableMessage": "Actualmente no hay datos disponibles para este evento (listas de salida, inscripciones, recorridos o resultados). Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento para más información."
-  },
-  "Form": {
-    "EventName": "Nombre del evento",
-    "Sport": "Deporte",
-    "Date": "Fecha",
-    "Timezone": "Zona horaria",
-    "Organizer": "Organizador",
-    "Location": "Ubicación",
-    "Latitude": "Latitud GPS",
-    "Longitude": "Longitud GPS",
-    "Country": "País",
-    "ZeroTime": "Hora cero",
-    "Ranking": "Ranking",
-    "CoefRanking": "Coeficiente de ranking",
-    "Relay": "Relevo",
-    "HundredthPrecision": "Precisión centésimas",
-    "Published": "Publicado",
-    "Placeholders": {
-      "EventName": "Mi primer evento",
-      "Latitude": "Introduzca la latitud (p.ej., 50.0755)",
-      "Longitude": "Introduzca la longitud (p.ej., 14.4378)"
     },
-    "Toast": {
-      "CreateSuccess": "¡El evento se ha creado correctamente!",
-      "EditSuccess": "¡El evento se ha actualizado correctamente!"
-    }
-  },
-  "Card": {
-    "Title": "Información del evento",
-    "Description": "Por favor, complete el formulario a continuación para actualizar los detalles del evento"
-  },
-  "Password": {
-    "GeneratePassword": "Generar contraseña",
-    "RegeneratePassword": "Volver a generar contraseña",
-    "PassportExpiration": "Caducidad de la contraseña",
-    "NoExpirationSet": "No se ha establecido caducidad",
-    "Copy": "Copiar",
-    "Revoke": "Anular",
-    "Card": {
-      "Title": "Contraseña del evento",
-      "Description": "Introduzca la contraseña del evento que protege los detalles del evento solicitados a través de la API"
+    "Tables": {
+      "Name": "Nombre",
+      "Organizer": "Organizador",
+      "Date": "Fecha",
+      "Visibility": "Visibilidad",
+      "Actions": "Acciones",
+      "Format": "Formato",
+      "Status": "Estado",
+      "Sport": "Sport",
+      "Country": "País",
+      "Entries": "Entradas",
+      "Competitors": "Competidores"
     },
-    "Field": {
-      "Name": "Contraseña del evento",
+    "Tabs": {
+      "All": "Todo",
+      "Today": "Hoy",
+      "Ongoing": "En curso",
+      "Recent": "Recientes",
+      "Past": "Pasado",
+      "Upcoming": "Próximos",
+      "Results": "Resultados",
+      "Splits": "Parciales",
+      "Detail": "Detalle",
+      "Info": "Información",
+      "Cards": "Tarjetas",
+      "List": "Lista",
+      "Cat": "Cat",
+      "Club": "Club",
+      "Live": "En vivo"
+    },
+    "Alert": {
+      "DemoTitle": "Esta es una aplicación de demostración",
+      "DemoDescription": "La aplicación OrienteerFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
+      "EventDataNotAvailableTitle": "Datos del evento no disponibles",
+      "EventDataNotAvailableMessage": "Actualmente no hay datos disponibles para este evento (listas de salida, inscripciones, recorridos o resultados). Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento para más información."
+    },
+    "Form": {
+      "EventName": "Nombre del evento",
+      "Sport": "Deporte",
+      "Date": "Fecha",
+      "Timezone": "Zona horaria",
+      "Organizer": "Organizador",
+      "Location": "Ubicación",
+      "Latitude": "Latitud GPS",
+      "Longitude": "Longitud GPS",
+      "Country": "País",
+      "ZeroTime": "Hora cero",
+      "Ranking": "Ranking",
+      "CoefRanking": "Coeficiente de ranking",
+      "Relay": "Relevo",
+      "HundredthPrecision": "Precisión centésimas",
+      "Published": "Publicado",
       "Placeholders": {
-        "Name": "Contraseña del evento"
+        "EventName": "Mi primer evento",
+        "Latitude": "Introduzca la latitud (p.ej., 50.0755)",
+        "Longitude": "Introduzca la longitud (p.ej., 14.4378)"
+      },
+      "Toast": {
+        "CreateSuccess": "¡El evento se ha creado correctamente!",
+        "EditSuccess": "¡El evento se ha actualizado correctamente!"
       }
     },
-    "Toast": {
-      "UpdateSuccessDescription": "¡La contraseña se ha actualizado correctamente!",
-      "UpdateFailTitle": "Algo salió mal, por favor inténtelo de nuevo.",
-      "RevokeSuccessDescription": "¡La contraseña se ha anulado correctamente!",
-      "RevokeFailTitle": "Algo salió mal, por favor inténtelo de nuevo.",
-      "CopySuccessDescription": "¡Contraseña copiada! Manténgala segura."
-    }
-  },
-  "Link": {
     "Card": {
-      "Title": "Enlace del evento",
-      "Description": "Utilice esta función para compartir rápidamente un enlace a un evento: puede copiarlo, compartirlo o imprimir el código QR para un acceso sencillo a los resultados en vivo.",
-      "Navigator": {
-        "Title": "OrienteerFeed",
-        "Event": "Evento",
-        "Location": "Ubicación",
-        "Date": "Fecha",
-        "EventUri": "Ver resultados en directo",
-        "UrlDescription": "¡Escanee el código QR para acceder al momento a los resultados en directo!"
+      "Title": "Información del evento",
+      "Description": "Por favor, complete el formulario a continuación para actualizar los detalles del evento"
+    },
+    "Password": {
+      "GeneratePassword": "Generar contraseña",
+      "RegeneratePassword": "Volver a generar contraseña",
+      "PassportExpiration": "Caducidad de la contraseña",
+      "NoExpirationSet": "No se ha establecido caducidad",
+      "Copy": "Copiar",
+      "Revoke": "Anular",
+      "Card": {
+        "Title": "Contraseña del evento",
+        "Description": "Introduzca la contraseña del evento que protege los detalles del evento solicitados a través de la API"
+      },
+      "Field": {
+        "Name": "Contraseña del evento",
+        "Placeholders": {
+          "Name": "Contraseña del evento"
+        }
+      },
+      "Toast": {
+        "UpdateSuccessDescription": "¡La contraseña se ha actualizado correctamente!",
+        "UpdateFailTitle": "Algo salió mal, por favor inténtelo de nuevo.",
+        "RevokeSuccessDescription": "¡La contraseña se ha anulado correctamente!",
+        "RevokeFailTitle": "Algo salió mal, por favor inténtelo de nuevo.",
+        "CopySuccessDescription": "¡Contraseña copiada! Manténgala segura."
       }
     },
-    "PrintWindow": {
-      "Title": "Código QR - Resultados en vivo de OrienteerFeed",
-      "Header": "ORIENTEERFEED",
-      "EventQR": "CÓDIGO QR DEL EVENTO",
-      "Info": "Escanee este código QR para ver los resultados en vivo en línea."
-    },
-    "Toast": {
-      "CopySuccessDescription": "¡Listo! El enlace ya está en su portapapeles, puede compartirlo."
-    }
-  },
-  "QrCode": {
-    "Card": {
-      "Title": "Conexión O Checklist",
-      "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión O Feed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara.",
-      "ApiBaseUrl": "URL",
-      "EventId": "ID del evento",
-      "EventPassword": "Contraseña del evento",
-      "EventName": "Nombre",
-      "EventDate": "Fecha",
-      "ShareQrCode": "Compartir código QR del evento",
-      "PrintQrCode": "Imprimir código QR del evento",
-      "Navigator": {
-        "Title": "Código QR de OrienteerFeed",
-        "Text": "Aquí está el código QR del evento O-Feed para conectar su aplicación móvil O-Checklist."
+    "Link": {
+      "Card": {
+        "Title": "Enlace del evento",
+        "Description": "Utilice esta función para compartir rápidamente un enlace a un evento: puede copiarlo, compartirlo o imprimir el código QR para un acceso sencillo a los resultados en vivo.",
+        "Navigator": {
+          "Title": "OrienteerFeed",
+          "Event": "Evento",
+          "Location": "Ubicación",
+          "Date": "Fecha",
+          "EventUri": "Ver resultados en directo",
+          "UrlDescription": "¡Escanee el código QR para acceder al momento a los resultados en directo!"
+        }
+      },
+      "PrintWindow": {
+        "Title": "Código QR - Resultados en vivo de OrienteerFeed",
+        "Header": "ORIENTEERFEED",
+        "EventQR": "CÓDIGO QR DEL EVENTO",
+        "Info": "Escanee este código QR para ver los resultados en vivo en línea."
+      },
+      "Toast": {
+        "CopySuccessDescription": "¡Listo! El enlace ya está en su portapapeles, puede compartirlo."
       }
     },
-    "PrintWindow": {
-      "Header": "ORIENTEERFEED",
-      "Subheader": "Escanee este código QR para emparejar su aplicación móvil O-Checklist con el evento.",
-      "Footer": "Por favor, mantenga esta información segura. Si encuentra algún problema, contacte con soporte."
-    }
-  },
-  "Visibility": {
-    "Card": {
-      "Title": "Visibilidad",
-      "Description": "Determina si el evento será público o privado. Los eventos públicos se muestran en la lista de la página principal de la aplicación, mientras que los eventos privados solo son visibles para su organizador."
+    "QrCode": {
+      "Card": {
+        "Title": "Conexión O Checklist",
+        "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión O Feed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara.",
+        "ApiBaseUrl": "URL",
+        "EventId": "ID del evento",
+        "EventPassword": "Contraseña del evento",
+        "EventName": "Nombre",
+        "EventDate": "Fecha",
+        "ShareQrCode": "Compartir código QR del evento",
+        "PrintQrCode": "Imprimir código QR del evento",
+        "Navigator": {
+          "Title": "Código QR de OrienteerFeed",
+          "Text": "Aquí está el código QR del evento O-Feed para conectar su aplicación móvil O-Checklist."
+        }
+      },
+      "PrintWindow": {
+        "Header": "ORIENTEERFEED",
+        "Subheader": "Escanee este código QR para emparejar su aplicación móvil O-Checklist con el evento.",
+        "Footer": "Por favor, mantenga esta información segura. Si encuentra algún problema, contacte con soporte."
+      }
     },
-    "Toast": {
-      "UpdateSuccess": "¡El evento ahora está {{status}}!",
-      "UpdateFail": "No se pudo actualizar la visibilidad del evento."
-    }
-  },
-  "DangerZone": {
-    "Title": "Zona de peligro",
-    "Description": "Acciones irreversibles que eliminarán los datos de forma permanente. Proceda con extrema precaución.",
-    "Footer": "Estas acciones no se pueden deshacer. Asegúrese de tener las copias de seguridad adecuadas.",
-    "DeleteCompetitors": {
-      "Title": "Eliminar competidores",
-      "Description": "Si ha subido la lista de salida o resultados para un evento incorrecto, puede eliminar todos los competidores y comenzar de nuevo. Este botón elimina todos los corredores (lista de salida y resultados).",
-      "Button": "Eliminar competidores",
-      "ConfirmTitle": "Eliminar todos los competidores",
-      "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los competidores? Esta acción no se puede deshacer.",
-      "ConfirmButton": "Eliminar competidores"
+    "Visibility": {
+      "Card": {
+        "Title": "Visibilidad",
+        "Description": "Determina si el evento será público o privado. Los eventos públicos se muestran en la lista de la página principal de la aplicación, mientras que los eventos privados solo son visibles para su organizador."
+      },
+      "Toast": {
+        "UpdateSuccess": "¡El evento ahora está {{status}}!",
+        "UpdateFail": "No se pudo actualizar la visibilidad del evento."
+      }
     },
-    "DeleteAllEventData": {
-      "Title": "Eliminar todos los datos del evento",
-      "Description": "Si necesita eliminar completamente todos los datos del evento, incluidos corredores, clases y resultados, utilice este botón. Tenga precaución, ya que esta acción es irreversible.",
-      "Button": "Eliminar todos los datos del evento",
-      "ConfirmTitle": "Eliminar todos los datos del evento",
-      "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los datos del evento? Esto eliminará todos los resultados y no se puede deshacer.",
-      "ConfirmButton": "Eliminar todos los datos"
-    },
-    "DeleteEvent": {
-      "Title": "Eliminar evento",
-      "Description": "Todos los datos del evento serán eliminados. Esta acción no se puede deshacer.",
-      "Button": "Eliminar evento",
-      "ConfirmTitle": "Eliminar evento",
-      "ConfirmDescription": "¿Estás seguro de que quieres eliminar este evento completo? Esta acción no se puede deshacer.",
-      "ConfirmButton": "Eliminar evento"
+    "DangerZone": {
+      "Title": "Zona de peligro",
+      "Description": "Acciones irreversibles que eliminarán los datos de forma permanente. Proceda con extrema precaución.",
+      "Footer": "Estas acciones no se pueden deshacer. Asegúrese de tener las copias de seguridad adecuadas.",
+      "DeleteCompetitors": {
+        "Title": "Eliminar competidores",
+        "Description": "Si ha subido la lista de salida o resultados para un evento incorrecto, puede eliminar todos los competidores y comenzar de nuevo. Este botón elimina todos los corredores (lista de salida y resultados).",
+        "Button": "Eliminar competidores",
+        "ConfirmTitle": "Eliminar todos los competidores",
+        "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los competidores? Esta acción no se puede deshacer.",
+        "ConfirmButton": "Eliminar competidores"
+      },
+      "DeleteAllEventData": {
+        "Title": "Eliminar todos los datos del evento",
+        "Description": "Si necesita eliminar completamente todos los datos del evento, incluidos corredores, clases y resultados, utilice este botón. Tenga precaución, ya que esta acción es irreversible.",
+        "Button": "Eliminar todos los datos del evento",
+        "ConfirmTitle": "Eliminar todos los datos del evento",
+        "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los datos del evento? Esto eliminará todos los resultados y no se puede deshacer.",
+        "ConfirmButton": "Eliminar todos los datos"
+      },
+      "DeleteEvent": {
+        "Title": "Eliminar evento",
+        "Description": "Todos los datos del evento serán eliminados. Esta acción no se puede deshacer.",
+        "Button": "Eliminar evento",
+        "ConfirmTitle": "Eliminar evento",
+        "ConfirmDescription": "¿Estás seguro de que quieres eliminar este evento completo? Esta acción no se puede deshacer.",
+        "ConfirmButton": "Eliminar evento"
+      },
+      "Toast": {
+        "DeleteFailTitle": "Error al eliminar datos",
+        "DeleteSuccessDescription": "Datos eliminados correctamente"
+      }
     },
     "TroublesShooting": {
       "Title": "¿Necesita ayuda o tiene alguna pregunta?",
+      "Description": "Si encuentra un error o necesita ayuda, no dude en ponerse en contacto con nosotros.",
       "Description1": "Nuestro equipo de asistencia está listo para ayudarle con cualquier problema o pregunta. Póngase en contacto con nosotros en",
-      "Description2": "por favor incluya cualquier archivo relevante."
-    },
-    "Toast": {
-      "DeleteFailTitle": "Error al eliminar datos",
-      "DeleteSuccessDescription": "Datos eliminados correctamente"
+      "Description2": "por favor incluya cualquier archivo relevante.",
+      "Discord": "Join Discord",
+      "GitHubIssues": "Open GitHub Issues"
     }
   },
   "Home": {

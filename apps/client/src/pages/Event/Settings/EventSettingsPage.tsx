@@ -22,6 +22,7 @@ import { EventLinkCard } from './EventLinkCard';
 import { EventPasswordCard } from './EventPasswordCard';
 import { EventVisibilityCard } from './EventVisibilityCard';
 import { QrCodeCredentialsCard } from './QrCodeCredentialsCard';
+import { TroubleShootingCard } from './TroubleShootingCard';
 
 interface EventData {
   event: Event;
@@ -69,6 +70,7 @@ export const EventSettingsPage = () => {
   const { user } = useAuth();
 
   const [password, setPassword] = useState<string>('');
+  const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
 
   const { loading, error, data } = useQuery<EventData>(GET_EVENT, {
     variables: { eventId },
@@ -78,10 +80,22 @@ export const EventSettingsPage = () => {
     .href;
 
   useEffect(() => {
-    if (data?.event?.eventPassword?.password) {
-      setPassword(data.event.eventPassword.password);
+    if (data?.event?.eventPassword) {
+      setPassword(data.event.eventPassword.password ?? '');
+      setExpiresAt(data.event.eventPassword.expiresAt ?? undefined);
+    } else {
+      setPassword('');
+      setExpiresAt(undefined);
     }
-  }, [data]);
+  }, [
+    data?.event?.eventPassword?.password,
+    data?.event?.eventPassword?.expiresAt,
+  ]);
+
+  const handleEventDataDeleted = () => {
+    setPassword('');
+    setExpiresAt(undefined);
+  };
 
   // Create initialData for EventInfoCard
   const initialData: Partial<EventFormData> | null = data?.event
@@ -153,8 +167,8 @@ export const EventSettingsPage = () => {
                 t={t}
                 eventId={initialData?.id || ''}
                 eventData={data.event}
-                password={data.event.eventPassword?.password}
-                expiresAt={data.event.eventPassword?.expiresAt}
+                password={password}
+                expiresAt={expiresAt}
                 onPasswordUpdate={setPassword}
               />
             </div>
@@ -191,7 +205,14 @@ export const EventSettingsPage = () => {
               />
             </div>
             <div className="break-inside-avoid">
-              <DangerZoneCard t={t} eventId={eventId} />
+              <DangerZoneCard
+                t={t}
+                eventId={eventId}
+                onEventDataDeleted={handleEventDataDeleted}
+              />
+            </div>
+            <div className="break-inside-avoid">
+              <TroubleShootingCard t={t} />
             </div>
           </div>
         </div>

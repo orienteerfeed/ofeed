@@ -5,7 +5,7 @@ import { useQuery } from '@apollo/client/react';
 import { useForm } from '@tanstack/react-form';
 import { TFunction } from 'i18next';
 import { Copy, Eye, EyeOff } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '../../../components/atoms';
 import { CountdownTimer, Field } from '../../../components/organisms';
 import { useRequest } from '../../../hooks/useRequest';
@@ -63,6 +63,15 @@ export const EventPasswordForm: React.FC<EventPasswordFormProps> = ({
   const [expiration, setExpiration] = useState<Date | null>(
     expiresAt ? new Date(expiresAt) : null
   );
+
+  useEffect(() => {
+    setPassword(initialPassword ?? '');
+  }, [initialPassword]);
+
+  useEffect(() => {
+    setExpiration(expiresAt ? new Date(parseInt(expiresAt, 10)) : null);
+  }, [expiresAt]);
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 

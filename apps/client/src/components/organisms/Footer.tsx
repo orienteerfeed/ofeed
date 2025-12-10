@@ -35,17 +35,19 @@ export const Footer: React.FC<FooterProps> = ({ t }) => {
         <div className="flex items-center justify-between gap-4">
           {/* Left side - Copyright + License + Heart */}
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span>©{currentYear} Orienteerfeed</span>
-            <span className="text-muted-foreground/50">•</span>
-            <ExternalLink
-              href="https://www.gnu.org/licenses/gpl-3.0.html"
-              variant="minimal"
-              className="text-sm text-muted-foreground hover:text-foreground"
-              showIcon={true}
-            >
-              GPL v3
-            </ExternalLink>
-            <span className="text-muted-foreground/50">•</span>
+            <div className="hidden md:inline-flex gap-2">
+              <span>©{currentYear} OFeed</span>
+              <span className="text-muted-foreground/50">•</span>
+              <ExternalLink
+                href="https://www.gnu.org/licenses/gpl-3.0.html"
+                variant="minimal"
+                className="text-sm text-muted-foreground hover:text-foreground"
+                showIcon={true}
+              >
+                GPL v3
+              </ExternalLink>
+              <span className="text-muted-foreground/50">•</span>
+            </div>
             <div className="flex items-center gap-1">
               <span className="text-xs">{t('Organisms.Footer.MadeWith')}</span>
               <Heart className="w-3 h-3 fill-red-500 text-red-500" />

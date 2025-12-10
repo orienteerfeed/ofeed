@@ -250,15 +250,18 @@
           "ConfirmDescription": "Opravdu chcete smazat celou tuto událost? Tuto akci nelze vrátit zpět.",
           "ConfirmButton": "Smazat událost"
         },
-        "TroublesShooting": {
-          "Title": "Potřebujete pomoc nebo máte dotazy?",
-          "Description1": "Náš tým podpory je připraven vám pomoci s jakýmikoli problémy nebo dotazy. Kontaktujte nás na adrese",
-          "Description2": "prosíme přilož případně problémové soubory."
-        },
         "Toast": {
           "DeleteFailTitle": "Chyba při mazání dat",
           "DeleteSuccessDescription": "Data úspěšně smazána"
         }
+      },
+      "TroublesShooting": {
+        "Title": "Potřebujete pomoc nebo máte dotazy?",
+        "Description": "Pokud narazíte na chybu nebo potřebujete pomoc, neváhejte nás kontaktovat.",
+        "Description1": "Náš tým podpory je připraven vám pomoci s jakýmikoli problémy nebo dotazy. Kontaktujte nás na adrese",
+        "Description2": "prosíme přilož případně problémové soubory.",
+        "Discord": "Připojit se na Discord",
+        "GitHubIssues": "Otevřít GitHub Issues"
       }
     },
     "Home": {
