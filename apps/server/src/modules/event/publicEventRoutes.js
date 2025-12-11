@@ -6,6 +6,8 @@ import { calculateCompetitorRankingPoints } from '../../utils/ranking.js';
 import { formatErrors } from '../../utils/errors.js';
 import prisma from '../../utils/context.js';
 
+import { getEventCompetitorDetail } from './eventService.js';
+
 const router = Router();
 
 /**
@@ -419,136 +421,88 @@ router.get(
         .json(validation(`Event with ID ${eventId} does not exist in the database`, 422));
     }
 
-    let competitorData;
-    if (!dbResponseEvent.relay) {
-      // Return data for an individual competition
-      let dbIndividualResponse;
-      try {
-        dbIndividualResponse = await prisma.competitor.findFirst({
-          where: {
-            id: parseInt(competitorId),
-            class: {
-              eventId: eventId, // Ensure this matches the structure and type of your eventId
-            },
-          },
-          select: {
-            id: true,
-            classId: true,
-            firstname: true,
-            lastname: true,
-            bibNumber: true,
-            nationality: true,
-            registration: true,
-            license: true,
-            ranking: true,
-            rankPointsAvg: true,
-            organisation: true,
-            shortName: true,
-            card: true,
-            startTime: true,
-            finishTime: true,
-            time: true,
-            status: true,
-            lateStart: true,
-            note: true,
-            externalId: true,
-            updatedAt: true,
-            splits: {
-              select: { controlCode: true, time: true },
-            },
-            class: {
-              select: {
-                id: true,
-                externalId: true,
-                name: true,
-                startName: true,
-                length: true,
-                climb: true,
-                controlsCount: true,
-              },
-            },
-          },
-        });
-      } catch (err) {
-        console.error(err);
-        return res
-          .status(500)
-          .json(
-            error(
-              `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-                err.message
-            )
-          );
-      }
-      competitorData = dbIndividualResponse;
-    } else {
-      // Return data for an relay competition
-      let dbRelayResponse;
-      try {
-        dbRelayResponse = await prisma.competitor.findFirst({
-          where: {
-            id: parseInt(competitorId),
-            class: {
-              eventId: eventId, // Ensure this matches the structure and type of your eventId
-            },
-          },
-          select: {
-            id: true,
-            classId: true,
-            firstname: true,
-            lastname: true,
-            nationality: true,
-            registration: true,
-            license: true,
-            ranking: true,
-            organisation: true,
-            shortName: true,
-            card: true,
-            startTime: true,
-            finishTime: true,
-            time: true,
-            teamId: true,
-            leg: true,
-            status: true,
-            note: true,
-            externalId: true,
-            updatedAt: true,
-            splits: {
-              select: { controlCode: true, time: true },
-            },
-            class: {
-              select: {
-                id: true,
-                externalId: true,
-                name: true,
-                length: true,
-                climb: true,
-                controlsCount: true,
-              },
-            },
-            team: {
-              select: {
-                name: true,
-                organisation: true,
-                shortName: true,
-                bibNumber: true,
-              },
-            },
-          },
-        });
-      } catch (err) {
-        console.error(err);
-        return res
-          .status(500)
-          .json(
-            error(
-              `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-                err.message
-            )
-          );
-      }
-      competitorData = dbRelayResponse;
+    let competitorData = await getEventCompetitorDetail(eventId, competitorId, dbResponseEvent);
+
+    return res.status(200).json(success('OK', { data: competitorData }, res.statusCode));
+  }
+);
+
+/**
+ * @swagger
+ * /rest/v1/events/{eventId}/competitors/{competitorExternalId}/external-id:
+ *  get:
+ *    summary: Competitor detail using external id
+ *    description: Get competitor detial data by external Id
+ *    tags:
+ *       - Events
+ *    parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         description: String ID of the event to retrieve.
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: competitorExternalId
+ *         required: true
+ *         description: External id of the competitor whose detail you want to get.
+ *         schema:
+ *            type: integer
+ *    responses:
+ *      200:
+ *        description: Event with array of classes and competitors
+ *      422:
+ *        description: Validation Error
+ *      500:
+ *        description: Internal server error
+ */
+router.get(
+  '/:eventId/competitors/:competitorExternalId/external-id',
+  [check('eventId').not().isEmpty().isString(), check('competitorExternalId').not().isEmpty().isNumeric()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json(validation(formatErrors(errors)));
     }
+    const { eventId, competitorExternalId } = req.params;
+    // Everything went fine.
+    let dbResponseEvent;
+    try {
+      dbResponseEvent = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          id: true,
+          relay: true,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json(error(`An error occurred: ` + err.message));
+    }
+
+    if (!dbResponseEvent) {
+      return res
+        .status(422)
+        .json(validation(`Event with ID ${eventId} does not exist in the database`, 422));
+    }
+
+    // Get competitor id
+    const dbCompetitorResponse = await prisma.competitor.findFirst({
+      where: {
+        class: { eventId: eventId },
+        externalId: competitorExternalId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!dbCompetitorResponse) {
+      return res.status(404).json(errorResponse('Competitor not found', res.statusCode));
+    }
+
+    let competitorData = await getEventCompetitorDetail(eventId, dbCompetitorResponse.id, dbResponseEvent);
+
     return res.status(200).json(success('OK', { data: competitorData }, res.statusCode));
   }
 );
