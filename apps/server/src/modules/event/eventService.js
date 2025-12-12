@@ -487,6 +487,11 @@ export const deleteEventCompetitorsAndProtocols = async eventId => {
         where: { id: { in: competitorIdList } },
       });
     }
+
+    // Teams reference classId, so remove them here
+    await prisma.team.deleteMany({
+      where: { classId: { in: classIdList } },
+    });
   } catch (err) {
     console.error('Failed to delete competitors or protocols:', err);
     throw new DatabaseError('Error deleting competitors or related data');
