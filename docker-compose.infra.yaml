@@ -1,0 +1,10 @@
+services:
+  api:
+    networks:
+      - app-network
+      - ofeed-shared
+
+networks:
+  ofeed-shared:
+    external: true
+    name: ofeed-shared

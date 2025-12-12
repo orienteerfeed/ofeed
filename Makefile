@@ -18,8 +18,14 @@ set-compose-file:
 	@echo "COMPOSE_FILE=$(COMPOSE_FILE_VAL)" >> $(ENV_FILE).tmp
 	@mv $(ENV_FILE).tmp $(ENV_FILE)
 
+use-mysql:
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.mysql.yaml
+
 use-traefik:
 	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.traefik.yaml
+
+use-infra-traefik:
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.infra.yaml:docker-compose.traefik.yaml
 
 use-scaled:
 	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.scaled.yaml
