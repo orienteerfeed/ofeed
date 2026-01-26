@@ -1,3 +1,4 @@
+import { ConnectorIcon, OChecklistIcon } from '@/assets/icons';
 import {
   Card,
   CardContent,
@@ -34,7 +35,8 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
   const qrCodeRef = useRef<HTMLCanvasElement>(null);
 
   // Format the service credentials
-  const serviceCredentials = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
+  const ochecklistDeepLink = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
+  const connectorDeepLink = `https://stigning.se/ofeed_connector?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
   const codeSize = 200;
   const errorCorrectionLevel = 'L' as const;
   const qrBackgroundColor = '#ffffff';
@@ -222,6 +224,30 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
     }
   };
 
+  const handleOpenDeepLink = async (deepLink: string) => {
+    if (!deepLink) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: t('Pages.Event.QrCode.Card.Navigator.Title'),
+          text: t('Pages.Event.QrCode.Card.Navigator.Text'),
+          url: deepLink,
+        });
+        return;
+      } catch (error) {
+        console.error('Error sharing deep link:', error);
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(deepLink);
+      alert(t('Operations.CopiedToClipboard', { ns: 'common' }));
+    } catch {
+      window.open(deepLink, '_blank');
+    }
+  };
+
   // Utility to convert base64 data URL to Blob
   const dataURLToBlob = (dataUrl: string): Blob => {
     const arr = dataUrl.split(',');
@@ -268,7 +294,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
         <div className="flex justify-center">
           <div className="p-2 rounded-xl bg-white">
             <QRCodeCanvas
-              value={serviceCredentials}
+              value={ochecklistDeepLink}
               size={codeSize}
               level={errorCorrectionLevel}
               ref={qrCodeRef}
@@ -286,6 +312,20 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
           <Button onClick={handlePrint} variant="outline" className="flex-1">
             <Printer className="h-4 w-4 mr-2" />
             {t('Print', { ns: 'common' })}
+          </Button>
+          <Button
+            onClick={() => handleOpenDeepLink(ochecklistDeepLink)}
+            variant="outline"
+            className="flex-1"
+          >
+            <OChecklistIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => handleOpenDeepLink(connectorDeepLink)}
+            variant="outline"
+            className="flex-1"
+          >
+            <ConnectorIcon className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>

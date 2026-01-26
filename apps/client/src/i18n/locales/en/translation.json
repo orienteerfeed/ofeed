@@ -108,7 +108,7 @@
       },
       "Alert": {
         "DemoTitle": "This is a demo app",
-        "DemoDescription": "OrienteerFeed app is a demo app. If you face an issue please report it to Github issues, thanks.",
+        "DemoDescription": "OFeed app is a demo app. If you face an issue please report it to Github issues, thanks.",
         "EventDataNotAvailableTitle": "Event Data Not Available",
         "EventDataNotAvailableMessage": "No data is currently available for this event (start lists, registrations, courses, or results). Please check back later or contact the event organizer for more information."
       },
@@ -172,7 +172,7 @@
           "Title": "Event link",
           "Description": "Use this feature to quickly share a link to an event - you can copy, share or print the QR code for easy access to live results.",
           "Navigator": {
-            "Title": "OrienteerFeed",
+            "Title": "OFeed",
             "Event": "Event",
             "Location": "Location",
             "Date": "Date",
@@ -181,9 +181,9 @@
           }
         },
         "PrintWindow": {
-          "Title": "QR Code - OrienteerFeed Live Results",
-          "Header": "ORIENTEERFEED",
-          "EventQR": "EVENT QR CODE",
+          "Title": "QR Code - OFeed Live Results",
+          "Header": "OFeed",
+          "EventQR": "Event QR code",
           "Info": "Scan this QR code to view live results online."
         },
         "Toast": {
@@ -202,12 +202,12 @@
           "ShareQrCode": "Share event QR code",
           "PrintQrCode": "Print event QR code",
           "Navigator": {
-            "Title": "OrienteerFeed QR Code",
+            "Title": "OFeed QR Code",
             "Text": "Here is the QR code for the O-Feed event to pair your mobile app O-Checklist!"
           }
         },
         "PrintWindow": {
-          "Header": "ORIENTEERFEED",
+          "Header": "OFeed",
           "Subheader": "Scan this QR code to pair your mobile app O-Checklist with the event.",
           "Footer": "Please keep this information secure. If you encounter any issues, contact support."
         }
