@@ -219,7 +219,7 @@
         },
         "PrintWindow": {
           "Header": "OFeed",
-          "Subheader": "Escanee este código QR para emparejar su aplicación móvil O-Checklist con el evento.",
+          "Subheader": "Escanee este código QR para emparejar su aplicación móvil O Checklist / SI-Droid Connector con el evento.",
           "Footer": "Por favor, mantenga esta información segura. Si encuentra algún problema, contacte con soporte."
         }
       },

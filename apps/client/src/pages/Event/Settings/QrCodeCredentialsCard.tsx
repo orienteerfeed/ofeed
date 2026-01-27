@@ -35,7 +35,8 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
   apiEventsEndpoint,
   apiBaseUrl,
 }) => {
-  const qrCodeRef = useRef<HTMLCanvasElement>(null);
+  const qrCodeOChecklistRef = useRef<HTMLCanvasElement>(null);
+  const qrCodeConnectorRef = useRef<HTMLCanvasElement>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   // Format the service credentials
@@ -45,11 +46,14 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
   const errorCorrectionLevel = 'L' as const;
   const qrBackgroundColor = '#ffffff';
 
-  const handleShare = async () => {
-    if (navigator.share && qrCodeRef.current) {
+  const handleShare = async (
+    ref: React.RefObject<HTMLCanvasElement | null>,
+    appName: string
+  ) => {
+    if (navigator.share && ref.current) {
       try {
         // Access the canvas element directly from the QRCodeCanvas component
-        const canvas = qrCodeRef.current;
+        const canvas = ref.current;
         if (!canvas) return;
 
         // Create an offscreen canvas to add padding and border
@@ -112,7 +116,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
         // Convert the offscreen canvas to base64 PNG
         const finalDataUrl = offscreenCanvas.toDataURL('image/png');
         const blob = dataURLToBlob(finalDataUrl);
-        const file = new File([blob], 'ofeed-ochecklist-qr.png', {
+        const file = new File([blob], `ofeed-${appName}-qr.png`, {
           type: 'image/png',
         });
 
@@ -129,8 +133,8 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
     }
   };
 
-  const handlePrint = () => {
-    const canvas = qrCodeRef.current;
+  const handlePrint = (ref: React.RefObject<HTMLCanvasElement | null>) => {
+    const canvas = ref.current;
     if (!canvas) return;
 
     const dataUrl = canvas.toDataURL('image/png');
@@ -322,12 +326,6 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
             >
               SI Droid Connector
             </TabsTrigger>
-            {/* <TabsTrigger
-              value="meos"
-              className="rounded-t-lg border-x-2 border-t-2 border-b-0 border-transparent px-4 py-3 text-sm font-medium transition-all data-[state=active]:border-border data-[state=active]:border-b-background data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 relative data-[state=active]:z-10"
-            >
-              MeOS
-            </TabsTrigger> */}
           </TabsList>
 
           {/* Content container - negative margin to overlap with tab */}
@@ -347,7 +345,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
                     value={ochecklistDeepLink}
                     size={codeSize}
                     level={errorCorrectionLevel}
-                    ref={qrCodeRef}
+                    ref={qrCodeOChecklistRef}
                     bgColor={qrBackgroundColor}
                     marginSize={1}
                   />
@@ -355,7 +353,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
-                  onClick={handleShare}
+                  onClick={() => handleShare(qrCodeOChecklistRef, 'ochecklist')}
                   variant="outline"
                   className="flex-1"
                 >
@@ -363,7 +361,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
                   {t('Share', { ns: 'common' })}
                 </Button>
                 <Button
-                  onClick={handlePrint}
+                  onClick={() => handlePrint(qrCodeOChecklistRef)}
                   variant="outline"
                   className="flex-1"
                 >
@@ -507,6 +505,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
                     value={connectorDeepLink}
                     size={codeSize}
                     level={errorCorrectionLevel}
+                    ref={qrCodeConnectorRef}
                     bgColor={qrBackgroundColor}
                     marginSize={1}
                   />
@@ -514,7 +513,9 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
-                  onClick={handleShare}
+                  onClick={() =>
+                    handleShare(qrCodeConnectorRef, 'si-droid-connector')
+                  }
                   variant="outline"
                   className="flex-1"
                 >
@@ -522,7 +523,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
                   {t('Share', { ns: 'common' })}
                 </Button>
                 <Button
-                  onClick={handlePrint}
+                  onClick={() => handlePrint(qrCodeConnectorRef)}
                   variant="outline"
                   className="flex-1"
                 >
@@ -535,38 +536,6 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
                   className="flex-1"
                 >
                   <ConnectorIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="meos" className="m-0 p-6 space-y-4">
-              <div className="flex justify-center">
-                <div className="p-2 rounded-xl bg-white">
-                  <QRCodeCanvas
-                    value={connectorDeepLink}
-                    size={codeSize}
-                    level={errorCorrectionLevel}
-                    bgColor={qrBackgroundColor}
-                    marginSize={1}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  onClick={handleShare}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {t('Share', { ns: 'common' })}
-                </Button>
-                <Button
-                  onClick={handlePrint}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  {t('Print', { ns: 'common' })}
                 </Button>
               </div>
             </TabsContent>
