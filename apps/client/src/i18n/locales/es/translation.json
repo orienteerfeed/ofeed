@@ -191,8 +191,8 @@
       },
       "QrCode": {
         "Card": {
-          "Title": "Conexión O Checklist",
-          "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión O Feed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara.",
+          "Title": "Integración",
+          "Description": "Cada pestaña describe cómo configurar la conexión.",
           "ApiBaseUrl": "URL",
           "EventId": "ID del evento",
           "EventPassword": "Contraseña del evento",
@@ -203,6 +203,18 @@
           "Navigator": {
             "Title": "Código QR de OFeed",
             "Text": "Aquí está el código QR del evento OFeed para conectar su aplicación móvil O-Checklist."
+          },
+          "Tabs": {
+            "OChecklist": {
+              "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión O Feed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara."
+            },
+            "QuickEvent": {
+              "Description": "Copie y pegue estas credenciales en la configuración del servicio OFeed.",
+              "ExportInterval": "Intervalo para exportar"
+            },
+            "SIDroidConenctor": {
+              "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión O Feed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara."
+            }
           }
         },
         "PrintWindow": {

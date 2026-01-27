@@ -192,8 +192,8 @@
       },
       "QrCode": {
         "Card": {
-          "Title": "O Checklist propojení",
-          "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování.",
+          "Title": "Integrace",
+          "Description": "V jednotlivých záložkách jsou sepsané detaily potřebné pro propojení.",
           "ApiBaseUrl": "Url",
           "EventId": "Id akce",
           "EventPassword": "Heslo",
@@ -204,6 +204,18 @@
           "Navigator": {
             "Title": "OFeed QR kód",
             "Text": "Tady máš QR kód k OFeed akci, abys mohl snadno propojit s O Checklistem!"
+          },
+          "Tabs": {
+            "OChecklist": {
+              "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování."
+            },
+            "QuickEvent": {
+              "Description": "V nastavení OFeed služby zadej do přihlašovacích údajů tyto hodnoty.",
+              "ExportInterval": "Interval pro exportování"
+            },
+            "SIDroidConenctor": {
+              "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování."
+            }
           }
         },
         "PrintWindow": {
