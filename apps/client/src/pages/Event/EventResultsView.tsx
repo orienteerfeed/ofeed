@@ -442,7 +442,7 @@ const CategoryResultsView = ({
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
-        <span>Loading results...</span>
+        <span>{t('Pages.Event.Results.Loading')}</span>
       </div>
     );
   }
@@ -938,7 +938,7 @@ const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
-        <span>Loading clubs...</span>
+        <span>{t('Pages.Event.Results.LoadingClubs')}</span>
       </div>
     );
   }
@@ -1033,13 +1033,15 @@ const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
       {competitorsLoading && clubResults.length === 0 && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>Loading club results...</span>
+          <span>{t('Pages.Event.Results.LoadingClubResults')}</span>
         </div>
       )}
 
       {competitorsError && (
         <div className="text-center py-8 text-destructive">
-          Error loading club results: {competitorsError.message}
+          {t('Pages.Event.Results.ErrorLoadingClubResults', {
+            message: competitorsError.message,
+          })}
         </div>
       )}
 

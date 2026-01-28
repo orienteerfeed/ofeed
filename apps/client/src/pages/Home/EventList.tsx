@@ -26,7 +26,7 @@ interface GraphQLEvent {
   id: string;
   name: string;
   organizer: string;
-  date: string; // timestamp jako string
+  date: string; // timestamp as a string
   location: string;
   country: {
     countryCode: string;
@@ -37,7 +37,7 @@ interface GraphQLEvent {
     name: string;
   };
   timezone: string;
-  zeroTime: string; // timestamp jako string
+  zeroTime: string; // timestamp as a string
   classes: {
     id: number;
     name: string;
@@ -104,7 +104,7 @@ const EVENTS_QUERY = gql`
   }
 `;
 
-// Funkce pro získání statusu události na základě data
+// Function for obtaining event status based on date
 const getEventStatus = (
   dateTimestamp: string
 ): 'upcoming' | 'ongoing' | 'past' => {
@@ -126,10 +126,10 @@ const convertGraphQLEventToEvent = (graphqlEvent: GraphQLEvent): Event => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
 
-  // Formátování data z timestampu pomocí formatDate z utils
+  // Formatting data from a timestamp using formatDate from utils
   const formattedDate = formatDate(graphqlEvent.date);
 
-  // Určení statusu události
+  // Determining the status of an event
   const status = getEventStatus(graphqlEvent.date);
 
   return {
@@ -180,29 +180,40 @@ function mapFilterToGraphQL(filter: EventFilter): string | null {
 }
 
 export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
-  // Sentinel pro infinite scroll - OPRAVA: větší threshold a rootMargin
+  const VIEW_MODE_KEY = 'homeEventsViewMode';
+  // Sentinel for infinite scroll - FIX: larger threshold and rootMargin
   const { ref, inView } = useInView({
-    threshold: 0.8, // Musí být vidět 80% sentinelu
+    threshold: 0.8, // Must be visible 80% of the sentinel
     triggerOnce: false,
-    rootMargin: '50px', // Větší margin - načte se dříve, ale až když jsme blízko konce
+    rootMargin: '50px', // Larger margin - loads earlier, but only when we're close to the end
   });
 
-  const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const stored = localStorage.getItem(VIEW_MODE_KEY);
+      if (stored === 'card' || stored === 'list') {
+        return stored;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return 'card';
+  });
   const [loadedEvents, setLoadedEvents] = useState<Event[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Řízení konkurenčního načítání
+  // Controlling concurrent loading
   const loadingRef = useRef(false);
   const lastLoadTimeRef = useRef(0);
 
-  // Scroll kotva a obnova pozice
+  // Scroll anchor and position restoration
   const anchorIdRef = useRef<string | null>(null);
   const prevScrollTopRef = useRef(0);
   const restoringRef = useRef(false);
 
-  // Sledování, zda uživatel doscrolloval dostatečně nízko
+  // Checking whether the user has scrolled down far enough
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const graphqlFilter = mapFilterToGraphQL(filter);
@@ -216,7 +227,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     fetchPolicy: 'network-only',
   });
 
-  // Reaguje na změnu filtru – resetuje stav
+  // Responds to filter change – resets status
   useEffect(() => {
     setLoadedEvents([]);
     setEndCursor(null);
@@ -227,7 +238,15 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     anchorIdRef.current = null;
   }, [filter]);
 
-  // Zpracuje data z GraphQL - hlavní logika pro načítání dat
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, viewMode);
+    } catch {
+      // ignore storage errors
+    }
+  }, [viewMode]);
+
+  // Processes data from GraphQL - the main logic for loading data
   useEffect(() => {
     if (!data?.events) return;
 
@@ -236,12 +255,12 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     );
 
     setLoadedEvents(prev => {
-      // Pokud je endCursor null, jedná se o první načtení - kompletně nahradit
+      // If endCursor is null, this is the first read - replace completely
       if (!endCursor) {
         return newEvents;
       }
 
-      // Jinak přidat nové události a odstranit duplicity
+      // Otherwise add new events and remove duplicates
       const existingIds = new Set(prev.map(e => e.id));
       const uniqueNewEvents = newEvents.filter(e => !existingIds.has(e.id));
 
@@ -253,7 +272,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     setHasMore(data.events.pageInfo.hasNextPage);
   }, [data, endCursor]);
 
-  // Po přidání nových událostí vrať pohled na poslední starou položku
+  // After adding new events, return view to the last old item
   useLayoutEffect(() => {
     if (!restoringRef.current) return;
 
@@ -281,7 +300,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     anchorIdRef.current = null;
   }, [loadedEvents.length]);
 
-  // Manuální kontrola scroll pozice pro lepší UX
+  // Manual scroll position check for better UX
   useEffect(() => {
     const checkScrollPosition = () => {
       if (!hasMore || isLoadingMore || loadingRef.current || !endCursor) return;
@@ -292,7 +311,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
       const scrollHeight = scrollContainer.scrollHeight;
       const clientHeight = scrollContainer.clientHeight;
 
-      // Načítat pouze když je uživatel blízko konce (do 20% od konce)
+      // Load only when the user is near the end (within 20% of the end)
       const scrollRatio = (scrollTop + clientHeight) / scrollHeight;
 
       if (scrollRatio > 0.8 && inView) {
@@ -300,7 +319,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
       }
     };
 
-    // Přidat event listener pro scroll
+    // Add event listener for scroll
     const scrollElement = scrollContainerRef.current || window;
     scrollElement.addEventListener('scroll', checkScrollPosition);
 
@@ -309,12 +328,12 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     };
   }, [hasMore, isLoadingMore, endCursor, inView]);
 
-  // Trigger načítání další stránky při doscrollování dolů - OPRAVA: přidáno více podmínek
+  // Trigger loading more pages when scrolling down - FIX: added more conditions
   useEffect(() => {
     const timeSinceLastLoad = Date.now() - lastLoadTimeRef.current;
     const minTimeBetweenLoads = 250;
 
-    // Přísnější podmínky pro načítání
+    // Stricter conditions for loading
     const shouldLoadMore =
       inView &&
       hasMore &&
@@ -323,7 +342,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
       !loadingRef.current &&
       endCursor &&
       timeSinceLastLoad >= minTimeBetweenLoads &&
-      // Dodatečná kontrola - zda jsme skutečně dost nízko
+      // Additional check - whether we are really low enough
       window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000;
 
     if (shouldLoadMore) {
@@ -347,7 +366,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
       return;
     }
 
-    // Zaznamenat pozici pro obnovení scrollu
+    // Record position for scroll recovery
     const last = loadedEvents[loadedEvents.length - 1];
     anchorIdRef.current = last ? last.id : null;
     prevScrollTopRef.current =
@@ -394,7 +413,9 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <Loader2 className="w-8 h-8 animate-spin" />
-        <p className="text-muted-foreground">Načítám události...</p>
+        <p className="text-muted-foreground">
+          {t('Pages.Home.Infinite.LoadingInitial')}
+        </p>
       </div>
     );
   }
@@ -403,7 +424,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     return (
       <div className="flex justify-center py-8">
         <p className="text-destructive">
-          Chyba při načítání událostí: {error.message}
+          {t('Pages.Home.Infinite.LoadError', { message: error.message })}
         </p>
       </div>
     );
@@ -411,11 +432,13 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
 
   return (
     <div ref={scrollContainerRef} className="space-y-6">
-      {/* Přepínač zobrazení */}
+      {/* Display switch */}
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
-          {loadedEvents.length} událostí
-          {hasMore && ' • Načítají se další...'}
+          {t('Pages.Home.Infinite.EventsCount', {
+            count: loadedEvents.length,
+          })}
+          {hasMore && ` • ${t('Pages.Home.Infinite.LoadingMoreInline')}`}
         </div>
         <div className="flex gap-2">
           <Button
@@ -443,7 +466,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
         </div>
       </div>
 
-      {/* Výpis událostí */}
+      {/*List of events */}
       {viewMode === 'card' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loadedEvents.map((event, index) => (
@@ -509,51 +532,46 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
         </div>
       )}
 
-      {/* Sentinel pro infinite scroll - OPRAVA: větší výška a lepší pozice */}
+      {/* Sentinel for infinite scroll - FIX: increased height and better positioning */}
       {hasMore && (
         <div
           ref={ref}
-          className="flex justify-center items-center py-12 transition-opacity duration-300"
-          style={{
-            minHeight: '200px', // Větší výška pro lepší detekci
-            marginBottom: '100px',
-          }}
+          className="flex flex-col items-center justify-center py-10 text-muted-foreground"
         >
           {isLoadingMore ? (
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-sm">Načítám další události...</span>
+            <div className="flex items-center gap-2 text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{t('Pages.Home.Infinite.LoadingMore')}</span>
             </div>
           ) : (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Scrollujte dolů pro více událostí
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Zobrazí se, když budete blízko konce
-              </p>
+            <div className="text-center text-sm">
+              <span>{t('Pages.Home.Infinite.ScrollMore')}</span>
             </div>
           )}
         </div>
       )}
 
-      {/* Konec seznamu */}
+      {/* End of list */}
       {!hasMore && loadedEvents.length > 0 && (
-        <div className="text-center text-muted-foreground py-12 border-t">
-          <p className="text-lg">✓ Všechny události načteny</p>
-          <p className="text-sm mt-2">
-            Našli jste {loadedEvents.length} událostí
+        <div className="flex flex-col items-center justify-center gap-1 py-10 text-muted-foreground">
+          <p className="text-sm font-medium">
+            {t('Pages.Home.Infinite.AllLoaded')}
+          </p>
+          <p className="text-xs">
+            {t('Pages.Home.Infinite.FoundCount', {
+              count: loadedEvents.length,
+            })}
           </p>
         </div>
       )}
 
-      {/* Prázdný stav */}
+      {/* Empty state */}
       {loadedEvents.length === 0 && !loading && (
-        <div className="text-center py-12 space-y-3">
-          <p className="text-muted-foreground">Žádné události nenalezeny</p>
-          <p className="text-sm text-muted-foreground">
-            Zkuste změnit filtr nebo se podívejte později.
+        <div className="text-center py-12 space-y-2 text-muted-foreground">
+          <p className="text-sm font-medium">
+            {t('Pages.Home.Infinite.NoEvents')}
           </p>
+          <p className="text-xs">{t('Pages.Home.Infinite.NoEventsHint')}</p>
         </div>
       )}
     </div>

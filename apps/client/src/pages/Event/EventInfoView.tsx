@@ -1,8 +1,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDate, formatTimeToHms } from '@/lib/date';
+import { formatDate, formatTimeToHms, getLocaleKey } from '@/lib/date';
 import { Event } from '@/types/event';
 import { Calendar, Clock, MapPin, Trophy, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { CountryFlag } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
 
@@ -11,6 +12,8 @@ interface EventInfoViewProps {
 }
 
 export function EventInfoView({ event }: EventInfoViewProps) {
+  const { t, i18n } = useTranslation();
+  const localeKey = getLocaleKey(i18n.language);
   // Helper function to determine badge variant based on event status
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -29,13 +32,26 @@ export function EventInfoView({ event }: EventInfoViewProps) {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'Results are final';
+        return t('Pages.Event.Detail.StatusText.Completed');
       case 'live':
-        return 'Event in progress';
+        return t('Pages.Event.Detail.StatusText.Live');
       case 'upcoming':
-        return 'Registration open';
+        return t('Pages.Event.Detail.StatusText.Upcoming');
       default:
         return '';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return t('Pages.Event.Detail.Status.Completed');
+      case 'live':
+        return t('Pages.Event.Detail.Status.Live');
+      case 'upcoming':
+        return t('Pages.Event.Detail.Status.Upcoming');
+      default:
+        return t('Pages.Event.Detail.Status.Draft');
     }
   };
 
@@ -58,7 +74,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-primary" />
-            Event Information
+            {t('Pages.Event.Detail.EventInformation')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -68,11 +84,16 @@ export function EventInfoView({ event }: EventInfoViewProps) {
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground">Date</div>
-                <div className="font-medium">{formatDate(event.date)}</div>
+                <div className="text-sm text-muted-foreground">
+                  {t('Pages.Event.Detail.Date')}
+                </div>
+                <div className="font-medium">
+                  {formatDate(event.date, localeKey)}
+                </div>
                 {event.zeroTime && (
                   <div className="text-sm text-muted-foreground mt-1">
-                    Zero time: {formatTimeToHms(event.zeroTime)}
+                    {t('Pages.Event.Detail.ZeroTime')}:{' '}
+                    {formatTimeToHms(event.zeroTime)}
                   </div>
                 )}
               </div>
@@ -82,7 +103,9 @@ export function EventInfoView({ event }: EventInfoViewProps) {
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div className="flex-1">
-                <div className="text-sm text-muted-foreground">Location</div>
+                <div className="text-sm text-muted-foreground">
+                  {t('Pages.Event.Detail.Location')}
+                </div>
                 <div className="font-medium">{event.location}</div>
                 <div className="flex items-center gap-2 mt-1">
                   <CountryFlag
@@ -101,7 +124,9 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               <div className="flex items-start gap-3">
                 <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
-                  <div className="text-sm text-muted-foreground">Organizer</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('Pages.Event.Detail.Organizer')}
+                  </div>
                   <div className="font-medium">{event.organizer}</div>
                 </div>
               </div>
@@ -113,15 +138,26 @@ export function EventInfoView({ event }: EventInfoViewProps) {
             <div className="flex items-start gap-3">
               <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
               <div>
-                <div className="text-sm text-muted-foreground">Classes</div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {event.classes?.map(cls => (
-                    <Badge key={cls.id} variant="secondary">
-                      {cls.name}
-                      {cls.length && ` • ${cls.length}m`}
-                      {cls.climb && ` • ${cls.climb}m`}
-                    </Badge>
-                  ))}
+                <div className="text-sm text-muted-foreground">
+                  {t('Pages.Event.Detail.Classes')}
+                </div>
+                <div className="mt-2">
+                  <div className="flex flex-wrap gap-2 sm:hidden">
+                    {event.classes?.map(cls => (
+                      <Badge key={cls.id} variant="secondary">
+                        {cls.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="hidden flex-wrap gap-2 sm:flex">
+                    {event.classes?.map(cls => (
+                      <Badge key={cls.id} variant="secondary">
+                        {cls.name}
+                        {cls.length && ` • ${cls.length}m`}
+                        {cls.climb && ` • ${cls.climb}m`}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -130,9 +166,11 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               <div className="flex items-start gap-3">
                 <Trophy className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <div className="text-sm text-muted-foreground">Format</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('Pages.Event.Detail.Format')}
+                  </div>
                   <Badge variant="default" className="mt-1">
-                    Relay Race
+                    {t('Pages.Event.Detail.RelayRace')}
                   </Badge>
                 </div>
               </div>
@@ -142,11 +180,13 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               <div className="flex items-start gap-3">
                 <Trophy className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <div className="text-sm text-muted-foreground">Ranking</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('Pages.Event.Detail.Ranking')}
+                  </div>
                   <div className="font-medium">{event.ranking}</div>
                   {event.coefRanking && (
                     <div className="text-sm text-muted-foreground">
-                      Coefficient: {event.coefRanking}
+                      {t('Pages.Event.Detail.Coefficient')}: {event.coefRanking}
                     </div>
                   )}
                 </div>
@@ -160,7 +200,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-primary" />
-            Event Status
+            {t('Pages.Event.Detail.EventStatus')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -169,7 +209,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               variant={getStatusBadgeVariant(eventStatus)}
               className="text-sm"
             >
-              {eventStatus.toUpperCase()}
+              {getStatusLabel(eventStatus)}
             </Badge>
             <span className="text-sm text-muted-foreground">
               {getStatusText(eventStatus)}
@@ -181,10 +221,9 @@ export function EventInfoView({ event }: EventInfoViewProps) {
               className="mt-2"
               severity="warning"
               variant="outlined"
-              title="Event is not published yet"
+              title={t('Pages.Event.Detail.Alert.UnpublishedTitle')}
             >
-              This event is currently in draft mode and not visible to the
-              public.
+              {t('Pages.Event.Detail.Alert.UnpublishedDescription')}
             </Alert>
           )}
         </CardContent>
@@ -195,24 +234,30 @@ export function EventInfoView({ event }: EventInfoViewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
-            Additional Details
+            {t('Pages.Event.Detail.AdditionalDetails')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Sport:</span>
+              <span className="text-muted-foreground">
+                {t('Pages.Event.Detail.Sport')}:
+              </span>
               <span className="ml-2 font-medium capitalize">
                 {event.sport.name}
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">Event ID:</span>
+              <span className="text-muted-foreground">
+                {t('Pages.Event.Detail.EventId')}:
+              </span>
               <span className="ml-2 font-medium font-mono">{event.id}</span>
             </div>
             {event.authorId && (
               <div>
-                <span className="text-muted-foreground">Author:</span>
+                <span className="text-muted-foreground">
+                  {t('Pages.Event.Detail.Author')}:
+                </span>
                 <span className="ml-2 font-medium">
                   {event.user?.firstname} {event.user?.lastname}
                 </span>

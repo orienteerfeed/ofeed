@@ -112,6 +112,145 @@
         "EventDataNotAvailableTitle": "Data závodu nejsou k dispozici",
         "EventDataNotAvailableMessage": "Pro tento závod zatím nejsou dostupná žádná data (startovní listiny, přihlášky, tratě ani výsledky). Zkuste to prosím později nebo se informujte u pořadatele."
       },
+      "Report": {
+        "Title": "Report změn",
+        "Description": "Přehled změn stavů a čipů závodníků",
+        "AutoRefresh": "Automatická obnova: {{seconds}} s",
+        "LastUpdated": "Poslední aktualizace: {{time}}",
+        "NoTimestamp": "-",
+        "ActiveFilters": "Aktivní filtry:",
+        "PresetsTitle": "Předdefinované filtry",
+        "Buttons": {
+          "RefreshData": "Načíst data",
+          "ExportCsv": "Export CSV",
+          "ExportPdf": "Export PDF",
+          "ClearFilters": "Vyčistit filtry",
+          "ShowProcessed": "Zobrazit zpracované",
+          "HideProcessed": "Skrýt zpracované"
+        },
+        "Presets": {
+          "CardChanges": "Změny čipů",
+          "NoteChanges": "Změny poznámek",
+          "LateStarts": "Zpožděné starty",
+          "DidNotStart": "Nestartující",
+          "All": "Všechny záznamy"
+        },
+        "Filters": {
+          "IdPlaceholder": "Filtr ID",
+          "DateRange": "Vyber rozsah",
+          "DateFrom": "Od",
+          "DateTo": "Do",
+          "TimeFrom": "Čas od",
+          "TimeTo": "Čas do",
+          "TypePlaceholder": "Vyber typ",
+          "CompetitorIdPlaceholder": "Filtr ID závodníka",
+          "LastnamePlaceholder": "Filtr příjmení",
+          "FirstnamePlaceholder": "Filtr jméno",
+          "PreviousValuePlaceholder": "Filtr původní hodnota",
+          "NewValuePlaceholder": "Filtr nová hodnota",
+          "OriginPlaceholder": "Vyber origin",
+          "SelectedCount": "{{count}} vybráno",
+          "ClearSelection": "Vyčistit výběr"
+        },
+        "TypeLabels": {
+          "class_change": "Změna kategorie",
+          "firstname_change": "Změna jména",
+          "lastname_change": "Změna příjmení",
+          "bibNumber_change": "Změna startovního čísla",
+          "nationality_change": "Změna národnosti",
+          "registration_change": "Změna registrace",
+          "license_change": "Změna licence",
+          "ranking_change": "Změna rankingu",
+          "rank_points_avg_change": "Změna průměru ranking bodů",
+          "organisation_change": "Změna oddílu",
+          "short_name_change": "Změna zkratky",
+          "si_card_change": "Změna SI čipu",
+          "start_time_change": "Změna času startu",
+          "finish_time_change": "Změna času cíle",
+          "time_change": "Změna času",
+          "team_change": "Změna týmu",
+          "leg_change": "Změna úseku",
+          "status_change": "Změna stavu",
+          "late_start_change": "Zpožděný start",
+          "note_change": "Změna poznámky",
+          "external_id_change": "Změna externího ID"
+        },
+        "OriginLabels": {
+          "START": "Start",
+          "OFFICE": "Kancelář",
+          "FINISH": "Cíl",
+          "IT": "IT"
+        },
+        "Pagination": {
+          "RowsPerPage": "Řádků na stránku",
+          "RowsOption": "{{count}}",
+          "PageOf": "Strana {{page}} z {{total}}",
+          "Previous": "Předchozí stránka",
+          "Next": "Další stránka"
+        },
+        "Table": {
+          "Id": "ID",
+          "DateTime": "Datum a čas",
+          "Type": "Typ",
+          "CompetitorId": "ID závodníka",
+          "Lastname": "Příjmení",
+          "Firstname": "Jméno",
+          "PreviousValue": "Původní hodnota",
+          "NewValue": "Nová hodnota",
+          "Origin": "Origin"
+        }
+      },
+      "Settings": {
+        "Loading": "Načítám nastavení závodu"
+      },
+      "Detail": {
+        "EventInformation": "Informace o závodu",
+        "Date": "Datum",
+        "ZeroTime": "Nulový čas",
+        "Location": "Lokalita",
+        "Organizer": "Pořadatel",
+        "Classes": "Kategorie",
+        "ShowAllClasses": "Zobrazit všechny kategorie",
+        "ShowLessClasses": "Zobrazit méně",
+        "Format": "Formát",
+        "RelayRace": "Štafetový závod",
+        "Ranking": "Ranking",
+        "Coefficient": "Koeficient",
+        "EventStatus": "Stav závodu",
+        "AdditionalDetails": "Další informace",
+        "Sport": "Sport",
+        "EventId": "ID závodu",
+        "Author": "Autor",
+        "Report": "Report",
+        "Status": {
+          "Completed": "DOKONČENO",
+          "Live": "PROBÍHÁ",
+          "Upcoming": "NADCHÁZEJÍCÍ",
+          "Draft": "KONCEPT"
+        },
+        "StatusText": {
+          "Completed": "Výsledky jsou finální",
+          "Live": "Závod právě probíhá",
+          "Upcoming": "Registrace je otevřená"
+        },
+        "Alert": {
+          "UnpublishedTitle": "Závod ještě není publikován",
+          "UnpublishedDescription": "Tento závod je v režimu konceptu a není veřejně viditelný."
+        },
+        "ErrorTitle": "Chyba při načítání závodu",
+        "ErrorDescription": "Nepodařilo se načíst data závodu",
+        "Loading": "Načítám závod"
+      },
+      "Results": {
+        "Loading": "Načítám výsledky",
+        "LoadingClubs": "Načítám kluby",
+        "LoadingClubResults": "Načítám klubové výsledky",
+        "ErrorLoadingClubResults": "Chyba při načítání klubových výsledků: {{message}}"
+      },
+      "Splits": {
+        "LoadingChart": "Načítám graf mezičasů",
+        "LoadingTimes": "Načítám mezičasy"
+      },
       "Form": {
         "EventName": "Název závodu",
         "Sport": "Sport",
@@ -270,6 +409,18 @@
         "LiveResults": "Živé výsledky",
         "SplitAnalysis": "Detailní analýza mezičasů",
         "RealTimeEventControl": "Přehled změn v reálném čase"
+      },
+      "Infinite": {
+        "LoadingInitial": "Načítám události...",
+        "LoadingMore": "Načítám další události...",
+        "LoadingMoreInline": "Načítají se další...",
+        "ScrollMore": "Posuňte dolů pro více událostí",
+        "AllLoaded": "Všechny události načteny",
+        "EventsCount": "{{count}} událostí",
+        "FoundCount": "Našli jste {{count}} událostí",
+        "LoadError": "Chyba při načítání událostí: {{message}}",
+        "NoEvents": "Žádné události nenalezeny",
+        "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
       }
     },
     "Profile": {

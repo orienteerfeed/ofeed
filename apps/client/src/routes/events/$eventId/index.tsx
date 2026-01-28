@@ -6,7 +6,6 @@ export const Route = createFileRoute('/events/$eventId/')({
   component: RouteComponent,
   validateSearch: z.object({
     tab: z.string().default('info'),
-    sort: z.string().default('date'),
     class: z.string().optional(),
   }),
 });

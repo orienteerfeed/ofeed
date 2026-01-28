@@ -112,6 +112,145 @@
         "EventDataNotAvailableTitle": "Event Data Not Available",
         "EventDataNotAvailableMessage": "No data is currently available for this event (start lists, registrations, courses, or results). Please check back later or contact the event organizer for more information."
       },
+      "Report": {
+        "Title": "Changelog report",
+        "Description": "Overview of status and card changes",
+        "AutoRefresh": "Auto refresh: {{seconds}} s",
+        "LastUpdated": "Last update: {{time}}",
+        "NoTimestamp": "-",
+        "ActiveFilters": "Active filters:",
+        "PresetsTitle": "Preset filters",
+        "Buttons": {
+          "RefreshData": "Load data",
+          "ExportCsv": "Export CSV",
+          "ExportPdf": "Export PDF",
+          "ClearFilters": "Clear filters",
+          "ShowProcessed": "Show processed",
+          "HideProcessed": "Hide processed"
+        },
+        "Presets": {
+          "CardChanges": "Card changes",
+          "NoteChanges": "Note changes",
+          "LateStarts": "Late starts",
+          "DidNotStart": "Did not start",
+          "All": "All records"
+        },
+        "Filters": {
+          "IdPlaceholder": "Filter ID",
+          "DateRange": "Select range",
+          "DateFrom": "From",
+          "DateTo": "To",
+          "TimeFrom": "Start time",
+          "TimeTo": "End time",
+          "TypePlaceholder": "Select type",
+          "CompetitorIdPlaceholder": "Filter competitor ID",
+          "LastnamePlaceholder": "Filter lastname",
+          "FirstnamePlaceholder": "Filter firstname",
+          "PreviousValuePlaceholder": "Filter previous value",
+          "NewValuePlaceholder": "Filter new value",
+          "OriginPlaceholder": "Select origin",
+          "SelectedCount": "{{count}} selected",
+          "ClearSelection": "Clear selection"
+        },
+        "TypeLabels": {
+          "class_change": "Class change",
+          "firstname_change": "First name change",
+          "lastname_change": "Last name change",
+          "bibNumber_change": "Bib number change",
+          "nationality_change": "Nationality change",
+          "registration_change": "Registration change",
+          "license_change": "License change",
+          "ranking_change": "Ranking change",
+          "rank_points_avg_change": "Ranking points avg change",
+          "organisation_change": "Organisation change",
+          "short_name_change": "Short name change",
+          "si_card_change": "SI card change",
+          "start_time_change": "Start time change",
+          "finish_time_change": "Finish time change",
+          "time_change": "Time change",
+          "team_change": "Team change",
+          "leg_change": "Leg change",
+          "status_change": "Status change",
+          "late_start_change": "Late start change",
+          "note_change": "Note change",
+          "external_id_change": "External ID change"
+        },
+        "OriginLabels": {
+          "START": "Start",
+          "OFFICE": "Office",
+          "FINISH": "Finish",
+          "IT": "IT"
+        },
+        "Pagination": {
+          "RowsPerPage": "Rows per page",
+          "RowsOption": "{{count}}",
+          "PageOf": "Page {{page}} of {{total}}",
+          "Previous": "Previous page",
+          "Next": "Next page"
+        },
+        "Table": {
+          "Id": "ID",
+          "DateTime": "Date & time",
+          "Type": "Type",
+          "CompetitorId": "Competitor ID",
+          "Lastname": "Lastname",
+          "Firstname": "Firstname",
+          "PreviousValue": "Previous value",
+          "NewValue": "New value",
+          "Origin": "Origin"
+        }
+      },
+      "Settings": {
+        "Loading": "Loading event settings"
+      },
+      "Detail": {
+        "EventInformation": "Event Information",
+        "Date": "Date",
+        "ZeroTime": "Zero time",
+        "Location": "Location",
+        "Organizer": "Organizer",
+        "Classes": "Classes",
+        "ShowAllClasses": "Show all classes",
+        "ShowLessClasses": "Show fewer classes",
+        "Format": "Format",
+        "RelayRace": "Relay race",
+        "Ranking": "Ranking",
+        "Coefficient": "Coefficient",
+        "EventStatus": "Event Status",
+        "AdditionalDetails": "Additional Details",
+        "Sport": "Sport",
+        "EventId": "Event ID",
+        "Author": "Author",
+        "Report": "Report",
+        "Status": {
+          "Completed": "COMPLETED",
+          "Live": "LIVE",
+          "Upcoming": "UPCOMING",
+          "Draft": "DRAFT"
+        },
+        "StatusText": {
+          "Completed": "Results are final",
+          "Live": "Event in progress",
+          "Upcoming": "Registration open"
+        },
+        "Alert": {
+          "UnpublishedTitle": "Event is not published yet",
+          "UnpublishedDescription": "This event is currently in draft mode and not visible to the public."
+        },
+        "ErrorTitle": "Error loading event",
+        "ErrorDescription": "Failed to load event data",
+        "Loading": "Loading event"
+      },
+      "Results": {
+        "Loading": "Loading results",
+        "LoadingClubs": "Loading clubs",
+        "LoadingClubResults": "Loading club results",
+        "ErrorLoadingClubResults": "Error loading club results: {{message}}"
+      },
+      "Splits": {
+        "LoadingChart": "Loading split chart",
+        "LoadingTimes": "Loading split times"
+      },
       "Form": {
         "EventName": "Event name",
         "Sport": "Sport",
@@ -270,6 +409,18 @@
         "LiveResults": "Live Results",
         "SplitAnalysis": "Deep Split Analysis",
         "RealTimeEventControl": "Real-Time Event Control"
+      },
+      "Infinite": {
+        "LoadingInitial": "Loading events...",
+        "LoadingMore": "Loading more events...",
+        "LoadingMoreInline": "Loading more...",
+        "ScrollMore": "Scroll down for more events",
+        "AllLoaded": "All events loaded",
+        "EventsCount": "{{count}} events",
+        "FoundCount": "You found {{count}} events",
+        "LoadError": "Error loading events: {{message}}",
+        "NoEvents": "No events found",
+        "NoEventsHint": "Try changing the filter or check back later."
       }
     },
     "Profile": {
