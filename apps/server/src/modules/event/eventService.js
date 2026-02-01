@@ -487,6 +487,11 @@ export const deleteEventCompetitorsAndProtocols = async eventId => {
         where: { id: { in: competitorIdList } },
       });
     }
+
+    // Teams reference classId, so remove them here
+    await prisma.team.deleteMany({
+      where: { classId: { in: classIdList } },
+    });
   } catch (err) {
     console.error('Failed to delete competitors or protocols:', err);
     throw new DatabaseError('Error deleting competitors or related data');
@@ -537,6 +542,15 @@ export const deleteEventCompetitorAndProtocols = async (eventId, competitorId) =
     await prisma.competitor.delete({
       where: { id: competitorId },
     });
+
+    // Publish changes to subscribers
+    try {
+      await publishUpdatedCompetitor(eventId, competitor);
+      await publishUpdatedCompetitors(competitor.classId);
+    } catch (err) {
+      console.error('Error publishing competitors update:', err);
+    }
+
   } catch (err) {
     console.error('Failed to delete competitor or protocols:', err);
     throw new DatabaseError('Error deleting competitor or related data');

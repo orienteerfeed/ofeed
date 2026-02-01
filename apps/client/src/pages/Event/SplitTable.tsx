@@ -26,6 +26,7 @@ import {
   User,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CompetitorName } from './CompetitorName';
 
 // Types
@@ -425,6 +426,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
   isLoading = false,
   error,
 }) => {
+  const { t } = useTranslation();
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: 'position',
     direction: 'asc',
@@ -567,7 +569,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>Loading split times...</span>
+          <span>{t('Pages.Event.Splits.LoadingTimes')}</span>
         </CardContent>
       </Card>
     );

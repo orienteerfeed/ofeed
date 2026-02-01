@@ -1,10 +1,11 @@
 import { notFound, useNavigate } from '@tanstack/react-router';
-import { Calendar, Loader2, MapPin, Settings } from 'lucide-react';
+import { Calendar, FileText, Loader2, MapPin, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, CountryFlag } from '../../components/atoms';
 import { useAuth } from '../../hooks/useAuth';
 import { useEvent } from '../../hooks/useEvent';
-import { formatDateWithDay } from '../../lib/date';
+import { formatDateWithDay, getLocaleKey } from '../../lib/date';
+import PATHNAMES from '../../lib/paths/pathnames';
 import { MainPageLayout } from '../../templates/MainPageLayout';
 import { EventDetailTabs } from './EventDetailTabs';
 import { NotificationControlPanel } from './NotificationControlPanel';
@@ -15,7 +16,7 @@ interface EventPageProps {
 }
 
 export const EventPage = ({ eventId, tab }: EventPageProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { event, loading, error } = useEvent(eventId);
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -27,7 +28,10 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
     isAuthenticated && user && event && user.id === event.authorId;
 
   const handleSettingsClick = () => {
-    navigate({ to: '/events/$eventId/settings', params: { eventId } });
+    navigate(PATHNAMES.eventSettings(eventId));
+  };
+  const handleReportClick = () => {
+    navigate(PATHNAMES.eventReport(eventId));
   };
 
   if (loading) {
@@ -36,7 +40,9 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading event...</p>
+            <p className="text-muted-foreground">
+              {t('Pages.Event.Detail.Loading')}
+            </p>
           </div>
         </div>
       </MainPageLayout>
@@ -50,10 +56,10 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-destructive mb-2">
-              Error loading event
+              {t('Pages.Event.Detail.ErrorTitle')}
             </h2>
             <p className="text-muted-foreground">
-              {error.message || 'Failed to load event data'}
+              {error.message || t('Pages.Event.Detail.ErrorDescription')}
             </p>
           </div>
         </div>
@@ -73,16 +79,16 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
         {/* Header row with metadata and settings button */}
         <div className="flex justify-between items-start mb-4">
           {/* Event metadata */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <CountryFlag
               countryCode={event.country.countryCode}
               className="w-8 h-6 shadow-md"
             />
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 <span className="font-mono">
-                  {formatDateWithDay(event.date)}
+                  {formatDateWithDay(event.date, getLocaleKey(i18n.language))}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -97,17 +103,30 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
             <NotificationControlPanel />
             {/* Settings button for event owner */}
             {isEventOwner && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSettingsClick}
-                className="flex items-center gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:block">
-                  {t('Settings', { ns: 'common' })}
-                </span>
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReportClick}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="hidden sm:block">
+                    {t('Pages.Event.Detail.Report')}
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSettingsClick}
+                  className="flex items-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span className="hidden sm:block">
+                    {t('Settings', { ns: 'common' })}
+                  </span>
+                </Button>
+              </>
             )}
           </div>
         </div>

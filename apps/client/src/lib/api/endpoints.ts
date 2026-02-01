@@ -55,6 +55,10 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}/delete-data`,
   deleteEvent: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}`,
+  eventChangelog: (
+    eventId: string | number,
+    params?: QueryParams
+  ): string => `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
   uploadIofXml: (): string => `${apiPrefix}/upload/iof`,
 } as const;
 

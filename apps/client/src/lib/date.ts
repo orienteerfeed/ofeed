@@ -1,6 +1,6 @@
 import type { Locale } from 'date-fns';
 import { format, formatDuration, parseISO } from 'date-fns';
-import { cs, enGB } from 'date-fns/locale';
+import { cs, enGB, es } from 'date-fns/locale';
 
 export const DATE_FORMATS = {
   date: 'd. M. yyyy',
@@ -10,8 +10,16 @@ export const DATE_FORMATS = {
   timeHhMm: 'HH:mm',
 } as const;
 
-type LocaleKey = 'cs' | 'enGB';
-const LOCALES: Record<LocaleKey, Locale> = { cs, enGB };
+export type LocaleKey = 'cs' | 'enGB' | 'es';
+const LOCALES: Record<LocaleKey, Locale> = { cs, enGB, es };
+
+export function getLocaleKey(language?: string): LocaleKey {
+  if (!language) return 'cs';
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith('cs')) return 'cs';
+  if (normalized.startsWith('es')) return 'es';
+  return 'enGB';
+}
 
 /** build date-fns options only when we actually have a locale (exactOptionalPropertyTypes-safe) */
 function fmtOpts(key?: LocaleKey) {

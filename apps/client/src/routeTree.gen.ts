@@ -18,6 +18,7 @@ import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
+import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventId/report'
 import { Route as AuthResetPasswordTokenRouteImport } from './routes/auth/reset-password/$token'
 
 const ProfileRoute = ProfileRouteImport.update({
@@ -65,6 +66,11 @@ const EventsEventIdSettingsRoute = EventsEventIdSettingsRouteImport.update({
   path: '/events/$eventId/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdReportRoute = EventsEventIdReportRouteImport.update({
+  id: '/events/$eventId/report',
+  path: '/events/$eventId/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthResetPasswordTokenRoute = AuthResetPasswordTokenRouteImport.update({
   id: '/auth/reset-password/$token',
   path: '/auth/reset-password/$token',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/auth/signin'
     | '/auth/signup'
     | '/auth/reset-password/$token'
+    | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/events/$eventId'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/auth/signin'
     | '/auth/signup'
     | '/auth/reset-password/$token'
+    | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/events/$eventId'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth/signin'
     | '/auth/signup'
     | '/auth/reset-password/$token'
+    | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/events/$eventId/'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
+  EventsEventIdReportRoute: typeof EventsEventIdReportRoute
   EventsEventIdSettingsRoute: typeof EventsEventIdSettingsRoute
   EventsEventIdIndexRoute: typeof EventsEventIdIndexRoute
 }
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId/report': {
+      id: '/events/$eventId/report'
+      path: '/events/$eventId/report'
+      fullPath: '/events/$eventId/report'
+      preLoaderRoute: typeof EventsEventIdReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/reset-password/$token': {
       id: '/auth/reset-password/$token'
       path: '/auth/reset-password/$token'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
+  EventsEventIdReportRoute: EventsEventIdReportRoute,
   EventsEventIdSettingsRoute: EventsEventIdSettingsRoute,
   EventsEventIdIndexRoute: EventsEventIdIndexRoute,
 }

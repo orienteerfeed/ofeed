@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatSecondsToTime } from '@/lib/date';
 import { Loader2, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid,
   Legend,
@@ -140,6 +141,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   isLoading = false,
   error,
 }) => {
+  const { t } = useTranslation();
   // Sort competitors same as in SplitTable (by status priority, then time)
   const sortedCompetitors = useMemo(() => {
     return [...competitors].sort((a, b) => {
@@ -261,7 +263,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-          <span>Loading split chart...</span>
+          <span>{t('Pages.Event.Splits.LoadingChart')}</span>
         </CardContent>
       </Card>
     );
