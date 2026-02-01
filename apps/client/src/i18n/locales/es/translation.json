@@ -346,14 +346,14 @@
           },
           "Tabs": {
             "OChecklist": {
-              "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión O Feed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara. Puede utilizar el botón con el icono de la aplicación para obtener el enlace para compartir las credenciales en un solo dispositivo."
+              "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión OFeed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara. Puede utilizar el botón con el icono de la aplicación para obtener el enlace para compartir las credenciales en un solo dispositivo."
             },
             "QuickEvent": {
               "Description": "Copie y pegue estas credenciales en la configuración del servicio OFeed.",
               "ExportInterval": "Intervalo para exportar"
             },
             "SIDroidConenctor": {
-              "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión O Feed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara. Puede utilizar el botón con el icono de la aplicación para obtener el enlace para compartir las credenciales en un solo dispositivo."
+              "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión OFeed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara. Puede utilizar el botón con el icono de la aplicación para obtener el enlace para compartir las credenciales en un solo dispositivo."
             }
           }
         },

@@ -342,18 +342,18 @@
           "PrintQrCode": "Print event QR code",
           "Navigator": {
             "Title": "OFeed QR Code",
-            "Text": "Here is the QR code for the O-Feed event to pair your mobile app O-Checklist!"
+            "Text": "Here is the QR code for the OFeed event to pair your mobile app O-Checklist!"
           },
           "Tabs": {
             "OChecklist": {
-              "Description": "Scan the QR code to set url, event id and password into the settings of O Feed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
+              "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
             },
             "QuickEvent": {
               "Description": "Copy and paste these Credentials into OFeed service setup.",
               "ExportInterval": "Export Interval"
             },
             "SIDroidConenctor": {
-              "Description": "Scan the QR code to set url, event id and password into the settings of O Feed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
+              "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
             }
           }
         },
