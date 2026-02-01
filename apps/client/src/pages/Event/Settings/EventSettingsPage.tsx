@@ -18,10 +18,10 @@ import { MainPageLayout } from '../../../templates/MainPageLayout';
 import { Event, EventFormData } from '../../../types';
 import { DangerZoneCard } from './DangerZoneCard';
 import { EventInfoCard } from './EventInfoCard';
+import { EventIntegrationsCard } from './EventIntegrationsCard';
 import { EventLinkCard } from './EventLinkCard';
 import { EventPasswordCard } from './EventPasswordCard';
 import { EventVisibilityCard } from './EventVisibilityCard';
-import { QrCodeCredentialsCard } from './QrCodeCredentialsCard';
 import { TroubleShootingCard } from './TroubleShootingCard';
 
 interface EventData {
@@ -177,7 +177,7 @@ export const EventSettingsPage = () => {
 
             {password && (
               <div className="break-inside-avoid">
-                <QrCodeCredentialsCard
+                <EventIntegrationsCard
                   t={t}
                   eventId={eventId}
                   eventPassword={password}

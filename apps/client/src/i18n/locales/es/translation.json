@@ -329,7 +329,7 @@
           "CopySuccessDescription": "¡Listo! El enlace ya está en su portapapeles, puede compartirlo."
         }
       },
-      "QrCode": {
+      "Integration": {
         "Card": {
           "Title": "Integración",
           "Description": "Cada pestaña describe cómo configurar la conexión.",

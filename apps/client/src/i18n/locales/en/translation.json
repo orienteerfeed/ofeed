@@ -329,7 +329,7 @@
           "CopySuccessDescription": "Boom! The link is now in your clipboard, share it away!"
         }
       },
-      "QrCode": {
+      "Integration": {
         "Card": {
           "Title": "Integrations",
           "Description": "Each tab describes how to setup the connection.",

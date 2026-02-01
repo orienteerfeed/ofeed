@@ -16,7 +16,7 @@ import { useRef, useState } from 'react';
 import { Button } from '../../../components/atoms';
 import { toast } from '../../../utils';
 
-interface QrCodeCredentialsCardProps {
+interface EventIntegrationsCardProps {
   t: TFunction;
   eventId: string;
   eventPassword: string;
@@ -26,7 +26,7 @@ interface QrCodeCredentialsCardProps {
   apiBaseUrl: string;
 }
 
-export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
+export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   t,
   eventId,
   eventPassword,
@@ -122,8 +122,8 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
 
         await navigator.share({
           files: [file],
-          title: t('Pages.Event.QrCode.Card.Navigator.Title'),
-          text: t('Pages.Event.QrCode.Card.Navigator.Text'),
+          title: t('Pages.Event.Integration.Card.Navigator.Title'),
+          text: t('Pages.Event.Integration.Card.Navigator.Text'),
         });
       } catch (error) {
         console.error('Error sharing QR code:', error);
@@ -192,31 +192,31 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
           <body>
             <div class="container">
               <div class="header"><h1>${t(
-                'Pages.Event.QrCode.PrintWindow.Header'
+                'Pages.Event.Integration.PrintWindow.Header'
               )}</h1></div>
               <div class="subheader">${t(
-                'Pages.Event.QrCode.PrintWindow.Subheader'
+                'Pages.Event.Integration.PrintWindow.Subheader'
               )}</div>
               <img src="${dataUrl}" class="qr-code" alt="QR Code" />
               <div class="details">
                 <span><strong>${t(
-                  'Pages.Event.QrCode.Card.EventName'
+                  'Pages.Event.Integration.Card.EventName'
                 )}:</strong> ${eventName}</span>
                 <span><strong>${t(
-                  'Pages.Event.QrCode.Card.EventDate'
+                  'Pages.Event.Integration.Card.EventDate'
                 )}:</strong> ${eventDate}</span>
                 <span><strong>${t(
-                  'Pages.Event.QrCode.Card.ApiBaseUrl'
+                  'Pages.Event.Integration.Card.ApiBaseUrl'
                 )}:</strong> ${apiBaseUrl}</span>
                 <span><strong>${t(
-                  'Pages.Event.QrCode.Card.EventId'
+                  'Pages.Event.Integration.Card.EventId'
                 )}:</strong> ${eventId}</span>
                 <span><strong>${t(
-                  'Pages.Event.QrCode.Card.EventPassword'
+                  'Pages.Event.Integration.Card.EventPassword'
                 )}:</strong> ${eventPassword}</span>
               </div>
               <div class="footer">
-              ${t('Pages.Event.QrCode.PrintWindow.Footer')}
+              ${t('Pages.Event.Integration.PrintWindow.Footer')}
               </div>
             </div>
             <script>
@@ -238,8 +238,8 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: t('Pages.Event.QrCode.Card.Navigator.Title'),
-          text: t('Pages.Event.QrCode.Card.Navigator.Text'),
+          title: t('Pages.Event.Integration.Card.Navigator.Title'),
+          text: t('Pages.Event.Integration.Card.Navigator.Text'),
           url: deepLink,
         });
         return;
@@ -299,10 +299,10 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
     <Card className="w-full">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">
-          {t('Pages.Event.QrCode.Card.Title')}
+          {t('Pages.Event.Integration.Card.Title')}
         </CardTitle>
         <CardDescription>
-          {t('Pages.Event.QrCode.Card.Description')}
+          {t('Pages.Event.Integration.Card.Description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-0">
@@ -336,7 +336,9 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
             <TabsContent value="ochecklist" className="m-0 p-6 space-y-4">
               <div className="space-y-2 mb-6">
                 <p className="text-sm text-muted-foreground">
-                  {t('Pages.Event.QrCode.Card.Tabs.OChecklist.Description')}
+                  {t(
+                    'Pages.Event.Integration.Card.Tabs.OChecklist.Description'
+                  )}
                 </p>
               </div>
               <div className="flex justify-center">
@@ -381,13 +383,15 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
             <TabsContent value="quickevent" className="m-0 p-6 space-y-4">
               <div className="space-y-2 mb-6">
                 <p className="text-sm text-muted-foreground">
-                  {t('Pages.Event.QrCode.Card.Tabs.QuickEvent.Description')}
+                  {t(
+                    'Pages.Event.Integration.Card.Tabs.QuickEvent.Description'
+                  )}
                 </p>
 
                 <div className="flex justify-between items-center">
                   <Label className="text-sm font-medium">
                     {t(
-                      'Pages.Event.QrCode.Card.Tabs.QuickEvent.ExportInterval'
+                      'Pages.Event.Integration.Card.Tabs.QuickEvent.ExportInterval'
                     )}
                   </Label>
                   <p className="text-sm text-muted-foreground">60 s</p>
@@ -395,7 +399,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
 
                 <div className="flex justify-between items-center gap-2">
                   <Label className="text-sm font-medium">
-                    {t('Pages.Event.QrCode.Card.ApiBaseUrl')}
+                    {t('Pages.Event.Integration.Card.ApiBaseUrl')}
                   </Label>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted-foreground truncate max-w-[200px]">
@@ -418,7 +422,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
 
                 <div className="flex justify-between items-center gap-2">
                   <Label className="text-sm font-medium">
-                    {t('Pages.Event.QrCode.Card.EventId')}
+                    {t('Pages.Event.Integration.Card.EventId')}
                   </Label>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted-foreground">{eventId}</p>
@@ -437,7 +441,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
 
                 <div className="flex justify-between items-center gap-2">
                   <Label className="text-sm font-medium">
-                    {t('Pages.Event.QrCode.Card.EventPassword')}
+                    {t('Pages.Event.Integration.Card.EventPassword')}
                   </Label>
                   <div className="flex items-center gap-2 flex-1 max-w-[250px]">
                     <div className="relative flex-1">
@@ -495,7 +499,7 @@ export const QrCodeCredentialsCard: React.FC<QrCodeCredentialsCardProps> = ({
               <div className="space-y-2 mb-6">
                 <p className="text-sm text-muted-foreground">
                   {t(
-                    'Pages.Event.QrCode.Card.Tabs.SIDroidConenctor.Description'
+                    'Pages.Event.Integration.Card.Tabs.SIDroidConenctor.Description'
                   )}
                 </p>
               </div>

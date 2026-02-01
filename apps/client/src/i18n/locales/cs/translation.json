@@ -329,7 +329,7 @@
           "CopySuccessDescription": "Hop! Odkaz je teď ve schránce, sdílej dál!"
         }
       },
-      "QrCode": {
+      "Integration": {
         "Card": {
           "Title": "Integrace",
           "Description": "V jednotlivých záložkách jsou sepsané detaily potřebné pro propojení.",
