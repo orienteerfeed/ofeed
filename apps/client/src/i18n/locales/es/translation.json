@@ -29,248 +29,6 @@
         "SignUp": "Registrarse",
         "SignInWithEmail": "Iniciar sesión con correo electrónico",
         "WelcomeBack": "Bienvenido de nuevo"
-      }
-    },
-    "SignUpPage": {
-      "AlreadyHaveAnAccount": "¿Ya tienes una cuenta?",
-      "CreateAccount": "Crear cuenta",
-      "CreatingAccount": "Creando cuenta..."
-    },
-    "RequestPasswordResetPage": {
-      "ForgottenPassword": "¿Ha olvidado su contraseña?",
-      "EnterYourEmail": "Introduzca su correo electrónico para recibir un enlace y restablecer su contraseña",
-      "ResetPassword": "Restablecer contraseña",
-      "SendResetLink": "Enviar enlace de restablecimiento",
-      "Sending": "Enviando...",
-      "BackToSignIn": "Volver a iniciar sesión",
-      "CheckYourEmail": "Revise su correo electrónico",
-      "PasswordResetLinkSent": "Enlace para restablecer la contraseña enviado"
-    },
-    "PasswordResetEmailSentPage": {
-      "CheckYourEmail": "Revise su correo electrónico",
-      "PasswordResetInstructions1": "Si esta dirección de correo electrónico está asociada a una cuenta, recibirá en breve un enlace para restablecer su contraseña. Por favor, revise su bandeja de entrada y siga las instrucciones para restablecerla.",
-      "PasswordResetInstructions2": "Si no encuentra el correo electrónico, revise su carpeta de correo no deseado.",
-      "PasswordResetInstructions3": "Si no ha solicitado el restablecimiento de la contraseña, puede ignorar este correo."
-    },
-    "PasswordResetPage": {
-      "EnterYourNewPassword": "Introduzca una nueva contraseña",
-      "ResetYourPassword": "Restablecer su contraseña",
-      "NewPassword": "Nueva contraseña",
-      "ResettingPassword": "Restableciendo la contraseña...",
-      "ResetPassword": "Restablecer contraseña"
-    }
-  },
-  "Event": {
-    "Description": "Resumen de eventos",
-    "CompetitorsList": "Lista de competidores",
-    "MyEvents": "Mis eventos",
-    "MyEventsDescription": "Resumen de todos los eventos que has creado",
-    "NoCompetitorsFound": "No se han encontrado competidores para la clase seleccionada.",
-    "Classes": "Clases",
-    "OrganizedBy": "Organizado por",
-    "Operations": {
-      "EditEvent": "Editar evento",
-      "EditDescription": "Edite los detalles del evento existente",
-      "CreateEvent": "Crear evento",
-      "CreateDescription": "Rellene el formulario para crear un nuevo evento",
-      "DeleteEvent": "Eliminar evento",
-      "SelectClass": "Seleccionar clase"
-    },
-    "Tables": {
-      "Name": "Nombre",
-      "Organizer": "Organizador",
-      "Date": "Fecha",
-      "Visibility": "Visibilidad",
-      "Actions": "Acciones",
-      "Format": "Formato",
-      "Status": "Estado",
-      "Sport": "Sport",
-      "Country": "País",
-      "Entries": "Entradas",
-      "Competitors": "Competidores"
-    },
-    "Tabs": {
-      "All": "Todo",
-      "Today": "Hoy",
-      "Ongoing": "En curso",
-      "Recent": "Recientes",
-      "Past": "Pasado",
-      "Upcoming": "Próximos",
-      "Results": "Resultados",
-      "Splits": "Parciales",
-      "Detail": "Detalle",
-      "Info": "Información",
-      "Cards": "Tarjetas",
-      "List": "Lista",
-      "Cat": "Cat",
-      "Club": "Club",
-      "Live": "En vivo"
-    },
-    "Alert": {
-      "DemoTitle": "Esta es una aplicación de demostración",
-      "DemoDescription": "La aplicación OrienteerFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
-      "EventDataNotAvailableTitle": "Datos del evento no disponibles",
-      "EventDataNotAvailableMessage": "Actualmente no hay datos disponibles para este evento (listas de salida, inscripciones, recorridos o resultados). Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento para más información."
-    },
-    "Report": {
-      "Title": "Registro de cambios de competidores",
-      "Description": "Resumen de cambios de estado y tarjeta",
-      "AutoRefresh": "Actualización automática: {{seconds}} s",
-      "LastUpdated": "Última actualización: {{time}}",
-        "NoTimestamp": "-",
-        "ActiveFilters": "Filtros activos:",
-        "PresetsTitle": "Filtros predefinidos",
-        "Buttons": {
-        "RefreshData": "Cargar datos",
-        "ExportCsv": "Exportar CSV",
-        "ExportPdf": "Exportar PDF",
-        "ClearFilters": "Limpiar filtros",
-        "ShowProcessed": "Mostrar procesados",
-        "HideProcessed": "Ocultar procesados"
-      },
-      "Presets": {
-        "CardChanges": "Cambios de tarjeta",
-        "NoteChanges": "Cambios de notas",
-        "LateStarts": "Salidas tardías",
-        "DidNotStart": "No inició",
-        "All": "Todos los registros"
-      },
-      "Filters": {
-        "IdPlaceholder": "Filtrar ID",
-        "DateRange": "Seleccionar rango",
-        "DateFrom": "Desde",
-        "DateTo": "Hasta",
-        "TimeFrom": "Hora inicio",
-        "TimeTo": "Hora fin",
-        "TypePlaceholder": "Seleccionar tipo",
-        "CompetitorIdPlaceholder": "Filtrar ID del competidor",
-        "LastnamePlaceholder": "Filtrar apellido",
-        "FirstnamePlaceholder": "Filtrar nombre",
-        "PreviousValuePlaceholder": "Filtrar valor anterior",
-        "NewValuePlaceholder": "Filtrar valor nuevo",
-        "OriginPlaceholder": "Seleccionar origen",
-        "SelectedCount": "{{count}} seleccionados",
-        "ClearSelection": "Limpiar selección"
-      },
-      "TypeLabels": {
-        "class_change": "Cambio de categoría",
-        "firstname_change": "Cambio de nombre",
-        "lastname_change": "Cambio de apellido",
-        "bibNumber_change": "Cambio de dorsal",
-        "nationality_change": "Cambio de nacionalidad",
-        "registration_change": "Cambio de registro",
-        "license_change": "Cambio de licencia",
-        "ranking_change": "Cambio de ranking",
-        "rank_points_avg_change": "Cambio de promedio de puntos de ranking",
-        "organisation_change": "Cambio de club",
-        "short_name_change": "Cambio de abreviatura",
-        "si_card_change": "Cambio de tarjeta SI",
-        "start_time_change": "Cambio de hora de salida",
-        "finish_time_change": "Cambio de hora de llegada",
-        "time_change": "Cambio de tiempo",
-        "team_change": "Cambio de equipo",
-        "leg_change": "Cambio de tramo",
-        "status_change": "Cambio de estado",
-        "late_start_change": "Salida tardía",
-        "note_change": "Cambio de nota",
-        "external_id_change": "Cambio de ID externo"
-      },
-      "OriginLabels": {
-        "START": "Salida",
-        "OFFICE": "Oficina",
-        "FINISH": "Meta",
-        "IT": "TI"
-      },
-      "Pagination": {
-        "RowsPerPage": "Filas por página",
-        "RowsOption": "{{count}}",
-        "PageOf": "Página {{page}} de {{total}}",
-        "Previous": "Página anterior",
-        "Next": "Página siguiente"
-      },
-      "Table": {
-        "Id": "ID",
-        "DateTime": "Fecha y hora",
-        "Type": "Tipo",
-        "CompetitorId": "ID del competidor",
-        "Lastname": "Apellido",
-        "Firstname": "Nombre",
-        "PreviousValue": "Valor anterior",
-        "NewValue": "Valor nuevo",
-        "Origin": "Origen"
-      }
-    },
-    "Settings": {
-      "Loading": "Cargando ajustes del evento"
-    },
-    "Detail": {
-      "EventInformation": "Información del evento",
-      "Date": "Fecha",
-      "ZeroTime": "Hora cero",
-      "Location": "Ubicación",
-      "Organizer": "Organizador",
-      "Classes": "Categorías",
-      "ShowAllClasses": "Ver todas las categorías",
-      "ShowLessClasses": "Ver menos",
-      "Format": "Formato",
-      "RelayRace": "Carrera de relevos",
-      "Ranking": "Ranking",
-      "Coefficient": "Coeficiente",
-      "EventStatus": "Estado del evento",
-      "AdditionalDetails": "Detalles adicionales",
-      "Sport": "Deporte",
-      "EventId": "ID del evento",
-      "Author": "Autor",
-      "Report": "Reporte",
-      "Status": {
-        "Completed": "COMPLETADO",
-        "Live": "EN CURSO",
-        "Upcoming": "PRÓXIMO",
-        "Draft": "BORRADOR"
-      },
-      "StatusText": {
-        "Completed": "Los resultados son definitivos",
-        "Live": "Evento en progreso",
-        "Upcoming": "Registro abierto"
-      },
-      "Alert": {
-        "UnpublishedTitle": "El evento aún no está publicado",
-        "UnpublishedDescription": "Este evento está en modo borrador y no es visible para el público."
-      },
-      "ErrorTitle": "Error al cargar el evento",
-      "ErrorDescription": "No se pudieron cargar los datos del evento",
-      "Loading": "Cargando evento"
-    },
-      "Results": {
-        "Loading": "Cargando resultados",
-        "LoadingClubs": "Cargando clubes",
-        "LoadingClubResults": "Cargando resultados por club",
-        "ErrorLoadingClubResults": "Error al cargar resultados por club: {{message}}"
-      },
-    "Splits": {
-      "LoadingChart": "Cargando gráfico de parciales",
-      "LoadingTimes": "Cargando parciales"
-    },
-    "Form": {
-      "EventName": "Nombre del evento",
-      "Sport": "Deporte",
-      "Date": "Fecha",
-      "Timezone": "Zona horaria",
-      "Organizer": "Organizador",
-      "Location": "Ubicación",
-      "Latitude": "Latitud GPS",
-      "Longitude": "Longitud GPS",
-      "Country": "País",
-      "ZeroTime": "Hora cero",
-      "Ranking": "Ranking",
-      "CoefRanking": "Coeficiente de ranking",
-      "Relay": "Relevo",
-      "HundredthPrecision": "Precisión centésimas",
-      "Published": "Publicado",
-      "Placeholders": {
-        "EventName": "Mi primer evento",
-        "Latitude": "Introduzca la latitud (p.ej., 50.0755)",
-        "Longitude": "Introduzca la longitud (p.ej., 14.4378)"
       },
       "SignUpPage": {
         "AlreadyHaveAnAccount": "¿Ya tienes una cuenta?",
@@ -321,6 +79,7 @@
         "Name": "Nombre",
         "Organizer": "Organizador",
         "Date": "Fecha",
+        "Location": "Ubicación",
         "Visibility": "Visibilidad",
         "Actions": "Acciones",
         "Format": "Formato",
@@ -349,7 +108,7 @@
       },
       "Alert": {
         "DemoTitle": "Esta es una aplicación de demostración",
-        "DemoDescription": "La aplicación OFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
+        "DemoDescription": "La aplicación OrienteerFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
         "EventDataNotAvailableTitle": "Datos del evento no disponibles",
         "EventDataNotAvailableMessage": "Actualmente no hay datos disponibles para este evento (listas de salida, inscripciones, recorridos o resultados). Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento para más información."
       },
@@ -704,70 +463,13 @@
           "RevokeFailTitle": "No se han podido invalidar las credenciales"
         },
         "HowToUse": {
-          "Title": "Cómo usar OAuth2",
-          "Description": "Usa tu Client ID y Client Secret en una petición con grant_type=client_credentials al endpoint /auth/oauth2/token. Debajo tienes un ejemplo de petición usando curl."
+          "Title": "Cómo utilizar OAuth2",
+          "Description": "Utilice su ID de cliente y su secreto de cliente en una solicitud con grant_type=client_credentials al punto final /auth/oauth2/token. A continuación se muestra un ejemplo de solicitud utilizando curl."
         }
       },
-      "Toast": {
-        "DeleteFailTitle": "Error al eliminar datos",
-        "DeleteSuccessDescription": "Datos eliminados correctamente"
-      }
-    },
-    "TroublesShooting": {
-      "Title": "¿Necesita ayuda o tiene alguna pregunta?",
-      "Description": "Si encuentra un error o necesita ayuda, no dude en ponerse en contacto con nosotros.",
-      "Description1": "Nuestro equipo de asistencia está listo para ayudarle con cualquier problema o pregunta. Póngase en contacto con nosotros en",
-      "Description2": "por favor incluya cualquier archivo relevante.",
-      "Discord": "Join Discord",
-      "GitHubIssues": "Open GitHub Issues"
-    }
-  },
-  "Home": {
-    "Hero": {
-      "Subtitle": "Resultados y eventos de orientación en vivo. Sincroniza carreras, sigue atletas y consulta todo en un lugar.",
-      "LiveResults": "Resultados en vivo",
-      "SplitAnalysis": "Análisis detallado de parciales",
-      "RealTimeEventControl": "Control del evento en tiempo real"
-    },
-    "Infinite": {
-      "LoadingInitial": "Cargando eventos...",
-      "LoadingMore": "Cargando más eventos...",
-      "LoadingMoreInline": "Cargando más...",
-      "ScrollMore": "Desplázate hacia abajo para más eventos",
-      "AllLoaded": "Todos los eventos cargados",
-      "EventsCount": "{{count}} eventos",
-      "FoundCount": "Encontraste {{count}} eventos",
-      "LoadError": "Error al cargar eventos: {{message}}",
-      "NoEvents": "No se encontraron eventos",
-      "NoEventsHint": "Prueba a cambiar el filtro o vuelve más tarde."
-    }
-  },
-  "Profile": {
-    "MyEntries": {
-      "Title": "Mis entradas",
-      "Description": "Aquí encontrarás todos tus registros y elementos enviados. Puedes verlos, editarlos o seguir su estado."
-    },
-    "PersonalInfo": {
-      "Title": "Información personal",
-      "Description": "Aquí puedes ver y actualizar tus datos personales, tu información de contacto y otros ajustes de tu perfil.",
-      "SiCardNumber": "Número de tarjeta Sportident",
-      "EmergencyContact": "Contacto de emergencia"
-    },
-    "OAuth2": {
-      "Title": "Acceso a la API con OAuth2",
-      "Description": "Genera credenciales para acceder a la API mediante OAuth2. Necesitarás un Client ID y un Client Secret.",
-      "ClientId": "ID de cliente",
-      "ClientSecret": "Secreto de cliente (Client Secret)",
-      "Generate": "Generar nuevo Client Secret",
-      "Regenerate": "Regenerar secreto de cliente",
-      "SecretWarning": "Aviso importante",
-      "SecretWarningDescription": "Tu Client Secret es información sensible. No la compartas con nadie y guárdala de forma segura. No se mostrará de nuevo después de salir o actualizar esta página.",
-      "Revoke": "Revocar",
-      "Toast": {
-        "GenerateSuccessDescription": "¡Las credenciales OAuth2 se han generado correctamente!",
-        "GenerateFailTitle": "Ha ocurrido un error, intente repetir la operación",
-        "RevokeSuccessDescription": "¡Las credenciales se han invalidado correctamente!",
-        "RevokeFailTitle": "No se han podido invalidar las credenciales"
+      "OtherIntegrations": {
+        "Title": "Otras integraciones",
+        "Description": "Conecta tu cuenta con servicios y herramientas adicionales. Con el tiempo aparecerán aquí nuevas integraciones."
       },
       "Security": {
         "PasswordDescription": "Aquí puedes cambiar la contraseña de tu cuenta. Te recomendamos usar una contraseña fuerte y única.",
