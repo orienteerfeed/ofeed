@@ -108,7 +108,7 @@
       },
       "Alert": {
         "DemoTitle": "Esta es una aplicación de demostración",
-        "DemoDescription": "La aplicación OrienteerFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
+        "DemoDescription": "La aplicación OFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
         "EventDataNotAvailableTitle": "Datos del evento no disponibles",
         "EventDataNotAvailableMessage": "Actualmente no hay datos disponibles para este evento (listas de salida, inscripciones, recorridos o resultados). Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento para más información."
       },
@@ -463,8 +463,8 @@
           "RevokeFailTitle": "No se han podido invalidar las credenciales"
         },
         "HowToUse": {
-          "Title": "Cómo utilizar OAuth2",
-          "Description": "Utilice su ID de cliente y su secreto de cliente en una solicitud con grant_type=client_credentials al punto final /auth/oauth2/token. A continuación se muestra un ejemplo de solicitud utilizando curl."
+          "Title": "Cómo usar OAuth2",
+          "Description": "Usa tu Client ID y Client Secret en una petición con grant_type=client_credentials al endpoint /auth/oauth2/token. Debajo tienes un ejemplo de petición usando curl."
         }
       },
       "OtherIntegrations": {
