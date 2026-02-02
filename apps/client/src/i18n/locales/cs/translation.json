@@ -106,11 +106,18 @@
         "Club": "Klub",
         "Live": "Živě"
       },
+      "Live": {
+        "Title": "Živé přenosy",
+        "Description": "Aktuální aktualizace se zde zobrazí během závodu"
+      },
       "Alert": {
         "DemoTitle": "Zkušební provoz",
         "DemoDescription": "Jedná se o první prototyp aplikace, který může obsahovat chyby. Budeme rádi za jejich reportování v Githubu.",
         "EventDataNotAvailableTitle": "Data závodu nejsou k dispozici",
-        "EventDataNotAvailableMessage": "Pro tento závod zatím nejsou dostupná žádná data (startovní listiny, přihlášky, tratě ani výsledky). Zkuste to prosím později nebo se informujte u pořadatele."
+        "EventDataNotAvailableMessage": "Pro zobrazení {{view}} zatím nejsou dostupná žádná data. Zkuste to prosím později nebo se informujte u pořadatele.",
+        "ViewResults": "výsledků",
+        "ViewSplits": "mezičasů",
+        "ViewClub": "klubů"
       },
       "Report": {
         "Title": "Report změn",
@@ -206,7 +213,7 @@
       "Detail": {
         "EventInformation": "Informace o závodu",
         "Date": "Datum",
-        "ZeroTime": "Nulový čas",
+        "ZeroTime": "Start nula",
         "Location": "Lokalita",
         "Organizer": "Pořadatel",
         "Classes": "Kategorie",

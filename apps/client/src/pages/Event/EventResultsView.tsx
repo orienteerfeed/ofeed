@@ -25,8 +25,8 @@ import { motion } from 'motion/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Badge, Button, CountryFlag } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
-import { ClassSelect } from './ClassSelect';
 import { CompetitorName } from './CompetitorName';
+import { EventCategorySwitcher } from './EventCategorySwitcher';
 
 // GraphQL queries and subscriptions
 const COMPETITORS_BY_CLASS_UPDATED = gql`
@@ -215,12 +215,35 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
 
   const [selectedClass, setSelectedClass] = useState(initialClass);
   const [viewMode, setViewMode] = useState<ViewMode>('category');
+  const [selectedClub, setSelectedClub] = useState<string | null>(null);
+  const [isClubSheetOpen, setIsClubSheetOpen] = useState(false);
+  const [categoryCompetitorsCount, setCategoryCompetitorsCount] =
+    useState<number>(0);
+  const [isCategoryLoading, setIsCategoryLoading] = useState(false);
 
   // Get current class object
   const currentClass = event.classes?.find(cls => cls.name === selectedClass);
 
   // Get class ID from class name
   const selectedClassId = currentClass?.id;
+
+  useEffect(() => {
+    setCategoryCompetitorsCount(0);
+  }, [selectedClassId]);
+
+  useEffect(() => {
+    if (viewMode !== 'category') {
+      setIsCategoryLoading(false);
+      setCategoryCompetitorsCount(0);
+    }
+  }, [viewMode]);
+
+  const { data: organisationsData, loading: organisationsLoading } =
+    useQuery<OrganisationsResponse>(ORGANISATIONS, {
+      variables: { eventId: event.id },
+      pollInterval: 15000,
+      skip: viewMode !== 'club',
+    });
 
   // Synchronize URL when selectedClass changes
   useEffect(() => {
@@ -292,7 +315,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           </div>
 
           {viewMode === 'category' && event.classes && currentClass && (
-            <ClassSelect
+            <EventCategorySwitcher
               classes={event.classes}
               selectedClass={selectedClassId || 0}
               onClassChange={classId => {
@@ -304,7 +327,102 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
                 }
               }}
               currentClass={currentClass}
+              competitorsCount={categoryCompetitorsCount}
+              loading={isCategoryLoading}
             />
+          )}
+
+          {viewMode === 'club' && (
+            <Sheet open={isClubSheetOpen} onOpenChange={setIsClubSheetOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 gap-1 min-w-[120px] bg-transparent"
+                  disabled={
+                    organisationsLoading ||
+                    !organisationsData?.organisations?.length
+                  }
+                >
+                  <Users className="w-3 h-3 shrink-0" />
+                  <span className="text-xs font-bold truncate max-w-[120px]">
+                    {selectedClub || 'Select Club'}
+                  </span>
+                  <ChevronDown className="h-3 w-3 shrink-0" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[80vh] max-h-[80vh]">
+                <div className="flex flex-col h-full pt-4">
+                  <div className="text-left mb-6">
+                    <SheetTitle className="text-xl font-bold">
+                      Select Club
+                    </SheetTitle>
+                    <SheetDescription className="text-muted-foreground mt-1">
+                      Choose a club to view results
+                    </SheetDescription>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto">
+                    {organisationsLoading && (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                        <span>{t('Pages.Event.Results.LoadingClubs')}</span>
+                      </div>
+                    )}
+
+                    {!organisationsLoading &&
+                      organisationsData?.organisations?.length && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-4">
+                          {organisationsData.organisations.map(org => (
+                            <Button
+                              key={org.name}
+                              variant={
+                                selectedClub === org.name
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              className="h-auto min-h-[80px] flex flex-col items-center justify-center p-3 text-center"
+                              onClick={() => {
+                                setSelectedClub(org.name);
+                                setIsClubSheetOpen(false);
+                              }}
+                            >
+                              <div className="flex flex-col items-center justify-center w-full gap-1">
+                                <span className="text-sm font-semibold leading-tight break-words text-center w-full">
+                                  {org.name}
+                                </span>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs font-normal"
+                                >
+                                  {org.competitors} runners
+                                </Badge>
+                              </div>
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+
+                    {!organisationsLoading &&
+                      !organisationsData?.organisations?.length && (
+                        <div className="text-center py-12 text-muted-foreground">
+                          No clubs found
+                        </div>
+                      )}
+                  </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setIsClubSheetOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           )}
         </div>
       </div>
@@ -323,6 +441,8 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
               selectedClass.startsWith('M21') ||
               selectedClass.startsWith('W21'))
           }
+          onCompetitorsCountChange={setCategoryCompetitorsCount}
+          onLoadingChange={setIsCategoryLoading}
         />
       )}
       {viewMode === 'category' && !selectedClassId && (
@@ -331,19 +451,32 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           variant="outlined"
           title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
         >
-          {t('Pages.Event.Alert.EventDataNotAvailableMessage')}
+          {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+            view: t('Pages.Event.Alert.ViewResults'),
+          })}
         </Alert>
       )}
 
       {/* Club View */}
-      {viewMode === 'club' && <ClubResultsView t={t} eventId={event.id} />}
+      {viewMode === 'club' && (
+        <ClubResultsView
+          t={t}
+          eventId={event.id}
+          selectedClub={selectedClub}
+          setSelectedClub={setSelectedClub}
+          organisationsData={organisationsData}
+          organisationsLoading={organisationsLoading}
+        />
+      )}
 
       {viewMode === 'live' && (
         <div className="border border-border rounded-lg p-8 text-center">
           <Radio className="w-12 h-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
-          <h3 className="text-xl font-bold mb-2">Live Feed</h3>
+          <h3 className="text-xl font-bold mb-2">
+            {t('Pages.Event.Live.Title')}
+          </h3>
           <p className="text-muted-foreground">
-            Real-time updates will appear here during the event
+            {t('Pages.Event.Live.Description')}
           </p>
         </div>
       )}
@@ -358,12 +491,16 @@ interface CategoryResultsViewProps {
   classId: number;
   className: string;
   showRanking?: boolean;
+  onCompetitorsCountChange?: (count: number) => void;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 const CategoryResultsView = ({
   t,
   classId,
   showRanking,
+  onCompetitorsCountChange,
+  onLoadingChange,
 }: CategoryResultsViewProps) => {
   const [competitors, setCompetitors] = useState<ProcessedCompetitor[]>([]);
   const [highlightedRows, setHighlightedRows] = useState<string[]>([]);
@@ -377,6 +514,10 @@ const CategoryResultsView = ({
         variables: { classId },
       }
     );
+
+  useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   // Update current time every second for active competitors
   useEffect(() => {
@@ -415,6 +556,10 @@ const CategoryResultsView = ({
     }
   }, [data]);
 
+  useEffect(() => {
+    onCompetitorsCountChange?.(competitors.length);
+  }, [competitors.length, onCompetitorsCountChange]);
+
   // Calculate running time for active competitors
   const getRunningTime = (startTime?: string): string => {
     if (!startTime) return '-';
@@ -449,9 +594,27 @@ const CategoryResultsView = ({
 
   if (error) {
     return (
-      <div className="text-center py-8 text-destructive">
-        Error loading results: {error.message}
-      </div>
+      <Alert
+        severity="error"
+        variant="outlined"
+        title="Error loading results"
+      >
+        {error.message}
+      </Alert>
+    );
+  }
+
+  if (!loading && competitors.length === 0) {
+    return (
+      <Alert
+        severity="info"
+        variant="outlined"
+        title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
+      >
+        {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+          view: t('Pages.Event.Alert.ViewResults'),
+        })}
+      </Alert>
     );
   }
 
@@ -574,15 +737,6 @@ const CategoryResultsView = ({
           </TableBody>
         </Table>
       </div>
-      {competitors.length === 0 && !loading && (
-        <Alert
-          severity="info"
-          variant="outlined"
-          title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
-        >
-          {t('Pages.Event.Alert.EventDataNotAvailableMessage')}
-        </Alert>
-      )}
     </div>
   );
 };
@@ -591,20 +745,22 @@ const CategoryResultsView = ({
 interface ClubResultsViewProps {
   t: TFunction;
   eventId: string;
+  selectedClub: string | null;
+  setSelectedClub: (club: string | null) => void;
+  organisationsData: OrganisationsResponse | undefined;
+  organisationsLoading: boolean;
 }
 
-const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
-  const [selectedClub, setSelectedClub] = useState<string | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+const ClubResultsView = ({
+  t,
+  eventId,
+  selectedClub,
+  setSelectedClub,
+  organisationsData,
+  organisationsLoading,
+}: ClubResultsViewProps) => {
   const scrollPositionRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Fetch organizations with polling
-  const { data: organisationsData, loading: organisationsLoading } =
-    useQuery<OrganisationsResponse>(ORGANISATIONS, {
-      variables: { eventId },
-      pollInterval: 15000,
-    });
 
   // Fetch competitors for selected club with polling
   const {
@@ -642,7 +798,7 @@ const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
     if (firstOrg && !selectedClub) {
       setSelectedClub(firstOrg.name);
     }
-  }, [organisationsData, selectedClub]);
+  }, [organisationsData, selectedClub, setSelectedClub]);
 
   // Function to calculate position and loss in category
   const calculatePositionAndLoss = (competitor: any) => {
@@ -945,9 +1101,15 @@ const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
 
   if (!organisationsData?.organisations) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        No clubs found
-      </div>
+      <Alert
+        severity="info"
+        variant="outlined"
+        title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
+      >
+        {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+          view: t('Pages.Event.Alert.ViewClub'),
+        })}
+      </Alert>
     );
   }
 
@@ -957,78 +1119,6 @@ const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
       className="space-y-4 overflow-auto"
       style={{ maxHeight: 'calc(100vh - 200px)' }} // Adjust based on your layout
     >
-      {/* Club Selection in Sheet */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Club Results</h3>
-
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 gap-2 max-w-[200px]"
-            >
-              <Users className="w-4 h-4 shrink-0" />
-              <span className="text-sm font-medium truncate">
-                {selectedClub || 'Select Club'}
-              </span>
-              <ChevronDown className="h-3 w-3 shrink-0" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-[80vh] max-h-[80vh]">
-            <div className="flex flex-col h-full pt-4">
-              <div className="text-left mb-6">
-                <SheetTitle className="text-xl font-bold">
-                  Select Club
-                </SheetTitle>
-                <SheetDescription className="text-muted-foreground mt-1">
-                  Choose a club to view results
-                </SheetDescription>
-              </div>
-
-              <div className="flex-1 overflow-y-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-4">
-                  {organisationsData.organisations.map(org => (
-                    <Button
-                      key={org.name}
-                      variant={
-                        selectedClub === org.name ? 'default' : 'outline'
-                      }
-                      className="h-auto min-h-[80px] flex flex-col items-center justify-center p-3 text-center"
-                      onClick={() => {
-                        setSelectedClub(org.name);
-                        setIsSheetOpen(false);
-                      }}
-                    >
-                      <div className="flex flex-col items-center justify-center w-full gap-1">
-                        <span className="text-sm font-semibold leading-tight break-words text-center w-full">
-                          {org.name}
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className="text-xs font-normal"
-                        >
-                          {org.competitors} runners
-                        </Badge>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-t pt-4 mt-4">
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setIsSheetOpen(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
 
       {competitorsLoading && clubResults.length === 0 && (
         <div className="flex items-center justify-center py-12">
@@ -1156,11 +1246,13 @@ const ClubResultsView = ({ t, eventId }: ClubResultsViewProps) => {
 
       {clubResults.length === 0 && !competitorsLoading && (
         <Alert
-          severity="warning"
+          severity="info"
           variant="outlined"
           title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
         >
-          {t('Pages.Event.Alert.EventDataNotAvailableMessage')}
+          {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+            view: t('Pages.Event.Alert.ViewClub'),
+          })}
         </Alert>
       )}
     </div>

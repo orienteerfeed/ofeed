@@ -1,4 +1,4 @@
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from '@/components/organisms';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -272,10 +272,12 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   // Error state
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          Error loading split chart: {error.message}
-        </AlertDescription>
+      <Alert
+        severity="error"
+        variant="outlined"
+        title="Error loading split chart"
+      >
+        {error.message}
       </Alert>
     );
   }
@@ -283,10 +285,10 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   // Empty state
   if (!chartData.length || !controlCodes.length) {
     return (
-      <Alert>
-        <AlertDescription>
-          No split data available to display the chart.
-        </AlertDescription>
+      <Alert severity="info" variant="outlined">
+        {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+          view: t('Pages.Event.Alert.ViewSplits'),
+        })}
       </Alert>
     );
   }

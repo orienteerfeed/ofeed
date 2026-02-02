@@ -106,11 +106,18 @@
         "Club": "Club",
         "Live": "Live"
       },
+      "Live": {
+        "Title": "Live Feed",
+        "Description": "Real-time updates will appear here during the event"
+      },
       "Alert": {
         "DemoTitle": "This is a demo app",
         "DemoDescription": "OrienteerFeed app is a demo app. If you face an issue please report it to Github issues, thanks.",
         "EventDataNotAvailableTitle": "Event Data Not Available",
-        "EventDataNotAvailableMessage": "No data is currently available for this event (start lists, registrations, courses, or results). Please check back later or contact the event organizer for more information."
+        "EventDataNotAvailableMessage": "No data is currently available for the {{view}} view. Please check back later or contact the event organizer for more information.",
+        "ViewResults": "results",
+        "ViewSplits": "splits",
+        "ViewClub": "clubs"
       },
       "Report": {
         "Title": "Changelog report",
