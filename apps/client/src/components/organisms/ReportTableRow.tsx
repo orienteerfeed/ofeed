@@ -43,6 +43,7 @@ export const ReportTableRow = ({
       <TableCell>
         {new Date(item.createdAt).toLocaleString('cs-CZ')}
       </TableCell>
+      <TableCell>{originLabel}</TableCell>
       <TableCell>
         <Badge
           variant="outline"
@@ -55,12 +56,11 @@ export const ReportTableRow = ({
           {typeLabel}
         </Badge>
       </TableCell>
-      <TableCell>{item.competitorId}</TableCell>
       <TableCell>{item.competitor?.lastname ?? '-'}</TableCell>
       <TableCell>{item.competitor?.firstname ?? '-'}</TableCell>
+      <TableCell>{item.competitorId}</TableCell>
       <TableCell>{item.previousValue ?? '-'}</TableCell>
       <TableCell>{item.newValue ?? '-'}</TableCell>
-      <TableCell>{originLabel}</TableCell>
     </TableRow>
   );
 };

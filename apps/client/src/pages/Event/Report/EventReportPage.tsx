@@ -230,8 +230,6 @@ export const EventReportPage = () => {
     lastResponseRef.current = null;
     setChangelogData([]);
     setPage(1);
-    setProcessedItems(new Set());
-    setProcessedLoaded(false);
   }, [eventId]);
 
   const latestStatusChangeByCompetitor = useMemo(() => {
@@ -304,13 +302,23 @@ export const EventReportPage = () => {
       return next;
     });
 
-    if (filter === 'si_card_change') {
+    const presetTypeMap: Partial<Record<PresetFilter, string>> = {
+      si_card_change: 'si_card_change',
+      note_change: 'note_change',
+      late_start_change: 'late_start_change',
+      did_not_start: 'status_change',
+    };
+
+    const mappedType = presetTypeMap[filter];
+    if (filter === 'all') {
+      setTypeFilters([]);
+    } else if (mappedType) {
       setTypeFilters(prev => {
         const next = new Set(prev);
-        if (next.has('si_card_change')) {
-          next.delete('si_card_change');
+        if (next.has(mappedType)) {
+          next.delete(mappedType);
         } else {
-          next.add('si_card_change');
+          next.add(mappedType);
         }
         return Array.from(next);
       });
@@ -519,7 +527,7 @@ export const EventReportPage = () => {
       TYPE_OPTIONS.map(value => ({
         value,
         label: t(`Pages.Event.Report.TypeLabels.${value}`),
-      })),
+      })).sort((a, b) => a.label.localeCompare(b.label)),
     [t]
   );
 
@@ -528,7 +536,7 @@ export const EventReportPage = () => {
       ORIGIN_OPTIONS.map(value => ({
         value,
         label: t(`Pages.Event.Report.OriginLabels.${value}`),
-      })),
+      })).sort((a, b) => a.label.localeCompare(b.label)),
     [t]
   );
 

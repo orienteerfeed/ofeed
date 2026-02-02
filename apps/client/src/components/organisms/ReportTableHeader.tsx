@@ -103,6 +103,20 @@ export const ReportTableHeader = ({
           )
         )}
         {renderHeaderCell(
+          t('Pages.Event.Report.Table.Origin'),
+          'origin',
+          sortConfig,
+          onSort,
+          () => (
+            <MultiSelectDropdown
+              placeholder={t('Pages.Event.Report.Filters.OriginPlaceholder')}
+              options={originOptions}
+              selected={originFilters}
+              onChange={onOriginFiltersChange}
+            />
+          )
+        )}
+        {renderHeaderCell(
           t('Pages.Event.Report.Table.Type'),
           'type',
           sortConfig,
@@ -113,24 +127,6 @@ export const ReportTableHeader = ({
               options={typeOptions}
               selected={typeFilters}
               onChange={onTypeFiltersChange}
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.CompetitorId'),
-          'competitorId',
-          sortConfig,
-          onSort,
-          () => (
-            <Input
-              placeholder={t(
-                'Pages.Event.Report.Filters.CompetitorIdPlaceholder'
-              )}
-              value={columnFilters.competitorId}
-              onChange={event =>
-                onColumnFilterChange('competitorId', event.target.value)
-              }
-              className="mt-2 h-8 bg-background text-xs"
             />
           )
         )}
@@ -167,6 +163,24 @@ export const ReportTableHeader = ({
           )
         )}
         {renderHeaderCell(
+          t('Pages.Event.Report.Table.CompetitorId'),
+          'competitorId',
+          sortConfig,
+          onSort,
+          () => (
+            <Input
+              placeholder={t(
+                'Pages.Event.Report.Filters.CompetitorIdPlaceholder'
+              )}
+              value={columnFilters.competitorId}
+              onChange={event =>
+                onColumnFilterChange('competitorId', event.target.value)
+              }
+              className="mt-2 h-8 bg-background text-xs"
+            />
+          )
+        )}
+        {renderHeaderCell(
           t('Pages.Event.Report.Table.PreviousValue'),
           'previousValue',
           sortConfig,
@@ -197,20 +211,6 @@ export const ReportTableHeader = ({
                 onColumnFilterChange('newValue', event.target.value)
               }
               className="mt-2 h-8 bg-background text-xs"
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.Origin'),
-          'origin',
-          sortConfig,
-          onSort,
-          () => (
-            <MultiSelectDropdown
-              placeholder={t('Pages.Event.Report.Filters.OriginPlaceholder')}
-              options={originOptions}
-              selected={originFilters}
-              onChange={onOriginFiltersChange}
             />
           )
         )}
