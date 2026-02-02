@@ -536,6 +536,19 @@
       "Title": "Jazyk",
       "SelectLanguage": "Vybrat jazyk"
     },
+    "EventSearchDialog": {
+      "Title": "Hledat události",
+      "Placeholder": "Hledejte podle názvu, místa, země nebo organizátora...",
+      "Hint": "Zkuste hledat podle: názvu události, města, země nebo organizátora",
+      "Searching": "Vyhledávání událostí...",
+      "Organizer": "Organizátor",
+      "Draft": "Návrh",
+      "NoEventsFound": "Nebyly nalezeny žádné události pro \"{{query}}\"",
+      "NoEventsHint": "Zkuste hledat podle názvu události, místa, země nebo organizátora",
+      "RecentEvents": "Nedávné události:",
+      "StartTyping": "Začněte psát pro vyhledání událostí",
+      "StartTypingHint": "Hledejte podle názvu události, místa, země nebo organizátora"
+    },
     "SearchBox": {
       "SearchResults": "Výsledky hledání"
     }

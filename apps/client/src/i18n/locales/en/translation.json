@@ -536,6 +536,19 @@
       "Title": "Language",
       "SelectLanguage": "Select language"
     },
+    "EventSearchDialog": {
+      "Title": "Search events",
+      "Placeholder": "Search by name, location, country, or organizer...",
+      "Hint": "Try searching by: event name, city, country, or organizer",
+      "Searching": "Searching events...",
+      "Organizer": "Organizer",
+      "Draft": "Draft",
+      "NoEventsFound": "No events found for \"{{query}}\"",
+      "NoEventsHint": "Try searching by event name, location, country, or organizer",
+      "RecentEvents": "Recent events:",
+      "StartTyping": "Start typing to search events",
+      "StartTypingHint": "Search by event name, location, country, or organizer"
+    },
     "SearchBox": {
       "SearchResults": "Search results"
     }
