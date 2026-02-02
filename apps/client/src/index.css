@@ -1,7 +1,6 @@
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
-@import 'flag-icons/css/flag-icons.min.css';
 
 @custom-variant dark (&:is(.dark *));
 
