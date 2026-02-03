@@ -45,7 +45,7 @@ export const EventsTabs: React.FC<EventTabsProps> = ({ t }) => {
     },
   ];
 
-  const handleValueChange = useCallback((_value: string) => {
+  const handleValueChange = useCallback(() => {
     setTimeout(() => {
       if (tabsContainerRef.current) {
         const navbar = document.querySelector('header');

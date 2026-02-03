@@ -57,7 +57,7 @@ interface ProcessedCompetitor extends Competitor {
 interface SplitTableProps {
   competitors: Competitor[];
   isLoading?: boolean;
-  error?: any;
+  error?: unknown;
 }
 
 interface LegPositionData {
@@ -376,12 +376,14 @@ const getCompetitorSortValue = (
       return competitor.loss ?? Infinity;
 
     case 'final-leg':
-      const lastSplitTime = competitor.splits.at(-1)?.time;
-      const finishTime = competitor.time;
-      if (lastSplitTime && finishTime) {
-        return finishTime - lastSplitTime;
+      {
+        const lastSplitTime = competitor.splits.at(-1)?.time;
+        const finishTime = competitor.time;
+        if (lastSplitTime && finishTime) {
+          return finishTime - lastSplitTime;
+        }
+        return Infinity;
       }
-      return Infinity;
 
     default:
       if (field.startsWith('leg-')) {
@@ -582,7 +584,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
         variant="outlined"
         title="Error loading split times"
       >
-        {error.message}
+        {error instanceof Error ? error.message : String(error)}
       </Alert>
     );
   }

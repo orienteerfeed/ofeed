@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import type { USBDevice } from '@/types/webusb';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 

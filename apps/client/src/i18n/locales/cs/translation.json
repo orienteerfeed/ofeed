@@ -122,6 +122,9 @@
       "Report": {
         "Title": "Report změn",
         "Description": "Přehled změn stavů a čipů závodníků",
+        "CompetitorChangesTitle": "Změny pro {{name}} (ID {{id}})",
+        "CompetitorChangesDescription": "Všechny změny pro vybraného závodníka v rámci tohoto závodu.",
+        "CompetitorChangesEmpty": "Pro tohoto závodníka nebyly nalezeny žádné změny.",
         "AutoRefresh": "Automatická obnova: {{seconds}} s",
         "LastUpdated": "Poslední aktualizace: {{time}}",
         "NoTimestamp": "-",
@@ -155,7 +158,7 @@
           "FirstnamePlaceholder": "Filtr jméno",
           "PreviousValuePlaceholder": "Filtr původní hodnota",
           "NewValuePlaceholder": "Filtr nová hodnota",
-          "OriginPlaceholder": "Vyber origin",
+          "OriginPlaceholder": "Vyber původ",
           "SelectedCount": "{{count}} vybráno",
           "ClearSelection": "Vyčistit výběr"
         },
@@ -204,7 +207,7 @@
           "Firstname": "Jméno",
           "PreviousValue": "Původní hodnota",
           "NewValue": "Nová hodnota",
-          "Origin": "Origin"
+          "Origin": "Původ"
         }
       },
       "Settings": {
@@ -513,6 +516,11 @@
       "Blog": "Blog",
       "MadeWith": "Vytvořeno s",
       "ForOrienteering": "pro orientační sporty"
+    },
+    "AppDataTable": {
+      "Empty": "Tabulka neobsahuje žádná data.",
+      "Loading": "Načítání dat...",
+      "Error": "Nepodařilo se načíst data."
     }
   },
   "Molecules": {

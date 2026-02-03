@@ -122,6 +122,9 @@
     "Report": {
       "Title": "Registro de cambios de competidores",
       "Description": "Resumen de cambios de estado y tarjeta",
+      "CompetitorChangesTitle": "Cambios para {{name}} (ID {{id}})",
+      "CompetitorChangesDescription": "Todos los cambios del competidor seleccionado en este evento.",
+      "CompetitorChangesEmpty": "No se encontraron cambios para este competidor.",
       "AutoRefresh": "Actualización automática: {{seconds}} s",
       "LastUpdated": "Última actualización: {{time}}",
         "NoTimestamp": "-",
@@ -512,9 +515,14 @@
       "Blog": "Blog",
       "MadeWith": "Fabricado con",
       "ForOrienteering": "para orientación"
+    },
+    "AppDataTable": {
+      "Empty": "No hay datos disponibles.",
+      "Loading": "Cargando datos...",
+      "Error": "No se pudieron cargar los datos."
     }
   },
-  "Molecules": {
+    "Molecules": {
     "DragDrop": {
       "ClickToUpload": "Haga clic para subir",
       "Delete": "Eliminar",

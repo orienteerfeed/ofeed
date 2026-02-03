@@ -122,6 +122,9 @@
       "Report": {
         "Title": "Changelog report",
         "Description": "Overview of status and card changes",
+        "CompetitorChangesTitle": "Changes for {{name}} (ID {{id}})",
+        "CompetitorChangesDescription": "All changes for the selected competitor in this event.",
+        "CompetitorChangesEmpty": "No changes found for this competitor.",
         "AutoRefresh": "Auto refresh: {{seconds}} s",
         "LastUpdated": "Last update: {{time}}",
         "NoTimestamp": "-",
@@ -513,6 +516,11 @@
       "Blog": "Blog",
       "MadeWith": "Made with",
       "ForOrienteering": "for orienteering"
+    },
+    "AppDataTable": {
+      "Empty": "No data available.",
+      "Loading": "Loading data...",
+      "Error": "Failed to load data."
     }
   },
   "Molecules": {

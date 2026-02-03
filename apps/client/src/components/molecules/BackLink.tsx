@@ -25,10 +25,10 @@ export const BackLink: FC<BackLinkProps> = ({
   children,
 }) => {
   const { t } = useTranslation('common');
-  const label = children ?? t(labelKey as any);
+  const label = children ?? t(labelKey);
   const aria =
     ariaLabel ??
-    (typeof label === 'string' ? label : String(t(labelKey as any)));
+    (typeof label === 'string' ? label : String(t(labelKey)));
 
   return (
     <Link

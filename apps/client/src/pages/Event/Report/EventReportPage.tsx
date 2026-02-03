@@ -1,15 +1,24 @@
 import { BackLink } from '@/components/molecules';
 import {
-  EventReportTable,
+  AppDataTable,
   ReportFilters,
+  AppTableEmptyState,
+  ReportTableHeader,
+  ReportTableRow,
+  AppPagination,
+  AppRowsPerPage,
+  AppTableHeader,
   type ReportFilterConfig,
   type PresetFilter,
-  type ChangelogEntry,
-  type ColumnFilter,
-  type SortColumn,
+  type AppTableColumn,
 } from '@/components/organisms';
 import type { DateRangeValue } from '@/components/organisms/ReportTableHeader';
-import { useApi } from '@/hooks';
+import type {
+  ChangelogEntry,
+  ColumnFilter,
+  SortColumn,
+} from '@/types/reportTable';
+import { useApi, useEvent } from '@/hooks';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 import { MainPageLayout } from '@/templates/MainPageLayout';
 import { useQuery } from '@tanstack/react-query';
@@ -17,16 +26,46 @@ import { useParams } from '@tanstack/react-router';
 import {
   Clock,
   CreditCard,
+  Download,
   List,
+  MoreHorizontal,
+  Printer,
   StickyNote,
   XCircle,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/atoms';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from '@/components/ui/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type ChangelogResponse = {
   data: ChangelogEntry[];
 };
+
+type DialogSortColumn =
+  | 'createdAt'
+  | 'type'
+  | 'origin'
+  | 'previousValue'
+  | 'newValue';
 
 const REFRESH_INTERVAL_SECONDS = 30;
 
@@ -98,10 +137,12 @@ export const EventReportPage = () => {
   const { t } = useTranslation();
   const { eventId } = useParams({ from: '/events/$eventId/report' });
   const api = useApi();
+  const { event } = useEvent(eventId);
   const sinceRef = useRef<string | null>(null);
   const lastRequestAtRef = useRef<number>(0);
   const inFlightRef = useRef<Promise<ChangelogResponse> | null>(null);
   const lastResponseRef = useRef<ChangelogResponse | null>(null);
+  const previousEventIdRef = useRef<string | null>(null);
 
   const [processedItems, setProcessedItems] = useState<Set<string>>(new Set());
   const [processedLoaded, setProcessedLoaded] = useState(false);
@@ -126,12 +167,34 @@ export const EventReportPage = () => {
     column: 'createdAt',
     direction: 'desc',
   });
+  const [columnOrder, setColumnOrder] = useState<SortColumn[]>([
+    'id',
+    'createdAt',
+    'origin',
+    'type',
+    'lastname',
+    'firstname',
+    'competitorId',
+    'previousValue',
+    'newValue',
+  ]);
+  const columnOrderStorageKey = `reportColumnOrder:${eventId}`;
   const [refreshCounter, setRefreshCounter] = useState(
     REFRESH_INTERVAL_SECONDS
   );
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [selectedCompetitorId, setSelectedCompetitorId] = useState<
+    number | null
+  >(null);
+  const [dialogSort, setDialogSort] = useState<{
+    column: DialogSortColumn;
+    direction: 'asc' | 'desc';
+  }>({
+    column: 'createdAt',
+    direction: 'asc',
+  });
 
   const storageKey = `processedChangelogItems:${eventId}`;
 
@@ -170,6 +233,7 @@ export const EventReportPage = () => {
     queryKey: ['eventChangelog', eventId],
     queryFn: fetchChangelog,
     refetchOnWindowFocus: false,
+    enabled: Boolean(eventId),
   });
 
   useEffect(() => {
@@ -188,7 +252,7 @@ export const EventReportPage = () => {
     sinceRef.current = nowIso;
     setLastUpdated(new Date());
     setRefreshCounter(REFRESH_INTERVAL_SECONDS);
-  }, [data]);
+  }, [data, eventId]);
 
   useEffect(() => {
     const stored = localStorage.getItem(storageKey);
@@ -224,12 +288,16 @@ export const EventReportPage = () => {
   }, [refetch]);
 
   useEffect(() => {
-    sinceRef.current = null;
-    lastRequestAtRef.current = 0;
-    inFlightRef.current = null;
-    lastResponseRef.current = null;
-    setChangelogData([]);
-    setPage(1);
+    if (!eventId) return;
+    if (previousEventIdRef.current && previousEventIdRef.current !== eventId) {
+      sinceRef.current = null;
+      lastRequestAtRef.current = 0;
+      inFlightRef.current = null;
+      lastResponseRef.current = null;
+      setChangelogData([]);
+      setPage(1);
+    }
+    previousEventIdRef.current = eventId;
   }, [eventId]);
 
   const latestStatusChangeByCompetitor = useMemo(() => {
@@ -540,6 +608,7 @@ export const EventReportPage = () => {
     [t]
   );
 
+
   const filterLabels = useMemo(
     () => ({
       si_card_change: t('Pages.Event.Report.Presets.CardChanges'),
@@ -587,13 +656,13 @@ export const EventReportPage = () => {
 
     const escapeValue = (value: string) => {
       const needsQuotes = /[",\n]/.test(value);
-      const escaped = value.replace(/\"/g, '\"\"');
+      const escaped = value.replace(/"/g, '""');
       return needsQuotes ? `"${escaped}"` : escaped;
     };
 
     const csvContent = [headers, ...rows]
       .map(row => row.map(escapeValue).join(','))
-      .join('\\n');
+      .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -636,7 +705,7 @@ export const EventReportPage = () => {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/\"/g, '&quot;')
+      .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
     const html = `<!doctype html>
@@ -696,12 +765,115 @@ export const EventReportPage = () => {
     [filterLabels]
   );
 
+  const dialogColumnOrder = useMemo<DialogSortColumn[]>(
+    () => ['createdAt', 'type', 'origin', 'previousValue', 'newValue'],
+    []
+  );
+
+  const dialogColumns = useMemo<AppTableColumn<DialogSortColumn>[]>(
+    () => [
+      {
+        id: 'createdAt',
+        label: t('Pages.Event.Report.Table.DateTime'),
+        sortable: true,
+      },
+      {
+        id: 'type',
+        label: t('Pages.Event.Report.Table.Type'),
+        sortable: true,
+      },
+      {
+        id: 'origin',
+        label: t('Pages.Event.Report.Table.Origin'),
+        sortable: true,
+      },
+      {
+        id: 'previousValue',
+        label: t('Pages.Event.Report.Table.PreviousValue'),
+        sortable: true,
+      },
+      {
+        id: 'newValue',
+        label: t('Pages.Event.Report.Table.NewValue'),
+        sortable: true,
+      },
+    ],
+    [t]
+  );
+
+  const handleDialogSort = (column: DialogSortColumn) => {
+    setDialogSort(prev =>
+      prev.column === column
+        ? {
+            column,
+            direction: prev.direction === 'asc' ? 'desc' : 'asc',
+          }
+        : { column, direction: 'asc' }
+    );
+  };
+
+  const selectedCompetitorChanges = useMemo(() => {
+    if (!selectedCompetitorId) return [];
+    const direction = dialogSort.direction === 'asc' ? 1 : -1;
+    const compare = (a: ChangelogEntry, b: ChangelogEntry) => {
+      if (dialogSort.column === 'createdAt') {
+        return (
+          (new Date(a.createdAt).getTime() -
+            new Date(b.createdAt).getTime()) *
+          direction
+        );
+      }
+
+      const valueByColumn: Record<DialogSortColumn, string> = {
+        createdAt: '',
+        type: a.type ?? '',
+        origin: a.origin ?? '',
+        previousValue: a.previousValue ?? '',
+        newValue: a.newValue ?? '',
+      };
+
+      const valueByColumnB: Record<DialogSortColumn, string> = {
+        createdAt: '',
+        type: b.type ?? '',
+        origin: b.origin ?? '',
+        previousValue: b.previousValue ?? '',
+        newValue: b.newValue ?? '',
+      };
+
+      return (
+        valueByColumn[dialogSort.column].localeCompare(
+          valueByColumnB[dialogSort.column]
+        ) * direction
+      );
+    };
+
+    return [...changelogData]
+      .filter(item => item.competitorId === selectedCompetitorId)
+      .sort(compare);
+  }, [changelogData, dialogSort, selectedCompetitorId]);
+
+  const selectedCompetitorName = useMemo(() => {
+    if (!selectedCompetitorId) return null;
+    const match = selectedCompetitorChanges.find(item => item.competitor);
+    if (!match?.competitor) return null;
+    const parts = [
+      match.competitor.firstname ?? '',
+      match.competitor.lastname ?? '',
+    ].filter(Boolean);
+    return parts.length ? parts.join(' ') : null;
+  }, [selectedCompetitorChanges, selectedCompetitorId]);
+
   return (
     <MainPageLayout t={t}>
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="flex flex-col gap-4">
           <BackLink to={`/events/${eventId}`} />
           <div>
+            {event?.name && (
+              <p className="text-sm font-medium text-muted-foreground">
+                {event.name}
+              </p>
+            )}
             <h1 className="text-2xl font-semibold">
               {t('Pages.Event.Report.Title')}
             </h1>
@@ -724,38 +896,174 @@ export const EventReportPage = () => {
           isFetching={isFetching}
         />
 
-        <EventReportTable
+        <AppDataTable
           data={pagedData}
           isLoading={isLoading}
           error={error}
-          page={page}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onExportCsv={exportCsv}
-          onExportPdf={exportPdf}
-          onPageChange={setPage}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPage(1);
+          columnCount={columnOrder.length + 1}
+          columnOrder={columnOrder}
+          onColumnOrderChange={setColumnOrder}
+          columnOrderStorageKey={columnOrderStorageKey}
+          renderHeader={
+            <ReportTableHeader
+              sortConfig={sortConfig}
+              onSort={handleSort}
+              columnOrder={columnOrder}
+              onColumnOrderChange={setColumnOrder}
+              columnFilters={columnFilters}
+              onColumnFilterChange={updateColumnFilter}
+              onNumericFilterChange={updateNumericFilter}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              typeFilters={typeFilters}
+              onTypeFiltersChange={setTypeFilters}
+              originFilters={originFilters}
+              onOriginFiltersChange={setOriginFilters}
+              typeOptions={typeOptions}
+              originOptions={originOptions}
+            />
+          }
+          renderRow={item => {
+            const isProcessed = processedItems.has(item.id.toString());
+            return (
+              <ReportTableRow
+                key={item.id}
+                item={item}
+                isProcessed={isProcessed}
+                onToggleProcessed={toggleProcessedItem}
+                columnOrder={columnOrder}
+                onRowClick={() => setSelectedCompetitorId(item.competitorId)}
+              />
+            );
           }}
-          sortConfig={sortConfig}
-          onSort={handleSort}
-          columnFilters={columnFilters}
-          onColumnFilterChange={updateColumnFilter}
-          onNumericFilterChange={updateNumericFilter}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          typeFilters={typeFilters}
-          onTypeFiltersChange={setTypeFilters}
-          originFilters={originFilters}
-          onOriginFiltersChange={setOriginFilters}
-          typeOptions={typeOptions}
-          originOptions={originOptions}
-          processedItems={processedItems}
-          onToggleProcessed={toggleProcessedItem}
+          emptyState={<AppTableEmptyState isLoading={isLoading} error={error} />}
+          renderToolbar={
+            <div className="flex items-center justify-end gap-2 sm:justify-between">
+              <div className="hidden sm:block">
+                <AppRowsPerPage
+                  pageSize={pageSize}
+                  onPageSizeChange={size => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="hidden items-center gap-2 sm:flex">
+                  <Button type="button" variant="outline" onClick={exportCsv}>
+                    <Download className="h-4 w-4" />
+                    {t('Pages.Event.Report.Buttons.ExportCsv')}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={exportPdf}>
+                    <Printer className="h-4 w-4" />
+                    {t('Pages.Event.Report.Buttons.ExportPdf')}
+                  </Button>
+                </div>
+                <div className="sm:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" variant="outline" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={exportCsv}>
+                        <Download className="mr-2 h-4 w-4" />
+                        {t('Pages.Event.Report.Buttons.ExportCsv')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={exportPdf}>
+                        <Printer className="mr-2 h-4 w-4" />
+                        {t('Pages.Event.Report.Buttons.ExportPdf')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+          }
+          renderPagination={
+            <AppPagination
+              page={page}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={setPage}
+            />
+          }
         />
 
         <div className="text-sm text-muted-foreground">{lastUpdatedLabel}</div>
+
+        <Dialog
+          open={selectedCompetitorId !== null}
+          onOpenChange={open => {
+            if (!open) setSelectedCompetitorId(null);
+          }}
+        >
+          <DialogContent className="left-0 top-0 h-[100vh] w-[100vw] max-w-none translate-x-0 translate-y-0 rounded-none sm:left-1/2 sm:top-1/2 sm:h-auto sm:w-[95vw] sm:max-w-4xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg max-h-[100vh] sm:max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedCompetitorId
+                  ? t('Pages.Event.Report.CompetitorChangesTitle', {
+                      name: selectedCompetitorName ?? '-',
+                      id: selectedCompetitorId,
+                    })
+                  : t('Pages.Event.Report.CompetitorChangesTitle', {
+                      name: '-',
+                      id: '-',
+                    })}
+              </DialogTitle>
+              <DialogDescription>
+                {t('Pages.Event.Report.CompetitorChangesDescription')}
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedCompetitorChanges.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('Pages.Event.Report.CompetitorChangesEmpty')}
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <AppTableHeader
+                    columns={dialogColumns}
+                    columnOrder={dialogColumnOrder}
+                    sortConfig={dialogSort}
+                    onSort={handleDialogSort}
+                    headerClassName="bg-transparent"
+                  />
+                  <TableBody>
+                    {selectedCompetitorChanges.map(item => {
+                      const typeLabel = t(
+                        `Pages.Event.Report.TypeLabels.${item.type}`,
+                        {
+                          defaultValue: item.type,
+                        }
+                      );
+                      const originLabel = t(
+                        `Pages.Event.Report.OriginLabels.${item.origin}`,
+                        {
+                          defaultValue: item.origin ?? '-',
+                        }
+                      );
+
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            {new Date(item.createdAt).toLocaleString()}
+                          </TableCell>
+                          <TableCell>{typeLabel}</TableCell>
+                          <TableCell>{originLabel}</TableCell>
+                          <TableCell>{item.previousValue ?? '-'}</TableCell>
+                          <TableCell>{item.newValue ?? '-'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </MainPageLayout>
   );

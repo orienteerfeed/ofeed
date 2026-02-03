@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { EventSettingsPage } from '../../../pages';
-import { requireEventAccess } from '../../_guards';
+import { requireEventAccess } from '../../../lib/guards';
 
 export const Route = createFileRoute('/events/$eventId/settings')({
   beforeLoad: async ({ location, params }) => {

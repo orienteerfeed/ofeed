@@ -54,7 +54,7 @@ export const UserMenu = ({ user, t }: UserMenuProps) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link
-            to={'/profile' as any}
+            {...PATHNAMES.profile()}
             className="flex w-full cursor-pointer items-center"
           >
             <UserIcon className="mr-2 h-4 w-4" />
@@ -63,7 +63,7 @@ export const UserMenu = ({ user, t }: UserMenuProps) => {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link
-            to={'/my-events' as any}
+            {...PATHNAMES.myEvents()}
             className="flex w-full cursor-pointer items-center"
           >
             <CalendarCheck className="mr-2 h-4 w-4" />
@@ -72,7 +72,7 @@ export const UserMenu = ({ user, t }: UserMenuProps) => {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link
-            to={'/profile' as any}
+            {...PATHNAMES.profile()}
             className="flex w-full cursor-pointer items-center"
           >
             <Settings className="mr-2 h-4 w-4" />

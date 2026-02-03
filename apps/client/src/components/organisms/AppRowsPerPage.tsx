@@ -2,17 +2,17 @@ import { Select } from '@/components/atoms';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export type ReportRowsPerPageProps = {
+export type AppRowsPerPageProps = {
   pageSize: number;
   onPageSizeChange: (size: number) => void;
   pageSizeOptions?: number[];
 };
 
-export const ReportRowsPerPage = ({
+export const AppRowsPerPage = ({
   pageSize,
   onPageSizeChange,
   pageSizeOptions = [25, 50, 100, 200],
-}: ReportRowsPerPageProps) => {
+}: AppRowsPerPageProps) => {
   const { t } = useTranslation();
   const options = useMemo(
     () =>

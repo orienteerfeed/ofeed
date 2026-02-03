@@ -12,7 +12,7 @@ import { EventPasswordForm } from './EventPasswordForm';
 interface EventPasswordCardProps {
   t: TFunction;
   eventId: string;
-  [key: string]: any; // For other props
+  [key: string]: unknown; // For other props
 }
 
 export const EventPasswordCard: React.FC<EventPasswordCardProps> = ({

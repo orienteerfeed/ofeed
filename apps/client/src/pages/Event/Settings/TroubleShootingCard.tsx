@@ -27,10 +27,9 @@ export const TroubleShootingCard: React.FC<TroubleShootingCardProps> = ({
   discordUrl,
   githubIssuesUrl,
 }) => {
-  const resolvedDiscordUrl =
-    discordUrl || (config as any).DISCORD_INVITE_URL || undefined;
+  const resolvedDiscordUrl = discordUrl || config.DISCORD_INVITE_URL || undefined;
   const resolvedGithubIssuesUrl =
-    githubIssuesUrl || (config as any).GITHUB_REPO_URL + `/issues` || undefined;
+    githubIssuesUrl || `${config.GITHUB_REPO_URL}/issues` || undefined;
 
   return (
     <Card className="w-full border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 backdrop-blur-sm">

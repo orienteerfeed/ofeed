@@ -1,12 +1,15 @@
 import { AppProviders } from '@/providers';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { NotAuthorizedPage, NotFoundPage } from '../pages';
-import { ForbiddenError } from './_guards';
+import { ForbiddenError } from '../lib/guards';
 
 export const Route = createRootRoute({
   component: RootComponent,
   errorComponent: ({ error }) => {
-    const status = (error as any)?.status;
+    const status =
+      typeof error === 'object' && error !== null && 'status' in error
+        ? (error as { status?: number }).status
+        : undefined;
     if (error instanceof ForbiddenError || status === 403) {
       return <NotAuthorizedPage />;
     }

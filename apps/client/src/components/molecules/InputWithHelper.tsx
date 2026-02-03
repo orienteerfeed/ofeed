@@ -23,6 +23,12 @@ export interface CommonProps {
   id?: string;
   /** Name for the input (common across all types) */
   name?: string;
+  /** Allow mobile auto-capitalization */
+  autoCapitalize?: string;
+  /** Allow mobile auto-correct */
+  autoCorrect?: string;
+  /** Read-only state for inputs */
+  readOnly?: boolean;
 }
 
 // Combined type for all possible props
@@ -30,7 +36,10 @@ export type InputWithHelperProps =
   | ({ type: 'select' } & SelectProps & CommonProps)
   | ({ type: 'checkbox' } & CheckboxProps & CommonProps)
   | ({
-      type?: React.InputHTMLAttributes<HTMLInputElement>['type'];
+      type?: Exclude<
+        React.InputHTMLAttributes<HTMLInputElement>['type'],
+        'checkbox'
+      >;
     } & InputProps &
       CommonProps);
 
@@ -54,34 +63,46 @@ const InputWithHelperComponent = forwardRef<
   // Create clean props for each component type
   const getSelectProps = (props: InputWithHelperProps): SelectProps => {
     const {
-      type: _type,
-      error: _error,
-      helperText: _helperText,
-      label: _label,
+      type,
+      error,
+      helperText,
+      label,
       ...selectProps
     } = props;
+    void type;
+    void error;
+    void helperText;
+    void label;
     return selectProps as SelectProps;
   };
 
   const getCheckboxProps = (props: InputWithHelperProps): CheckboxProps => {
     const {
-      type: _type,
-      error: _error,
-      helperText: _helperText,
-      label: _label,
+      type,
+      error,
+      helperText,
+      label,
       ...checkboxProps
     } = props;
+    void type;
+    void error;
+    void helperText;
+    void label;
     return checkboxProps as CheckboxProps;
   };
 
   const getInputProps = (props: InputWithHelperProps): InputProps => {
     const {
-      type: _type,
-      error: _error,
-      helperText: _helperText,
-      label: _label,
+      type,
+      error,
+      helperText,
+      label,
       ...inputProps
     } = props;
+    void type;
+    void error;
+    void helperText;
+    void label;
     return inputProps as InputProps;
   };
 

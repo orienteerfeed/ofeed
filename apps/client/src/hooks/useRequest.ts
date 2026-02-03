@@ -11,7 +11,7 @@ import { toast } from '../utils';
 import { useAuthForRequest } from './useAuth';
 
 const log = config.REQUEST_LOGGING
-  ? (message: string, ...args: any[]) => {
+  ? (message: string, ...args: unknown[]) => {
       console.info(`[API] ${message}`, ...args);
     }
   : () => {};
@@ -38,7 +38,7 @@ function normalizeHeaders(headers: HeadersInit = {}): Record<string, string> {
   return headers as Record<string, string>;
 }
 
-export const useRequest = <T = any>(
+export const useRequest = <T = unknown>(
   initialState: Partial<RequestState<T>> = {}
 ): UseRequestReturn<T> => {
   const { token, logout } = useAuthForRequest();
@@ -165,13 +165,23 @@ export const useRequest = <T = any>(
         }));
 
         onSuccess?.(responseData as T);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Ignore abort errors
-        if (error.name === 'AbortError') {
+        if (
+          error instanceof DOMException
+            ? error.name === 'AbortError'
+            : typeof error === 'object' &&
+              error !== null &&
+              'name' in error &&
+              (error as { name?: string }).name === 'AbortError'
+        ) {
           return;
         }
 
-        const errorMessage = error.message || 'An unexpected error occurred';
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred';
 
         log(`${method} ${url} error`, error);
 

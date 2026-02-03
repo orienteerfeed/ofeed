@@ -578,7 +578,7 @@ const CategoryResultsView = ({
       if (runningTime < 0) return '-';
 
       return formatSecondsToTime(runningTime);
-    } catch (error) {
+    } catch {
       return '-';
     }
   };
@@ -800,21 +800,51 @@ const ClubResultsView = ({
     }
   }, [organisationsData, selectedClub, setSelectedClub]);
 
+  type CompetitorClassInfo = {
+    id?: string | number | null;
+    name?: string | null;
+    competitors?: Array<{
+      id?: string | number;
+      status?: string | null;
+      time?: number | null;
+    }>;
+  };
+
+  type CompetitorWithClass = {
+    id?: string | number;
+    firstname?: string;
+    lastname?: string;
+    organisation?: string;
+    competitorId?: number;
+    status?: string | null;
+    time?: number | null;
+    startTime?: string | null;
+    class?: CompetitorClassInfo | null;
+  };
+
+  const getCompetitorClassName = (competitor?: CompetitorWithClass | null) =>
+    competitor?.class?.name ?? 'ZZZ';
+
+  const getCompetitorClassId = (competitor?: CompetitorWithClass | null) =>
+    competitor?.class?.id ?? undefined;
+
   // Function to calculate position and loss in category
-  const calculatePositionAndLoss = (competitor: any) => {
+  const calculatePositionAndLoss = (competitor: CompetitorWithClass) => {
     const classCompetitors = competitor.class?.competitors || [];
 
     // Filter only competitors with valid time and OK status for position calculation
     const validCompetitors = classCompetitors
       .filter(
-        (comp: any) =>
+        (
+          comp
+        ): comp is { id?: string | number; status?: string | null; time: number } =>
           comp.status === 'OK' && comp.time !== null && comp.time !== undefined
       )
-      .sort((a: any, b: any) => a.time - b.time);
+      .sort((a, b) => a.time - b.time);
 
     // Find best time in category (only from OK status competitors)
     const bestTime =
-      validCompetitors.length > 0 ? validCompetitors[0].time : null;
+      validCompetitors.length > 0 ? validCompetitors[0]?.time ?? null : null;
 
     // For non-OK status competitors, return appropriate position emoji
     if (competitor.status !== 'OK') {
@@ -867,21 +897,26 @@ const ClubResultsView = ({
 
     for (let i = 0; i < validCompetitors.length; i++) {
       const comp = validCompetitors[i];
+      if (!comp) continue;
 
       if (previousTime !== null && comp.time === previousTime) {
         // Same time - same position
-        if (comp.id === competitor.id) {
-          position = currentPosition;
+        if (comp.id != null && competitor.id != null) {
+          if (String(comp.id) === String(competitor.id)) {
+            position = currentPosition;
+          }
         }
       } else {
         // Different time - new position
         currentPosition = i + 1;
-        if (comp.id === competitor.id) {
-          position = currentPosition;
+        if (comp.id != null && competitor.id != null) {
+          if (String(comp.id) === String(competitor.id)) {
+            position = currentPosition;
+          }
         }
       }
 
-      previousTime = comp.time;
+      previousTime = comp.time ?? null;
     }
 
     // Calculate loss only for OK status competitors with valid time
@@ -921,8 +956,12 @@ const ClubResultsView = ({
           })
           // REMOVED FILTER - show all competitors regardless of status
           .sort((a, b) => {
-            const classA = (a.competitor as any).class?.name || 'ZZZ';
-            const classB = (b.competitor as any).class?.name || 'ZZZ';
+            const classA = getCompetitorClassName(
+              a.competitor as CompetitorWithClass
+            );
+            const classB = getCompetitorClassName(
+              b.competitor as CompetitorWithClass
+            );
 
             if (classA !== classB) {
               return classA.localeCompare(classB);
@@ -982,16 +1021,21 @@ const ClubResultsView = ({
           runners: processedCompetitors.map(item => {
             const comp = item.competitor;
             return {
-              id: comp.id,
+              id: String(comp.id),
               firstname: comp.firstname,
               lastname: comp.lastname,
-              class: (comp as any).class?.name || 'N/A',
+              class: getCompetitorClassName(comp as CompetitorWithClass) || 'N/A',
               time: comp.time ? formatSecondsToTime(comp.time) : '-',
               status: comp.status,
               position: item.calculatedPosition,
               startTime: comp.startTime || undefined,
               loss: item.calculatedLoss || undefined,
-              classId: (comp as any).class?.id || undefined,
+              classId: (() => {
+                const classId = getCompetitorClassId(
+                  comp as CompetitorWithClass
+                );
+                return classId != null ? String(classId) : undefined;
+              })(),
             };
           }),
         };

@@ -40,27 +40,37 @@ function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
   // --- Auth headers using SetContextLink
   const authLink = new SetContextLink((_, previousContext) => {
     const token = getToken();
+    const previousHeaders =
+      (previousContext as { headers?: Record<string, string> })?.headers || {};
     return {
       headers: {
-        ...((previousContext as any)?.headers || {}),
+        ...previousHeaders,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     };
   });
 
   // --- Error handling using ErrorLink
-  const errorLink = new ErrorLink(((error: any) => {
-    const { graphQLErrors, networkError, operation } = error;
-    if (graphQLErrors) {
+  const errorLink = new ErrorLink(error => {
+    if (error && typeof error === 'object' && 'graphQLErrors' in error) {
+      const graphQLErrors = (
+        error as { graphQLErrors?: unknown }
+      ).graphQLErrors;
       console.warn(
-        `[GQL errors] ${operation.operationName ?? 'unknown'}`,
+        `[GQL errors] ${
+          (error as { operation?: { operationName?: string } }).operation
+            ?.operationName ?? 'unknown'
+        }`,
         graphQLErrors
       );
     }
-    if (networkError) {
-      console.error('[Network error]', networkError);
+    if (error && typeof error === 'object' && 'networkError' in error) {
+      console.error(
+        '[Network error]',
+        (error as { networkError?: unknown }).networkError
+      );
     }
-  }) as any);
+  });
 
   // --- WS link (subscriptions) – only in browser
   let wsLink: ApolloLink | null = null;

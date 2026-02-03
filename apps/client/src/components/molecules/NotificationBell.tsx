@@ -14,12 +14,13 @@ import {
   useNotifications,
 } from '../../hooks/useNotifications';
 import { Button } from '../atoms';
+import type { Notification } from '@/types/notification';
 
 interface NotificationBellProps {
   className?: string;
 }
 
-const NotificationItem: React.FC<{ notification: any }> = ({
+const NotificationItem: React.FC<{ notification: Notification }> = ({
   notification,
 }) => {
   const markAsRead = useMarkAsRead();

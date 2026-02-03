@@ -12,7 +12,7 @@ import { Eye, EyeOff, Key, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/atoms';
-import { Field } from '../../components/organisms';
+import { Field, type AnyReactFormApi } from '../../components/organisms';
 import { config } from '../../config';
 import { useApi } from '../../hooks';
 import { ENDPOINTS } from '../../lib/api/endpoints';
@@ -33,10 +33,13 @@ interface GenerateCredentialsRequest {
 
 // ReactiveField wrapper component - stejný jako v EventForm
 interface ReactiveFieldProps {
-  form?: any;
+  form: AnyReactFormApi<{
+    clientId: string;
+    clientSecret: string;
+  }>;
   name: string;
   type?: string;
-  validate?: (value: any) => string | undefined;
+  validate?: (value: string) => string | undefined;
   placeholder?: string;
   className?: string;
   options?: Array<{ value: string; label: string }>;
@@ -52,8 +55,10 @@ const ReactiveField: React.FC<ReactiveFieldProps> = ({
   ...props
 }) => {
   return (
-    <form.Subscribe selector={(state: any) => state.isSubmitting}>
-      {(isSubmitting: any) => (
+    <form.Subscribe
+      selector={(state: { isSubmitting: boolean }) => state.isSubmitting}
+    >
+      {(isSubmitting: boolean) => (
         <Field
           form={form}
           disabled={externalDisabled || (isSubmitting ?? false)}

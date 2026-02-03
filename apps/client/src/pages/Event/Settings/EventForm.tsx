@@ -1,5 +1,5 @@
 import { ButtonWithSpinner } from '@/components/molecules';
-import { Field } from '@/components/organisms';
+import { Field, type AnyReactFormApi } from '@/components/organisms';
 import { Label } from '@/components/ui/label';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
@@ -70,10 +70,10 @@ const convertToFormValues = (
 
 // ReactiveField wrapper component
 interface ReactiveFieldProps {
-  form?: any;
+  form: AnyReactFormApi<EventFormValues>;
   name: string;
   type?: string;
-  validate?: (value: any) => string | undefined;
+  validate?: (value: string) => string | undefined;
   placeholder?: string;
   className?: string;
   options?: Array<{ value: string; label: string }>;
@@ -87,8 +87,10 @@ const ReactiveField: React.FC<ReactiveFieldProps> = ({
   ...props
 }) => {
   return (
-    <form.Subscribe selector={(state: any) => state.isSubmitting}>
-      {(isSubmitting: any) => (
+    <form.Subscribe
+      selector={(state: { isSubmitting: boolean }) => state.isSubmitting}
+    >
+      {(isSubmitting: boolean) => (
         <Field
           form={form}
           disabled={externalDisabled || (isSubmitting ?? false)}
@@ -315,7 +317,7 @@ export const EventForm: React.FC<EventFormProps> = ({
             published: value.published,
             hundredthPrecision: value.hundredthPrecision,
           }),
-          onSuccess: (response: any) => {
+          onSuccess: (response: unknown) => {
             toast({
               title: t('Operations.Success', { ns: 'common' }),
               description: initialData?.id
@@ -324,28 +326,45 @@ export const EventForm: React.FC<EventFormProps> = ({
               variant: 'default',
             });
 
-            const eventId = response.results?.data?.id || response.data?.id;
+            const responseData = response as
+              | {
+                  results?: { data?: { id?: string } };
+                  data?: { id?: string };
+                }
+              | null;
+            const eventId =
+              responseData?.results?.data?.id ?? responseData?.data?.id;
             if (eventId) {
               navigate({
                 ...PATHNAMES.eventSettings(eventId),
               });
             }
           },
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             console.error('Form submission error:', err);
 
-            if (err.errors && Array.isArray(err.errors)) {
-              err.errors.forEach((error: any) => {
+            if (
+              typeof err === 'object' &&
+              err !== null &&
+              'errors' in err &&
+              Array.isArray((err as { errors?: unknown[] }).errors)
+            ) {
+              (err as { errors: Array<{ param?: string; msg?: string }> }).errors.forEach(
+                error => {
                 toast({
                   title: 'Validation Error',
                   description: `${error.param}: ${error.msg}`,
                   variant: 'error',
                 });
-              });
+                }
+              );
             } else {
               toast({
                 title: t('Operations.Error', { ns: 'common' }),
-                description: err.message || 'Failed to save event',
+                description:
+                  err instanceof Error
+                    ? err.message
+                    : 'Failed to save event',
                 variant: 'error',
               });
             }
