@@ -3,7 +3,7 @@
 # =========================
 # BUILD STAGE
 # =========================
-FROM node:22.20.0-slim AS builder
+FROM node:22.22.0-slim AS builder
 WORKDIR /repo
 
 ARG PNPM_VERSION=10.20.0
