@@ -8,10 +8,11 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TFunction } from 'i18next';
 import { Copy, Eye, EyeOff, Printer, Send } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import type { ComponentType, RefObject } from 'react';
 import { useRef, useState } from 'react';
 import { Button } from '../../../components/atoms';
 import { toast } from '../../../utils';
@@ -25,6 +26,88 @@ interface EventIntegrationsCardProps {
   apiEventsEndpoint: string;
   apiBaseUrl: string;
 }
+
+interface QrTabPanelProps {
+  description: string;
+  shareLabel: string;
+  printLabel: string;
+  qrRef: RefObject<HTMLCanvasElement | null>;
+  deepLink: string;
+  appName: string;
+  appNameLabel: string;
+  icon: ComponentType<{ className?: string }>;
+  onShare: (
+    ref: RefObject<HTMLCanvasElement | null>,
+    appName: string
+  ) => Promise<void>;
+  onPrint: (ref: RefObject<HTMLCanvasElement | null>, appName: string) => void;
+  onOpen: (deepLink: string) => void;
+  codeSize: number;
+  errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
+  qrBackgroundColor: string;
+}
+
+const panelClassName = 'rounded-lg border bg-card p-6 shadow-sm';
+
+const QrTabPanel = ({
+  description,
+  shareLabel,
+  printLabel,
+  qrRef,
+  deepLink,
+  appName,
+  appNameLabel,
+  icon: Icon,
+  onShare,
+  onPrint,
+  onOpen,
+  codeSize,
+  errorCorrectionLevel,
+  qrBackgroundColor,
+}: QrTabPanelProps) => (
+  <div className={panelClassName}>
+    <div className="space-y-2 mb-6">
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </div>
+    <div className="flex justify-center">
+      <div className="p-2 rounded-xl bg-white">
+        <QRCodeCanvas
+          value={deepLink}
+          size={codeSize}
+          level={errorCorrectionLevel}
+          ref={qrRef}
+          bgColor={qrBackgroundColor}
+          marginSize={1}
+        />
+      </div>
+    </div>
+    <div className="flex flex-col sm:flex-row gap-2 mt-6">
+      <Button
+        onClick={() => onShare(qrRef, appName)}
+        variant="outline"
+        className="flex-1"
+      >
+        <Send className="h-4 w-4 mr-2" />
+        {shareLabel}
+      </Button>
+      <Button
+        onClick={() => onPrint(qrRef, appNameLabel)}
+        variant="outline"
+        className="flex-1"
+      >
+        <Printer className="h-4 w-4 mr-2" />
+        {printLabel}
+      </Button>
+      <Button
+        onClick={() => onOpen(deepLink)}
+        variant="outline"
+        className="flex-1"
+      >
+        <Icon className="h-4 w-4" />
+      </Button>
+    </div>
+  </div>
+);
 
 export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   t,
@@ -133,7 +216,10 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
     }
   };
 
-  const handlePrint = (ref: React.RefObject<HTMLCanvasElement | null>) => {
+  const handlePrint = (
+    ref: React.RefObject<HTMLCanvasElement | null>,
+    appName: string
+  ) => {
     const canvas = ref.current;
     if (!canvas) return;
 
@@ -195,7 +281,8 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                 'Pages.Event.Integration.PrintWindow.Header'
               )}</h1></div>
               <div class="subheader">${t(
-                'Pages.Event.Integration.PrintWindow.Subheader'
+                'Pages.Event.Integration.PrintWindow.Subheader',
+                { appName }
               )}</div>
               <img src="${dataUrl}" class="qr-code" alt="QR Code" />
               <div class="details">
@@ -250,7 +337,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
 
     try {
       await navigator.clipboard.writeText(deepLink);
-      alert(t('Operations.CopiedToClipboard', { ns: 'common' }));
+      toast({
+        title: t('Operations.Success', { ns: 'common' }),
+        description: t('Operations.CopiedToClipboard', { ns: 'common' }),
+        variant: 'default',
+      });
     } catch {
       window.open(deepLink, '_blank');
     }
@@ -286,13 +377,20 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
     setPasswordVisible(!passwordVisible);
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(eventPassword);
+  const copyWithToast = (value: string, description: string) => {
+    navigator.clipboard.writeText(value);
     toast({
       title: t('Operations.Success', { ns: 'common' }),
-      description: t('Pages.Event.Password.Toast.CopySuccessDescription'),
+      description,
       variant: 'default',
     });
+  };
+
+  const copyPasswordToClipboard = () => {
+    copyWithToast(
+      eventPassword,
+      t('Pages.Event.Password.Toast.CopySuccessDescription')
+    );
   };
 
   return (
@@ -307,80 +405,35 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
       </CardHeader>
       <CardContent className="space-y-0">
         <Tabs defaultValue="ochecklist" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 gap-2 bg-transparent p-0 h-auto mb-0">
-            <TabsTrigger
-              value="ochecklist"
-              className="rounded-t-lg border-x-2 border-t-2 border-b-0 border-transparent px-4 py-3 text-sm font-medium transition-all data-[state=active]:border-border data-[state=active]:border-b-background data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 relative data-[state=active]:z-10"
-            >
-              OChecklist
-            </TabsTrigger>
-            <TabsTrigger
-              value="quickevent"
-              className="rounded-t-lg border-x-2 border-t-2 border-b-0 border-transparent px-4 py-3 text-sm font-medium transition-all data-[state=active]:border-border data-[state=active]:border-b-background data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 relative data-[state=active]:z-10"
-            >
-              QuickEvent
-            </TabsTrigger>
-            <TabsTrigger
-              value="connector"
-              className="rounded-t-lg border-x-2 border-t-2 border-b-0 border-transparent px-4 py-3 text-sm font-medium transition-all data-[state=active]:border-border data-[state=active]:border-b-background data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground hover:data-[state=inactive]:bg-muted/50 relative data-[state=active]:z-10"
-            >
-              SI Droid Connector
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="ochecklist">OChecklist</TabsTrigger>
+            <TabsTrigger value="quickevent">QuickEvent</TabsTrigger>
+            <TabsTrigger value="connector">SI Droid Connector</TabsTrigger>
           </TabsList>
 
-          {/* Content container - negative margin to overlap with tab */}
-          <div
-            className="border-2 border-border rounded-b-lg bg-background -mt-[2px]"
-            style={{ borderTopLeftRadius: 0 }}
-          >
-            <TabsContent value="ochecklist" className="m-0 p-6 space-y-4">
-              <div className="space-y-2 mb-6">
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'Pages.Event.Integration.Card.Tabs.OChecklist.Description'
-                  )}
-                </p>
-              </div>
-              <div className="flex justify-center">
-                <div className="p-2 rounded-xl bg-white">
-                  <QRCodeCanvas
-                    value={ochecklistDeepLink}
-                    size={codeSize}
-                    level={errorCorrectionLevel}
-                    ref={qrCodeOChecklistRef}
-                    bgColor={qrBackgroundColor}
-                    marginSize={1}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  onClick={() => handleShare(qrCodeOChecklistRef, 'ochecklist')}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {t('Share', { ns: 'common' })}
-                </Button>
-                <Button
-                  onClick={() => handlePrint(qrCodeOChecklistRef)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  {t('Print', { ns: 'common' })}
-                </Button>
-                <Button
-                  onClick={() => handleOpenDeepLink(ochecklistDeepLink)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <OChecklistIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </TabsContent>
+          <TabsContent value="ochecklist" className="space-y-4">
+            <QrTabPanel
+              description={t(
+                'Pages.Event.Integration.Card.Tabs.OChecklist.Description'
+              )}
+              shareLabel={t('Share', { ns: 'common' })}
+              printLabel={t('Print', { ns: 'common' })}
+              qrRef={qrCodeOChecklistRef}
+              deepLink={ochecklistDeepLink}
+              appName="ochecklist"
+              appNameLabel="O Checklist"
+              icon={OChecklistIcon}
+              onShare={handleShare}
+              onPrint={handlePrint}
+              onOpen={handleOpenDeepLink}
+              codeSize={codeSize}
+              errorCorrectionLevel={errorCorrectionLevel}
+              qrBackgroundColor={qrBackgroundColor}
+            />
+          </TabsContent>
 
-            <TabsContent value="quickevent" className="m-0 p-6 space-y-4">
+          <TabsContent value="quickevent" className="space-y-4">
+            <div className={panelClassName}>
               <div className="space-y-2 mb-6">
                 <p className="text-sm text-muted-foreground">
                   {t(
@@ -408,7 +461,10 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     <Button
                       type="button"
                       onClick={() =>
-                        navigator.clipboard.writeText(apiEventsEndpoint)
+                        copyWithToast(
+                          apiEventsEndpoint,
+                          t('Pages.Event.Integration.Toast.CopyBaseUrl')
+                        )
                       }
                       variant="ghost"
                       size="sm"
@@ -428,7 +484,12 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     <p className="text-sm text-muted-foreground">{eventId}</p>
                     <Button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(eventId)}
+                      onClick={() =>
+                        copyWithToast(
+                          eventId,
+                          t('Pages.Event.Integration.Toast.CopyEventId')
+                        )
+                      }
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0 shrink-0"
@@ -480,7 +541,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     {/* Copy Button */}
                     <Button
                       type="button"
-                      onClick={copyToClipboard}
+                      onClick={copyPasswordToClipboard}
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0 shrink-0"
@@ -493,57 +554,29 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                   </div>
                 </div>
               </div>
-            </TabsContent>
+            </div>
+          </TabsContent>
 
-            <TabsContent value="connector" className="m-0 p-6 space-y-4">
-              <div className="space-y-2 mb-6">
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'Pages.Event.Integration.Card.Tabs.SIDroidConenctor.Description'
-                  )}
-                </p>
-              </div>
-              <div className="flex justify-center">
-                <div className="p-2 rounded-xl bg-white">
-                  <QRCodeCanvas
-                    value={connectorDeepLink}
-                    size={codeSize}
-                    level={errorCorrectionLevel}
-                    ref={qrCodeConnectorRef}
-                    bgColor={qrBackgroundColor}
-                    marginSize={1}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  onClick={() =>
-                    handleShare(qrCodeConnectorRef, 'si-droid-connector')
-                  }
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {t('Share', { ns: 'common' })}
-                </Button>
-                <Button
-                  onClick={() => handlePrint(qrCodeConnectorRef)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  {t('Print', { ns: 'common' })}
-                </Button>
-                <Button
-                  onClick={() => handleOpenDeepLink(connectorDeepLink)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <ConnectorIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </TabsContent>
-          </div>
+          <TabsContent value="connector" className="space-y-4">
+            <QrTabPanel
+              description={t(
+                'Pages.Event.Integration.Card.Tabs.SIDroidConenctor.Description'
+              )}
+              shareLabel={t('Share', { ns: 'common' })}
+              printLabel={t('Print', { ns: 'common' })}
+              qrRef={qrCodeConnectorRef}
+              deepLink={connectorDeepLink}
+              appName="si-droid-connector"
+              appNameLabel="SI-Droid Connector"
+              icon={ConnectorIcon}
+              onShare={handleShare}
+              onPrint={handlePrint}
+              onOpen={handleOpenDeepLink}
+              codeSize={codeSize}
+              errorCorrectionLevel={errorCorrectionLevel}
+              qrBackgroundColor={qrBackgroundColor}
+            />
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>

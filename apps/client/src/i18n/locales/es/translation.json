@@ -467,8 +467,12 @@
         },
         "PrintWindow": {
           "Header": "OFeed",
-          "Subheader": "Escanee este código QR para emparejar su aplicación móvil O Checklist / SI-Droid Connector con el evento.",
+          "Subheader": "Escanee este código QR para emparejar su aplicación móvil {{appName}} con el evento.",
           "Footer": "Por favor, mantenga esta información segura. Si encuentra algún problema, contacte con soporte."
+        },
+        "Toast": {
+          "CopyBaseUrl": "¡Hop! La URL base ya está en su portapapeles, compártala.",
+          "CopyEventId": "¡Hop! El ID del evento ya está en su portapapeles, compártalo."
         }
       },
       "Visibility": {

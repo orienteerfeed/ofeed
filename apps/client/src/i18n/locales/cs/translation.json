@@ -369,8 +369,12 @@
         },
         "PrintWindow": {
           "Header": "OFeed",
-          "Subheader": "Naskenuj QR kód pro snadné propojení s mobilní aplikací O Checklist / SI-Droid Connector.",
+          "Subheader": "Naskenuj QR kód pro snadné propojení s mobilní aplikací {{appName}}.",
           "Footer": "Prosíme udržuj QR kód na bezpečném místě. Pokud Ti něco nefunguje, tak nám dej prosím vědět."
+        },
+        "Toast": {
+          "CopyBaseUrl": "Hop! Base URL je teď ve schránce, sdílej dál!",
+          "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!"
         }
       },
       "Visibility": {
