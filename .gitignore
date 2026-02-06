@@ -216,6 +216,9 @@ node_modules/.cache/
 *.d.ts
 *.d.ts.map
 
+# Allow app-specific declaration files
+!apps/client/src/types/svg.d.ts
+
 # Svelte
 .svelte-kit/
 
