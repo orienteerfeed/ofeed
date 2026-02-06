@@ -7,6 +7,7 @@
   },
   "Operations": {
     "Submit": "Potvrdit",
+    "CopiedToClipboard": "Zkopírováno",
     "Submitting": "Zpracovávání...",
     "Success": "V pořádku",
     "Error": "Chyba",
