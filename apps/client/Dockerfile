@@ -32,7 +32,7 @@ RUN --mount=type=secret,id=client_env,target=/repo/apps/client/.env \
 # =============================================================================
 # PRODUCTION STAGE (NGINX)
 # =============================================================================
-FROM nginx:1.29.1-alpine AS production
+FROM nginx:1.29.5-alpine AS production
 
 # Install curl for health checks
 RUN apk add --no-cache curl
