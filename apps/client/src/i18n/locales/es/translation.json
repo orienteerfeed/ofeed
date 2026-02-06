@@ -279,8 +279,14 @@
       "Published": "Publicado",
       "Placeholders": {
         "EventName": "Mi primer evento",
+        "Sport": "Seleccione un deporte",
+        "Timezone": "Seleccione zona horaria",
+        "Organizer": "Nombre del organizador",
+        "Location": "Lugar del evento",
         "Latitude": "Introduzca la latitud (p.ej., 50.0755)",
-        "Longitude": "Introduzca la longitud (p.ej., 14.4378)"
+        "Longitude": "Introduzca la longitud (p.ej., 14.4378)",
+        "Country": "Seleccione un país",
+        "CoefRanking": "1.02"
       },
       "Toast": {
         "CreateSuccess": "¡El evento se ha creado correctamente!",

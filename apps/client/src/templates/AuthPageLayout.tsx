@@ -1,9 +1,7 @@
 import { Link } from '@tanstack/react-router';
+import { TFunction } from 'i18next';
 import { ArrowLeft } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { LanguageSelector, ThemeToggleButton } from '../components/molecules';
-
-type TFunction = ReturnType<typeof useTranslation>['t'];
 
 interface AuthPageLayoutProps {
   children: React.ReactNode;
