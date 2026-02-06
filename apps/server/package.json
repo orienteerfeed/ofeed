@@ -16,7 +16,7 @@
   "license": "GPL-3.0",
   "type": "module",
   "dependencies": {
-    "@apollo/server": "^4.12.2",
+    "@apollo/server": "^5.4.0",
     "@graphql-tools/schema": "^9.0.19",
     "@node-oauth/oauth2-server": "^5.2.1",
     "@prisma/client": "^6.19.2",
