@@ -279,8 +279,14 @@
         "Published": "Zveřejněno",
         "Placeholders": {
           "EventName": "Moje první OFeed akce",
+          "Sport": "Vyberte sport",
+          "Timezone": "Vyberte časové pásmo",
+          "Organizer": "Název organizátora",
+          "Location": "Místo konání",
           "Latitude": "Zadej gps šířku (např., 50.0755)",
-          "Longitude": "Zadej gps délku (např., 14.4378)"
+          "Longitude": "Zadej gps délku (např., 14.4378)",
+          "Country": "Vyberte zemi",
+          "CoefRanking": "1.02"
         },
         "Toast": {
           "CreateSuccess": "Akce byla úspěšně založena!",
