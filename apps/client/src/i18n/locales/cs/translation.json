@@ -437,7 +437,7 @@
     },
     "Home": {
       "Hero": {
-        "Subtitle": "Živé výsledky a akce v orientačním běhu. Synchronizuj akce, sleduj běžce a měj data pod kontrolou na jednom místě.",
+        "Subtitle": "Živý přehled ze sportovních akcí. Sledování běžců, průběžné změny a nepřetržitý tok informací na jednom místě.",
         "LiveResults": "Živé výsledky",
         "SplitAnalysis": "Detailní analýza mezičasů",
         "RealTimeEventControl": "Přehled změn v reálném čase"
@@ -447,9 +447,9 @@
         "LoadingMore": "Načítám další události...",
         "LoadingMoreInline": "Načítají se další...",
         "ScrollMore": "Posuňte dolů pro více událostí",
-        "AllLoaded": "Všechny události načteny",
-        "EventsCount": "{{count}} událostí",
-        "FoundCount": "Našli jste {{count}} událostí",
+        "AllLoaded": "Všechny akce načteny",
+        "EventsCount": "{{count}} akcí",
+        "FoundCount": "Našli jste {{count}} akcí",
         "LoadError": "Chyba při načítání událostí: {{message}}",
         "NoEvents": "Žádné události nenalezeny",
         "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
