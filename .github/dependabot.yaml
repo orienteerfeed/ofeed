@@ -5,7 +5,155 @@
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      prod-minor-patch:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+        exclude-patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+      dev-minor-patch:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+        exclude-patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+      risky-minor-patch:
+        update-types: ["minor", "patch"]
+        patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+
+  - package-ecosystem: "npm"
+    directory: "/apps/client"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      prod-minor-patch:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+        exclude-patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+      dev-minor-patch:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+        exclude-patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+      risky-minor-patch:
+        update-types: ["minor", "patch"]
+        patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+
+  - package-ecosystem: "npm"
+    directory: "/apps/server"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      prod-minor-patch:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+        exclude-patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+      dev-minor-patch:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+        exclude-patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+      risky-minor-patch:
+        update-types: ["minor", "patch"]
+        patterns:
+          - "react"
+          - "react-dom"
+          - "vite"
+          - "prisma"
+          - "@apollo/*"
+          - "apollo*"
+          - "graphql"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "docker"
+    directory: "/apps/client"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "docker"
+    directory: "/apps/server"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
