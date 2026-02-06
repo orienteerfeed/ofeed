@@ -443,15 +443,15 @@
         "RealTimeEventControl": "Přehled změn v reálném čase"
       },
       "Infinite": {
-        "LoadingInitial": "Načítám události...",
-        "LoadingMore": "Načítám další události...",
+        "LoadingInitial": "Načítám akce...",
+        "LoadingMore": "Načítám další akce...",
         "LoadingMoreInline": "Načítají se další...",
-        "ScrollMore": "Posuňte dolů pro více událostí",
+        "ScrollMore": "Posuňte dolů pro více akcí",
         "AllLoaded": "Všechny akce načteny",
         "EventsCount": "{{count}} akcí",
         "FoundCount": "Našli jste {{count}} akcí",
-        "LoadError": "Chyba při načítání událostí: {{message}}",
-        "NoEvents": "Žádné události nenalezeny",
+        "LoadError": "Chyba při načítání akcí: {{message}}",
+        "NoEvents": "Žádné akce nenalezeny",
         "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
       }
     },
@@ -574,17 +574,17 @@
       "SelectLanguage": "Vybrat jazyk"
     },
     "EventSearchDialog": {
-      "Title": "Hledat události",
+      "Title": "Hledat akce",
       "Placeholder": "Hledejte podle názvu, místa, země nebo organizátora...",
-      "Hint": "Zkuste hledat podle: názvu události, města, země nebo organizátora",
-      "Searching": "Vyhledávání událostí...",
+      "Hint": "Zkuste hledat podle: názvu akce, města, země nebo organizátora",
+      "Searching": "Vyhledávání akcí...",
       "Organizer": "Organizátor",
       "Draft": "Návrh",
-      "NoEventsFound": "Nebyly nalezeny žádné události pro \"{{query}}\"",
-      "NoEventsHint": "Zkuste hledat podle názvu události, místa, země nebo organizátora",
-      "RecentEvents": "Nedávné události:",
-      "StartTyping": "Začněte psát pro vyhledání událostí",
-      "StartTypingHint": "Hledejte podle názvu události, místa, země nebo organizátora"
+      "NoEventsFound": "Nebyly nalezeny žádné akce pro \"{{query}}\"",
+      "NoEventsHint": "Zkuste hledat podle názvu akce, místa, země nebo organizátora",
+      "RecentEvents": "Nedávné akce:",
+      "StartTyping": "Začněte psát pro vyhledání akcí",
+      "StartTypingHint": "Hledejte podle názvu akce, místa, země nebo organizátora"
     },
     "SearchBox": {
       "SearchResults": "Výsledky hledání"

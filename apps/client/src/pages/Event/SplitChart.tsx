@@ -256,6 +256,9 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     '#db2777', // pink-600
   ];
 
+  const getLineColor = (index: number) =>
+    lineColors[index % lineColors.length] ?? '#2563eb';
+
   // Memoized custom tooltip component
   const CustomTooltip = useMemo(
     () => makeCustomTooltip(competitorsById, positionsByLeg),
@@ -340,7 +343,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
                   type="monotone"
                   dataKey={c.id}
                   name={getCompetitorLabel(c)}
-                  stroke={lineColors[idx % lineColors.length]}
+                  stroke={getLineColor(idx)}
                   dot={false}
                   strokeWidth={2}
                   isAnimationActive={false}
@@ -421,7 +424,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
                   <div
                     className="h-3 w-3 rounded-full"
                     style={{
-                      backgroundColor: lineColors[idx % lineColors.length],
+                      backgroundColor: getLineColor(idx),
                     }}
                   />
                 </div>

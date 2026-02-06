@@ -88,7 +88,7 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
-  '/events/$eventId': typeof EventsEventIdIndexRoute
+  '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,7 +130,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
-    | '/events/$eventId'
+    | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -227,7 +227,7 @@ declare module '@tanstack/react-router' {
     '/events/$eventId/': {
       id: '/events/$eventId/'
       path: '/events/$eventId'
-      fullPath: '/events/$eventId'
+      fullPath: '/events/$eventId/'
       preLoaderRoute: typeof EventsEventIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
