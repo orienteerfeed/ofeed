@@ -55,6 +55,8 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}/delete-data`,
   deleteEvent: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}`,
+  uploadEventImage: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/image`,
   eventChangelog: (
     eventId: string | number,
     params?: QueryParams

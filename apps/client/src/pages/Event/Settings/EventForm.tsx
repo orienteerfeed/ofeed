@@ -1,12 +1,15 @@
 import { ButtonWithSpinner } from '@/components/molecules';
 import { Field, type AnyReactFormApi } from '@/components/organisms';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { format, toDate } from 'date-fns-tz';
 import { TFunction } from 'i18next';
+import { Upload, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useRequest } from '../../../hooks/useRequest';
 import { ENDPOINTS } from '../../../lib/api/endpoints';
@@ -108,6 +111,91 @@ export const EventForm: React.FC<EventFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const request = useRequest();
+  const imageRequest = useRequest();
+  const [featuredImage, setFeaturedImage] = React.useState<File | null>(null);
+  const [isDraggingImage, setIsDraggingImage] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const maxFeaturedImageSize = 2 * 1024 * 1024;
+  const allowedFeaturedImageTypes = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ]);
+
+  const featuredImagePreview = React.useMemo(() => {
+    if (!featuredImage) return null;
+    return URL.createObjectURL(featuredImage);
+  }, [featuredImage]);
+
+  useEffect(() => {
+    return () => {
+      if (featuredImagePreview) {
+        URL.revokeObjectURL(featuredImagePreview);
+      }
+    };
+  }, [featuredImagePreview]);
+
+  const validateFeaturedImage = (file: File): boolean => {
+    if (!allowedFeaturedImageTypes.has(file.type)) {
+      toast({
+        title: t('Organisms.DragDrop.Toast.InvalidFormat'),
+        description: `${t('Organisms.DragDrop.Toast.AllowedFormats', {
+          formats: 'JPG, JPEG, PNG, WEBP',
+        })}`,
+        variant: 'error',
+      });
+      return false;
+    }
+
+    if (file.size > maxFeaturedImageSize) {
+      toast({
+        title: t('Organisms.DragDrop.Toast.FileTooLarge'),
+        description: t('Organisms.DragDrop.Toast.MaxSize', { size: 2 }),
+        variant: 'error',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleFeaturedImageSelect = (file: File) => {
+    if (!validateFeaturedImage(file)) return;
+    setFeaturedImage(file);
+  };
+
+  const handleFeaturedImageInput: React.ChangeEventHandler<HTMLInputElement> = e => {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+    handleFeaturedImageSelect(file);
+    e.currentTarget.value = '';
+  };
+
+  const handleFeaturedImageDrop: React.DragEventHandler<HTMLDivElement> = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingImage(false);
+
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleFeaturedImageSelect(file);
+  };
+
+  const handleFeaturedImageDragOver: React.DragEventHandler<HTMLDivElement> = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingImage(true);
+  };
+
+  const handleFeaturedImageDragLeave: React.DragEventHandler<HTMLDivElement> = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingImage(false);
+  };
+
+  const handleFeaturedImageRemove = () => {
+    setFeaturedImage(null);
+  };
 
   // Fetch sports data using Apollo Client
   const {
@@ -292,6 +380,8 @@ export const EventForm: React.FC<EventFormProps> = ({
         ? ENDPOINTS.eventDetail(initialData.id)
         : ENDPOINTS.events();
 
+      let savedEventId: string | undefined;
+
       try {
         await request.request(url, {
           method,
@@ -332,13 +422,8 @@ export const EventForm: React.FC<EventFormProps> = ({
                   data?: { id?: string };
                 }
               | null;
-            const eventId =
+            savedEventId =
               responseData?.results?.data?.id ?? responseData?.data?.id;
-            if (eventId) {
-              navigate({
-                ...PATHNAMES.eventSettings(eventId),
-              });
-            }
           },
           onError: (err: unknown) => {
             console.error('Form submission error:', err);
@@ -370,6 +455,39 @@ export const EventForm: React.FC<EventFormProps> = ({
             }
           },
         });
+
+        const uploadTargetId = savedEventId ?? initialData?.id;
+
+        if (uploadTargetId && featuredImage) {
+          const formData = new FormData();
+          formData.append('file', featuredImage);
+
+          await imageRequest.request(ENDPOINTS.uploadEventImage(uploadTargetId), {
+            method: 'POST',
+            body: formData,
+            onSuccess: () => {
+              toast({
+                title: t('Operations.Success', { ns: 'common' }),
+                description: t('Pages.Event.Form.Toast.FeaturedImageUploadSuccess'),
+                variant: 'default',
+              });
+              setFeaturedImage(null);
+            },
+            onError: () => {
+              toast({
+                title: t('Operations.Error', { ns: 'common' }),
+                description: t('Pages.Event.Form.Toast.FeaturedImageUploadError'),
+                variant: 'error',
+              });
+            },
+          });
+        }
+
+        if (savedEventId && !initialData?.id) {
+          navigate({
+            ...PATHNAMES.eventSettings(savedEventId),
+          });
+        }
       } catch (error) {
         console.error('Form submission error:', error);
         toast({
@@ -426,6 +544,71 @@ export const EventForm: React.FC<EventFormProps> = ({
             validate={validateEventName}
             className="w-full"
           />
+        </div>
+
+        {/* Featured Image */}
+        <div className="md:col-span-2 space-y-2">
+          <Label className="text-sm font-medium">
+            {t('Pages.Event.Form.FeaturedImage')}
+          </Label>
+
+          <div
+            onDrop={handleFeaturedImageDrop}
+            onDragOver={handleFeaturedImageDragOver}
+            onDragLeave={handleFeaturedImageDragLeave}
+            className={cn(
+              'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors',
+              isDraggingImage
+                ? 'border-primary bg-primary/5'
+                : 'border-border bg-muted/20'
+            )}
+          >
+            <Upload className="h-5 w-5 text-muted-foreground" />
+            <div className="text-sm text-muted-foreground">
+              {t('Pages.Event.Form.FeaturedImageHint')}
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {t('Pages.Event.Form.FeaturedImageButton')}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFeaturedImageInput}
+            />
+          </div>
+
+          {featuredImage && (
+            <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-3">
+              {featuredImagePreview ? (
+                <img
+                  src={featuredImagePreview}
+                  alt={featuredImage.name}
+                  className="h-16 w-16 rounded-md object-cover"
+                />
+              ) : null}
+              <div className="flex-1">
+                <div className="text-sm font-medium">{featuredImage.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {(featuredImage.size / 1024).toFixed(0)} KB
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleFeaturedImageRemove}
+                aria-label={t('Pages.Event.Form.FeaturedImageRemove')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Sport Selection - plná šířka na mobile, 2 sloupce na desktopu */}

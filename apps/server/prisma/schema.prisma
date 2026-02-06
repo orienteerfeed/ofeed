@@ -71,6 +71,7 @@ model Event {
   longitude Float?   // GPS Longitude (nullable)
   countryId String?  @db.Char(2)
   country   Country? @relation(fields: [countryId], references: [countryCode])
+  featuredImageKey String? @db.VarChar(512)
   zeroTime  DateTime @db.DateTime()
   relay     Boolean  @default(false)
   startMode StartMode @default(Individual)

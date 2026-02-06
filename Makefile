@@ -21,6 +21,9 @@ set-compose-file:
 use-mysql:
 	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.mysql.yaml
 
+use-minio:
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.minio.yaml
+
 use-traefik:
 	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.traefik.yaml
 

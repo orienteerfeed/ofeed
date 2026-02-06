@@ -272,6 +272,10 @@
         "Longitude": "Zeměpisná délka",
         "Country": "Země",
         "ZeroTime": "Čas startu",
+        "FeaturedImage": "Úvodní obrázek",
+        "FeaturedImageHint": "JPEG, PNG nebo WEBP, max 2 MB.",
+        "FeaturedImageButton": "Přidat obrázek",
+        "FeaturedImageRemove": "Odebrat",
         "Ranking": "Ranking",
         "CoefRanking": "Rankingový koeficient",
         "Relay": "Štafety",
@@ -290,7 +294,9 @@
         },
         "Toast": {
           "CreateSuccess": "Akce byla úspěšně založena!",
-          "EditSuccess": "Akce byla úspěšně aktualizována!"
+          "EditSuccess": "Akce byla úspěšně aktualizována!",
+          "FeaturedImageUploadSuccess": "Obrázek byl úspěšně nahrán.",
+          "FeaturedImageUploadError": "Nahrání obrázku se nezdařilo."
         }
       },
       "Card": {

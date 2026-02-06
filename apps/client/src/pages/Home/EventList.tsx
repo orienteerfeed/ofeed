@@ -28,6 +28,7 @@ interface GraphQLEvent {
   organizer: string;
   date: string; // timestamp as a string
   location: string;
+  featuredImage?: string | null;
   country: {
     countryCode: string;
     countryName: string;
@@ -77,6 +78,7 @@ const EVENTS_QUERY = gql`
           organizer
           date
           location
+          featuredImage
           country {
             countryCode
             countryName
@@ -140,6 +142,9 @@ const convertGraphQLEventToEvent = (graphqlEvent: GraphQLEvent): Event => {
     description: `${graphqlEvent.organizer} pořádá ${graphqlEvent.name} v ${graphqlEvent.location}`,
     organizer: graphqlEvent.organizer,
     location: graphqlEvent.location,
+    ...(graphqlEvent.featuredImage
+      ? { featuredImage: graphqlEvent.featuredImage }
+      : {}),
     country: {
       countryCode: graphqlEvent.country.countryCode,
       countryName: graphqlEvent.country.countryName,

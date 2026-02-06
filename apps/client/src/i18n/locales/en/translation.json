@@ -272,6 +272,10 @@
         "Longitude": "GPS Longitude",
         "Country": "Country",
         "ZeroTime": "Zero time",
+        "FeaturedImage": "Featured image",
+        "FeaturedImageHint": "JPEG, PNG or WEBP, max 2 MB.",
+        "FeaturedImageButton": "Add image",
+        "FeaturedImageRemove": "Remove",
         "Ranking": "Ranking",
         "CoefRanking": "Ranking coeficient",
         "Relay": "Relay",
@@ -290,7 +294,9 @@
         },
         "Toast": {
           "CreateSuccess": "The event as created successfully!",
-          "EditSuccess": "The event was updated successfully!"
+          "EditSuccess": "The event was updated successfully!",
+          "FeaturedImageUploadSuccess": "Featured image uploaded successfully.",
+          "FeaturedImageUploadError": "Failed to upload featured image."
         }
       },
       "Card": {

@@ -1,4 +1,7 @@
 import { Router } from 'express';
+import path from 'path';
+import multer from 'multer';
+import sharp from 'sharp';
 import { body, check, query, validationResult } from 'express-validator';
 
 import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
@@ -9,8 +12,10 @@ import {
 } from '../../utils/responseApi.js';
 
 import prisma from '../../utils/context.js';
+import { requireEventOwner } from '../../utils/authz.js';
 import { encodeBase64, encrypt } from '../../utils/cryptoUtils.js';
 import { formatErrors } from '../../utils/errors.js';
+import { deletePublicObject, putPublicObject } from '../../utils/s3Storage.js';
 import validateEvent from '../../utils/validateEvent.js';
 
 import {
@@ -31,6 +36,45 @@ const router = Router();
 
 const validInputOrigin = ['START'];
 const validInputStatus = ['Inactive', 'Active', 'DidNotStart', 'Cancelled', 'LateStart'];
+
+const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+const maxImageSizeBytes = 2 * 1024 * 1024;
+
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: maxImageSizeBytes },
+  fileFilter: (req, file, cb) => {
+    if (!allowedImageTypes.has(file.mimetype)) {
+      return cb(new Error('Invalid image type'));
+    }
+    cb(null, true);
+  },
+}).single('file');
+
+const getImageFormat = (file) => {
+  switch (file.mimetype) {
+    case 'image/png':
+      return 'png';
+    case 'image/webp':
+      return 'webp';
+    case 'image/jpeg':
+    default:
+      return 'jpeg';
+  }
+};
+
+const getImageExtension = (format) => {
+  switch (format) {
+    case 'png':
+      return '.png';
+    case 'webp':
+      return '.webp';
+    case 'jpeg':
+    default:
+      return '.jpg';
+  }
+};
 
 const validateStateChangeInputs = [
   check('eventId').not().isEmpty().isString(),
@@ -272,6 +316,117 @@ router.post('/', validateEvent, async (req, res) => {
     }
     return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
+});
+
+/**
+ * @swagger
+ * /rest/v1/events/{eventId}/image:
+ *  post:
+ *    summary: Upload event featured image
+ *    description: Upload an image and store its key on the event.
+ *    tags:
+ *      - Events
+ *    security:
+ *      - bearerAuth: []
+ *    parameters:
+ *      - in: path
+ *        name: eventId
+ *        required: true
+ *        description: The ID of the event to update.
+ *        schema:
+ *          type: string
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            required:
+ *              - file
+ *            properties:
+ *              file:
+ *                type: string
+ *                format: binary
+ *    responses:
+ *      200:
+ *        description: Image uploaded successfully
+ *      401:
+ *        description: Not authenticated
+ *      403:
+ *        description: Not authorized
+ *      404:
+ *        description: Event not found
+ *      422:
+ *        description: Validation Error
+ *      500:
+ *        description: Internal Server Error
+ */
+router.post('/:eventId/image', (req, res) => {
+  imageUpload(req, res, async err => {
+    if (err) {
+      return res.status(422).json(validationResponse(err.message, res.statusCode));
+    }
+
+    const { eventId } = req.params;
+
+    try {
+      await requireEventOwner(prisma, req.auth, eventId);
+
+      if (!req.file) {
+        return res.status(422).json(validationResponse('No file uploaded', res.statusCode));
+      }
+
+      const format = getImageFormat(req.file);
+      const prefix = `events/${eventId}/featured-`;
+
+      const existingEvent = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { featuredImageKey: true },
+      });
+
+      const ext = getImageExtension(format);
+      const key = `${prefix}${Date.now()}${ext}`;
+
+      const baseImage = sharp(req.file.buffer)
+        .rotate()
+        .resize({ width: 640, height: 640, fit: 'inside', withoutEnlargement: true });
+
+      const resizedBuffer =
+        format === 'png'
+          ? await baseImage.png({ compressionLevel: 9 }).toBuffer()
+          : await baseImage.toFormat(format, { quality: 80 }).toBuffer();
+
+      const contentType = `image/${format === 'jpeg' ? 'jpeg' : format}`;
+
+      await putPublicObject({
+        key,
+        body: resizedBuffer,
+        contentType,
+      });
+
+      await prisma.event.update({
+        where: { id: eventId },
+        data: { featuredImageKey: key, updatedAt: new Date() },
+      });
+
+      if (existingEvent?.featuredImageKey && existingEvent.featuredImageKey !== key) {
+        await deletePublicObject(existingEvent.featuredImageKey);
+      }
+
+      return res
+        .status(200)
+        .json(successResponse('OK', { featuredImageKey: key }, res.statusCode));
+    } catch (error) {
+      const message = error?.message || 'Internal Server Error';
+      if (message === 'Event not found') {
+        return res.status(404).json(errorResponse(message, res.statusCode));
+      }
+      if (message.startsWith('Unauthorized') || message === 'Not authorized for this event') {
+        return res.status(403).json(errorResponse(message, res.statusCode));
+      }
+      return res.status(500).json(errorResponse(message, res.statusCode));
+    }
+  });
 });
 
 /**

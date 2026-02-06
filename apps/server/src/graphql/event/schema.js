@@ -86,5 +86,7 @@ export const typeDef = /* GraphQL */ `
     country: Country
     user: User
     eventPassword: EventPassword
+    featuredImageKey: String
+    featuredImage: String
   }
 `;

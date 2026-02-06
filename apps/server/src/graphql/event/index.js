@@ -9,6 +9,18 @@ import prisma from '../../utils/context.js';
 
 export { resolvers, typeDef };
 
+const buildPublicImageUrl = (key) => {
+  if (!key) return null;
+  const base = (process.env.S3_PUBLIC_BASE_URL || '').replace(/\/+$/, '');
+  if (!base) return null;
+  const bucket = (process.env.S3_BUCKET_PUBLIC || process.env.S3_BUCKET || '').replace(
+    /\/+$/,
+    ''
+  );
+  const safeKey = key.replace(/^\/+/, '');
+  return bucket ? `${base}/${bucket}/${safeKey}` : `${base}/${safeKey}`;
+};
+
 const resolvers = {
   Query: {
     ...queries,
@@ -50,5 +62,6 @@ const resolvers = {
       }
       return decryptedPassword;
     },
+    featuredImage: (parent) => buildPublicImageUrl(parent.featuredImageKey),
   },
 };

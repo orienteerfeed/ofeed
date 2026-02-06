@@ -272,6 +272,10 @@
         "Longitude": "Longitud GPS",
         "Country": "País",
         "ZeroTime": "Hora cero",
+        "FeaturedImage": "Imagen destacada",
+        "FeaturedImageHint": "JPEG, PNG o WEBP, máx. 2 MB.",
+        "FeaturedImageButton": "Añadir imagen",
+        "FeaturedImageRemove": "Quitar",
         "Ranking": "Ranking",
         "CoefRanking": "Coeficiente de ranking",
         "Relay": "Relevo",
@@ -290,7 +294,9 @@
         },
         "Toast": {
           "CreateSuccess": "¡El evento se ha creado correctamente!",
-          "EditSuccess": "¡El evento se ha actualizado correctamente!"
+          "EditSuccess": "¡El evento se ha actualizado correctamente!",
+          "FeaturedImageUploadSuccess": "La imagen destacada se subió correctamente.",
+          "FeaturedImageUploadError": "No se pudo subir la imagen destacada."
         }
       },
       "Card": {
