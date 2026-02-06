@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Event } from '@/types/event';
+import { config } from '@/config';
 import { Link } from '@tanstack/react-router';
 import { t } from 'i18next';
 import { Calendar, MapPin } from 'lucide-react';
@@ -40,7 +41,13 @@ export const EventCard = ({ event }: EventCardProps) => {
       >
         <div className="relative aspect-[3/2] overflow-hidden">
           <img
-            src={event.featuredImage || getRandomEventPlaceholder()}
+            src={
+              event.featuredImage
+                ? event.featuredImage.startsWith('/')
+                  ? `${config.BASE_API_URL}${event.featuredImage}`
+                  : event.featuredImage
+                : getRandomEventPlaceholder()
+            }
             alt={event.name}
             className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
           />

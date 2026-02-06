@@ -1,5 +1,6 @@
 import {
   DeleteObjectsCommand,
+  GetObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
@@ -82,6 +83,21 @@ export const deletePublicObjectsByPrefix = async (prefix) => {
 
   await client.send(deleteCommand);
   return { bucket, deleted: objects.length };
+};
+
+export const getPublicObject = async (key) => {
+  const bucket = getPublicBucket();
+  if (!bucket) {
+    throw new Error('S3_BUCKET_PUBLIC is not set');
+  }
+
+  const client = getS3Client();
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  return client.send(command);
 };
 
 export const deletePublicObject = async (key) => {

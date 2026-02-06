@@ -1,14 +1,77 @@
 import { Router } from 'express';
+import { pipeline } from 'stream/promises';
 import { check, validationResult } from 'express-validator';
 
 import { validation, error, success } from '../../utils/responseApi.js';
 import { calculateCompetitorRankingPoints } from '../../utils/ranking.js';
 import { formatErrors } from '../../utils/errors.js';
 import prisma from '../../utils/context.js';
+import { getPublicObject } from '../../utils/s3Storage.js';
 
 import { getEventCompetitorDetail } from './eventService.js';
 
 const router = Router();
+
+/**
+ * @swagger
+ * /rest/v1/events/{eventId}/image:
+ *  get:
+ *    summary: Get featured image
+ *    description: Returns the featured image for a public event.
+ *    tags:
+ *       - Events
+ *    parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         description: String ID of the event.
+ *         schema:
+ *           type: string
+ *    responses:
+ *      200:
+ *        description: Image stream
+ *      404:
+ *        description: Image not found
+ *      500:
+ *        description: Internal server error
+ */
+router.get('/:eventId/image', [check('eventId').not().isEmpty().isString()], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json(validation(formatErrors(errors)));
+  }
+
+  const { eventId } = req.params;
+
+  try {
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { featuredImageKey: true, published: true },
+    });
+
+    if (!event || !event.featuredImageKey || !event.published) {
+      return res.status(404).json(error('Image not found', res.statusCode));
+    }
+
+    const s3Object = await getPublicObject(event.featuredImageKey);
+    if (!s3Object?.Body) {
+      return res.status(404).json(error('Image not found', res.statusCode));
+    }
+
+    if (s3Object.ContentType) {
+      res.setHeader('Content-Type', s3Object.ContentType);
+    }
+    if (s3Object.ContentLength) {
+      res.setHeader('Content-Length', String(s3Object.ContentLength));
+    }
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+
+    await pipeline(s3Object.Body, res);
+  } catch (err) {
+    console.error('Failed to stream image:', err);
+    return res.status(500).json(error('Failed to load image', res.statusCode));
+  }
+});
 
 /**
  * @swagger
