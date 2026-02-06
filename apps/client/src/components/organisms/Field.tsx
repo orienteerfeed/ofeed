@@ -1,37 +1,54 @@
-import { useField } from '@tanstack/react-form';
+import {
+  type DeepValue,
+  type ReactFormExtendedApi,
+  useField,
+} from '@tanstack/react-form';
 import React from 'react';
-import { InputWithHelper } from '../molecules/InputWithHelper';
+import { type CheckboxProps, type InputProps, type SelectProps } from '../atoms';
+import {
+  InputWithHelper,
+  type CommonProps,
+  type InputWithHelperProps,
+} from '../molecules/InputWithHelper';
 
-export type FieldProps = {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type AnyReactFormApi<TFormData = unknown> = ReactFormExtendedApi<
+  TFormData,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+>;
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+export type FieldProps<TFormData = unknown> = {
   name: string;
-  validate?: (value: any) => string | undefined;
-  form?: any;
-} & (
-  | {
-      type: 'select';
-      [key: string]: any;
-    }
-  | {
-      type: 'checkbox';
-      [key: string]: any;
-    }
-  | {
-      type?: React.InputHTMLAttributes<HTMLInputElement>['type'];
-      [key: string]: any;
-    }
-);
+  validate?: (value: string) => string | undefined;
+  form: AnyReactFormApi<TFormData>;
+} & Omit<InputWithHelperProps, 'name' | 'form'>;
 
-export const Field = (props: FieldProps): React.JSX.Element => {
+export const Field = <TFormData,>(
+  props: FieldProps<TFormData>
+): React.JSX.Element => {
   const { name, validate, type = 'text', form, ...inputProps } = props;
   const [localError, setLocalError] = React.useState<string | undefined>();
-  const validationTimeoutRef = React.useRef<number | null>(null);
+  const validationTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   // Use the field without explicit typing UseFieldOptions
   const field = useField({
-    name: name as any,
-    form: form,
+    name,
+    form,
     validators: {
-      onBlur: validate ? ({ value }) => validate(value) : undefined,
+      onBlur: validate ? ({ value }) => validate(String(value ?? '')) : undefined,
     },
   });
 
@@ -53,28 +70,33 @@ export const Field = (props: FieldProps): React.JSX.Element => {
   const handleBlur = (): void => {
     // Validate immediately when leaving the field
     if (validate) {
-      const error = validate(field.state.value as string);
+      const error = validate(String(field.state.value ?? ''));
       setLocalError(error);
     }
     field.handleBlur();
   };
 
+  type FieldValue = DeepValue<TFormData, string>;
+  const setFieldValue = (value: unknown) => {
+    field.handleChange(() => value as FieldValue);
+  };
+
   // Handle different input types
   const handleValueChange = (value: string): void => {
-    field.handleChange(value);
+    setFieldValue(value);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value;
-    field.handleChange(value);
+    setFieldValue(value);
     handleLocalValidation(value);
   };
 
   const handleCheckboxChange = (checked: boolean | 'indeterminate'): void => {
     const value = checked === true;
-    field.handleChange(value);
+    setFieldValue(value);
     if (validate) {
-      const error = validate(value);
+      const error = validate(String(value));
       setLocalError(error);
     }
   };
@@ -103,6 +125,10 @@ export const Field = (props: FieldProps): React.JSX.Element => {
 
   // Render based on type
   if (type === 'select') {
+    const selectProps = inputProps as Omit<
+      SelectProps & CommonProps,
+      'name' | 'type'
+    >;
     return (
       <InputWithHelper
         type="select"
@@ -111,25 +137,33 @@ export const Field = (props: FieldProps): React.JSX.Element => {
         onValueChange={handleValueChange}
         onBlur={handleBlur}
         error={displayError}
-        {...(inputProps as any)}
+        {...selectProps}
       />
     );
   }
 
   if (type === 'checkbox') {
+    const checkboxProps = inputProps as Omit<
+      CheckboxProps & CommonProps,
+      'name' | 'type' | 'checked' | 'onCheckedChange'
+    >;
+    const checkboxFieldProps = {
+      type: 'checkbox' as const,
+      name,
+      checked: Boolean(field.state.value),
+      onCheckedChange: handleCheckboxChange,
+      error: displayError,
+      ...checkboxProps,
+    } as unknown as InputWithHelperProps;
     return (
-      <InputWithHelper
-        type="checkbox"
-        name={name}
-        checked={Boolean(field.state.value)}
-        onCheckedChange={handleCheckboxChange}
-        onBlur={handleBlur}
-        error={displayError}
-        {...(inputProps as any)}
-      />
+      <InputWithHelper {...checkboxFieldProps} />
     );
   }
 
+  const inputPropsTyped = inputProps as Omit<
+    InputProps & CommonProps,
+    'name' | 'type'
+  >;
   // Regular input types
   return (
     <InputWithHelper
@@ -139,7 +173,7 @@ export const Field = (props: FieldProps): React.JSX.Element => {
       onChange={handleInputChange}
       onBlur={handleBlur}
       error={displayError}
-      {...(inputProps as any)}
+      {...inputPropsTyped}
     />
   );
 };

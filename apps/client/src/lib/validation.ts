@@ -4,7 +4,7 @@ export interface ValidationHelpers {
 
 export const createValidations = ({ t }: ValidationHelpers) => ({
   // Základní validace
-  required: (value: any) => {
+  required: (value: unknown) => {
     if (!value || (typeof value === 'string' && value.trim() === '')) {
       return t('Validations.Required');
     }
@@ -36,7 +36,7 @@ export const createValidations = ({ t }: ValidationHelpers) => ({
     }
   },
 
-  number: (value: any) => {
+  number: (value: unknown) => {
     if (!value) return undefined;
     if (isNaN(Number(value))) {
       return t('Validations.Number');
@@ -44,7 +44,7 @@ export const createValidations = ({ t }: ValidationHelpers) => ({
     return undefined;
   },
 
-  requiredNumber: (value: any) => {
+  requiredNumber: (value: unknown) => {
     const requiredError = createValidations({ t }).required(value);
     if (requiredError) return requiredError;
     return createValidations({ t }).number(value);

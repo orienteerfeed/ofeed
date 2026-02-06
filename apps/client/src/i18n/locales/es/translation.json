@@ -29,6 +29,114 @@
         "SignUp": "Registrarse",
         "SignInWithEmail": "Iniciar sesión con correo electrónico",
         "WelcomeBack": "Bienvenido de nuevo"
+      }
+    },
+    "SignUpPage": {
+      "AlreadyHaveAnAccount": "¿Ya tienes una cuenta?",
+      "CreateAccount": "Crear cuenta",
+      "CreatingAccount": "Creando cuenta..."
+    },
+    "RequestPasswordResetPage": {
+      "ForgottenPassword": "¿Ha olvidado su contraseña?",
+      "EnterYourEmail": "Introduzca su correo electrónico para recibir un enlace y restablecer su contraseña",
+      "ResetPassword": "Restablecer contraseña",
+      "SendResetLink": "Enviar enlace de restablecimiento",
+      "Sending": "Enviando...",
+      "BackToSignIn": "Volver a iniciar sesión",
+      "CheckYourEmail": "Revise su correo electrónico",
+      "PasswordResetLinkSent": "Enlace para restablecer la contraseña enviado"
+    },
+    "PasswordResetEmailSentPage": {
+      "CheckYourEmail": "Revise su correo electrónico",
+      "PasswordResetInstructions1": "Si esta dirección de correo electrónico está asociada a una cuenta, recibirá en breve un enlace para restablecer su contraseña. Por favor, revise su bandeja de entrada y siga las instrucciones para restablecerla.",
+      "PasswordResetInstructions2": "Si no encuentra el correo electrónico, revise su carpeta de correo no deseado.",
+      "PasswordResetInstructions3": "Si no ha solicitado el restablecimiento de la contraseña, puede ignorar este correo."
+    },
+    "PasswordResetPage": {
+      "EnterYourNewPassword": "Introduzca una nueva contraseña",
+      "ResetYourPassword": "Restablecer su contraseña",
+      "NewPassword": "Nueva contraseña",
+      "ResettingPassword": "Restableciendo la contraseña...",
+      "ResetPassword": "Restablecer contraseña"
+    }
+  },
+  "Event": {
+    "Description": "Resumen de eventos",
+    "CompetitorsList": "Lista de competidores",
+    "MyEvents": "Mis eventos",
+    "MyEventsDescription": "Resumen de todos los eventos que has creado",
+    "NoCompetitorsFound": "No se han encontrado competidores para la clase seleccionada.",
+    "Classes": "Clases",
+    "OrganizedBy": "Organizado por",
+    "Operations": {
+      "EditEvent": "Editar evento",
+      "EditDescription": "Edite los detalles del evento existente",
+      "CreateEvent": "Crear evento",
+      "CreateDescription": "Rellene el formulario para crear un nuevo evento",
+      "DeleteEvent": "Eliminar evento",
+      "SelectClass": "Seleccionar clase"
+    },
+    "Tables": {
+      "Name": "Nombre",
+      "Organizer": "Organizador",
+      "Date": "Fecha",
+      "Visibility": "Visibilidad",
+      "Actions": "Acciones",
+      "Format": "Formato",
+      "Status": "Estado",
+      "Sport": "Sport",
+      "Country": "País",
+      "Entries": "Entradas",
+      "Competitors": "Competidores"
+    },
+    "Tabs": {
+      "All": "Todo",
+      "Today": "Hoy",
+      "Ongoing": "En curso",
+      "Recent": "Recientes",
+      "Past": "Pasado",
+      "Upcoming": "Próximos",
+      "Results": "Resultados",
+      "Splits": "Parciales",
+      "Detail": "Detalle",
+      "Info": "Información",
+      "Cards": "Tarjetas",
+      "List": "Lista",
+      "Cat": "Cat",
+      "Club": "Club",
+      "Live": "En vivo"
+    },
+    "Live": {
+      "Title": "En vivo",
+      "Description": "Las actualizaciones en tiempo real aparecerán aquí durante el evento"
+    },
+    "Alert": {
+      "DemoTitle": "Esta es una aplicación de demostración",
+      "DemoDescription": "La aplicación OrienteerFeed es una aplicación de desarrollo. Si encuentra algún problema, por favor repórtelo en los issues de Github. Gracias.",
+      "EventDataNotAvailableTitle": "Datos del evento no disponibles",
+      "EventDataNotAvailableMessage": "Actualmente no hay datos disponibles para la vista {{view}}. Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento para más información.",
+      "ViewResults": "resultados",
+      "ViewSplits": "parciales",
+      "ViewClub": "clubes"
+    },
+    "Report": {
+      "Title": "Registro de cambios de competidores",
+      "Description": "Resumen de cambios de estado y tarjeta",
+      "CompetitorChangesTitle": "Cambios para {{name}} (ID {{id}})",
+      "CompetitorChangesDescription": "Todos los cambios del competidor seleccionado en este evento.",
+      "CompetitorChangesEmpty": "No se encontraron cambios para este competidor.",
+      "AutoRefresh": "Actualización automática: {{seconds}} s",
+      "LastUpdated": "Última actualización: {{time}}",
+        "NoTimestamp": "-",
+        "ActiveFilters": "Filtros activos:",
+        "PresetsTitle": "Filtros predefinidos",
+        "Buttons": {
+        "RefreshData": "Cargar datos",
+        "ExportCsv": "Exportar CSV",
+        "ExportPdf": "Exportar PDF",
+        "ClearFilters": "Limpiar filtros",
+        "ShowProcessed": "Mostrar procesados",
+        "HideProcessed": "Ocultar procesados"
       },
       "SignUpPage": {
         "AlreadyHaveAnAccount": "¿Ya tienes una cuenta?",
@@ -518,9 +626,14 @@
       "Blog": "Blog",
       "MadeWith": "Fabricado con",
       "ForOrienteering": "para orientación"
+    },
+    "AppDataTable": {
+      "Empty": "No hay datos disponibles.",
+      "Loading": "Cargando datos...",
+      "Error": "No se pudieron cargar los datos."
     }
   },
-  "Molecules": {
+    "Molecules": {
     "DragDrop": {
       "ClickToUpload": "Haga clic para subir",
       "Delete": "Eliminar",
@@ -547,6 +660,19 @@
     "LanguageSelector": {
       "Title": "Idioma",
       "SelectLanguage": "Seleccionar idioma"
+    },
+    "EventSearchDialog": {
+      "Title": "Buscar eventos",
+      "Placeholder": "Buscar por nombre, ubicación, país u organizador...",
+      "Hint": "Prueba a buscar por: nombre del evento, ciudad, país u organizador",
+      "Searching": "Buscando eventos...",
+      "Organizer": "Organizador",
+      "Draft": "Borrador",
+      "NoEventsFound": "No se encontraron eventos para \"{{query}}\"",
+      "NoEventsHint": "Prueba a buscar por nombre del evento, ubicación, país u organizador",
+      "RecentEvents": "Eventos recientes:",
+      "StartTyping": "Empieza a escribir para buscar eventos",
+      "StartTypingHint": "Buscar por nombre del evento, ubicación, país u organizador"
     },
     "SearchBox": {
       "SearchResults": "Resultados de búsqueda"

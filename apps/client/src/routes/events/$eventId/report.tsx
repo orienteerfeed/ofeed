@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { EventReportPage } from '../../../pages';
-import { requireEventAccess } from '../../_guards';
+import { requireEventAccessOrForbidden } from '../../../lib/guards';
 
 export const Route = createFileRoute('/events/$eventId/report')({
-  beforeLoad: async ({ location, params }) => {
-    return await requireEventAccess({ location, params });
+  beforeLoad: async ({ params }) => {
+    return await requireEventAccessOrForbidden({ params });
   },
   component: RouteComponent,
 });

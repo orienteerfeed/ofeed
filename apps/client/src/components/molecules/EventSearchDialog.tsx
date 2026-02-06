@@ -10,6 +10,7 @@ import { useLazyQuery } from '@apollo/client/react';
 import { useNavigate } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDate, formatDateWithDay } from '../../lib/date';
 import { Button, CountryFlag, Input } from '../atoms';
 
@@ -70,6 +71,7 @@ interface EventSearchDialogProps {
 
 export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLDivElement>(null);
@@ -181,7 +183,9 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
         ref={searchRef}
       >
         <DialogHeader className="border-b p-6 pb-4">
-          <DialogTitle className="text-lg">Search Events</DialogTitle>
+          <DialogTitle className="text-lg">
+            {t('Molecules.EventSearchDialog.Title')}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="p-6 pb-4">
@@ -190,7 +194,7 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
             <Input
               ref={inputRef}
               type="search"
-              placeholder="Search by name, location, country, or organizer..."
+              placeholder={t('Molecules.EventSearchDialog.Placeholder')}
               value={searchQuery}
               onChange={handleInputChange}
               onKeyDown={handleInputKeyDown}
@@ -207,7 +211,7 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
           {/* Search hints */}
           {searchQuery.length === 0 && (
             <div className="mt-3 text-sm text-muted-foreground">
-              Try searching by: event name, city, country, or organizer
+              {t('Molecules.EventSearchDialog.Hint')}
             </div>
           )}
         </div>
@@ -215,14 +219,16 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
         <div className="flex-1 space-y-3 overflow-y-auto px-6 pb-6">
           {searchQuery.length > 0 ? (
             loading ? (
-              <div className="py-8 text-center text-muted-foreground">
-                <div className="flex items-center justify-center gap-3">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <span className="text-sm">Searching events...</span>
+                <div className="py-8 text-center text-muted-foreground">
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <span className="text-sm">
+                      {t('Molecules.EventSearchDialog.Searching')}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ) : displayEvents.length > 0 ? (
-              displayEvents.map((event: Event) => (
+              ) : displayEvents.length > 0 ? (
+                displayEvents.map((event: Event) => (
                 <button
                   key={event.id}
                   onClick={() => handleEventClick(event.id)}
@@ -239,10 +245,15 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
                           {formatDate(event.date)}
                         </div>
                         {event.organizer && (
-                          <div>Organizer: {event.organizer}</div>
+                          <div>
+                            {t('Molecules.EventSearchDialog.Organizer')}:{' '}
+                            {event.organizer}
+                          </div>
                         )}
                         {event.published === false && (
-                          <span className="text-orange-500">Draft</span>
+                          <span className="text-orange-500">
+                            {t('Molecules.EventSearchDialog.Draft')}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -256,10 +267,12 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
             ) : (
               <div className="py-8 text-center text-muted-foreground">
                 <div className="text-base mb-2">
-                  No events found for "{searchQuery}"
+                  {t('Molecules.EventSearchDialog.NoEventsFound', {
+                    query: searchQuery,
+                  })}
                 </div>
                 <div className="text-sm">
-                  Try searching by event name, location, country, or organizer
+                  {t('Molecules.EventSearchDialog.NoEventsHint')}
                 </div>
               </div>
             )
@@ -267,7 +280,9 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
             <div className="py-8 text-center text-sm text-muted-foreground">
               {events.length > 0 ? (
                 <>
-                  <div className="mb-6 text-lg font-medium">Recent events:</div>
+                  <div className="mb-6 text-lg font-medium">
+                    {t('Molecules.EventSearchDialog.RecentEvents')}
+                  </div>
                   <div className="space-y-4">
                     {events.map(event => (
                       <button
@@ -286,7 +301,10 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
                                 {formatDateWithDay(event.date)}
                               </div>
                               {event.organizer && (
-                                <div>Organizer: {event.organizer}</div>
+                                <div>
+                                  {t('Molecules.EventSearchDialog.Organizer')}:{' '}
+                                  {event.organizer}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -301,9 +319,11 @@ export const EventSearchDialog = ({ events = [] }: EventSearchDialogProps) => {
                 </>
               ) : (
                 <div className="space-y-2">
-                  <div className="text-base">Start typing to search events</div>
+                  <div className="text-base">
+                    {t('Molecules.EventSearchDialog.StartTyping')}
+                  </div>
                   <div className="text-sm">
-                    Search by event name, location, country, or organizer
+                    {t('Molecules.EventSearchDialog.StartTypingHint')}
                   </div>
                 </div>
               )}

@@ -348,7 +348,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     if (shouldLoadMore) {
       void handleLoadMore();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [inView, hasMore, loading, isLoadingMore, endCursor]);
 
   const handleLoadMore = async () => {

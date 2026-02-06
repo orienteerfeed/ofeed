@@ -1,4 +1,4 @@
-interface USBDevice {
+export interface USBDevice {
   readonly vendorId: number;
   readonly productId: number;
   readonly productName: string;
@@ -113,9 +113,13 @@ type USBRequestType = 'standard' | 'class' | 'vendor';
 type USBRecipient = 'device' | 'interface' | 'endpoint' | 'other';
 type USBTransferStatus = 'ok' | 'stall' | 'babble';
 
-interface Navigator {
-  usb?: {
-    requestDevice(options?: USBDeviceRequestOptions): Promise<USBDevice>;
-    getDevices(): Promise<USBDevice[]>;
-  };
+declare global {
+  interface Navigator {
+    usb?: {
+      requestDevice(options?: USBDeviceRequestOptions): Promise<USBDevice>;
+      getDevices(): Promise<USBDevice[]>;
+    };
+  }
 }
+
+export {};

@@ -7,7 +7,7 @@ import type {
 import { useAuthForRequest } from './useAuth';
 
 const log = config.REQUEST_LOGGING
-  ? (message: string, ...args: any[]) => {
+  ? (message: string, ...args: unknown[]) => {
       console.info(`[API] ${message}`, ...args);
     }
   : () => {};
@@ -90,7 +90,7 @@ export const useApi = () => {
 
   const post = async <T>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     options?: { skipAuth?: boolean }
   ): Promise<T> => {
     const url = `${config.BASE_API_URL}${endpoint}`;
@@ -109,7 +109,7 @@ export const useApi = () => {
 
   const put = async <T>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     options?: { skipAuth?: boolean }
   ): Promise<T> => {
     const url = `${config.BASE_API_URL}${endpoint}`;
@@ -145,7 +145,7 @@ export const useApi = () => {
 
   const patch = async <T>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     options?: { skipAuth?: boolean }
   ): Promise<T> => {
     const url = `${config.BASE_API_URL}${endpoint}`;

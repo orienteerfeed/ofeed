@@ -172,8 +172,15 @@ export const DragDropFile: React.FC<DragDropFileProps> = ({
 // Helper: gzip -> File .gz (fallback: no compression)
 async function gzipBlobToFile(blob: Blob, origName: string): Promise<File> {
   // Modern browsers: CompressionStream('gzip')
-  if (typeof (window as any).CompressionStream === 'function') {
-    const cs = new (window as any).CompressionStream('gzip');
+  type CompressionStreamCtor = new (
+    format: string
+  ) => TransformStream<Uint8Array, Uint8Array>;
+  const compressionStreamCtor = (
+    window as Window & { CompressionStream?: CompressionStreamCtor }
+  ).CompressionStream;
+
+  if (typeof compressionStreamCtor === 'function') {
+    const cs = new compressionStreamCtor('gzip');
     const gzStream = blob.stream().pipeThrough(cs);
     const gzBlob = await new Response(gzStream).blob();
     const name = origName.endsWith('.gz') ? origName : `${origName}.gz`;

@@ -8,7 +8,7 @@ export interface UploadedFile {
 
 export interface DragDropFileProps {
   eventId: string;
-  onUploadSuccess?: (response: any) => void;
+  onUploadSuccess?: (response: unknown) => void;
   maxFiles?: number;
   allowedFormats?: string[];
 }

@@ -15,8 +15,7 @@ export type CommonTranslationKeys =
   | 'ErrorMessage'
   | 'UploadFail'
   | 'Operations.Submit'
-  | 'Navigation.Back'
-  | 'Navigation.Home';
+  ;
 
 // Pro různé namespaces
 export type AuthTranslationKeys =

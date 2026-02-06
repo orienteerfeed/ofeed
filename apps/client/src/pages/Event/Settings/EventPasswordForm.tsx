@@ -119,8 +119,9 @@ export const EventPasswordForm: React.FC<EventPasswordFormProps> = ({
         body: JSON.stringify({
           eventId,
         }),
-        onSuccess: (response: ApiResponse) => {
-          const responseData = response.results?.data || response.data;
+        onSuccess: (response: unknown) => {
+          const apiResponse = response as ApiResponse;
+          const responseData = apiResponse.results?.data || apiResponse.data;
           if (!responseData) {
             throw new Error('No data in response');
           }
@@ -154,9 +155,9 @@ export const EventPasswordForm: React.FC<EventPasswordFormProps> = ({
             err &&
             typeof err === 'object' &&
             'errors' in err &&
-            Array.isArray((err as any).errors)
+            Array.isArray((err as { errors?: unknown }).errors)
           ) {
-            (err as any).errors.forEach((error: ApiError) => {
+            (err as { errors: ApiError[] }).errors.forEach((error: ApiError) => {
               toast({
                 title: t('Pages.Event.Password.Toast.UpdateFailTitle'),
                 description: `${error.param || 'unknown'}: ${error.msg || 'Unknown error'}`,
@@ -166,7 +167,7 @@ export const EventPasswordForm: React.FC<EventPasswordFormProps> = ({
           } else {
             const errorMessage =
               err && typeof err === 'object' && 'message' in err
-                ? (err as any).message
+                ? String((err as { message?: unknown }).message)
                 : 'Failed to generate password';
 
             toast({
@@ -229,9 +230,9 @@ export const EventPasswordForm: React.FC<EventPasswordFormProps> = ({
             err &&
             typeof err === 'object' &&
             'errors' in err &&
-            Array.isArray((err as any).errors)
+            Array.isArray((err as { errors?: unknown }).errors)
           ) {
-            (err as any).errors.forEach((error: ApiError) => {
+            (err as { errors: ApiError[] }).errors.forEach((error: ApiError) => {
               toast({
                 title: t('Pages.Event.Password.Toast.RevokeFailTitle'),
                 description: `${error.param || 'unknown'}: ${error.msg || 'Unknown error'}`,
@@ -241,7 +242,7 @@ export const EventPasswordForm: React.FC<EventPasswordFormProps> = ({
           } else {
             const errorMessage =
               err && typeof err === 'object' && 'message' in err
-                ? (err as any).message
+                ? String((err as { message?: unknown }).message)
                 : 'Failed to revoke password';
 
             toast({

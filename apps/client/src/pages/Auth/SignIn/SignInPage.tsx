@@ -116,12 +116,14 @@ export const SignInPage = () => {
 
         // Redirect po úspěšném přihlášení
         router.navigate({ to: '/' });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Login error:', error);
         toast({
           title: t('Errors.SignInFailedTitle', 'Sign-in failed'),
           description:
-            error?.message ?? t('Errors.Generic', 'Something went wrong'),
+            error instanceof Error
+              ? error.message
+              : t('Errors.Generic', 'Something went wrong'),
           variant: 'error',
         });
       }

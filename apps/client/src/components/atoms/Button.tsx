@@ -9,8 +9,7 @@ import * as React from 'react';
 export type ButtonVariantProps = VariantProps<typeof shadButtonVariants>;
 
 // The simplest and safest props type is whatever shadcn's Button already accepts:
-export interface ButtonProps
-  extends React.ComponentPropsWithoutRef<typeof ShadButton> {}
+export type ButtonProps = React.ComponentPropsWithoutRef<typeof ShadButton>;
 
 // Minimal passthrough wrapper (keeps shadcn styles/behavior)
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(

@@ -1,4 +1,4 @@
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from '@/components/organisms';
 import { Event } from '@/types/event';
 import { useNavigate } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
@@ -54,10 +54,8 @@ export const EventSplitsView: React.FC<EventSplitsViewProps> = ({
 
   if (!event.classes || event.classes.length === 0) {
     return (
-      <Alert>
-        <AlertDescription>
-          No classes available for this event.
-        </AlertDescription>
+      <Alert severity="warning" variant="outlined">
+        No classes available for this event.
       </Alert>
     );
   }
@@ -74,7 +72,9 @@ export const EventSplitsView: React.FC<EventSplitsViewProps> = ({
   return (
     <div className="space-y-6">
       {isRelay ? (
-        `Relay splits view coming soon`
+        <Alert severity="info" variant="outlined">
+          Relay splits view coming soon.
+        </Alert>
       ) : (
         <ClassIndividualSplit
           t={t}

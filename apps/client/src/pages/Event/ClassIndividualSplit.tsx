@@ -1,12 +1,12 @@
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from '@/components/organisms';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { gql } from '@apollo/client';
 import { useSubscription } from '@apollo/client/react';
 import { TFunction } from 'i18next';
-import { Loader2, Mountain, Route } from 'lucide-react';
+import { Mountain, Route } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { ClassSelect } from './ClassSelect';
+import { EventCategorySwitcher } from './EventCategorySwitcher';
 import { SplitChart } from './SplitChart';
 import { SplitTable } from './SplitTable';
 
@@ -108,63 +108,55 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
 
   if (!currentClass) {
     return (
-      <Alert>
-        <AlertDescription>
-          Please select a class to view split times.
-        </AlertDescription>
+      <Alert severity="info" variant="outlined">
+        Please select a class to view split times.
       </Alert>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="gap-1 py-1">
-              <Route className="w-3 h-3" />
-              {courseLengthInKm.toFixed(1)} km
-            </Badge>
-            {courseClimb && (
-              <Badge variant="secondary" className="gap-1 py-1">
-                <Mountain className="w-3 h-3" />
-                {courseClimb} m
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2
-              className={`w-4 h-4 ${loading ? 'animate-spin' : 'opacity-0'}`}
-            />
-            <span>
-              {competitors.length}{' '}
-              {t('Pages.Event.Tables.Competitors').toLowerCase()}
-            </span>
-          </div>
-
-          <ClassSelect
-            classes={event.classes}
-            selectedClass={selectedClass}
-            onClassChange={onClassChange}
-            currentClass={currentClass}
-          />
-        </div>
-      </div>
-
-      {/* Split view (Table / Chart) */}
+    <div className="space-y-4">
       <Tabs defaultValue="table" className="w-full">
-        <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground">
-          <TabsTrigger className="flex-1" value="table">
-            {t('Pages.Event.Splits.Table', 'Tabulka')}
-          </TabsTrigger>
-          <TabsTrigger className="flex-1" value="chart">
-            {t('Pages.Event.Splits.Chart', 'Graf')}
-          </TabsTrigger>
-        </TabsList>
+        <div className="sticky top-0 z-10 bg-background border-b border-border pb-2 mb-2">
+          <div className="flex items-center justify-between gap-2">
+            <TabsList className="flex h-7 items-center gap-1 rounded-md bg-muted p-0">
+              <TabsTrigger
+                className="h-7 px-2 py-0 gap-1 rounded-md text-xs font-medium transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow data-[state=active]:hover:bg-primary/90 data-[state=inactive]:hover:bg-accent data-[state=inactive]:hover:text-accent-foreground"
+                value="table"
+              >
+                {t('Pages.Event.Splits.Table', 'Tabulka')}
+              </TabsTrigger>
+              <TabsTrigger
+                className="h-7 px-2 py-0 gap-1 rounded-md text-xs font-medium transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow data-[state=active]:hover:bg-primary/90 data-[state=inactive]:hover:bg-accent data-[state=inactive]:hover:text-accent-foreground"
+                value="chart"
+              >
+                {t('Pages.Event.Splits.Chart', 'Graf')}
+              </TabsTrigger>
+            </TabsList>
+
+            <EventCategorySwitcher
+              classes={event.classes}
+              selectedClass={selectedClass}
+              onClassChange={onClassChange}
+              currentClass={currentClass}
+              competitorsCount={competitors.length}
+              loading={loading}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="gap-1 py-1">
+            <Route className="w-3 h-3" />
+            {courseLengthInKm.toFixed(1)} km
+          </Badge>
+          {courseClimb && (
+            <Badge variant="secondary" className="gap-1 py-1">
+              <Mountain className="w-3 h-3" />
+              {courseClimb} m
+            </Badge>
+          )}
+        </div>
 
         <TabsContent value="table" className="mt-4">
           <SplitTable

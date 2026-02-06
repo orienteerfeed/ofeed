@@ -159,7 +159,7 @@ export const DragDropContainer = ({
 
         onUpload(converted);
         if (fileRef.current) fileRef.current.value = '';
-      } catch (error) {
+      } catch {
         toast({
           title: t('Operations.Error', { ns: 'common' }),
           description: t('Molecules.DragDrop.Toast.ProcessingError'),

@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthStore>()(
       name: 'ofeed-auth',
       storage: createJSONStorage(() => localStorage),
       // Optional: migrate old storage format
-      migrate: (persistedState: any, version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
         if (version === 0) {
           // Migrace z předchozí verze pokud potřebujete
           return persistedState;

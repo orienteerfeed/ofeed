@@ -1,4 +1,4 @@
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from '@/components/organisms';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -57,7 +57,7 @@ interface ProcessedCompetitor extends Competitor {
 interface SplitTableProps {
   competitors: Competitor[];
   isLoading?: boolean;
-  error?: any;
+  error?: unknown;
 }
 
 interface LegPositionData {
@@ -376,12 +376,14 @@ const getCompetitorSortValue = (
       return competitor.loss ?? Infinity;
 
     case 'final-leg':
-      const lastSplitTime = competitor.splits.at(-1)?.time;
-      const finishTime = competitor.time;
-      if (lastSplitTime && finishTime) {
-        return finishTime - lastSplitTime;
+      {
+        const lastSplitTime = competitor.splits.at(-1)?.time;
+        const finishTime = competitor.time;
+        if (lastSplitTime && finishTime) {
+          return finishTime - lastSplitTime;
+        }
+        return Infinity;
       }
-      return Infinity;
 
     default:
       if (field.startsWith('leg-')) {
@@ -577,20 +579,22 @@ export const SplitTable: React.FC<SplitTableProps> = ({
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          Error loading split times: {error.message}
-        </AlertDescription>
+      <Alert
+        severity="error"
+        variant="outlined"
+        title="Error loading split times"
+      >
+        {error instanceof Error ? error.message : String(error)}
       </Alert>
     );
   }
 
   if (visibleCompetitors.length === 0) {
     return (
-      <Alert>
-        <AlertDescription>
-          No competitors with split times available for the selected class.
-        </AlertDescription>
+      <Alert severity="info" variant="outlined">
+        {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+          view: t('Pages.Event.Alert.ViewSplits'),
+        })}
       </Alert>
     );
   }

@@ -214,12 +214,14 @@ export const SignUpPage = () => {
 
         // Navigate to home page after successful registration
         router.navigate({ to: '/' });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Registration error:', error);
         toast({
           title: t('Errors.SignUpFailedTitle', 'Sign-up failed'),
           description:
-            error?.message ?? t('Errors.Generic', 'Something went wrong'),
+            error instanceof Error
+              ? error.message
+              : t('Errors.Generic', 'Something went wrong'),
           variant: 'error',
         });
       }

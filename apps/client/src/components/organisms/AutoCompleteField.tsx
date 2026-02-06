@@ -161,7 +161,7 @@ export const AutoCompleteField = forwardRef<
       setFieldError('');
     };
 
-    const handleBlur = (_e: React.FocusEvent<HTMLInputElement>) => {
+    const handleBlur = () => {
       // Delay hiding suggestions to allow for clicks
       setTimeout(() => setShowSuggestions(false), 200);
 

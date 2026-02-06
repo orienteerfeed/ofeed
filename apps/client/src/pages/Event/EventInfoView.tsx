@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatTimeToHms, getLocaleKey } from '@/lib/date';
 import { Event } from '@/types/event';
 import { Calendar, Clock, MapPin, Trophy, Users } from 'lucide-react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CountryFlag } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
@@ -14,6 +15,11 @@ interface EventInfoViewProps {
 export function EventInfoView({ event }: EventInfoViewProps) {
   const { t, i18n } = useTranslation();
   const localeKey = getLocaleKey(i18n.language);
+
+  const sortedClasses = React.useMemo(() => {
+    if (!event.classes) return [];
+    return [...event.classes].sort((a, b) => a.name.localeCompare(b.name));
+  }, [event.classes]);
   // Helper function to determine badge variant based on event status
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -143,14 +149,14 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                 </div>
                 <div className="mt-2">
                   <div className="flex flex-wrap gap-2 sm:hidden">
-                    {event.classes?.map(cls => (
+                    {sortedClasses.map(cls => (
                       <Badge key={cls.id} variant="secondary">
                         {cls.name}
                       </Badge>
                     ))}
                   </div>
                   <div className="hidden flex-wrap gap-2 sm:flex">
-                    {event.classes?.map(cls => (
+                    {sortedClasses.map(cls => (
                       <Badge key={cls.id} variant="secondary">
                         {cls.name}
                         {cls.length && ` • ${cls.length}m`}

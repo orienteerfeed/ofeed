@@ -1,23 +1,17 @@
 import { Button, Checkbox, Input } from '@/components/atoms';
+import { AppTableHeader, type AppTableColumn } from '@/components/organisms';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import {
-  ArrowUpDown,
-  CalendarIcon,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import type { ReactNode } from 'react';
+import { CalendarIcon, ChevronDown } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
-import { ColumnFilter, SortColumn } from './EventReportTable';
+import { ColumnFilter, SortColumn } from '@/types/reportTable';
 
 export type SelectOption = { value: string; label: string };
 export type DateRangeValue = {
@@ -29,6 +23,8 @@ export type DateRangeValue = {
 export type ReportTableHeaderProps = {
   sortConfig: { column: SortColumn; direction: 'asc' | 'desc' };
   onSort: (column: SortColumn) => void;
+  columnOrder: SortColumn[];
+  onColumnOrderChange?: (next: SortColumn[]) => void;
   columnFilters: Record<ColumnFilter, string>;
   onColumnFilterChange: (column: ColumnFilter, value: string) => void;
   onNumericFilterChange: (column: ColumnFilter, value: string) => void;
@@ -45,6 +41,8 @@ export type ReportTableHeaderProps = {
 export const ReportTableHeader = ({
   sortConfig,
   onSort,
+  columnOrder,
+  onColumnOrderChange,
   columnFilters,
   onColumnFilterChange,
   onNumericFilterChange,
@@ -58,195 +56,152 @@ export const ReportTableHeader = ({
   originOptions,
 }: ReportTableHeaderProps) => {
   const { t } = useTranslation();
-  return (
-    <TableHeader className="bg-muted/40">
-      <TableRow>
-        <TableHead className="w-10"></TableHead>
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.Id'),
-          'id',
-          sortConfig,
-          onSort,
-          () => (
-            <Input
-              placeholder={t('Pages.Event.Report.Filters.IdPlaceholder')}
-              value={columnFilters.id}
-              onChange={event =>
-                onNumericFilterChange('id', event.target.value)
-              }
-              inputMode="numeric"
-              type="number"
-              className="mt-2 h-8 bg-background text-xs"
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.DateTime'),
-          'createdAt',
-          sortConfig,
-          onSort,
-          () => (
-            <DateRangeFilter
-              value={dateRange}
-              onChange={onDateRangeChange}
-              label={t('Pages.Event.Report.Filters.DateRange')}
-              fromLabel={t('Pages.Event.Report.Filters.DateFrom')}
-              toLabel={t('Pages.Event.Report.Filters.DateTo')}
-              clearLabel={t('Pages.Event.Report.Filters.ClearSelection')}
-              timeFromLabel={t('Pages.Event.Report.Filters.TimeFrom' as any, {
-                defaultValue: 'Start time',
-              })}
-              timeToLabel={t('Pages.Event.Report.Filters.TimeTo' as any, {
-                defaultValue: 'End time',
-              })}
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.Type'),
-          'type',
-          sortConfig,
-          onSort,
-          () => (
-            <MultiSelectDropdown
-              placeholder={t('Pages.Event.Report.Filters.TypePlaceholder')}
-              options={typeOptions}
-              selected={typeFilters}
-              onChange={onTypeFiltersChange}
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.CompetitorId'),
-          'competitorId',
-          sortConfig,
-          onSort,
-          () => (
-            <Input
-              placeholder={t(
-                'Pages.Event.Report.Filters.CompetitorIdPlaceholder'
-              )}
-              value={columnFilters.competitorId}
-              onChange={event =>
-                onColumnFilterChange('competitorId', event.target.value)
-              }
-              className="mt-2 h-8 bg-background text-xs"
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.Lastname'),
-          'lastname',
-          sortConfig,
-          onSort,
-          () => (
-            <Input
-              placeholder={t('Pages.Event.Report.Filters.LastnamePlaceholder')}
-              value={columnFilters.lastname}
-              onChange={event =>
-                onColumnFilterChange('lastname', event.target.value)
-              }
-              className="mt-2 h-8 bg-background text-xs"
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.Firstname'),
-          'firstname',
-          sortConfig,
-          onSort,
-          () => (
-            <Input
-              placeholder={t('Pages.Event.Report.Filters.FirstnamePlaceholder')}
-              value={columnFilters.firstname}
-              onChange={event =>
-                onColumnFilterChange('firstname', event.target.value)
-              }
-              className="mt-2 h-8 bg-background text-xs"
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.PreviousValue'),
-          'previousValue',
-          sortConfig,
-          onSort,
-          () => (
-            <Input
-              placeholder={t(
-                'Pages.Event.Report.Filters.PreviousValuePlaceholder'
-              )}
-              value={columnFilters.previousValue}
-              onChange={event =>
-                onColumnFilterChange('previousValue', event.target.value)
-              }
-              className="mt-2 h-8 bg-background text-xs"
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.NewValue'),
-          'newValue',
-          sortConfig,
-          onSort,
-          () => (
-            <Input
-              placeholder={t('Pages.Event.Report.Filters.NewValuePlaceholder')}
-              value={columnFilters.newValue}
-              onChange={event =>
-                onColumnFilterChange('newValue', event.target.value)
-              }
-              className="mt-2 h-8 bg-background text-xs"
-            />
-          )
-        )}
-        {renderHeaderCell(
-          t('Pages.Event.Report.Table.Origin'),
-          'origin',
-          sortConfig,
-          onSort,
-          () => (
-            <MultiSelectDropdown
-              placeholder={t('Pages.Event.Report.Filters.OriginPlaceholder')}
-              options={originOptions}
-              selected={originFilters}
-              onChange={onOriginFiltersChange}
-            />
-          )
-        )}
-      </TableRow>
-    </TableHeader>
-  );
-};
-
-const renderHeaderCell = (
-  label: string,
-  column: SortColumn,
-  sortConfig: { column: SortColumn; direction: 'asc' | 'desc' },
-  onSort: (column: SortColumn) => void,
-  filterSlot: () => ReactNode
-) => {
-  const isActive = sortConfig.column === column;
-  const icon = !isActive ? (
-    <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
-  ) : sortConfig.direction === 'asc' ? (
-    <ChevronUp className="h-3.5 w-3.5" />
-  ) : (
-    <ChevronDown className="h-3.5 w-3.5" />
-  );
+  const columns: AppTableColumn<SortColumn>[] = [
+    {
+      id: 'id',
+      label: t('Pages.Event.Report.Table.Id'),
+      sortable: true,
+      filter: (
+        <Input
+          placeholder={t('Pages.Event.Report.Filters.IdPlaceholder')}
+          value={columnFilters.id}
+          onChange={event => onNumericFilterChange('id', event.target.value)}
+          inputMode="numeric"
+          type="number"
+          className="mt-2 h-8 bg-background text-xs"
+        />
+      ),
+    },
+    {
+      id: 'createdAt',
+      label: t('Pages.Event.Report.Table.DateTime'),
+      sortable: true,
+      filter: (
+        <DateRangeFilter
+          value={dateRange}
+          onChange={onDateRangeChange}
+          label={t('Pages.Event.Report.Filters.DateRange')}
+          fromLabel={t('Pages.Event.Report.Filters.DateFrom')}
+          toLabel={t('Pages.Event.Report.Filters.DateTo')}
+          clearLabel={t('Pages.Event.Report.Filters.ClearSelection')}
+          timeFromLabel={t('Pages.Event.Report.Filters.TimeFrom', {
+            defaultValue: 'Start time',
+          })}
+          timeToLabel={t('Pages.Event.Report.Filters.TimeTo', {
+            defaultValue: 'End time',
+          })}
+        />
+      ),
+    },
+    {
+      id: 'origin',
+      label: t('Pages.Event.Report.Table.Origin'),
+      sortable: true,
+      filter: (
+        <MultiSelectDropdown
+          placeholder={t('Pages.Event.Report.Filters.OriginPlaceholder')}
+          options={originOptions}
+          selected={originFilters}
+          onChange={onOriginFiltersChange}
+        />
+      ),
+    },
+    {
+      id: 'type',
+      label: t('Pages.Event.Report.Table.Type'),
+      sortable: true,
+      filter: (
+        <MultiSelectDropdown
+          placeholder={t('Pages.Event.Report.Filters.TypePlaceholder')}
+          options={typeOptions}
+          selected={typeFilters}
+          onChange={onTypeFiltersChange}
+        />
+      ),
+    },
+    {
+      id: 'lastname',
+      label: t('Pages.Event.Report.Table.Lastname'),
+      sortable: true,
+      filter: (
+        <Input
+          placeholder={t('Pages.Event.Report.Filters.LastnamePlaceholder')}
+          value={columnFilters.lastname}
+          onChange={event => onColumnFilterChange('lastname', event.target.value)}
+          className="mt-2 h-8 bg-background text-xs"
+        />
+      ),
+    },
+    {
+      id: 'firstname',
+      label: t('Pages.Event.Report.Table.Firstname'),
+      sortable: true,
+      filter: (
+        <Input
+          placeholder={t('Pages.Event.Report.Filters.FirstnamePlaceholder')}
+          value={columnFilters.firstname}
+          onChange={event =>
+            onColumnFilterChange('firstname', event.target.value)
+          }
+          className="mt-2 h-8 bg-background text-xs"
+        />
+      ),
+    },
+    {
+      id: 'competitorId',
+      label: t('Pages.Event.Report.Table.CompetitorId'),
+      sortable: true,
+      filter: (
+        <Input
+          placeholder={t('Pages.Event.Report.Filters.CompetitorIdPlaceholder')}
+          value={columnFilters.competitorId}
+          onChange={event =>
+            onColumnFilterChange('competitorId', event.target.value)
+          }
+          className="mt-2 h-8 bg-background text-xs"
+        />
+      ),
+    },
+    {
+      id: 'previousValue',
+      label: t('Pages.Event.Report.Table.PreviousValue'),
+      sortable: true,
+      filter: (
+        <Input
+          placeholder={t('Pages.Event.Report.Filters.PreviousValuePlaceholder')}
+          value={columnFilters.previousValue}
+          onChange={event =>
+            onColumnFilterChange('previousValue', event.target.value)
+          }
+          className="mt-2 h-8 bg-background text-xs"
+        />
+      ),
+    },
+    {
+      id: 'newValue',
+      label: t('Pages.Event.Report.Table.NewValue'),
+      sortable: true,
+      filter: (
+        <Input
+          placeholder={t('Pages.Event.Report.Filters.NewValuePlaceholder')}
+          value={columnFilters.newValue}
+          onChange={event => onColumnFilterChange('newValue', event.target.value)}
+          className="mt-2 h-8 bg-background text-xs"
+        />
+      ),
+    },
+  ];
 
   return (
-    <TableHead className="align-top py-3">
-      <button
-        type="button"
-        onClick={() => onSort(column)}
-        className="flex w-full items-center justify-between gap-2 text-left text-xs font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <span>{label}</span>
-        {icon}
-      </button>
-      {filterSlot()}
-    </TableHead>
+    <AppTableHeader
+      columns={columns}
+      columnOrder={columnOrder}
+      onColumnOrderChange={onColumnOrderChange}
+      sortConfig={sortConfig}
+      onSort={onSort}
+      leadingCellClassName="w-10"
+      leadingCell={<span className="sr-only">Select</span>}
+    />
   );
 };
 

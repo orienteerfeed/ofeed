@@ -8,13 +8,17 @@ interface CompetitorNameProps {
 }
 
 export const CompetitorName = ({ competitor }: CompetitorNameProps) => {
+  const firstname = competitor.firstname?.trim() ?? '';
+  const lastname = competitor.lastname?.trim() ?? '';
+  const hasLastname = lastname.length > 0;
+
   return (
     <>
       <span className="block sm:hidden">
-        {competitor.lastname} {competitor.firstname.charAt(0)}.
+        {hasLastname ? `${lastname} ${firstname.charAt(0)}.` : firstname}
       </span>
       <span className="hidden sm:block">
-        {competitor.lastname} {competitor.firstname}
+        {hasLastname ? `${lastname} ${firstname}` : firstname}
       </span>
     </>
   );

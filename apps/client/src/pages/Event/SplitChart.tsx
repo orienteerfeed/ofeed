@@ -1,4 +1,4 @@
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from '@/components/organisms';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -42,7 +42,7 @@ interface Competitor {
 interface SplitChartProps {
   competitors: Competitor[];
   isLoading?: boolean;
-  error?: any;
+  error?: unknown;
 }
 
 interface ChartPoint {
@@ -54,7 +54,11 @@ interface ChartPoint {
 // TODO: Use proper Recharts tooltip types from their definitions
 interface RechartsCustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: Array<{
+    dataKey?: string;
+    value?: number;
+    payload?: ChartPoint;
+  }>;
   label?: string | number;
 }
 
@@ -83,12 +87,13 @@ const makeCustomTooltip =
   (
     competitorsById: Record<string, Competitor>,
     positionsByLeg: PositionsByLeg
-  ) =>
-  ({ active, payload }: RechartsCustomTooltipProps) => {
+  ): React.FC<RechartsCustomTooltipProps> =>
+  ({ active, payload }) => {
     // Check if tooltip should be displayed
     if (!active || !payload?.length) return null;
 
     const first = payload[0];
+    if (!first?.payload) return null;
     const data = first.payload as ChartPoint;
 
     const legIndex = data.legIndex as number;
@@ -101,7 +106,7 @@ const makeCustomTooltip =
           Leg {legIndex} ({controlCode})
         </div>
         <div className="space-y-1">
-          {payload.map((entry: any) => {
+          {payload.map(entry => {
             if (!entry.dataKey) return null;
 
             const competitorId = entry.dataKey;
@@ -252,7 +257,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   ];
 
   // Memoized custom tooltip component
-  const customTooltip = useMemo(
+  const CustomTooltip = useMemo(
     () => makeCustomTooltip(competitorsById, positionsByLeg),
     [competitorsById, positionsByLeg]
   );
@@ -272,10 +277,12 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   // Error state
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          Error loading split chart: {error.message}
-        </AlertDescription>
+      <Alert
+        severity="error"
+        variant="outlined"
+        title="Error loading split chart"
+      >
+        {error instanceof Error ? error.message : String(error)}
       </Alert>
     );
   }
@@ -283,10 +290,10 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   // Empty state
   if (!chartData.length || !controlCodes.length) {
     return (
-      <Alert>
-        <AlertDescription>
-          No split data available to display the chart.
-        </AlertDescription>
+      <Alert severity="info" variant="outlined">
+        {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+          view: t('Pages.Event.Alert.ViewSplits'),
+        })}
       </Alert>
     );
   }
@@ -324,7 +331,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
                 }
               />
               {/* TODO: Fix TypeScript types for Recharts Tooltip content prop */}
-              <RechartsTooltip content={customTooltip as any} />
+              <RechartsTooltip content={<CustomTooltip />} />
               <Legend />
 
               {visibleCompetitors.map((c, idx) => (

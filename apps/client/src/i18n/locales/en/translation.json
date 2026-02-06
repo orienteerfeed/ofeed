@@ -106,15 +106,25 @@
         "Club": "Club",
         "Live": "Live"
       },
+      "Live": {
+        "Title": "Live Feed",
+        "Description": "Real-time updates will appear here during the event"
+      },
       "Alert": {
         "DemoTitle": "This is a demo app",
         "DemoDescription": "OFeed app is a demo app. If you face an issue please report it to Github issues, thanks.",
         "EventDataNotAvailableTitle": "Event Data Not Available",
-        "EventDataNotAvailableMessage": "No data is currently available for this event (start lists, registrations, courses, or results). Please check back later or contact the event organizer for more information."
+        "EventDataNotAvailableMessage": "No data is currently available for the {{view}} view. Please check back later or contact the event organizer for more information.",
+        "ViewResults": "results",
+        "ViewSplits": "splits",
+        "ViewClub": "clubs"
       },
       "Report": {
         "Title": "Changelog report",
         "Description": "Overview of status and card changes",
+        "CompetitorChangesTitle": "Changes for {{name}} (ID {{id}})",
+        "CompetitorChangesDescription": "All changes for the selected competitor in this event.",
+        "CompetitorChangesEmpty": "No changes found for this competitor.",
         "AutoRefresh": "Auto refresh: {{seconds}} s",
         "LastUpdated": "Last update: {{time}}",
         "NoTimestamp": "-",
@@ -518,6 +528,11 @@
       "Blog": "Blog",
       "MadeWith": "Made with",
       "ForOrienteering": "for orienteering"
+    },
+    "AppDataTable": {
+      "Empty": "No data available.",
+      "Loading": "Loading data...",
+      "Error": "Failed to load data."
     }
   },
   "Molecules": {
@@ -547,6 +562,19 @@
     "LanguageSelector": {
       "Title": "Language",
       "SelectLanguage": "Select language"
+    },
+    "EventSearchDialog": {
+      "Title": "Search events",
+      "Placeholder": "Search by name, location, country, or organizer...",
+      "Hint": "Try searching by: event name, city, country, or organizer",
+      "Searching": "Searching events...",
+      "Organizer": "Organizer",
+      "Draft": "Draft",
+      "NoEventsFound": "No events found for \"{{query}}\"",
+      "NoEventsHint": "Try searching by event name, location, country, or organizer",
+      "RecentEvents": "Recent events:",
+      "StartTyping": "Start typing to search events",
+      "StartTypingHint": "Search by event name, location, country, or organizer"
     },
     "SearchBox": {
       "SearchResults": "Search results"

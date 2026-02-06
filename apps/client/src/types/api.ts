@@ -8,7 +8,7 @@ export interface BaseApiResponse {
 }
 
 // Success response - matches your success() function
-export interface SuccessApiResponse<T = any> extends BaseApiResponse {
+export interface SuccessApiResponse<T = unknown> extends BaseApiResponse {
   error: false;
   results: T;
 }
@@ -34,7 +34,7 @@ export interface ValidationApiResponse extends BaseApiResponse {
 }
 
 // Union type for all possible API responses
-export type ApiResponse<T = any> =
+export type ApiResponse<T = unknown> =
   | SuccessApiResponse<T>
   | ErrorApiResponse
   | ValidationApiResponse;
@@ -55,24 +55,24 @@ export const isValidationResponse = (
   response.error && response.code === 422 && 'errors' in response;
 
 // Request state management
-export interface RequestState<T = any> {
+export interface RequestState<T = unknown> {
   data: T | null;
   isLoading: boolean;
   error: string | null;
 }
 
 export interface RequestOptions extends RequestInit {
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: unknown) => void;
   onError?: (error: string) => void;
   skipAuth?: boolean;
 }
 
-export interface UseRequestReturn<T = any> extends RequestState<T> {
+export interface UseRequestReturn<T = unknown> extends RequestState<T> {
   request: (url: string, options?: RequestOptions) => Promise<void>;
   clearError: () => void;
   clearData: () => void;
 }
 
-export interface UseFetchRequestReturn<T = any> extends UseRequestReturn<T> {
+export interface UseFetchRequestReturn<T = unknown> extends UseRequestReturn<T> {
   refetch: (optionsUpdate?: RequestOptions) => void;
 }

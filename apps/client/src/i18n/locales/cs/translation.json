@@ -106,15 +106,25 @@
         "Club": "Klub",
         "Live": "Živě"
       },
+      "Live": {
+        "Title": "Živé přenosy",
+        "Description": "Aktuální aktualizace se zde zobrazí během závodu"
+      },
       "Alert": {
         "DemoTitle": "Zkušební provoz",
         "DemoDescription": "Jedná se o první prototyp aplikace, který může obsahovat chyby. Budeme rádi za jejich reportování v Githubu.",
         "EventDataNotAvailableTitle": "Akce nemá k dispozici žádná data",
-        "EventDataNotAvailableMessage": "Pro tuto akci zatím nejsou dostupná žádná data (startovní listiny, přihlášky, tratě ani výsledky). Zkuste to prosím později nebo se informujte u pořadatele."
+        "EventDataNotAvailableMessage": "Pro zobrazení {{view}} zatím nejsou dostupná žádná data. Zkus to prosím později nebo se informuj u pořadatele.",
+        "ViewResults": "výsledků",
+        "ViewSplits": "mezičasů",
+        "ViewClub": "klubů"
       },
       "Report": {
         "Title": "Report změn",
         "Description": "Přehled změn stavů a čipů závodníků",
+        "CompetitorChangesTitle": "Změny pro {{name}} (ID {{id}})",
+        "CompetitorChangesDescription": "Všechny změny pro vybraného závodníka v rámci tohoto závodu.",
+        "CompetitorChangesEmpty": "Pro tohoto závodníka nebyly nalezeny žádné změny.",
         "AutoRefresh": "Automatická obnova: {{seconds}} s",
         "LastUpdated": "Poslední aktualizace: {{time}}",
         "NoTimestamp": "-",
@@ -148,7 +158,7 @@
           "FirstnamePlaceholder": "Filtr jméno",
           "PreviousValuePlaceholder": "Filtr původní hodnota",
           "NewValuePlaceholder": "Filtr nová hodnota",
-          "OriginPlaceholder": "Vyber origin",
+          "OriginPlaceholder": "Vyber původ",
           "SelectedCount": "{{count}} vybráno",
           "ClearSelection": "Vyčistit výběr"
         },
@@ -197,7 +207,7 @@
           "Firstname": "Jméno",
           "PreviousValue": "Původní hodnota",
           "NewValue": "Nová hodnota",
-          "Origin": "Origin"
+          "Origin": "Původ"
         }
       },
       "Settings": {
@@ -206,7 +216,7 @@
       "Detail": {
         "EventInformation": "Informace o závodu",
         "Date": "Datum",
-        "ZeroTime": "Nulový čas",
+        "ZeroTime": "Start nula",
         "Location": "Lokalita",
         "Organizer": "Pořadatel",
         "Classes": "Kategorie",
@@ -518,6 +528,11 @@
       "Blog": "Blog",
       "MadeWith": "Vytvořeno s",
       "ForOrienteering": "pro orientační sporty"
+    },
+    "AppDataTable": {
+      "Empty": "Tabulka neobsahuje žádná data.",
+      "Loading": "Načítání dat...",
+      "Error": "Nepodařilo se načíst data."
     }
   },
   "Molecules": {
@@ -547,6 +562,19 @@
     "LanguageSelector": {
       "Title": "Jazyk",
       "SelectLanguage": "Vybrat jazyk"
+    },
+    "EventSearchDialog": {
+      "Title": "Hledat události",
+      "Placeholder": "Hledejte podle názvu, místa, země nebo organizátora...",
+      "Hint": "Zkuste hledat podle: názvu události, města, země nebo organizátora",
+      "Searching": "Vyhledávání událostí...",
+      "Organizer": "Organizátor",
+      "Draft": "Návrh",
+      "NoEventsFound": "Nebyly nalezeny žádné události pro \"{{query}}\"",
+      "NoEventsHint": "Zkuste hledat podle názvu události, místa, země nebo organizátora",
+      "RecentEvents": "Nedávné události:",
+      "StartTyping": "Začněte psát pro vyhledání událostí",
+      "StartTypingHint": "Hledejte podle názvu události, místa, země nebo organizátora"
     },
     "SearchBox": {
       "SearchResults": "Výsledky hledání"

@@ -143,12 +143,14 @@ export const ResetPasswordPage = () => {
 
         // Redirect after successful login
         router.navigate({ to: '/' });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Password reset error:', error);
         toast({
           title: t('Errors.ResetPasswordFailedTitle', 'Reset password failed'),
           description:
-            error?.message ?? t('Errors.Generic', 'Something went wrong'),
+            error instanceof Error
+              ? error.message
+              : t('Errors.Generic', 'Something went wrong'),
           variant: 'error',
         });
       }

@@ -7,7 +7,7 @@ type AuthSession = NonNullable<Session>; // = { user: User }
 
 interface EventAuthUsers {
   authorId: number;
-  teamUserIds: number[];
+  teamUserIds?: number[];
 }
 
 interface GetEventAuthUsersResponse {
@@ -61,7 +61,27 @@ export async function requireEventAccess({
   const evt = await getEventAuthUsers(params.eventId);
   const allowed =
     evt.authorId === session.user.id ||
-    evt.teamUserIds.includes(session.user.id);
+    (evt.teamUserIds ?? []).includes(session.user.id);
+  if (!allowed) {
+    throw new ForbiddenError();
+  }
+  return { session, event: evt };
+}
+
+export async function requireEventAccessOrForbidden({
+  params,
+}: {
+  params: { eventId: string };
+}) {
+  const session = await getSession();
+  if (!session) {
+    throw new ForbiddenError();
+  }
+
+  const evt = await getEventAuthUsers(params.eventId);
+  const allowed =
+    evt.authorId === session.user.id ||
+    (evt.teamUserIds ?? []).includes(session.user.id);
   if (!allowed) {
     throw new ForbiddenError();
   }
@@ -85,7 +105,10 @@ async function getEventAuthUsers(eventId: string): Promise<EventAuthUsers> {
       throw new Error('Event not found');
     }
 
-    return result.data.event;
+    return {
+      authorId: result.data.event.authorId,
+      teamUserIds: [],
+    };
   } catch (error) {
     console.error('Failed to fetch event auth users:', error);
     throw new Error('Event fetch failed');

@@ -2,19 +2,19 @@ import { Button } from '@/components/atoms';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export type ReportPaginationProps = {
+export type AppPaginationProps = {
   page: number;
   pageSize: number;
   totalItems: number;
   onPageChange: (page: number) => void;
 };
 
-export const ReportPagination = ({
+export const AppPagination = ({
   page,
   pageSize,
   totalItems,
   onPageChange,
-}: ReportPaginationProps) => {
+}: AppPaginationProps) => {
   const { t } = useTranslation();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const canGoBack = page > 1;
