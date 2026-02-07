@@ -15,7 +15,11 @@ import prisma from '../../utils/context.js';
 import { requireEventOwner } from '../../utils/authz.js';
 import { encodeBase64, encrypt } from '../../utils/cryptoUtils.js';
 import { formatErrors } from '../../utils/errors.js';
-import { deletePublicObject, putPublicObject } from '../../utils/s3Storage.js';
+import {
+  deletePublicObject,
+  deletePublicObjectsByPrefix,
+  putPublicObject,
+} from '../../utils/s3Storage.js';
 import validateEvent from '../../utils/validateEvent.js';
 
 import {
@@ -659,15 +663,16 @@ router.delete('/:eventId', async (req, res) => {
   try {
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { authorId: true },
+      select: { authorId: true, featuredImageKey: true },
     });
 
     if (!event || event.authorId !== userId) {
       return res.status(403).json(errorResponse('Event not found', res.statusCode));
     }
 
-    // TODO: Check if the user has the right permissions to delete this event
-    // For example, ensure the userId matches the authorId of the event
+    await deleteAllEventData(eventId);
+
+    await deletePublicObjectsByPrefix(`events/${eventId}/`);
 
     await prisma.event.delete({
       where: { id: eventId },

@@ -597,7 +597,7 @@ export const deleteEventCompetitor = async (eventId, competitorId) => {
  *
  * @param {string} eventId - The ID of the event for which records should be deleted.
  * @throws {DatabaseError} If there is an error deleting records from the database.
- * @returns {string} Success message indicating the data has been deleted.
+ * @returns {Promise<string>} Success message indicating the data has been deleted.
  */
 export const deleteAllEventData = async eventId => {
   try {
