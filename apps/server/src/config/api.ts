@@ -1,0 +1,17 @@
+import { API_DEFAULTS } from "../constants";
+import env from "./env";
+
+export const API_PREFIX = API_DEFAULTS.BASE_PATH;
+
+export const API_CONFIG = {
+  PREFIX: API_PREFIX,
+  PAGINATION: {
+    DEFAULT_PAGE: API_DEFAULTS.DEFAULT_PAGE,
+    DEFAULT_LIMIT: API_DEFAULTS.DEFAULT_LIMIT,
+    MAX_LIMIT: API_DEFAULTS.MAX_LIMIT,
+  },
+  RATE_LIMITS: {
+    WINDOW_MS: env.RATE_LIMIT_WINDOW_MS,
+    MAX_REQUESTS: env.RATE_LIMIT_MAX,
+  },
+} as const;

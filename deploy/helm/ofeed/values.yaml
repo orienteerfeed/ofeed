@@ -1,0 +1,81 @@
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+api:
+  replicaCount: 1
+  image:
+    repository: ofeed-server
+    tag: local
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3001
+  env:
+    NODE_ENV: production
+    PORT: "3001"
+    CORS_ORIGIN: "http://localhost:3000"
+    CORS_METHODS: "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+    CORS_HEADERS: "Content-Type,Authorization,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url"
+    RATE_LIMIT_WINDOW_MS: "60000"
+    RATE_LIMIT_MAX: "100"
+    LOG_LEVEL: info
+    OPENAPI_DOC_PATH: "/doc"
+    OPENAPI_REFERENCE_PATH: "/reference"
+  podAnnotations: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+web:
+  replicaCount: 1
+  image:
+    repository: ofeed-client
+    tag: local
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  env: {}
+  podAnnotations: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations: {}
+  hosts:
+    - host: ofeed.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+vault:
+  enabled: true
+  role: ofeed-api
+  authPath: auth/kubernetes
+  secretPath: kv/data/ofeed/api
+  kvVersion: v2
+  injectFileName: api-env
+  databaseUrlKey: DATABASE_URL
+  jwtTokenSecretKey: JWT_TOKEN_SECRET_KEY
+
+migrations:
+  enabled: true
+  backoffLimit: 6
+  activeDeadlineSeconds: 600
+  hook:
+    enabled: true
+    events: post-install,post-upgrade
+    deletePolicy: before-hook-creation,hook-succeeded

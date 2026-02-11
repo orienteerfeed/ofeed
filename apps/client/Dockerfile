@@ -1,72 +1,39 @@
-# =============================================================================
-# BUILD STAGE
-# =============================================================================
-FROM node:22.22.0-alpine AS builder
+# syntax=docker/dockerfile:1.7
 
-# Set working directory
-WORKDIR /repo
+ARG NODE_VERSION=22.20.0
+ARG PNPM_VERSION=10.29.2
 
-# Pin pnpm version from the monorepo
-ARG PNPM_VERSION=10.20.0
+FROM node:${NODE_VERSION}-alpine AS builder
+ARG PNPM_VERSION
+WORKDIR /workspace
+ENV PNPM_HOME="/pnpm"
+ENV PNPM_STORE_DIR="/pnpm/store"
+ENV PATH="${PNPM_HOME}:${PATH}"
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
-# Speed up repeated installs
-ENV PNPM_STORE_DIR=/pnpm/store
-
-# Copy monorepo manifests (lock + workspace + all package.json files)
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
-# Copy client package.json
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY apps/client/package.json apps/client/package.json
-
-# Install only what the client app (and its local deps) needs
+COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
   pnpm install --frozen-lockfile --filter ./apps/client...
 
-# Copy source code
-COPY . .
+COPY apps/client apps/client
+COPY packages/shared packages/shared
 
-# Build the application
-RUN --mount=type=secret,id=client_env,target=/repo/apps/client/.env \
-    pnpm --filter ./apps/client... build
+RUN --mount=type=secret,id=client_env,target=/workspace/apps/client/.env \
+  pnpm --filter ./apps/client... run build
 
-# =============================================================================
-# PRODUCTION STAGE (NGINX)
-# =============================================================================
-FROM nginx:1.29.5-alpine AS production
+FROM nginx:1.29-alpine AS runner
+RUN apk add --no-cache gettext
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+COPY apps/client/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=builder /workspace/apps/client/dist /usr/share/nginx/html
 
-# Create required nginx runtime dirs
-RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run/nginx
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nginxuser -u 1001
-
-# Set permissions on required nginx directories
-RUN chown -R nginxuser:nodejs \
-    /usr/share/nginx \
-    /var/cache/nginx \
-    /var/log/nginx \
-    /var/run/nginx \
-    /etc/nginx
-
-# Copy custom nginx configuration
-COPY apps/client/nginx.conf /etc/nginx/nginx.conf
-
-# Copy built app to nginx
-COPY --from=builder /repo/apps/client/dist /usr/share/nginx/html
-
-# Switch to non-root user
-USER nginxuser
-
-# Expose port
+ENV PORT=80
+ENV API_UPSTREAM="http://api:3001"
 EXPOSE 80
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:80/ || exit 1
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 \
+  CMD wget -qO- http://localhost:${PORT}/healthz >/dev/null || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "envsubst '$API_UPSTREAM $PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]

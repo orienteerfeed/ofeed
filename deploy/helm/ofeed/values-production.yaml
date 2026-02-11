@@ -1,0 +1,98 @@
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets:
+  - name: regcred
+
+serviceAccount:
+  create: true
+  name: ofeed-api-vault
+  annotations: {}
+
+api:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/orienteerfeed/ofeed-server
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3001
+  env:
+    NODE_ENV: production
+    PORT: "3001"
+    CORS_ORIGIN: "https://ofeed.example.com"
+    CORS_METHODS: "GET,HEAD,POST,PUT,DELETE,OPTIONS"
+    CORS_HEADERS: "Content-Type,Authorization,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url"
+    RATE_LIMIT_WINDOW_MS: "60000"
+    RATE_LIMIT_MAX: "200"
+    LOG_LEVEL: info
+    OPENAPI_DOC_PATH: "/doc"
+    OPENAPI_REFERENCE_PATH: "/reference"
+  podAnnotations: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+web:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/orienteerfeed/ofeed-client
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  env: {}
+  podAnnotations: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  hosts:
+    - host: ofeed.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: ofeed-tls
+      hosts:
+        - ofeed.example.com
+
+vault:
+  enabled: true
+  role: ofeed-api
+  authPath: auth/kubernetes
+  secretPath: kv/data/ofeed/api
+  kvVersion: v2
+  injectFileName: api-env
+  databaseUrlKey: DATABASE_URL
+  jwtTokenSecretKey: JWT_TOKEN_SECRET_KEY
+
+migrations:
+  enabled: true
+  backoffLimit: 6
+  activeDeadlineSeconds: 600
+  hook:
+    enabled: true
+    events: post-install,post-upgrade
+    deletePolicy: before-hook-creation,hook-succeeded

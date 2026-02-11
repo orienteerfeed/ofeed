@@ -1,9 +1,17 @@
-version: '3'
 services:
   api:
-    image: ofeed-app
+    image: ofeed-server
     network_mode: host
-    build: .
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+      args:
+        NODE_VERSION: 22.20.0
+        PNPM_VERSION: 10.29.2
+    env_file: ./apps/server/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
     restart: unless-stopped
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - "host.docker.internal:host-gateway"

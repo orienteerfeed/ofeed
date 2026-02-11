@@ -2,10 +2,10 @@ services:
   api:
     labels:
       - traefik.enable=true
-      - traefik.http.routers.api.rule=Host(`${API_HOST?}`)
+      - traefik.http.routers.api.rule=Host(`api.ofeed.local`)
       - traefik.http.routers.api.entrypoints=https
       - traefik.http.routers.api.tls.certresolver=le
-      - traefik.http.services.api.loadbalancer.server.port=${SERVER_PORT:-3001}
+      - traefik.http.services.api.loadbalancer.server.port=3001
       - traefik.http.middlewares.api-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.api-redirect.redirectscheme.permanent=true
       - traefik.http.routers.api.middlewares=api-redirect
@@ -15,7 +15,7 @@ services:
   frontend:
     labels:
       - traefik.enable=true
-      - traefik.http.routers.frontend.rule=Host(`${FRONTEND_HOST?}`)
+      - traefik.http.routers.frontend.rule=Host(`ofeed.local`)
       - traefik.http.routers.frontend.entrypoints=https
       - traefik.http.routers.frontend.tls.certresolver=le
       - traefik.http.services.frontend.loadbalancer.server.port=80

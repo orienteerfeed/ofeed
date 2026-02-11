@@ -11,8 +11,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@ofeed/database": ["./packages/database"],
-      "@ofeed/ui": ["./packages/ui"]
+      "@repo/shared": ["./packages/shared/src/index.ts"],
+      "@repo/shared/*": ["./packages/shared/src/*"]
     }
   }
 }

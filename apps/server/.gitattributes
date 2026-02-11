@@ -3,6 +3,7 @@
 
 # Convert text file line endings to lf
 *.js text diff=javascript
+*.ts text diff=typescript
 *.graphql diff=graphql
 *.json diff=json
 *.md diff=markdown
@@ -19,4 +20,4 @@ yarn.lock eol=lf
 # Here, we normalize to LF (Linux/Mac) across platforms
 /prisma/*.prisma text eol=lf
 /prisma/migrations/** text eol=lf
-/prisma/seed.js text eol=lf
+/prisma/seed.ts text eol=lf

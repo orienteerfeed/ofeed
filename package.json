@@ -1,30 +1,41 @@
 {
   "name": "ofeed-monorepo",
   "version": "1.0.0",
+  "license": "GPL-3.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "setup:dev": "node scripts/setup-dev.mjs",
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
+    "test:watch": "turbo run test:watch --parallel",
+    "test:client": "pnpm --filter ./apps/client test",
+    "test:server": "pnpm --filter ./apps/server test",
     "clean": "turbo run clean",
     "db:generate": "turbo run db:generate",
-    "db:migrate": "turbo run db:migrate"
+    "db:migrate": "turbo run db:migrate",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.54.0",
-    "@typescript-eslint/parser": "^8.54.0",
+    "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
-    "prettier": "^3.6.2",
+    "eslint-plugin-import": "^2.32.0",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.8.3",
+    "turbo": "^2.8.4",
     "typescript": "^5.9.3"
   },
-  "packageManager": "pnpm@10.20.0",
+  "packageManager": "pnpm@10.29.2+sha512.bef43fa759d91fd2da4b319a5a0d13ef7a45bb985a3d7342058470f9d2051a3ba8674e629672654686ef9443ad13a82da2beb9eeb3e0221c87b8154fff9d74b8",
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": "10.20.0"
+    "pnpm": ">=10.20.0 <11"
   }
 }

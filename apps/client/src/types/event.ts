@@ -1,5 +1,6 @@
 import { Country } from './country';
 import { User } from './user';
+import type { EventPassword as SharedEventPassword, Sport as SharedEventSport } from '@repo/shared';
 export type EventFilter =
   | 'all'
   | 'ongoing'
@@ -71,10 +72,7 @@ export interface EventsFilterParams {
   sort?: 'date' | 'name' | 'distance' | 'popularity';
 }
 
-export interface EventSport {
-  id: number;
-  name: string;
-}
+export type EventSport = SharedEventSport;
 
 export type EventDiscipline = 'middle' | 'long' | 'sprint' | 'relay';
 
@@ -86,10 +84,9 @@ export interface EventQueryVariables {
   eventId: string;
 }
 
-export interface EventPassword {
-  password: string;
+export type EventPassword = Pick<SharedEventPassword, 'password'> & {
   expiresAt: string;
-}
+};
 
 export interface EventFormData {
   id?: string;

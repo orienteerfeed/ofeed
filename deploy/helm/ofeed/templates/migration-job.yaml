@@ -1,0 +1,56 @@
+{{- if .Values.migrations.enabled -}}
+{{- if not .Values.vault.enabled -}}
+{{- fail "vault.enabled must be true; migration job also expects secrets from HashiCorp Vault" -}}
+{{- end -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ofeed.fullname" . }}-migrate
+  labels:
+    {{- include "ofeed.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
+  {{- if .Values.migrations.hook.enabled }}
+  annotations:
+    "helm.sh/hook": {{ .Values.migrations.hook.events | quote }}
+    "helm.sh/hook-delete-policy": {{ .Values.migrations.hook.deletePolicy | quote }}
+  {{- end }}
+spec:
+  backoffLimit: {{ .Values.migrations.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migrations.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "ofeed.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: {{ required "vault.role is required" .Values.vault.role | quote }}
+        vault.hashicorp.com/auth-path: {{ required "vault.authPath is required" .Values.vault.authPath | quote }}
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/agent-inject-secret-{{ .Values.vault.injectFileName }}: {{ required "vault.secretPath is required" .Values.vault.secretPath | quote }}
+        vault.hashicorp.com/agent-inject-template-{{ .Values.vault.injectFileName }}: |
+          {{- include "ofeed.vaultTemplate" (dict "path" .Values.vault.secretPath "kvVersion" .Values.vault.kvVersion "databaseUrlKey" .Values.vault.databaseUrlKey "jwtTokenSecretKey" .Values.vault.jwtTokenSecretKey) | nindent 10 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "ofeed.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          command:
+            - sh
+            - -ec
+          args:
+            - |
+              . /vault/secrets/{{ .Values.vault.injectFileName }}
+              for i in 1 2 3 4 5 6 7 8 9 10; do
+                pnpm exec prisma migrate deploy && exit 0
+                echo "migration attempt ${i} failed, retrying in 5s..."
+                sleep 5
+              done
+              exit 1
+{{- end }}

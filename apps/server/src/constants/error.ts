@@ -1,0 +1,6 @@
+export const ERROR_CODES = {
+  INTERNAL: "E5000",
+  NOT_FOUND: "E1404",
+  VALIDATION: "E1422",
+  SERVICE_UNAVAILABLE: "E1503",
+} as const;

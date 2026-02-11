@@ -1,72 +1,31 @@
-# Dependencies
+.git
+.github
+.husky
+.pnpm-store
+.turbo
+.vscode
+**/.DS_Store
+**/*.log
+
+docs
+deploy
+CHANGELOG.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+
 node_modules
 **/node_modules
-npm-debug.log
-yarn-error.log
-pnpm-debug.log
-
-# Build outputs
-dist
-build
-.next
-.nuxt
-out
-.output
+**/.turbo
 **/dist
-**/build
+**/coverage
 
-# Testing
-coverage
-.nyc_output
-*.log
+apps/*/.env
+apps/*/.env.*
+!apps/server/.env.example
+!apps/client/.env.example
 
-# Environment files
-.env
-.env*.local
-**/.env
-**/.env*.local
-
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Git
-.git
-.gitignore
-.gitattributes
-
-# CI/CD
-.github
-.gitlab-ci.yml
-.travis.yml
-
-# Documentation
-README.md
-CHANGELOG.md
-LICENSE
-docs
-
-# Docker
-Dockerfile
-docker-compose*.yml
-.dockerignore
-
-# Development
-*.md
-.editorconfig
-.eslintrc*
-.prettierrc*
-tsconfig*.json
-
-# OS
-Thumbs.db
-.DS_Store
-
-# Temporary files
+**/*.tsbuildinfo
 tmp
 temp
-*.tmp
+apps/server/logs
+mysql-data

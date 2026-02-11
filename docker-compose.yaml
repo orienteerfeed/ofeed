@@ -3,51 +3,52 @@ name: ofeed
 services:
   api:
     image: ofeed-server
-    container_name: ofeed-server
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
       args:
-        NODE_ENV: production
+        NODE_VERSION: 22.20.0
+        PNPM_VERSION: 10.29.2
     env_file: ./apps/server/.env
     ports:
-      - "${SERVER_PORT:-3001}:3001"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
     networks:
       - app-network
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -f http://localhost:${SERVER_PORT:-3001}/readyz || exit 1",
-        ]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/live >/dev/null || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
 
   frontend:
     image: ofeed-client
-    container_name: ofeed-client
     build:
       context: .
       dockerfile: ./apps/client/Dockerfile
       args:
-        NODE_ENV: production
+        NODE_VERSION: 22.20.0
+        PNPM_VERSION: 10.29.2
       secrets:
         - client_env
     env_file: ./apps/client/.env
-    environment:
-      API_URL: http://api:3001
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "3000:80"
     restart: unless-stopped
     networks:
       - app-network
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/healthz >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
 secrets:
   client_env:

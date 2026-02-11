@@ -1,0 +1,51 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "envMode": "strict",
+  "globalEnv": [
+    "NODE_ENV",
+    "PORT",
+    "API_BASE_URL",
+    "DATABASE_URL",
+    "CORS_ORIGIN",
+    "CORS_METHODS",
+    "CORS_HEADERS",
+    "RATE_LIMIT_WINDOW_MS",
+    "RATE_LIMIT_MAX",
+    "VITE_API_BASE_URL",
+    "VITE_PUBLIC_URL",
+    "VITE_DEBUG_LOGGING",
+    "VITE_DEFAULT_LANGUAGE"
+  ],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "build/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "type-check": {
+      "dependsOn": ["^type-check"]
+    },
+    "test": {
+      "dependsOn": ["^test"]
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    }
+  }
+}

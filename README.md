@@ -3,154 +3,192 @@
 [![Nodejs Version](https://img.shields.io/badge/node.js-22.20%20LTS-green.svg)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 
-"OrienteerFeed" is designed to be a dynamic and interactive web API platform which is specifically made for the orienteering community. Delivering real-time updates, live tracking, and a continuous stream of information about orienteering events is its key service.
+OrienteerFeed (OFeed) is a monorepo web platform for orienteering event data, combining REST + GraphQL APIs, real-time event workflows, and a modern React frontend.
 
-⭐ Star us on GitHub — it motivates us a lot!
+## Tech Stack
 
-[![](https://dcbadge.limes.pink/api/server/https://discord.gg/YWURC23tHZ)](https://discord.gg/YWURC23tHZ)
+- Client: Vite + React + TypeScript
+- Server: Hono + TypeScript + Prisma (MariaDB adapter)
+- UI: shadcn/ui + Tailwind CSS
+- Data and Routing: TanStack Query + TanStack Router
+- i18n: i18next + react-i18next
+- Monorepo: pnpm workspaces + Turborepo
+- Shared: `@repo/shared` (shared schemas/types)
 
-## How It Works
+## Repository Layout
 
-This application is like a digital hub for all things related to orienteering events. It serves as a one-stop platform where you can get details about various events, the classes offered at these events, and the competitors participating in them. It provides these services through a web server and is capable of communicating using both RESTful APIs and GraphQL, which are two ways of fetching data from a server.
+```text
+apps/
+  client/    # Vite + React application
+  server/    # Hono + Prisma API
+packages/
+  shared/    # shared schemas/types
+```
 
-### Key Components
+## Requirements
 
-- Web Server: Built on Node.js and Express, this server acts as the central point that handles all requests from users' browsers or apps. It processes these requests and sends back the required information.
-- RESTful API: This is a set of URLs (like links you click on the web) that you can access to get data about events, competitors, etc. For example, you might have a URL to get a list of all events and another to get detailed information about a specific event. You can access the API documentation by visiting `[server]/api-docs` in your web browser. This documentation is presented in the Swagger format, which provides a clear and interactive way of understanding the available API endpoints, their required parameters, and the responses they return. This tool also allows you to directly test API requests from within the documentation interface to see real-time responses from the server.
-- GraphQL API: Unlike the RESTful API where each type of data might have its URL, GraphQL allows you to send queries to a single endpoint to fetch exactly the data you need. For example, you could ask for the names of all competitors in a specific class without getting any other unnecessary data. Explore and interact with our GraphQL API using the Apollo Sandbox by navigating to `[server]/graphql` in your web browser. The Apollo Sandbox provides an intuitive, interactive environment where you can construct and test your GraphQL queries and mutations directly against our live data.
-- Persistence Storage: This is where all the data about events, classes, competitors, etc., is stored. Each time you make a query, the server retrieves data from this storage. It is set up using the MariaDB database.
-- Our application secures sensitive operations, such as adding or modifying event details, through a robust user authentication system. Users are required to log in to gain access to these features. Authentication is managed using [JSON Web Tokens (JWT)](https://jwt.io/), a secure method that helps ensure that only authorized users can perform certain actions.
-  - When a user logs in, they receive a JWT that encapsulates their user credentials and permissions.
-  - This token must be included as a Bearer token in the headers of HTTP requests made to the API for operations that modify data.
-  - The server validates this token to ensure it is valid and checks if the user has the right permissions to perform the requested action.
-- XML Processing: The app can handle IOF-XML v3 data, which is a standard format for organizing data. This is useful for uploading and downloading data about entries or results from different systems that use [IOF-XML](https://github.com/international-orienteering-federation/datastandard-v3).
+- Node.js version pinned in `.nvmrc` (`22.20.0`)
+- pnpm `>=10.20.0 <11` (recommended: `10.29.2`)
 
-## Development
-
-We will be using [Node.js](https://nodejs.org/) v22.20.0 (current LTS).
-New JavaScript features (ES2015) are "enabled". Can be used with promises, ES6 generators and async/await using [Babel](https://babeljs.io/).
-
-### NodeJS Express
-
-- **[Express docs](https://expressjs.com/en/starter/hello-world.html)**
-
-### Local development
-
-Clone the git repo, install dependencies, and deploy database schema.
-To clone and run this application, you'll need Git, Node.js (which comes with npm) and pnpm package manager installed on your computer. For consistent development and deployment environments, this project specifies a required Node.js version in the [.nvmrc](./.nvmrc) file. It is recommended to manage your Node.js installation using [Node Version Manager](https://github.com/nvm-sh/nvm) (nvm), which helps ensure that you are using the exact version of Node.js needed for this project. 
-
-> This repo using pnpm as package manager. If you don't have pnpm or
-> have a different version, use Corepack (part of Node ≥16.13;
-> recommended):
-> 
-> ```bash
-> # Enable Corepack and activate the exact pnpm version required by the repo
-> 
-> corepack enable
-> corepack prepare  pnpm@10.20.0  --activate
-> 
-> # Verify
-> pnpm -v  # should print 10.20.0
-> ```
-> 
-> Fallback (not recommended, only if Corepack is unavailable):
-> 
-> ```bash
-> npm i  -g  pnpm@10.20.0
-> pnpm -v
-> ```
-
-**From your command line:**
+Use nvm to install and activate the exact Node.js version from `.nvmrc`:
 
 ```bash
-# Clone this repository
+nvm install
+nvm use
+```
+
+Use Corepack:
+
+```bash
+corepack enable
+corepack prepare pnpm@10.29.2 --activate
+pnpm -v
+```
+
+## Quick Start (Local Development)
+
+```bash
 git clone https://github.com/orienteerfeed/ofeed.git
-# Go into the repository
 cd ofeed
-# Install root dependencies
-# (Root dependencies include shared development tools like Prettier and ESLint,
-# which are used for code formatting, linting, and maintaining a consistent code style
-# across both the client and server applications. These tools are not needed in production
-# but are essential for a clean and maintainable codebase during development.)
-pnpm install
-```
-> If you are migrating from npm/yarn, delete `package-lock.json`/`yarn.lock` and `node_modules`.
-> The lockfile for pnpm is `pnpm-lock.yaml`.
-
-#### Server
-
-```bash
-# Go into the app folder
-cd apps/server
-
-# Create .env from template and fill in the credentials to your database and keys to 3rd party.
-cp .env.example .env
-
-# Deploy database schema
-pnpm exec prisma migrate deploy
-pnpm exec prisma generate
-pnpm exec prisma db seed
-
-# Run the app
-pnpm start:dev
+pnpm setup:dev
 ```
 
-#### Client
+`pnpm setup:dev`:
+
+- installs dependencies
+- creates `apps/server/.env` from `apps/server/.env.example` (if missing)
+- creates `apps/client/.env` from `apps/client/.env.example` (if missing)
+
+Then run:
 
 ```bash
-# Go into the app folder
-cd apps/client
-# Create .env from template and fill in the base url for backend api service.
-cp .env.example .env
-# Run the app
+docker compose -f docker-compose.mysql.yaml up -d mysql
+pnpm db:generate
+pnpm db:migrate
 pnpm dev
 ```
 
-#### How to update database schema
+Default local URLs:
 
-1. Modify your `./apps/server/prisma/schema.prisma` file to reflect the changes you want in your [database schema](https://www.prisma.io/docs/orm/prisma-schema/data-model/models). This could involve adding new models, updating existing models, or deleting models. For example, to add a new model:
+- Client: `http://localhost:3000`
+- API: `http://localhost:3001`
+- GraphQL: `http://localhost:3001/graphql`
+- OpenAPI JSON: `http://localhost:3001/doc`
+- API Reference UI: `http://localhost:3001/reference`
+- Health: `http://localhost:3001/health`
+- Metrics (Prometheus): `http://localhost:3001/metrics`
 
-```
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-}
-```
+## Development Commands (Root)
 
-2. Generate Migration
+- `pnpm setup:dev` - bootstrap local dev environment
+- `pnpm dev` - run client + server in parallel via Turborepo
+- `pnpm build` - build all workspace packages/apps
+- `pnpm lint` - lint all workspace packages/apps
+- `pnpm format` - format repo files with Prettier
+- `pnpm format:check` - check formatting
+- `pnpm type-check` - type-check all packages/apps
+- `pnpm test` - run tests across workspace
+- `pnpm test:watch` - run tests in watch mode (parallel)
+- `pnpm test:client` - run only client tests
+- `pnpm test:server` - run only server tests
+- `pnpm db:generate` - run prisma generate via turbo
+- `pnpm db:migrate` - run prisma migrate via turbo
+- `pnpm clean` - clean turbo outputs
 
-```
-pnpm exec prisma migrate dev --name your_migration_name
-```
+## App-Level Commands
 
-## Docker compose
+### Server (`apps/server`)
+
+- `pnpm dev` / `pnpm start:dev` - run API in watch mode
+- `pnpm test` / `pnpm test:watch`
+- `pnpm lint` / `pnpm lint:fix`
+- `pnpm db:generate`
+- `pnpm db:migrate`
+- `pnpm db:migrate:deploy`
+- `pnpm db:seed`
+
+### Client (`apps/client`)
+
+- `pnpm dev`
+- `pnpm build`
+- `pnpm test` / `pnpm test:watch`
+- `pnpm lint` / `pnpm lint:fix`
+- `pnpm e2e`
+
+## Database and Prisma
+
+- Prisma schema: `apps/server/prisma/schema.prisma`
+- Prisma Client output is generated into: `apps/server/src/generated/prisma`
+- ORM: Prisma v7 with MariaDB adapter (`@prisma/adapter-mariadb`)
+
+## Docker Compose
+
+This repository does not require root `.env` for application runtime.
+Use app-level env files:
+
+- `apps/server/.env`
+- `apps/client/.env`
+
+Create them from examples:
 
 ```bash
-# Create server and client env files
-Create apps/server/.env from the template in apps/server/.env.example and fill in the credentials to your database and keys to 3rd party.
-Create apps/client/.env from the template in apps/client/.env.example and fill in the base url for backend api service.
-# Start the OFeed platform with one command, docker must be running (e.g. Docker Desktop)
-docker compose up -d
+cp apps/server/.env.example apps/server/.env
+cp apps/client/.env.example apps/client/.env
 ```
+
+Start full app stack:
+
+```bash
+docker compose up -d --build
+```
+
+Available compose overlays:
+
+- `docker-compose.mysql.yaml` - local MySQL/MariaDB-compatible DB
+- `docker-compose.minio.yaml` - local MinIO + init
+- `docker-compose.traefik.yaml` - Traefik labels/integration
+- `docker-compose.scaled.yaml` - static replicas for api/frontend
+- `docker-compose.infra.yaml` - attach shared external network
+- `docker-compose.remote.yaml` - host networking variant (API)
+
+## Helm / k3s Deployment
+
+- Helm chart: `deploy/helm/ofeed`
+- Deployment guide: `docs/DEPLOYMENT_K3S.md`
+
+## CI/CD and Versioning Flow
+
+### Automated versioning and GitHub releases
+
+Releases are automated from `main` via `semantic-release` (`.github/workflows/release.yaml`):
+
+- `fix:` -> patch bump (`x.y.Z`)
+- `feat:` -> minor bump (`x.Y.0`)
+- `BREAKING CHANGE` (or `feat!:` / `fix!:`) -> major bump (`X.0.0`)
+
+On release, CI automatically:
+
+1. updates root version in `package.json`
+2. updates `CHANGELOG.md`
+3. creates git tag `vX.Y.Z`
+4. creates GitHub Release
+
+### Docker image publishing
+
+Docker images are published by `.github/workflows/publish-images-ghcr.yaml` on tag `v*` to GHCR:
+
+- `ghcr.io/orienteerfeed/ofeed-server`
+- `ghcr.io/orienteerfeed/ofeed-client`
+
+Packages are published as private by default.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
-
-1. Create your feature branch: `git checkout -b Feature/my-new-feature`
-2. Commit your changes: `git commit -am 'Add some feature'`
-3. Push to the branch: `git push origin Feature/my-new-feature`
-4. Submit a pull request :D
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution process and standards.
 
 ## Changelog
 
-In separate file [CHANGELOG.md](CHANGELOG.md). Please [keep a CHANGELOG](https://keepachangelog.com/).
-
-This project adheres to [Semantic Versioning](https://semver.org/).
+See [CHANGELOG.md](./CHANGELOG.md).
 
 ## Credits
 
@@ -160,4 +198,4 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## License
 
-[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](/LICENSE)
+[GPL-3.0](./LICENSE)

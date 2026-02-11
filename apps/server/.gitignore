@@ -1,3 +1,12 @@
+# dev
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/*.code-snippets
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf
+
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -31,6 +40,7 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 lerna-debug.log*
 /log/*
 !/log/.gitkeep
@@ -79,3 +89,16 @@ experimental/**/*.db
 
 .codegpt
 .certificates/
+
+# misc
+.DS_Store
+
+
+# docker
+volumes/
+
+# prisma
+# Old location (Prisma 6.x)
+/generated/prisma
+# New location (Prisma 7.x - in src)
+/src/generated/prisma

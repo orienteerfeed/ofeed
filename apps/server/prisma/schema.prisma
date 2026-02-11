@@ -2,13 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["fullTextIndex"]
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // datasource db {
@@ -17,21 +16,21 @@ datasource db {
 // }
 
 model Country {
-  countryCode String @id @db.Char(2)
+  countryCode String  @id @db.Char(2)
   countryName String
   events      Event[]
 }
 
 model RankingCzech {
-  id            Int     @id @default(autoincrement()) @db.UnsignedInt
-  place         Int
-  firstName     String
-  lastName      String
-  registration  String  @unique @db.VarChar(10)
-  points        Int
-  rankIndex     Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  place        Int
+  firstName    String
+  lastName     String
+  registration String   @unique @db.VarChar(10)
+  points       Int
+  rankIndex    Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Sport {
@@ -41,52 +40,53 @@ model Sport {
 }
 
 model User {
-  id        Int      @id @default(autoincrement()) @db.UnsignedInt
-  email     String   @unique
-  firstname String
-  lastname  String
-  organisation String?
-  password  String   @db.VarChar(255)
-  active    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  events    Event[]
-  protocols Protocol[]
-  oAuthClients OAuthClient[]
-  oAuthAccessToken OAuthAccessToken[]
+  id                     Int                      @id @default(autoincrement()) @db.UnsignedInt
+  email                  String                   @unique
+  firstname              String
+  lastname               String
+  organisation           String?
+  password               String                   @db.VarChar(255)
+  active                 Boolean                  @default(false)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  events                 Event[]
+  protocols              Protocol[]
+  oAuthClients           OAuthClient[]
+  oAuthAccessToken       OAuthAccessToken[]
   oAuthAuthorizationCode OAuthAuthorizationCode[]
-  oAuthRefreshToken OAuthRefreshToken[]
+  oAuthRefreshToken      OAuthRefreshToken[]
 }
 
 model Event {
-  id        String   @id @default(cuid())
-  sport     Sport    @relation(fields: [sportId], references: [id])
-  sportId   Int      @db.UnsignedInt
-  name      String
-  organizer String?
-  date      DateTime @db.Date
-  timezone  String   @default("Europe/Prague")
-  location  String?
-  latitude  Float?   // GPS Latitude (nullable)
-  longitude Float?   // GPS Longitude (nullable)
-  countryId String?  @db.Char(2)
-  country   Country? @relation(fields: [countryId], references: [countryCode])
-  featuredImageKey String? @db.VarChar(512)
-  zeroTime  DateTime @db.DateTime()
-  relay     Boolean  @default(false)
-  startMode StartMode @default(Individual)
-  ranking   Boolean  @default(false)
-  coefRanking Float?
-  hundredthPrecision Boolean  @default(false) // Measure finish time in hundredths of a second
-  published Boolean  @default(false)
-  demo      Boolean  @default(false)
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?     @db.UnsignedInt
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  classes   Class[]
-  protocols Protocol[]
-  eventPasswords EventPassword[]
+  id                 String          @id @default(cuid())
+  sport              Sport           @relation(fields: [sportId], references: [id])
+  sportId            Int             @db.UnsignedInt
+  name               String
+  organizer          String?
+  date               DateTime        @db.Date
+  timezone           String          @default("Europe/Prague")
+  location           String?
+  latitude           Float? // GPS Latitude (nullable)
+  longitude          Float? // GPS Longitude (nullable)
+  countryId          String?         @db.Char(2)
+  country            Country?        @relation(fields: [countryId], references: [countryCode])
+  featuredImageKey   String?         @db.VarChar(512)
+  zeroTime           DateTime        @db.DateTime()
+  relay              Boolean         @default(false)
+  startMode          StartMode       @default(Individual)
+  ranking            Boolean         @default(false)
+  coefRanking        Float?
+  hundredthPrecision Boolean         @default(false) // Measure finish time in hundredths of a second
+  published          Boolean         @default(false)
+  demo               Boolean         @default(false)
+  author             User?           @relation(fields: [authorId], references: [id])
+  authorId           Int?            @db.UnsignedInt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  classes            Class[]
+  protocols          Protocol[]
+  eventPasswords     EventPassword[]
+
   @@fulltext([name, organizer, location])
 }
 
@@ -143,22 +143,22 @@ model Competitor {
 }
 
 model Split {
-  id            Int          @id @default(autoincrement()) @db.UnsignedInt
-  competitorId  Int          @db.UnsignedInt
-  competitor    Competitor   @relation(fields: [competitorId], references: [id])
-  controlCode   Int
-  time          Int?
+  id           Int        @id @default(autoincrement()) @db.UnsignedInt
+  competitorId Int        @db.UnsignedInt
+  competitor   Competitor @relation(fields: [competitorId], references: [id])
+  controlCode  Int
+  time         Int?
 }
 
 model Team {
-  id            Int          @id @default(autoincrement()) @db.UnsignedInt
-  class         Class        @relation(fields: [classId], references: [id])
-  classId       Int          @db.UnsignedInt
-  name          String
-  organisation  String?
-  shortName     String?      @db.VarChar(10)
-  bibNumber     Int
-  competitors   Competitor[]
+  id           Int          @id @default(autoincrement()) @db.UnsignedInt
+  class        Class        @relation(fields: [classId], references: [id])
+  classId      Int          @db.UnsignedInt
+  name         String
+  organisation String?
+  shortName    String?      @db.VarChar(10)
+  bibNumber    Int
+  competitors  Competitor[]
 }
 
 model Protocol {
@@ -187,12 +187,12 @@ model EventPassword {
 }
 
 model OAuthClient {
-  id                 String       @id @default(cuid())
-  clientId           String       @unique @db.VarChar(255)
-  clientSecret       String       @db.VarChar(255)
-  createdAt          DateTime     @default(now())
-  user               User         @relation(fields: [userId], references: [id])
-  userId             Int          @db.UnsignedInt
+  id                 String                   @id @default(cuid())
+  clientId           String                   @unique @db.VarChar(255)
+  clientSecret       String                   @db.VarChar(255)
+  createdAt          DateTime                 @default(now())
+  user               User                     @relation(fields: [userId], references: [id])
+  userId             Int                      @db.UnsignedInt
   accessTokens       OAuthAccessToken[]
   authorizationCodes OAuthAuthorizationCode[]
   grants             OAuthGrant[]
@@ -202,59 +202,59 @@ model OAuthClient {
 }
 
 model OAuthGrant {
-  id        String       @id @default(cuid())
-  client    OAuthClient  @relation(fields: [clientId], references: [id])
+  id        String      @id @default(cuid())
+  client    OAuthClient @relation(fields: [clientId], references: [id])
   clientId  String
-  grantType String       @db.VarChar(255)
+  grantType String      @db.VarChar(255)
 }
 
 model OAuthScope {
-  id       String       @id @default(cuid())
-  client   OAuthClient  @relation(fields: [clientId], references: [id])
+  id       String      @id @default(cuid())
+  client   OAuthClient @relation(fields: [clientId], references: [id])
   clientId String
-  scope    String       @db.VarChar(255)
+  scope    String      @db.VarChar(255)
 }
 
 model OAuthRedirectUri {
-  id       String       @id @default(cuid())
-  client   OAuthClient  @relation(fields: [clientId], references: [id])
+  id       String      @id @default(cuid())
+  client   OAuthClient @relation(fields: [clientId], references: [id])
   clientId String
-  uri      String       @db.VarChar(255)
+  uri      String      @db.VarChar(255)
 }
 
 model OAuthAccessToken {
-  id        String       @id @default(cuid())
-  token     String       @db.VarChar(1024)
-  client    OAuthClient  @relation(fields: [clientId], references: [id])
+  id        String      @id @default(cuid())
+  token     String      @db.VarChar(1024)
+  client    OAuthClient @relation(fields: [clientId], references: [id])
   clientId  String
-  user      User?        @relation(fields: [userId], references: [id])
-  userId    Int?         @db.UnsignedInt
+  user      User?       @relation(fields: [userId], references: [id])
+  userId    Int?        @db.UnsignedInt
   expiresAt DateTime
 }
 
 model OAuthAuthorizationCode {
-  id          String       @id @default(cuid())
-  code        String       @unique @db.VarChar(255)
-  client      OAuthClient  @relation(fields: [clientId], references: [id])
+  id          String      @id @default(cuid())
+  code        String      @unique @db.VarChar(255)
+  client      OAuthClient @relation(fields: [clientId], references: [id])
   clientId    String
-  user        User?        @relation(fields: [userId], references: [id])
-  userId      Int?         @db.UnsignedInt
+  user        User?       @relation(fields: [userId], references: [id])
+  userId      Int?        @db.UnsignedInt
   expiresAt   DateTime
-  redirectUri String       @db.VarChar(255)
+  redirectUri String      @db.VarChar(255)
 }
 
 model OAuthRefreshToken {
-  id        String       @id @default(cuid())
-  token     String       @db.VarChar(1024)
-  client    OAuthClient  @relation(fields: [clientId], references: [id])
+  id        String      @id @default(cuid())
+  token     String      @db.VarChar(1024)
+  client    OAuthClient @relation(fields: [clientId], references: [id])
   clientId  String
-  user      User?        @relation(fields: [userId], references: [id])
-  userId    Int?         @db.UnsignedInt
+  user      User?       @relation(fields: [userId], references: [id])
+  userId    Int?        @db.UnsignedInt
   expiresAt DateTime
 }
 
 model PasswordReset {
-  email     String  @id
+  email     String   @id
   token     String
   createdAt DateTime @default(now())
 }

@@ -13,3 +13,6 @@ ignoredBuiltDependencies:
   - core-js
   - esbuild
   - prisma
+
+onlyBuiltDependencies:
+  - sharp

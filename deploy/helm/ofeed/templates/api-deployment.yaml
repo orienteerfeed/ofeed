@@ -1,0 +1,86 @@
+{{- if not .Values.vault.enabled -}}
+{{- fail "vault.enabled must be true; this chart expects secrets from HashiCorp Vault" -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ofeed.apiServiceName" . }}
+  labels:
+    {{- include "ofeed.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ofeed.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "ofeed.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: {{ required "vault.role is required" .Values.vault.role | quote }}
+        vault.hashicorp.com/auth-path: {{ required "vault.authPath is required" .Values.vault.authPath | quote }}
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/agent-inject-secret-{{ .Values.vault.injectFileName }}: {{ required "vault.secretPath is required" .Values.vault.secretPath | quote }}
+        vault.hashicorp.com/agent-inject-template-{{ .Values.vault.injectFileName }}: |
+          {{- include "ofeed.vaultTemplate" (dict "path" .Values.vault.secretPath "kvVersion" .Values.vault.kvVersion "databaseUrlKey" .Values.vault.databaseUrlKey "jwtTokenSecretKey" .Values.vault.jwtTokenSecretKey) | nindent 10 }}
+      {{- with .Values.api.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ofeed.serviceAccountName" . }}
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.service.port }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.api.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              . /vault/secrets/{{ .Values.vault.injectFileName }}
+              exec pnpm exec tsx src/index.ts
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+      {{- with .Values.api.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

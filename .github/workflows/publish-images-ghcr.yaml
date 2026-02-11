@@ -1,0 +1,110 @@
+name: Publish Docker Images to GHCR
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ghcr-publish-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Build and push (${{ matrix.component }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: server
+            image: ghcr.io/orienteerfeed/ofeed-server
+            dockerfile: apps/server/Dockerfile
+            build_secrets: ""
+          - component: client
+            image: ghcr.io/orienteerfeed/ofeed-client
+            dockerfile: apps/client/Dockerfile
+            build_secrets: id=client_env,src=/tmp/client.env
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare client build env
+        if: matrix.component == 'client'
+        run: |
+          API_URL="${{ vars.VITE_BASE_API_URL }}"
+          PUBLIC_URL="${{ vars.VITE_PUBLIC_URL }}"
+
+          if [ -z "$API_URL" ]; then
+            API_URL="https://api.ofeed.local"
+          fi
+
+          if [ -z "$PUBLIC_URL" ]; then
+            PUBLIC_URL="https://ofeed.local"
+          fi
+
+          printf 'VITE_BASE_API_URL=%s\nVITE_PUBLIC_URL=%s\n' "$API_URL" "$PUBLIC_URL" > /tmp/client.env
+
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
+
+      - name: Build and push (server)
+        if: matrix.component == 'server'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          build-args: |
+            NODE_VERSION=22.20.0
+            PNPM_VERSION=10.29.2
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push (client)
+        if: matrix.component == 'client'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          build-args: |
+            NODE_VERSION=22.20.0
+            PNPM_VERSION=10.29.2
+          secrets: ${{ matrix.build_secrets }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

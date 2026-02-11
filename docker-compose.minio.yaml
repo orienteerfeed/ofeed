@@ -4,9 +4,6 @@ services:
     container_name: ofeed-minio
     restart: unless-stopped
     env_file: ./apps/server/.env
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     command: server /data --address ":9000" --console-address ":9001"
     ports:
       - "9000:9000"
@@ -16,11 +13,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -f http://localhost:9000/minio/health/ready || exit 1",
-        ]
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/ready || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,10 +25,6 @@ services:
       minio:
         condition: service_healthy
     env_file: ./apps/server/.env
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      S3_BUCKET_PUBLIC: ${S3_BUCKET_PUBLIC:-ofeed-public}
     entrypoint: >
       /bin/sh -c "
       mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
