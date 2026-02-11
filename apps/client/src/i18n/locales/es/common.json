@@ -1,49 +1,50 @@
 {
-  "Back": "Atrás",
-  "Or": "O",
-  "And": "y",
-  "Table": {
-    "NoData": "No hay datos disponibles en la tabla"
-  },
-  "Operations": {
-    "Submit": "Enviar",
-    "Submitting": "Enviando...",
-    "Success": "Éxito",
+    "Back": "Atrás",
+    "Or": "O",
+    "And": "y",
+    "Table": {
+        "NoData": "No hay datos disponibles en la tabla"
+    },
+    "Operations": {
+        "Submit": "Enviar",
+        "Submitting": "Enviando...",
+        "Success": "Éxito",
+        "Error": "Error",
+        "Create": "Crear",
+        "Update": "Actualizar",
+        "Cancel": "Cancelar",
+        "Save": "Guardar",
+        "Configure": "Configurar",
+        "CopiedToClipboard": "Copiar al portapapeles"
+    },
+    "Settings": "Configuraciones",
+    "Loading": "Cargando...",
     "Error": "Error",
-    "Create": "Crear",
-    "Update": "Actualizar",
-    "Cancel": "Cancelar",
-    "Save": "Guardar",
-    "Configure": "Configurar"
-  },
-  "Settings": "Configuraciones",
-  "Loading": "Cargando...",
-  "Error": "Error",
-  "ErrorMessage": "Ups! Algo ha salido mal.",
-  "UploadFail": "Carga fallida",
-  "Orienteering": {
-    "Class": "Categoría"
-  },
-  "Timer": {
-    "Days": "dias",
-    "Hours": "horas",
-    "Minutes": "minutos",
-    "Seconds": "segundos"
-  },
-  "Share": "Compartir",
-  "Print": "Imprimir",
-  "Copy": "Copiar",
-  "Public": "Público",
-  "Private": "Privado",
-  "Search": "Buscar",
-  "Close": "Cerrar",
-  "NoResults": "No hay resultados",
-  "TypeAtLeastNCharacters": "Escriba al menos {{n}} caracteres…",
-  "View": "Vista",
-  "ComingSoon": "Próximamente",
-  "NotImplementedTitle": "Todavía no implementado",
-  "NotImplementedDescription": "Aún no está disponible. Estamos trabajando en esta función.",
-  "Theme": {
-    "Toggle": "Cambiar tema"
-  }
+    "ErrorMessage": "Ups! Algo ha salido mal.",
+    "UploadFail": "Carga fallida",
+    "Orienteering": {
+        "Class": "Categoría"
+    },
+    "Timer": {
+        "Days": "dias",
+        "Hours": "horas",
+        "Minutes": "minutos",
+        "Seconds": "segundos"
+    },
+    "Share": "Compartir",
+    "Print": "Imprimir",
+    "Copy": "Copiar",
+    "Public": "Público",
+    "Private": "Privado",
+    "Search": "Buscar",
+    "Close": "Cerrar",
+    "NoResults": "No hay resultados",
+    "TypeAtLeastNCharacters": "Escriba al menos {{n}} caracteres…",
+    "View": "Vista",
+    "ComingSoon": "Próximamente",
+    "NotImplementedTitle": "Todavía no implementado",
+    "NotImplementedDescription": "Aún no está disponible. Estamos trabajando en esta función.",
+    "Theme": {
+        "Toggle": "Cambiar tema"
+    }
 }
