@@ -15,7 +15,7 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY apps/client/package.json apps/client/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
-  pnpm install --frozen-lockfile --filter ./apps/client...
+  pnpm install --frozen-lockfile --filter ./apps/client... --filter ./packages/shared...
 
 COPY apps/client apps/client
 COPY packages/shared packages/shared
