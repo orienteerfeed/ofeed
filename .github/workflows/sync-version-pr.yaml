@@ -1,0 +1,76 @@
+name: Sync Version PR
+
+on:
+  workflow_run:
+    workflows:
+      - Release
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: version-sync-pr-main
+  cancel-in-progress: true
+
+jobs:
+  sync-version-pr:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Resolve release version and update package.json
+        id: sync
+        shell: bash
+        run: |
+          git fetch --tags --force
+
+          latest_tag="$(git tag --list 'v*' --sort=-version:refname | head -n 1)"
+
+          if [ -z "$latest_tag" ]; then
+            echo "No v* tag found; skipping."
+            echo "needs_pr=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          release_version="${latest_tag#v}"
+          current_version="$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).version")"
+
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+
+          if [ "$current_version" = "$release_version" ]; then
+            echo "package.json is already on $release_version; skipping."
+            echo "needs_pr=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          node -e "const fs=require('fs');const p='package.json';const d=JSON.parse(fs.readFileSync(p,'utf8'));d.version='${release_version}';fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n');"
+          echo "needs_pr=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create version sync PR
+        if: steps.sync.outputs.needs_pr == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          base: main
+          branch: chore/version-sync-package-json
+          delete-branch: true
+          title: "chore(version): sync package.json to v${{ steps.sync.outputs.release_version }}"
+          commit-message: "chore(version): sync package.json to v${{ steps.sync.outputs.release_version }} [skip release]"
+          body: |
+            Automated PR created after release.
+
+            Syncs root `package.json` version with released tag `v${{ steps.sync.outputs.release_version }}`.
+          labels: |
+            release
+            automated
+          add-paths: |
+            package.json

@@ -164,9 +164,10 @@ Releases are automated from `main` via `semantic-release` (`.github/workflows/re
 
 Behavior:
 
-- every push to `main` creates a new release version (`patch` increment)
+- every push to `main` (except `package.json`-only commits) creates a new release version (`patch` increment)
 - creates git tag `vX.Y.Z`
 - creates GitHub Release
+- after successful release, `.github/workflows/sync-version-pr.yaml` creates/updates PR that syncs root `package.json` version to released tag
 
 Note:
 
