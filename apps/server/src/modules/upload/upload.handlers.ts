@@ -4,6 +4,9 @@ import { Parser } from 'xml2js';
 import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
 import { requireAuth } from '../../middlewares/require-jwt.js';
+import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
+import { toValidationIssues } from '../../lib/validation/zod.js';
+import { ensureEventOwner, isAuthzError } from '../../utils/authz.js';
 
 import prisma from '../../utils/context.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
@@ -26,87 +29,7 @@ const uploadIofBodySchema = z.object({
   validateXml: z.boolean().optional(),
 }).passthrough();
 
-type ValidationIssue = {
-  msg: string;
-  param: string;
-  location: "all";
-};
-
-type UploadedFile = {
-  buffer: Buffer;
-  mimetype: string;
-  originalname: string;
-  size: number;
-};
-
-function toValidationIssues(issues: z.ZodIssue[]): ValidationIssue[] {
-  return issues.map(issue => ({
-    msg: issue.message,
-    param: issue.path.length > 0 ? issue.path.join(".") : "body",
-    location: "all",
-  }));
-}
-
-function normalizeBooleanLikeValues(input: unknown): unknown {
-  if (typeof input === "string") {
-    if (input === "true") {
-      return true;
-    }
-
-    if (input === "false") {
-      return false;
-    }
-  }
-
-  return input;
-}
-
-async function normalizeUploadFile(file: File): Promise<UploadedFile> {
-  return {
-    buffer: Buffer.from(await file.arrayBuffer()),
-    mimetype: file.type,
-    originalname: file.name,
-    size: file.size,
-  };
-}
-
-async function extractMultipartPayload(c: any) {
-  const parsed = await c.req.parseBody({ all: true });
-  const body: Record<string, unknown> = {};
-  let file: UploadedFile | undefined;
-
-  for (const [key, value] of Object.entries(parsed)) {
-    if (Array.isArray(value)) {
-      const normalized = await Promise.all(
-        value.map(async item => {
-          if (item instanceof File) {
-            const normalizedFile = await normalizeUploadFile(item);
-            if (!file) {
-              file = normalizedFile;
-            }
-            return normalizedFile;
-          }
-
-          return normalizeBooleanLikeValues(item);
-        }),
-      );
-      body[key] = normalized;
-      continue;
-    }
-
-    if (value instanceof File) {
-      const normalizedFile = await normalizeUploadFile(value);
-      if (!file) {
-        file = normalizedFile;
-      }
-      continue;
-    }
-
-    body[key] = normalizeBooleanLikeValues(value);
-  }
-
-  return { body, file };
-}
+type UploadedFile = MultipartFile;
 
 // Utility functions
 /**
@@ -302,27 +225,6 @@ const validateIofXml = async (xmlString, xsdString) => {
   }
   return returnState;
 };
-
-/**
- * Retrieves an event by its ID from the database.
- *
- * @async
- * @function getEventById
- * @param {number} eventId - The ID of the event to retrieve.
- * @returns {Promise<Object|null>} The event object if found, otherwise null.
- * @throws {Error} If the event does not exist or there is a database error.
- */
-async function getEventById(eventId) {
-  try {
-    return await prisma.event.findUnique({
-      where: { id: eventId },
-      select: { id: true, relay: true, ranking: true, authorId: true },
-    });
-  } catch (err) {
-    console.error(err);
-    throw new Error(`Event with ID ${eventId} does not exist in the database: ${err.message}`);
-  }
-}
 
 /**
  * Retrieves a list of classes for a given event.
@@ -966,8 +868,7 @@ async function handleIofXmlUpload(
     eventId,
     validateXml,
     file,
-    userId,
-  }: { eventId: string; validateXml?: boolean; file?: UploadedFile; userId?: string | number },
+  }: { eventId: string; validateXml?: boolean; file?: UploadedFile },
 ) {
   if (!file) {
     console.error('File not found');
@@ -989,17 +890,22 @@ async function handleIofXmlUpload(
 
   let dbResponseEvent;
   try {
-    dbResponseEvent = await getEventById(eventId);
-  } catch (err: any) {
-    return c.json(error(err.message, 500), 500);
-  }
+    const ownership = await ensureEventOwner(prisma, c.get("authContext"), eventId, {
+      select: { relay: true, ranking: true },
+      eventNotFoundStatus: 404,
+      eventNotFoundMessage: 'Event not found',
+      forbiddenStatus: 403,
+      forbiddenMessage: 'You are not authorized to upload data for this event',
+    });
 
-  if (!dbResponseEvent) {
-    return c.json(error('Event not found', 404), 404);
-  }
+    dbResponseEvent = ownership.event;
+  } catch (err) {
+    if (isAuthzError(err)) {
+      return c.json(error(err.message, err.statusCode), err.statusCode);
+    }
 
-  if (dbResponseEvent.authorId !== userId) {
-    return c.json(error('You are not authorized to upload data for this event', 403), 403);
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
+    return c.json(error(message, 500), 500);
   }
 
   let iofXml3;
@@ -1182,21 +1088,17 @@ export function registerUploadRoutes(router) {
 router.use("*", requireAuth);
 
 router.post("/iof", async c => {
-  const { body, file } = await extractMultipartPayload(c);
+  const { body, file } = await parseMultipartPayload(c);
   const parsedBody = uploadIofBodySchema.safeParse(body);
 
   if (!parsedBody.success) {
     return c.json(validation(toValidationIssues(parsedBody.error.issues)), 422);
   }
 
-  const authContext = c.get("authContext");
-  const userId = authContext?.isAuthenticated ? authContext.userId : undefined;
-
   return handleIofXmlUpload(c, {
     eventId: parsedBody.data.eventId,
     validateXml: parsedBody.data.validateXml,
     file,
-    userId,
   });
 });
 
@@ -1222,7 +1124,7 @@ router.post("/iof", async c => {
  *        description: Internal server error
  */
 router.post("/czech-ranking", async c => {
-  const { file } = await extractMultipartPayload(c);
+  const { file } = await parseMultipartPayload(c);
 
   if (!file) {
     console.error('File not found');

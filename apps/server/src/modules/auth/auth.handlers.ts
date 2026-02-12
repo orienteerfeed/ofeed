@@ -9,6 +9,7 @@ import type { Context } from "hono";
 import type { AppBindings, AppOpenAPI } from "../../types";
 
 import { AuthenticationError, ValidationError } from "../../exceptions/index.js";
+import { toLowerCaseHeaderRecord } from "../../lib/http/headers.js";
 import { getJwtUserId, requireJwtAuth } from "../../middlewares/require-jwt";
 import prisma from "../../utils/context.js";
 import { error as errorResponse, success as successResponse, validation as validationResponse } from "../../utils/responseApi.js";
@@ -81,16 +82,6 @@ async function parseJsonBody<T extends z.ZodTypeAny>(
   }
 
   return { ok: true, data: parsed.data };
-}
-
-function toLowerCaseHeaders(headers: Headers) {
-  const normalized: Record<string, string> = {};
-
-  for (const [key, value] of headers.entries()) {
-    normalized[key.toLowerCase()] = value;
-  }
-
-  return normalized;
 }
 
 function toQueryRecord(url: string) {
@@ -323,7 +314,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
 
       const oauthRequest = new OAuthRequest({
         method: c.req.method,
-        headers: toLowerCaseHeaders(c.req.raw.headers),
+        headers: toLowerCaseHeaderRecord(c.req.raw.headers),
         query: toQueryRecord(c.req.url),
         body: {
           grant_type: grantType,

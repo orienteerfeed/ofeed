@@ -4,6 +4,9 @@ import type { Context, Handler } from "hono";
 import sharp from 'sharp';
 
 import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
+import { parseJsonObjectSafe, parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
+import { toLowerCaseHeaderRecord } from '../../lib/http/headers.js';
+import { toValidationIssues, type ValidationIssue } from '../../lib/validation/zod.js';
 import {
   error as errorResponse,
   success as successResponse,
@@ -11,7 +14,14 @@ import {
 } from '../../utils/responseApi.js';
 
 import prisma from '../../utils/context.js';
-import { requireEventOwner } from '../../utils/authz.js';
+import {
+  ensureEventOwner,
+  isAuthzError,
+  requireEventOwner,
+  type EventOwnerOptions,
+} from '../../utils/authz.js';
+import { createCompetitorSchema, updateCompetitorSchema } from '../../utils/validateCompetitor.js';
+import eventWriteSchema from '../../utils/validateEvent.js';
 import { encodeBase64, encrypt } from '../../utils/cryptoUtils.js';
 import { formatErrors } from '../../utils/errors.js';
 import {
@@ -29,21 +39,16 @@ import {
   updateCompetitor,
 } from './event.service.js';
 import type { AppBindings } from "../../types";
+import {
+  changelogQuerySchema,
+  eventCompetitorExternalParamsSchema,
+  eventCompetitorParamsSchema,
+  eventIdParamsSchema,
+} from "./event.schema.js";
 
 type BodyMode = "auto" | "json" | "form" | "none";
 
-type ValidationIssue = {
-  msg: string;
-  param: string;
-  location: "all";
-};
-
-type SecureFile = {
-  buffer: Buffer;
-  mimetype: string;
-  originalname: string;
-  size: number;
-};
+type SecureFile = MultipartFile;
 
 type EventRouteRequest = {
   params: any;
@@ -93,100 +98,6 @@ type EventRouteOptions = {
   bodySchema?: z.ZodTypeAny;
 };
 
-function getHeaders(c: Context<AppBindings>) {
-  const result: Record<string, string> = {};
-
-  for (const [key, value] of c.req.raw.headers.entries()) {
-    result[key.toLowerCase()] = value;
-  }
-
-  return result;
-}
-
-function toValidationIssues(error: z.ZodError): ValidationIssue[] {
-  return error.issues.map(issue => ({
-    msg: issue.message,
-    param: issue.path.length > 0 ? issue.path.join(".") : "body",
-    location: "all",
-  }));
-}
-
-function normalizeBooleanLikeValues(input: unknown): unknown {
-  if (typeof input === "string") {
-    if (input === "true") {
-      return true;
-    }
-
-    if (input === "false") {
-      return false;
-    }
-  }
-
-  return input;
-}
-
-async function parseFormBody(c: Context<AppBindings>) {
-  const parsed = await c.req.parseBody({ all: true });
-  const body: Record<string, unknown> = {};
-  let file: SecureFile | undefined;
-
-  for (const [key, value] of Object.entries(parsed)) {
-    if (Array.isArray(value)) {
-      const normalized = await Promise.all(
-        value.map(async item => {
-          if (item instanceof File) {
-            const normalizedFile: SecureFile = {
-              buffer: Buffer.from(await item.arrayBuffer()),
-              mimetype: item.type,
-              originalname: item.name,
-              size: item.size,
-            };
-
-            if (!file) {
-              file = normalizedFile;
-            }
-
-            return normalizedFile;
-          }
-
-          return normalizeBooleanLikeValues(item);
-        }),
-      );
-
-      body[key] = normalized;
-      continue;
-    }
-
-    if (value instanceof File) {
-      const normalizedFile: SecureFile = {
-        buffer: Buffer.from(await value.arrayBuffer()),
-        mimetype: value.type,
-        originalname: value.name,
-        size: value.size,
-      };
-
-      if (!file) {
-        file = normalizedFile;
-      }
-
-      continue;
-    }
-
-    body[key] = normalizeBooleanLikeValues(value);
-  }
-
-  return { body, file };
-}
-
-async function parseJsonBody(c: Context<AppBindings>) {
-  try {
-    const payload = await c.req.json();
-    return typeof payload === "object" && payload !== null ? (payload as Record<string, unknown>) : {};
-  } catch {
-    return {};
-  }
-}
-
 async function buildEventRouteRequest(c: Context<AppBindings>, bodyMode: BodyMode): Promise<EventRouteRequest> {
   const params = c.req.param();
   const query = c.req.query();
@@ -204,11 +115,11 @@ async function buildEventRouteRequest(c: Context<AppBindings>, bodyMode: BodyMod
           contentType.includes("application/x-www-form-urlencoded")));
 
     if (shouldParseForm) {
-      const parsed = await parseFormBody(c);
+      const parsed = await parseMultipartPayload(c);
       body = parsed.body;
-      file = parsed.file;
+      file = parsed.file as SecureFile | undefined;
     } else {
-      body = await parseJsonBody(c);
+      body = await parseJsonObjectSafe(c);
     }
   }
 
@@ -217,7 +128,7 @@ async function buildEventRouteRequest(c: Context<AppBindings>, bodyMode: BodyMod
     params,
     query,
     body,
-    headers: getHeaders(c),
+    headers: toLowerCaseHeaderRecord(c.req.raw.headers),
     auth,
     __validationIssues: [],
   };
@@ -263,6 +174,27 @@ function getValidationResult(req: EventRouteRequest) {
   };
 }
 
+async function authorizeOwnedEvent(
+  req: EventRouteRequest,
+  res: RouteJsonResponder,
+  eventId: string,
+  options?: EventOwnerOptions,
+) {
+  try {
+    const ownership = await ensureEventOwner(prisma, req.auth, eventId, options);
+    return { ok: true as const, ...ownership };
+  } catch (error) {
+    if (isAuthzError(error)) {
+      return {
+        ok: false as const,
+        response: res.status(error.statusCode).json(errorResponse(error.message, error.statusCode)),
+      };
+    }
+
+    throw error;
+  }
+}
+
 function routeWithValidation(options: EventRouteOptions, handler: EventRouteHandler): Handler<AppBindings>;
 function routeWithValidation(handler: EventRouteHandler): Handler<AppBindings>;
 function routeWithValidation(
@@ -303,39 +235,7 @@ function routeWithValidation(
 }
 
 export function registerSecureEventRoutes(router) {
-const eventIdParamsSchema = z.object({
-  eventId: z.string().min(1),
-});
-
-const eventCompetitorParamsSchema = z.object({
-  eventId: z.string().min(1),
-  competitorId: z.string().regex(/^\d+$/),
-});
-
-const eventCompetitorExternalParamsSchema = z.object({
-  eventId: z.string().min(1),
-  competitorExternalId: z.string().min(1),
-});
-
-const eventBodySchema = z.object({
-  sportId: z.coerce.number().int().positive(),
-  name: z.string().min(1).max(255),
-  date: z.string().min(1),
-  timezone: z.string().min(1),
-  organizer: z.string().min(1).max(255),
-  location: z.string().min(1).max(255),
-  latitude: z.coerce.number().min(-90).max(90).optional().nullable(),
-  longitude: z.coerce.number().min(-180).max(180).optional().nullable(),
-  zeroTime: z.string().min(1),
-  relay: z.boolean().optional(),
-  hundredthPrecision: z.boolean().optional(),
-  published: z.boolean().optional(),
-  ranking: z.boolean().optional(),
-  startMode: z.string().optional(),
-  coefRanking: z.coerce.number().optional().nullable(),
-  countryCode: z.string().min(2).max(2).optional(),
-  country: z.string().min(2).max(2).optional(),
-}).passthrough();
+const eventBodySchema = eventWriteSchema;
 
 const generatePasswordBodySchema = z.object({
   eventId: z.string().min(1),
@@ -343,7 +243,6 @@ const generatePasswordBodySchema = z.object({
 
 const validInputOrigin = ['START'];
 const validInputStatus = ['Inactive', 'Active', 'DidNotStart', 'Cancelled', 'LateStart'];
-const validCompetitorOrigin = ['START', 'FINISH', 'OFFICE', 'IT'];
 
 const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -392,21 +291,8 @@ const stateChangeBodySchema = z.object({
   status: z.enum(validInputStatus as [string, ...string[]]),
 });
 
-const createCompetitorBodySchema = z.object({
-  origin: z.enum(validCompetitorOrigin as [string, ...string[]]),
-  classId: z.coerce.number().int().positive().optional().nullable(),
-  classExternalId: z.string().max(191).optional().nullable(),
-  firstname: z.string().min(1),
-  lastname: z.string().min(1),
-  externalId: z.string().max(191).optional().nullable(),
-}).passthrough().refine(
-  value => Boolean(value.classId) !== Boolean(value.classExternalId),
-  { message: 'Either classId or classExternalId must be provided, but not both', path: ['classId'] },
-);
-
-const updateCompetitorBodySchema = z.object({
-  origin: z.enum(validCompetitorOrigin as [string, ...string[]]),
-}).passthrough();
+const createCompetitorBodySchema = createCompetitorSchema;
+const updateCompetitorBodySchema = updateCompetitorSchema;
 
 const externalCompetitorUpdateBodySchema = updateCompetitorBodySchema.extend({
   useExternalId: z.boolean(),
@@ -415,13 +301,6 @@ const externalCompetitorUpdateBodySchema = updateCompetitorBodySchema.extend({
   value => !(value.classId && value.classExternalId),
   { message: 'Only one of classId or classExternalId should be provided, not both.', path: ['classId'] },
 );
-
-const changelogQuerySchema = z.object({
-  since: z.string().datetime({ offset: true }).optional(),
-  origin: z.enum(['START', 'FINISH', 'IT', 'OFFICE']).optional(),
-  group: z.boolean().optional(),
-  classId: z.coerce.number().int().optional(),
-});
 
 // Readable password generator for Node.js backend service
 const generatePassword = (wordCount = 3) => {
@@ -878,7 +757,6 @@ router.put(
     { paramsSchema: eventIdParamsSchema, bodySchema: eventBodySchema },
     async ({ req, res }) => {
   const { eventId } = req.params;
-  const { userId } = req.jwtDecoded;
   const {
     name,
     date,
@@ -896,19 +774,18 @@ router.put(
     relay,
   } = req.body;
 
+  const ownership = await authorizeOwnedEvent(req, res, eventId, {
+    eventNotFoundMessage: 'Event not found',
+    forbiddenMessage: 'Not authorized',
+  });
+
+  if (!ownership.ok) {
+    return ownership.response;
+  }
+
+  const { userId } = ownership;
+
   try {
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-    });
-
-    if (!event) {
-      return res.status(404).json(errorResponse('Event not found', res.statusCode));
-    }
-
-    if (event.authorId !== userId) {
-      return res.status(403).json(errorResponse('Not authorized', res.statusCode));
-    }
-
     // TODO: Add permission checks to ensure the user is allowed to edit the event
 
     // 🔥 Normalize latitude and longitude
@@ -989,18 +866,20 @@ router.put(
  */
 router.delete("/:eventId", routeWithValidation({ paramsSchema: eventIdParamsSchema }, async ({ req, res }) => {
   const { eventId } = req.params;
-  const { userId } = req.jwtDecoded; // Assuming you're using JWT to get the user ID
 
   // TODO: Add permission check to ensure the user can delete this event
 
   try {
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      select: { authorId: true, featuredImageKey: true },
+    const ownership = await authorizeOwnedEvent(req, res, eventId, {
+      select: { featuredImageKey: true },
+      eventNotFoundStatus: 403,
+      eventNotFoundMessage: 'Event not found',
+      forbiddenStatus: 403,
+      forbiddenMessage: 'Event not found',
     });
 
-    if (!event || event.authorId !== userId) {
-      return res.status(403).json(errorResponse('Event not found', res.statusCode));
+    if (!ownership.ok) {
+      return ownership.response;
     }
 
     await deleteAllEventData(eventId);
@@ -1056,7 +935,6 @@ router.post(
   "/generate-password",
   routeWithValidation({ bodySchema: generatePasswordBodySchema }, async ({ req, res }) => {
   const { eventId } = req.body;
-  const { userId } = req.jwtDecoded; // Assuming JWT contains userId
 
   const eventPassword = generatePassword(3);
 
@@ -1064,17 +942,18 @@ router.post(
   const encryptedPassword =
     typeof eventPassword !== 'undefined' ? encodeBase64(encrypt(eventPassword)) : undefined;
 
+  const ownership = await authorizeOwnedEvent(req, res, eventId, {
+    eventNotFoundStatus: 403,
+    eventNotFoundMessage: 'Event not found or you don`t have a permissions',
+    forbiddenStatus: 403,
+    forbiddenMessage: 'Event not found or you don`t have a permissions',
+  });
+
+  if (!ownership.ok) {
+    return ownership.response;
+  }
+
   try {
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-    });
-
-    if (!event || event.authorId !== userId) {
-      return res
-        .status(403)
-        .json(errorResponse('Event not found or you don`t have a permissions', res.statusCode));
-    }
-
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
 
     await prisma.eventPassword.upsert({
@@ -1143,19 +1022,19 @@ router.post(
   "/revoke-password",
   routeWithValidation({ bodySchema: generatePasswordBodySchema }, async ({ req, res }) => {
   const { eventId } = req.body;
-  const { userId } = req.jwtDecoded; // Assuming JWT contains userId
+
+  const ownership = await authorizeOwnedEvent(req, res, eventId, {
+    eventNotFoundStatus: 404,
+    eventNotFoundMessage: 'Event not found or you don`t have a permissions',
+    forbiddenStatus: 404,
+    forbiddenMessage: 'Event not found or you don`t have a permissions',
+  });
+
+  if (!ownership.ok) {
+    return ownership.response;
+  }
 
   try {
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-    });
-
-    if (!event || event.authorId !== userId) {
-      return res
-        .status(404)
-        .json(errorResponse('Event not found or you don`t have a permissions', res.statusCode));
-    }
-
     const deletedEventPassword = await prisma.eventPassword.delete({
       where: { eventId }, // eventId must be unique in your schema
     });
@@ -1203,14 +1082,14 @@ router.get(
   "/:eventId/password",
   routeWithValidation({ paramsSchema: eventIdParamsSchema }, async ({ req, res }) => {
   const { eventId } = req.params;
-  const { userId } = req.jwtDecoded; // Assuming JWT contains userId
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const ownership = await authorizeOwnedEvent(req, res, eventId, {
+    eventNotFoundMessage: 'Event not found',
+    forbiddenMessage: 'Not authorized',
   });
 
-  if (event.authorId !== userId) {
-    return res.status(403).json(errorResponse('Not authorized', res.statusCode));
+  if (!ownership.ok) {
+    return ownership.response;
   }
 
   try {
@@ -1302,13 +1181,12 @@ router.post(
     const { status, origin } = req.body;
     const { userId } = req.jwtDecoded;
 
-    //TODO: Check user permissions
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
+    const ownership = await authorizeOwnedEvent(req, res, eventId, {
+      forbiddenMessage: 'Not authorized',
     });
 
-    if (event.authorId !== userId) {
-      return res.status(403).json(errorResponse('Not authorized', res.statusCode));
+    if (!ownership.ok) {
+      return ownership.response;
     }
 
     // Everything went fine.
@@ -1530,21 +1408,18 @@ router.post(
     const { userId } = req.jwtDecoded;
     const { origin, classExternalId } = req.body;
 
+    const ownership = await authorizeOwnedEvent(req, res, eventId, {
+      eventNotFoundStatus: 404,
+      eventNotFoundMessage: 'Event not found',
+      forbiddenStatus: 403,
+      forbiddenMessage: 'Not authorized to add a competitor',
+    });
+
+    if (!ownership.ok) {
+      return ownership.response;
+    }
+
     try {
-      // Check if the event exists and the user is authorized
-      const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: { authorId: true },
-      });
-
-      if (!event) {
-        return res.status(404).json(errorResponse('Event not found', 404));
-      }
-
-      if (event.authorId !== userId) {
-        return res.status(403).json(errorResponse('Not authorized to add a competitor', 403));
-      }
-
       if (classExternalId) {
         try {
           const dbClassResponse = await prisma.class.findFirst({
@@ -1606,16 +1481,15 @@ const handleValidateAndUpdateCompetitor = async (
   const { req, res } = routeContext;
   const { eventId } = req.params;
   const { origin } = req.body;
-  const { userId } = req.jwtDecoded;
-
-  //TODO: Check user permissions
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const ownership = await authorizeOwnedEvent(req, res, eventId, {
+    forbiddenMessage: 'Not authorized',
   });
 
-  if (!event || event.authorId !== userId) {
-    return res.status(403).json(errorResponse('Not authorized', res.statusCode));
+  if (!ownership.ok) {
+    return ownership.response;
   }
+
+  const { userId } = ownership;
 
   // Everything went fine.
   try {
@@ -2192,38 +2066,15 @@ router.get(
       return res.status(422).json(validationResponse(formatErrors(errors)));
     }
     const { eventId } = req.params;
-    const { userId } = req.jwtDecoded;
     const { since, origin, group, classId } = req.query;
     const shouldGroup = group === 'true' || group === true;
 
-    //TODO: Check user permissions
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
+    const ownership = await authorizeOwnedEvent(req, res, eventId, {
+      forbiddenMessage: 'Not authorized',
     });
 
-    if (!event || event.authorId !== userId) {
-      return res.status(403).json(errorResponse('Not authorized', res.statusCode));
-    }
-
-    // Everything went fine.
-    //TODO: make check event existance separately in middleware function
-    let dbResponseEvent;
-    try {
-      dbResponseEvent = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: {
-          id: true,
-        },
-      });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
-    }
-
-    if (!dbResponseEvent) {
-      return res
-        .status(422)
-        .json(errorResponse(`Event with ID ${eventId} does not exist in the database`, 422));
+    if (!ownership.ok) {
+      return ownership.response;
     }
 
     // Build filters for the query
@@ -2360,17 +2211,14 @@ router.delete(
       return res.status(422).json(validationResponse(formatErrors(errors)));
     }
     const { eventId } = req.params;
-    const { userId } = req.jwtDecoded;
 
     try {
-      // Check user permissions
-      const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: { authorId: true },
+      const ownership = await authorizeOwnedEvent(req, res, eventId, {
+        forbiddenMessage: 'Not authorized',
       });
 
-      if (!event || event.authorId !== userId) {
-        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
+      if (!ownership.ok) {
+        return ownership.response;
       }
 
       // Call deleteEventCompetitors function
@@ -2433,17 +2281,14 @@ router.delete(
     }
     const { eventId } = req.params;
     const competitorId = parseInt(req.params.competitorId, 10);
-    const { userId } = req.jwtDecoded;
 
     try {
-      // Check user permissions
-      const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: { authorId: true },
+      const ownership = await authorizeOwnedEvent(req, res, eventId, {
+        forbiddenMessage: 'Not authorized',
       });
 
-      if (!event || event.authorId !== userId) {
-        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
+      if (!ownership.ok) {
+        return ownership.response;
       }
 
       // Call deleteCompetitor function
@@ -2500,17 +2345,14 @@ router.delete(
     }
 
     const { eventId, competitorExternalId } = req.params;
-    const { userId } = req.jwtDecoded;
 
     try {
-      // Check user permissions
-      const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: { authorId: true },
+      const ownership = await authorizeOwnedEvent(req, res, eventId, {
+        forbiddenMessage: 'Not authorized',
       });
 
-      if (!event || event.authorId !== userId) {
-        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
+      if (!ownership.ok) {
+        return ownership.response;
       }
 
       // Get competitor id
@@ -2584,21 +2426,15 @@ router.delete(
       return res.status(422).json(validationResponse(formatErrors(errors)));
     }
     const { eventId } = req.params;
-    const { userId } = req.jwtDecoded;
 
     try {
-      // Check user permissions
-      const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        select: { authorId: true },
+      const ownership = await authorizeOwnedEvent(req, res, eventId, {
+        eventNotFoundMessage: 'Event not found',
+        forbiddenMessage: 'Not authorized',
       });
 
-      if (!event) {
-        return res.status(404).json(errorResponse('Event not found', res.statusCode));
-      }
-
-      if (event.authorId !== userId) {
-        return res.status(403).json(errorResponse('Not authorized', res.statusCode));
+      if (!ownership.ok) {
+        return ownership.response;
       }
 
       // Call deleteEventData function

@@ -1,58 +1,26 @@
 import { z } from "@hono/zod-openapi";
 
-import { formatErrors } from "../../utils/errors.js";
 import prisma from "../../utils/context.js";
 import { getPublicObject } from "../../utils/s3Storage.js";
 import { error, success, validation } from "../../utils/responseApi.js";
 import { calculateCompetitorRankingPoints } from "../../utils/ranking.js";
+import {
+  toValidationIssues as zodToValidationIssues,
+  toValidationMessage,
+} from "../../lib/validation/zod.js";
 
 import { getEventCompetitorDetail } from "./event.service.js";
-
-type ValidationIssue = {
-  msg: string;
-  param: string;
-  location: "all";
-};
-
-function toValidationIssues(issues: z.ZodIssue[]): ValidationIssue[] {
-  return issues.map(issue => ({
-    msg: issue.message,
-    param: issue.path.length > 0 ? issue.path.join(".") : "body",
-    location: "all",
-  }));
-}
+import { eventCompetitorExternalParamsSchema, eventCompetitorParamsSchema, eventIdParamsSchema } from "./event.schema.js";
 
 function responseValidationIssues(issues: z.ZodIssue[]) {
-  return validation(toValidationIssues(issues));
+  return validation(zodToValidationIssues(issues));
 }
 
 function responseValidationString(issues: z.ZodIssue[]) {
-  return validation(
-    formatErrors(
-      issues.map(issue => ({
-        msg: issue.message,
-        param: issue.path.length > 0 ? issue.path.join(".") : "body",
-        location: "all",
-      })),
-    ),
-  );
+  return validation(toValidationMessage(issues));
 }
 
 export function registerPublicEventRoutes(router) {
-  const eventIdParamsSchema = z.object({
-    eventId: z.string().min(1),
-  });
-
-  const eventCompetitorParamsSchema = z.object({
-    eventId: z.string().min(1),
-    competitorId: z.string().regex(/^\d+$/),
-  });
-
-  const eventCompetitorExternalParamsSchema = z.object({
-    eventId: z.string().min(1),
-    competitorExternalId: z.string().min(1),
-  });
-
   const eventCompetitorsQuerySchema = z.object({
     class: z.string().regex(/^\d+$/).optional(),
     lastUpdate: z.string().datetime({ offset: true }).optional(),
@@ -471,4 +439,3 @@ export function registerPublicEventRoutes(router) {
     return c.json(success("OK", { data: "Calculate ranking" }, 200), 200);
   });
 }
-

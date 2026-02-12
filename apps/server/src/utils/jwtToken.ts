@@ -2,6 +2,7 @@ import type { Context, Next } from "hono";
 import dotenvFlow from 'dotenv-flow';
 import jwt from 'jsonwebtoken';
 import { oauth2Model } from '../modules/auth/oauth2.model.js';
+import { toLowerCaseHeaderRecord } from '../lib/http/headers.js';
 import { getDecryptedEventPassword } from '../modules/event/event.service.js';
 import prisma from './context.js';
 import { error } from './responseApi.js';
@@ -33,13 +34,7 @@ export const generateJwtTokenForLink = (userId) => {
 };
 
 function headersFromHonoContext(c: Context): Record<string, string> {
-  const headers: Record<string, string> = {};
-
-  for (const [key, value] of c.req.raw.headers.entries()) {
-    headers[key.toLowerCase()] = value;
-  }
-
-  return headers;
+  return toLowerCaseHeaderRecord(c.req.raw.headers);
 }
 
 /**
