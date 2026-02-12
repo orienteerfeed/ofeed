@@ -25,9 +25,7 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
   }
 
   if (!dbResponseCompetitor) {
-    throw new ValidationError(
-      `Competitor with ID ${competitorId} does not exist in the database` + err.message
-    );
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   // Initialize competitorStatus to the provided status, and lateStart to false.
@@ -75,7 +73,7 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor = {};
+  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
   try {
     updatedCompetitor = await prisma.competitor.findUnique({
       where: { id: parseInt(competitorId) },
@@ -87,6 +85,10 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
+  }
+
+  if (!updatedCompetitor) {
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   // Publish changes to subscribers
@@ -200,9 +202,7 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   }
 
   if (!dbResponseCompetitor) {
-    throw new ValidationError(
-      `Competitor with ID ${competitorId} does not exist in the database` + err.message
-    );
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   if (origin === 'START') {
@@ -299,7 +299,7 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor = {};
+  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
   try {
     updatedCompetitor = await prisma.competitor.findUnique({
       where: { id: parseInt(competitorId) },
@@ -311,6 +311,10 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
+  }
+
+  if (!updatedCompetitor) {
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   // Publish changes to subscribers
@@ -414,7 +418,7 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor = {};
+  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
   try {
     updatedCompetitor = await prisma.competitor.findUnique({
       where: { id: parseInt(newCompetitor.id) },
@@ -426,6 +430,10 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
+  }
+
+  if (!updatedCompetitor) {
+    throw new ValidationError(`Competitor with ID ${newCompetitor.id} does not exist in the database`);
   }
 
   // Publish event updates
@@ -673,14 +681,9 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
       });
     } catch (err) {
       console.error(err);
-      return res
-        .status(500)
-        .json(
-          error(
-            `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-            err.message
-          )
-        );
+      throw new DatabaseError(
+        `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database`,
+      );
     }
     competitorData = dbIndividualResponse;
   } else {
@@ -740,14 +743,9 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
       });
     } catch (err) {
       console.error(err);
-      return res
-        .status(500)
-        .json(
-          error(
-            `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-            err.message
-          )
-        );
+      throw new DatabaseError(
+        `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database`,
+      );
     }
     competitorData = dbRelayResponse;
   }

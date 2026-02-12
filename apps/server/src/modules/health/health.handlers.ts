@@ -1,8 +1,10 @@
 import type { Context } from "hono";
 
+import type { AppBindings } from "../../types";
+
 import { performFullHealthCheck, performReadinessCheck } from "./health.service";
 
-export function liveHandler(c: Context) {
+export function liveHandler(c: Context<AppBindings>) {
   c.header("Cache-Control", "no-store");
   return c.json(
     {
@@ -13,7 +15,7 @@ export function liveHandler(c: Context) {
   );
 }
 
-export async function readyHandler(c: Context) {
+export async function readyHandler(c: Context<AppBindings>) {
   c.header("Cache-Control", "no-store");
 
   const prisma = c.get("prisma");
@@ -40,7 +42,7 @@ export async function readyHandler(c: Context) {
   );
 }
 
-export async function healthHandler(c: Context) {
+export async function healthHandler(c: Context<AppBindings>) {
   c.header("Cache-Control", "no-store");
 
   const prisma = c.get("prisma");

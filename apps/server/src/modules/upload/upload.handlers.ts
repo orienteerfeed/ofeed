@@ -180,8 +180,20 @@ const checkXmlType = json => {
  * @param {string} xsdString - The XSD string to validate against.
  * @returns {Promise<{ state: boolean, message: string }>} - An object containing the validation state and message.
  */
+type XmlValidationIssue = {
+  param: string;
+  msg: string;
+  type: string;
+};
+
+type XmlValidationResult = {
+  state: boolean;
+  message: string;
+  errors?: XmlValidationIssue[];
+};
+
 const validateIofXml = async (xmlString, xsdString) => {
-  let returnState = { state: false, message: '' };
+  const returnState: XmlValidationResult = { state: false, message: '' };
   try {
     // First check if XML is well-formed
     const parser = new DOMParser();
@@ -217,6 +229,7 @@ const validateIofXml = async (xmlString, xsdString) => {
               type: 'schema',
             },
           ];
+      returnState.message = returnState.errors.map(issue => issue.msg).join("; ");
       console.log(returnState.message);
     }
   } catch (err) {
@@ -884,7 +897,7 @@ async function handleIofXmlUpload(
     const xsd = await fetchIOFXmlSchema();
     const iofXmlValidation = await validateIofXml(xmlBuffer.toString(), xsd);
     if (!iofXmlValidation.state) {
-      return c.json(validation(iofXmlValidation.errors), 422);
+      return c.json(validation(iofXmlValidation.errors ?? iofXmlValidation.message), 422);
     }
   }
 

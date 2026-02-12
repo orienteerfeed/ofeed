@@ -4,6 +4,7 @@ import {
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
+  type S3ClientConfig,
 } from '@aws-sdk/client-s3';
 
 let s3Client;
@@ -18,7 +19,7 @@ const getS3Client = () => {
     throw new Error('S3_ACCESS_KEY or S3_SECRET_KEY is not set');
   }
 
-  const config = {
+  const config: S3ClientConfig = {
     region: process.env.S3_REGION || 'us-east-1',
     credentials: { accessKeyId, secretAccessKey },
     forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',

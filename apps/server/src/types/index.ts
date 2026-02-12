@@ -7,7 +7,7 @@ import type { LogContext, logger } from "../lib/logging";
 export interface AuthContext {
   isAuthenticated: boolean;
   type: "jwt" | "eventBasic" | null;
-  userId?: string;
+  userId?: number | string;
   eventId?: string;
   rawToken?: string;
   tokenPayload?: Record<string, unknown>;
@@ -21,6 +21,7 @@ export interface AppBindings {
     logContext: LogContext;
     prisma: typeof prisma;
     authContext?: AuthContext;
+    jwtUserId?: number;
   };
 }
 

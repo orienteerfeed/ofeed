@@ -58,7 +58,7 @@ describe("verifyJwtToken middleware", () => {
     const app = new Hono();
     app.use("*", jwtToken.verifyJwtToken);
     app.get("/", c => {
-      const auth = c.get("authContext") as {
+      const auth = (c as any).get("authContext") as {
         isAuthenticated: boolean;
         type: string | null;
         userId?: number | string;

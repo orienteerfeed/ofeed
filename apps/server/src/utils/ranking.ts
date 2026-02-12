@@ -1,4 +1,5 @@
 import { DatabaseError, NotFoundError, ValidationError } from '../exceptions/index.js';
+import type { ResultStatus } from '../generated/prisma/client';
 import prisma from './context.js';
 
 const CZ_INDIVIDUAL_START = 0.0;
@@ -7,7 +8,7 @@ const CZ_PURSUIT_START = 0.08;
 const CZ_PREFIX_RANKING_CLASSES_REGEX = /^(H20|H21|D20|D21|M21|W21)/;
 const CZ_REGISTRATION_REGEX = /^[A-Z]{3}\d{4}$/; // Regular expression to match czech registration format
 const CZ_RANKING_RACES_COUNT = 8;
-const EXCLUDED_COMPETITOR_STATUSES_FROM_RANKING = [
+const EXCLUDED_COMPETITOR_STATUSES_FROM_RANKING: ResultStatus[] = [
   'NotCompeting',
   'DidNotStart',
   'DidNotEnter',

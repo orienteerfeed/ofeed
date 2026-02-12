@@ -38,6 +38,7 @@ import {
   storeCompetitor,
   updateCompetitor,
 } from './event.service.js';
+import type { Prisma } from "../../generated/prisma/client";
 import type { AppBindings } from "../../types";
 import {
   changelogQuerySchema,
@@ -57,7 +58,7 @@ type EventRouteRequest = {
   headers: Record<string, string>;
   auth?: AppBindings["Variables"]["authContext"];
   jwtDecoded?: {
-    userId?: string;
+    userId?: string | number;
   };
   eventId?: string;
   file?: SecureFile;
@@ -172,6 +173,20 @@ function getValidationResult(req: EventRouteRequest) {
     isEmpty: () => req.__validationIssues.length === 0,
     array: () => req.__validationIssues,
   };
+}
+
+function getNumericJwtUserId(req: EventRouteRequest) {
+  const rawUserId = req.jwtDecoded?.userId;
+  if (typeof rawUserId === "number") {
+    return Number.isFinite(rawUserId) ? rawUserId : null;
+  }
+
+  if (typeof rawUserId === "string" && rawUserId.trim() !== "") {
+    const parsedUserId = Number(rawUserId);
+    return Number.isFinite(parsedUserId) ? parsedUserId : null;
+  }
+
+  return null;
 }
 
 async function authorizeOwnedEvent(
@@ -488,7 +503,10 @@ router.post(
     relay,
   } = req.body;
 
-  const { userId } = req.jwtDecoded;
+  const userId = getNumericJwtUserId(req);
+  if (!userId) {
+    return res.status(401).json(errorResponse('Unauthorized', res.statusCode));
+  }
 
   //TODO: Check user permissions
 
@@ -1179,7 +1197,10 @@ router.post(
     }
     const { eventId, competitorId } = req.params;
     const { status, origin } = req.body;
-    const { userId } = req.jwtDecoded;
+    const userId = getNumericJwtUserId(req);
+    if (!userId) {
+      return res.status(401).json(errorResponse('Unauthorized', res.statusCode));
+    }
 
     const ownership = await authorizeOwnedEvent(req, res, eventId, {
       forbiddenMessage: 'Not authorized',
@@ -1405,7 +1426,10 @@ router.post(
     }
 
     const { eventId } = req.params;
-    const { userId } = req.jwtDecoded;
+    const userId = getNumericJwtUserId(req);
+    if (!userId) {
+      return res.status(401).json(errorResponse('Unauthorized', res.statusCode));
+    }
     const { origin, classExternalId } = req.body;
 
     const ownership = await authorizeOwnedEvent(req, res, eventId, {
@@ -2078,7 +2102,7 @@ router.get(
     }
 
     // Build filters for the query
-    const filters = {
+    const filters: Prisma.ProtocolWhereInput = {
       eventId: eventId,
     };
 

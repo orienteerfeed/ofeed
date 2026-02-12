@@ -130,14 +130,14 @@ export default function createApp() {
     }
 
     if (path.startsWith(authRateLimitPrefix)) {
-      return authRateLimiter(c, next);
+      return authRateLimiter(c as never, next as never);
     }
 
     if (path === GRAPHQL_OPENAPI.path) {
-      return graphQLRateLimiter(c, next);
+      return graphQLRateLimiter(c as never, next as never);
     }
 
-    return defaultRateLimiter(c, next);
+    return defaultRateLimiter(c as never, next as never);
   });
 
   app.use("*", async (c, next) => {

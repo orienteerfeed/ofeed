@@ -22,8 +22,25 @@ function normalizeUserId(authContext: AuthContext): number | string | undefined 
   return authContext.userId;
 }
 
+function normalizeNumericUserId(userId: number | string | undefined) {
+  if (typeof userId === "number") {
+    return Number.isFinite(userId) ? userId : undefined;
+  }
+
+  if (typeof userId === "string" && userId.trim() !== "") {
+    const parsed = Number(userId);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+}
+
 export function getJwtUserId(c: Context<AppBindings>) {
   return normalizeUserId(c.get("authContext"));
+}
+
+export function getJwtNumericUserId(c: Context<AppBindings>) {
+  return normalizeNumericUserId(getJwtUserId(c));
 }
 
 export function getAuthenticatedUserId(c: Context<AppBindings>) {
@@ -31,12 +48,13 @@ export function getAuthenticatedUserId(c: Context<AppBindings>) {
 }
 
 export const requireJwtAuth: MiddlewareHandler<AppBindings> = async (c, next) => {
-  const userId = getJwtUserId(c);
+  const userId = getJwtNumericUserId(c);
 
   if (!userId) {
     return c.json(errorResponse("Unauthorized: Invalid or missing credentials.", 401), 401);
   }
 
+  c.set("jwtUserId", userId);
   await next();
 };
 

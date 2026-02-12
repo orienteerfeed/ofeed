@@ -12,7 +12,9 @@ export const competitorsByClassUpdated = {
     // Use pubsub.asyncIterableIterator for subsequent updates
     const topic = `${COMPETITORS_BY_CLASS_UPDATED}_${classId}`;
     console.log(`Subscribing to topic: ${topic}`);
-    const asyncIterableIterator = pubsub.asyncIterableIterator([topic]);
+    const asyncIterableIterator = pubsub.asyncIterableIterator([topic]) as AsyncIterable<{
+      competitorsByClassUpdated: unknown;
+    }>;
 
     // Relay subsequent updates to the subscriber
     for await (const payload of asyncIterableIterator) {

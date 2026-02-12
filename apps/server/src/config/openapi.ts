@@ -32,7 +32,7 @@ function registerDocumentedRoutes(app: AppOpenAPI) {
 }
 
 export function configureOpenAPI(app: AppOpenAPI) {
-  app.doc(OPENAPI_CONFIG.docPath, {
+  const documentConfig = {
     openapi: "3.0.0",
     info: {
       title: OPENAPI_CONFIG.title,
@@ -43,7 +43,9 @@ export function configureOpenAPI(app: AppOpenAPI) {
       securitySchemes: OPENAPI_SECURITY_SCHEMES,
     },
     servers: [{ url: "" }],
-  });
+  };
+
+  app.doc(OPENAPI_CONFIG.docPath, documentConfig as never);
 
   // Register routes that are not declared via `router.openapi(...)`.
   registerDocumentedRoutes(app);

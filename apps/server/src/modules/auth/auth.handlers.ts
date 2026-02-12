@@ -10,7 +10,7 @@ import type { AppBindings, AppOpenAPI } from "../../types";
 
 import { AuthenticationError, ValidationError } from "../../exceptions/index.js";
 import { toLowerCaseHeaderRecord } from "../../lib/http/headers.js";
-import { getJwtUserId, requireJwtAuth } from "../../middlewares/require-jwt";
+import { getJwtNumericUserId, requireJwtAuth } from "../../middlewares/require-jwt";
 import prisma from "../../utils/context.js";
 import { error as errorResponse, success as successResponse, validation as validationResponse } from "../../utils/responseApi.js";
 import { generateRandomHex } from "../../utils/randomUtils.js";
@@ -32,11 +32,9 @@ const OAuthRequest = OAuth2Server.Request;
 const OAuthResponse = OAuth2Server.Response;
 
 const oauth = new OAuth2Server({
-  debug: true,
-  model: oauth2Model,
-  grants: ["authorization_code", "password", "refresh_token", "client_credentials"],
-  accessTokenLifetime: 3600,
-  allowBearerTokensInQueryString: true,
+  model: oauth2Model as OAuth2Server.ClientCredentialsModel &
+    OAuth2Server.PasswordModel &
+    OAuth2Server.RefreshTokenModel,
 });
 
 const oauthCredentialBodySchema = z.object({
@@ -95,24 +93,11 @@ function toQueryRecord(url: string) {
   return query;
 }
 
-function toNumericUserId(userId: number | string | undefined) {
-  if (typeof userId === "number") {
-    return Number.isFinite(userId) ? userId : null;
-  }
-
-  if (typeof userId === "string" && userId.trim() !== "") {
-    const parsed = Number(userId);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  return null;
-}
-
 export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/signin", async c => {
     const parsedBody = await parseJsonBody(c, signinBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -137,7 +122,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/signup", async c => {
     const parsedBody = await parseJsonBody(c, signupBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -173,7 +158,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/request-password-reset", async c => {
     const parsedBody = await parseJsonBody(c, passwordResetRequestBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -209,7 +194,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/reset-password", async c => {
     const parsedBody = await parseJsonBody(c, passwordResetConfirmBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -227,7 +212,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
               user: passwordResetPayload.user,
               message: "Password reset successful",
             },
-            message: passwordResetPayload.message,
+            message: "Password reset successful",
           },
           200,
         ),
@@ -336,7 +321,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
         scope,
       };
 
-      return c.json(accessTokenResponse, oauthResponse.status || 200);
+      return c.json(accessTokenResponse, 200);
     } catch (err) {
       const statusCode =
         typeof err === "object" && err !== null && "code" in err && typeof err.code === "number"
@@ -349,11 +334,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   });
 
   router.get("/oauth2-credentials", requireJwtAuth, async c => {
-    const userId = toNumericUserId(getJwtUserId(c));
-
-    if (!userId) {
-      return c.json(errorResponse("Unauthorized: Invalid or missing credentials.", 401), 401);
-    }
+    const userId = getJwtNumericUserId(c) as number;
 
     try {
       const oAuth2Credentials = await prisma.oAuthClient.findFirst({
@@ -378,15 +359,11 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   });
 
   router.post("/generate-oauth2-credentials", requireJwtAuth, async c => {
-    const userId = toNumericUserId(getJwtUserId(c));
-
-    if (!userId) {
-      return c.json(errorResponse("Unauthorized: Invalid or missing credentials.", 401), 401);
-    }
+    const userId = getJwtNumericUserId(c) as number;
 
     const parsedBody = await parseJsonBody(c, oauthCredentialBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 

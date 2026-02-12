@@ -30,7 +30,7 @@ const okText = (description: string) => ({
   description,
   content: {
     "text/plain": {
-      schema: { type: "string" },
+      schema: { type: "string" as const },
     },
   },
 });
@@ -74,8 +74,11 @@ const competitorExternalIdParam = {
   schema: { type: "string" },
 } as const;
 
-const bearerSecurity = [{ BearerAuth: [] }] as const;
-const bearerOrBasicSecurity = [{ BearerAuth: [] }, { BasicAuth: [] }] as const;
+const bearerSecurity: NonNullable<OpenApiOperation["security"]> = [{ BearerAuth: [] }];
+const bearerOrBasicSecurity: NonNullable<OpenApiOperation["security"]> = [
+  { BearerAuth: [] },
+  { BasicAuth: [] },
+];
 
 const authBase = AUTH_OPENAPI.basePath;
 const eventsBase = EVENT_OPENAPI.basePath;
