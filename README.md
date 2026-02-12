@@ -5,6 +5,14 @@
 
 OrienteerFeed (OFeed) is a monorepo web platform for orienteering event data, combining REST + GraphQL APIs, real-time event workflows, and a modern React frontend.
 
+⭐ Star us on GitHub — it motivates us a lot!
+
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/YWURC23tHZ)](https://discord.gg/YWURC23tHZ)
+
+## How It Works
+
+This application is like a digital hub for all things related to orienteering events. It serves as a one-stop platform where you can get details about various events, the classes offered at these events, and the competitors participating in them. It provides these services through a web server and is capable of communicating using both RESTful APIs and GraphQL, which are two ways of fetching data from a server.
+
 ## Tech Stack
 
 - Client: Vite + React + TypeScript
@@ -167,7 +175,7 @@ Behavior:
 - every push to `main` (except `package.json`-only commits) creates a new release version (`patch` increment)
 - creates git tag `vX.Y.Z`
 - creates GitHub Release
-- after successful release, `.github/workflows/sync-version-pr.yaml` creates/updates PR that syncs root `package.json` version to released tag
+- after successful release, the same workflow creates/updates PR that syncs root `package.json` version to released tag
 
 Note:
 
@@ -186,6 +194,12 @@ Packages are published as private by default.
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution process and standards.
 
+1. Create your feature branch: `git checkout -b Feature/my-new-feature`
+2. Commit your changes: `git commit -am 'Add some feature'`
+3. Push to the branch: `git push origin Feature/my-new-feature`
+4. Submit a pull request :D
+
+
 ## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md).
@@ -198,4 +212,4 @@ See [CHANGELOG.md](./CHANGELOG.md).
 
 ## License
 
-[GPL-3.0](./LICENSE)
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](/LICENSE)
