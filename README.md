@@ -160,18 +160,17 @@ Available compose overlays:
 
 ### Automated versioning and GitHub releases
 
-Releases are automated from `main` via `semantic-release` (`.github/workflows/release.yaml`):
+Releases are automated from `main` via `semantic-release` (`.github/workflows/release.yaml`).
 
-- `fix:` -> patch bump (`x.y.Z`)
-- `feat:` -> minor bump (`x.Y.0`)
-- `BREAKING CHANGE` (or `feat!:` / `fix!:`) -> major bump (`X.0.0`)
+Behavior:
 
-On release, CI automatically:
+- every push to `main` creates a new release version (`patch` increment)
+- creates git tag `vX.Y.Z`
+- creates GitHub Release
 
-1. updates root version in `package.json`
-2. updates `CHANGELOG.md`
-3. creates git tag `vX.Y.Z`
-4. creates GitHub Release
+Note:
+
+- set optional secret `RELEASE_PLEASE_TOKEN` (PAT) to allow tag/release events to trigger downstream workflows (for example Docker publish). If it is not set, workflow falls back to `GITHUB_TOKEN`.
 
 ### Docker image publishing
 
