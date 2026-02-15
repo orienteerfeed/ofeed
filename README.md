@@ -13,6 +13,9 @@ OrienteerFeed (OFeed) is a monorepo web platform for orienteering event data, co
 
 This application is like a digital hub for all things related to orienteering events. It serves as a one-stop platform where you can get details about various events, the classes offered at these events, and the competitors participating in them. It provides these services through a web server and is capable of communicating using both RESTful APIs and GraphQL, which are two ways of fetching data from a server.
 
+## Localization
+We are using [Webplate](https://hosted.weblate.org/projects/ofeed/) free localization hosting, thanks to [webplate.org](https://weblate.org/) and Michal Čihař.
+
 ## Tech Stack
 
 - Client: Vite + React + TypeScript
