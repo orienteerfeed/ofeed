@@ -1,1 +1,11 @@
-{}
+{
+    "Pages": {
+        "Auth": {
+            "User": {
+                "Firstname": "Vorname",
+                "Lastname": "Nachname",
+                "Club": ""
+            }
+        }
+    }
+}
