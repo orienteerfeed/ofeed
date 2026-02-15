@@ -9,12 +9,12 @@ import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { timing } from "hono/timing";
 import { rateLimiter } from "hono-rate-limiter";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
 import type { AppBindings, AppOpenAPI, RateLimitOptions } from "../types";
 
 import { buildCSPHeaderValue, env, isCSPEnabled } from "../config";
-import { HTTP_STATUS } from "../constants";
+import { API_DEFAULTS, HTTP_STATUS } from "../constants";
 import { prisma } from "../db/prisma";
 import { accessLoggerMiddleware } from "../middlewares/access-logger";
 import { authMiddleware, isPublicPath } from "../middlewares/auth.middleware";
@@ -27,6 +27,23 @@ import { error as errorResponse } from "../utils/responseApi.js";
 import { logger } from "./logging";
 
 const authRateLimitPrefix = AUTH_OPENAPI.basePath;
+const restApiPrefix = API_DEFAULTS.BASE_PATH;
+
+function toRfc3339Timestamp() {
+  return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
+function shouldAttachMeta(path: string, contentType: string | null) {
+  if (!path.startsWith(restApiPrefix)) {
+    return false;
+  }
+
+  if (path.includes("/oauth2")) {
+    return false;
+  }
+
+  return contentType?.toLowerCase().includes("application/json") ?? false;
+}
 
 export function createRouter() {
   return new OpenAPIHono<AppBindings>({
@@ -143,6 +160,58 @@ export default function createApp() {
   app.use("*", async (c, next) => {
     c.set("prisma", prisma);
     await next();
+  });
+
+  app.use("*", async (c, next) => {
+    await next();
+
+    if (!shouldAttachMeta(c.req.path, c.res.headers.get("content-type"))) {
+      return;
+    }
+
+    if (c.res.status === HTTP_STATUS.NO_CONTENT) {
+      return;
+    }
+
+    let payload: unknown;
+    try {
+      payload = await c.res.clone().json();
+    } catch {
+      return;
+    }
+
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return;
+    }
+
+    const payloadRecord = payload as Record<string, unknown>;
+    const currentMeta = payloadRecord.meta;
+    const nextMeta =
+      currentMeta && typeof currentMeta === "object" && !Array.isArray(currentMeta)
+        ? { ...(currentMeta as Record<string, unknown>) }
+        : {};
+
+    if (typeof nextMeta.requestId !== "string" || nextMeta.requestId.length === 0) {
+      nextMeta.requestId = c.get("requestId") || randomUUID();
+    }
+
+    if (typeof nextMeta.timestamp !== "string" || nextMeta.timestamp.length === 0) {
+      nextMeta.timestamp = toRfc3339Timestamp();
+    }
+
+    const headers = new Headers(c.res.headers);
+    headers.delete("content-length");
+
+    c.res = new Response(
+      JSON.stringify({
+        ...payloadRecord,
+        meta: nextMeta,
+      }),
+      {
+        status: c.res.status,
+        headers,
+      },
+    );
   });
 
   app.notFound((c) => c.json(errorResponse("404: Not found.", HTTP_STATUS.NOT_FOUND), HTTP_STATUS.NOT_FOUND));
