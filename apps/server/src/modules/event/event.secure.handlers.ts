@@ -5,6 +5,7 @@ import sharp from 'sharp';
 
 import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
 import { parseJsonObjectSafe, parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
+import { getErrorDetails, logEndpoint } from '../../lib/http/endpoint-logger.js';
 import { toLowerCaseHeaderRecord } from '../../lib/http/headers.js';
 import { toValidationIssues, type ValidationIssue } from '../../lib/validation/zod.js';
 import {
@@ -42,9 +43,12 @@ import type { Prisma } from "../../generated/prisma/client";
 import type { AppBindings } from "../../types";
 import {
   changelogQuerySchema,
+  externalCompetitorUpdateBodySchema,
   eventCompetitorExternalParamsSchema,
   eventCompetitorParamsSchema,
   eventIdParamsSchema,
+  generatePasswordBodySchema,
+  stateChangeBodySchema,
 } from "./event.schema.js";
 
 type BodyMode = "auto" | "json" | "form" | "none";
@@ -52,6 +56,7 @@ type BodyMode = "auto" | "json" | "form" | "none";
 type SecureFile = MultipartFile;
 
 type EventRouteRequest = {
+  c: Context<AppBindings>;
   params: any;
   query: any;
   body: any;
@@ -126,6 +131,7 @@ async function buildEventRouteRequest(c: Context<AppBindings>, bodyMode: BodyMod
 
   const auth = c.get("authContext");
   const req: EventRouteRequest = {
+    c,
     params,
     query,
     body,
@@ -189,6 +195,29 @@ function getNumericJwtUserId(req: EventRouteRequest) {
   return null;
 }
 
+function logSecureRouteResult(c: Context<AppBindings>, statusCode: number) {
+  const details = {
+    method: c.req.method,
+    path: c.req.path,
+    statusCode,
+  };
+
+  if (statusCode >= 500) {
+    logEndpoint(c, 'error', 'Secure event endpoint failed', details);
+    return;
+  }
+
+  if (statusCode >= 400) {
+    logEndpoint(c, 'warn', 'Secure event endpoint rejected request', details);
+    return;
+  }
+
+  const method = c.req.method.toUpperCase();
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    logEndpoint(c, 'info', 'Secure event endpoint completed', details);
+  }
+}
+
 async function authorizeOwnedEvent(
   req: EventRouteRequest,
   res: RouteJsonResponder,
@@ -233,31 +262,24 @@ function routeWithValidation(
 
     const response = await handler({ c, req, res });
 
+    let finalResponse: Response;
     if (response instanceof Response) {
-      return response;
+      finalResponse = response;
+    } else if (response === undefined) {
+      finalResponse = res.json(null);
+    } else if (typeof response === "string") {
+      finalResponse = new Response(response, { status: res.statusCode });
+    } else {
+      finalResponse = c.json(response as any, res.statusCode as any);
     }
 
-    if (response === undefined) {
-      return res.json(null);
-    }
-
-    if (typeof response === "string") {
-      return new Response(response, { status: res.statusCode });
-    }
-
-    return c.json(response as any, res.statusCode as any);
+    logSecureRouteResult(c, finalResponse.status);
+    return finalResponse;
   };
 }
 
 export function registerSecureEventRoutes(router) {
 const eventBodySchema = eventWriteSchema;
-
-const generatePasswordBodySchema = z.object({
-  eventId: z.string().min(1),
-});
-
-const validInputOrigin = ['START'];
-const validInputStatus = ['Inactive', 'Active', 'DidNotStart', 'Cancelled', 'LateStart'];
 
 const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -301,21 +323,8 @@ const getImageExtension = (format: "png" | "webp" | "jpeg") => {
   }
 };
 
-const stateChangeBodySchema = z.object({
-  origin: z.enum(validInputOrigin as [string, ...string[]]),
-  status: z.enum(validInputStatus as [string, ...string[]]),
-});
-
 const createCompetitorBodySchema = createCompetitorSchema;
 const updateCompetitorBodySchema = updateCompetitorSchema;
-
-const externalCompetitorUpdateBodySchema = updateCompetitorBodySchema.extend({
-  useExternalId: z.boolean(),
-  classExternalId: z.string().max(191).optional().nullable(),
-}).refine(
-  value => !(value.classId && value.classExternalId),
-  { message: 'Only one of classId or classExternalId should be provided, not both.', path: ['classId'] },
-);
 
 // Readable password generator for Node.js backend service
 const generatePassword = (wordCount = 3) => {
@@ -1000,7 +1009,10 @@ router.post(
         )
       );
   } catch (error) {
-    console.error(error);
+    logEndpoint(req.c, 'error', 'Generate event password failed', {
+      eventId,
+      ...getErrorDetails(error),
+    });
     return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
   }),
@@ -1061,7 +1073,10 @@ router.post(
       .status(200)
       .json(successResponse('OK', { data: { ...deletedEventPassword } }, res.statusCode));
   } catch (error) {
-    console.error(error);
+    logEndpoint(req.c, 'error', 'Revoke event password failed', {
+      eventId,
+      ...getErrorDetails(error),
+    });
     return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
   }
   }),
@@ -1461,7 +1476,11 @@ router.post(
           }
           req.body.classId = dbClassResponse.id;
         } catch (error) {
-          console.error(error);
+          logEndpoint(req.c, 'error', 'Class lookup by externalId failed on competitor create', {
+            eventId,
+            classExternalId,
+            ...getErrorDetails(error),
+          });
           return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
         }
       }
@@ -1473,7 +1492,10 @@ router.post(
 
       return res.status(200).json(successResponse('OK', { data: storeCompetitorMessage }, 200));
     } catch (error) {
-      console.error(error);
+      logEndpoint(req.c, 'error', 'Store competitor failed', {
+        eventId,
+        ...getErrorDetails(error),
+      });
 
       if (error instanceof ValidationError) {
         return res.status(422).json(validationResponse(error.message, 422));
@@ -1574,7 +1596,11 @@ const handleValidateAndUpdateCompetitor = async (
       .status(200)
       .json(successResponse('OK', { data: updateCompetitorMessage }, res.statusCode));
   } catch (error) {
-    console.error(error);
+    logEndpoint(req.c, 'error', 'Update competitor failed', {
+      eventId,
+      competitorId,
+      ...getErrorDetails(error),
+    });
     if (error instanceof ValidationError) {
       return res.status(422).json(validationResponse(error.message, res.statusCode));
     } else if (error instanceof AuthenticationError) {
@@ -1988,7 +2014,11 @@ router.put(
         },
       });
     } catch (error) {
-      console.error(error);
+      logEndpoint(req.c, 'error', 'External competitor lookup failed on update', {
+        eventId,
+        competitorExternalId,
+        ...getErrorDetails(error),
+      });
       return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
     }
 
@@ -2013,7 +2043,12 @@ router.put(
         }
         req.body.classId = dbClassResponse.id;
       } catch (error) {
-        console.error(error);
+        logEndpoint(req.c, 'error', 'Class lookup by externalId failed on external competitor update', {
+          eventId,
+          classExternalId,
+          competitorExternalId,
+          ...getErrorDetails(error),
+        });
         return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
       }
     }
@@ -2152,7 +2187,10 @@ router.get(
         },
       });
     } catch (err) {
-      console.error(err);
+      logEndpoint(req.c, 'error', 'Load event changelog failed', {
+        eventId,
+        ...getErrorDetails(err),
+      });
       return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
     }
 
@@ -2250,7 +2288,10 @@ router.delete(
 
       return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
-      console.error(error);
+      logEndpoint(req.c, 'error', 'Delete event competitors failed', {
+        eventId,
+        ...getErrorDetails(error),
+      });
       if (error instanceof DatabaseError) {
         return res.status(500).json(errorResponse(error.message, res.statusCode));
       }
@@ -2320,7 +2361,11 @@ router.delete(
 
       return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
-      console.error(error);
+      logEndpoint(req.c, 'error', 'Delete competitor failed', {
+        eventId,
+        competitorId,
+        ...getErrorDetails(error),
+      });
       if (error instanceof DatabaseError) {
         return res.status(500).json(errorResponse(error.message, res.statusCode));
       }
@@ -2399,7 +2444,11 @@ router.delete(
 
       return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
-      console.error(error);
+      logEndpoint(req.c, 'error', 'Delete external competitor failed', {
+        eventId,
+        competitorExternalId,
+        ...getErrorDetails(error),
+      });
       if (error instanceof DatabaseError) {
         return res.status(500).json(errorResponse(error.message, res.statusCode));
       }
@@ -2466,7 +2515,10 @@ router.delete(
 
       return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
     } catch (error) {
-      console.error(error);
+      logEndpoint(req.c, 'error', 'Delete all event data failed', {
+        eventId,
+        ...getErrorDetails(error),
+      });
       if (error instanceof DatabaseError) {
         return res.status(500).json(errorResponse(error.message, res.statusCode));
       }

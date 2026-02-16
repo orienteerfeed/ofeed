@@ -30,6 +30,72 @@ const uploadIofBodySchema = z.object({
 }).passthrough();
 
 type UploadedFile = MultipartFile;
+type UploadLogLevel = 'info' | 'warn' | 'error';
+type CompressionType = 'none' | 'gzip' | 'zlib' | 'deflate' | 'unknown';
+type MaybeUnzipResult = {
+  buffer: Buffer;
+  compressionEnabled: boolean;
+  compressedInput: boolean;
+  compressionType: CompressionType;
+  decompressionFailed: boolean;
+};
+
+function getUploadFileMeta(file?: UploadedFile) {
+  return {
+    fileName: file?.originalname || null,
+    fileSizeBytes: file?.size ?? null,
+    mediaType: file?.mimetype || null,
+  };
+}
+
+function getUploadLogContext(c: any) {
+  try {
+    const context = c.get('logContext');
+    if (context && typeof context === 'object') {
+      return context;
+    }
+  } catch {
+    // no-op fallback
+  }
+
+  return {};
+}
+
+function logUploadEvent(
+  c: any,
+  level: UploadLogLevel,
+  message: string,
+  details: Record<string, unknown>,
+) {
+  const context = {
+    ...getUploadLogContext(c),
+    upload: details,
+  };
+
+  let scopedLogger;
+  try {
+    scopedLogger = c.get('logger');
+  } catch {
+    scopedLogger = undefined;
+  }
+
+  if (scopedLogger && typeof scopedLogger[level] === 'function') {
+    scopedLogger[level](message, context);
+    return;
+  }
+
+  if (level === 'error') {
+    console.error(message, context);
+    return;
+  }
+
+  if (level === 'warn') {
+    console.warn(message, context);
+    return;
+  }
+
+  console.info(message, context);
+}
 
 // Utility functions
 /**
@@ -883,20 +949,63 @@ async function handleIofXmlUpload(
     file,
   }: { eventId: string; validateXml?: boolean; file?: UploadedFile },
 ) {
+  const endpoint = '/rest/v1/upload/iof';
+  const iofValidationEnabled = typeof validateXml === 'undefined' || validateXml !== false;
+
   if (!file) {
-    console.error('File not found');
+    logUploadEvent(c, 'warn', 'IOF upload failed: missing file', {
+      endpoint,
+      eventId,
+      ...getUploadFileMeta(file),
+      compressionEnabled: true,
+      compressedInput: false,
+      compressionType: 'none',
+      decompressionFailed: false,
+      iofValidationEnabled,
+      success: false,
+      stage: 'input',
+    });
     return c.json(validation('No file uploaded', 422), 422);
   }
 
-  // Process uploaded XML file (compressed or uncompressed)
-  // Automatically detects gzip compression and decompresses if needed
-  // Returns Buffer containing the raw XML data ready for parsing
-  const xmlBuffer = maybeUnzip(file);
+  const unzipResult = maybeUnzip(file);
+  const uploadDetails = {
+    endpoint,
+    eventId,
+    ...getUploadFileMeta(file),
+    compressionEnabled: unzipResult.compressionEnabled,
+    compressedInput: unzipResult.compressedInput,
+    compressionType: unzipResult.compressionType,
+    decompressionFailed: unzipResult.decompressionFailed,
+    iofValidationEnabled,
+  };
 
-  if (typeof validateXml === 'undefined' || validateXml !== false) {
+  logUploadEvent(c, 'info', 'IOF upload received', {
+    ...uploadDetails,
+    success: false,
+    stage: 'received',
+  });
+
+  if (unzipResult.decompressionFailed) {
+    logUploadEvent(c, 'warn', 'IOF upload decompression failed, falling back to raw payload', {
+      ...uploadDetails,
+      success: false,
+      stage: 'decompression',
+    });
+  }
+
+  const xmlBuffer = unzipResult.buffer;
+
+  if (iofValidationEnabled) {
     const xsd = await fetchIOFXmlSchema();
     const iofXmlValidation = await validateIofXml(xmlBuffer.toString(), xsd);
     if (!iofXmlValidation.state) {
+      logUploadEvent(c, 'warn', 'IOF upload failed XML validation', {
+        ...uploadDetails,
+        success: false,
+        stage: 'xml-validation',
+        validationMessage: iofXmlValidation.message,
+      });
       return c.json(validation(iofXmlValidation.errors ?? iofXmlValidation.message), 422);
     }
   }
@@ -914,10 +1023,23 @@ async function handleIofXmlUpload(
     dbResponseEvent = ownership.event;
   } catch (err) {
     if (isAuthzError(err)) {
+      logUploadEvent(c, 'warn', 'IOF upload failed authorization', {
+        ...uploadDetails,
+        success: false,
+        stage: 'authorization',
+        statusCode: err.statusCode,
+        reason: err.message,
+      });
       return c.json(error(err.message, err.statusCode), err.statusCode);
     }
 
     const message = err instanceof Error ? err.message : 'Internal Server Error';
+    logUploadEvent(c, 'error', 'IOF upload failed while resolving event ownership', {
+      ...uploadDetails,
+      success: false,
+      stage: 'authorization',
+      reason: message,
+    });
     return c.json(error(message, 500), 500);
   }
 
@@ -925,6 +1047,12 @@ async function handleIofXmlUpload(
   try {
     iofXml3 = await parseXml(xmlBuffer);
   } catch (err: any) {
+    logUploadEvent(c, 'error', 'IOF upload failed while parsing XML', {
+      ...uploadDetails,
+      success: false,
+      stage: 'xml-parse',
+      reason: err?.message || 'XML parsing failed',
+    });
     return c.json(error(err.message, 500), 500);
   }
 
@@ -933,72 +1061,107 @@ async function handleIofXmlUpload(
   try {
     dbClassLists = await getClassLists(eventId);
   } catch (err: any) {
+    logUploadEvent(c, 'error', 'IOF upload failed while loading event classes', {
+      ...uploadDetails,
+      success: false,
+      stage: 'load-classes',
+      reason: err?.message || 'Unable to load classes',
+    });
     return c.json(error(err.message, 500), 500);
   }
 
   const eventName = iofXml3[Object.keys(iofXml3)[0]]['Event'][0]['Name'];
 
-  await Promise.all(
-    iofXmlType.map(async type => {
-      if (type.jsonKey === 'ResultList') {
-        const classResults = iofXml3.ResultList.ClassResult;
-        if (classResults && classResults.length > 0) {
-          const updatedClasses = await processClassResults(
-            eventId,
-            classResults,
-            dbClassLists,
-            dbResponseEvent
-          );
-          notifyWinnerChanges(eventId);
-          for (const classId of updatedClasses) {
-            try {
-              await publishUpdatedCompetitors(classId); // Process sequentially
-            } catch (err) {
-              console.error(`Error publishing competitors update for classId ${classId}:`, err);
+  try {
+    await Promise.all(
+      iofXmlType.map(async type => {
+        if (type.jsonKey === 'ResultList') {
+          const classResults = iofXml3.ResultList.ClassResult;
+          if (classResults && classResults.length > 0) {
+            const updatedClasses = await processClassResults(
+              eventId,
+              classResults,
+              dbClassLists,
+              dbResponseEvent
+            );
+            notifyWinnerChanges(eventId);
+            for (const classId of updatedClasses) {
+              try {
+                await publishUpdatedCompetitors(classId); // Process sequentially
+              } catch (err) {
+                logUploadEvent(c, 'error', 'IOF upload failed while publishing updated competitors', {
+                  ...uploadDetails,
+                  success: false,
+                  stage: 'publish-updated-competitors',
+                  classId,
+                  reason: err instanceof Error ? err.message : 'Publish failed',
+                });
+              }
             }
           }
-        }
-      } else if (type.jsonKey === 'StartList') {
-        const classStarts = iofXml3.StartList.ClassStart;
-        if (classStarts && classStarts.length > 0) {
-          await processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent);
-        }
-      } else if (type.jsonKey === 'CourseData') {
-        // Process CourseData
-        let dbClassLists;
-        try {
-          dbClassLists = await prisma.class.findMany({
-            where: { eventId: eventId },
-            select: {
-              id: true,
-              name: true,
-            },
-          });
-        } catch (err) {
-          console.error(err);
-          return;
-        }
+        } else if (type.jsonKey === 'StartList') {
+          const classStarts = iofXml3.StartList.ClassStart;
+          if (classStarts && classStarts.length > 0) {
+            await processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent);
+          }
+        } else if (type.jsonKey === 'CourseData') {
+          // Process CourseData
+          let dbClassLists;
+          try {
+            dbClassLists = await prisma.class.findMany({
+              where: { eventId: eventId },
+              select: {
+                id: true,
+                name: true,
+              },
+            });
+          } catch (err) {
+            logUploadEvent(c, 'error', 'IOF upload failed while loading classes for course data', {
+              ...uploadDetails,
+              success: false,
+              stage: 'course-data-load-classes',
+              reason: err instanceof Error ? err.message : 'Unable to load classes',
+            });
+            return;
+          }
 
-        const courseData = iofXml3.CourseData.RaceCourseData[0].Course;
-        await Promise.all(
-          courseData.map(async course => {
-            const classDetails = {
-              Name: [course.Name[0]],
-              Id: [],
-              ATTR: {},
-            };
-            const additionalData = {
-              length: course.Length && parseInt(course.Length[0]),
-              climb: course.Climb && parseInt(course.Climb[0]),
-              controlsCount: course.CourseControl && course.CourseControl.length - 2,
-            };
+          const courseData = iofXml3.CourseData.RaceCourseData[0].Course;
+          await Promise.all(
+            courseData.map(async course => {
+              const classDetails = {
+                Name: [course.Name[0]],
+                Id: [],
+                ATTR: {},
+              };
+              const additionalData = {
+                length: course.Length && parseInt(course.Length[0]),
+                climb: course.Climb && parseInt(course.Climb[0]),
+                controlsCount: course.CourseControl && course.CourseControl.length - 2,
+              };
 
-            await upsertClass(eventId, classDetails, dbClassLists, additionalData);
-          })
-        );
-      }
-    })
-  );
+              await upsertClass(eventId, classDetails, dbClassLists, additionalData);
+            })
+          );
+        }
+      })
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Upload processing failed';
+    logUploadEvent(c, 'error', 'IOF upload failed during processing', {
+      ...uploadDetails,
+      success: false,
+      stage: 'processing',
+      reason: message,
+    });
+    return c.json(error(message, 500), 500);
+  }
+
+  logUploadEvent(c, 'info', 'IOF upload completed', {
+    ...uploadDetails,
+    success: true,
+    stage: 'completed',
+    eventName,
+  });
 
   return c.json(
     success('OK', { data: 'Iof xml uploaded successfully: ' + eventName }, 200),
@@ -1021,50 +1184,84 @@ async function handleIofXmlUpload(
  * @param file.buffer - The file contents as a Buffer.
  * @param file.mimetype - Optional MIME type (e.g., 'application/gzip', 'application/zlib').
  * @param file.originalname - Optional original filename (e.g., 'data.xml.gz', 'payload.zlib').
- * @returns Buffer - Decompressed content when gzip/zlib is detected, otherwise the original buffer.
+ * @returns MaybeUnzipResult - Decompressed content metadata and payload.
  *
  * @throws {Error} If decompression fails due to corrupted or invalid compressed data.
  */
 
-function maybeUnzip(file) {
+function maybeUnzip(file: UploadedFile): MaybeUnzipResult {
   const buf = file.buffer;
-  if (!buf) return buf;
+  if (!buf) {
+    return {
+      buffer: Buffer.alloc(0),
+      compressionEnabled: true,
+      compressedInput: false,
+      compressionType: 'none',
+      decompressionFailed: false,
+    };
+  }
 
   const mimetype = file.mimetype || '';
   const name = file.originalname || '';
 
-  const looksGzip =
-    buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
+  const looksGzip = buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
 
-  const looksZlib =
-    buf.length > 2 && buf[0] === 0x78 &&
-    [0x01, 0x5E, 0x9C, 0xDA].includes(buf[1]);
+  const looksZlib = buf.length > 2 && buf[0] === 0x78 && [0x01, 0x5e, 0x9c, 0xda].includes(buf[1]);
   // common CMF/FLG combinations for zlib headers
 
-  const hintedGzip =
-    /application\/(x-)?gzip/i.test(mimetype) || /\.gz$/i.test(name);
+  const hintedGzip = /application\/(x-)?gzip/i.test(mimetype) || /\.gz$/i.test(name);
 
-  const hintedZlib =
-    /application\/zlib/i.test(mimetype) ||
-    /\.(zz|zlib)$/i.test(name);
+  const hintedZlib = /application\/zlib/i.test(mimetype) || /\.(zz|zlib)$/i.test(name);
 
   const hintedDeflate = /application\/deflate/i.test(mimetype);
+
+  const compressedInput = looksGzip || hintedGzip || looksZlib || hintedZlib || hintedDeflate;
+
   try {
     if (looksGzip || hintedGzip) {
-      return zlib.gunzipSync(buf);
+      return {
+        buffer: zlib.gunzipSync(buf),
+        compressionEnabled: true,
+        compressedInput: true,
+        compressionType: 'gzip',
+        decompressionFailed: false,
+      };
     }
     if (looksZlib || hintedZlib) {
-      return zlib.inflateSync(buf);
+      return {
+        buffer: zlib.inflateSync(buf),
+        compressionEnabled: true,
+        compressedInput: true,
+        compressionType: 'zlib',
+        decompressionFailed: false,
+      };
     }
     if (hintedDeflate) {
-      return zlib.inflateRawSync(buf);
+      return {
+        buffer: zlib.inflateRawSync(buf),
+        compressionEnabled: true,
+        compressedInput: true,
+        compressionType: 'deflate',
+        decompressionFailed: false,
+      };
     }
-  } catch (err) {
-    // If detection was wrong or decompression fails, fall back to original buffer
-    console.warn("maybeUnzip: decompression failed", err);
+  } catch {
+    return {
+      buffer: buf,
+      compressionEnabled: true,
+      compressedInput,
+      compressionType: compressedInput ? 'unknown' : 'none',
+      decompressionFailed: true,
+    };
   }
 
-  return buf;
+  return {
+    buffer: buf,
+    compressionEnabled: true,
+    compressedInput: false,
+    compressionType: 'none',
+    decompressionFailed: false,
+  };
 }
 
 /**
@@ -1096,24 +1293,38 @@ function maybeUnzip(file) {
  *        description: Internal server error.
  */
 export function registerUploadRoutes(router) {
-// Verify user authentication
-//TODO: Restrucure the code for better readability
-router.use("*", requireAuth);
+  // Verify user authentication
+  //TODO: Restrucure the code for better readability
+  router.use("*", requireAuth);
 
-router.post("/iof", async c => {
-  const { body, file } = await parseMultipartPayload(c);
-  const parsedBody = uploadIofBodySchema.safeParse(body);
+  router.post("/iof", async c => {
+    const endpoint = '/rest/v1/upload/iof';
+    const { body, file } = await parseMultipartPayload(c);
+    const parsedBody = uploadIofBodySchema.safeParse(body);
 
-  if (!parsedBody.success) {
-    return c.json(validation(toValidationIssues(parsedBody.error.issues)), 422);
-  }
+    if (!parsedBody.success) {
+      const issues = toValidationIssues(parsedBody.error.issues);
+      logUploadEvent(c, 'warn', 'IOF upload request validation failed', {
+        endpoint,
+        ...getUploadFileMeta(file),
+        compressionEnabled: true,
+        compressedInput: false,
+        compressionType: 'none',
+        decompressionFailed: false,
+        iofValidationEnabled: null,
+        success: false,
+        stage: 'request-validation',
+        issues,
+      });
+      return c.json(validation(issues), 422);
+    }
 
-  return handleIofXmlUpload(c, {
-    eventId: parsedBody.data.eventId,
-    validateXml: parsedBody.data.validateXml,
-    file,
+    return handleIofXmlUpload(c, {
+      eventId: parsedBody.data.eventId,
+      validateXml: parsedBody.data.validateXml,
+      file,
+    });
   });
-});
 
 /**
  * @swagger
@@ -1136,36 +1347,78 @@ router.post("/iof", async c => {
  *      500:
  *        description: Internal server error
  */
-router.post("/czech-ranking", async c => {
-  const { file } = await parseMultipartPayload(c);
+  router.post("/czech-ranking", async c => {
+    const endpoint = '/rest/v1/upload/czech-ranking';
+    const { file } = await parseMultipartPayload(c);
 
-  if (!file) {
-    console.error('File not found');
-    return c.json(validation('No file uploaded', 422), 422);
-  }
+    if (!file) {
+      logUploadEvent(c, 'warn', 'Czech ranking upload failed: missing file', {
+        endpoint,
+        ...getUploadFileMeta(file),
+        compressionEnabled: false,
+        compressedInput: false,
+        compressionType: 'none',
+        decompressionFailed: false,
+        iofValidationEnabled: false,
+        success: false,
+        stage: 'input',
+      });
+      return c.json(validation('No file uploaded', 422), 422);
+    }
 
-  if (file.size > 2000000) {
-    console.error('File is too large');
-    return c.json(validation('File is too large. Allowed size is up to 2MB', 422), 422);
-  }
+    const uploadDetails = {
+      endpoint,
+      ...getUploadFileMeta(file),
+      compressionEnabled: false,
+      compressedInput: false,
+      compressionType: 'none',
+      decompressionFailed: false,
+      iofValidationEnabled: false,
+    };
 
-  try {
-    const processedRankingData = await storeCzechRankingData(file.buffer.toString());
-    return c.json(
-      success(
-        'OK',
-        {
-          data: 'Csv ranking Czech data uploaded successfully: ' + processedRankingData,
-        },
-        200
-      ),
-      200,
-    );
-  } catch (err: any) {
-    console.error(err);
-    return c.json(error(err.message, 500), 500);
-  }
-});
+    logUploadEvent(c, 'info', 'Czech ranking upload received', {
+      ...uploadDetails,
+      success: false,
+      stage: 'received',
+    });
+
+    if (file.size > 2000000) {
+      logUploadEvent(c, 'warn', 'Czech ranking upload failed: file too large', {
+        ...uploadDetails,
+        success: false,
+        stage: 'validation',
+        maxSizeBytes: 2000000,
+      });
+      return c.json(validation('File is too large. Allowed size is up to 2MB', 422), 422);
+    }
+
+    try {
+      const processedRankingData = await storeCzechRankingData(file.buffer.toString());
+      logUploadEvent(c, 'info', 'Czech ranking upload completed', {
+        ...uploadDetails,
+        success: true,
+        stage: 'completed',
+      });
+      return c.json(
+        success(
+          'OK',
+          {
+            data: 'Csv ranking Czech data uploaded successfully: ' + processedRankingData,
+          },
+          200
+        ),
+        200,
+      );
+    } catch (err: any) {
+      logUploadEvent(c, 'error', 'Czech ranking upload failed during processing', {
+        ...uploadDetails,
+        success: false,
+        stage: 'processing',
+        reason: err?.message || 'Unexpected processing error',
+      });
+      return c.json(error(err.message, 500), 500);
+    }
+  });
 }
 
 export const parseXmlForTesting = {

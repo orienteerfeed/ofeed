@@ -4,6 +4,7 @@ import prisma from "../../utils/context.js";
 import { getPublicObject } from "../../utils/s3Storage.js";
 import { error, success, validation } from "../../utils/responseApi.js";
 import { calculateCompetitorRankingPoints } from "../../utils/ranking.js";
+import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";
 import {
   toValidationIssues as zodToValidationIssues,
   toValidationMessage,
@@ -65,7 +66,10 @@ export function registerPublicEventRoutes(router) {
         headers,
       });
     } catch (err) {
-      console.error("Failed to stream image:", err);
+      logEndpoint(c, "error", "Public event image stream failed", {
+        eventId,
+        ...getErrorDetails(err),
+      });
       return c.json(error("Failed to load image", 500), 500);
     }
   });
@@ -87,7 +91,7 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public event list query failed", getErrorDetails(err));
       return c.json(error(`Database error${err.message}`, 500), 500);
     } finally {
       return c.json(success("OK", { data: dbResponse }, 200), 200);
@@ -126,7 +130,10 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public event detail query failed", {
+        eventId,
+        ...getErrorDetails(err),
+      });
       return c.json(
         error(`Event with ID ${eventId} does not exist in the database${err.message}`, 500),
         500,
@@ -166,7 +173,10 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public competitors event lookup failed", {
+        eventId,
+        ...getErrorDetails(err),
+      });
       return c.json(
         error(`Event with ID ${eventId} does not exist in the database${err.message}`, 500),
         500,
@@ -229,7 +239,10 @@ export function registerPublicEventRoutes(router) {
           },
         });
       } catch (err: any) {
-        console.error(err);
+        logEndpoint(c, "error", "Public individual competitors query failed", {
+          eventId,
+          ...getErrorDetails(err),
+        });
         return c.json(error(`An error occurred: ${err.message}`, 500), 500);
       }
       eventData = dbIndividualResponse;
@@ -289,7 +302,10 @@ export function registerPublicEventRoutes(router) {
           },
         });
       } catch (err: any) {
-        console.error(err);
+        logEndpoint(c, "error", "Public relay competitors query failed", {
+          eventId,
+          ...getErrorDetails(err),
+        });
         return c.json(
           error(`Event with ID ${eventId} does not exist in the database${err.message}`, 500),
           500,
@@ -365,7 +381,11 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public competitor detail event lookup failed", {
+        eventId,
+        competitorId,
+        ...getErrorDetails(err),
+      });
       return c.json(error(`An error occurred: ${err.message}`, 500), 500);
     }
 
@@ -396,7 +416,11 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public external competitor event lookup failed", {
+        eventId,
+        competitorExternalId,
+        ...getErrorDetails(err),
+      });
       return c.json(error(`An error occurred: ${err.message}`, 500), 500);
     }
 

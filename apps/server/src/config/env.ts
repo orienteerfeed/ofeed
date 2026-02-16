@@ -70,6 +70,7 @@ const envSchema = z.object({
   OPENAPI_REFERENCE_PATH: z.string().default("/reference"),
 
   MAX_DEFAULT_BODY_SIZE_BYTES: z.coerce.number().default(1 * 1024 * 1024),
+  MAX_UPLOAD_BODY_SIZE_BYTES: z.coerce.number().default(5 * 1024 * 1024),
   ENABLE_COMPRESSION: z.coerce.boolean().default(true),
 });
 

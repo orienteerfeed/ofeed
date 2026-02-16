@@ -1,4 +1,4 @@
-import type { Schema } from "hono";
+import type { Context, Schema } from "hono";
 
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { bodyLimit } from "hono/body-limit";
@@ -20,7 +20,9 @@ import { accessLoggerMiddleware } from "../middlewares/access-logger";
 import { authMiddleware, isPublicPath } from "../middlewares/auth.middleware";
 import { metricsMiddleware } from "../middlewares/metrics.middleware";
 import { AUTH_OPENAPI } from "../modules/auth/auth.openapi";
+import { EVENT_OPENAPI } from "../modules/event/event.openapi";
 import { GRAPHQL_OPENAPI } from "../modules/graphql/graphql.openapi";
+import { UPLOAD_OPENAPI } from "../modules/upload/upload.openapi";
 import { structuredLogger } from "../middlewares/pino-logger";
 import { error as errorResponse } from "../utils/responseApi.js";
 
@@ -28,6 +30,8 @@ import { logger } from "./logging";
 
 const authRateLimitPrefix = AUTH_OPENAPI.basePath;
 const restApiPrefix = API_DEFAULTS.BASE_PATH;
+const uploadBodyLimitPrefix = UPLOAD_OPENAPI.basePath;
+const eventsBodyLimitPrefix = EVENT_OPENAPI.basePath;
 
 function toRfc3339Timestamp() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -43,6 +47,58 @@ function shouldAttachMeta(path: string, contentType: string | null) {
   }
 
   return contentType?.toLowerCase().includes("application/json") ?? false;
+}
+
+function shouldUseUploadBodyLimit(path: string) {
+  if (path.startsWith(uploadBodyLimitPrefix)) {
+    return true;
+  }
+
+  const normalizedPath = path.endsWith("/") ? path.slice(0, -1) : path;
+  const eventPrefix = `${eventsBodyLimitPrefix}/`;
+  const imageSuffix = "/image";
+
+  if (!normalizedPath.startsWith(eventPrefix) || !normalizedPath.endsWith(imageSuffix)) {
+    return false;
+  }
+
+  const eventId = normalizedPath.slice(eventPrefix.length, normalizedPath.length - imageSuffix.length);
+  return eventId.length > 0 && !eventId.includes("/");
+}
+
+function mergeResponseMeta(c: Context<AppBindings>, payloadRecord: Record<string, unknown>) {
+  const currentMeta = payloadRecord.meta;
+  const nextMeta =
+    currentMeta && typeof currentMeta === "object" && !Array.isArray(currentMeta)
+      ? { ...(currentMeta as Record<string, unknown>) }
+      : {};
+
+  if (typeof nextMeta.requestId !== "string" || nextMeta.requestId.length === 0) {
+    nextMeta.requestId = c.get("requestId") || randomUUID();
+  }
+
+  if (typeof nextMeta.timestamp !== "string" || nextMeta.timestamp.length === 0) {
+    nextMeta.timestamp = toRfc3339Timestamp();
+  }
+
+  return {
+    ...payloadRecord,
+    meta: nextMeta,
+  };
+}
+
+function payloadTooLargeBody(c: Context<AppBindings>) {
+  const payload: Record<string, unknown> = {
+    message: "Payload too large",
+    error: true,
+    code: HTTP_STATUS.CONTENT_TOO_LARGE,
+  };
+
+  if (!shouldAttachMeta(c.req.path, "application/json")) {
+    return payload;
+  }
+
+  return mergeResponseMeta(c, payload);
 }
 
 export function createRouter() {
@@ -62,22 +118,23 @@ export default function createApp() {
   app.use("*", structuredLogger);
   app.use("*", metricsMiddleware);
 
-  app.use(
-    "*",
-    bodyLimit({
-      maxSize: env.MAX_DEFAULT_BODY_SIZE_BYTES,
-      onError: (c) => {
-        return c.json(
-          {
-            message: "Payload too large",
-            error: true,
-            code: HTTP_STATUS.CONTENT_TOO_LARGE,
-          },
-          HTTP_STATUS.CONTENT_TOO_LARGE,
-        );
-      },
-    }),
-  );
+  const defaultBodyLimit = bodyLimit({
+    maxSize: env.MAX_DEFAULT_BODY_SIZE_BYTES,
+    onError: (c) => c.json(payloadTooLargeBody(c as Context<AppBindings>), HTTP_STATUS.CONTENT_TOO_LARGE),
+  });
+
+  const uploadBodyLimit = bodyLimit({
+    maxSize: env.MAX_UPLOAD_BODY_SIZE_BYTES,
+    onError: (c) => c.json(payloadTooLargeBody(c as Context<AppBindings>), HTTP_STATUS.CONTENT_TOO_LARGE),
+  });
+
+  app.use("*", async (c, next) => {
+    if (shouldUseUploadBodyLimit(c.req.path)) {
+      return uploadBodyLimit(c as never, next as never);
+    }
+
+    return defaultBodyLimit(c as never, next as never);
+  });
 
   app.use("*", secureHeaders());
   app.use("*", async (c, next) => {
@@ -184,29 +241,11 @@ export default function createApp() {
       return;
     }
 
-    const payloadRecord = payload as Record<string, unknown>;
-    const currentMeta = payloadRecord.meta;
-    const nextMeta =
-      currentMeta && typeof currentMeta === "object" && !Array.isArray(currentMeta)
-        ? { ...(currentMeta as Record<string, unknown>) }
-        : {};
-
-    if (typeof nextMeta.requestId !== "string" || nextMeta.requestId.length === 0) {
-      nextMeta.requestId = c.get("requestId") || randomUUID();
-    }
-
-    if (typeof nextMeta.timestamp !== "string" || nextMeta.timestamp.length === 0) {
-      nextMeta.timestamp = toRfc3339Timestamp();
-    }
-
     const headers = new Headers(c.res.headers);
     headers.delete("content-length");
 
     c.res = new Response(
-      JSON.stringify({
-        ...payloadRecord,
-        meta: nextMeta,
-      }),
+      JSON.stringify(mergeResponseMeta(c, payload as Record<string, unknown>)),
       {
         status: c.res.status,
         headers,

@@ -5,8 +5,9 @@ import type { AppOpenAPI } from "../types";
 
 import env from "./env";
 import packageJson from "../../../../package.json" with { type: "json" };
-import { OPENAPI_PATHS, OPENAPI_TAGS, type OpenApiPathItem } from "./openapi.paths";
+import { OPENAPI_PATHS, OPENAPI_TAGS } from "./openapi.paths";
 import { OPENAPI_SECURITY_SCHEMES } from "./security";
+import type { OpenApiPathItem } from "./openapi.types";
 
 export const OPENAPI_CONFIG = {
   title: env.OPENAPI_TITLE,

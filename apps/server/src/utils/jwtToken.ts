@@ -2,6 +2,7 @@ import type { Context, Next } from "hono";
 import dotenvFlow from 'dotenv-flow';
 import jwt from 'jsonwebtoken';
 import { oauth2Model } from '../modules/auth/oauth2.model.js';
+import { logger } from '../lib/logging.js';
 import { toLowerCaseHeaderRecord } from '../lib/http/headers.js';
 import { getDecryptedEventPassword } from '../modules/event/event.service.js';
 import prisma from './context.js';
@@ -51,7 +52,15 @@ export const verifyJwtToken = async (c: Context, next: Next) => {
     c.set("authContext" as never, auth as never);
     await next();
   } catch (err) {
-    console.error(err);
+    logger.error('JWT middleware verification failed', {
+      request: {
+        method: c.req.method,
+        path: c.req.path,
+      },
+      error: {
+        message: err instanceof Error ? err.message : 'Unknown error',
+      },
+    });
     return c.json(error('Unauthorized', 401), 401);
   }
 };
@@ -150,7 +159,12 @@ export const buildAuthContextFromRequest = async (req) => {
         tokenPayload: decoded,
       };
     } catch (err) {
-      console.error('JWT verification failed:', err.message);
+      logger.warn('JWT verification failed', {
+        authType: 'bearer',
+        error: {
+          message: err instanceof Error ? err.message : 'Unknown error',
+        },
+      });
       return { isAuthenticated: false, type: null };
     }
   }
@@ -174,7 +188,13 @@ export const buildAuthContextFromRequest = async (req) => {
         eventId,
       };
     } catch (err) {
-      console.error('Basic auth verification failed:', err.message);
+      logger.warn('Basic auth verification failed', {
+        authType: 'basic',
+        eventId,
+        error: {
+          message: err instanceof Error ? err.message : 'Unknown error',
+        },
+      });
       return { isAuthenticated: false, type: null };
     }
   }
@@ -193,7 +213,12 @@ export const getUserIdFromActivationToken = (token) => {
     const decoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY);
     return decoded.id;
   } catch (error) {
-    console.error('Failed to verify token:', error);
+    logger.warn('Activation token verification failed', {
+      authType: 'activation-token',
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+    });
     throw new Error('Invalid or expired token');
   }
 };
