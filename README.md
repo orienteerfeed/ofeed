@@ -197,9 +197,18 @@ Packages are published as private by default.
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution process and standards.
 
-1. Create your feature branch: `git checkout -b Feature/my-new-feature`
-2. Commit your changes: `git commit -am 'Add some feature'`
-3. Push to the branch: `git push origin Feature/my-new-feature`
+1. Create your feature branch: `git checkout -b feature/my-new-feature`
+2. Commit your changes using Conventional Commits:
+
+```bash
+git commit -m "feat(server): add event image upload validation"
+git commit -m "fix(auth): handle invalid refresh token"
+git commit -m "docs(readme): update contributing examples"
+git commit -m "feat(events): add competitor status sync" -m "Refs #45"
+git commit -m "feat(events): add competitor status sync" -m "Closes #45"
+```
+
+3. Push to the branch: `git push origin feature/my-new-feature`
 4. Submit a pull request :D
 
 
