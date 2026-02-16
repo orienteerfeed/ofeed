@@ -17,19 +17,19 @@ with the project.
 
 ## Git Conventions
 
-### Prefixy (dle Conventional Commits)
+### Conventional Commit Prefixes
 
-| Prefix      | Popis                                                         |
-| ----------- | ------------------------------------------------------------- |
-| `feat:`     | Nová funkce nebo vylepšení                                    |
-| `fix:`      | Oprava chyby                                                  |
-| `chore:`    | Údržba projektu (např. aktualizace závislostí, build skripty) |
-| `docs:`     | Změna nebo doplnění dokumentace                               |
-| `style:`    | Úpravy vzhledu kódu (formátování, mezery), bez změny funkce   |
-| `refactor:` | Refaktorování kódu bez změny funkcionality                    |
-| `test:`     | Přidání nebo úprava testů                                     |
-| `perf:`     | Optimalizace výkonu                                           |
-| `ci:`       | Úpravy CI/CD konfigurace                                      |
+| Prefix      | Description                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| `feat:`     | New feature or enhancement                                          |
+| `fix:`      | Bug fix                                                             |
+| `chore:`    | Project maintenance (for example dependency updates, build scripts) |
+| `docs:`     | Documentation changes                                               |
+| `style:`    | Code style changes (formatting, spacing) without behavior changes   |
+| `refactor:` | Code refactoring without behavior changes                           |
+| `test:`     | Adding or updating tests                                            |
+| `perf:`     | Performance optimization                                            |
+| `ci:`       | CI/CD configuration changes                                         |
 
 Reference: [conventionalcommits.org](https://www.conventionalcommits.org/)
 
@@ -42,7 +42,7 @@ Reference: [conventionalcommits.org](https://www.conventionalcommits.org/)
 | `hotfix/`  | Used for fixing urgent production bugs with high impact |
 | `release/` | Used for preparing and testing work for release         |
 
-### Ukázky
+### Examples
 
 ```bash
 git checkout -b feature/competitor-status-sync
