@@ -11,6 +11,7 @@ export interface AuthContext {
   eventId?: string;
   rawToken?: string;
   tokenPayload?: Record<string, unknown>;
+  failureReason?: string;
 }
 
 export interface AppBindings {

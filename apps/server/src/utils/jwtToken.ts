@@ -4,12 +4,59 @@ import jwt from 'jsonwebtoken';
 import { oauth2Model } from '../modules/auth/oauth2.model.js';
 import { logger } from '../lib/logging.js';
 import { toLowerCaseHeaderRecord } from '../lib/http/headers.js';
-import { getDecryptedEventPassword } from '../modules/event/event.service.js';
+import { decodeBase64, decrypt } from './cryptoUtils.js';
 import prisma from './context.js';
 import { error } from './responseApi.js';
 
 dotenvFlow.config();
 const JWT_TOKEN_SECRET_KEY = process.env.JWT_TOKEN_SECRET_KEY;
+
+type AuthFailureReason =
+  | 'missing_authorization_header'
+  | 'unsupported_authorization_scheme'
+  | 'invalid_bearer_token'
+  | 'oauth_access_token_not_found'
+  | 'basic_malformed_credentials'
+  | 'basic_missing_event_id'
+  | 'basic_missing_password'
+  | 'basic_event_not_found'
+  | 'basic_password_not_found'
+  | 'basic_password_expired'
+  | 'basic_password_decrypt_failed'
+  | 'basic_password_mismatch'
+  | 'basic_unexpected_error';
+
+type UnauthenticatedContext = {
+  isAuthenticated: false;
+  type: null;
+  failureReason: AuthFailureReason;
+};
+
+type BasicAuthFailureReason =
+  | 'basic_missing_event_id'
+  | 'basic_missing_password'
+  | 'basic_event_not_found'
+  | 'basic_password_not_found'
+  | 'basic_password_expired'
+  | 'basic_password_decrypt_failed'
+  | 'basic_password_mismatch'
+  | 'basic_unexpected_error';
+
+class BasicAuthVerificationError extends Error {
+  reason: BasicAuthFailureReason;
+  eventId?: string;
+
+  constructor(reason: BasicAuthFailureReason, message: string, eventId?: string) {
+    super(message);
+    this.name = 'BasicAuthVerificationError';
+    this.reason = reason;
+    this.eventId = eventId;
+  }
+}
+
+function unauthenticated(failureReason: AuthFailureReason): UnauthenticatedContext {
+  return { isAuthenticated: false, type: null, failureReason };
+}
 
 /**
  * Generates a JWT token with an optional expiration.
@@ -84,19 +131,19 @@ export const verifyToken = (token) => {
 
 /**
  * Verifies Basic authentication credentials for event access.
- * @param {string} username - The username (expected to be event ID).
+ * @param {string} eventId - The username from Basic auth (expected to be event ID).
  * @param {string} password - The password to verify.
- * @param {string} eventId - The event ID from the request.
  * @returns {Object} Object containing userId if authentication succeeds.
  * @throws {Error} If authentication fails or credentials are invalid.
  */
-export const verifyBasicAuth = async (username, password, eventId) => {
-  if (!username || !password) {
-    throw new Error('Unauthorized: No credentials provided');
+export const verifyBasicAuth = async (eventId, password) => {
+  if (!eventId) {
+    throw new BasicAuthVerificationError('basic_missing_event_id', 'Unauthorized: Event not provided');
   }
 
-  // username = eventId (in your implementation)
-  const storedPassword = await getDecryptedEventPassword(eventId);
+  if (!password) {
+    throw new BasicAuthVerificationError('basic_missing_password', 'Unauthorized: No credentials provided', eventId);
+  }
 
   const eventUser = await prisma.event.findUnique({
     where: { id: eventId },
@@ -106,11 +153,46 @@ export const verifyBasicAuth = async (username, password, eventId) => {
     },
   });
 
-  if (storedPassword && password === storedPassword.password) {
-    return { userId: eventUser.authorId };
-  } else {
-    throw new Error('Unauthorized: Invalid username or password');
+  if (!eventUser) {
+    throw new BasicAuthVerificationError('basic_event_not_found', 'Unauthorized: Event not found', eventId);
   }
+
+  const eventPassword = await prisma.eventPassword.findUnique({
+    where: { eventId },
+    select: {
+      password: true,
+      expiresAt: true,
+    },
+  });
+
+  if (!eventPassword) {
+    throw new BasicAuthVerificationError(
+      'basic_password_not_found',
+      'Unauthorized: Event password not found',
+      eventId,
+    );
+  }
+
+  if (new Date(eventPassword.expiresAt) <= new Date()) {
+    throw new BasicAuthVerificationError('basic_password_expired', 'Unauthorized: Event password expired', eventId);
+  }
+
+  let decryptedPassword: string;
+  try {
+    decryptedPassword = decrypt(decodeBase64(eventPassword.password));
+  } catch (err) {
+    throw new BasicAuthVerificationError(
+      'basic_password_decrypt_failed',
+      err instanceof Error ? err.message : 'Unauthorized: Unable to decrypt event password',
+      eventId,
+    );
+  }
+
+  if (!decryptedPassword || password !== decryptedPassword) {
+    throw new BasicAuthVerificationError('basic_password_mismatch', 'Unauthorized: Invalid username or password', eventId);
+  }
+
+  return { userId: eventUser.authorId };
 };
 
 /**
@@ -130,24 +212,36 @@ export const verifyBasicAuth = async (username, password, eventId) => {
  * @returns {Promise<Object>} Authentication context object.
  */
 export const buildAuthContextFromRequest = async (req) => {
-  const authHeader = req.headers['authorization'] || '';
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'] || '';
 
   if (!authHeader) {
-    return { isAuthenticated: false, type: null };
+    return unauthenticated('missing_authorization_header');
   }
 
+  const [schemeRaw, ...credentialsParts] = authHeader.trim().split(' ');
+  const scheme = schemeRaw?.toLowerCase();
+  const credentialsPart = credentialsParts.join(' ').trim();
+
   // Bearer <token>
-  if (authHeader.startsWith('Bearer ')) {
-    const rawToken = authHeader.slice(7).trim();
+  if (scheme === 'bearer') {
+    const rawToken = credentialsPart;
+    if (!rawToken) {
+      return unauthenticated('invalid_bearer_token');
+    }
 
     try {
-      const decoded = verifyToken(rawToken);
+      const decoded = verifyToken(rawToken) as { clientId?: string; userId?: number | string } & Record<string, unknown>;
 
       // Optional OAuth clientId check – same logic as before
       if (decoded.clientId) {
         const tokenDetails = await oauth2Model.getAccessToken(rawToken);
         if (!tokenDetails) {
-          return { isAuthenticated: false, type: null };
+          logger.warn('JWT verification failed', {
+            authType: 'bearer',
+            reason: 'oauth_access_token_not_found',
+            tokenType: 'oauth-client',
+          });
+          return unauthenticated('oauth_access_token_not_found');
         }
       }
 
@@ -165,22 +259,48 @@ export const buildAuthContextFromRequest = async (req) => {
           message: err instanceof Error ? err.message : 'Unknown error',
         },
       });
-      return { isAuthenticated: false, type: null };
+      return unauthenticated('invalid_bearer_token');
     }
   }
 
   // Basic <base64(eventId:password)>
-  if (authHeader.startsWith('Basic ')) {
-    const base64Credentials = authHeader.slice(6).trim();
-    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
-    const [eventId, password] = credentials.split(':');
+  if (scheme === 'basic') {
+    if (!credentialsPart) {
+      return unauthenticated('basic_malformed_credentials');
+    }
 
-    if (!eventId || !password) {
-      return { isAuthenticated: false, type: null };
+    const credentials = Buffer.from(credentialsPart, 'base64').toString('utf8');
+    const separatorIndex = credentials.indexOf(':');
+    if (separatorIndex < 0) {
+      logger.warn('Basic auth verification failed', {
+        authType: 'basic',
+        reason: 'basic_malformed_credentials',
+      });
+      return unauthenticated('basic_malformed_credentials');
+    }
+
+    const eventId = credentials.slice(0, separatorIndex).trim();
+    const password = credentials.slice(separatorIndex + 1);
+
+    if (!eventId) {
+      logger.warn('Basic auth verification failed', {
+        authType: 'basic',
+        reason: 'basic_missing_event_id',
+      });
+      return unauthenticated('basic_missing_event_id');
+    }
+
+    if (!password) {
+      logger.warn('Basic auth verification failed', {
+        authType: 'basic',
+        eventId,
+        reason: 'basic_missing_password',
+      });
+      return unauthenticated('basic_missing_password');
     }
 
     try {
-      const { userId } = await verifyBasicAuth(eventId, password, eventId);
+      const { userId } = await verifyBasicAuth(eventId, password);
       return {
         isAuthenticated: true,
         type: 'eventBasic',
@@ -188,18 +308,21 @@ export const buildAuthContextFromRequest = async (req) => {
         eventId,
       };
     } catch (err) {
+      const reason =
+        err instanceof BasicAuthVerificationError ? err.reason : ('basic_unexpected_error' as const);
       logger.warn('Basic auth verification failed', {
         authType: 'basic',
         eventId,
+        reason,
         error: {
           message: err instanceof Error ? err.message : 'Unknown error',
         },
       });
-      return { isAuthenticated: false, type: null };
+      return unauthenticated(reason);
     }
   }
 
-  return { isAuthenticated: false, type: null };
+  return unauthenticated('unsupported_authorization_scheme');
 };
 
 /**

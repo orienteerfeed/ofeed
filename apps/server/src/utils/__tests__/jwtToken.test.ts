@@ -28,7 +28,11 @@ describe("buildAuthContextFromRequest", () => {
   it("returns unauthenticated context without authorization header", async () => {
     const context = await jwtToken.buildAuthContextFromRequest({ headers: {} });
 
-    expect(context).toEqual({ isAuthenticated: false, type: null });
+    expect(context).toEqual({
+      isAuthenticated: false,
+      type: null,
+      failureReason: "missing_authorization_header",
+    });
   });
 
   it("returns authenticated jwt context for valid bearer token", async () => {
@@ -39,6 +43,9 @@ describe("buildAuthContextFromRequest", () => {
 
     expect(context.isAuthenticated).toBe(true);
     expect(context.type).toBe("jwt");
+    if (!context.isAuthenticated) {
+      throw new Error("Expected authenticated context");
+    }
     expect(context.userId).toBe(42);
   });
 });

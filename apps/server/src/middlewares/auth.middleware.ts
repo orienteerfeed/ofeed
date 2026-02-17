@@ -18,7 +18,11 @@ export async function authMiddleware(c: Context, next: Next) {
     const auth = await buildAuthContextFromRequest(requestLikeFromHono(c) as any);
     c.set("authContext", auth);
   } catch (error) {
-    c.set("authContext", { isAuthenticated: false, type: null });
+    c.set("authContext", {
+      isAuthenticated: false,
+      type: null,
+      failureReason: "auth_context_build_failed",
+    });
   }
 
   await next();
