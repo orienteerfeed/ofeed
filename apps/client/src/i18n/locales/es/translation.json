@@ -301,7 +301,7 @@
             },
             "Card": {
                 "Title": "Información del evento",
-                "Description": "Por favor, complete el formulario a continuación para actualizar los detalles del evento"
+                "Description": "Por favor, complete el formulario a continuación para actualizar los detalles del evento."
             },
             "Password": {
                 "GeneratePassword": "Generar contraseña",
@@ -312,7 +312,7 @@
                 "Revoke": "Anular",
                 "Card": {
                     "Title": "Contraseña del evento",
-                    "Description": "Introduzca la contraseña del evento que protege los detalles del evento solicitados a través de la API"
+                    "Description": "Introduzca la contraseña del evento que protege los detalles del evento solicitados a través de la API."
                 },
                 "Field": {
                     "Name": "Contraseña del evento",
@@ -331,7 +331,7 @@
             "Link": {
                 "Card": {
                     "Title": "Enlace del evento",
-                    "Description": "Utilice esta función para compartir rápidamente un enlace a un evento: puede copiarlo, compartirlo o imprimir el código QR para un acceso sencillo a los resultados en vivo.",
+                    "Description": "Compartir rápidamente un enlace a un evento: puede copiarlo, compartirlo o imprimir el código QR para un acceso sencillo a los resultados en vivo.",
                     "Navigator": {
                         "Title": "OFeed",
                         "Event": "Evento",
@@ -353,15 +353,15 @@
             },
             "Integration": {
                 "Card": {
-                    "Title": "Integración",
-                    "Description": "Cada pestaña describe cómo configurar la conexión.",
+                    "Title": "Configuración de aplicaciones",
+                    "Description": "Cómo configurar las aplicaciones para conectarse a OFeed.",
                     "ApiBaseUrl": "URL",
                     "EventId": "ID del evento",
                     "EventPassword": "Contraseña del evento",
                     "EventName": "Nombre",
                     "EventDate": "Fecha",
-                    "ShareQrCode": "Compartir código QR del evento",
-                    "PrintQrCode": "Imprimir código QR del evento",
+                    "ShareQrCode": "Compartir QR",
+                    "PrintQrCode": "Imprimir QR",
                     "Navigator": {
                         "Title": "Código QR de OFeed",
                         "Text": "Aquí está el código QR del evento OFeed para conectar su aplicación móvil O Checklist!"
@@ -416,7 +416,7 @@
                     "Description": "Si necesita eliminar completamente todos los datos del evento, incluidos corredores, clases y resultados, utilice este botón. Tenga precaución, ya que esta acción es irreversible!",
                     "Button": "Eliminar todos los datos del evento",
                     "ConfirmTitle": "Eliminar todos los datos del evento",
-                    "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los datos del evento? Esto eliminará todos los resultados y no se puede deshacer.",
+                    "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los datos del evento? Esto eliminará todos los resultados y no se puede deshacer!",
                     "ConfirmButton": "Eliminar todos los datos"
                 },
                 "DeleteEvent": {
@@ -424,7 +424,7 @@
                     "Description": "Todos los datos del evento serán eliminados. Esta acción no se puede deshacer!",
                     "Button": "Eliminar evento",
                     "ConfirmTitle": "Eliminar evento",
-                    "ConfirmDescription": "¿Estás seguro de que quieres eliminar este evento completo? Esta acción no se puede deshacer.",
+                    "ConfirmDescription": "¿Estás seguro de que quieres eliminar este evento completo? Esta acción no se puede deshacer!",
                     "ConfirmButton": "Eliminar evento"
                 },
                 "Toast": {
@@ -515,7 +515,7 @@
         "DragDrop": {
             "UploadIofXml": {
                 "Title": "Subir XML IOF",
-                "Description": "Subir archivos XML IOF con listas de salida y resultados"
+                "Description": "Subir archivos XML IOF con listas de salida y resultados."
             },
             "Toast": {
                 "UploadSuccess": "¡Archivos subidos correctamente!",
@@ -556,7 +556,7 @@
             "ClickToUpload": "Haga clic para subir",
             "Delete": "Eliminar",
             "OrdDragAndDrop": "o arrastre y suelte",
-            "SupportedFormats": "Formatos soportados:",
+            "SupportedFormats": "Formato soportados:",
             "Done": "Hecho",
             "OrDragAndDrop": "o arrastre y suelte",
             "Toast": {
