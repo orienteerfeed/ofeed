@@ -1,10 +1,10 @@
 import type { Context, Next } from "hono";
 import jwt from 'jsonwebtoken';
 import env from '../config/env.js';
+import { decodeBase64, decrypt } from '../lib/crypto/encryption.js';
 import { oauth2Model } from '../modules/auth/oauth2.model.js';
 import { logger } from '../lib/logging.js';
 import { toLowerCaseHeaderRecord } from '../lib/http/headers.js';
-import { decodeBase64, decrypt } from './cryptoUtils.js';
 import prisma from './context.js';
 import { error } from './responseApi.js';
 

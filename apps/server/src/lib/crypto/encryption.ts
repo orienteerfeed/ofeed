@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 
-import env from '../config/env.js';
+import env from '../../config/env.js';
 
 type AesGcmAlgorithm = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
 type AesCbcAlgorithm = 'aes-128-cbc' | 'aes-192-cbc' | 'aes-256-cbc';

@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { createCipheriv, randomBytes } from "node:crypto";
 
-let cryptoUtils: typeof import("../cryptoUtils.js");
+let cryptoUtils: typeof import("../../lib/crypto/encryption.js");
 const TEST_SECRET_HEX = "0123456789abcdef0123456789abcdef";
 
 beforeAll(async () => {
   process.env.ENCRYPTION_SECRET_KEY = TEST_SECRET_HEX;
   vi.resetModules();
-  cryptoUtils = await import("../cryptoUtils.js");
+  cryptoUtils = await import("../../lib/crypto/encryption.js");
 });
 
 function createLegacyEncryptedPayload(text: string) {

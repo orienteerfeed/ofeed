@@ -1,4 +1,4 @@
-import { pubsub, COMPETITORS_BY_CLASS_UPDATED, COMPETITOR_UPDATED } from '../../utils/pubsub.js';
+import { pubsub, COMPETITORS_BY_CLASS_UPDATED, COMPETITOR_UPDATED } from '../../lib/pubsub.js';
 import { getCompetitorsByClass } from './shared.js';
 
 export const competitorsByClassUpdated = {

@@ -1,6 +1,6 @@
 import { DatabaseError, ValidationError } from '../../exceptions/index.js';
 import prisma from '../../utils/context.js';
-import { decodeBase64, decrypt } from '../../utils/cryptoUtils.js';
+import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import {
   publishUpdatedCompetitor,

@@ -23,13 +23,13 @@ import {
 } from '../../utils/authz.js';
 import { createCompetitorSchema, updateCompetitorSchema } from '../../utils/validateCompetitor.js';
 import eventWriteSchema from '../../utils/validateEvent.js';
-import { encodeBase64, encrypt } from '../../utils/cryptoUtils.js';
+import { encodeBase64, encrypt } from '../../lib/crypto/encryption.js';
 import { formatErrors } from '../../utils/errors.js';
 import {
   deletePublicObject,
   deletePublicObjectsByPrefix,
   putPublicObject,
-} from '../../utils/s3Storage.js';
+} from '../../lib/storage/s3.js';
 import {
   changeCompetitorStatus,
   deleteAllEventData,

@@ -14,7 +14,7 @@ import { toLowerCaseHeaderRecord } from "../../lib/http/headers.js";
 import { getJwtNumericUserId, requireJwtAuth } from "../../middlewares/require-jwt";
 import prisma from "../../utils/context.js";
 import { error as errorResponse, success as successResponse, validation as validationResponse } from "../../utils/responseApi.js";
-import { generateRandomHex } from "../../utils/randomUtils.js";
+import { generateRandomHex } from "../../lib/crypto/random.js";
 import {
   authenticateUser,
   passwordResetConfirm,

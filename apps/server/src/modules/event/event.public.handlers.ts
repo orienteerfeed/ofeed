@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
 import prisma from "../../utils/context.js";
-import { getPublicObject } from "../../utils/s3Storage.js";
+import { getPublicObject } from "../../lib/storage/s3.js";
 import { error, success, validation } from "../../utils/responseApi.js";
 import { calculateCompetitorRankingPoints } from "../../utils/ranking.js";
 import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";

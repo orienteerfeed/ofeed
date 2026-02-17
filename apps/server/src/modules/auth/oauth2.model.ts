@@ -6,7 +6,7 @@ import argon2 from "argon2";
 import type { Prisma } from "../../generated/prisma/client";
 
 import prisma from "../../utils/context.js";
-import { generateRandomHex } from "../../utils/randomUtils.js";
+import { generateRandomHex } from "../../lib/crypto/random.js";
 
 type OAuthClient = OAuth2Server.Client & {
   id: string;
