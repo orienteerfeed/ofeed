@@ -1,6 +1,6 @@
 import type { Context, Next } from "hono";
-import dotenvFlow from 'dotenv-flow';
 import jwt from 'jsonwebtoken';
+import env from '../config/env.js';
 import { oauth2Model } from '../modules/auth/oauth2.model.js';
 import { logger } from '../lib/logging.js';
 import { toLowerCaseHeaderRecord } from '../lib/http/headers.js';
@@ -8,8 +8,7 @@ import { decodeBase64, decrypt } from './cryptoUtils.js';
 import prisma from './context.js';
 import { error } from './responseApi.js';
 
-dotenvFlow.config();
-const JWT_TOKEN_SECRET_KEY = process.env.JWT_TOKEN_SECRET_KEY;
+const JWT_TOKEN_SECRET_KEY = env.JWT_TOKEN_SECRET_KEY;
 
 type AuthFailureReason =
   | 'missing_authorization_header'
@@ -188,7 +187,15 @@ export const verifyBasicAuth = async (eventId, password) => {
     );
   }
 
-  if (!decryptedPassword || password !== decryptedPassword) {
+  if (!decryptedPassword || decryptedPassword.trim() === '') {
+    throw new BasicAuthVerificationError(
+      'basic_password_decrypt_failed',
+      'Unauthorized: Event password decryption returned empty value',
+      eventId,
+    );
+  }
+
+  if (password !== decryptedPassword) {
     throw new BasicAuthVerificationError('basic_password_mismatch', 'Unauthorized: Invalid username or password', eventId);
   }
 

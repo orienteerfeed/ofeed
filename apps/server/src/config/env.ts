@@ -1,7 +1,66 @@
-import dotenvFlow from "dotenv-flow";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+
 import { z } from "@hono/zod-openapi";
 
-dotenvFlow.config();
+function resolveDotenvFiles(nodeEnv: string) {
+  // process.loadEnvFile does not override existing keys, so more specific files must go first.
+  const files = [`.env.${nodeEnv}`, ".env"];
+
+  // Keep test env deterministic and avoid leaking local overrides into CI tests.
+  if (nodeEnv !== "test") {
+    files.unshift(`.env.${nodeEnv}.local`, ".env.local");
+  }
+
+  return files.map(file => path.resolve(process.cwd(), file));
+}
+
+function loadDotenvFiles() {
+  const nodeEnv = (process.env.NODE_ENV ?? "development").trim() || "development";
+  for (const filePath of resolveDotenvFiles(nodeEnv)) {
+    if (!existsSync(filePath)) {
+      continue;
+    }
+
+    if (typeof process.loadEnvFile === "function") {
+      process.loadEnvFile(filePath);
+      continue;
+    }
+
+    // Fallback parser for runtimes without process.loadEnvFile.
+    const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
+
+      const separatorIndex = trimmed.indexOf("=");
+      if (separatorIndex <= 0) {
+        continue;
+      }
+
+      const key = trimmed.slice(0, separatorIndex).trim();
+      let value = trimmed.slice(separatorIndex + 1).trim();
+      if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) {
+        continue;
+      }
+
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+
+      value = value.replace(/\\n/g, "\n");
+
+      process.env[key] = value;
+    }
+  }
+}
+
+loadDotenvFiles();
 
 const DEFAULT_DATABASE_URL = "mysql://user:password@localhost:3306/orienteerfeed";
 

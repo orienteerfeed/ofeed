@@ -141,23 +141,43 @@ export const getDecryptedEventPassword = async eventId => {
 
     if (!eventPassword) return;
 
-    // Check if eventPassword is found and is not expired
-    const decryptedPassword =
-      eventPassword && new Date(eventPassword.expiresAt) > new Date()
-        ? decrypt(decodeBase64(eventPassword.password)) // Decrypt the password if valid
-        : undefined;
-    if (!decryptedPassword) return; // return null if password is expired
-    return { ...eventPassword, password: decryptedPassword }; // Return the decrypted password or undefined
+    if (new Date(eventPassword.expiresAt) <= new Date()) {
+      return;
+    }
+
+    let decodedPasswordPayload;
+    try {
+      decodedPasswordPayload = decodeBase64(eventPassword.password);
+    } catch (error) {
+      throw new DatabaseError('Event password payload is corrupted.');
+    }
+
+    let decryptedPassword: string;
+    try {
+      decryptedPassword = decrypt(decodedPasswordPayload);
+    } catch (error) {
+      throw new DatabaseError('Event password decryption failed. Check ENCRYPTION_SECRET_KEY configuration.');
+    }
+
+    if (!decryptedPassword || decryptedPassword.trim() === '') {
+      throw new DatabaseError(
+        'Event password decryption returned an empty value. Check ENCRYPTION_SECRET_KEY configuration.',
+      );
+    }
+
+    return { ...eventPassword, password: decryptedPassword };
   } catch (error) {
     console.error('Error fetching event or event password:', error);
 
-    // Prisma specific error handling
-    if (error) {
-      throw new DatabaseError('Unknown database error occurred.');
-    } else {
-      // Handle all other general errors
-      throw new Error('Failed to retrieve or decrypt the event password.');
+    if (error instanceof ValidationError || error instanceof DatabaseError) {
+      throw error;
     }
+
+    throw new DatabaseError(
+      error instanceof Error
+        ? `Failed to retrieve or decrypt the event password: ${error.message}`
+        : 'Failed to retrieve or decrypt the event password.',
+    );
   }
 };
 

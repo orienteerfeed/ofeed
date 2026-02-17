@@ -1,15 +1,17 @@
 import {
   DeleteObjectsCommand,
   GetObjectCommand,
+  type GetObjectCommandOutput,
   ListObjectsV2Command,
   PutObjectCommand,
+  type PutObjectCommandInput,
   S3Client,
   type S3ClientConfig,
 } from '@aws-sdk/client-s3';
 
-let s3Client;
+let s3Client: S3Client | undefined;
 
-const getS3Client = () => {
+const getS3Client = (): S3Client => {
   if (s3Client) return s3Client;
 
   const accessKeyId = process.env.S3_ACCESS_KEY;
@@ -33,11 +35,17 @@ const getS3Client = () => {
   return s3Client;
 };
 
-const getPublicBucket = () => {
+const getPublicBucket = (): string | undefined => {
   return process.env.S3_BUCKET_PUBLIC || process.env.S3_BUCKET;
 };
 
-export const putPublicObject = async ({ key, body, contentType }) => {
+type PutPublicObjectInput = {
+  key: string;
+  body: PutObjectCommandInput['Body'];
+  contentType?: string;
+};
+
+export const putPublicObject = async ({ key, body, contentType }: PutPublicObjectInput) => {
   const bucket = getPublicBucket();
   if (!bucket) {
     throw new Error('S3_BUCKET_PUBLIC is not set');
@@ -55,7 +63,7 @@ export const putPublicObject = async ({ key, body, contentType }) => {
   return { bucket, key };
 };
 
-export const deletePublicObjectsByPrefix = async (prefix) => {
+export const deletePublicObjectsByPrefix = async (prefix: string) => {
   const bucket = getPublicBucket();
   if (!bucket) {
     throw new Error('S3_BUCKET_PUBLIC is not set');
@@ -69,9 +77,9 @@ export const deletePublicObjectsByPrefix = async (prefix) => {
 
   const listed = await client.send(listCommand);
   const objects = (listed.Contents || [])
-    .map(obj => obj.Key)
+    .map((obj) => obj.Key)
     .filter(Boolean)
-    .map(Key => ({ Key }));
+    .map((Key) => ({ Key }));
 
   if (!objects.length) {
     return { bucket, deleted: 0 };
@@ -86,7 +94,7 @@ export const deletePublicObjectsByPrefix = async (prefix) => {
   return { bucket, deleted: objects.length };
 };
 
-export const getPublicObject = async (key) => {
+export const getPublicObject = async (key: string): Promise<GetObjectCommandOutput> => {
   const bucket = getPublicBucket();
   if (!bucket) {
     throw new Error('S3_BUCKET_PUBLIC is not set');
@@ -101,7 +109,7 @@ export const getPublicObject = async (key) => {
   return client.send(command);
 };
 
-export const deletePublicObject = async (key) => {
+export const deletePublicObject = async (key?: string | null) => {
   const bucket = getPublicBucket();
   if (!bucket) {
     throw new Error('S3_BUCKET_PUBLIC is not set');
