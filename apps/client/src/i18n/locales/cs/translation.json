@@ -216,7 +216,7 @@
             "Detail": {
                 "EventInformation": "Informace o závodu",
                 "Date": "Datum",
-                "ZeroTime": "Start nula",
+                "ZeroTime": "Start 00",
                 "Location": "Lokalita",
                 "Organizer": "Pořadatel",
                 "Classes": "Kategorie",
@@ -229,7 +229,7 @@
                 "EventStatus": "Stav závodu",
                 "AdditionalDetails": "Další informace",
                 "Sport": "Sport",
-                "EventId": "ID závodu",
+                "EventId": "ID akce",
                 "Author": "Autor",
                 "Report": "Report",
                 "Status": {
@@ -282,7 +282,7 @@
                 "HundredthPrecision": "Setinová přesnost",
                 "Published": "Zveřejněno",
                 "Placeholders": {
-                    "EventName": "Moje první OFeed akce",
+                    "EventName": "Moje první akce",
                     "Sport": "Vyberte sport",
                     "Timezone": "Vyberte časové pásmo",
                     "Organizer": "Název organizátora",
@@ -301,7 +301,7 @@
             },
             "Card": {
                 "Title": "Parametry akce",
-                "Description": "Vyplň jednotlivé detaily akce"
+                "Description": "Vyplň jednotlivé detaily akce."
             },
             "Password": {
                 "GeneratePassword": "Generovat heslo",
@@ -312,7 +312,7 @@
                 "Revoke": "Zneplatnit",
                 "Card": {
                     "Title": "Heslo akce",
-                    "Description": "Nastav si heslo, které zabezpečuje poskytování dat přes API"
+                    "Description": "Nastav si heslo, které zabezpečuje poskytování dat přes API."
                 },
                 "Field": {
                     "Name": "Heslo",
@@ -331,7 +331,7 @@
             "Link": {
                 "Card": {
                     "Title": "Odkaz na akci",
-                    "Description": "Použij tuto funkci pro rychlé sdílení odkazu na akci – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k živým výsledkům.",
+                    "Description": "Rychlé sdílení odkazu na akci – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k aktuálním výsledkům.",
                     "Navigator": {
                         "Title": "OFeed",
                         "Event": "Akce",
@@ -353,15 +353,15 @@
             },
             "Integration": {
                 "Card": {
-                    "Title": "Integrace",
-                    "Description": "V jednotlivých záložkách jsou sepsané detaily potřebné pro propojení.",
+                    "Title": "Nastavení aplikací",
+                    "Description": "Jak nastavit připojení aplikací k OFeedu.",
                     "ApiBaseUrl": "Url",
                     "EventId": "Id akce",
                     "EventPassword": "Heslo",
                     "EventName": "Název",
                     "EventDate": "Datum",
-                    "ShareQrCode": "Sdílet QR kód",
-                    "PrintQrCode": "Vytisknout QR kód",
+                    "ShareQrCode": "Sdílet QR",
+                    "PrintQrCode": "Vytisknout QR",
                     "Navigator": {
                         "Title": "OFeed QR kód",
                         "Text": "Tady máš QR kód k OFeed akci, abys mohl snadno propojit s O Checklistem!"
@@ -382,7 +382,7 @@
                 "PrintWindow": {
                     "Header": "OFeed",
                     "Subheader": "Naskenuj QR kód pro snadné propojení s mobilní aplikací {{appName}}.",
-                    "Footer": "Prosíme udržuj QR kód na bezpečném místě. Pokud Ti něco nefunguje, tak nám dej prosím vědět."
+                    "Footer": "Prosíme drž informace na bezpečném místě. Pokud Ti něco nefunguje, tak nám dej prosím vědět."
                 },
                 "Toast": {
                     "CopyBaseUrl": "Hop! Base URL je teď ve schránce, sdílej dál!",
@@ -392,7 +392,7 @@
             "Visibility": {
                 "Card": {
                     "Title": "Viditelnost",
-                    "Description": "Určuje, zda bude akce veřejná nebo privátní. Veřejné akce se zobrazují v seznamu na hlavní stránce aplikace, zatímco privátní akce jsou viditelné pouze pro jejich organizátora."
+                    "Description": "Určuje, zda bude akce veřejná nebo privátní. Veřejné akce se zobrazují v seznamu na hlavní stránce OFeedu, zatímco privátní akce jsou viditelné pouze pro jejich organizátora."
                 },
                 "Toast": {
                     "UpdateSuccess": "Akce je nyní {{status}}!",
@@ -421,7 +421,7 @@
                 },
                 "DeleteEvent": {
                     "Title": "Smazat akci",
-                    "Description": "Všechna data akce budou smazána. Smazání je trvalé a nelze vrátit zpět!",
+                    "Description": "Smaže akci. Je potřeba nejprve smazat všechna data. Smazání je trvalé a nelze vrátit zpět!",
                     "Button": "Smazat",
                     "ConfirmTitle": "Smazat akci",
                     "ConfirmDescription": "Opravdu chceš smazat celou tuto akci? Operace je nevratná!",
@@ -515,7 +515,7 @@
         "DragDrop": {
             "UploadIofXml": {
                 "Title": "Nahrát IOF XML",
-                "Description": "Nahrát IOF XML soubory se startovkami a výsledky"
+                "Description": "Nahrát IOF XML soubory se startovkami a výsledky."
             },
             "Toast": {
                 "UploadSuccess": "Soubory úspěšně nahrány!",
@@ -556,7 +556,7 @@
             "ClickToUpload": "Pro nahrání klikni",
             "Delete": "Smazat",
             "OrdDragAndDrop": "nebo drag & drop",
-            "SupportedFormats": "Podporované formáty:",
+            "SupportedFormats": "Podporovaný formát:",
             "Done": "Hotovo",
             "OrDragAndDrop": "nebo drag & drop",
             "Toast": {
