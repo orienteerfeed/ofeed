@@ -1,0 +1,50 @@
+{
+    "And": "und",
+    "Table": {
+        "NoData": "erstellen"
+    },
+    "Operations": {
+        "Submit": "schließen",
+        "Cancel": "Stornieren",
+        "Save": "Speichern",
+        "Configure": "Konfigurieren",
+        "Create": "Erstellen",
+        "Update": "Aktualisieren",
+        "Submitting": "Wird übermittelt...",
+        "Success": "Erfolg",
+        "Error": "Fehlermeldung",
+        "CopiedToClipboard": "in die Zwischenablage kopiert"
+    },
+    "Back": "Zurück",
+    "Close": "Abbrechen",
+    "ComingSoon": "Bald verfügbar",
+    "Copy": "Kopieren",
+    "Public": "Offentlich",
+    "NotImplementedTitle": "Noch nicht implementiert worden",
+    "Error": "Fehlermeldung",
+    "ErrorMessage": "Upss! Etwas scheint nicht zu funktionieren.",
+    "Loading": "Wird geladen...",
+    "UploadFail": "Upload fehlgeschlagen",
+    "Orienteering": {
+        "Class": "Klasse"
+    },
+    "Timer": {
+        "Days": "tage",
+        "Hours": "stunden",
+        "Minutes": "minuten",
+        "Seconds": "sekunden"
+    },
+    "Share": "Teilen",
+    "Print": "Drucken",
+    "Private": "Privat",
+    "Search": "Suche",
+    "NoResults": "Keine Ergebinisse",
+    "TypeAtLeastNCharacters": "Mindestens {{n}} zeichen nutzen",
+    "View": "Ansicht",
+    "NotImplementedDescription": "Diese Funktionalität ist noch nicht verfügbar, es wird darauf jedoch gearbeitet.",
+    "Theme": {
+        "Toggle": "Motiv ändern"
+    },
+    "Settings": "Einstellungen",
+    "Or": "Oder"
+}
