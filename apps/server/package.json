@@ -60,14 +60,14 @@
     "xmllint-wasm": "^5.1.0"
   },
   "devDependencies": {
-    "@types/node": "^25.2.2",
+    "@types/node": "^24.10.13",
     "@types/ws": "^8.18.1",
     "@types/xml2js": "^0.4.14",
     "eslint": "^9.39.2",
     "prettier": "^2.8.8",
     "prisma": "^7.3.0",
     "tsx": "^4.21.0",
-    "typescript-eslint": "^8.54.0",
+    "typescript-eslint": "^8.55.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
