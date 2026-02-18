@@ -1,0 +1,50 @@
+{
+    "Back": "Tillbaka",
+    "Or": "Eller",
+    "And": "och",
+    "Table": {
+        "NoData": "Inga data tillgängliga i tabellen"
+    },
+    "Operations": {
+        "Submit": "Skicka",
+        "CopiedToClipboard": "Kopierat till urklipp",
+        "Submitting": "Skickar…",
+        "Success": "Genomfört OK",
+        "Error": "Fel",
+        "Create": "Skapa",
+        "Update": "Uppdatera",
+        "Cancel": "Avbryt",
+        "Save": "Spara",
+        "Configure": "Konfigurera"
+    },
+    "Settings": "Inställningar",
+    "Loading": "Laddar…",
+    "Error": "Fel",
+    "ErrorMessage": "Något gick fel.",
+    "UploadFail": "Uppladdningen misslyckades",
+    "Orienteering": {
+        "Class": "Klass"
+    },
+    "Timer": {
+        "Days": "dagar",
+        "Hours": "timmar",
+        "Minutes": "minuter",
+        "Seconds": "sekunder"
+    },
+    "Share": "Dela",
+    "Print": "Skriv ut",
+    "Copy": "Kopiera",
+    "Public": "Offentligt",
+    "Private": "Privat",
+    "Search": "Sök",
+    "Close": "Stäng",
+    "NoResults": "Inga resultat",
+    "TypeAtLeastNCharacters": "Skriv minst {{n}} tecken…",
+    "View": "Visa",
+    "ComingSoon": "Kommer snart",
+    "NotImplementedTitle": "Inte infört än",
+    "NotImplementedDescription": "Funktionen är ännu inte tillgänglig. Vi arbetar på den.",
+    "Theme": {
+        "Toggle": "Växla tema"
+    }
+}
