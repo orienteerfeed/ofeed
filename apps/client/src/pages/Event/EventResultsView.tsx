@@ -1496,6 +1496,12 @@ const RelayResultsView = ({
 const processCompetitors = (
   competitors: Competitor[]
 ): ProcessedCompetitor[] => {
+  const getSortableStartTime = (startTime?: string): number => {
+    if (!startTime) return Number.POSITIVE_INFINITY;
+    const timestamp = new Date(startTime).getTime();
+    return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp;
+  };
+
   const statusPriority = {
     OK: 0,
     Active: 1,
@@ -1511,9 +1517,11 @@ const processCompetitors = (
 
   const sortedCompetitors = competitors.slice().sort((a, b) => {
     const statusA =
-      statusPriority[a.status as keyof typeof statusPriority] || 10;
+      statusPriority[a.status as keyof typeof statusPriority] ?? 10;
     const statusB =
-      statusPriority[b.status as keyof typeof statusPriority] || 10;
+      statusPriority[b.status as keyof typeof statusPriority] ?? 10;
+    const startTimeDiff =
+      getSortableStartTime(a.startTime) - getSortableStartTime(b.startTime);
 
     // If both have OK status, sort by time (fastest first)
     if (a.status === 'OK' && b.status === 'OK') {
@@ -1530,16 +1538,18 @@ const processCompetitors = (
       return 1;
     }
 
+    // Keep competitors ordered by start time after startlist upload
+    if (a.status === 'Inactive' && b.status === 'Inactive') {
+      return startTimeDiff;
+    }
+
     // Both don't have OK status - sort by status priority
     if (statusA !== statusB) {
       return statusA - statusB;
     }
 
     // Same status (both non-OK) - sort by start time
-    return (
-      new Date(a.startTime || 0).getTime() -
-      new Date(b.startTime || 0).getTime()
-    );
+    return startTimeDiff;
   });
 
   return calculatePositions(sortedCompetitors);
