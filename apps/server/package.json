@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start:dev": "NODE_ENV=development PORT=3001 tsx watch src/index.ts",
-    "dev": "NODE_ENV=development PORT=3001 tsx watch src/index.ts",
+    "start:dev": "cross-env NODE_ENV=development PORT=3001 tsx watch src/index.ts",
+    "dev": "cross-env NODE_ENV=development PORT=3001 tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "type-check": "tsc --noEmit",
     "start": "pnpm exec tsx src/index.ts",
