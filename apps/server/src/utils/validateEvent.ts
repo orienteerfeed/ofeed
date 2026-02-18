@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
 export const eventWriteSchema = z.object({
-  sportId: z.coerce.number().int().positive(),
+  sportId: z.coerce.number().int().min(1),
   name: z.string().min(1).max(255),
   date: z.string().min(1),
   timezone: z.string().min(1),

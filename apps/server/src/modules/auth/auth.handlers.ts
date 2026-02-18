@@ -9,10 +9,12 @@ import type { Context } from "hono";
 import type { AppBindings, AppOpenAPI } from "../../types";
 
 import { AuthenticationError, ValidationError } from "../../exceptions/index.js";
-import { getJwtUserId, requireJwtAuth } from "../../middlewares/require-jwt";
+import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";
+import { toLowerCaseHeaderRecord } from "../../lib/http/headers.js";
+import { getJwtNumericUserId, requireJwtAuth } from "../../middlewares/require-jwt";
 import prisma from "../../utils/context.js";
 import { error as errorResponse, success as successResponse, validation as validationResponse } from "../../utils/responseApi.js";
-import { generateRandomHex } from "../../utils/randomUtils.js";
+import { generateRandomHex } from "../../lib/crypto/random.js";
 import {
   authenticateUser,
   passwordResetConfirm,
@@ -20,6 +22,7 @@ import {
   signupUser,
 } from "./auth.service.js";
 import {
+  oauthCredentialsBodySchema,
   passwordResetConfirmBodySchema,
   passwordResetRequestBodySchema,
   signinBodySchema,
@@ -31,17 +34,9 @@ const OAuthRequest = OAuth2Server.Request;
 const OAuthResponse = OAuth2Server.Response;
 
 const oauth = new OAuth2Server({
-  debug: true,
-  model: oauth2Model,
-  grants: ["authorization_code", "password", "refresh_token", "client_credentials"],
-  accessTokenLifetime: 3600,
-  allowBearerTokensInQueryString: true,
-});
-
-const oauthCredentialBodySchema = z.object({
-  grants: z.literal("client_credentials"),
-  scopes: z.string().optional(),
-  redirectUris: z.string().optional(),
+  model: oauth2Model as OAuth2Server.ClientCredentialsModel &
+    OAuth2Server.PasswordModel &
+    OAuth2Server.RefreshTokenModel,
 });
 
 function formatZodError(error: z.ZodError) {
@@ -65,6 +60,9 @@ async function parseJsonBody<T extends z.ZodTypeAny>(
   try {
     payload = await c.req.json();
   } catch {
+    logEndpoint(c, "warn", "Auth request contains invalid JSON payload", {
+      path: c.req.path,
+    });
     return {
       ok: false,
       response: c.json(validationResponse("body: Invalid JSON payload"), 422),
@@ -74,6 +72,10 @@ async function parseJsonBody<T extends z.ZodTypeAny>(
   const parsed = schema.safeParse(payload);
 
   if (!parsed.success) {
+    logEndpoint(c, "warn", "Auth request validation failed", {
+      path: c.req.path,
+      issues: formatZodError(parsed.error),
+    });
     return {
       ok: false,
       response: c.json(validationResponse(formatZodError(parsed.error)), 422),
@@ -81,16 +83,6 @@ async function parseJsonBody<T extends z.ZodTypeAny>(
   }
 
   return { ok: true, data: parsed.data };
-}
-
-function toLowerCaseHeaders(headers: Headers) {
-  const normalized: Record<string, string> = {};
-
-  for (const [key, value] of headers.entries()) {
-    normalized[key.toLowerCase()] = value;
-  }
-
-  return normalized;
 }
 
 function toQueryRecord(url: string) {
@@ -104,24 +96,11 @@ function toQueryRecord(url: string) {
   return query;
 }
 
-function toNumericUserId(userId: number | string | undefined) {
-  if (typeof userId === "number") {
-    return Number.isFinite(userId) ? userId : null;
-  }
-
-  if (typeof userId === "string" && userId.trim() !== "") {
-    const parsed = Number(userId);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  return null;
-}
-
 export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/signin", async c => {
     const parsedBody = await parseJsonBody(c, signinBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -129,16 +108,20 @@ export function registerAuthRoutes(router: AppOpenAPI) {
 
     try {
       const loginSuccessPayload = await authenticateUser(username, password);
+      logEndpoint(c, "info", "User sign-in completed");
       return c.json(successResponse("OK", { data: loginSuccessPayload }, 200), 200);
     } catch (error) {
       if (error instanceof ValidationError) {
+        logEndpoint(c, "warn", "User sign-in validation failed", getErrorDetails(error));
         return c.json(validationResponse(error.message), 422);
       }
 
       if (error instanceof AuthenticationError) {
+        logEndpoint(c, "warn", "User sign-in rejected", getErrorDetails(error));
         return c.json(errorResponse(error.message, 401), 401);
       }
 
+      logEndpoint(c, "error", "User sign-in failed", getErrorDetails(error));
       return c.json(errorResponse("Internal Server Error", 500), 500);
     }
   });
@@ -146,7 +129,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/signup", async c => {
     const parsedBody = await parseJsonBody(c, signupBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -161,6 +144,8 @@ export function registerAuthRoutes(router: AppOpenAPI) {
         c.req.header("x-orienteerfeed-app-activate-user-url") ?? "localhost",
       );
 
+      logEndpoint(c, "info", "User sign-up completed");
+
       return c.json(
         successResponse(
           "OK",
@@ -171,10 +156,12 @@ export function registerAuthRoutes(router: AppOpenAPI) {
       );
     } catch (error) {
       if (error instanceof ValidationError) {
+        logEndpoint(c, "warn", "User sign-up validation failed", getErrorDetails(error));
         return c.json(errorResponse(error.message, 422), 422);
       }
 
       const message = error instanceof Error ? error.message : "Internal Server Error";
+      logEndpoint(c, "error", "User sign-up failed", getErrorDetails(error));
       return c.json(errorResponse(message, 500), 500);
     }
   });
@@ -182,7 +169,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/request-password-reset", async c => {
     const parsedBody = await parseJsonBody(c, passwordResetRequestBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -193,6 +180,8 @@ export function registerAuthRoutes(router: AppOpenAPI) {
         email,
         c.req.header("x-ofeed-app-reset-password-url") ?? "localhost",
       );
+
+      logEndpoint(c, "info", "Password reset request completed");
 
       return c.json(
         successResponse(
@@ -207,10 +196,12 @@ export function registerAuthRoutes(router: AppOpenAPI) {
       );
     } catch (error) {
       if (error instanceof ValidationError) {
+        logEndpoint(c, "warn", "Password reset request validation failed", getErrorDetails(error));
         return c.json(errorResponse(error.message, 422), 422);
       }
 
       const message = error instanceof Error ? error.message : "Internal Server Error";
+      logEndpoint(c, "error", "Password reset request failed", getErrorDetails(error));
       return c.json(errorResponse(message, 500), 500);
     }
   });
@@ -218,7 +209,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
   router.post("/reset-password", async c => {
     const parsedBody = await parseJsonBody(c, passwordResetConfirmBodySchema);
 
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -226,6 +217,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
 
     try {
       const passwordResetPayload = await passwordResetConfirm(token, newPassword);
+      logEndpoint(c, "info", "Password reset confirm completed");
 
       return c.json(
         successResponse(
@@ -236,7 +228,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
               user: passwordResetPayload.user,
               message: "Password reset successful",
             },
-            message: passwordResetPayload.message,
+            message: "Password reset successful",
           },
           200,
         ),
@@ -244,10 +236,12 @@ export function registerAuthRoutes(router: AppOpenAPI) {
       );
     } catch (error) {
       if (error instanceof ValidationError) {
+        logEndpoint(c, "warn", "Password reset confirm validation failed", getErrorDetails(error));
         return c.json(errorResponse(error.message, 422), 422);
       }
 
       const message = error instanceof Error ? error.message : "Internal Server Error";
+      logEndpoint(c, "error", "Password reset confirm failed", getErrorDetails(error));
       return c.json(errorResponse(message, 500), 500);
     }
   });
@@ -260,6 +254,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
     const authHeader = c.req.header("authorization");
 
     if (!authHeader || !authHeader.startsWith("Basic ")) {
+      logEndpoint(c, "warn", "OAuth2 token request missing valid authorization header");
       return c.json(
         {
           error: "invalid_request",
@@ -274,6 +269,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
     const [clientId, clientSecret] = credentials.split(":");
 
     if (!clientId || !clientSecret) {
+      logEndpoint(c, "warn", "OAuth2 token request has invalid client credentials format");
       return c.json(
         {
           error: "invalid_client",
@@ -288,6 +284,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
     const scope = typeof parsedBody.scope === "string" ? parsedBody.scope : undefined;
 
     if (!grantType || grantType !== "client_credentials") {
+      logEndpoint(c, "warn", "OAuth2 token request has unsupported grant type");
       return c.json(
         {
           error: "invalid_grant",
@@ -302,6 +299,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
       const client = await oauth2Model.getClient(clientId, clientSecret);
 
       if (!client) {
+        logEndpoint(c, "warn", "OAuth2 token request rejected: unknown client");
         return c.json(
           {
             error: "unauthorized_client",
@@ -312,6 +310,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
       }
 
       if (!oauth2Model.validateRequestedScopes(requestedScopes, client.scopes)) {
+        logEndpoint(c, "warn", "OAuth2 token request rejected: invalid scope");
         return c.json(
           {
             error: "invalid_scope",
@@ -323,7 +322,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
 
       const oauthRequest = new OAuthRequest({
         method: c.req.method,
-        headers: toLowerCaseHeaders(c.req.raw.headers),
+        headers: toLowerCaseHeaderRecord(c.req.raw.headers),
         query: toQueryRecord(c.req.url),
         body: {
           grant_type: grantType,
@@ -345,7 +344,11 @@ export function registerAuthRoutes(router: AppOpenAPI) {
         scope,
       };
 
-      return c.json(accessTokenResponse, oauthResponse.status || 200);
+      logEndpoint(c, "info", "OAuth2 access token issued", {
+        grantType,
+      });
+
+      return c.json(accessTokenResponse, 200);
     } catch (err) {
       const statusCode =
         typeof err === "object" && err !== null && "code" in err && typeof err.code === "number"
@@ -353,22 +356,30 @@ export function registerAuthRoutes(router: AppOpenAPI) {
           : 500;
       const message = err instanceof Error ? err.message : "Internal Server Error";
 
+      logEndpoint(
+        c,
+        statusCode >= 500 ? "error" : "warn",
+        "OAuth2 token request failed",
+        {
+          statusCode,
+          ...getErrorDetails(err),
+        },
+      );
+
       return c.json(errorResponse(message, statusCode), statusCode);
     }
   });
 
   router.get("/oauth2-credentials", requireJwtAuth, async c => {
-    const userId = toNumericUserId(getJwtUserId(c));
-
-    if (!userId) {
-      return c.json(errorResponse("Unauthorized: Invalid or missing credentials.", 401), 401);
-    }
+    const userId = getJwtNumericUserId(c) as number;
 
     try {
       const oAuth2Credentials = await prisma.oAuthClient.findFirst({
         where: { userId },
         select: { clientId: true },
       });
+
+      logEndpoint(c, "info", "OAuth2 credentials retrieved");
 
       return c.json(
         successResponse(
@@ -382,20 +393,17 @@ export function registerAuthRoutes(router: AppOpenAPI) {
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Internal Server Error";
+      logEndpoint(c, "error", "OAuth2 credentials lookup failed", getErrorDetails(error));
       return c.json(errorResponse(message, 500), 500);
     }
   });
 
   router.post("/generate-oauth2-credentials", requireJwtAuth, async c => {
-    const userId = toNumericUserId(getJwtUserId(c));
+    const userId = getJwtNumericUserId(c) as number;
 
-    if (!userId) {
-      return c.json(errorResponse("Unauthorized: Invalid or missing credentials.", 401), 401);
-    }
+    const parsedBody = await parseJsonBody(c, oauthCredentialsBodySchema);
 
-    const parsedBody = await parseJsonBody(c, oauthCredentialBodySchema);
-
-    if (!parsedBody.ok) {
+    if (parsedBody.ok === false) {
       return parsedBody.response;
     }
 
@@ -437,6 +445,12 @@ export function registerAuthRoutes(router: AppOpenAPI) {
         data: clientData as never,
       });
 
+      logEndpoint(c, "info", "OAuth2 client credentials generated", {
+        grants: grantArray,
+        hasRedirectUris: redirectUriArray.length > 0,
+        hasScopes: scopeArray.length > 0,
+      });
+
       return c.json(
         successResponse(
           "OK",
@@ -454,6 +468,7 @@ export function registerAuthRoutes(router: AppOpenAPI) {
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Internal Server Error";
+      logEndpoint(c, "error", "OAuth2 client credential generation failed", getErrorDetails(error));
       return c.json(errorResponse(message, 500), 500);
     }
   });

@@ -1,4 +1,5 @@
 import { requireEventOwner } from '../../utils/authz.js';
+import type { Prisma } from '../../generated/prisma/client';
 
 export const changelogByEvent = async (_, args, context) => {
   const { eventId, origin, classId, since } = args;
@@ -7,7 +8,7 @@ export const changelogByEvent = async (_, args, context) => {
   try {
     await requireEventOwner(prisma, auth, eventId);
 
-    const filters = { eventId };
+    const filters: Prisma.ProtocolWhereInput = { eventId };
 
     if (since) {
       filters.createdAt = { gte: new Date(since) };

@@ -48,8 +48,8 @@ const resolvers = {
     },
     eventPassword: async (parent, _, context) => {
       const { prisma, auth } = context;
-      const { userId } = await requireEventOwner(prisma, auth, parent.id);
-      const decryptedPassword = getDecryptedEventPassword(parent.id, userId);
+      await requireEventOwner(prisma, auth, parent.id);
+      const decryptedPassword = await getDecryptedEventPassword(parent.id);
       // Return `null` if no password exists
       if (!decryptedPassword) {
         return null;

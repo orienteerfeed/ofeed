@@ -5,8 +5,9 @@ import type { AppOpenAPI } from "../types";
 
 import env from "./env";
 import packageJson from "../../../../package.json" with { type: "json" };
-import { OPENAPI_PATHS, OPENAPI_TAGS, type OpenApiPathItem } from "./openapi.paths";
+import { OPENAPI_PATHS, OPENAPI_TAGS } from "./openapi.paths";
 import { OPENAPI_SECURITY_SCHEMES } from "./security";
+import type { OpenApiPathItem } from "./openapi.types";
 
 export const OPENAPI_CONFIG = {
   title: env.OPENAPI_TITLE,
@@ -32,7 +33,7 @@ function registerDocumentedRoutes(app: AppOpenAPI) {
 }
 
 export function configureOpenAPI(app: AppOpenAPI) {
-  app.doc(OPENAPI_CONFIG.docPath, {
+  const documentConfig = {
     openapi: "3.0.0",
     info: {
       title: OPENAPI_CONFIG.title,
@@ -43,7 +44,9 @@ export function configureOpenAPI(app: AppOpenAPI) {
       securitySchemes: OPENAPI_SECURITY_SCHEMES,
     },
     servers: [{ url: "" }],
-  });
+  };
+
+  app.doc(OPENAPI_CONFIG.docPath, documentConfig as never);
 
   // Register routes that are not declared via `router.openapi(...)`.
   registerDocumentedRoutes(app);
