@@ -216,7 +216,7 @@
             "Detail": {
                 "EventInformation": "Informace o závodu",
                 "Date": "Datum",
-                "ZeroTime": "Start 00",
+                "ZeroTime": "Čas startu",
                 "Location": "Lokalita",
                 "Organizer": "Pořadatel",
                 "Classes": "Kategorie",
@@ -413,7 +413,7 @@
                 },
                 "DeleteAllEventData": {
                     "Title": "Smazat všechna data akce",
-                    "Description": "Pokud potřebuješ odstranit všechna data akce (závodníky, kategorie a výsledky), tak použij toto tlačítko. Pozor, operace je nevratná!",
+                    "Description": "Pokud potřebuješ odstranit všechna data akce (závodníky, kategorie, štafety a výsledky), tak použij toto tlačítko. Pozor, operace je nevratná!",
                     "Button": "Smazat",
                     "ConfirmTitle": "Smazat všechna data akce",
                     "ConfirmDescription": "Opravdu chceš smazat všechna data akce? Tím odstraníš všechny výsledky a operace je nevratná!",
@@ -455,7 +455,7 @@
                 "ScrollMore": "Posuňte dolů pro více akcí",
                 "AllLoaded": "Všechny akce načteny",
                 "EventsCount": "{{count}} akcí",
-                "FoundCount": "Našli jste {{count}} akcí",
+                "FoundCount": "Zobrazeno {{count}} akcí",
                 "LoadError": "Chyba při načítání akcí: {{message}}",
                 "NoEvents": "Žádné akce nenalezeny",
                 "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
