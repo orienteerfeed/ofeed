@@ -1,6 +1,4 @@
-import type { ZodSchema } from "zod";
-
-export function jsonContent<T extends ZodSchema>(schema: T, description = "") {
+export function jsonContent<T>(schema: T, description = "") {
   return {
     content: {
       "application/json": {
@@ -11,7 +9,7 @@ export function jsonContent<T extends ZodSchema>(schema: T, description = "") {
   } as const;
 }
 
-export function jsonContentRequired<T extends ZodSchema>(schema: T, description = "") {
+export function jsonContentRequired<T>(schema: T, description = "") {
   return {
     content: {
       "application/json": {

@@ -1,4 +1,4 @@
-import { pubsub, WINNER_UPDATED } from '../../utils/pubsub.js';
+import { pubsub, WINNER_UPDATED } from '../../lib/pubsub.js';
 
 export const winnerUpdated = {
   subscribe: (_, { eventId }) => {

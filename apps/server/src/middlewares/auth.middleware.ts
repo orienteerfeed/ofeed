@@ -1,5 +1,6 @@
 import type { Context, Next } from "hono";
 
+import { toLowerCaseHeaderRecord } from "../lib/http/headers.js";
 import { buildAuthContextFromRequest } from "../utils/jwtToken.js";
 
 const PUBLIC_PREFIXES = ["/", "/doc", "/reference", "/health", "/metrics", "/readyz"];
@@ -9,13 +10,7 @@ export function isPublicPath(path: string) {
 }
 
 function requestLikeFromHono(c: Context) {
-  const headers: Record<string, string> = {};
-
-  for (const [key, value] of c.req.raw.headers.entries()) {
-    headers[key.toLowerCase()] = value;
-  }
-
-  return { headers };
+  return { headers: toLowerCaseHeaderRecord(c.req.raw.headers) };
 }
 
 export async function authMiddleware(c: Context, next: Next) {
@@ -23,7 +18,11 @@ export async function authMiddleware(c: Context, next: Next) {
     const auth = await buildAuthContextFromRequest(requestLikeFromHono(c) as any);
     c.set("authContext", auth);
   } catch (error) {
-    c.set("authContext", { isAuthenticated: false, type: null });
+    c.set("authContext", {
+      isAuthenticated: false,
+      type: null,
+      failureReason: "auth_context_build_failed",
+    });
   }
 
   await next();

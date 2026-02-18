@@ -1,58 +1,27 @@
 import { z } from "@hono/zod-openapi";
 
-import { formatErrors } from "../../utils/errors.js";
 import prisma from "../../utils/context.js";
-import { getPublicObject } from "../../utils/s3Storage.js";
+import { getPublicObject } from "../../lib/storage/s3.js";
 import { error, success, validation } from "../../utils/responseApi.js";
 import { calculateCompetitorRankingPoints } from "../../utils/ranking.js";
+import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";
+import {
+  toValidationIssues as zodToValidationIssues,
+  toValidationMessage,
+} from "../../lib/validation/zod.js";
 
 import { getEventCompetitorDetail } from "./event.service.js";
-
-type ValidationIssue = {
-  msg: string;
-  param: string;
-  location: "all";
-};
-
-function toValidationIssues(issues: z.ZodIssue[]): ValidationIssue[] {
-  return issues.map(issue => ({
-    msg: issue.message,
-    param: issue.path.length > 0 ? issue.path.join(".") : "body",
-    location: "all",
-  }));
-}
+import { eventCompetitorExternalParamsSchema, eventCompetitorParamsSchema, eventIdParamsSchema } from "./event.schema.js";
 
 function responseValidationIssues(issues: z.ZodIssue[]) {
-  return validation(toValidationIssues(issues));
+  return validation(zodToValidationIssues(issues));
 }
 
 function responseValidationString(issues: z.ZodIssue[]) {
-  return validation(
-    formatErrors(
-      issues.map(issue => ({
-        msg: issue.message,
-        param: issue.path.length > 0 ? issue.path.join(".") : "body",
-        location: "all",
-      })),
-    ),
-  );
+  return validation(toValidationMessage(issues));
 }
 
 export function registerPublicEventRoutes(router) {
-  const eventIdParamsSchema = z.object({
-    eventId: z.string().min(1),
-  });
-
-  const eventCompetitorParamsSchema = z.object({
-    eventId: z.string().min(1),
-    competitorId: z.string().regex(/^\d+$/),
-  });
-
-  const eventCompetitorExternalParamsSchema = z.object({
-    eventId: z.string().min(1),
-    competitorExternalId: z.string().min(1),
-  });
-
   const eventCompetitorsQuerySchema = z.object({
     class: z.string().regex(/^\d+$/).optional(),
     lastUpdate: z.string().datetime({ offset: true }).optional(),
@@ -97,7 +66,10 @@ export function registerPublicEventRoutes(router) {
         headers,
       });
     } catch (err) {
-      console.error("Failed to stream image:", err);
+      logEndpoint(c, "error", "Public event image stream failed", {
+        eventId,
+        ...getErrorDetails(err),
+      });
       return c.json(error("Failed to load image", 500), 500);
     }
   });
@@ -119,7 +91,7 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public event list query failed", getErrorDetails(err));
       return c.json(error(`Database error${err.message}`, 500), 500);
     } finally {
       return c.json(success("OK", { data: dbResponse }, 200), 200);
@@ -158,7 +130,10 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public event detail query failed", {
+        eventId,
+        ...getErrorDetails(err),
+      });
       return c.json(
         error(`Event with ID ${eventId} does not exist in the database${err.message}`, 500),
         500,
@@ -198,7 +173,10 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public competitors event lookup failed", {
+        eventId,
+        ...getErrorDetails(err),
+      });
       return c.json(
         error(`Event with ID ${eventId} does not exist in the database${err.message}`, 500),
         500,
@@ -261,7 +239,10 @@ export function registerPublicEventRoutes(router) {
           },
         });
       } catch (err: any) {
-        console.error(err);
+        logEndpoint(c, "error", "Public individual competitors query failed", {
+          eventId,
+          ...getErrorDetails(err),
+        });
         return c.json(error(`An error occurred: ${err.message}`, 500), 500);
       }
       eventData = dbIndividualResponse;
@@ -321,7 +302,10 @@ export function registerPublicEventRoutes(router) {
           },
         });
       } catch (err: any) {
-        console.error(err);
+        logEndpoint(c, "error", "Public relay competitors query failed", {
+          eventId,
+          ...getErrorDetails(err),
+        });
         return c.json(
           error(`Event with ID ${eventId} does not exist in the database${err.message}`, 500),
           500,
@@ -397,7 +381,11 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public competitor detail event lookup failed", {
+        eventId,
+        competitorId,
+        ...getErrorDetails(err),
+      });
       return c.json(error(`An error occurred: ${err.message}`, 500), 500);
     }
 
@@ -428,7 +416,11 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      console.error(err);
+      logEndpoint(c, "error", "Public external competitor event lookup failed", {
+        eventId,
+        competitorExternalId,
+        ...getErrorDetails(err),
+      });
       return c.json(error(`An error occurred: ${err.message}`, 500), 500);
     }
 
@@ -471,4 +463,3 @@ export function registerPublicEventRoutes(router) {
     return c.json(success("OK", { data: "Calculate ranking" }, 200), 200);
   });
 }
-

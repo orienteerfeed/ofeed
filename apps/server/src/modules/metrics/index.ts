@@ -3,7 +3,7 @@ import { createRouter } from "../../lib/create-app";
 import { getMetricsHandler } from "./metrics.handlers";
 import { getMetrics } from "./metrics.routes";
 
-const router = createRouter().openapi(getMetrics, getMetricsHandler);
+const router = createRouter().openapi(getMetrics, getMetricsHandler as never);
 
 export default router;
 export * from "./metrics.handlers.js";
