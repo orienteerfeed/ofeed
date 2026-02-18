@@ -1,4 +1,5 @@
 import { DatabaseError, NotFoundError, ValidationError } from '../exceptions/index.js';
+import type { ResultStatus } from '../generated/prisma/client';
 import prisma from './context.js';
 
 const CZ_INDIVIDUAL_START = 0.0;
@@ -7,14 +8,33 @@ const CZ_PURSUIT_START = 0.08;
 const CZ_PREFIX_RANKING_CLASSES_REGEX = /^(H20|H21|D20|D21|M21|W21)/;
 const CZ_REGISTRATION_REGEX = /^[A-Z]{3}\d{4}$/; // Regular expression to match czech registration format
 const CZ_RANKING_RACES_COUNT = 8;
-const EXCLUDED_COMPETITOR_STATUSES_FROM_RANKING = [
+const EXCLUDED_COMPETITOR_STATUSES_FROM_RANKING: ResultStatus[] = [
   'NotCompeting',
   'DidNotStart',
   'DidNotEnter',
   'Cancelled',
 ]; // List of statuses to exclude
 
-export const calculateCompetitorRankingPoints = async eventId => {
+type RankingClass = {
+  id: number;
+  name: string;
+};
+
+type RankingCompetitor = {
+  id: number;
+  classId: number;
+  registration: string;
+  time: number | null;
+  status: ResultStatus;
+  ranking: number | null;
+};
+
+type RatedCompetitor = RankingCompetitor & {
+  time: number;
+  position: number;
+};
+
+export const calculateCompetitorRankingPoints = async (eventId: string): Promise<boolean> => {
   let dbEventResponse;
   try {
     dbEventResponse = await prisma.event.findUnique({
@@ -51,9 +71,9 @@ export const calculateCompetitorRankingPoints = async eventId => {
   }
 
   if (dbEventResponse.countryId === 'CZ') {
-    const eventCoefRanking = parseFloat(dbEventResponse.coefRanking) || 1.0;
+    const eventCoefRanking = Number(dbEventResponse.coefRanking) || 1.0;
     const rankingClasses = filterCzechRankingClasses(dbEventResponse.classes);
-    if (!rankingClasses) {
+    if (rankingClasses.length === 0) {
       throw new ValidationError(`No ranking classes found in the event with ID ${eventId}.`);
     }
 
@@ -159,11 +179,11 @@ export const calculateCompetitorRankingPoints = async eventId => {
   return true;
 };
 
-const filterCzechRankingClasses = classes => {
+const filterCzechRankingClasses = (classes: RankingClass[]): RankingClass[] => {
   return classes.filter(cls => CZ_PREFIX_RANKING_CLASSES_REGEX.test(cls.name));
 };
 
-const calculateMedianOfTopThreeTimes = data => {
+const calculateMedianOfTopThreeTimes = (data: RankingCompetitor[]): number | null => {
   // Filter out null times, sort times in ascending order, and slice the top three
   const topThreeTimes = data
     .filter(
@@ -183,7 +203,7 @@ const calculateMedianOfTopThreeTimes = data => {
   return topThreeTimes[1];
 };
 
-const fetchTopRankings = async (country, data) => {
+const fetchTopRankings = async (country: string, data: RankingCompetitor[]): Promise<number | null> => {
   if (country === 'CZ') {
     const validRegistrations = data
       .filter(entry => CZ_REGISTRATION_REGEX.test(entry.registration))
@@ -221,10 +241,13 @@ const fetchTopRankings = async (country, data) => {
   return null;
 };
 
-const calculateCompetitorPositionBasedOnTime = competitors => {
+const calculateCompetitorPositionBasedOnTime = (competitors: RankingCompetitor[]): RatedCompetitor[] => {
   // Filter out participants who did not finish (time is null)
   const ratedCompetitors = competitors
-    .filter(competitor => competitor.time !== null && competitor.status === 'OK')
+    .filter(
+      (competitor): competitor is RankingCompetitor & { time: number } =>
+        competitor.time !== null && competitor.status === 'OK'
+    )
     .sort((a, b) => a.time - b.time)
     .map((competitor, index) => ({
       ...competitor,

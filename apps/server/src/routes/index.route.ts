@@ -1,7 +1,9 @@
 import { createRoute, z } from "@hono/zod-openapi";
+import type { Context } from "hono";
 
 import { HTTP_STATUS } from "../constants";
 import { createRouter } from "../lib/create-app";
+import type { AppBindings } from "../types";
 import { success } from "../utils/responseApi.js";
 import packageJson from "../../../../package.json" with { type: "json" };
 
@@ -66,15 +68,30 @@ const versionRoute = createRoute({
   },
 });
 
+const rootHandler = (c: Context<AppBindings>) => {
+  return c.text("Hello World!", HTTP_STATUS.OK);
+};
+
+const readyHandler = (c: Context<AppBindings>) => {
+  return c.text("OK", HTTP_STATUS.OK);
+};
+
+const versionHandler = (c: Context<AppBindings>) => {
+  return c.json(
+    success(
+      "OK",
+      {
+        version: packageJson.version,
+      },
+      HTTP_STATUS.OK,
+    ),
+    HTTP_STATUS.OK,
+  );
+};
+
 const router = createRouter()
-  .openapi(rootRoute, (c) => {
-    return c.text("Hello World!", HTTP_STATUS.OK);
-  })
-  .openapi(readyRoute, (c) => {
-    return c.text("OK", HTTP_STATUS.OK);
-  })
-  .openapi(versionRoute, (c) => {
-    return c.json(success(`Version: ${packageJson.version}`), HTTP_STATUS.OK);
-  });
+  .openapi(rootRoute, rootHandler as never)
+  .openapi(readyRoute, readyHandler as never)
+  .openapi(versionRoute, versionHandler as never);
 
 export default router;

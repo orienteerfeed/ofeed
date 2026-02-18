@@ -13,6 +13,9 @@ OrienteerFeed (OFeed) is a monorepo web platform for orienteering event data, co
 
 This application is like a digital hub for all things related to orienteering events. It serves as a one-stop platform where you can get details about various events, the classes offered at these events, and the competitors participating in them. It provides these services through a web server and is capable of communicating using both RESTful APIs and GraphQL, which are two ways of fetching data from a server.
 
+## Localization
+We are using [Webplate](https://hosted.weblate.org/projects/ofeed/) free localization hosting, thanks to [webplate.org](https://weblate.org/) and Michal Čihař.
+
 ## Tech Stack
 
 - Client: Vite + React + TypeScript
@@ -194,9 +197,18 @@ Packages are published as private by default.
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution process and standards.
 
-1. Create your feature branch: `git checkout -b Feature/my-new-feature`
-2. Commit your changes: `git commit -am 'Add some feature'`
-3. Push to the branch: `git push origin Feature/my-new-feature`
+1. Create your feature branch: `git checkout -b feature/my-new-feature`
+2. Commit your changes using Conventional Commits:
+
+```bash
+git commit -m "feat(server): add event image upload validation"
+git commit -m "fix(auth): handle invalid refresh token"
+git commit -m "docs(readme): update contributing examples"
+git commit -m "feat(events): add competitor status sync" -m "Refs #45"
+git commit -m "feat(events): add competitor status sync" -m "Closes #45"
+```
+
+3. Push to the branch: `git push origin feature/my-new-feature`
 4. Submit a pull request :D
 
 
