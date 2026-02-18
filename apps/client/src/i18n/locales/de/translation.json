@@ -1,0 +1,58 @@
+{
+    "Pages": {
+        "Auth": {
+            "User": {
+                "Firstname": "Vorname",
+                "Lastname": "Nachname",
+                "Club": "Verein",
+                "Email": "Email",
+                "Password": "Passwort",
+                "Placeholder": {
+                    "Firstname": "Hans",
+                    "Lastname": "Neumann",
+                    "Club": "Mein Verein",
+                    "Email": "newman@example.com",
+                    "Password": "Ihr Passwort",
+                    "NewPassword": "Ihr neues Passwort",
+                    "PasswordConfirmation": "Passwort bestätigung"
+                }
+            },
+            "SignInUpPage": {
+                "Login": "Login",
+                "DontHaveAnAccount": "Haben sie noch kein Zugang?",
+                "CreateAnAccount": "Konto erstellen",
+                "EnterYourInformation": "Füllen Sie die u.s. Infos aus um ihr Account zu erstellen",
+                "EnterYourEmailToSignIn": "Geben Sie ihre Mailadresse an um sich anmelden zu können",
+                "ClickConsent": "Wenn Sie fortfahren klicken, stimmen sie unseren",
+                "TermsOfService": "Agbs"
+            },
+            "RequestPasswordResetPage": {
+                "ForgottenPassword": "Passwort vergessen"
+            }
+        }
+    },
+    "Organisms": {
+        "Navbar": {
+            "Pages": "Seiten"
+        },
+        "Footer": {
+            "Docs": "Dokumente",
+            "Donate": "Spenden",
+            "Blog": "Blog",
+            "MadeWith": "Gemacht mit",
+            "ForOrienteering": "für orientierungslauf"
+        },
+        "AppDataTable": {
+            "Empty": "Es gibt keine Daten.",
+            "Loading": "Wid geladen...",
+            "Error": "Dateiupload fehlgeschlagen."
+        }
+    },
+    "Molecules": {
+        "DragDrop": {
+            "ClickToUpload": "Klicken sie hier für upload",
+            "Delete": "Löschen",
+            "OrdDragAndDrop": "oder drag and drop"
+        }
+    }
+}
