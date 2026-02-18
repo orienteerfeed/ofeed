@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { generateRandomHex } from "../randomUtils.js";
+import { generateRandomHex } from "../../lib/crypto/random.js";
 
 describe("generateRandomHex", () => {
   it("returns a string with requested length", () => {

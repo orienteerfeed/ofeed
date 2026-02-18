@@ -1,7 +1,18 @@
 import prisma from '../../utils/context.js';
+import type { Prisma } from '../../generated/prisma/client';
 
-export const events = async (_, { input = {} }) => {
-  const normalizedInput = input ?? {};
+type EventFilter = 'ALL' | 'TODAY' | 'UPCOMING' | 'RECENT';
+
+type EventsInput = {
+  filter?: EventFilter;
+  sportId?: number;
+  search?: string;
+  first?: number;
+  after?: string;
+};
+
+export const events = async (_: unknown, { input = {} }: { input?: EventsInput }) => {
+  const normalizedInput: EventsInput = input ?? {};
   const filter = normalizedInput.filter ?? 'ALL';
   const sportId = normalizedInput.sportId ?? undefined;
   const search = normalizedInput.search ?? undefined;
@@ -21,7 +32,7 @@ export const events = async (_, { input = {} }) => {
   }
 
   // Build where clause based on filters
-  const where = {
+  const where: Prisma.EventWhereInput = {
     published: true,
   };
 
@@ -33,9 +44,9 @@ export const events = async (_, { input = {} }) => {
   // Apply search filter if provided
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { location: { contains: search, mode: 'insensitive' } },
-      { organizer: { contains: search, mode: 'insensitive' } },
+      { name: { contains: search } },
+      { location: { contains: search } },
+      { organizer: { contains: search } },
     ];
   }
 
@@ -72,7 +83,7 @@ export const events = async (_, { input = {} }) => {
   }
 
   // Cursor-based pagination configuration
-  let cursorClause = {};
+  let cursorClause: Pick<Prisma.EventFindManyArgs, 'cursor' | 'skip'> = {};
   if (after) {
     // If cursor is in format "cursor-11", extract offset
     if (after.startsWith('cursor-')) {

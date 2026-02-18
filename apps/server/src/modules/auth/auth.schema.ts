@@ -26,9 +26,15 @@ export const oauthTokenBodySchema = z.object({
   scope: z.string().optional(),
 });
 
+export const oauthCredentialsBodySchema = z.object({
+  grants: z.literal("client_credentials"),
+  scopes: z.string().optional(),
+  redirectUris: z.string().optional(),
+});
+
 export type SigninBody = z.infer<typeof signinBodySchema>;
 export type SignupBody = z.infer<typeof signupBodySchema>;
 export type PasswordResetRequestBody = z.infer<typeof passwordResetRequestBodySchema>;
 export type PasswordResetConfirmBody = z.infer<typeof passwordResetConfirmBodySchema>;
 export type OauthTokenBody = z.infer<typeof oauthTokenBodySchema>;
-
+export type OauthCredentialsBody = z.infer<typeof oauthCredentialsBodySchema>;

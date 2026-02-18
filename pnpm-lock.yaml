@@ -345,15 +345,9 @@ importers:
       argon2:
         specifier: ^0.44.0
         version: 0.44.0
-      crypto-js:
-        specifier: ^4.2.0
-        version: 4.2.0
       csv-parse:
         specifier: ^5.6.0
         version: 5.6.0
-      dotenv-flow:
-        specifier: ^3.3.0
-        version: 3.3.0
       ejs:
         specifier: ^3.1.10
         version: 3.1.10

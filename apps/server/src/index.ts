@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server";
+import type { Server as HttpServer } from "node:http";
 
 import { env } from "./config";
 import { attachGraphQLWebSocketServer } from "./graphql/server";
@@ -16,7 +17,7 @@ const server = serve(
   },
 );
 
-const disposeGraphQLWebSocket = attachGraphQLWebSocketServer(server);
+const disposeGraphQLWebSocket = attachGraphQLWebSocketServer(server as unknown as HttpServer);
 
 let shuttingDown = false;
 
