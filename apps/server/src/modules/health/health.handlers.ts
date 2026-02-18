@@ -1,8 +1,11 @@
 import type { Context } from "hono";
 
+import type { AppBindings } from "../../types";
+
+import { logEndpoint } from "../../lib/http/endpoint-logger.js";
 import { performFullHealthCheck, performReadinessCheck } from "./health.service";
 
-export function liveHandler(c: Context) {
+export function liveHandler(c: Context<AppBindings>) {
   c.header("Cache-Control", "no-store");
   return c.json(
     {
@@ -13,7 +16,7 @@ export function liveHandler(c: Context) {
   );
 }
 
-export async function readyHandler(c: Context) {
+export async function readyHandler(c: Context<AppBindings>) {
   c.header("Cache-Control", "no-store");
 
   const prisma = c.get("prisma");
@@ -30,6 +33,7 @@ export async function readyHandler(c: Context) {
   }
 
   c.header("Retry-After", "30");
+  logEndpoint(c, "warn", "Readiness check reported not ready", { checks });
 
   return c.json(
     {
@@ -40,7 +44,7 @@ export async function readyHandler(c: Context) {
   );
 }
 
-export async function healthHandler(c: Context) {
+export async function healthHandler(c: Context<AppBindings>) {
   c.header("Cache-Control", "no-store");
 
   const prisma = c.get("prisma");
@@ -51,6 +55,7 @@ export async function healthHandler(c: Context) {
   }
 
   c.header("Retry-After", "30");
+  logEndpoint(c, "warn", "Health check reported degraded status", { resultStatus: result.status });
 
   return c.json(result, 503);
 }

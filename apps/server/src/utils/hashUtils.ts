@@ -1,6 +1,12 @@
 import crypto from 'crypto';
 
-export const createShortCompetitorHash = (classId, familyName, givenName) => {
+type HashInput = string | number;
+
+export const createShortCompetitorHash = (
+  classId: HashInput,
+  familyName: HashInput,
+  givenName: HashInput,
+): string => {
   // Normalize and combine inputs
   const input = `${classId}-${familyName}-${givenName}`.toLowerCase();
 
@@ -14,7 +20,7 @@ export const createShortCompetitorHash = (classId, familyName, givenName) => {
   return Math.abs(hash).toString().slice(0, 10);
 };
 
-export const generateResetPasswordToken = userId => {
+export const generateResetPasswordToken = (userId: string | number): string => {
   const salt = crypto.randomBytes(16).toString('hex'); // Generate a random salt
   const rawToken = `${userId}.${salt}`; // Combine user ID with salt
   const resetToken = crypto.createHash('sha256').update(rawToken).digest('hex'); // Hash it

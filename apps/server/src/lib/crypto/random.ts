@@ -6,7 +6,7 @@ import crypto from 'crypto';
  * @returns {string} The generated hexadecimal string.
  * @throws {Error} If length is not a positive integer.
  */
-export const generateRandomHex = length => {
+export const generateRandomHex = (length: number): string => {
   if (!Number.isInteger(length) || length <= 0) {
     throw new Error('Length must be a positive integer');
   }

@@ -3,7 +3,14 @@ import { z } from "@hono/zod-openapi";
 import { Parser } from 'xml2js';
 import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
+import type { Context } from "hono";
 import { requireAuth } from '../../middlewares/require-jwt.js';
+import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
+import { toValidationIssues } from '../../lib/validation/zod.js';
+import { ensureEventOwner, isAuthzError } from '../../utils/authz.js';
+import type { AppBindings, AppOpenAPI } from "../../types";
+import { ResultStatus as ResultStatusEnum } from "../../generated/prisma/enums";
+import type { ProtocolType, ResultStatus, Sex } from "../../generated/prisma/enums";
 
 import prisma from '../../utils/context.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
@@ -26,86 +33,231 @@ const uploadIofBodySchema = z.object({
   validateXml: z.boolean().optional(),
 }).passthrough();
 
-type ValidationIssue = {
-  msg: string;
-  param: string;
-  location: "all";
-};
-
-type UploadedFile = {
+type UploadedFile = MultipartFile;
+type UploadLogLevel = 'info' | 'warn' | 'error';
+type CompressionType = 'none' | 'gzip' | 'zlib' | 'deflate' | 'unknown';
+type UploadContext = Context<AppBindings>;
+type MaybeUnzipResult = {
   buffer: Buffer;
-  mimetype: string;
-  originalname: string;
-  size: number;
+  compressionEnabled: boolean;
+  compressedInput: boolean;
+  compressionType: CompressionType;
+  decompressionFailed: boolean;
 };
 
-function toValidationIssues(issues: z.ZodIssue[]): ValidationIssue[] {
-  return issues.map(issue => ({
-    msg: issue.message,
-    param: issue.path.length > 0 ? issue.path.join(".") : "body",
-    location: "all",
-  }));
+type IofSourceId = {
+  ATTR?: { type?: string };
+  _?: string;
+};
+
+type IofPersonName = {
+  Family?: string[];
+  Given?: string[];
+};
+
+type IofPerson = {
+  Id?: IofSourceId[];
+  Name?: IofPersonName[];
+  Nationality?: Array<{ ATTR?: { code?: string } }>;
+};
+
+type IofOrganisation = {
+  Name?: string[];
+  ShortName?: string[];
+} | null;
+
+type IofStart = {
+  BibNumber?: string[];
+  StartTime?: string[];
+  ControlCard?: string[];
+  Leg?: Array<string | number>;
+};
+
+type IofSplitTime = {
+  ControlCode?: string[];
+  Time?: string[];
+};
+
+type IofResult = {
+  BibNumber?: string[];
+  StartTime?: string[];
+  FinishTime?: string[];
+  Time?: string[];
+  ControlCard?: string[];
+  Status?: unknown;
+  SplitTime?: IofSplitTime[];
+  Leg?: Array<string | number>;
+};
+
+type TeamWithBib = {
+  Name: string[];
+  BibNumber?: string[];
+};
+
+type IofPayloadType = 'ResultList' | 'StartList' | 'CourseData';
+type IofTypeMatch = { isArray: true; jsonKey: IofPayloadType; jsonValue: unknown };
+const IOF_PAYLOAD_TYPES: readonly IofPayloadType[] = ['ResultList', 'StartList', 'CourseData'];
+type UploadScopedLogger = Pick<AppBindings["Variables"]["logger"], "info" | "warn" | "error">;
+
+function isIofPayloadType(value: string): value is IofPayloadType {
+  return (IOF_PAYLOAD_TYPES as readonly string[]).includes(value);
 }
 
-function normalizeBooleanLikeValues(input: unknown): unknown {
-  if (typeof input === "string") {
-    if (input === "true") {
-      return true;
-    }
+const RESULT_STATUSES = new Set<ResultStatus>(Object.values(ResultStatusEnum));
 
-    if (input === "false") {
-      return false;
+const RESULT_STATUS_ALIASES: Record<string, ResultStatus> = {
+  DNS: "DidNotStart",
+  DNF: "DidNotFinish",
+  DSQ: "Disqualified",
+  MP: "MissingPunch",
+  OT: "OverTime",
+  NC: "NotCompeting",
+  NENT: "DidNotEnter",
+};
+
+function normalizeStatusToken(value: string): string {
+  return value.trim().replace(/[\s_-]+/g, "").toUpperCase();
+}
+
+function getIofTextValue(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  if (typeof value === "number") {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = getIofTextValue(item);
+      if (nested) {
+        return nested;
+      }
+    }
+    return undefined;
+  }
+
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  const direct =
+    getIofTextValue(record._) ??
+    getIofTextValue(record.value) ??
+    getIofTextValue(record["#text"]) ??
+    getIofTextValue(record.text);
+  if (direct) {
+    return direct;
+  }
+
+  const attrCandidate = record.ATTR;
+  if (attrCandidate && typeof attrCandidate === "object") {
+    const attrs = attrCandidate as Record<string, unknown>;
+    const fromAttrs =
+      getIofTextValue(attrs.value) ??
+      getIofTextValue(attrs.status) ??
+      getIofTextValue(attrs.code);
+    if (fromAttrs) {
+      return fromAttrs;
     }
   }
 
-  return input;
+  for (const entry of Object.values(record)) {
+    const nested = getIofTextValue(entry);
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return undefined;
 }
 
-async function normalizeUploadFile(file: File): Promise<UploadedFile> {
+function toResultStatus(value: unknown, fallback: ResultStatus): ResultStatus {
+  const rawStatus = getIofTextValue(value);
+  if (!rawStatus) {
+    return fallback;
+  }
+
+  if (RESULT_STATUSES.has(rawStatus as ResultStatus)) {
+    return rawStatus as ResultStatus;
+  }
+
+  const normalized = normalizeStatusToken(rawStatus);
+  for (const candidate of RESULT_STATUSES) {
+    if (normalizeStatusToken(candidate) === normalized) {
+      return candidate;
+    }
+  }
+
+  return RESULT_STATUS_ALIASES[normalized] ?? fallback;
+}
+
+function toSex(value: string | undefined, fallback: Sex): Sex {
+  if (value === "M" || value === "F" || value === "B") {
+    return value;
+  }
+
+  return fallback;
+}
+
+function getUploadFileMeta(file?: UploadedFile) {
   return {
-    buffer: Buffer.from(await file.arrayBuffer()),
-    mimetype: file.type,
-    originalname: file.name,
-    size: file.size,
+    fileName: file?.originalname || null,
+    fileSizeBytes: file?.size ?? null,
+    mediaType: file?.mimetype || null,
   };
 }
 
-async function extractMultipartPayload(c: any) {
-  const parsed = await c.req.parseBody({ all: true });
-  const body: Record<string, unknown> = {};
-  let file: UploadedFile | undefined;
-
-  for (const [key, value] of Object.entries(parsed)) {
-    if (Array.isArray(value)) {
-      const normalized = await Promise.all(
-        value.map(async item => {
-          if (item instanceof File) {
-            const normalizedFile = await normalizeUploadFile(item);
-            if (!file) {
-              file = normalizedFile;
-            }
-            return normalizedFile;
-          }
-
-          return normalizeBooleanLikeValues(item);
-        }),
-      );
-      body[key] = normalized;
-      continue;
+function getUploadLogContext(c: UploadContext) {
+  try {
+    const context = c.get('logContext');
+    if (context && typeof context === 'object') {
+      return context;
     }
-
-    if (value instanceof File) {
-      const normalizedFile = await normalizeUploadFile(value);
-      if (!file) {
-        file = normalizedFile;
-      }
-      continue;
-    }
-
-    body[key] = normalizeBooleanLikeValues(value);
+  } catch {
+    // no-op fallback
   }
 
-  return { body, file };
+  return {};
+}
+
+function logUploadEvent(
+  c: UploadContext,
+  level: UploadLogLevel,
+  message: string,
+  details: Record<string, unknown>,
+) {
+  const context = {
+    ...getUploadLogContext(c),
+    upload: details,
+  };
+
+  let scopedLogger: UploadScopedLogger | undefined;
+  try {
+    scopedLogger = c.get('logger');
+  } catch {
+    scopedLogger = undefined;
+  }
+
+  if (scopedLogger && typeof scopedLogger[level] === 'function') {
+    scopedLogger[level](message, context);
+    return;
+  }
+
+  if (level === 'error') {
+    console.error(message, context);
+    return;
+  }
+
+  if (level === 'warn') {
+    console.warn(message, context);
+    return;
+  }
+
+  console.info(message, context);
 }
 
 // Utility functions
@@ -117,37 +269,35 @@ async function extractMultipartPayload(c: any) {
  * it returns the body of the response as text. If an error occurs, it logs an error
  * message to the console.
  *
- * @returns {Promise<string|undefined>} A promise that resolves to the IOF XML schema as a string,
- * or undefined if an error occurs.
+ * Returns IOF XML schema content.
  */
-async function fetchIOFXmlSchema() {
+async function fetchIOFXmlSchema(): Promise<string> {
   try {
     const response = await fetch(IOF_XML_SCHEMA, {
       method: 'get',
       headers: { 'Content-Type': 'application/xml' },
     });
     return await response.text();
-  } catch (err) {
-    console.error('Problem to load IOF XML schema: ', err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Problem to load IOF XML schema: ', message);
+    return '';
   }
 }
 
 /**
  * Retrieves the competitor key based on the provided class ID and person object.
  *
- * @param {string} classId - The class ID associated with the competitor.
- * @param {Object} person - The person object containing identification and name details.
- * @param {Array} person.Id - An array of identification objects.
- * @param {Object} person.Id[].ATTR - Attributes of the identification object.
- * @param {string} person.Id[].ATTR.type - The type of the identification.
- * @param {string} person.Id[] - The identification value.
- * @param {Array} person.Name - An array of name objects.
- * @param {Array} person.Name[].Family - An array containing family names.
- * @param {Array} person.Name[].Given - An array containing given names.
- *
- * @returns {string} - The competitor key, either an ID or a hash created from the family and given names.
+ * @param classId - The class ID associated with the competitor.
+ * @param person - The person object containing identification and name details.
+ * @param keyType - Key source priority (`registration` or `system`).
+ * @returns Competitor key, either source ID or fallback hash.
  */
-function getCompetitorKey(classId, person, keyType = 'registration') {
+function getCompetitorKey(
+  classId: number,
+  person: IofPerson,
+  keyType: 'registration' | 'system' = 'registration',
+): string {
   try {
     // Ensure `person` and `person.Id` are valid
     if (!person || !Array.isArray(person.Id) || person.Id.length === 0) {
@@ -160,7 +310,8 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
       // Use the first valid ID with type "CZE" or any other ID if "CZE" is not available
       const id =
         person.Id.find(
-          sourceId => sourceId.ATTR?.type === 'CZE' && sourceId._ && sourceId._.trim() !== ''
+          (sourceId: IofSourceId) =>
+            sourceId.ATTR?.type === 'CZE' && sourceId._ && sourceId._.trim() !== ''
         )?._ || person.Id.find(sourceId => sourceId._ && sourceId._.trim() !== '')?._;
 
       if (id) return id; // Return ID if available
@@ -195,11 +346,11 @@ function getCompetitorKey(classId, person, keyType = 'registration') {
 // Fallback function to generate a competitor hash using names
 /**
  *
- * @param {string} classId - The class ID associated with the competitor.
- * @param {Object} person - The person object containing identification and name details.
- * @returns {string} - Unique competitor's id
+ * @param classId - The class ID associated with the competitor.
+ * @param person - The person object containing identification and name details.
+ * @returns Unique competitor ID.
  */
-function fallbackToNameHash(classId, person) {
+function fallbackToNameHash(classId: number, person: IofPerson): string {
   const familyName = person?.Name?.[0]?.Family?.[0] || '';
   const givenName = person?.Name?.[0]?.Given?.[0] || '';
   if (!familyName || !givenName) {
@@ -211,54 +362,72 @@ function fallbackToNameHash(classId, person) {
 /**
  * Parses the XML content from the request file buffer.
  *
- * @param {Object} buffer - The buffer object containing the file buffer.
- * @returns {Promise<Object>} - A promise that resolves to the parsed XML object.
- * @throws {Error} - Throws an error if parsing fails.
+ * @param buffer - Request file buffer.
+ * @returns Parsed XML object.
+ * @throws Error when parsing fails.
  */
-async function parseXml(buffer) {
+async function parseXml(buffer: Buffer): Promise<Record<string, unknown>> {
   /** This function takes in two parameters, a request object and a callback function.
    * It attempts to parse the buffer of the file contained in the request object using the parser.parseStringPromise() method.
    * If successful, it calls the callback function with null as the first parameter and iofXml3 as the second parameter.
    * If an error occurs, it logs it to the console and calls the callback function with err as its only parameter.  */
   try {
     return await parser.parseStringPromise(buffer.toString());
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
-    throw new Error('Error parsing file: ' + err.message);
+    const message = err instanceof Error ? err.message : 'Unknown parse error';
+    throw new Error('Error parsing file: ' + message);
   }
 }
 
 /**
  * Checks if the JSON object contains any of the specified XML types and returns an array of objects with information about the matching keys.
  *
- * @param {Object} json - The JSON object to check.
- * @returns {Array<Object>} An array of objects containing information about the matching keys in the JSON object.
- * @returns {boolean} return[].isArray - Indicates if the value is an array.
- * @returns {string} return[].jsonKey - The key in the JSON object that matches the XML type.
- * @returns {any} return[].jsonValue - The value associated with the matching key in the JSON object.
+ * @param json - Parsed XML object.
+ * @returns Matching IOF payload sections.
  */
-const checkXmlType = json => {
+const checkXmlType = (json: Record<string, unknown>): IofTypeMatch[] => {
   /**
    * checkXmlType() is a function that takes in a JSON object as an argument and returns an array of objects.
    * The function checks if the JSON object contains any of the values in the iofXmlTypes array, and if so,
    * it pushes an object containing the key, value, and whether or not it is an array into the response array.
    * The returned response array will contain objects with information about any keys in the JSON object that match
    * any of the values in the iofXmlTypes array. */
-  const iofXmlTypes = ['ResultList', 'StartList', 'CourseData'];
-  return Object.entries(json)
-    .filter(([key]) => iofXmlTypes.includes(key))
-    .map(([key, value]) => ({ isArray: true, jsonKey: key, jsonValue: value }));
+  const response: IofTypeMatch[] = [];
+  for (const [key, value] of Object.entries(json)) {
+    if (isIofPayloadType(key)) {
+      response.push({
+        isArray: true,
+        jsonKey: key,
+        jsonValue: value,
+      });
+    }
+  }
+
+  return response;
 };
 
 /**
  * Validates an XML string against an XSD string using WASM-based xmllint.
  *
- * @param {string} xmlString - The XML string to be validated.
- * @param {string} xsdString - The XSD string to validate against.
- * @returns {Promise<{ state: boolean, message: string }>} - An object containing the validation state and message.
+ * @param xmlString - XML string to validate.
+ * @param xsdString - XSD schema content.
+ * @returns Validation result with state, message and optional issues.
  */
-const validateIofXml = async (xmlString, xsdString) => {
-  let returnState = { state: false, message: '' };
+type XmlValidationIssue = {
+  param: string;
+  msg: string;
+  type: string;
+};
+
+type XmlValidationResult = {
+  state: boolean;
+  message: string;
+  errors?: XmlValidationIssue[];
+};
+
+const validateIofXml = async (xmlString: string, xsdString: string): Promise<XmlValidationResult> => {
+  const returnState: XmlValidationResult = { state: false, message: '' };
   try {
     // First check if XML is well-formed
     const parser = new DOMParser();
@@ -282,9 +451,14 @@ const validateIofXml = async (xmlString, xsdString) => {
     } else {
       // Convert xmllint errors to ValidationError format
       returnState.errors = result.errors
-        ? result.errors.map(error => ({
+        ? result.errors.map((error: unknown) => ({
             param: 'xml',
-            msg: typeof error === 'string' ? error : error.message || 'Validation error',
+            msg:
+              typeof error === 'string'
+                ? error
+                : error && typeof error === 'object' && 'message' in error
+                  ? String(error.message)
+                  : 'Validation error',
             type: 'schema',
           }))
         : [
@@ -294,76 +468,60 @@ const validateIofXml = async (xmlString, xsdString) => {
               type: 'schema',
             },
           ];
+      returnState.message = returnState.errors.map(issue => issue.msg).join("; ");
       console.log(returnState.message);
     }
-  } catch (err) {
-    returnState.message = err.message;
-    console.error('Problem to validate xml: ', err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown validation error';
+    returnState.message = message;
+    console.error('Problem to validate xml: ', message);
   }
   return returnState;
 };
 
 /**
- * Retrieves an event by its ID from the database.
- *
- * @async
- * @function getEventById
- * @param {number} eventId - The ID of the event to retrieve.
- * @returns {Promise<Object|null>} The event object if found, otherwise null.
- * @throws {Error} If the event does not exist or there is a database error.
- */
-async function getEventById(eventId) {
-  try {
-    return await prisma.event.findUnique({
-      where: { id: eventId },
-      select: { id: true, relay: true, ranking: true, authorId: true },
-    });
-  } catch (err) {
-    console.error(err);
-    throw new Error(`Event with ID ${eventId} does not exist in the database: ${err.message}`);
-  }
-}
-
-/**
  * Retrieves a list of classes for a given event.
  *
- * @param {number} eventId - The ID of the event to retrieve classes for.
- * @returns {Promise<Array<{id: number, externalId: string}>>} A promise that resolves to an array of class objects, each containing an `id` and `externalId`.
- * @throws {Error} Throws an error if there is a database issue.
+ * @param eventId - Event identifier.
+ * @returns Class list with external identifiers.
+ * @throws Error if database query fails.
  */
-async function getClassLists(eventId) {
+async function getClassLists(eventId: string): Promise<Array<{ id: number; externalId: string | null }>> {
   try {
     return await prisma.class.findMany({
       where: { eventId: eventId },
       select: { id: true, externalId: true },
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
-    throw new Error(`Database error: ${err.message}`);
+    const message = err instanceof Error ? err.message : 'Unknown database error';
+    throw new Error(`Database error: ${message}`);
   }
 }
 
 /**
  * Upserts a class in the database based on the provided class details.
  *
- * @param {string} eventId - The ID of the event to which the class belongs.
- * @param {Object} classDetails - The details of the class to be upserted.
- * @param {Array} classDetails.Id - An array containing the class IDs.
- * @param {Array} classDetails.Name - An array containing the class names.
- * @param {Object} classDetails.ATTR - Additional attributes of the class.
- * @param {string} [classDetails.ATTR.sex] - The sex attribute of the class.
- * @param {Array} dbClassLists - The list of existing classes in the database.
- * @param {Object} [additionalData={}] - Additional data to be included in the class record.
- * @returns {Promise<string>} - The ID of the upserted class.
+ * @param eventId - Event identifier.
+ * @param classDetails - Source class payload from XML.
+ * @param dbClassLists - Existing DB classes for current event.
+ * @param additionalData - Optional derived attributes.
+ * @returns Class numeric database ID.
  */
-async function upsertClass(eventId, classDetails, dbClassLists, additionalData = {}) {
+async function upsertClass(
+  eventId: string,
+  classDetails: { Id?: string[]; Name: string[]; ATTR?: { sex?: string } },
+  dbClassLists: Array<{ id: number; externalId: string | null }>,
+  additionalData: Record<string, unknown> = {},
+): Promise<number> {
   const sourceClassId = classDetails.Id?.shift();
-  const className = classDetails.Name.shift();
+  const className = classDetails.Name.shift() ?? sourceClassId ?? '';
   const classIdentifier = sourceClassId || className;
   const existingClass = dbClassLists.find(cls => cls.externalId === classIdentifier);
 
   // Determine sex based on the first letter of the class name
-  const sex = className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
+  const inferredSex: Sex = className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
+  const classSex = toSex(classDetails.ATTR?.sex, inferredSex);
 
   if (!existingClass) {
     const dbClassInsert = await prisma.class.create({
@@ -371,7 +529,7 @@ async function upsertClass(eventId, classDetails, dbClassLists, additionalData =
         eventId: eventId,
         externalId: classIdentifier,
         name: className,
-        sex: classDetails.ATTR?.sex || sex,
+        sex: classSex,
         ...additionalData, // Spread additional properties like length, climb, etc.
       },
     });
@@ -381,7 +539,7 @@ async function upsertClass(eventId, classDetails, dbClassLists, additionalData =
       where: { id: existingClass.id },
       data: {
         name: className,
-        sex: classDetails.ATTR?.sex || sex,
+        sex: classSex,
         ...additionalData, // Update additional fields if present
       },
     });
@@ -397,26 +555,26 @@ async function upsertClass(eventId, classDetails, dbClassLists, additionalData =
  * information if there are any changes. If the competitor does not exist, it creates a new competitor
  * record in the database.
  *
- * @param {number} eventId - The ID of the event.
- * @param {number} classId - The ID of the class.
- * @param {Object} person - The person object containing competitor details.
- * @param {Object} organisation - The organisation object containing organisation details.
- * @param {Object|null} [start=null] - The start object containing start details (optional).
- * @param {Object|null} [result=null] - The result object containing result details (optional).
- * @param {number|null} [teamId=null] - The ID of the team (optional).
- * @param {number|null} [leg=null] - The leg number (optional).
- * @returns {Promise<Object>} - A promise that resolves to an object containing the competitor ID and a boolean indicating if the competitor was updated.
+ * @param eventId - Event identifier.
+ * @param classId - Class database ID.
+ * @param person - Competitor person details.
+ * @param organisation - Competitor organisation details.
+ * @param start - Optional start payload.
+ * @param result - Optional result payload.
+ * @param teamId - Optional team database ID.
+ * @param leg - Optional relay leg.
+ * @returns Competitor ID and whether record was changed.
  */
 async function upsertCompetitor(
-  eventId,
-  classId,
-  person,
-  organisation,
-  start = null,
-  result = null,
-  teamId = null,
-  leg = null
-) {
+  eventId: string,
+  classId: number,
+  person: IofPerson,
+  organisation: IofOrganisation,
+  start: IofStart | null = null,
+  result: IofResult | null = null,
+  teamId: number | null = null,
+  leg: string | number | null = null,
+): Promise<{ id: number; updated: boolean }> {
   const registration = getCompetitorKey(classId, person, 'registration');
   const externalId = getCompetitorKey(classId, person, 'system');
   const dbCompetitorResponse = await prisma.competitor.findFirst({
@@ -446,11 +604,19 @@ async function upsertCompetitor(
     },
   });
 
+  const firstname = person.Name?.[0]?.Given?.[0] ?? dbCompetitorResponse?.firstname ?? '';
+  const lastname = person.Name?.[0]?.Family?.[0] ?? dbCompetitorResponse?.lastname ?? '';
+  const hasFinishTime = Boolean(result?.FinishTime?.[0]);
+  const fallbackStatus: ResultStatus = hasFinishTime
+    ? 'OK'
+    : (dbCompetitorResponse?.status ?? 'Inactive');
+  const normalizedStatus = toResultStatus(result?.Status, fallbackStatus);
+
   // Prepare new data, giving preference to already stored values for certain fields
   const competitorData = {
     class: { connect: { id: classId } },
-    firstname: person.Name[0].Given[0],
-    lastname: person.Name[0].Family[0],
+    firstname,
+    lastname,
     nationality: person.Nationality?.[0].ATTR.code,
     registration: registration,
     license: dbCompetitorResponse?.license || null,
@@ -471,10 +637,10 @@ async function upsertCompetitor(
       : start?.ControlCard
         ? parseInt(start.ControlCard.shift())
         : (dbCompetitorResponse?.card ?? null),
-    status: result?.Status?.toString() ?? (dbCompetitorResponse?.status || 'Inactive'),
+    status: normalizedStatus,
     lateStart: dbCompetitorResponse?.lateStart || false,
     team: teamId ? { connect: { id: teamId } } : undefined,
-    leg: leg ? parseInt(leg) : undefined,
+    leg: leg ? Number.parseInt(String(leg), 10) : undefined,
     externalId: externalId,
     note: dbCompetitorResponse?.note || null,
     updatedAt: new Date(),
@@ -522,10 +688,10 @@ async function upsertCompetitor(
     ];
 
     // Collect changes to be added to the protocol
-    const changes = [];
+    const changes: Array<{ type: ProtocolType; previousValue: string | null; newValue: string | null }> = [];
 
     // Define a mapping of competitorData keys to their corresponding protocol types
-    const keyToTypeMap = {
+    const keyToTypeMap: Record<string, ProtocolType> = {
       classId: 'class_change',
       firstname: 'firstname_change',
       lastname: 'lastname_change',
@@ -598,6 +764,191 @@ async function upsertCompetitor(
   }
 }
 
+const splitWriteLocks = new Map<number, Promise<void>>();
+const SPLIT_WRITE_CONFLICT_MAX_RETRIES = 4;
+const SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS = 40;
+
+const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+function isSplitWriteConflict(error: unknown): error is Error {
+  if (!(error instanceof Error)) return false;
+
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("record has changed since last read in table 'split'") ||
+    message.includes('record has changed since last read in table "split"') ||
+    message.includes('write conflict') ||
+    message.includes('deadlock') ||
+    message.includes('p2034')
+  );
+}
+
+async function withSplitWriteLock<T>(
+  competitorId: number,
+  operation: () => Promise<T>,
+): Promise<T> {
+  const previous = splitWriteLocks.get(competitorId) || Promise.resolve();
+  let release: (() => void) | undefined;
+  const gate = new Promise<void>(resolve => {
+    release = resolve;
+  });
+  const tail = previous.then(() => gate);
+  splitWriteLocks.set(competitorId, tail);
+
+  await previous;
+  try {
+    return await operation();
+  } finally {
+    release?.();
+    if (splitWriteLocks.get(competitorId) === tail) {
+      splitWriteLocks.delete(competitorId);
+    }
+  }
+}
+
+async function withSplitWriteConflictRetry<T>(
+  competitorId: number,
+  operation: () => Promise<T>,
+): Promise<T> {
+  for (let attempt = 1; attempt <= SPLIT_WRITE_CONFLICT_MAX_RETRIES; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isSplitWriteConflict(error)) {
+        throw error;
+      }
+
+      if (attempt === SPLIT_WRITE_CONFLICT_MAX_RETRIES) {
+        console.error('Split write conflict retries exhausted', {
+          competitorId,
+          attempts: attempt,
+          maxAttempts: SPLIT_WRITE_CONFLICT_MAX_RETRIES,
+          reason: error.message,
+        });
+        throw error;
+      }
+
+      console.warn('Retrying split write after conflict', {
+        competitorId,
+        attempt,
+        maxAttempts: SPLIT_WRITE_CONFLICT_MAX_RETRIES,
+        reason: error.message,
+      });
+      await wait(SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS * attempt);
+    }
+  }
+
+  return operation();
+}
+
+type NormalizedSplit = {
+  controlCode: number;
+  time: number | null;
+};
+
+function normalizeIncomingSplits(result: IofResult): NormalizedSplit[] {
+  const splitTimes = result?.SplitTime ?? [];
+  const byControlCode = new Map<number, number | null>();
+
+  for (const split of splitTimes) {
+    const rawControlCode = split.ControlCode?.[0];
+    const controlCode = rawControlCode ? Number.parseInt(rawControlCode, 10) : Number.NaN;
+    if (!Number.isInteger(controlCode)) {
+      continue;
+    }
+
+    const rawTime = split.Time?.[0];
+    const time = rawTime ? Number.parseInt(rawTime, 10) : null;
+    byControlCode.set(controlCode, Number.isInteger(time) ? time : null);
+  }
+
+  return [...byControlCode.entries()]
+    .map(([controlCode, time]) => ({ controlCode, time }))
+    .sort((a, b) => a.controlCode - b.controlCode);
+}
+
+async function upsertSplitsUnsafe(competitorId: number, result: IofResult) {
+  const dbSplitResponse = await prisma.split.findMany({
+    where: { competitorId: competitorId },
+    select: {
+      id: true,
+      controlCode: true,
+      time: true,
+    },
+    orderBy: { id: "asc" },
+  });
+
+  const incomingSplits = normalizeIncomingSplits(result);
+  const incomingByControlCode = new Map<number, number | null>(
+    incomingSplits.map(split => [split.controlCode, split.time]),
+  );
+
+  const existingByControlCode = new Map<number, { id: number; time: number | null }>();
+  let duplicateExistingRows = 0;
+  for (const split of dbSplitResponse) {
+    if (existingByControlCode.has(split.controlCode)) {
+      duplicateExistingRows += 1;
+      continue;
+    }
+
+    existingByControlCode.set(split.controlCode, {
+      id: split.id,
+      time: split.time,
+    });
+  }
+
+  let created = 0;
+  let updated = 0;
+  let deleted = duplicateExistingRows;
+
+  for (const [controlCode, incomingTime] of incomingByControlCode) {
+    const existing = existingByControlCode.get(controlCode);
+    if (!existing) {
+      created += 1;
+      continue;
+    }
+
+    if (existing.time !== incomingTime) {
+      updated += 1;
+    }
+  }
+
+  for (const controlCode of existingByControlCode.keys()) {
+    if (!incomingByControlCode.has(controlCode)) {
+      deleted += 1;
+    }
+  }
+
+  const changeMade = created > 0 || updated > 0 || deleted > 0;
+  if (!changeMade) {
+    return { created, updated, deleted, changeMade };
+  }
+
+  // Replace all competitor splits atomically to avoid interleaving create/update/delete conflicts.
+  await prisma.$transaction(async tx => {
+    await tx.split.deleteMany({
+      where: { competitorId: competitorId },
+    });
+
+    if (incomingSplits.length > 0) {
+      await tx.split.createMany({
+        data: incomingSplits.map(split => ({
+          competitorId: competitorId,
+          controlCode: split.controlCode,
+          time: split.time,
+        })),
+      });
+    }
+  });
+
+  return {
+    created,
+    updated,
+    deleted,
+    changeMade,
+  };
+}
+
 /**
  * Updates or inserts split times for a given competitor based on the provided result data.
  *
@@ -607,94 +958,18 @@ async function upsertCompetitor(
  * - Creates new splits for any incoming splits that do not exist in the database.
  * - Updates existing splits if their times differ from the incoming data.
  * - Deletes splits from the database that are not present in the incoming data.
+ * - Retries on split write conflicts and serializes split writes per competitor.
  *
  * @async
  * @function upsertSplits
- * @param {number} competitorId - The ID of the competitor whose splits are being updated.
- * @param {Object} result - The result data containing split times.
- * @param {Array<Object>} result.SplitTime - An array of split time objects.
- * @param {Array<string>} [result.SplitTime[].ControlCode] - The control code(s) for the split.
- * @param {Array<string>} [result.SplitTime[].Time] - The time(s) for the split.
- * @returns {Promise<Object>} An object summarizing the changes made:
- * - `created` {number}: The number of splits created.
- * - `updated` {number}: The number of splits updated.
- * - `deleted` {number}: The number of splits deleted.
- * - `changeMade` {boolean}: Whether any changes were made (true if splits were created, updated, or deleted).
+ * @param competitorId - Competitor database ID.
+ * @param result - Result payload with split times.
+ * @returns Summary of split mutations.
  */
-async function upsertSplits(competitorId, result) {
-  const dbSplitResponse = await prisma.split.findMany({
-    where: { competitorId: competitorId },
-    select: {
-      id: true,
-      controlCode: true,
-      time: true,
-    },
-  });
-
-  const splitTimes = result.SplitTime || [];
-  const incomingSplits = splitTimes
-    .map(split => ({
-      controlCode: split.ControlCode?.[0] ? parseInt(split.ControlCode[0]) : null,
-      time: split.Time?.[0] ? parseInt(split.Time[0]) : null,
-    }))
-    .filter(split => split.controlCode !== null);
-
-  // Create a map of existing splits for quick lookup
-  const existingSplitsMap = new Map(dbSplitResponse.map(split => [split.controlCode, split]));
-
-  // Track splits to create, update, and delete
-  const splitsToCreate = [];
-  const splitsToUpdate = [];
-  const existingControlCodes = new Set();
-  let updated = false;
-
-  for (const incomingSplit of incomingSplits) {
-    const existingSplit = existingSplitsMap.get(incomingSplit.controlCode);
-    if (existingSplit) {
-      existingControlCodes.add(incomingSplit.controlCode);
-      if (existingSplit.time !== incomingSplit.time) {
-        splitsToUpdate.push({
-          id: existingSplit.id,
-          time: incomingSplit.time,
-        });
-        updated = true;
-      }
-    } else {
-      splitsToCreate.push({
-        competitorId: competitorId,
-        controlCode: incomingSplit.controlCode,
-        time: incomingSplit.time,
-      });
-      updated = true;
-    }
-  }
-
-  const splitsToDelete = dbSplitResponse.filter(
-    split => !existingControlCodes.has(split.controlCode)
+async function upsertSplits(competitorId: number, result: IofResult) {
+  return withSplitWriteLock(competitorId, () =>
+    withSplitWriteConflictRetry(competitorId, () => upsertSplitsUnsafe(competitorId, result))
   );
-
-  if (splitsToDelete.length > 0) {
-    updated = true;
-  }
-
-  // Perform database operations
-  await Promise.all([
-    ...splitsToCreate.map(split => prisma.split.create({ data: split })),
-    ...splitsToUpdate.map(split =>
-      prisma.split.update({
-        where: { id: split.id },
-        data: { time: split.time },
-      })
-    ),
-    ...splitsToDelete.map(split => prisma.split.delete({ where: { id: split.id } })),
-  ]);
-
-  return {
-    created: splitsToCreate.length,
-    updated: splitsToUpdate.length,
-    deleted: splitsToDelete.length,
-    changeMade: updated,
-  };
 }
 
 /**
@@ -704,16 +979,23 @@ async function upsertSplits(competitorId, result) {
  * event class and bib number. It prevents duplicate entries while keeping team
  * details up to date. The organisation information is also included in the update.
  *
- * @param {string} eventId - The ID of the event the team is participating in.
- * @param {string} classId - The ID of the class the team belongs to.
- * @param {Object} teamResult - The team result object containing team details (e.g., name, bib number).
- * @param {Object} organisation - The organisation object containing team affiliation details (e.g., name, short name).
- * @returns {Promise<string>} - The ID of the upserted team.
+ * @param eventId - Event identifier.
+ * @param classId - Class database ID.
+ * @param teamResult - Team payload with name and bib number.
+ * @param organisation - Organisation details.
+ * @returns Team database ID.
  */
-async function upsertTeam(eventId, classId, teamResult, organisation) {
+async function upsertTeam(
+  eventId: string,
+  classId: number,
+  teamResult: TeamWithBib,
+  organisation: IofOrganisation,
+): Promise<number> {
   // Extract team details from the input object
-  const teamName = teamResult.Name.shift(); // Shift removes the first element from the array
-  const bibNumber = teamResult.BibNumber ? parseInt(teamResult.BibNumber.shift()) : null; // Convert BibNumber to integer
+  const teamName = teamResult.Name.shift() ?? '';
+  const bibNumber = teamResult.BibNumber
+    ? Number.parseInt(teamResult.BibNumber.shift() ?? '', 10) || null
+    : null;
 
   // Check if the team already exists in the database based on event class and bib number
   const dbRelayResponse = await prisma.team.findFirst({
@@ -758,13 +1040,18 @@ async function upsertTeam(eventId, classId, teamResult, organisation) {
 /**
  * Processes class starts for an event.
  *
- * @param {string} eventId - The ID of the event.
- * @param {Array} classStarts - The starts of the classes to process.
- * @param {Object} dbClassLists - The database class lists.
- * @param {Object} dbResponseEvent - The database response event.
- * @returns {Promise<void>} A promise that resolves when the processing is complete.
+ * @param eventId - Event ID.
+ * @param classStarts - Class starts payload.
+ * @param dbClassLists - Existing DB classes for the event.
+ * @param dbResponseEvent - Event flags used by processing flow.
+ * @returns Completion promise.
  */
-async function processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent) {
+async function processClassStarts(
+  eventId: string,
+  classStarts: Array<Record<string, any>>,
+  dbClassLists: Array<{ id: number; externalId: string | null }>,
+  dbResponseEvent: { relay?: boolean },
+): Promise<void> {
   await Promise.all(
     classStarts.map(async classStart => {
       const classDetails = classStart.Class.shift();
@@ -845,14 +1132,19 @@ async function processClassStarts(eventId, classStarts, dbClassLists, dbResponse
 /**
  * Processes class results for an event, updating the database with new or modified data.
  *
- * @param {string} eventId - The ID of the event.
- * @param {Array} classResults - An array of class results to process.
- * @param {Object} dbClassLists - The database class lists.
- * @param {Object} dbResponseEvent - The database response event.
- * @returns {Promise<Array>} - A promise that resolves to an array of updated class IDs.
+ * @param eventId - Event ID.
+ * @param classResults - Class results payload.
+ * @param dbClassLists - Existing DB classes for the event.
+ * @param dbResponseEvent - Event flags used by processing flow.
+ * @returns Updated class IDs.
  */
-async function processClassResults(eventId, classResults, dbClassLists, dbResponseEvent) {
-  const updatedClasses = new Set(); // Unique class IDs that had changes
+async function processClassResults(
+  eventId: string,
+  classResults: Array<Record<string, any>>,
+  dbClassLists: Array<{ id: number; externalId: string | null }>,
+  dbResponseEvent: { relay?: boolean; ranking?: boolean },
+): Promise<number[]> {
+  const updatedClasses = new Set<number>(); // Unique class IDs that had changes
   await Promise.all(
     classResults.map(async classResult => {
       const classDetails = classResult.Class.shift();
@@ -951,135 +1243,285 @@ async function processClassResults(eventId, classResults, dbClassLists, dbRespon
 /**
  * Handles the upload of IOF XML files.
  *
- * @param {Object} req - The request object.
- * @param {Object} req.body - The body of the request.
- * @param {string} req.body.eventId - The ID of the event.
- * @param {string} [req.body.validateXml] - Flag to indicate whether to validate the XML.
- * @param {Object} req.file - The uploaded file.
- * @param {Buffer} req.file.buffer - The buffer of the uploaded file.
- * @param {Object} res - The response object.
- * @returns {Promise<void>} - A promise that resolves when the upload is handled.
+ * @param c - Hono context.
+ * @param payload - Parsed multipart payload.
+ * @returns Upload handler response.
  */
 async function handleIofXmlUpload(
-  c: any,
+  c: UploadContext,
   {
     eventId,
     validateXml,
     file,
-    userId,
-  }: { eventId: string; validateXml?: boolean; file?: UploadedFile; userId?: string | number },
+  }: { eventId: string; validateXml?: boolean; file?: UploadedFile },
 ) {
+  const endpoint = '/rest/v1/upload/iof';
+  const iofValidationEnabled = typeof validateXml === 'undefined' || validateXml !== false;
+
   if (!file) {
-    console.error('File not found');
+    logUploadEvent(c, 'warn', 'IOF upload failed: missing file', {
+      endpoint,
+      eventId,
+      ...getUploadFileMeta(file),
+      compressionEnabled: true,
+      compressedInput: false,
+      compressionType: 'none',
+      decompressionFailed: false,
+      iofValidationEnabled,
+      success: false,
+      stage: 'input',
+    });
     return c.json(validation('No file uploaded', 422), 422);
   }
 
-  // Process uploaded XML file (compressed or uncompressed)
-  // Automatically detects gzip compression and decompresses if needed
-  // Returns Buffer containing the raw XML data ready for parsing
-  const xmlBuffer = maybeUnzip(file);
+  const unzipResult = maybeUnzip(file);
+  const uploadDetails = {
+    endpoint,
+    eventId,
+    ...getUploadFileMeta(file),
+    compressionEnabled: unzipResult.compressionEnabled,
+    compressedInput: unzipResult.compressedInput,
+    compressionType: unzipResult.compressionType,
+    decompressionFailed: unzipResult.decompressionFailed,
+    iofValidationEnabled,
+  };
 
-  if (typeof validateXml === 'undefined' || validateXml !== false) {
+  logUploadEvent(c, 'info', 'IOF upload received', {
+    ...uploadDetails,
+    success: false,
+    stage: 'received',
+  });
+
+  if (unzipResult.decompressionFailed) {
+    logUploadEvent(c, 'warn', 'IOF upload decompression failed, falling back to raw payload', {
+      ...uploadDetails,
+      success: false,
+      stage: 'decompression',
+    });
+  }
+
+  const xmlBuffer = unzipResult.buffer;
+
+  if (iofValidationEnabled) {
     const xsd = await fetchIOFXmlSchema();
     const iofXmlValidation = await validateIofXml(xmlBuffer.toString(), xsd);
     if (!iofXmlValidation.state) {
-      return c.json(validation(iofXmlValidation.errors), 422);
+      logUploadEvent(c, 'warn', 'IOF upload failed XML validation', {
+        ...uploadDetails,
+        success: false,
+        stage: 'xml-validation',
+        validationMessage: iofXmlValidation.message,
+      });
+      return c.json(validation(iofXmlValidation.errors ?? iofXmlValidation.message), 422);
     }
   }
 
   let dbResponseEvent;
   try {
-    dbResponseEvent = await getEventById(eventId);
-  } catch (err: any) {
-    return c.json(error(err.message, 500), 500);
+    const ownership = await ensureEventOwner(prisma, c.get("authContext"), eventId, {
+      select: { relay: true, ranking: true },
+      eventNotFoundStatus: 404,
+      eventNotFoundMessage: 'Event not found',
+      forbiddenStatus: 403,
+      forbiddenMessage: 'You are not authorized to upload data for this event',
+    });
+
+    dbResponseEvent = ownership.event;
+  } catch (err) {
+    if (isAuthzError(err)) {
+      const statusCode = err.statusCode === 404 ? 404 : err.statusCode === 403 ? 403 : 401;
+      logUploadEvent(c, 'warn', 'IOF upload failed authorization', {
+        ...uploadDetails,
+        success: false,
+        stage: 'authorization',
+        statusCode,
+        reason: err.message,
+      });
+      return c.json(error(err.message, statusCode), statusCode);
+    }
+
+    const message = err instanceof Error ? err.message : 'Internal Server Error';
+    logUploadEvent(c, 'error', 'IOF upload failed while resolving event ownership', {
+      ...uploadDetails,
+      success: false,
+      stage: 'authorization',
+      reason: message,
+    });
+    return c.json(error(message, 500), 500);
   }
 
-  if (!dbResponseEvent) {
-    return c.json(error('Event not found', 404), 404);
-  }
-
-  if (dbResponseEvent.authorId !== userId) {
-    return c.json(error('You are not authorized to upload data for this event', 403), 403);
-  }
-
-  let iofXml3;
+  let iofXml3: Record<string, any>;
   try {
-    iofXml3 = await parseXml(xmlBuffer);
+    iofXml3 = (await parseXml(xmlBuffer)) as Record<string, any>;
   } catch (err: any) {
+    logUploadEvent(c, 'error', 'IOF upload failed while parsing XML', {
+      ...uploadDetails,
+      success: false,
+      stage: 'xml-parse',
+      reason: err?.message || 'XML parsing failed',
+    });
     return c.json(error(err.message, 500), 500);
   }
 
   const iofXmlType = checkXmlType(iofXml3);
+  logUploadEvent(c, 'info', 'IOF upload XML parsed', {
+    ...uploadDetails,
+    success: false,
+    stage: 'xml-parsed',
+    detectedTypes: iofXmlType.map(type => type.jsonKey),
+    detectedTypeCount: iofXmlType.length,
+  });
+
+  if (iofXmlType.length === 0) {
+    logUploadEvent(c, 'warn', 'IOF upload parsed XML without supported IOF sections', {
+      ...uploadDetails,
+      success: false,
+      stage: 'xml-type-detection',
+    });
+  }
+
   let dbClassLists;
   try {
     dbClassLists = await getClassLists(eventId);
   } catch (err: any) {
+    logUploadEvent(c, 'error', 'IOF upload failed while loading event classes', {
+      ...uploadDetails,
+      success: false,
+      stage: 'load-classes',
+      reason: err?.message || 'Unable to load classes',
+    });
     return c.json(error(err.message, 500), 500);
   }
 
   const eventName = iofXml3[Object.keys(iofXml3)[0]]['Event'][0]['Name'];
 
-  await Promise.all(
-    iofXmlType.map(async type => {
-      if (type.jsonKey === 'ResultList') {
-        const classResults = iofXml3.ResultList.ClassResult;
-        if (classResults && classResults.length > 0) {
-          const updatedClasses = await processClassResults(
-            eventId,
-            classResults,
-            dbClassLists,
-            dbResponseEvent
-          );
-          notifyWinnerChanges(eventId);
-          for (const classId of updatedClasses) {
-            try {
-              await publishUpdatedCompetitors(classId); // Process sequentially
-            } catch (err) {
-              console.error(`Error publishing competitors update for classId ${classId}:`, err);
+  try {
+    await Promise.all(
+      iofXmlType.map(async type => {
+        if (type.jsonKey === 'ResultList') {
+          const classResults = iofXml3.ResultList.ClassResult;
+          logUploadEvent(c, 'info', 'IOF upload processing ResultList', {
+            ...uploadDetails,
+            success: false,
+            stage: 'processing-result-list',
+            classResultCount: Array.isArray(classResults) ? classResults.length : 0,
+          });
+          if (classResults && classResults.length > 0) {
+            const updatedClasses = await processClassResults(
+              eventId,
+              classResults,
+              dbClassLists,
+              dbResponseEvent
+            );
+            notifyWinnerChanges(eventId);
+            logUploadEvent(c, 'info', 'IOF upload ResultList processed', {
+              ...uploadDetails,
+              success: false,
+              stage: 'processed-result-list',
+              classResultCount: classResults.length,
+              updatedClassCount: updatedClasses.length,
+            });
+            for (const classId of updatedClasses) {
+              try {
+                await publishUpdatedCompetitors(classId); // Process sequentially
+              } catch (err) {
+                logUploadEvent(c, 'error', 'IOF upload failed while publishing updated competitors', {
+                  ...uploadDetails,
+                  success: false,
+                  stage: 'publish-updated-competitors',
+                  classId,
+                  reason: err instanceof Error ? err.message : 'Publish failed',
+                });
+              }
             }
           }
-        }
-      } else if (type.jsonKey === 'StartList') {
-        const classStarts = iofXml3.StartList.ClassStart;
-        if (classStarts && classStarts.length > 0) {
-          await processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent);
-        }
-      } else if (type.jsonKey === 'CourseData') {
-        // Process CourseData
-        let dbClassLists;
-        try {
-          dbClassLists = await prisma.class.findMany({
-            where: { eventId: eventId },
-            select: {
-              id: true,
-              name: true,
-            },
+        } else if (type.jsonKey === 'StartList') {
+          const classStarts = iofXml3.StartList.ClassStart;
+          logUploadEvent(c, 'info', 'IOF upload processing StartList', {
+            ...uploadDetails,
+            success: false,
+            stage: 'processing-start-list',
+            classStartCount: Array.isArray(classStarts) ? classStarts.length : 0,
           });
-        } catch (err) {
-          console.error(err);
-          return;
+          if (classStarts && classStarts.length > 0) {
+            await processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent);
+            logUploadEvent(c, 'info', 'IOF upload StartList processed', {
+              ...uploadDetails,
+              success: false,
+              stage: 'processed-start-list',
+              classStartCount: classStarts.length,
+            });
+          }
+        } else if (type.jsonKey === 'CourseData') {
+          // Process CourseData
+          let dbClassLists;
+          try {
+            dbClassLists = await prisma.class.findMany({
+              where: { eventId: eventId },
+              select: {
+                id: true,
+                name: true,
+              },
+            });
+          } catch (err) {
+            logUploadEvent(c, 'error', 'IOF upload failed while loading classes for course data', {
+              ...uploadDetails,
+              success: false,
+              stage: 'course-data-load-classes',
+              reason: err instanceof Error ? err.message : 'Unable to load classes',
+            });
+            return;
+          }
+
+          const courseData = iofXml3.CourseData.RaceCourseData[0].Course;
+          logUploadEvent(c, 'info', 'IOF upload processing CourseData', {
+            ...uploadDetails,
+            success: false,
+            stage: 'processing-course-data',
+            courseCount: Array.isArray(courseData) ? courseData.length : 0,
+          });
+          await Promise.all(
+            courseData.map(async course => {
+              const classDetails = {
+                Name: [course.Name[0]],
+                Id: [],
+                ATTR: {},
+              };
+              const additionalData = {
+                length: course.Length && parseInt(course.Length[0]),
+                climb: course.Climb && parseInt(course.Climb[0]),
+                controlsCount: course.CourseControl && course.CourseControl.length - 2,
+              };
+
+              await upsertClass(eventId, classDetails, dbClassLists, additionalData);
+            })
+          );
+          logUploadEvent(c, 'info', 'IOF upload CourseData processed', {
+            ...uploadDetails,
+            success: false,
+            stage: 'processed-course-data',
+            courseCount: Array.isArray(courseData) ? courseData.length : 0,
+          });
         }
+      })
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Upload processing failed';
+    logUploadEvent(c, 'error', 'IOF upload failed during processing', {
+      ...uploadDetails,
+      success: false,
+      stage: 'processing',
+      reason: message,
+    });
+    return c.json(error(message, 500), 500);
+  }
 
-        const courseData = iofXml3.CourseData.RaceCourseData[0].Course;
-        await Promise.all(
-          courseData.map(async course => {
-            const classDetails = {
-              Name: [course.Name[0]],
-              Id: [],
-              ATTR: {},
-            };
-            const additionalData = {
-              length: course.Length && parseInt(course.Length[0]),
-              climb: course.Climb && parseInt(course.Climb[0]),
-              controlsCount: course.CourseControl && course.CourseControl.length - 2,
-            };
-
-            await upsertClass(eventId, classDetails, dbClassLists, additionalData);
-          })
-        );
-      }
-    })
-  );
+  logUploadEvent(c, 'info', 'IOF upload completed', {
+    ...uploadDetails,
+    success: true,
+    stage: 'completed',
+    eventName,
+  });
 
   return c.json(
     success('OK', { data: 'Iof xml uploaded successfully: ' + eventName }, 200),
@@ -1102,50 +1544,84 @@ async function handleIofXmlUpload(
  * @param file.buffer - The file contents as a Buffer.
  * @param file.mimetype - Optional MIME type (e.g., 'application/gzip', 'application/zlib').
  * @param file.originalname - Optional original filename (e.g., 'data.xml.gz', 'payload.zlib').
- * @returns Buffer - Decompressed content when gzip/zlib is detected, otherwise the original buffer.
+ * @returns MaybeUnzipResult - Decompressed content metadata and payload.
  *
- * @throws {Error} If decompression fails due to corrupted or invalid compressed data.
+ * Throws when decompression fails due to corrupted or invalid compressed data.
  */
 
-function maybeUnzip(file) {
+function maybeUnzip(file: UploadedFile): MaybeUnzipResult {
   const buf = file.buffer;
-  if (!buf) return buf;
+  if (!buf) {
+    return {
+      buffer: Buffer.alloc(0),
+      compressionEnabled: true,
+      compressedInput: false,
+      compressionType: 'none',
+      decompressionFailed: false,
+    };
+  }
 
   const mimetype = file.mimetype || '';
   const name = file.originalname || '';
 
-  const looksGzip =
-    buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
+  const looksGzip = buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b;
 
-  const looksZlib =
-    buf.length > 2 && buf[0] === 0x78 &&
-    [0x01, 0x5E, 0x9C, 0xDA].includes(buf[1]);
+  const looksZlib = buf.length > 2 && buf[0] === 0x78 && [0x01, 0x5e, 0x9c, 0xda].includes(buf[1]);
   // common CMF/FLG combinations for zlib headers
 
-  const hintedGzip =
-    /application\/(x-)?gzip/i.test(mimetype) || /\.gz$/i.test(name);
+  const hintedGzip = /application\/(x-)?gzip/i.test(mimetype) || /\.gz$/i.test(name);
 
-  const hintedZlib =
-    /application\/zlib/i.test(mimetype) ||
-    /\.(zz|zlib)$/i.test(name);
+  const hintedZlib = /application\/zlib/i.test(mimetype) || /\.(zz|zlib)$/i.test(name);
 
   const hintedDeflate = /application\/deflate/i.test(mimetype);
+
+  const compressedInput = looksGzip || hintedGzip || looksZlib || hintedZlib || hintedDeflate;
+
   try {
     if (looksGzip || hintedGzip) {
-      return zlib.gunzipSync(buf);
+      return {
+        buffer: zlib.gunzipSync(buf),
+        compressionEnabled: true,
+        compressedInput: true,
+        compressionType: 'gzip',
+        decompressionFailed: false,
+      };
     }
     if (looksZlib || hintedZlib) {
-      return zlib.inflateSync(buf);
+      return {
+        buffer: zlib.inflateSync(buf),
+        compressionEnabled: true,
+        compressedInput: true,
+        compressionType: 'zlib',
+        decompressionFailed: false,
+      };
     }
     if (hintedDeflate) {
-      return zlib.inflateRawSync(buf);
+      return {
+        buffer: zlib.inflateRawSync(buf),
+        compressionEnabled: true,
+        compressedInput: true,
+        compressionType: 'deflate',
+        decompressionFailed: false,
+      };
     }
-  } catch (err) {
-    // If detection was wrong or decompression fails, fall back to original buffer
-    console.warn("maybeUnzip: decompression failed", err);
+  } catch {
+    return {
+      buffer: buf,
+      compressionEnabled: true,
+      compressedInput,
+      compressionType: compressedInput ? 'unknown' : 'none',
+      decompressionFailed: true,
+    };
   }
 
-  return buf;
+  return {
+    buffer: buf,
+    compressionEnabled: true,
+    compressedInput: false,
+    compressionType: 'none',
+    decompressionFailed: false,
+  };
 }
 
 /**
@@ -1176,29 +1652,39 @@ function maybeUnzip(file) {
  *      500:
  *        description: Internal server error.
  */
-export function registerUploadRoutes(router) {
-// Verify user authentication
-//TODO: Restrucure the code for better readability
-router.use("*", requireAuth);
+export function registerUploadRoutes(router: AppOpenAPI) {
+  // Verify user authentication
+  //TODO: Restrucure the code for better readability
+  router.use("*", requireAuth);
 
-router.post("/iof", async c => {
-  const { body, file } = await extractMultipartPayload(c);
-  const parsedBody = uploadIofBodySchema.safeParse(body);
+  router.post("/iof", async c => {
+    const endpoint = '/rest/v1/upload/iof';
+    const { body, file } = await parseMultipartPayload(c);
+    const parsedBody = uploadIofBodySchema.safeParse(body);
 
-  if (!parsedBody.success) {
-    return c.json(validation(toValidationIssues(parsedBody.error.issues)), 422);
-  }
+    if (!parsedBody.success) {
+      const issues = toValidationIssues(parsedBody.error.issues);
+      logUploadEvent(c, 'warn', 'IOF upload request validation failed', {
+        endpoint,
+        ...getUploadFileMeta(file),
+        compressionEnabled: true,
+        compressedInput: false,
+        compressionType: 'none',
+        decompressionFailed: false,
+        iofValidationEnabled: null,
+        success: false,
+        stage: 'request-validation',
+        issues,
+      });
+      return c.json(validation(issues), 422);
+    }
 
-  const authContext = c.get("authContext");
-  const userId = authContext?.isAuthenticated ? authContext.userId : undefined;
-
-  return handleIofXmlUpload(c, {
-    eventId: parsedBody.data.eventId,
-    validateXml: parsedBody.data.validateXml,
-    file,
-    userId,
+    return handleIofXmlUpload(c, {
+      eventId: parsedBody.data.eventId,
+      validateXml: parsedBody.data.validateXml,
+      file,
+    });
   });
-});
 
 /**
  * @swagger
@@ -1221,36 +1707,91 @@ router.post("/iof", async c => {
  *      500:
  *        description: Internal server error
  */
-router.post("/czech-ranking", async c => {
-  const { file } = await extractMultipartPayload(c);
+  router.post("/czech-ranking", async c => {
+    const endpoint = '/rest/v1/upload/czech-ranking';
+    const { file } = await parseMultipartPayload(c);
 
-  if (!file) {
-    console.error('File not found');
-    return c.json(validation('No file uploaded', 422), 422);
-  }
+    if (!file) {
+      logUploadEvent(c, 'warn', 'Czech ranking upload failed: missing file', {
+        endpoint,
+        ...getUploadFileMeta(file),
+        compressionEnabled: false,
+        compressedInput: false,
+        compressionType: 'none',
+        decompressionFailed: false,
+        iofValidationEnabled: false,
+        success: false,
+        stage: 'input',
+      });
+      return c.json(validation('No file uploaded', 422), 422);
+    }
 
-  if (file.size > 2000000) {
-    console.error('File is too large');
-    return c.json(validation('File is too large. Allowed size is up to 2MB', 422), 422);
-  }
+    const uploadDetails = {
+      endpoint,
+      ...getUploadFileMeta(file),
+      compressionEnabled: false,
+      compressedInput: false,
+      compressionType: 'none',
+      decompressionFailed: false,
+      iofValidationEnabled: false,
+    };
 
-  try {
-    const processedRankingData = await storeCzechRankingData(file.buffer.toString());
-    return c.json(
-      success(
-        'OK',
-        {
-          data: 'Csv ranking Czech data uploaded successfully: ' + processedRankingData,
-        },
-        200
-      ),
-      200,
-    );
-  } catch (err: any) {
-    console.error(err);
-    return c.json(error(err.message, 500), 500);
-  }
-});
+    logUploadEvent(c, 'info', 'Czech ranking upload received', {
+      ...uploadDetails,
+      success: false,
+      stage: 'received',
+    });
+
+    if (file.size > 2000000) {
+      logUploadEvent(c, 'warn', 'Czech ranking upload failed: file too large', {
+        ...uploadDetails,
+        success: false,
+        stage: 'validation',
+        fileSizeBytes: file.size,
+        maxSizeBytes: 2000000,
+      });
+      return c.json(validation('File is too large. Allowed size is up to 2MB', 422), 422);
+    }
+
+    logUploadEvent(c, 'info', 'Czech ranking upload processing started', {
+      ...uploadDetails,
+      success: false,
+      stage: 'processing-started',
+    });
+
+    try {
+      const processedRankingData = await storeCzechRankingData(file.buffer.toString());
+      logUploadEvent(c, 'info', 'Czech ranking upload completed', {
+        ...uploadDetails,
+        success: true,
+        stage: 'completed',
+        processedResult:
+          typeof processedRankingData === 'string'
+            ? processedRankingData
+            : Array.isArray(processedRankingData)
+              ? { processedItems: processedRankingData.length }
+              : processedRankingData,
+      });
+      return c.json(
+        success(
+          'OK',
+          {
+            data: 'Csv ranking Czech data uploaded successfully: ' + processedRankingData,
+          },
+          200
+        ),
+        200,
+      );
+    } catch (err: any) {
+      logUploadEvent(c, 'error', 'Czech ranking upload failed during processing', {
+        ...uploadDetails,
+        success: false,
+        stage: 'processing',
+        reason: err?.message || 'Unexpected processing error',
+      });
+      return c.json(error(err.message, 500), 500);
+    }
+  });
 }
 
 export const parseXmlForTesting = {

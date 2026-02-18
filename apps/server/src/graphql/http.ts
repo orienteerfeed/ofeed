@@ -1,5 +1,6 @@
 import { createYoga } from "graphql-yoga";
 
+import { toLowerCaseHeaderRecord } from "../lib/http/headers.js";
 import prisma from "../utils/context.js";
 import { buildAuthContextFromRequest } from "../utils/jwtToken.js";
 
@@ -18,12 +19,7 @@ export const yoga = createYoga<{
   schema: schemaWithDirectives,
   graphqlEndpoint: "/graphql",
   context: async ({ request }): Promise<YogaContext> => {
-    const headers: Record<string, string> = {};
-    for (const [key, value] of request.headers.entries()) {
-      headers[key.toLowerCase()] = value;
-    }
-
-    const auth = await buildAuthContextFromRequest({ headers });
+    const auth = await buildAuthContextFromRequest({ headers: toLowerCaseHeaderRecord(request.headers) });
 
     return {
       prisma,
