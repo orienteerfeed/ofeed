@@ -1,4 +1,4 @@
-import { pubsub, COMPETITORS_BY_CLASS_UPDATED, COMPETITOR_UPDATED } from '../../utils/pubsub.js';
+import { pubsub, COMPETITORS_BY_CLASS_UPDATED, COMPETITOR_UPDATED } from '../../lib/pubsub.js';
 import { getCompetitorsByClass } from './shared.js';
 
 export const competitorsByClassUpdated = {
@@ -12,7 +12,9 @@ export const competitorsByClassUpdated = {
     // Use pubsub.asyncIterableIterator for subsequent updates
     const topic = `${COMPETITORS_BY_CLASS_UPDATED}_${classId}`;
     console.log(`Subscribing to topic: ${topic}`);
-    const asyncIterableIterator = pubsub.asyncIterableIterator([topic]);
+    const asyncIterableIterator = pubsub.asyncIterableIterator([topic]) as AsyncIterable<{
+      competitorsByClassUpdated: unknown;
+    }>;
 
     // Relay subsequent updates to the subscriber
     for await (const payload of asyncIterableIterator) {

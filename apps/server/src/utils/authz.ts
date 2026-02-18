@@ -1,30 +1,67 @@
-export const requireEventOwner = async (prisma, auth, eventId) => {
-  // 1) User must be authenticated (JWT or Basic auth)
+export type EventOwnerOptions = {
+  select?: Record<string, boolean>;
+  unauthenticatedStatus?: number;
+  unauthenticatedMessage?: string;
+  invalidBasicStatus?: number;
+  invalidBasicMessage?: string;
+  eventNotFoundStatus?: number;
+  eventNotFoundMessage?: string;
+  forbiddenStatus?: number;
+  forbiddenMessage?: string;
+};
+
+const DEFAULT_OPTIONS: Required<Omit<EventOwnerOptions, "select">> = {
+  unauthenticatedStatus: 401,
+  unauthenticatedMessage: "Unauthorized: No credentials provided",
+  invalidBasicStatus: 401,
+  invalidBasicMessage: "Unauthorized: Basic credentials do not match this event",
+  eventNotFoundStatus: 404,
+  eventNotFoundMessage: "Event not found",
+  forbiddenStatus: 403,
+  forbiddenMessage: "Not authorized for this event",
+};
+
+export class AuthzError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = "AuthzError";
+    this.statusCode = statusCode;
+  }
+}
+
+export function isAuthzError(error: unknown): error is AuthzError {
+  return error instanceof AuthzError;
+}
+
+export const ensureEventOwner = async (prisma, auth, eventId, options: EventOwnerOptions = {}) => {
+  const settings = { ...DEFAULT_OPTIONS, ...options };
+
   if (!auth || !auth.isAuthenticated) {
-    throw new Error('Unauthorized: No credentials provided');
+    throw new AuthzError(settings.unauthenticatedMessage, settings.unauthenticatedStatus);
   }
 
-  // 2) If using Basic auth for event access, eventId must match the password's eventId
-  //    → ensures event password for Event A cannot be used for Event B
-  if (auth.type === 'eventBasic' && auth.eventId !== eventId) {
-    throw new Error('Unauthorized: Basic credentials do not match this event');
+  if (auth.type === "eventBasic" && auth.eventId !== eventId) {
+    throw new AuthzError(settings.invalidBasicMessage, settings.invalidBasicStatus);
   }
 
-  // 3) Fetch the event from database
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { authorId: true },
+    select: options.select ? { ...options.select, authorId: true } : { authorId: true },
   });
 
   if (!event) {
-    throw new Error('Event not found');
+    throw new AuthzError(settings.eventNotFoundMessage, settings.eventNotFoundStatus);
   }
 
-  // 4) Always required (for both JWT and Basic auth): user must be the event author
   if (event.authorId !== auth.userId) {
-    throw new Error('Not authorized for this event');
+    throw new AuthzError(settings.forbiddenMessage, settings.forbiddenStatus);
   }
 
-  // Return both event and userId for convenient usage
   return { event, userId: auth.userId };
+};
+
+export const requireEventOwner = async (prisma, auth, eventId) => {
+  return ensureEventOwner(prisma, auth, eventId);
 };

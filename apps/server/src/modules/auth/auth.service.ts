@@ -122,8 +122,8 @@ export const signupUser = async (email, password, firstname, lastname, app_base_
       subject: 'Orienteering Cloud Data Hub - registration',
       emailTo: email,
       onSuccess: () => console.log('Email sent successfully!'),
-      onError: error => {
-        throw new Error('Failed to send email:' + error);
+      onError: () => {
+        console.error('Failed to send email');
       },
     });
     // Return both the token and the user object
@@ -190,8 +190,8 @@ export const passwordResetRequest = async (email, app_base_url) => {
       subject: 'OrienteerFeed - forgotten password',
       emailTo: email,
       onSuccess: () => console.log('Email sent successfully!'),
-      onError: error => {
-        throw new Error('Failed to send email:' + error);
+      onError: () => {
+        console.error('Failed to send email');
       },
     });
     // Return both the token and the user object

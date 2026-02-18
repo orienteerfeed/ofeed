@@ -1,6 +1,6 @@
 import { DatabaseError, ValidationError } from '../../exceptions/index.js';
 import prisma from '../../utils/context.js';
-import { decodeBase64, decrypt } from '../../utils/cryptoUtils.js';
+import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import {
   publishUpdatedCompetitor,
@@ -25,9 +25,7 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
   }
 
   if (!dbResponseCompetitor) {
-    throw new ValidationError(
-      `Competitor with ID ${competitorId} does not exist in the database` + err.message
-    );
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   // Initialize competitorStatus to the provided status, and lateStart to false.
@@ -75,7 +73,7 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor = {};
+  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
   try {
     updatedCompetitor = await prisma.competitor.findUnique({
       where: { id: parseInt(competitorId) },
@@ -87,6 +85,10 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
+  }
+
+  if (!updatedCompetitor) {
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   // Publish changes to subscribers
@@ -139,23 +141,43 @@ export const getDecryptedEventPassword = async eventId => {
 
     if (!eventPassword) return;
 
-    // Check if eventPassword is found and is not expired
-    const decryptedPassword =
-      eventPassword && new Date(eventPassword.expiresAt) > new Date()
-        ? decrypt(decodeBase64(eventPassword.password)) // Decrypt the password if valid
-        : undefined;
-    if (!decryptedPassword) return; // return null if password is expired
-    return { ...eventPassword, password: decryptedPassword }; // Return the decrypted password or undefined
+    if (new Date(eventPassword.expiresAt) <= new Date()) {
+      return;
+    }
+
+    let decodedPasswordPayload;
+    try {
+      decodedPasswordPayload = decodeBase64(eventPassword.password);
+    } catch (error) {
+      throw new DatabaseError('Event password payload is corrupted.');
+    }
+
+    let decryptedPassword: string;
+    try {
+      decryptedPassword = decrypt(decodedPasswordPayload);
+    } catch (error) {
+      throw new DatabaseError('Event password decryption failed. Check ENCRYPTION_SECRET_KEY configuration.');
+    }
+
+    if (!decryptedPassword || decryptedPassword.trim() === '') {
+      throw new DatabaseError(
+        'Event password decryption returned an empty value. Check ENCRYPTION_SECRET_KEY configuration.',
+      );
+    }
+
+    return { ...eventPassword, password: decryptedPassword };
   } catch (error) {
     console.error('Error fetching event or event password:', error);
 
-    // Prisma specific error handling
-    if (error) {
-      throw new DatabaseError('Unknown database error occurred.');
-    } else {
-      // Handle all other general errors
-      throw new Error('Failed to retrieve or decrypt the event password.');
+    if (error instanceof ValidationError || error instanceof DatabaseError) {
+      throw error;
     }
+
+    throw new DatabaseError(
+      error instanceof Error
+        ? `Failed to retrieve or decrypt the event password: ${error.message}`
+        : 'Failed to retrieve or decrypt the event password.',
+    );
   }
 };
 
@@ -200,9 +222,7 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   }
 
   if (!dbResponseCompetitor) {
-    throw new ValidationError(
-      `Competitor with ID ${competitorId} does not exist in the database` + err.message
-    );
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   if (origin === 'START') {
@@ -299,7 +319,7 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor = {};
+  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
   try {
     updatedCompetitor = await prisma.competitor.findUnique({
       where: { id: parseInt(competitorId) },
@@ -311,6 +331,10 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
+  }
+
+  if (!updatedCompetitor) {
+    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
   }
 
   // Publish changes to subscribers
@@ -414,7 +438,7 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor = {};
+  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
   try {
     updatedCompetitor = await prisma.competitor.findUnique({
       where: { id: parseInt(newCompetitor.id) },
@@ -426,6 +450,10 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
+  }
+
+  if (!updatedCompetitor) {
+    throw new ValidationError(`Competitor with ID ${newCompetitor.id} does not exist in the database`);
   }
 
   // Publish event updates
@@ -673,14 +701,9 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
       });
     } catch (err) {
       console.error(err);
-      return res
-        .status(500)
-        .json(
-          error(
-            `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-            err.message
-          )
-        );
+      throw new DatabaseError(
+        `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database`,
+      );
     }
     competitorData = dbIndividualResponse;
   } else {
@@ -740,14 +763,9 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
       });
     } catch (err) {
       console.error(err);
-      return res
-        .status(500)
-        .json(
-          error(
-            `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database` +
-            err.message
-          )
-        );
+      throw new DatabaseError(
+        `Competitor with ID ${competitorId} in the event with ID ${eventId} does not exist in the database`,
+      );
     }
     competitorData = dbRelayResponse;
   }
