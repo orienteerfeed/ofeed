@@ -45,4 +45,12 @@ describe("auth routes (hono)", () => {
 
     expect(response.status).toBe(401);
   });
+
+  it("returns 401 for oauth2 credential revoke without authenticated user", async () => {
+    const response = await app.request("http://localhost/revoke-oauth2-credentials", {
+      method: "DELETE",
+    });
+
+    expect(response.status).toBe(401);
+  });
 });

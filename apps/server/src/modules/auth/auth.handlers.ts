@@ -398,6 +398,79 @@ export function registerAuthRoutes(router: AppOpenAPI) {
     }
   });
 
+  router.delete("/revoke-oauth2-credentials", requireJwtAuth, async c => {
+    const userId = getJwtNumericUserId(c) as number;
+
+    try {
+      const clients = await prisma.oAuthClient.findMany({
+        where: { userId },
+        select: { id: true },
+      });
+
+      if (clients.length === 0) {
+        logEndpoint(c, "info", "OAuth2 credentials revoke requested but no credentials exist");
+        return c.json(
+          successResponse(
+            "OK",
+            {
+              data: { revoked: false, deletedClients: 0 },
+              message: "OAuth2 credentials were already revoked",
+            },
+            200,
+          ),
+          200,
+        );
+      }
+
+      const clientIds = clients.map(client => client.id);
+
+      const deleteResult = await prisma.$transaction(async tx => {
+        await tx.oAuthAccessToken.deleteMany({
+          where: { clientId: { in: clientIds } },
+        });
+        await tx.oAuthAuthorizationCode.deleteMany({
+          where: { clientId: { in: clientIds } },
+        });
+        await tx.oAuthRefreshToken.deleteMany({
+          where: { clientId: { in: clientIds } },
+        });
+        await tx.oAuthGrant.deleteMany({
+          where: { clientId: { in: clientIds } },
+        });
+        await tx.oAuthRedirectUri.deleteMany({
+          where: { clientId: { in: clientIds } },
+        });
+        await tx.oAuthScope.deleteMany({
+          where: { clientId: { in: clientIds } },
+        });
+
+        return tx.oAuthClient.deleteMany({
+          where: { id: { in: clientIds } },
+        });
+      });
+
+      logEndpoint(c, "info", "OAuth2 credentials revoked", {
+        deletedClients: deleteResult.count,
+      });
+
+      return c.json(
+        successResponse(
+          "OK",
+          {
+            data: { revoked: true, deletedClients: deleteResult.count },
+            message: "OAuth2 credentials revoked",
+          },
+          200,
+        ),
+        200,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Internal Server Error";
+      logEndpoint(c, "error", "OAuth2 credentials revoke failed", getErrorDetails(error));
+      return c.json(errorResponse(message, 500), 500);
+    }
+  });
+
   router.post("/generate-oauth2-credentials", requireJwtAuth, async c => {
     const userId = getJwtNumericUserId(c) as number;
 

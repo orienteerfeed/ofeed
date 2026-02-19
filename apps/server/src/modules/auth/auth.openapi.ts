@@ -126,6 +126,18 @@ export const AUTH_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       },
     },
   },
+  [`${authBase}/revoke-oauth2-credentials`]: {
+    delete: {
+      tags: [AUTH_OPENAPI.tag],
+      operationId: "authRevokeOAuth2Credentials",
+      summary: "Revoke OAuth2 credentials",
+      security: bearerSecurity,
+      responses: {
+        200: okJson("OAuth2 credentials revoked", "legacy-no-meta"),
+        401: okJson("Unauthorized", "legacy-no-meta"),
+      },
+    },
+  },
   [`${authBase}/generate-oauth2-credentials`]: {
     post: {
       tags: [AUTH_OPENAPI.tag],
