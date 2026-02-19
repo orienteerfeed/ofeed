@@ -317,10 +317,10 @@ importers:
         version: 9.0.19(graphql@16.12.0)
       '@hono/node-server':
         specifier: ^1.19.9
-        version: 1.19.9(hono@4.11.10)
+        version: 1.19.9(hono@4.12.0)
       '@hono/zod-openapi':
         specifier: ^1.2.2
-        version: 1.2.2(hono@4.11.10)(zod@4.3.6)
+        version: 1.2.2(hono@4.12.0)(zod@4.3.6)
       '@node-oauth/oauth2-server':
         specifier: ^5.2.1
         version: 5.2.1
@@ -335,7 +335,7 @@ importers:
         version: link:../../packages/shared
       '@scalar/hono-api-reference':
         specifier: ^0.9.41
-        version: 0.9.41(hono@4.11.10)
+        version: 0.9.41(hono@4.12.0)
       '@sendgrid/mail':
         specifier: ^8.1.6
         version: 8.1.6
@@ -367,11 +367,11 @@ importers:
         specifier: ^5.16.2
         version: 5.18.0(graphql@16.12.0)
       hono:
-        specifier: ^4.11.10
-        version: 4.11.10
+        specifier: ^4.12.0
+        version: 4.12.0
       hono-rate-limiter:
         specifier: ^0.5.3
-        version: 0.5.3(hono@4.11.10)
+        version: 0.5.3(hono@4.12.0)
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -3623,6 +3623,11 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  acorn@8.16.0:
+    resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
+    engines: {node: '>=0.4.0'}
+    hasBin: true
+
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
@@ -4912,12 +4917,12 @@ packages:
       unstorage:
         optional: true
 
-  hono@4.11.10:
-    resolution: {integrity: sha512-kyWP5PAiMooEvGrA9jcD3IXF7ATu8+o7B3KCbPXid5se52NPqnOpM/r9qeW2heMnOekF4kqR1fXJqCYeCLKrZg==}
-    engines: {node: '>=16.9.0'}
-
   hono@4.11.4:
     resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
+    engines: {node: '>=16.9.0'}
+
+  hono@4.12.0:
+    resolution: {integrity: sha512-NekXntS5M94pUfiVZ8oXXK/kkri+5WpX2/Ik+LVsl+uvw+soj4roXIsPqO+XsWrAw20mOzaXOZf3Q7PfB9A/IA==}
     engines: {node: '>=16.9.0'}
 
   hook-std@4.0.0:
@@ -9070,25 +9075,25 @@ snapshots:
       '@repeaterjs/repeater': 3.0.6
       tslib: 2.8.1
 
-  '@hono/node-server@1.19.9(hono@4.11.10)':
-    dependencies:
-      hono: 4.11.10
-
   '@hono/node-server@1.19.9(hono@4.11.4)':
     dependencies:
       hono: 4.11.4
 
-  '@hono/zod-openapi@1.2.2(hono@4.11.10)(zod@4.3.6)':
+  '@hono/node-server@1.19.9(hono@4.12.0)':
+    dependencies:
+      hono: 4.12.0
+
+  '@hono/zod-openapi@1.2.2(hono@4.12.0)(zod@4.3.6)':
     dependencies:
       '@asteasolutions/zod-to-openapi': 8.4.1(zod@4.3.6)
-      '@hono/zod-validator': 0.7.6(hono@4.11.10)(zod@4.3.6)
-      hono: 4.11.10
+      '@hono/zod-validator': 0.7.6(hono@4.12.0)(zod@4.3.6)
+      hono: 4.12.0
       openapi3-ts: 4.5.0
       zod: 4.3.6
 
-  '@hono/zod-validator@0.7.6(hono@4.11.10)(zod@4.3.6)':
+  '@hono/zod-validator@0.7.6(hono@4.12.0)(zod@4.3.6)':
     dependencies:
-      hono: 4.11.10
+      hono: 4.12.0
       zod: 4.3.6
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.71.1(react@19.2.4))':
@@ -10055,10 +10060,10 @@ snapshots:
 
   '@scalar/helpers@0.2.12': {}
 
-  '@scalar/hono-api-reference@0.9.41(hono@4.11.10)':
+  '@scalar/hono-api-reference@0.9.41(hono@4.12.0)':
     dependencies:
       '@scalar/core': 0.3.38
-      hono: 4.11.10
+      hono: 4.12.0
 
   '@scalar/types@0.6.3':
     dependencies:
@@ -11333,9 +11338,9 @@ snapshots:
   '@xtuc/long@4.2.2':
     optional: true
 
-  acorn-import-phases@1.0.4(acorn@8.15.0):
+  acorn-import-phases@1.0.4(acorn@8.16.0):
     dependencies:
-      acorn: 8.15.0
+      acorn: 8.16.0
     optional: true
 
   acorn-jsx@5.3.2(acorn@8.15.0):
@@ -11343,6 +11348,9 @@ snapshots:
       acorn: 8.15.0
 
   acorn@8.15.0: {}
+
+  acorn@8.16.0:
+    optional: true
 
   agent-base@7.1.4: {}
 
@@ -12729,13 +12737,13 @@ snapshots:
 
   highlight.js@10.7.3: {}
 
-  hono-rate-limiter@0.5.3(hono@4.11.10):
+  hono-rate-limiter@0.5.3(hono@4.12.0):
     dependencies:
-      hono: 4.11.10
-
-  hono@4.11.10: {}
+      hono: 4.12.0
 
   hono@4.11.4: {}
+
+  hono@4.12.0: {}
 
   hook-std@4.0.0: {}
 
@@ -15009,8 +15017,8 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      acorn: 8.15.0
-      acorn-import-phases: 1.0.4(acorn@8.15.0)
+      acorn: 8.16.0
+      acorn-import-phases: 1.0.4(acorn@8.16.0)
       browserslist: 4.28.1
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.19.0
