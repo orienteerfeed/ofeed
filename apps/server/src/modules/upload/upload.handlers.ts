@@ -3,12 +3,12 @@ import { z } from "@hono/zod-openapi";
 import { Parser } from 'xml2js';
 import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
-import type { Context } from "hono";
 import { requireAuth } from '../../middlewares/require-jwt.js';
 import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
 import { toValidationIssues } from '../../lib/validation/zod.js';
 import { ensureEventOwner, isAuthzError } from '../../utils/authz.js';
 import type { AppBindings, AppOpenAPI } from "../../types";
+import { Prisma } from "../../generated/prisma/client";
 import { ResultStatus as ResultStatusEnum } from "../../generated/prisma/enums";
 import type { ProtocolType, ResultStatus, Sex } from "../../generated/prisma/enums";
 
@@ -36,7 +36,10 @@ const uploadIofBodySchema = z.object({
 type UploadedFile = MultipartFile;
 type UploadLogLevel = 'info' | 'warn' | 'error';
 type CompressionType = 'none' | 'gzip' | 'zlib' | 'deflate' | 'unknown';
-type UploadContext = Context<AppBindings>;
+type UploadContext = {
+  get: <K extends keyof AppBindings["Variables"]>(key: K) => AppBindings["Variables"][K];
+  json: (body: unknown, status?: number) => Response;
+};
 type MaybeUnzipResult = {
   buffer: Buffer;
   compressionEnabled: boolean;
@@ -765,10 +768,43 @@ async function upsertCompetitor(
 }
 
 const splitWriteLocks = new Map<number, Promise<void>>();
-const SPLIT_WRITE_CONFLICT_MAX_RETRIES = 4;
-const SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS = 40;
+const SPLIT_WRITE_CONFLICT_MAX_RETRIES = 6;
+const SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS = 75;
+const SPLIT_WRITE_CONFLICT_RETRY_JITTER_MS = 50;
+const SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS = 10_000;
+const SPLIT_WRITE_TRANSACTION_TIMEOUT_MS = 20_000;
+const IOF_WRITE_CONCURRENCY = 8;
 
 const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+async function forEachWithConcurrency<T>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<void>,
+) {
+  if (items.length === 0) {
+    return;
+  }
+
+  const maxConcurrency = Math.max(1, Math.floor(concurrency));
+  const workerCount = Math.min(maxConcurrency, items.length);
+  let nextIndex = 0;
+
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (true) {
+        const currentIndex = nextIndex;
+        nextIndex += 1;
+
+        if (currentIndex >= items.length) {
+          return;
+        }
+
+        await worker(items[currentIndex], currentIndex);
+      }
+    }),
+  );
+}
 
 function isSplitWriteConflict(error: unknown): error is Error {
   if (!(error instanceof Error)) return false;
@@ -779,6 +815,8 @@ function isSplitWriteConflict(error: unknown): error is Error {
     message.includes('record has changed since last read in table "split"') ||
     message.includes('write conflict') ||
     message.includes('deadlock') ||
+    message.includes('unable to start a transaction in the given time') ||
+    message.includes('transaction api error') ||
     message.includes('p2034')
   );
 }
@@ -834,7 +872,8 @@ async function withSplitWriteConflictRetry<T>(
         maxAttempts: SPLIT_WRITE_CONFLICT_MAX_RETRIES,
         reason: error.message,
       });
-      await wait(SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS * attempt);
+      const jitter = Math.floor(Math.random() * SPLIT_WRITE_CONFLICT_RETRY_JITTER_MS);
+      await wait(SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS * attempt + jitter);
     }
   }
 
@@ -925,21 +964,28 @@ async function upsertSplitsUnsafe(competitorId: number, result: IofResult) {
   }
 
   // Replace all competitor splits atomically to avoid interleaving create/update/delete conflicts.
-  await prisma.$transaction(async tx => {
-    await tx.split.deleteMany({
-      where: { competitorId: competitorId },
-    });
-
-    if (incomingSplits.length > 0) {
-      await tx.split.createMany({
-        data: incomingSplits.map(split => ({
-          competitorId: competitorId,
-          controlCode: split.controlCode,
-          time: split.time,
-        })),
+  await prisma.$transaction(
+    async tx => {
+      await tx.split.deleteMany({
+        where: { competitorId: competitorId },
       });
-    }
-  });
+
+      if (incomingSplits.length > 0) {
+        await tx.split.createMany({
+          data: incomingSplits.map(split => ({
+            competitorId: competitorId,
+            controlCode: split.controlCode,
+            time: split.time,
+          })),
+        });
+      }
+    },
+    {
+      maxWait: SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
+      timeout: SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
+      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+    },
+  );
 
   return {
     created,
@@ -1052,8 +1098,10 @@ async function processClassStarts(
   dbClassLists: Array<{ id: number; externalId: string | null }>,
   dbResponseEvent: { relay?: boolean },
 ): Promise<void> {
-  await Promise.all(
-    classStarts.map(async classStart => {
+  await forEachWithConcurrency(
+    classStarts,
+    IOF_WRITE_CONCURRENCY,
+    async (classStart: Record<string, any>) => {
       const classDetails = classStart.Class.shift();
 
       let length = null,
@@ -1063,7 +1111,7 @@ async function processClassStarts(
 
       if (classStart.Course && classStart.Course.length > 0) {
         length = classStart.Course[0].Length ? parseInt(classStart.Course[0].Length) : null;
-        climb = climb = classStart.Course[0].Climb ? parseInt(classStart.Course[0].Climb) : null;
+        climb = classStart.Course[0].Climb ? parseInt(classStart.Course[0].Climb) : null;
         controlsCount = classStart.Course[0].NumberOfControls
           ? parseInt(classStart.Course[0].NumberOfControls)
           : null;
@@ -1082,29 +1130,40 @@ async function processClassStarts(
       if (!dbResponseEvent.relay) {
         // Process Individual Starts
         if (!classStart.PersonStart || classStart.PersonStart.length === 0) return;
-        await Promise.all(
-          classStart.PersonStart.map(async competitorStart => {
+        await forEachWithConcurrency(
+          classStart.PersonStart as Array<Record<string, any>>,
+          IOF_WRITE_CONCURRENCY,
+          async (competitorStart: Record<string, any>) => {
             const person = competitorStart.Person.shift();
             const organisation = competitorStart.Organisation.shift();
             const start = competitorStart.Start.shift();
             await upsertCompetitor(eventId, classId, person, organisation, start, null);
-          })
+          },
         );
       } else {
         // Process Relay Starts
         if (!classStart.TeamStart || classStart.TeamStart.length === 0) return;
 
-        await Promise.all(
-          classStart.TeamStart.map(async teamStart => {
+        await forEachWithConcurrency(
+          classStart.TeamStart as Array<Record<string, any>>,
+          IOF_WRITE_CONCURRENCY,
+          async (teamStart: Record<string, any>) => {
             const organisation = teamStart.Organisation
               ? [...teamStart.Organisation].shift()
               : null; // Organisation details
 
-            const teamId = await upsertTeam(eventId, classId, teamStart, organisation);
+            const teamId = await upsertTeam(
+              eventId,
+              classId,
+              teamStart as TeamWithBib,
+              organisation
+            );
             // Process Team Member Starts
             if (teamStart.TeamMemberStart && teamStart.TeamMemberStart.length > 0) {
-              await Promise.all(
-                teamStart.TeamMemberStart.map(async teamMemberStart => {
+              await forEachWithConcurrency(
+                teamStart.TeamMemberStart as Array<Record<string, any>>,
+                IOF_WRITE_CONCURRENCY,
+                async (teamMemberStart: Record<string, any>) => {
                   const person = teamMemberStart.Person[0];
                   const start = [...teamMemberStart.Start].shift();
                   const leg = [...start.Leg].shift();
@@ -1119,13 +1178,13 @@ async function processClassStarts(
                     teamId,
                     leg
                   );
-                })
+                },
               );
             }
-          })
+          },
         );
       }
-    })
+    },
   );
 }
 
@@ -1145,18 +1204,21 @@ async function processClassResults(
   dbResponseEvent: { relay?: boolean; ranking?: boolean },
 ): Promise<number[]> {
   const updatedClasses = new Set<number>(); // Unique class IDs that had changes
-  await Promise.all(
-    classResults.map(async classResult => {
+  await forEachWithConcurrency(
+    classResults,
+    IOF_WRITE_CONCURRENCY,
+    async (classResult: Record<string, any>) => {
       const classDetails = classResult.Class.shift();
       const classId = await upsertClass(eventId, classDetails, dbClassLists);
 
       if (!dbResponseEvent.relay) {
         // Process Individual Results
         if (!classResult.PersonResult || classResult.PersonResult.length === 0) return;
-        await Promise.all(
-          classResult.PersonResult.map(async competitorResult => {
+        await forEachWithConcurrency(
+          classResult.PersonResult as Array<Record<string, any>>,
+          IOF_WRITE_CONCURRENCY,
+          async (competitorResult: Record<string, any>) => {
             const person = competitorResult.Person.shift();
-            // const organisation = competitorResult.Organisation?.shift();
 
             const organisation =
               Array.isArray(competitorResult.Organisation) &&
@@ -1179,7 +1241,7 @@ async function processClassResults(
             );
             const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
             if (updated || updatedSplits) updatedClasses.add(classId);
-          })
+          },
         );
         if (dbResponseEvent.ranking) {
           const rankingCalculation = calculateCompetitorRankingPoints(eventId);
@@ -1191,21 +1253,30 @@ async function processClassResults(
         // Process Relay Results
         if (!classResult.TeamResult || classResult.TeamResult.length === 0) return;
 
-        await Promise.all(
-          classResult.TeamResult.map(async teamResult => {
+        await forEachWithConcurrency(
+          classResult.TeamResult as Array<Record<string, any>>,
+          IOF_WRITE_CONCURRENCY,
+          async (teamResult: Record<string, any>) => {
             const organisation = teamResult.Organisation
               ? [...teamResult.Organisation].shift()
               : null; // Organisation details
 
-            const teamId = await upsertTeam(eventId, classId, teamResult, organisation);
+            const teamId = await upsertTeam(
+              eventId,
+              classId,
+              teamResult as TeamWithBib,
+              organisation
+            );
             // Process Team Member Results
             if (teamResult.TeamMemberResult && teamResult.TeamMemberResult.length > 0) {
               if (
                 Array.isArray(teamResult.TeamMemberResult) &&
                 teamResult.TeamMemberResult.length > 0
               ) {
-                await Promise.all(
-                  teamResult.TeamMemberResult.map(async teamMemberResult => {
+                await forEachWithConcurrency(
+                  teamResult.TeamMemberResult as Array<Record<string, any>>,
+                  IOF_WRITE_CONCURRENCY,
+                  async (teamMemberResult: Record<string, any>) => {
                     if (!teamMemberResult?.Person?.[0]) return;
                     const person = teamMemberResult.Person[0];
                     const result = [...teamMemberResult.Result].shift();
@@ -1228,14 +1299,14 @@ async function processClassResults(
                     );
                     const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
                     if (updated || updatedSplits) updatedClasses.add(classId);
-                  })
+                  },
                 );
               }
             }
-          })
+          },
         );
       }
-    })
+    },
   );
   return [...updatedClasses];
 }

@@ -1,4 +1,5 @@
 {
+  "files": ["./tsconfig.placeholder.ts"],
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -14,5 +15,6 @@
       "@repo/shared": ["./packages/shared/src/index.ts"],
       "@repo/shared/*": ["./packages/shared/src/*"]
     }
-  }
+  },
+  "exclude": ["apps/**/*", "packages/**/*"]
 }

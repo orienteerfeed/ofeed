@@ -5,6 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prestart:dev": "pnpm run db:generate",
+    "predev": "pnpm run db:generate",
     "start:dev": "NODE_ENV=development PORT=3001 tsx watch src/index.ts",
     "dev": "NODE_ENV=development PORT=3001 tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",

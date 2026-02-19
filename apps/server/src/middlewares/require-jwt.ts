@@ -8,7 +8,7 @@ import { error as errorResponse } from "../utils/responseApi.js";
 type AuthContext = AppBindings["Variables"]["authContext"];
 
 function logUnauthorizedRequest(
-  c: Context<AppBindings>,
+  c: Context<AppBindings, any>,
   authContext: AuthContext,
   mode: "jwt" | "jwt-or-basic",
 ) {
@@ -60,19 +60,19 @@ function normalizeNumericUserId(userId: number | string | undefined) {
   return undefined;
 }
 
-export function getJwtUserId(c: Context<AppBindings>) {
+export function getJwtUserId(c: Context<AppBindings, any>) {
   return normalizeUserId(c.get("authContext"));
 }
 
-export function getJwtNumericUserId(c: Context<AppBindings>) {
+export function getJwtNumericUserId(c: Context<AppBindings, any>) {
   return normalizeNumericUserId(getJwtUserId(c));
 }
 
-export function getAuthenticatedUserId(c: Context<AppBindings>) {
+export function getAuthenticatedUserId(c: Context<AppBindings, any>) {
   return normalizeAuthenticatedUserId(c.get("authContext"));
 }
 
-export const requireJwtAuth: MiddlewareHandler<AppBindings> = async (c, next) => {
+export const requireJwtAuth: MiddlewareHandler<AppBindings, any> = async (c, next) => {
   const authContext = c.get("authContext");
   const userId = getJwtNumericUserId(c);
 
@@ -85,7 +85,7 @@ export const requireJwtAuth: MiddlewareHandler<AppBindings> = async (c, next) =>
   await next();
 };
 
-export const requireAuth: MiddlewareHandler<AppBindings> = async (c, next) => {
+export const requireAuth: MiddlewareHandler<AppBindings, any> = async (c, next) => {
   const authContext = c.get("authContext");
   const userId = getAuthenticatedUserId(c);
 

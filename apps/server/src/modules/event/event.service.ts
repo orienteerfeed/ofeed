@@ -1,4 +1,5 @@
 import { DatabaseError, ValidationError } from '../../exceptions/index.js';
+import { Prisma } from '../../generated/prisma/client';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
@@ -411,7 +412,10 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
               time: time ?? null,
             },
           })
-        )
+        ),
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+        }
       );
     } catch (err) {
       console.error('Error storing splits:', err);

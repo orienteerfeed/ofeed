@@ -52,7 +52,7 @@ export const ForgotPasswordPage = () => {
     defaultValues: {
       email: '',
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value }: { value: { email: string } }) => {
       try {
         console.log('Password reset request for:', value.email);
 

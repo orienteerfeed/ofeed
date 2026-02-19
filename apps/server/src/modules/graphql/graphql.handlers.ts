@@ -1,8 +1,11 @@
-import type { Context } from "hono";
-
 import { yoga } from "./graphql.service.js";
 
-export function graphQLHttpHandler(c: Context) {
+type GraphQLRequestLike = {
+  req: {
+    raw: Request;
+  };
+};
+
+export function graphQLHttpHandler(c: GraphQLRequestLike) {
   return yoga.fetch(c.req.raw);
 }
-

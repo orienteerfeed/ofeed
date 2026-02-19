@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatTimeToHms, getLocaleKey } from '@/lib/date';
 import { Event } from '@/types/event';
+import { Link } from '@tanstack/react-router';
 import { Calendar, Clock, MapPin, Trophy, Users } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -150,18 +151,34 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                 <div className="mt-2">
                   <div className="flex flex-wrap gap-2 sm:hidden">
                     {sortedClasses.map(cls => (
-                      <Badge key={cls.id} variant="secondary">
-                        {cls.name}
-                      </Badge>
+                      <Link
+                        key={cls.id}
+                        to="/events/$eventId"
+                        params={{ eventId: event.id }}
+                        search={{ tab: 'results', class: cls.name }}
+                        className="inline-block"
+                      >
+                        <Badge variant="secondary" className="cursor-pointer">
+                          {cls.name}
+                        </Badge>
+                      </Link>
                     ))}
                   </div>
                   <div className="hidden flex-wrap gap-2 sm:flex">
                     {sortedClasses.map(cls => (
-                      <Badge key={cls.id} variant="secondary">
-                        {cls.name}
-                        {cls.length && ` • ${cls.length}m`}
-                        {cls.climb && ` • ${cls.climb}m`}
-                      </Badge>
+                      <Link
+                        key={cls.id}
+                        to="/events/$eventId"
+                        params={{ eventId: event.id }}
+                        search={{ tab: 'results', class: cls.name }}
+                        className="inline-block"
+                      >
+                        <Badge variant="secondary" className="cursor-pointer">
+                          {cls.name}
+                          {cls.length && ` • ${cls.length}m`}
+                          {cls.climb && ` • ${cls.climb}m`}
+                        </Badge>
+                      </Link>
                     ))}
                   </div>
                 </div>

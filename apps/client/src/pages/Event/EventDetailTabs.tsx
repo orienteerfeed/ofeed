@@ -31,10 +31,6 @@ export function EventDetailTabs({
     });
   };
 
-  // Get current tab from URL
-  const searchParams = new URLSearchParams(window.location.search);
-  const currentTab = searchParams.get('tab') || defaultTab;
-
   // Tabs definition
   const tabs = [
     {
@@ -91,11 +87,14 @@ export function EventDetailTabs({
   };
 
   const gridColsClass = gridColsClassMap[tabs.length] ?? 'grid-cols-3';
+  const currentTab = tabs.some(tab => tab.value === defaultTab)
+    ? defaultTab
+    : 'info';
 
   return (
     <Tabs
       tabs={tabs}
-      defaultValue={currentTab}
+      value={currentTab}
       onValueChange={handleTabChange}
       className="space-y-6"
       listClassName={`grid w-full ${gridColsClass} max-w-2xl mx-auto`}

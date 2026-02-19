@@ -5,7 +5,8 @@ import { GRAPHQL_OPENAPI } from "./graphql.openapi.js";
 
 const router = createRouter();
 
-router.on(["GET", "POST", "OPTIONS"], GRAPHQL_OPENAPI.path, graphQLHttpHandler);
+router.get(GRAPHQL_OPENAPI.path, graphQLHttpHandler);
+router.post(GRAPHQL_OPENAPI.path, graphQLHttpHandler);
+router.options(GRAPHQL_OPENAPI.path, graphQLHttpHandler);
 
 export default router;
-
