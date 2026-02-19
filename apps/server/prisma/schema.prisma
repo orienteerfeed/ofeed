@@ -37,6 +37,7 @@ model Sport {
   id     Int     @id @default(autoincrement()) @db.UnsignedInt
   name   String  @unique
   events Event[]
+  userCards UserCard[]
 }
 
 model User {
@@ -45,16 +46,39 @@ model User {
   firstname              String
   lastname               String
   organisation           String?
+  emergencyContact       String?                  @db.VarChar(255)
   password               String                   @db.VarChar(255)
   active                 Boolean                  @default(false)
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
   events                 Event[]
+  userCards              UserCard[]
   protocols              Protocol[]
   oAuthClients           OAuthClient[]
   oAuthAccessToken       OAuthAccessToken[]
   oAuthAuthorizationCode OAuthAuthorizationCode[]
   oAuthRefreshToken      OAuthRefreshToken[]
+}
+
+model UserCard {
+  id         Int          @id @default(autoincrement()) @db.UnsignedInt
+  userId     Int          @db.UnsignedInt
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sportId    Int          @db.UnsignedInt
+  sport      Sport        @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  type       UserCardType @default(SPORTIDENT)
+  cardNumber String       @db.VarChar(64)
+  isDefault  Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([userId, sportId])
+  @@index([userId, sportId, isDefault])
+  @@unique([userId, sportId, type, cardNumber])
+}
+
+enum UserCardType {
+  SPORTIDENT
 }
 
 model Event {

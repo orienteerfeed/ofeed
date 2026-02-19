@@ -64,7 +64,14 @@ export const authenticateUser = async (username, password) => {
 };
 
 // Function to sign up a user and send a registration confirmation email
-export const signupUser = async (email, password, firstname, lastname, app_base_url) => {
+export const signupUser = async (
+  email,
+  password,
+  firstname,
+  lastname,
+  app_base_url,
+  organisation = null,
+) => {
   try {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -83,6 +90,7 @@ export const signupUser = async (email, password, firstname, lastname, app_base_
         password: hashedPassword,
         firstname,
         lastname,
+        organisation,
         active: true,
       },
     });
@@ -262,5 +270,62 @@ export const passwordResetConfirm = async (token, newPassword) => {
   } catch (error) {
     console.error('Error in confirmPasswordReset:', error);
     throw new DatabaseError('Failed to reset password.');
+  }
+};
+
+export const changeAuthenticatedUserPassword = async (
+  userId,
+  currentPassword,
+  newPassword,
+) => {
+  if (!currentPassword || !newPassword) {
+    throw new ValidationError('Current password and new password are required.');
+  }
+
+  if (newPassword.length < 8) {
+    throw new ValidationError('New password must be at least 8 characters long.');
+  }
+
+  if (currentPassword === newPassword) {
+    throw new ValidationError('New password must be different from current password.');
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, password: true },
+    });
+
+    if (!user) {
+      throw new AuthenticationError('Unauthorized: Invalid user.');
+    }
+
+    const isCurrentPasswordValid = await argon2.verify(user.password, currentPassword);
+    if (!isCurrentPasswordValid) {
+      throw new AuthenticationError('Current password is incorrect.');
+    }
+
+    const salt = crypto.randomBytes(16);
+    const hashedPassword = await argon2.hash(newPassword, { salt });
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Password updated successfully',
+    };
+  } catch (error) {
+    if (error instanceof ValidationError || error instanceof AuthenticationError) {
+      throw error;
+    }
+
+    console.error('Error in changeAuthenticatedUserPassword:', error);
+    throw new DatabaseError('Failed to update password.');
   }
 };

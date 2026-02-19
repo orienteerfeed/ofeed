@@ -34,7 +34,8 @@ type ResetPasswordResponse = {
       firstname: string;
       lastname: string;
       email: string;
-      club?: string | null;
+      organisation?: string | null;
+      emergencyContact?: string | null;
     };
   };
 };
@@ -50,6 +51,8 @@ const RESET_PASSWORD_MUTATION = gql`
         firstname
         lastname
         email
+        organisation
+        emergencyContact
       }
     }
   }

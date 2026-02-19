@@ -27,7 +27,14 @@ interface LoginFormValues {
 type SignInResponse = {
   signin: {
     token: string;
-    user: { id: number; firstname: string; lastname: string; email: string };
+    user: {
+      id: number;
+      firstname: string;
+      lastname: string;
+      email: string;
+      organisation?: string | null;
+      emergencyContact?: string | null;
+    };
   };
 };
 type SignInVars = { input: { username: string; password: string } };
@@ -41,6 +48,8 @@ const SIGNIN_MUTATION = gql`
         firstname
         lastname
         email
+        organisation
+        emergencyContact
       }
     }
   }

@@ -1,635 +1,693 @@
 {
-    "Pages": {
-        "Auth": {
-            "User": {
-                "Firstname": "First name",
-                "Lastname": "Last name",
-                "Club": "Club",
-                "Email": "Email",
-                "Password": "Password",
-                "Placeholder": {
-                    "Firstname": "John",
-                    "Lastname": "Newman",
-                    "Club": "My Club",
-                    "Email": "newman@example.com",
-                    "Password": "Your secret password",
-                    "NewPassword": "Your new secret password",
-                    "PasswordConfirmation": "Password confirmation"
-                }
-            },
-            "SignInUpPage": {
-                "Login": "Login",
-                "DontHaveAnAccount": "Don't have an account?",
-                "CreateAnAccount": "Create an account",
-                "EnterYourInformation": "Enter your information below to create your account",
-                "EnterYourEmailToSignIn": "Enter your email to sign in to your account",
-                "ClickConsent": "By clicking continue, you agree to our",
-                "TermsOfService": "Terms Of Service",
-                "PrivacyPolicy": "Privacy Policy",
-                "SignUp": "Sign Up",
-                "SignInWithEmail": "Sign In With Email",
-                "WelcomeBack": "Welcome back"
-            },
-            "SignUpPage": {
-                "AlreadyHaveAnAccount": "Already have an account?",
-                "CreateAccount": "Create Account",
-                "CreatingAccount": "Creating account..."
-            },
-            "RequestPasswordResetPage": {
-                "ForgottenPassword": "Forgotten password",
-                "EnterYourEmail": "Enter your email to receive a link to reset your password",
-                "ResetPassword": "Reset password",
-                "SendResetLink": "Send reset link",
-                "Sending": "Sending...",
-                "BackToSignIn": "Back to sign in",
-                "CheckYourEmail": "Check your email",
-                "PasswordResetLinkSent": "Password reset link sent"
-            },
-            "PasswordResetEmailSentPage": {
-                "CheckYourEmail": "Check Your Email",
-                "PasswordResetInstructions1": "If this email address is associated with an account, you will receive a password reset link shortly. Please check your inbox and follow the instructions to reset your password.",
-                "PasswordResetInstructions2": "If you don’t see the email, please check your spam folder.",
-                "PasswordResetInstructions3": "If you didn’t request a password reset, you can ignore this email."
-            },
-            "PasswordResetPage": {
-                "EnterYourNewPassword": "Enter a new password",
-                "ResetYourPassword": "Reset your password",
-                "NewPassword": "New password",
-                "ResettingPassword": "Resetting password...",
-                "ResetPassword": "Reset Password"
-            }
-        },
-        "Event": {
-            "Description": "Events overview",
-            "CompetitorsList": "Competitors List",
-            "MyEvents": "My Events",
-            "MyEventsDescription": "Overview of all events you have created",
-            "NoCompetitorsFound": "No competitors found for the selected class.",
-            "Classes": "Classes",
-            "OrganizedBy": "Organized by",
-            "Operations": {
-                "EditEvent": "Edit event",
-                "EditDescription": "Edit existing event details",
-                "CreateEvent": "Create event",
-                "CreateDescription": "Fill out the form to create a new event",
-                "DeleteEvent": "Delete event",
-                "SelectClass": "Select class"
-            },
-            "Tables": {
-                "Name": "Name",
-                "Organizer": "Organizer",
-                "Date": "Date",
-                "Location": "Location",
-                "Visibility": "Visibility",
-                "Actions": "Actions",
-                "Format": "Format",
-                "Status": "Status",
-                "Sport": "Sport",
-                "Country": "Country",
-                "Entries": "Entries",
-                "Competitors": "Competitors"
-            },
-            "Tabs": {
-                "All": "All",
-                "Today": "Today",
-                "Ongoing": "Ongoing",
-                "Recent": "Recent",
-                "Past": "Past",
-                "Upcoming": "Upcoming",
-                "Results": "Results",
-                "Splits": "Splits",
-                "Detail": "Detail",
-                "Info": "Info",
-                "Cards": "Cards",
-                "List": "List",
-                "Cat": "Cat",
-                "Club": "Club",
-                "Live": "Live"
-            },
-            "Live": {
-                "Title": "Live Feed",
-                "Description": "Real-time updates will appear here during the event"
-            },
-            "Alert": {
-                "DemoTitle": "This is a demo app",
-                "DemoDescription": "OFeed app is a demo app. If you face an issue please report it to Github issues, thanks.",
-                "EventDataNotAvailableTitle": "Event Data Not Available",
-                "EventDataNotAvailableMessage": "No data is currently available for the {{view}} view. Please check back later or contact the event organizer for more information.",
-                "ViewResults": "results",
-                "ViewSplits": "splits",
-                "ViewClub": "clubs"
-            },
-            "Report": {
-                "Title": "Changelog report",
-                "Description": "Overview of status and card changes",
-                "CompetitorChangesTitle": "Changes for {{name}} (ID {{id}})",
-                "CompetitorChangesDescription": "All changes for the selected competitor in this event.",
-                "CompetitorChangesEmpty": "No changes found for this competitor.",
-                "AutoRefresh": "Auto refresh: {{seconds}} s",
-                "LastUpdated": "Last update: {{time}}",
-                "NoTimestamp": "-",
-                "ActiveFilters": "Active filters:",
-                "PresetsTitle": "Preset filters",
-                "Buttons": {
-                    "RefreshData": "Load data",
-                    "ExportCsv": "Export CSV",
-                    "ExportPdf": "Export PDF",
-                    "ClearFilters": "Clear filters",
-                    "ShowProcessed": "Show processed",
-                    "HideProcessed": "Hide processed"
-                },
-                "Presets": {
-                    "CardChanges": "Card changes",
-                    "NoteChanges": "Note changes",
-                    "LateStarts": "Late starts",
-                    "DidNotStart": "Did not start",
-                    "All": "All records"
-                },
-                "Filters": {
-                    "IdPlaceholder": "Filter ID",
-                    "DateRange": "Select range",
-                    "DateFrom": "From",
-                    "DateTo": "To",
-                    "TimeFrom": "Start time",
-                    "TimeTo": "End time",
-                    "TypePlaceholder": "Select type",
-                    "CompetitorIdPlaceholder": "Filter competitor ID",
-                    "LastnamePlaceholder": "Filter lastname",
-                    "FirstnamePlaceholder": "Filter firstname",
-                    "PreviousValuePlaceholder": "Filter previous value",
-                    "NewValuePlaceholder": "Filter new value",
-                    "OriginPlaceholder": "Select origin",
-                    "SelectedCount": "{{count}} selected",
-                    "ClearSelection": "Clear selection"
-                },
-                "TypeLabels": {
-                    "class_change": "Class change",
-                    "firstname_change": "First name change",
-                    "lastname_change": "Last name change",
-                    "bibNumber_change": "Bib number change",
-                    "nationality_change": "Nationality change",
-                    "registration_change": "Registration change",
-                    "license_change": "License change",
-                    "ranking_change": "Ranking change",
-                    "rank_points_avg_change": "Ranking points avg change",
-                    "organisation_change": "Organisation change",
-                    "short_name_change": "Short name change",
-                    "si_card_change": "SI card change",
-                    "start_time_change": "Start time change",
-                    "finish_time_change": "Finish time change",
-                    "time_change": "Time change",
-                    "team_change": "Team change",
-                    "leg_change": "Leg change",
-                    "status_change": "Status change",
-                    "late_start_change": "Late start change",
-                    "note_change": "Note change",
-                    "external_id_change": "External ID change"
-                },
-                "OriginLabels": {
-                    "START": "Start",
-                    "OFFICE": "Office",
-                    "FINISH": "Finish",
-                    "IT": "IT"
-                },
-                "Pagination": {
-                    "RowsPerPage": "Rows per page",
-                    "RowsOption": "{{count}}",
-                    "PageOf": "Page {{page}} of {{total}}",
-                    "Previous": "Previous page",
-                    "Next": "Next page"
-                },
-                "Table": {
-                    "Id": "ID",
-                    "DateTime": "Date & time",
-                    "Type": "Type",
-                    "CompetitorId": "Competitor ID",
-                    "Lastname": "Lastname",
-                    "Firstname": "Firstname",
-                    "PreviousValue": "Previous value",
-                    "NewValue": "New value",
-                    "Origin": "Origin"
-                }
-            },
-            "Settings": {
-                "Loading": "Loading event settings"
-            },
-            "Detail": {
-                "EventInformation": "Event Information",
-                "Date": "Date",
-                "ZeroTime": "Zero time",
-                "Location": "Location",
-                "Organizer": "Organizer",
-                "Classes": "Classes",
-                "ShowAllClasses": "Show all classes",
-                "ShowLessClasses": "Show fewer classes",
-                "Format": "Format",
-                "RelayRace": "Relay race",
-                "Ranking": "Ranking",
-                "Coefficient": "Coefficient",
-                "EventStatus": "Event Status",
-                "AdditionalDetails": "Additional Details",
-                "Sport": "Sport",
-                "EventId": "Event ID",
-                "Author": "Author",
-                "Report": "Report",
-                "Status": {
-                    "Completed": "COMPLETED",
-                    "Live": "LIVE",
-                    "Upcoming": "UPCOMING",
-                    "Draft": "DRAFT"
-                },
-                "StatusText": {
-                    "Completed": "Results are final",
-                    "Live": "Event in progress",
-                    "Upcoming": "Registration open"
-                },
-                "Alert": {
-                    "UnpublishedTitle": "Event is not published yet",
-                    "UnpublishedDescription": "This event is currently in draft mode and not visible to the public."
-                },
-                "ErrorTitle": "Error loading event",
-                "ErrorDescription": "Failed to load event data",
-                "Loading": "Loading event"
-            },
-            "Results": {
-                "Loading": "Loading results",
-                "LoadingClubs": "Loading clubs",
-                "LoadingClubResults": "Loading club results",
-                "ErrorLoadingClubResults": "Error loading club results: {{message}}"
-            },
-            "Splits": {
-                "LoadingChart": "Loading split chart",
-                "LoadingTimes": "Loading split times"
-            },
-            "Form": {
-                "EventName": "Event name",
-                "Sport": "Sport",
-                "Date": "Date",
-                "Timezone": "Timezone",
-                "Organizer": "Organizer",
-                "Location": "Location",
-                "Latitude": "GPS Latitude",
-                "Longitude": "GPS Longitude",
-                "Country": "Country",
-                "ZeroTime": "Zero time",
-                "FeaturedImage": "Featured image",
-                "FeaturedImageHint": "JPEG, PNG or WEBP, max 2 MB.",
-                "FeaturedImageButton": "Add image",
-                "FeaturedImageRemove": "Remove",
-                "Ranking": "Ranking",
-                "CoefRanking": "Ranking coeficient",
-                "Relay": "Relay",
-                "HundredthPrecision": "Hundredth precision",
-                "Published": "Published",
-                "Placeholders": {
-                    "EventName": "My first event",
-                    "Sport": "Select a sport",
-                    "Timezone": "Select timezone",
-                    "Organizer": "Organizer name",
-                    "Location": "Venue",
-                    "Latitude": "Enter latitude (e.g., 50.0755)",
-                    "Longitude": "Enter longitude (e.g., 14.4378)",
-                    "Country": "Select country",
-                    "CoefRanking": "1.02"
-                },
-                "Toast": {
-                    "CreateSuccess": "The event as created successfully!",
-                    "EditSuccess": "The event was updated successfully!",
-                    "FeaturedImageUploadSuccess": "Featured image uploaded successfully.",
-                    "FeaturedImageUploadError": "Failed to upload featured image."
-                }
-            },
-            "Card": {
-                "Title": "Event Information",
-                "Description": "Please fill in the form below to update the event details."
-            },
-            "Password": {
-                "GeneratePassword": "Generate Password",
-                "RegeneratePassword": "Regenerate Password",
-                "PassportExpiration": "Password Expiration",
-                "NoExpirationSet": "No expiration set",
-                "Copy": "Copy",
-                "Revoke": "Revoke",
-                "Card": {
-                    "Title": "Event Password",
-                    "Description": "Enter event password that secures event details requested via API."
-                },
-                "Field": {
-                    "Name": "Event Password",
-                    "Placeholders": {
-                        "Name": "Event password"
-                    }
-                },
-                "Toast": {
-                    "UpdateSuccessDescription": "Password was updated successfully!",
-                    "UpdateFailTitle": "Something went wrong, please try again.",
-                    "RevokeSuccessDescription": "Password was revoked successfully!",
-                    "RevokeFailTitle": "Something went wrong, please try again.",
-                    "CopySuccessDescription": "Password copied! Keep it safe."
-                }
-            },
-            "Link": {
-                "Card": {
-                    "Title": "Event Link",
-                    "Description": "Quickly share a link to an event - you can copy, share or print the QR code for easy access to live results.",
-                    "Navigator": {
-                        "Title": "OFeed",
-                        "Event": "Event",
-                        "Location": "Location",
-                        "Date": "Date",
-                        "EventUri": "View Live Results",
-                        "UrlDescription": "Scan the QR code to access live results instantly!"
-                    }
-                },
-                "PrintWindow": {
-                    "Title": "QR Code - OFeed Live Results",
-                    "Header": "OFeed",
-                    "EventQR": "Event QR code",
-                    "Info": "Scan this QR code to view live results online."
-                },
-                "Toast": {
-                    "CopySuccessDescription": "Boom! The link is now in your clipboard, share it away!"
-                }
-            },
-            "Integration": {
-                "Card": {
-                    "Title": "Configuration of apps",
-                    "Description": "How to set up the apps to connect to OFeed.",
-                    "ApiBaseUrl": "Url",
-                    "EventId": "Event id",
-                    "EventPassword": "Event Password",
-                    "EventName": "Name",
-                    "EventDate": "Date",
-                    "ShareQrCode": "Share QR",
-                    "PrintQrCode": "Print QR",
-                    "Navigator": {
-                        "Title": "OFeed QR Code",
-                        "Text": "Here is the QR code for the OFeed event to pair your mobile app O Checklist!"
-                    },
-                    "Tabs": {
-                        "OChecklist": {
-                            "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
-                        },
-                        "QuickEvent": {
-                            "Description": "Copy and paste these Credentials into OFeed service setup.",
-                            "ExportInterval": "Export Interval"
-                        },
-                        "SIDroidConenctor": {
-                            "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
-                        }
-                    }
-                },
-                "PrintWindow": {
-                    "Header": "OFeed",
-                    "Subheader": "Scan this QR code to pair your mobile app {{appName}} with the event.",
-                    "Footer": "Please keep this information secure. If you encounter any issues, contact support."
-                },
-                "Toast": {
-                    "CopyBaseUrl": "Hop! Base URL is now in your clipboard, share it away!",
-                    "CopyEventId": "Hop! Event ID is now in your clipboard, share it away!"
-                }
-            },
-            "Visibility": {
-                "Card": {
-                    "Title": "Visibility",
-                    "Description": "Determines whether the event is public or private. Public events are displayed in the event list on the OFeed's main page, while private events are visible only to their organizer."
-                },
-                "Toast": {
-                    "UpdateSuccess": "Event is now {{status}}!",
-                    "UpdateFail": "Couldn't update event visibility."
-                }
-            },
-            "DangerZone": {
-                "Title": "Danger Zone",
-                "Description": "Irreversible actions that will permanently delete data. Proceed with extreme caution.",
-                "Footer": "These actions cannot be undone. Please ensure you have appropriate backups.",
-                "DeleteCompetitors": {
-                    "Title": "Delete competitors",
-                    "Description": "If you uploaded Start list or Results for a wrong event, you can delete all competitors and start over. This button deletes all runners (Start list & Results).",
-                    "Button": "Delete competitors",
-                    "ConfirmTitle": "Delete All Competitors",
-                    "ConfirmDescription": "Are you sure you want to delete all competitors? This action cannot be undone!",
-                    "ConfirmButton": "Delete Competitors"
-                },
-                "DeleteAllEventData": {
-                    "Title": "Delete all event data",
-                    "Description": "If you need to completely remove all event data, including runners, classes, relays, and results, use this button. Be cautious, as this action is irreversible!",
-                    "Button": "Delete all event data",
-                    "ConfirmTitle": "Delete All Event Data",
-                    "ConfirmDescription": "Are you sure you want to delete all event data? This will remove all results and cannot be undone!",
-                    "ConfirmButton": "Delete All Data"
-                },
-                "DeleteEvent": {
-                    "Title": "Delete event",
-                    "Description": "The event will be deleted. You have to delete all event data first. This action cannot be undone!",
-                    "Button": "Delete event",
-                    "ConfirmTitle": "Delete Event",
-                    "ConfirmDescription": "Are you sure you want to delete this entire event? This action cannot be undone!",
-                    "ConfirmButton": "Delete Event"
-                },
-                "Toast": {
-                    "DeleteFailTitle": "Error deleting data",
-                    "DeleteSuccessDescription": "Data successfully deleted"
-                }
-            },
-            "TroublesShooting": {
-                "Title": "Need Help or Have Questions?",
-                "Description": "If you encounter an error or need assistance, please do not hesitate to contact us.",
-                "Description1": "Our support team is ready to assist you with any issues or questions. Reach out to us at",
-                "Description2": "please include any relevant files.",
-                "Discord": "Join Discord",
-                "GitHubIssues": "Open GitHub Issues"
-            }
-        },
-        "Home": {
-            "Hero": {
-                "Subtitle": "Live overview of sport events. Runner tracking, continuous updates, and a steady stream of information in one place.",
-                "LiveResults": "Live Results",
-                "SplitAnalysis": "Deep Split Analysis",
-                "RealTimeEventControl": "Real-Time Event Control"
-            },
-            "Infinite": {
-                "LoadingInitial": "Loading events...",
-                "LoadingMore": "Loading more events...",
-                "LoadingMoreInline": "Loading more...",
-                "ScrollMore": "Scroll down for more events",
-                "AllLoaded": "All events loaded",
-                "EventsCount": "{{count}} events",
-                "FoundCount": "You found {{count}} events",
-                "LoadError": "Error loading events: {{message}}",
-                "NoEvents": "No events found",
-                "NoEventsHint": "Try changing the filter or check back later."
-            }
-        },
-        "Profile": {
-            "MyEntries": {
-                "Title": "My entries",
-                "Description": "Here you can find all your entries and changes made to event registrations. You can view them, edit them, or track their status."
-            },
-            "PersonalInfo": {
-                "Title": "Personal info",
-                "Description": "Here you can view and update your personal details, contact information, and other profile settings.",
-                "SiCardNumber": "Sportident card number",
-                "EmergencyContact": "Emergency contact"
-            },
-            "OAuth2": {
-                "Title": "OAuth2 API Access",
-                "Description": "Generate credentials to access the API using OAuth2. You will need a Client ID and a Client Secret.",
-                "ClientId": "Client ID",
-                "ClientSecret": "Client Secret",
-                "Generate": "Generate new Client Secret",
-                "Regenerate": "Regenerate Client Secret",
-                "SecretWarning": "Important warning",
-                "SecretWarningDescription": "Your Client Secret is sensitive information. Do not share it with anyone and store it securely. It will not be shown again after you leave or refresh this page.",
-                "Revoke": "Revoke",
-                "Toast": {
-                    "GenerateSuccessDescription": "OAuth2 credentials have been successfully generated!",
-                    "GenerateFailTitle": "Something went wrong, please try again.",
-                    "RevokeSuccessDescription": "Credentials have been successfully revoked!",
-                    "RevokeFailTitle": "Credentials could not be revoked"
-                },
-                "HowToUse": {
-                    "Title": "How to use OAuth2",
-                    "Description": "Use your Client ID and Client Secret in a request with grant_type=client_credentials to the /auth/oauth2/token endpoint. Below is an example request using curl."
-                }
-            },
-            "OtherIntegrations": {
-                "Title": "Other integrations",
-                "Description": "Connect your account with additional services and tools. New integrations will appear here over time."
-            },
-            "Security": {
-                "PasswordDescription": "Here you can change your account password. We recommend using a strong, unique password.",
-                "CurrentPassword": "Current password",
-                "NewPassword": "New password",
-                "ConfirmNewPassword": "Confirm new password",
-                "UpdatePassword": "Update password"
-            },
-            "Tabs": {
-                "Profile": "Profile",
-                "Integrations": "Integrations",
-                "Security": "Security"
-            }
+  "Pages": {
+    "Auth": {
+      "User": {
+        "Firstname": "First name",
+        "Lastname": "Last name",
+        "Club": "Club",
+        "Email": "Email",
+        "Password": "Password",
+        "Placeholder": {
+          "Firstname": "John",
+          "Lastname": "Newman",
+          "Club": "My Club",
+          "Email": "newman@example.com",
+          "Password": "Your secret password",
+          "NewPassword": "Your new secret password",
+          "PasswordConfirmation": "Password confirmation"
         }
+      },
+      "SignInUpPage": {
+        "Login": "Login",
+        "DontHaveAnAccount": "Don't have an account?",
+        "CreateAnAccount": "Create an account",
+        "EnterYourInformation": "Enter your information below to create your account",
+        "EnterYourEmailToSignIn": "Enter your email to sign in to your account",
+        "ClickConsent": "By clicking continue, you agree to our",
+        "TermsOfService": "Terms Of Service",
+        "PrivacyPolicy": "Privacy Policy",
+        "SignUp": "Sign Up",
+        "SignInWithEmail": "Sign In With Email",
+        "WelcomeBack": "Welcome back"
+      },
+      "SignUpPage": {
+        "AlreadyHaveAnAccount": "Already have an account?",
+        "CreateAccount": "Create Account",
+        "CreatingAccount": "Creating account..."
+      },
+      "RequestPasswordResetPage": {
+        "ForgottenPassword": "Forgotten password",
+        "EnterYourEmail": "Enter your email to receive a link to reset your password",
+        "ResetPassword": "Reset password",
+        "SendResetLink": "Send reset link",
+        "Sending": "Sending...",
+        "BackToSignIn": "Back to sign in",
+        "CheckYourEmail": "Check your email",
+        "PasswordResetLinkSent": "Password reset link sent"
+      },
+      "PasswordResetEmailSentPage": {
+        "CheckYourEmail": "Check Your Email",
+        "PasswordResetInstructions1": "If this email address is associated with an account, you will receive a password reset link shortly. Please check your inbox and follow the instructions to reset your password.",
+        "PasswordResetInstructions2": "If you don’t see the email, please check your spam folder.",
+        "PasswordResetInstructions3": "If you didn’t request a password reset, you can ignore this email."
+      },
+      "PasswordResetPage": {
+        "EnterYourNewPassword": "Enter a new password",
+        "ResetYourPassword": "Reset your password",
+        "NewPassword": "New password",
+        "ResettingPassword": "Resetting password...",
+        "ResetPassword": "Reset Password"
+      }
     },
-    "Organisms": {
-        "DragDrop": {
-            "UploadIofXml": {
-                "Title": "Upload IOF XML",
-                "Description": "Upload IOF XML files with start lists and results."
+    "Event": {
+      "Description": "Events overview",
+      "CompetitorsList": "Competitors List",
+      "MyEvents": "My Events",
+      "MyEventsDescription": "Overview of all events you have created",
+      "NoCompetitorsFound": "No competitors found for the selected class.",
+      "Classes": "Classes",
+      "OrganizedBy": "Organized by",
+      "Operations": {
+        "EditEvent": "Edit event",
+        "EditDescription": "Edit existing event details",
+        "CreateEvent": "Create event",
+        "CreateDescription": "Fill out the form to create a new event",
+        "DeleteEvent": "Delete event",
+        "SelectClass": "Select class"
+      },
+      "Tables": {
+        "Name": "Name",
+        "Organizer": "Organizer",
+        "Date": "Date",
+        "Location": "Location",
+        "Visibility": "Visibility",
+        "Actions": "Actions",
+        "Format": "Format",
+        "Status": "Status",
+        "Sport": "Sport",
+        "Country": "Country",
+        "Entries": "Entries",
+        "Competitors": "Competitors"
+      },
+      "Tabs": {
+        "All": "All",
+        "Today": "Today",
+        "Ongoing": "Ongoing",
+        "Recent": "Recent",
+        "Past": "Past",
+        "Upcoming": "Upcoming",
+        "Results": "Results",
+        "Splits": "Splits",
+        "Detail": "Detail",
+        "Info": "Info",
+        "Cards": "Cards",
+        "List": "List",
+        "Cat": "Cat",
+        "Club": "Club",
+        "Live": "Live"
+      },
+      "Live": {
+        "Title": "Live Feed",
+        "Description": "Real-time updates will appear here during the event"
+      },
+      "Alert": {
+        "DemoTitle": "This is a demo app",
+        "DemoDescription": "OFeed app is a demo app. If you face an issue please report it to Github issues, thanks.",
+        "EventDataNotAvailableTitle": "Event Data Not Available",
+        "EventDataNotAvailableMessage": "No data is currently available for the {{view}} view. Please check back later or contact the event organizer for more information.",
+        "ViewResults": "results",
+        "ViewSplits": "splits",
+        "ViewClub": "clubs"
+      },
+      "Report": {
+        "Title": "Changelog report",
+        "Description": "Overview of status and card changes",
+        "CompetitorChangesTitle": "Changes for {{name}} (ID {{id}})",
+        "CompetitorChangesDescription": "All changes for the selected competitor in this event.",
+        "CompetitorChangesEmpty": "No changes found for this competitor.",
+        "AutoRefresh": "Auto refresh: {{seconds}} s",
+        "LastUpdated": "Last update: {{time}}",
+        "NoTimestamp": "-",
+        "ActiveFilters": "Active filters:",
+        "PresetsTitle": "Preset filters",
+        "Buttons": {
+          "RefreshData": "Load data",
+          "ExportCsv": "Export CSV",
+          "ExportPdf": "Export PDF",
+          "ClearFilters": "Clear filters",
+          "ShowProcessed": "Show processed",
+          "HideProcessed": "Hide processed"
+        },
+        "Presets": {
+          "CardChanges": "Card changes",
+          "NoteChanges": "Note changes",
+          "LateStarts": "Late starts",
+          "DidNotStart": "Did not start",
+          "All": "All records"
+        },
+        "Filters": {
+          "IdPlaceholder": "Filter ID",
+          "DateRange": "Select range",
+          "DateFrom": "From",
+          "DateTo": "To",
+          "TimeFrom": "Start time",
+          "TimeTo": "End time",
+          "TypePlaceholder": "Select type",
+          "CompetitorIdPlaceholder": "Filter competitor ID",
+          "LastnamePlaceholder": "Filter lastname",
+          "FirstnamePlaceholder": "Filter firstname",
+          "PreviousValuePlaceholder": "Filter previous value",
+          "NewValuePlaceholder": "Filter new value",
+          "OriginPlaceholder": "Select origin",
+          "SelectedCount": "{{count}} selected",
+          "ClearSelection": "Clear selection"
+        },
+        "TypeLabels": {
+          "class_change": "Class change",
+          "firstname_change": "First name change",
+          "lastname_change": "Last name change",
+          "bibNumber_change": "Bib number change",
+          "nationality_change": "Nationality change",
+          "registration_change": "Registration change",
+          "license_change": "License change",
+          "ranking_change": "Ranking change",
+          "rank_points_avg_change": "Ranking points avg change",
+          "organisation_change": "Organisation change",
+          "short_name_change": "Short name change",
+          "si_card_change": "SI card change",
+          "start_time_change": "Start time change",
+          "finish_time_change": "Finish time change",
+          "time_change": "Time change",
+          "team_change": "Team change",
+          "leg_change": "Leg change",
+          "status_change": "Status change",
+          "late_start_change": "Late start change",
+          "note_change": "Note change",
+          "external_id_change": "External ID change"
+        },
+        "OriginLabels": {
+          "START": "Start",
+          "OFFICE": "Office",
+          "FINISH": "Finish",
+          "IT": "IT"
+        },
+        "Pagination": {
+          "RowsPerPage": "Rows per page",
+          "RowsOption": "{{count}}",
+          "PageOf": "Page {{page}} of {{total}}",
+          "Previous": "Previous page",
+          "Next": "Next page"
+        },
+        "Table": {
+          "Id": "ID",
+          "DateTime": "Date & time",
+          "Type": "Type",
+          "CompetitorId": "Competitor ID",
+          "Lastname": "Lastname",
+          "Firstname": "Firstname",
+          "PreviousValue": "Previous value",
+          "NewValue": "New value",
+          "Origin": "Origin"
+        }
+      },
+      "Settings": {
+        "Loading": "Loading event settings"
+      },
+      "Detail": {
+        "EventInformation": "Event Information",
+        "Date": "Date",
+        "ZeroTime": "Zero time",
+        "Location": "Location",
+        "Organizer": "Organizer",
+        "Classes": "Classes",
+        "ShowAllClasses": "Show all classes",
+        "ShowLessClasses": "Show fewer classes",
+        "Format": "Format",
+        "RelayRace": "Relay race",
+        "Ranking": "Ranking",
+        "Coefficient": "Coefficient",
+        "EventStatus": "Event Status",
+        "AdditionalDetails": "Additional Details",
+        "Sport": "Sport",
+        "EventId": "Event ID",
+        "Author": "Author",
+        "Report": "Report",
+        "Status": {
+          "Completed": "COMPLETED",
+          "Live": "LIVE",
+          "Upcoming": "UPCOMING",
+          "Draft": "DRAFT"
+        },
+        "StatusText": {
+          "Completed": "Results are final",
+          "Live": "Event in progress",
+          "Upcoming": "Registration open"
+        },
+        "Alert": {
+          "UnpublishedTitle": "Event is not published yet",
+          "UnpublishedDescription": "This event is currently in draft mode and not visible to the public."
+        },
+        "ErrorTitle": "Error loading event",
+        "ErrorDescription": "Failed to load event data",
+        "Loading": "Loading event"
+      },
+      "Results": {
+        "Loading": "Loading results",
+        "LoadingClubs": "Loading clubs",
+        "LoadingClubResults": "Loading club results",
+        "ErrorLoadingClubResults": "Error loading club results: {{message}}"
+      },
+      "Splits": {
+        "LoadingChart": "Loading split chart",
+        "LoadingTimes": "Loading split times"
+      },
+      "Form": {
+        "EventName": "Event name",
+        "Sport": "Sport",
+        "Date": "Date",
+        "Timezone": "Timezone",
+        "Organizer": "Organizer",
+        "Location": "Location",
+        "Latitude": "GPS Latitude",
+        "Longitude": "GPS Longitude",
+        "Country": "Country",
+        "ZeroTime": "Zero time",
+        "FeaturedImage": "Featured image",
+        "FeaturedImageHint": "JPEG, PNG or WEBP, max 2 MB.",
+        "FeaturedImageButton": "Add image",
+        "FeaturedImageRemove": "Remove",
+        "Ranking": "Ranking",
+        "CoefRanking": "Ranking coeficient",
+        "Relay": "Relay",
+        "HundredthPrecision": "Hundredth precision",
+        "Published": "Published",
+        "Placeholders": {
+          "EventName": "My first event",
+          "Sport": "Select a sport",
+          "Timezone": "Select timezone",
+          "Organizer": "Organizer name",
+          "Location": "Venue",
+          "Latitude": "Enter latitude (e.g., 50.0755)",
+          "Longitude": "Enter longitude (e.g., 14.4378)",
+          "Country": "Select country",
+          "CoefRanking": "1.02"
+        },
+        "Toast": {
+          "CreateSuccess": "The event as created successfully!",
+          "EditSuccess": "The event was updated successfully!",
+          "FeaturedImageUploadSuccess": "Featured image uploaded successfully.",
+          "FeaturedImageUploadError": "Failed to upload featured image."
+        }
+      },
+      "Card": {
+        "Title": "Event Information",
+        "Description": "Please fill in the form below to update the event details."
+      },
+      "Password": {
+        "GeneratePassword": "Generate Password",
+        "RegeneratePassword": "Regenerate Password",
+        "PassportExpiration": "Password Expiration",
+        "NoExpirationSet": "No expiration set",
+        "Copy": "Copy",
+        "Revoke": "Revoke",
+        "Card": {
+          "Title": "Event Password",
+          "Description": "Enter event password that secures event details requested via API."
+        },
+        "Field": {
+          "Name": "Event Password",
+          "Placeholders": {
+            "Name": "Event password"
+          }
+        },
+        "Toast": {
+          "UpdateSuccessDescription": "Password was updated successfully!",
+          "UpdateFailTitle": "Something went wrong, please try again.",
+          "RevokeSuccessDescription": "Password was revoked successfully!",
+          "RevokeFailTitle": "Something went wrong, please try again.",
+          "CopySuccessDescription": "Password copied! Keep it safe."
+        }
+      },
+      "Link": {
+        "Card": {
+          "Title": "Event Link",
+          "Description": "Quickly share a link to an event - you can copy, share or print the QR code for easy access to live results.",
+          "Navigator": {
+            "Title": "OFeed",
+            "Event": "Event",
+            "Location": "Location",
+            "Date": "Date",
+            "EventUri": "View Live Results",
+            "UrlDescription": "Scan the QR code to access live results instantly!"
+          }
+        },
+        "PrintWindow": {
+          "Title": "QR Code - OFeed Live Results",
+          "Header": "OFeed",
+          "EventQR": "Event QR code",
+          "Info": "Scan this QR code to view live results online."
+        },
+        "Toast": {
+          "CopySuccessDescription": "Boom! The link is now in your clipboard, share it away!"
+        }
+      },
+      "Integration": {
+        "Card": {
+          "Title": "Configuration of apps",
+          "Description": "How to set up the apps to connect to OFeed.",
+          "ApiBaseUrl": "Url",
+          "EventId": "Event id",
+          "EventPassword": "Event Password",
+          "EventName": "Name",
+          "EventDate": "Date",
+          "ShareQrCode": "Share QR",
+          "PrintQrCode": "Print QR",
+          "Navigator": {
+            "Title": "OFeed QR Code",
+            "Text": "Here is the QR code for the OFeed event to pair your mobile app O Checklist!"
+          },
+          "Tabs": {
+            "OChecklist": {
+              "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
             },
-            "Toast": {
-                "UploadSuccess": "Files uploaded successfully!",
-                "UploadFail": "Something went wrong during the file upload. Please try again.",
-                "UploadInProgress": "File upload in progress",
-                "InvalidFormat": "Unsupported format",
-                "AllowedFormats": "Allowed formats are: {{formats}}",
-                "FileTooLarge": "File is too large",
-                "MaxSize": "Maximum size is {{size}} MB",
-                "ProcessingError": "File processing error",
-                "TryAgain": "Please try again"
+            "QuickEvent": {
+              "Description": "Copy and paste these Credentials into OFeed service setup.",
+              "ExportInterval": "Export Interval"
+            },
+            "SIDroidConenctor": {
+              "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
             }
+          }
         },
-        "Navbar": {
-            "Placeholder": "Type to search...",
-            "SignIn": "Sign In",
-            "SignUp": "Sign Up",
-            "LogOut": "Log out",
-            "MyProfile": "My Profile",
-            "Pages": "Pages"
+        "PrintWindow": {
+          "Header": "OFeed",
+          "Subheader": "Scan this QR code to pair your mobile app {{appName}} with the event.",
+          "Footer": "Please keep this information secure. If you encounter any issues, contact support."
         },
-        "Footer": {
-            "Collaborate": "Collaborate",
-            "Docs": "Docs",
-            "Donate": "Donate",
-            "Blog": "Blog",
-            "MadeWith": "Made with",
-            "ForOrienteering": "for orienteering"
-        },
-        "AppDataTable": {
-            "Empty": "No data available.",
-            "Loading": "Loading data...",
-            "Error": "Failed to load data."
+        "Toast": {
+          "CopyBaseUrl": "Hop! Base URL is now in your clipboard, share it away!",
+          "CopyEventId": "Hop! Event ID is now in your clipboard, share it away!"
         }
-    },
-    "Molecules": {
-        "DragDrop": {
-            "ClickToUpload": "Click to upload",
-            "Delete": "Delete",
-            "OrdDragAndDrop": "or drag and drop",
-            "SupportedFormats": "Supported format:",
-            "Done": "Done",
-            "OrDragAndDrop": "or drag and drop",
-            "Toast": {
-                "MaximumFiles": {
-                    "Title": "Maximum Files",
-                    "Description": "Only {{count}} files can be uploaded"
-                },
-                "InvalidFileFormat": {
-                    "Title": "Invalid file format",
-                    "Description": "Please upload only"
-                },
-                "Error": {
-                    "DescriptionSingle": "Only {{count}} file can be uploaded at a time",
-                    "DescriptionPlural": "Only {{count}} files can be uploaded at a time"
-                },
-                "ProcessingError": "File processing error"
-            }
+      },
+      "Visibility": {
+        "Card": {
+          "Title": "Visibility",
+          "Description": "Determines whether the event is public or private. Public events are displayed in the event list on the OFeed's main page, while private events are visible only to their organizer."
         },
-        "LanguageSelector": {
-            "Title": "Language",
-            "SelectLanguage": "Select language"
-        },
-        "EventSearchDialog": {
-            "Title": "Search events",
-            "Placeholder": "Search by name, location, country, or organizer...",
-            "Hint": "Try searching by: event name, city, country, or organizer",
-            "Searching": "Searching events...",
-            "Organizer": "Organizer",
-            "Draft": "Draft",
-            "NoEventsFound": "No events found for \"{{query}}\"",
-            "NoEventsHint": "Try searching by event name, location, country, or organizer",
-            "RecentEvents": "Recent events:",
-            "StartTyping": "Start typing to search events",
-            "StartTypingHint": "Search by event name, location, country, or organizer"
-        },
-        "SearchBox": {
-            "SearchResults": "Search results"
+        "Toast": {
+          "UpdateSuccess": "Event is now {{status}}!",
+          "UpdateFail": "Couldn't update event visibility."
         }
-    },
-    "Route": {
-        "Dashboard": "Dashboard",
-        "Events": "Events",
-        "Finances": "Finances",
-        "Settings": "Settings",
-        "Transactions": "Transactions"
-    },
-    "Templates": {
-        "Routes": {
-            "Home": "Home",
-            "Events": "Events",
-            "About": "About",
-            "Docs": "Docs",
-            "Contact": "Contact",
-            "MRB": "MyResultBoard",
-            "GitHub": "GitHub"
+      },
+      "DangerZone": {
+        "Title": "Danger Zone",
+        "Description": "Irreversible actions that will permanently delete data. Proceed with extreme caution.",
+        "Footer": "These actions cannot be undone. Please ensure you have appropriate backups.",
+        "DeleteCompetitors": {
+          "Title": "Delete competitors",
+          "Description": "If you uploaded Start list or Results for a wrong event, you can delete all competitors and start over. This button deletes all runners (Start list & Results).",
+          "Button": "Delete competitors",
+          "ConfirmTitle": "Delete All Competitors",
+          "ConfirmDescription": "Are you sure you want to delete all competitors? This action cannot be undone!",
+          "ConfirmButton": "Delete Competitors"
+        },
+        "DeleteAllEventData": {
+          "Title": "Delete all event data",
+          "Description": "If you need to completely remove all event data, including runners, classes, relays, and results, use this button. Be cautious, as this action is irreversible!",
+          "Button": "Delete all event data",
+          "ConfirmTitle": "Delete All Event Data",
+          "ConfirmDescription": "Are you sure you want to delete all event data? This will remove all results and cannot be undone!",
+          "ConfirmButton": "Delete All Data"
+        },
+        "DeleteEvent": {
+          "Title": "Delete event",
+          "Description": "The event will be deleted. You have to delete all event data first. This action cannot be undone!",
+          "Button": "Delete event",
+          "ConfirmTitle": "Delete Event",
+          "ConfirmDescription": "Are you sure you want to delete this entire event? This action cannot be undone!",
+          "ConfirmButton": "Delete Event"
+        },
+        "Toast": {
+          "DeleteFailTitle": "Error deleting data",
+          "DeleteSuccessDescription": "Data successfully deleted"
         }
+      },
+      "TroublesShooting": {
+        "Title": "Need Help or Have Questions?",
+        "Description": "If you encounter an error or need assistance, please do not hesitate to contact us.",
+        "Description1": "Our support team is ready to assist you with any issues or questions. Reach out to us at",
+        "Description2": "please include any relevant files.",
+        "Discord": "Join Discord",
+        "GitHubIssues": "Open GitHub Issues"
+      }
     },
-    "Validations": {
-        "Required": "Required field",
-        "Email": "Invalid email address",
-        "PasswordsDontMatch": "Passwords don't match",
-        "EmailsContainNotEmail": "One of the entered emails is not valid",
-        "EmailsUnique": "The email addresses entered must be unique",
-        "EmailsMinMax": "The number of emails must be a minimum of {{min}} and a maximum of {{max}}",
-        "SelectRequired": "Select a value",
-        "FileRequired": "Upload a file",
-        "NumberMin": "Enter a number greater than {{min}}",
-        "Date": "Invalid date",
-        "RegistrationNumber": "The registration number must correspond to the valid CSOS format (e.g. XXX0101)",
-        "Number": "The entered value must be a number",
-        "Time": "The time must be entered in the format HH:MM:SS (e.g. 01:18:06)",
-        "TimeInZones": "The time in the zones must not be longer than the total activity time",
-        "Latitude": "Latitude must be between -90 and 90",
-        "Longitude": "Longitude must be between -180 and 180"
+    "Home": {
+      "Hero": {
+        "Subtitle": "Live overview of sport events. Runner tracking, continuous updates, and a steady stream of information in one place.",
+        "LiveEventSynchronization": "Live event synchronization",
+        "LastMinuteChanges": "Last-minute changes",
+        "DetailedSplitAnalysis": "Deep Split Analysis"
+      },
+      "Infinite": {
+        "LoadingInitial": "Loading events...",
+        "LoadingMore": "Loading more events...",
+        "LoadingMoreInline": "Loading more...",
+        "ScrollMore": "Scroll down for more events",
+        "AllLoaded": "All events loaded",
+        "EventsCount": "{{count}} events",
+        "FoundCount": "You found {{count}} events",
+        "LoadError": "Error loading events: {{message}}",
+        "NoEvents": "No events found",
+        "NoEventsHint": "Try changing the filter or check back later."
+      }
+    },
+    "Profile": {
+      "MyEntries": {
+        "Title": "My entries",
+        "Description": "Here you can find all your entries and changes made to event registrations. You can view them, edit them, or track their status."
+      },
+      "PersonalInfo": {
+        "Title": "Personal info",
+        "Description": "Here you can view and update your personal details, contact information, and other profile settings.",
+        "SiCardNumber": "Sportident card number",
+        "EmergencyContact": "Emergency contact",
+        "Organization": "Organization / Club",
+        "Updated": "Profile updated successfully"
+      },
+      "OAuth2": {
+        "Title": "OAuth2 API Access",
+        "Description": "Generate credentials to access the API using OAuth2. You will need a Client ID and a Client Secret.",
+        "ClientId": "Client ID",
+        "ClientSecret": "Client Secret",
+        "Generate": "Generate new Client Secret",
+        "Regenerate": "Regenerate Client Secret",
+        "SecretWarning": "Important warning",
+        "SecretWarningDescription": "Your Client Secret is sensitive information. Do not share it with anyone and store it securely. It will not be shown again after you leave or refresh this page.",
+        "Revoke": "Revoke",
+        "Toast": {
+          "GenerateSuccessDescription": "OAuth2 credentials have been successfully generated!",
+          "GenerateFailTitle": "Something went wrong, please try again.",
+          "RevokeSuccessDescription": "Credentials have been successfully revoked!",
+          "RevokeFailTitle": "Credentials could not be revoked"
+        },
+        "HowToUse": {
+          "Title": "How to use OAuth2",
+          "Description": "Use your Client ID and Client Secret in a request with grant_type=client_credentials to the /auth/oauth2/token endpoint. Below is an example request using curl."
+        }
+      },
+      "OtherIntegrations": {
+        "Title": "Other integrations",
+        "Description": "Connect your account with additional services and tools. New integrations will appear here over time."
+      },
+      "Security": {
+        "PasswordDescription": "Here you can change your account password. We recommend using a strong, unique password.",
+        "CurrentPassword": "Current password",
+        "NewPassword": "New password",
+        "ConfirmNewPassword": "Confirm new password",
+        "UpdatePassword": "Update password",
+        "CurrentPasswordHelper": "Enter your current account password.",
+        "NewPasswordHelper": "Use at least 8 characters.",
+        "ConfirmNewPasswordHelper": "Repeat the new password to confirm.",
+        "PasswordUpdated": "Password updated successfully",
+        "Errors": {
+          "CurrentPasswordRequired": "Current password is required",
+          "NewPasswordRequired": "New password is required",
+          "CurrentPasswordIncorrect": "Current password is incorrect.",
+          "NewPasswordMustDiffer": "New password must be different from current password."
+        }
+      },
+      "Tabs": {
+        "Profile": "Profile",
+        "Integrations": "Integrations",
+        "Security": "Security",
+        "Notifications": "Notifications",
+        "billing": "Billing"
+      },
+      "Cards": {
+        "Title": "Cards",
+        "Description": "Manage your personal chips for each sport",
+        "Sport": "Sport",
+        "Type": "Type",
+        "Number": "Card number",
+        "SetAsDefault": "Set as default for this sport",
+        "Empty": "No cards saved yet. Add your first card.",
+        "DefaultBadge": "Default for this sport",
+        "MakeDefault": "Make default",
+        "Delete": "Delete",
+        "DeleteTitle": "Delete card",
+        "DeleteConfirm": "Delete this card?",
+        "EditTitle": "Edit card",
+        "EditDescription": "Update card settings for the selected sport",
+        "SportRequired": "Sport is required",
+        "CardNumberRequired": "Card number is required",
+        "SaveSuccess": "Card saved successfully"
+      },
+      "Notifications": {
+        "Title": "Notifications",
+        "Description": "Manage your notification preferences.",
+        "EventReminders": "Event reminders",
+        "EventRemindersDescription": "Receive reminders before your events start.",
+        "ResultsUpdates": "Results updates",
+        "ResultsUpdatesDescription": "Get notified when results are published."
+      },
+      "Billing": {
+        "Title": "Billing",
+        "Description": "Manage your billing settings and payment methods.",
+        "NoPaymentMethods": "No payment methods added yet.",
+        "AddPaymentMethod": "Add payment method"
+      }
     }
+  },
+  "Organisms": {
+    "DragDrop": {
+      "UploadIofXml": {
+        "Title": "Upload IOF XML",
+        "Description": "Upload IOF XML files with start lists and results."
+      },
+      "Toast": {
+        "UploadSuccess": "Files uploaded successfully!",
+        "UploadFail": "Something went wrong during the file upload. Please try again.",
+        "UploadInProgress": "File upload in progress",
+        "InvalidFormat": "Unsupported format",
+        "AllowedFormats": "Allowed formats are: {{formats}}",
+        "FileTooLarge": "File is too large",
+        "MaxSize": "Maximum size is {{size}} MB",
+        "ProcessingError": "File processing error",
+        "TryAgain": "Please try again"
+      }
+    },
+    "Navbar": {
+      "Placeholder": "Type to search...",
+      "SignIn": "Sign In",
+      "SignUp": "Sign Up",
+      "LogOut": "Log out",
+      "MyProfile": "My Profile",
+      "Pages": "Pages"
+    },
+    "Footer": {
+      "Collaborate": "Collaborate",
+      "Docs": "Docs",
+      "Donate": "Donate",
+      "Blog": "Blog",
+      "MadeWith": "Made with",
+      "ForOrienteering": "for orienteering"
+    },
+    "AppDataTable": {
+      "Empty": "No data available.",
+      "Loading": "Loading data...",
+      "Error": "Failed to load data."
+    }
+  },
+  "Molecules": {
+    "DragDrop": {
+      "ClickToUpload": "Click to upload",
+      "Delete": "Delete",
+      "OrdDragAndDrop": "or drag and drop",
+      "SupportedFormats": "Supported format:",
+      "Done": "Done",
+      "OrDragAndDrop": "or drag and drop",
+      "Toast": {
+        "MaximumFiles": {
+          "Title": "Maximum Files",
+          "Description": "Only {{count}} files can be uploaded"
+        },
+        "InvalidFileFormat": {
+          "Title": "Invalid file format",
+          "Description": "Please upload only"
+        },
+        "Error": {
+          "DescriptionSingle": "Only {{count}} file can be uploaded at a time",
+          "DescriptionPlural": "Only {{count}} files can be uploaded at a time"
+        },
+        "ProcessingError": "File processing error"
+      }
+    },
+    "LanguageSelector": {
+      "Title": "Language",
+      "SelectLanguage": "Select language"
+    },
+    "EventSearchDialog": {
+      "Title": "Search events",
+      "Placeholder": "Search by name, location, country, or organizer...",
+      "Hint": "Try searching by: event name, city, country, or organizer",
+      "Searching": "Searching events...",
+      "Organizer": "Organizer",
+      "Draft": "Draft",
+      "NoEventsFound": "No events found for \"{{query}}\"",
+      "NoEventsHint": "Try searching by event name, location, country, or organizer",
+      "RecentEvents": "Recent events:",
+      "StartTyping": "Start typing to search events",
+      "StartTypingHint": "Search by event name, location, country, or organizer"
+    },
+    "SearchBox": {
+      "SearchResults": "Search results"
+    }
+  },
+  "Route": {
+    "Dashboard": "Dashboard",
+    "Events": "Events",
+    "Finances": "Finances",
+    "Settings": "Settings",
+    "Transactions": "Transactions"
+  },
+  "Templates": {
+    "Routes": {
+      "Home": "Home",
+      "Events": "Events",
+      "About": "About",
+      "Docs": "Docs",
+      "Contact": "Contact",
+      "MRB": "MyResultBoard",
+      "GitHub": "GitHub"
+    }
+  },
+  "Validations": {
+    "Required": "Required field",
+    "Email": "Invalid email address",
+    "PasswordsDontMatch": "Passwords don't match",
+    "EmailsContainNotEmail": "One of the entered emails is not valid",
+    "EmailsUnique": "The email addresses entered must be unique",
+    "EmailsMinMax": "The number of emails must be a minimum of {{min}} and a maximum of {{max}}",
+    "SelectRequired": "Select a value",
+    "FileRequired": "Upload a file",
+    "NumberMin": "Enter a number greater than {{min}}",
+    "Date": "Invalid date",
+    "RegistrationNumber": "The registration number must correspond to the valid CSOS format (e.g. XXX0101)",
+    "Number": "The entered value must be a number",
+    "Time": "The time must be entered in the format HH:MM:SS (e.g. 01:18:06)",
+    "TimeInZones": "The time in the zones must not be longer than the total activity time",
+    "Latitude": "Latitude must be between -90 and 90",
+    "Longitude": "Longitude must be between -180 and 180"
+  },
+  "Errors": {
+    "Generic": "Something went wrong",
+    "UpdatePasswordFailedTitle": "Password update failed",
+    "UpdateProfileFailedTitle": "Profile update failed"
+  },
+  "validation": {
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "confirmPasswordRequired": "Please confirm your new password",
+    "passwordsDoNotMatch": "Passwords do not match"
+  }
 }

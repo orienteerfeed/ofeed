@@ -1,58 +1,173 @@
 {
-    "Pages": {
-        "Auth": {
-            "User": {
-                "Firstname": "Vorname",
-                "Lastname": "Nachname",
-                "Club": "Verein",
-                "Email": "Email",
-                "Password": "Passwort",
-                "Placeholder": {
-                    "Firstname": "Hans",
-                    "Lastname": "Neumann",
-                    "Club": "Mein Verein",
-                    "Email": "newman@example.com",
-                    "Password": "Ihr Passwort",
-                    "NewPassword": "Ihr neues Passwort",
-                    "PasswordConfirmation": "Passwort bestätigung"
-                }
-            },
-            "SignInUpPage": {
-                "Login": "Login",
-                "DontHaveAnAccount": "Haben sie noch kein Zugang?",
-                "CreateAnAccount": "Konto erstellen",
-                "EnterYourInformation": "Füllen Sie die u.s. Infos aus um ihr Account zu erstellen",
-                "EnterYourEmailToSignIn": "Geben Sie ihre Mailadresse an um sich anmelden zu können",
-                "ClickConsent": "Wenn Sie fortfahren klicken, stimmen sie unseren",
-                "TermsOfService": "Agbs"
-            },
-            "RequestPasswordResetPage": {
-                "ForgottenPassword": "Passwort vergessen"
-            }
+  "Pages": {
+    "Auth": {
+      "User": {
+        "Firstname": "Vorname",
+        "Lastname": "Nachname",
+        "Club": "Verein",
+        "Email": "Email",
+        "Password": "Passwort",
+        "Placeholder": {
+          "Firstname": "Hans",
+          "Lastname": "Neumann",
+          "Club": "Mein Verein",
+          "Email": "newman@example.com",
+          "Password": "Ihr Passwort",
+          "NewPassword": "Ihr neues Passwort",
+          "PasswordConfirmation": "Passwort bestätigung"
         }
+      },
+      "SignInUpPage": {
+        "Login": "Login",
+        "DontHaveAnAccount": "Haben sie noch kein Zugang?",
+        "CreateAnAccount": "Konto erstellen",
+        "EnterYourInformation": "Füllen Sie die u.s. Infos aus um ihr Account zu erstellen",
+        "EnterYourEmailToSignIn": "Geben Sie ihre Mailadresse an um sich anmelden zu können",
+        "ClickConsent": "Wenn Sie fortfahren klicken, stimmen sie unseren",
+        "TermsOfService": "Agbs"
+      },
+      "RequestPasswordResetPage": {
+        "ForgottenPassword": "Passwort vergessen"
+      }
     },
-    "Organisms": {
-        "Navbar": {
-            "Pages": "Seiten"
+    "Profile": {
+      "MyEntries": {
+        "Title": "Meine Anmeldungen",
+        "Description": "Hier findest du alle deine Anmeldungen und Änderungen bei Event-Registrierungen. Du kannst sie ansehen, bearbeiten oder ihren Status verfolgen."
+      },
+      "PersonalInfo": {
+        "Title": "Persönliche Daten",
+        "Description": "Hier kannst du deine persönlichen Daten, Kontaktinformationen und andere Profileinstellungen ansehen und aktualisieren.",
+        "SiCardNumber": "SportIdent-Kartennummer",
+        "EmergencyContact": "Notfallkontakt",
+        "Organization": "Organisation / Verein",
+        "Updated": "Profil erfolgreich aktualisiert"
+      },
+      "Cards": {
+        "Title": "Chips",
+        "Description": "Verwalte deine persönlichen Chips für jede Sportart",
+        "Sport": "Sport",
+        "Type": "Typ",
+        "Number": "Chipnummer",
+        "SetAsDefault": "Als Standard für diese Sportart festlegen",
+        "Empty": "Noch keine Chips gespeichert. Füge deinen ersten Chip hinzu.",
+        "DefaultBadge": "Standard für diese Sportart",
+        "MakeDefault": "Als Standard festlegen",
+        "Delete": "Löschen",
+        "DeleteTitle": "Chip löschen",
+        "DeleteConfirm": "Diesen Chip löschen?",
+        "EditTitle": "Chip bearbeiten",
+        "EditDescription": "Chip-Einstellungen für die ausgewählte Sportart aktualisieren",
+        "SportRequired": "Sport ist erforderlich",
+        "CardNumberRequired": "Chipnummer ist erforderlich",
+        "SaveSuccess": "Chip erfolgreich gespeichert"
+      },
+      "OAuth2": {
+        "Title": "OAuth2 API-Zugriff",
+        "Description": "Generiere Zugangsdaten für den API-Zugriff über OAuth2. Du benötigst eine Client-ID und ein Client-Secret.",
+        "ClientId": "Client-ID",
+        "ClientSecret": "Client-Secret",
+        "Generate": "Neues Client-Secret generieren",
+        "Regenerate": "Client-Secret neu generieren",
+        "SecretWarning": "Wichtiger Hinweis",
+        "SecretWarningDescription": "Dein Client-Secret ist vertraulich. Teile es mit niemandem und bewahre es sicher auf. Nach dem Verlassen oder Neuladen dieser Seite wird es nicht erneut angezeigt.",
+        "Revoke": "Widerrufen",
+        "Toast": {
+          "GenerateSuccessDescription": "OAuth2-Zugangsdaten wurden erfolgreich generiert!",
+          "GenerateFailTitle": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+          "RevokeSuccessDescription": "Zugangsdaten wurden erfolgreich widerrufen!",
+          "RevokeFailTitle": "Zugangsdaten konnten nicht widerrufen werden"
         },
-        "Footer": {
-            "Docs": "Dokumente",
-            "Donate": "Spenden",
-            "Blog": "Blog",
-            "MadeWith": "Gemacht mit",
-            "ForOrienteering": "für orientierungslauf"
-        },
-        "AppDataTable": {
-            "Empty": "Es gibt keine Daten.",
-            "Loading": "Wid geladen...",
-            "Error": "Dateiupload fehlgeschlagen."
+        "HowToUse": {
+          "Title": "So verwendest du OAuth2",
+          "Description": "Verwende deine Client-ID und dein Client-Secret in einer Anfrage mit grant_type=client_credentials an den Endpunkt /auth/oauth2/token. Unten findest du ein Beispiel mit curl."
         }
+      },
+      "OtherIntegrations": {
+        "Title": "Weitere Integrationen",
+        "Description": "Verbinde dein Konto mit zusätzlichen Diensten und Tools. Neue Integrationen werden hier nach und nach erscheinen."
+      },
+      "Security": {
+        "PasswordDescription": "Hier kannst du dein Kontopasswort ändern. Wir empfehlen ein starkes, einzigartiges Passwort.",
+        "CurrentPassword": "Aktuelles Passwort",
+        "NewPassword": "Neues Passwort",
+        "ConfirmNewPassword": "Neues Passwort bestätigen",
+        "UpdatePassword": "Passwort aktualisieren",
+        "CurrentPasswordHelper": "Gib dein aktuelles Kontopasswort ein.",
+        "NewPasswordHelper": "Verwende mindestens 8 Zeichen.",
+        "ConfirmNewPasswordHelper": "Wiederhole das neue Passwort zur Bestätigung.",
+        "PasswordUpdated": "Passwort erfolgreich aktualisiert",
+        "Errors": {
+          "CurrentPasswordRequired": "Aktuelles Passwort ist erforderlich",
+          "NewPasswordRequired": "Neues Passwort ist erforderlich",
+          "CurrentPasswordIncorrect": "Aktuelles Passwort ist falsch.",
+          "NewPasswordMustDiffer": "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden."
+        }
+      },
+      "Notifications": {
+        "Title": "Benachrichtigungen",
+        "Description": "Verwalte deine Benachrichtigungseinstellungen.",
+        "EventReminders": "Event-Erinnerungen",
+        "EventRemindersDescription": "Erhalte Erinnerungen, bevor deine Events beginnen.",
+        "ResultsUpdates": "Ergebnis-Updates",
+        "ResultsUpdatesDescription": "Erhalte eine Benachrichtigung, wenn Ergebnisse veröffentlicht werden."
+      },
+      "Billing": {
+        "Title": "Abrechnung",
+        "Description": "Verwalte deine Abrechnungseinstellungen und Zahlungsmethoden.",
+        "NoPaymentMethods": "Noch keine Zahlungsmethoden hinzugefügt.",
+        "AddPaymentMethod": "Zahlungsmethode hinzufügen"
+      },
+      "Tabs": {
+        "Profile": "Profil",
+        "Integrations": "Integrationen",
+        "Security": "Sicherheit",
+        "Notifications": "Benachrichtigungen",
+        "billing": "Abrechnung"
+      }
     },
-    "Molecules": {
-        "DragDrop": {
-            "ClickToUpload": "Klicken sie hier für upload",
-            "Delete": "Löschen",
-            "OrdDragAndDrop": "oder drag and drop"
-        }
+    "Home": {
+      "Hero": {
+        "Subtitle": "Live-Überblick über Sportevents. Läufer-Tracking, kontinuierliche Updates und ein stetiger Informationsfluss an einem Ort.",
+        "LiveEventSynchronization": "Live-Event-Synchronisierung",
+        "LastMinuteChanges": "Änderungen in letzter Minute",
+        "DetailedSplitAnalysis": "Detaillierte Zwischenzeitanalyse"
+      }
     }
+  },
+  "Organisms": {
+    "Navbar": {
+      "Pages": "Seiten"
+    },
+    "Footer": {
+      "Docs": "Dokumente",
+      "Donate": "Spenden",
+      "Blog": "Blog",
+      "MadeWith": "Gemacht mit",
+      "ForOrienteering": "für orientierungslauf"
+    },
+    "AppDataTable": {
+      "Empty": "Es gibt keine Daten.",
+      "Loading": "Wid geladen...",
+      "Error": "Dateiupload fehlgeschlagen."
+    }
+  },
+  "Molecules": {
+    "DragDrop": {
+      "ClickToUpload": "Klicken sie hier für upload",
+      "Delete": "Löschen",
+      "OrdDragAndDrop": "oder drag and drop"
+    }
+  },
+  "Errors": {
+    "Generic": "Etwas ist schiefgelaufen",
+    "UpdatePasswordFailedTitle": "Passwort konnte nicht aktualisiert werden",
+    "UpdateProfileFailedTitle": "Profil konnte nicht aktualisiert werden"
+  },
+  "validation": {
+    "passwordRequired": "Passwort ist erforderlich",
+    "passwordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
+    "confirmPasswordRequired": "Bitte bestätige dein neues Passwort",
+    "passwordsDoNotMatch": "Passwörter stimmen nicht überein"
+  }
 }

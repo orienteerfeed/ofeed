@@ -144,15 +144,15 @@ export const HomePage: React.FC = () => {
               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span>{t('Pages.Home.Hero.LiveResults')}</span>
+                  <span>{t('Pages.Home.Hero.LiveEventSynchronization')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span>{t('Pages.Home.Hero.SplitAnalysis')}</span>
+                  <span>{t('Pages.Home.Hero.LastMinuteChanges')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span>{t('Pages.Home.Hero.RealTimeEventControl')}</span>
+                  <span>{t('Pages.Home.Hero.DetailedSplitAnalysis')}</span>
                 </div>
               </div>
             </div>

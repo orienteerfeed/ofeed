@@ -54,7 +54,7 @@ type SignUpVars = {
     lastname: string;
     email: string;
     password: string;
-    club?: string | null;
+    organisation?: string | null;
   };
 };
 
@@ -192,6 +192,7 @@ export const SignUpPage = () => {
               lastname: value.lastName,
               email: value.email,
               password: value.password,
+              organisation: value.club.trim() ? value.club.trim() : null,
             },
           },
         });
@@ -206,6 +207,7 @@ export const SignUpPage = () => {
           email: value.email,
           firstname: value.firstName,
           lastname: value.lastName,
+          organisation: value.club || null,
           club: value.club,
         };
 

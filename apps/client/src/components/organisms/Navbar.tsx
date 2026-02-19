@@ -173,7 +173,8 @@ export function Navbar({ navLinks, t }: NavbarProps) {
                           {userWithInitials.lastname}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {userWithInitials.club}
+                          {userWithInitials.organisation ??
+                            userWithInitials.club}
                         </p>
                       </div>
                     </div>

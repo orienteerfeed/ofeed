@@ -23,6 +23,7 @@ interface UserMenuProps {
 export const UserMenu = ({ user, t }: UserMenuProps) => {
   const { signout } = useAuth();
   const navigate = useNavigate();
+  const organisation = user.organisation ?? user.club;
 
   const handleSignOut = () => {
     signout();
@@ -42,13 +43,16 @@ export const UserMenu = ({ user, t }: UserMenuProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              👋 Hey, {user.firstname}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.club}
-            </p>
+          <div className="grid grid-cols-[auto_1fr] gap-x-1 gap-y-1">
+            <span className="text-sm leading-none" aria-hidden>
+              👋
+            </span>
+            <p className="text-sm font-medium leading-none">Hey, {user.firstname}</p>
+            {organisation && (
+              <p className="col-start-2 text-xs leading-none text-muted-foreground">
+                {organisation}
+              </p>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

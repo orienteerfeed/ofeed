@@ -8,7 +8,14 @@ export const getLoginSuccessPayload = async ({ userId, prisma }) => {
       id: userId,
       active: true,
     },
-    select: { id: true, firstname: true, lastname: true },
+    select: {
+      id: true,
+      firstname: true,
+      lastname: true,
+      email: true,
+      organisation: true,
+      emergencyContact: true,
+    },
   });
 
   const dbPrivilegesResponse = await hasPrivilege(userId, prisma);
@@ -21,6 +28,9 @@ export const getLoginSuccessPayload = async ({ userId, prisma }) => {
       userId: dbResponse.id,
       firstName: dbResponse.firstname,
       lastName: dbResponse.lastname,
+      email: dbResponse.email,
+      organisation: dbResponse.organisation,
+      emergencyContact: dbResponse.emergencyContact,
     },
     privileges,
   };
