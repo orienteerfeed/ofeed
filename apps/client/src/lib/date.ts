@@ -1,6 +1,6 @@
 import type { Locale } from 'date-fns';
 import { format, formatDuration, parseISO } from 'date-fns';
-import { cs, enGB, es } from 'date-fns/locale';
+import { cs, de, enGB, es, sv } from 'date-fns/locale';
 
 export const DATE_FORMATS = {
   date: 'd. M. yyyy',
@@ -10,14 +10,16 @@ export const DATE_FORMATS = {
   timeHhMm: 'HH:mm',
 } as const;
 
-export type LocaleKey = 'cs' | 'enGB' | 'es';
-const LOCALES: Record<LocaleKey, Locale> = { cs, enGB, es };
+export type LocaleKey = 'cs' | 'enGB' | 'es' | 'de' | 'sv';
+const LOCALES: Record<LocaleKey, Locale> = { cs, enGB, es, de, sv };
 
 export function getLocaleKey(language?: string): LocaleKey {
   if (!language) return 'cs';
   const normalized = language.toLowerCase();
   if (normalized.startsWith('cs')) return 'cs';
+  if (normalized.startsWith('de')) return 'de';
   if (normalized.startsWith('es')) return 'es';
+  if (normalized.startsWith('sv')) return 'sv';
   return 'enGB';
 }
 

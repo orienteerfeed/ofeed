@@ -9,6 +9,7 @@ const LOCALE_TO_COUNTRY: Record<string, string> = {
   de: 'de',
   fr: 'fr',
   es: 'es',
+  sv: 'se',
   it: 'it',
   pl: 'pl',
   ru: 'ru',

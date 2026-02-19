@@ -33,10 +33,22 @@ const LANGUAGES: Language[] = [
     nativeName: 'English',
   },
   {
+    key: 'de',
+    country: 'de',
+    label: 'German',
+    nativeName: 'Deutsch',
+  },
+  {
     key: 'es',
     country: 'es',
     label: 'Spanish',
     nativeName: 'Español',
+  },
+  {
+    key: 'sv',
+    country: 'se',
+    label: 'Swedish',
+    nativeName: 'Svenska',
   },
 ];
 

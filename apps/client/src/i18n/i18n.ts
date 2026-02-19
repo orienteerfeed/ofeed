@@ -34,8 +34,14 @@ i18n
   )
   .use(initReactI18next)
   .init({
-    fallbackLng: { 'en-US': ['en'], 'cs-CZ': ['cs'], default: ['cs'] },
-    supportedLngs: ['en', 'cs', 'es'],
+    fallbackLng: {
+      'en-US': ['en'],
+      'cs-CZ': ['cs'],
+      'de-DE': ['de'],
+      'sv-SE': ['sv'],
+      default: ['cs'],
+    },
+    supportedLngs: ['en', 'cs', 'es', 'de', 'sv'],
     ns: ['translation', 'common'],
     defaultNS: 'translation',
     debug: !!config?.I18N_LOGGING,
