@@ -97,7 +97,7 @@ model Event {
   externalSource     ExternalSource?
   externalEventId    String?         @db.VarChar(128)
   featuredImageKey   String?         @db.VarChar(512)
-  zeroTime           DateTime        @db.DateTime()
+  zeroTime           DateTime        @db.Time(0)
   relay              Boolean         @default(false)
   startMode          StartMode       @default(Individual)
   ranking            Boolean         @default(false)

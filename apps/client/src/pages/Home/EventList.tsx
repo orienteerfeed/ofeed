@@ -38,7 +38,7 @@ interface GraphQLEvent {
     name: string;
   };
   timezone: string;
-  zeroTime: string; // timestamp as a string
+  zeroTime: string; // UTC time-of-day (HH:mm:ss)
   classes: {
     id: number;
     name: string;
@@ -154,7 +154,7 @@ const convertGraphQLEventToEvent = (graphqlEvent: GraphQLEvent): Event => {
     sportId: graphqlEvent.sport.id,
     sport: graphqlEvent.sport,
     discipline: 'middle',
-    zeroTime: formatDateTime(graphqlEvent.zeroTime),
+    zeroTime: graphqlEvent.zeroTime,
     classes: graphqlEvent.classes,
     maxParticipants: 0,
     currentParticipants: 0,

@@ -14,7 +14,9 @@ export const eventSchema = z.object({
   longitude: z.number().nullable().optional(),
   countryId: z.string().nullable().optional(),
   featuredImageKey: z.string().nullable().optional(),
-  zeroTime: dateLikeSchema,
+  zeroTime: z
+    .string()
+    .regex(/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/, "Expected UTC time as HH:mm:ss"),
   relay: z.boolean(),
   startMode: startModeSchema,
   ranking: z.boolean(),

@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
 import prisma from "../../utils/context.js";
+import { normalizeUtcTimeString } from "../../utils/time.js";
 import { getPublicObject } from "../../lib/storage/s3.js";
 import { error, success, validation } from "../../utils/responseApi.js";
 import { calculateCompetitorRankingPoints } from "../../utils/ranking.js";
@@ -144,7 +145,21 @@ export function registerPublicEventRoutes(router) {
       return c.json(validation(`Event with ID ${eventId} does not exist in the database`, 422), 422);
     }
 
-    return c.json(success("OK", { data: dbResponse }, 200), 200);
+    const zeroTime = normalizeUtcTimeString(dbResponse.zeroTime);
+
+    return c.json(
+      success(
+        "OK",
+        {
+          data: {
+            ...dbResponse,
+            zeroTime,
+          },
+        },
+        200,
+      ),
+      200,
+    );
   });
 
   router.get("/:eventId/competitors", async c => {

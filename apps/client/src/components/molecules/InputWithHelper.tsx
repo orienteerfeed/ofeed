@@ -8,6 +8,7 @@ import {
   type InputProps,
   Select,
   type SelectProps,
+  TimePickerInput,
 } from '../atoms';
 
 export interface CommonProps {
@@ -144,6 +145,14 @@ const InputWithHelperComponent = forwardRef<
             </label>
           )}
         </div>
+      ) : type === 'time' ? (
+        <TimePickerInput
+          {...getInputProps(props)}
+          ref={ref as React.Ref<HTMLInputElement>}
+          className={fieldClass}
+          aria-invalid={hasError || undefined}
+          id={id}
+        />
       ) : (
         <Input
           {...getInputProps(props)}

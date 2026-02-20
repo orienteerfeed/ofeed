@@ -30,7 +30,11 @@ export const EventInfoCard: React.FC<EventInfoCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-2">
-        <EventForm t={t} initialData={initialData} />
+        <EventForm
+          t={t}
+          initialData={initialData}
+          showExternalImportSection={false}
+        />
       </CardContent>
     </Card>
   );

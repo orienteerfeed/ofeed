@@ -296,6 +296,9 @@
         "Import": {
           "Title": "Import from external IS",
           "Description": "Search event by name or load by external event ID and prefill this form.",
+          "CurrentLink": "Current link",
+          "NoLink": "This event is not linked to any external system.",
+          "Unlink": "Remove link",
           "Provider": "Provider",
           "ExternalEventId": "External event ID",
           "ApiKey": "Eventor API key",
@@ -306,6 +309,7 @@
           "NoResults": "No matching events found.",
           "Open": "Import from external IS",
           "Hide": "Hide import",
+          "SaveLink": "Save link",
           "LoadPreview": "Load and prefill form",
           "Placeholders": {
             "ExternalEventId": "e.g. 8300",
@@ -323,6 +327,9 @@
             "PrefillSuccess": "Event form has been prefilled from external system.",
             "PrefillFailedTitle": "Import failed",
             "PrefillFailedDescription": "Unable to load event data from external provider.",
+            "LinkSaved": "External event link saved successfully.",
+            "LinkRemoved": "External event link removed successfully.",
+            "LinkRemovedPendingSave": "External event link will be removed after saving the event.",
             "SearchFailedTitle": "Search failed",
             "SearchFailedDescription": "Unable to search events in external provider."
           }

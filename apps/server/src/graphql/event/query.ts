@@ -198,7 +198,7 @@ function generateMockEvents(first, after, filter) {
       countryId: ['CZ', 'SK', 'DE', 'PL', 'AT'][i % 5],
       sportId: 1,
       timezone: 'Europe/Prague',
-      zeroTime: new Date(eventDate.getTime() + 9 * 60 * 60 * 1000).getTime().toString(),
+      zeroTime: '09:00:00',
       createdAt: new Date(now.getTime() - (100 - i) * 24 * 60 * 60 * 1000).getTime().toString(),
       updatedAt: new Date(now.getTime() - (100 - i) * 24 * 60 * 60 * 1000).getTime().toString(),
       sport: {

@@ -1,4 +1,5 @@
 import { createPrismaClient } from "../src/db/prisma-client";
+import { normalizeUtcTimeString, toPrismaTimeDate } from "../src/utils/time";
 
 const prisma = createPrismaClient();
 
@@ -287,7 +288,8 @@ async function main() {
     if (!dbEventResponse) {
       const date = process.env.DATE && new Date(process.env.DATE);
       const organizer = process.env.ORGANIZER && process.env.ORGANIZER;
-      const zeroTime = process.env.ZERO_TIME && new Date(process.env.ZERO_TIME);
+      const zeroTimeString =
+        normalizeUtcTimeString(process.env.ZERO_TIME ?? null) ?? "00:00:00";
       const isRelay = process.env.RELAY && Boolean(Number(process.env.RELAY));
       const location = process.env.LOCATION && process.env.LOCATION;
 
@@ -296,7 +298,7 @@ async function main() {
           name: eventName,
           date: date,
           organizer: organizer,
-          zeroTime: zeroTime,
+          zeroTime: toPrismaTimeDate(zeroTimeString),
           relay: isRelay,
           location: location,
           sportId: 1,

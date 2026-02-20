@@ -296,6 +296,9 @@
         "Import": {
           "Title": "Import z externího IS",
           "Description": "Vyhledej akci podle názvu nebo načti data podle externího ID a předvyplň formulář.",
+          "CurrentLink": "Aktuální propojení",
+          "NoLink": "Tato akce není propojena s externím systémem.",
+          "Unlink": "Zrušit propojení",
           "Provider": "Provider",
           "ExternalEventId": "Externí ID akce",
           "ApiKey": "Eventor API key",
@@ -306,6 +309,7 @@
           "NoResults": "Nebyla nalezena žádná odpovídající akce.",
           "Open": "Importovat z externího IS",
           "Hide": "Skrýt import",
+          "SaveLink": "Uložit propojení",
           "LoadPreview": "Načíst a předvyplnit formulář",
           "Placeholders": {
             "ExternalEventId": "např. 8300",
@@ -323,6 +327,9 @@
             "PrefillSuccess": "Formulář akce byl předvyplněn daty z externího systému.",
             "PrefillFailedTitle": "Import se nezdařil",
             "PrefillFailedDescription": "Nepodařilo se načíst data akce z externího systému.",
+            "LinkSaved": "Propojení s externí akcí bylo úspěšně uloženo.",
+            "LinkRemoved": "Propojení s externí akcí bylo úspěšně odstraněno.",
+            "LinkRemovedPendingSave": "Propojení s externí akcí bude odstraněno po uložení změn.",
             "SearchFailedTitle": "Vyhledání se nezdařilo",
             "SearchFailedDescription": "Nepodařilo se vyhledat akce v externím systému."
           }

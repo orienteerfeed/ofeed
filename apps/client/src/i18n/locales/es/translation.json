@@ -296,6 +296,9 @@
         "Import": {
           "Title": "Importar desde sistema externo",
           "Description": "Busca un evento por nombre o carga datos por ID externo para rellenar este formulario.",
+          "CurrentLink": "Vínculo actual",
+          "NoLink": "Este evento no está vinculado a ningún sistema externo.",
+          "Unlink": "Quitar vínculo",
           "Provider": "Proveedor",
           "ExternalEventId": "ID externo del evento",
           "ApiKey": "API key de Eventor",
@@ -306,6 +309,7 @@
           "NoResults": "No se encontraron eventos coincidentes.",
           "Open": "Importar desde sistema externo",
           "Hide": "Ocultar importación",
+          "SaveLink": "Guardar vínculo",
           "LoadPreview": "Cargar y rellenar formulario",
           "Placeholders": {
             "ExternalEventId": "p. ej. 8300",
@@ -323,6 +327,9 @@
             "PrefillSuccess": "El formulario se ha rellenado con datos del sistema externo.",
             "PrefillFailedTitle": "Importación fallida",
             "PrefillFailedDescription": "No se pudieron cargar datos del evento desde el proveedor externo.",
+            "LinkSaved": "El vínculo externo se guardó correctamente.",
+            "LinkRemoved": "El vínculo externo se eliminó correctamente.",
+            "LinkRemovedPendingSave": "El vínculo externo se eliminará después de guardar el evento.",
             "SearchFailedTitle": "Búsqueda fallida",
             "SearchFailedDescription": "No se pudieron buscar eventos en el proveedor externo."
           }

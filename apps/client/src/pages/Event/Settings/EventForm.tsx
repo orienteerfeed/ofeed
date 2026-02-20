@@ -3,6 +3,11 @@ import { Field, type AnyReactFormApi } from '@/components/organisms';
 import { Input, Select } from '@/components/atoms';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  formatStoredUtcTimeForInput,
+  localTimeToUtcTimeForStorage,
+  normalizeTimeInput,
+} from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
@@ -46,6 +51,7 @@ const GET_COUNTRIES = gql`
 interface EventFormProps {
   t: TFunction;
   initialData?: Partial<EventFormData> | null;
+  showExternalImportSection?: boolean;
   renderSubmitButton?: (props: {
     isSubmitting: boolean;
     canSubmit: boolean;
@@ -106,40 +112,10 @@ const normalizeDateInputValue = (value?: string): string | undefined => {
   return undefined;
 };
 
-const normalizeDateTimeInputValue = (
-  value?: string,
-  fallbackDate?: string
-): string | undefined => {
-  if (!value && fallbackDate) {
-    return `${fallbackDate}T00:00`;
-  }
-
-  if (!value) return undefined;
-
-  const trimmed = value.trim();
-  const directMatch = trimmed.match(
-    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/
-  );
-
-  if (directMatch) {
-    return `${directMatch[1]}-${directMatch[2]}-${directMatch[3]}T${directMatch[4]}:${directMatch[5]}`;
-  }
-
-  const parsedDate = new Date(trimmed);
-  if (!Number.isNaN(parsedDate.getTime())) {
-    return parsedDate.toISOString().slice(0, 16);
-  }
-
-  if (fallbackDate) {
-    return `${fallbackDate}T00:00`;
-  }
-
-  return undefined;
-};
-
 // Helper function to convert EventFormData to EventFormValues
 const convertToFormValues = (
-  event: Partial<EventFormData>
+  event: Partial<EventFormData>,
+  fallbackTimezone: string
 ): EventFormValues => ({
   eventName: event.name || '',
   sportId: event.sportId?.toString() || '',
@@ -150,7 +126,14 @@ const convertToFormValues = (
   latitude: event.latitude?.toString() || '',
   longitude: event.longitude?.toString() || '',
   countryCode: event.countryCode || '',
-  zeroTime: event.zeroTime || '',
+  zeroTime:
+    event.zeroTime && event.date
+      ? formatStoredUtcTimeForInput(
+          event.zeroTime,
+          event.date,
+          event.timezone || fallbackTimezone
+        )
+      : event.zeroTime || '',
   ranking: event.ranking || false,
   coefRanking: event.coefRanking?.toString() || '',
   relay: event.relay || false,
@@ -194,6 +177,7 @@ const ReactiveField: React.FC<ReactiveFieldProps> = ({
 export const EventForm: React.FC<EventFormProps> = ({
   t,
   initialData = null,
+  showExternalImportSection = true,
   renderSubmitButton,
 }) => {
   const navigate = useNavigate();
@@ -201,15 +185,24 @@ export const EventForm: React.FC<EventFormProps> = ({
   const request = useRequest();
   const imageRequest = useRequest();
   const isCreateMode = !initialData?.id;
+  const userTimezone = React.useMemo(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    []
+  );
+  const initialExternalSource = initialData?.externalSource ?? null;
+  const initialExternalEventId = initialData?.externalEventId ?? null;
   const apiPostRef = React.useRef(post);
 
   const [featuredImage, setFeaturedImage] = React.useState<File | null>(null);
   const [isDraggingImage, setIsDraggingImage] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [externalProvider, setExternalProvider] =
-    React.useState<ExternalProvider>('ORIS');
-  const [externalEventId, setExternalEventId] = React.useState('');
+  const [externalProvider, setExternalProvider] = React.useState<ExternalProvider>(
+    initialExternalSource ?? 'ORIS'
+  );
+  const [externalEventId, setExternalEventId] = React.useState(
+    initialExternalEventId ?? ''
+  );
   const [externalApiKey, setExternalApiKey] = React.useState('');
   const [externalSearchQuery, setExternalSearchQuery] = React.useState('');
   const [externalSearchResults, setExternalSearchResults] = React.useState<
@@ -221,16 +214,30 @@ export const EventForm: React.FC<EventFormProps> = ({
   const [showExternalSearchResults, setShowExternalSearchResults] =
     React.useState(false);
   const [isImportPanelOpen, setIsImportPanelOpen] = React.useState(false);
+  const [isExternalLinkCleared, setIsExternalLinkCleared] =
+    React.useState(false);
   const [importedExternalSource, setImportedExternalSource] =
-    React.useState<ExternalProvider | null>(null);
+    React.useState<ExternalProvider | null>(initialExternalSource);
   const [importedExternalEventId, setImportedExternalEventId] =
-    React.useState<string | null>(null);
+    React.useState<string | null>(initialExternalEventId);
   const latestSearchIdRef = React.useRef(0);
   const externalSearchTimeoutRef = React.useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
 
   const isEventorProvider = externalProvider === 'EVENTOR';
+  const hasSelectedExternalLink = Boolean(
+    importedExternalSource && importedExternalEventId
+  );
+  const effectiveExternalSource = isExternalLinkCleared
+    ? null
+    : importedExternalSource;
+  const effectiveExternalEventId = isExternalLinkCleared
+    ? null
+    : importedExternalEventId;
+  const hasEffectiveExternalLink = Boolean(
+    effectiveExternalSource && effectiveExternalEventId
+  );
 
   const maxFeaturedImageSize = 2 * 1024 * 1024;
   const allowedFeaturedImageTypes = new Set([
@@ -267,8 +274,6 @@ export const EventForm: React.FC<EventFormProps> = ({
     setExternalSearchResults([]);
     setShowExternalSearchResults(false);
     setIsSearchingExternal(false);
-    setImportedExternalSource(null);
-    setImportedExternalEventId(null);
     clearExternalSearchTimeout();
   }, [clearExternalSearchTimeout, externalProvider]);
 
@@ -369,7 +374,7 @@ export const EventForm: React.FC<EventFormProps> = ({
       clearExternalSearchTimeout();
 
       const query = rawQuery.trim();
-      if (!isCreateMode || !isImportPanelOpen) {
+      if (!isImportPanelOpen) {
         return;
       }
 
@@ -384,11 +389,11 @@ export const EventForm: React.FC<EventFormProps> = ({
         void runExternalSearch(query, 'auto');
       }, 350);
     },
-    [clearExternalSearchTimeout, isCreateMode, isImportPanelOpen, runExternalSearch]
+    [clearExternalSearchTimeout, isImportPanelOpen, runExternalSearch]
   );
 
   useEffect(() => {
-    if (!isCreateMode || !isImportPanelOpen || !showExternalSearchResults) {
+    if (!isImportPanelOpen || !showExternalSearchResults) {
       return;
     }
 
@@ -400,7 +405,6 @@ export const EventForm: React.FC<EventFormProps> = ({
     externalApiKey,
     externalProvider,
     externalSearchQuery,
-    isCreateMode,
     isImportPanelOpen,
     scheduleExternalSearch,
     showExternalSearchResults,
@@ -586,12 +590,17 @@ export const EventForm: React.FC<EventFormProps> = ({
     if (!value) {
       return t('validation.required', 'Zero time is required');
     }
+
+    if (!normalizeTimeInput(value)) {
+      return t('validation.time', 'Time must be in HH:mm or HH:mm:ss format');
+    }
+
     return undefined;
   };
 
   const form = useForm({
     defaultValues: initialData
-      ? convertToFormValues(initialData)
+      ? convertToFormValues(initialData, userTimezone)
       : {
           eventName: '',
           sportId: '',
@@ -649,8 +658,35 @@ export const EventForm: React.FC<EventFormProps> = ({
       const url = initialData?.id
         ? ENDPOINTS.eventDetail(initialData.id)
         : ENDPOINTS.events();
+      const externalSourcePayload = isExternalLinkCleared
+        ? null
+        : hasSelectedExternalLink
+          ? effectiveExternalSource
+          : undefined;
+      const externalEventIdPayload = isExternalLinkCleared
+        ? null
+        : hasSelectedExternalLink
+          ? effectiveExternalEventId
+          : undefined;
+      const normalizedZeroTime = localTimeToUtcTimeForStorage(
+        value.zeroTime,
+        value.date,
+        value.timezone || userTimezone
+      );
 
       let savedEventId: string | undefined;
+
+      if (!normalizedZeroTime) {
+        toast({
+          title: t('Operations.Error', { ns: 'common' }),
+          description: t(
+            'Pages.Event.Form.Toast.InvalidZeroTime',
+            'Unable to parse start time. Use HH:mm or HH:mm:ss format.'
+          ),
+          variant: 'error',
+        });
+        return;
+      }
 
       try {
         await request.request(url, {
@@ -668,7 +704,7 @@ export const EventForm: React.FC<EventFormProps> = ({
               ? parseFloat(value.longitude)
               : undefined,
             countryCode: value.countryCode || undefined,
-            zeroTime: value.zeroTime,
+            zeroTime: normalizedZeroTime,
             ranking: value.ranking,
             coefRanking: value.coefRanking
               ? parseFloat(value.coefRanking)
@@ -676,8 +712,8 @@ export const EventForm: React.FC<EventFormProps> = ({
             relay: value.relay,
             published: value.published,
             hundredthPrecision: value.hundredthPrecision,
-            externalSource: importedExternalSource || undefined,
-            externalEventId: importedExternalEventId || undefined,
+            externalSource: externalSourcePayload,
+            externalEventId: externalEventIdPayload,
           }),
           onSuccess: (response: unknown) => {
             toast({
@@ -809,10 +845,9 @@ export const EventForm: React.FC<EventFormProps> = ({
       form.setFieldValue('countryCode', draft.countryCode.toUpperCase());
     }
 
-    const normalizedZeroTime = normalizeDateTimeInputValue(
-      draft.zeroTime,
-      normalizedDate
-    );
+    const normalizedZeroTime =
+      normalizeTimeInput(draft.zeroTime) ??
+      (normalizedDate ? '00:00:00' : undefined);
     if (normalizedZeroTime) {
       form.setFieldValue('zeroTime', normalizedZeroTime);
     }
@@ -891,6 +926,7 @@ export const EventForm: React.FC<EventFormProps> = ({
       applyImportedDraft(payload.data);
       setImportedExternalSource(payload.data.provider ?? externalProvider);
       setImportedExternalEventId(payload.data.externalEventId ?? trimmedId);
+      setIsExternalLinkCleared(false);
 
       toast({
         title: t('Operations.Success', { ns: 'common' }),
@@ -931,6 +967,23 @@ export const EventForm: React.FC<EventFormProps> = ({
     void handleExternalPreviewLoad(selectedExternalEventId);
   };
 
+  const handleClearExternalLink = () => {
+    setIsExternalLinkCleared(true);
+    setImportedExternalSource(null);
+    setImportedExternalEventId(null);
+    setExternalSearchResults([]);
+    setShowExternalSearchResults(false);
+    setExternalSearchQuery('');
+    setExternalEventId('');
+    toast({
+      title: t('Operations.Success', { ns: 'common' }),
+      description: t(
+        'Pages.Event.Form.Import.Toast.LinkRemovedPendingSave',
+        'External event link will be removed after saving the event.'
+      ),
+    });
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -961,36 +1014,66 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">
-      {isCreateMode && (
-        <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-semibold">
-                {t('Pages.Event.Form.Import.Title', 'Import from external IS')}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  'Pages.Event.Form.Import.Description',
-                  'Search event by name or load by external event ID and prefill this form.'
-                )}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsImportPanelOpen(current => !current)}
-            >
-              {isImportPanelOpen
-                ? t('Pages.Event.Form.Import.Hide', 'Hide import')
-                : t(
-                    'Pages.Event.Form.Import.Open',
-                    'Import from external IS'
-                  )}
-            </Button>
+      {showExternalImportSection && (
+      <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">
+              {t('Pages.Event.Form.Import.Title', 'Import from external IS')}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                'Pages.Event.Form.Import.Description',
+                'Search event by name or load by external event ID and prefill this form.'
+              )}
+            </p>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsImportPanelOpen(current => !current)}
+          >
+            {isImportPanelOpen
+              ? t('Pages.Event.Form.Import.Hide', 'Hide import')
+              : t(
+                  'Pages.Event.Form.Import.Open',
+                  'Import from external IS'
+                )}
+          </Button>
+        </div>
 
-          {isImportPanelOpen && (
-            <>
+        {!isCreateMode && (
+          <div className="flex flex-col gap-2 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              {hasEffectiveExternalLink ? (
+                <>
+                  {t('Pages.Event.Form.Import.CurrentLink', 'Current link')}:{' '}
+                  <span className="font-medium text-foreground">
+                    {`${effectiveExternalSource} • ${effectiveExternalEventId}`}
+                  </span>
+                </>
+              ) : (
+                t(
+                  'Pages.Event.Form.Import.NoLink',
+                  'This event is not linked to any external system.'
+                )
+              )}
+            </p>
+            {hasEffectiveExternalLink && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleClearExternalLink}
+              >
+                {t('Pages.Event.Form.Import.Unlink', 'Remove link')}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {isImportPanelOpen && (
+          <>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">
@@ -998,9 +1081,11 @@ export const EventForm: React.FC<EventFormProps> = ({
                   </Label>
                   <Select
                     value={externalProvider}
-                    onValueChange={value =>
+                    onValueChange={value => {
                       setExternalProvider(value as ExternalProvider)
-                    }
+                      setImportedExternalSource(null);
+                      setImportedExternalEventId(null);
+                    }}
                     options={[
                       {
                         value: 'ORIS',
@@ -1030,6 +1115,7 @@ export const EventForm: React.FC<EventFormProps> = ({
                       setExternalEventId(e.target.value);
                       setImportedExternalSource(null);
                       setImportedExternalEventId(null);
+                      setIsExternalLinkCleared(false);
                     }}
                     placeholder={t(
                       'Pages.Event.Form.Import.Placeholders.ExternalEventId',
@@ -1186,7 +1272,7 @@ export const EventForm: React.FC<EventFormProps> = ({
               </div>
             </>
           )}
-        </div>
+      </div>
       )}
 
       {/* Základní informace - 2 sloupce */}
@@ -1417,7 +1503,8 @@ export const EventForm: React.FC<EventFormProps> = ({
           <ReactiveField
             form={form}
             name="zeroTime"
-            type="datetime-local"
+            type="time"
+            step="1"
             validate={validateZeroTime}
             className="w-full"
           />

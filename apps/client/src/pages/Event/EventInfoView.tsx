@@ -2,7 +2,11 @@ import { EventorIcon, OrisIcon } from '@/assets/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDate, formatTimeToHms, getLocaleKey } from '@/lib/date';
+import {
+  formatDate,
+  formatStoredUtcTimeForTimezone,
+  getLocaleKey,
+} from '@/lib/date';
 import {
   buildExternalEventUrl,
   externalEventSystems,
@@ -124,7 +128,11 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                 {event.zeroTime && (
                   <div className="text-sm text-muted-foreground mt-1">
                     {t('Pages.Event.Detail.ZeroTime')}:{' '}
-                    {formatTimeToHms(event.zeroTime)}
+                    {formatStoredUtcTimeForTimezone(
+                      event.zeroTime,
+                      event.date,
+                      event.timezone || 'UTC'
+                    )}
                   </div>
                 )}
               </div>
@@ -221,7 +229,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                         aria-label={t('Pages.Event.Detail.OpenInExternalSystem', {
                           provider: externalProviderLabel,
                         })}
-                        className="inline-flex h-full items-center justify-center"
+                        className="inline-flex items-center justify-center"
                       >
                         <ExternalProviderLogo />
                       </a>

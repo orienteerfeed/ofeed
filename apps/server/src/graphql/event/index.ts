@@ -7,6 +7,7 @@ import { EVENT_OPENAPI } from '../../modules/event/event.openapi.js';
 import { getDecryptedEventPassword } from '../../modules/event/event.service.js';
 import { requireEventOwner } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
+import { normalizeUtcTimeString } from '../../utils/time.js';
 
 export { resolvers, typeDef };
 
@@ -56,6 +57,7 @@ const resolvers = {
       }
       return decryptedPassword;
     },
+    zeroTime: parent => normalizeUtcTimeString(parent.zeroTime) ?? "00:00:00",
     featuredImage: (parent) => buildPublicImageUrl(parent.featuredImageKey, parent.id),
   },
 };

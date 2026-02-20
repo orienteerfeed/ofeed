@@ -1,5 +1,6 @@
 import type { Locale } from 'date-fns';
-import { format, formatDuration, parseISO } from 'date-fns';
+import { format, formatDuration, isValid, parse, parseISO } from 'date-fns';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import { cs, de, enGB, es, sv } from 'date-fns/locale';
 
 export const DATE_FORMATS = {
@@ -12,6 +13,9 @@ export const DATE_FORMATS = {
 
 export type LocaleKey = 'cs' | 'enGB' | 'es' | 'de' | 'sv';
 const LOCALES: Record<LocaleKey, Locale> = { cs, enGB, es, de, sv };
+const TIME_HH_MM_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+const TIME_HH_MM_SS_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+const ISO_DATE_PREFIX_PATTERN = /^(\d{4}-\d{2}-\d{2})/;
 
 export function getLocaleKey(language?: string): LocaleKey {
   if (!language) return 'cs';
@@ -75,8 +79,112 @@ export function formatDateWithDay(
 
 export function formatTimeToHms(value: Date | string | number): string {
   const d = parseDate(value);
+  if (!d && typeof value === 'string') {
+    return normalizeTimeInput(value) ?? '';
+  }
   if (!d) return '';
   return format(d, DATE_FORMATS.timeHms);
+}
+
+export function normalizeTimeInput(value?: string): string | undefined {
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+
+  if (TIME_HH_MM_SS_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (TIME_HH_MM_PATTERN.test(trimmed)) {
+    return `${trimmed}:00`;
+  }
+
+  const parsedIso = parseISO(trimmed);
+  if (isValid(parsedIso)) {
+    return formatInTimeZone(parsedIso, 'UTC', DATE_FORMATS.timeHms);
+  }
+
+  const fallbackFormats = [
+    'yyyy-MM-dd HH:mm:ss',
+    'yyyy-MM-dd HH:mm',
+    'dd.MM.yyyy HH:mm:ss',
+    'dd.MM.yyyy HH:mm',
+  ];
+
+  for (const fallbackFormat of fallbackFormats) {
+    const parsedFallback = parse(trimmed, fallbackFormat, new Date());
+    if (isValid(parsedFallback)) {
+      return format(parsedFallback, DATE_FORMATS.timeHms);
+    }
+  }
+
+  return undefined;
+}
+
+function extractIsoDatePart(value: Date | string | number): string | null {
+  if (typeof value === 'string') {
+    const directMatch = value.trim().match(ISO_DATE_PREFIX_PATTERN);
+    if (directMatch) {
+      return directMatch[1] ?? null;
+    }
+  }
+
+  const parsed = parseDate(value);
+  if (!parsed) return null;
+
+  return formatInTimeZone(parsed, 'UTC', 'yyyy-MM-dd');
+}
+
+function buildUtcDateFromStoredTime(
+  utcTime: string,
+  eventDate: Date | string | number
+): Date | null {
+  const normalizedUtcTime = normalizeTimeInput(utcTime);
+  const eventDatePart = extractIsoDatePart(eventDate);
+  if (!normalizedUtcTime || !eventDatePart) return null;
+
+  const date = parseISO(`${eventDatePart}T${normalizedUtcTime}Z`);
+  if (!isValid(date)) return null;
+
+  return date;
+}
+
+export function localTimeToUtcTimeForStorage(
+  localTime: string,
+  eventDate: Date | string | number,
+  userTimezone: string
+): string | undefined {
+  const normalizedLocalTime = normalizeTimeInput(localTime);
+  const eventDatePart = extractIsoDatePart(eventDate);
+  if (!normalizedLocalTime || !eventDatePart) return undefined;
+
+  const localDateTime = `${eventDatePart}T${normalizedLocalTime}`;
+  const utcDate = fromZonedTime(localDateTime, userTimezone);
+
+  return formatInTimeZone(utcDate, 'UTC', DATE_FORMATS.timeHms);
+}
+
+export function formatStoredUtcTimeForInput(
+  utcTime: string,
+  eventDate: Date | string | number,
+  userTimezone: string
+): string {
+  const utcDate = buildUtcDateFromStoredTime(utcTime, eventDate);
+  if (!utcDate) return '';
+
+  return formatInTimeZone(utcDate, userTimezone, DATE_FORMATS.timeHms);
+}
+
+export function formatStoredUtcTimeForTimezone(
+  utcTime: string,
+  eventDate: Date | string | number,
+  timezone: string
+): string {
+  const utcDate = buildUtcDateFromStoredTime(utcTime, eventDate);
+  if (!utcDate) return '';
+
+  return formatInTimeZone(utcDate, timezone, DATE_FORMATS.timeHms);
 }
 
 export function formatTimestamp(

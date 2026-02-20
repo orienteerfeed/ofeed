@@ -23,6 +23,7 @@ import {
 } from '../../utils/authz.js';
 import { createCompetitorSchema, updateCompetitorSchema } from '../../utils/validateCompetitor.js';
 import eventWriteSchema from '../../utils/validateEvent.js';
+import { normalizeUtcTimeString, toPrismaTimeDate } from '../../utils/time.js';
 import { encodeBase64, encrypt } from '../../lib/crypto/encryption.js';
 import { formatErrors } from '../../utils/errors.js';
 import {
@@ -497,8 +498,8 @@ const generatePassword = (wordCount = 3) => {
  *                example: US
  *              zeroTime:
  *                type: string
- *                format: date-time
- *                description: The event's zero time (reference time point).
+ *                pattern: '^([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d)?$'
+ *                description: Event start time in UTC (HH:mm or HH:mm:ss).
  *              published:
  *                type: boolean
  *                description: Whether the event is published or not.
@@ -575,6 +576,12 @@ router.post(
   // Everything went fine.
   try {
     const dateTime = new Date(date);
+    const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
+
+    if (!normalizedZeroTime) {
+      throw new ValidationError("Invalid zero time. Expected HH:mm or HH:mm:ss.");
+    }
+
     const insertedEventId = await prisma.event.create({
       data: {
         name,
@@ -585,7 +592,7 @@ router.post(
         latitude,
         longitude,
         countryId: countryCode,
-        zeroTime: new Date(zeroTime),
+        zeroTime: toPrismaTimeDate(normalizedZeroTime),
         ranking,
         coefRanking,
         startMode,
@@ -598,7 +605,18 @@ router.post(
         authorId: userId,
       },
     });
-    return res.status(200).json(successResponse('OK', { data: insertedEventId }, res.statusCode));
+    return res.status(200).json(
+      successResponse(
+        'OK',
+        {
+          data: {
+            ...insertedEventId,
+            zeroTime: normalizeUtcTimeString(insertedEventId.zeroTime),
+          },
+        },
+        res.statusCode,
+      ),
+    );
   } catch (error) {
     if (error instanceof ValidationError) {
       return res.status(422).json(validationResponse(error.message, res.statusCode));
@@ -788,8 +806,8 @@ router.post("/:eventId/image", routeWithValidation(
  *                example: US
  *              zeroTime:
  *                type: string
- *                format: date-time
- *                description: The event's zero time (reference time point).
+ *                pattern: '^([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d)?$'
+ *                description: Event start time in UTC (HH:mm or HH:mm:ss).
  *              published:
  *                type: boolean
  *                description: Whether the event is published or not.
@@ -870,6 +888,11 @@ router.put(
   const { userId } = ownership;
 
   try {
+    const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
+    if (!normalizedZeroTime) {
+      throw new ValidationError("Invalid zero time. Expected HH:mm or HH:mm:ss.");
+    }
+
     // TODO: Add permission checks to ensure the user is allowed to edit the event
 
     // 🔥 Normalize latitude and longitude
@@ -888,7 +911,7 @@ router.put(
         latitude: dbLatitude,
         longitude: dbLongitude,
         countryId: country,
-        zeroTime: new Date(zeroTime),
+        zeroTime: toPrismaTimeDate(normalizedZeroTime),
         ranking,
         coefRanking,
         startMode,
@@ -901,7 +924,18 @@ router.put(
       },
     });
 
-    return res.status(200).json(successResponse('OK', { data: updatedEvent }, res.statusCode));
+    return res.status(200).json(
+      successResponse(
+        'OK',
+        {
+          data: {
+            ...updatedEvent,
+            zeroTime: normalizeUtcTimeString(updatedEvent.zeroTime),
+          },
+        },
+        res.statusCode,
+      ),
+    );
   } catch (error) {
     if (error instanceof ValidationError) {
       return res.status(422).json(validationResponse(error.message, res.statusCode));

@@ -405,9 +405,9 @@ function normalizeDate(value: string | undefined): string | undefined {
   return undefined;
 }
 
-function normalizeDateTime(value: string | undefined, fallbackDate?: string): string | undefined {
+function normalizeTime(value: string | undefined, fallbackDate?: string): string | undefined {
   if (!value && fallbackDate) {
-    return `${fallbackDate}T00:00`;
+    return "00:00:00";
   }
 
   if (!value) {
@@ -415,29 +415,33 @@ function normalizeDateTime(value: string | undefined, fallbackDate?: string): st
   }
 
   const trimmed = value.trim();
-  const directMatch = trimmed.match(
-    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/,
-  );
+  const directTime = trimmed.match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (directTime) {
+    const seconds = directTime[3] ? directTime[3] : "00";
+    return `${directTime[1]}:${directTime[2]}:${seconds}`;
+  }
+
+  const directMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
   if (directMatch) {
-    return `${directMatch[1]}-${directMatch[2]}-${directMatch[3]}T${directMatch[4]}:${directMatch[5]}`;
+    const seconds = directMatch[6] ? directMatch[6] : "00";
+    return `${directMatch[4]}:${directMatch[5]}:${seconds}`;
   }
 
   const dottedMatch = trimmed.match(
-    /^(\d{1,2})\.(\d{1,2})\.(\d{4})[ T](\d{2}):(\d{2})/,
+    /^(\d{1,2})\.(\d{1,2})\.(\d{4})[ T](\d{2}):(\d{2})(?::(\d{2}))?/,
   );
   if (dottedMatch) {
-    const day = dottedMatch[1].padStart(2, "0");
-    const month = dottedMatch[2].padStart(2, "0");
-    return `${dottedMatch[3]}-${month}-${day}T${dottedMatch[4]}:${dottedMatch[5]}`;
+    const seconds = dottedMatch[6] ? dottedMatch[6] : "00";
+    return `${dottedMatch[4]}:${dottedMatch[5]}:${seconds}`;
   }
 
   const parsedDate = new Date(trimmed);
   if (!Number.isNaN(parsedDate.getTime())) {
-    return parsedDate.toISOString().slice(0, 16);
+    return parsedDate.toISOString().slice(11, 19);
   }
 
   if (fallbackDate) {
-    return `${fallbackDate}T00:00`;
+    return "00:00:00";
   }
 
   return undefined;
@@ -902,7 +906,7 @@ export async function loadExternalEventPreview(body: EventImportPreviewBody): Pr
     latitude: selected.latitude,
     longitude: selected.longitude,
     countryCode,
-    zeroTime: normalizeDateTime(selected.zeroTimeRaw, date),
+    zeroTime: normalizeTime(selected.zeroTimeRaw, date),
     ranking: selected.ranking ?? false,
     coefRanking: selected.coefRanking,
     relay: selected.relay ?? false,

@@ -2,7 +2,6 @@ import { config } from '@/config';
 import {
   formatDate,
   formatDateForInput,
-  formatDateTimeForInput,
 } from '@/lib/utils';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
@@ -17,6 +16,7 @@ import { NotAuthorizedPage } from '../../../pages';
 import { MainPageLayout } from '../../../templates/MainPageLayout';
 import { Event, EventFormData } from '../../../types';
 import { DangerZoneCard } from './DangerZoneCard';
+import { EventExternalLinkCard } from './EventExternalLinkCard';
 import { EventInfoCard } from './EventInfoCard';
 import { EventIntegrationsCard } from './EventIntegrationsCard';
 import { EventLinkCard } from './EventLinkCard';
@@ -45,6 +45,8 @@ export const GET_EVENT = gql`
       date
       timezone
       zeroTime
+      externalSource
+      externalEventId
       ranking
       coefRanking
       startMode
@@ -72,7 +74,7 @@ export const EventSettingsPage = () => {
   const [password, setPassword] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
 
-  const { loading, error, data } = useQuery<EventData>(GET_EVENT, {
+  const { loading, error, data, refetch } = useQuery<EventData>(GET_EVENT, {
     variables: { eventId },
   });
 
@@ -110,12 +112,18 @@ export const EventSettingsPage = () => {
         latitude: data.event.latitude,
         longitude: data.event.longitude,
         countryCode: data.event.country?.countryCode || '',
-        zeroTime: formatDateTimeForInput(data.event.zeroTime ?? ''),
+        zeroTime: data.event.zeroTime ?? '',
         ranking: data.event.ranking || false,
         coefRanking: data.event.coefRanking,
         relay: data.event.relay || false,
         hundredthPrecision: data.event.hundredthPrecision || false,
         published: data.event.published || false,
+        ...(data.event.externalSource
+          ? { externalSource: data.event.externalSource }
+          : {}),
+        ...(data.event.externalEventId
+          ? { externalEventId: data.event.externalEventId }
+          : {}),
       }
     : null;
 
@@ -162,6 +170,16 @@ export const EventSettingsPage = () => {
             {/* Left Column */}
             <div className="break-inside-avoid">
               <EventInfoCard t={t} initialData={initialData} />
+            </div>
+            <div className="break-inside-avoid">
+              <EventExternalLinkCard
+                t={t}
+                eventId={eventId}
+                initialData={initialData}
+                onUpdated={async () => {
+                  await refetch();
+                }}
+              />
             </div>
             {/* Middle Column */}
             <div className="break-inside-avoid">

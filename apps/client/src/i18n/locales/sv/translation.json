@@ -296,6 +296,9 @@
         "Import": {
           "Title": "Importera från externt system",
           "Description": "Sök tävling efter namn eller ladda data via externt id och förifyll formuläret.",
+          "CurrentLink": "Nuvarande länkning",
+          "NoLink": "Denna tävling är inte länkad till något externt system.",
+          "Unlink": "Ta bort länkning",
           "Provider": "Provider",
           "ExternalEventId": "Externt tävlings-id",
           "ApiKey": "Eventor API-nyckel",
@@ -306,6 +309,7 @@
           "NoResults": "Inga matchande tävlingar hittades.",
           "Open": "Importera från externt system",
           "Hide": "Dölj import",
+          "SaveLink": "Spara länkning",
           "LoadPreview": "Ladda och förifyll formulär",
           "Placeholders": {
             "ExternalEventId": "t.ex. 8300",
@@ -323,6 +327,9 @@
             "PrefillSuccess": "Formuläret har förifyllts med data från externt system.",
             "PrefillFailedTitle": "Import misslyckades",
             "PrefillFailedDescription": "Kunde inte läsa in tävlingsdata från extern leverantör.",
+            "LinkSaved": "Extern länkning sparades.",
+            "LinkRemoved": "Extern länkning togs bort.",
+            "LinkRemovedPendingSave": "Extern länkning tas bort när tävlingen sparas.",
             "SearchFailedTitle": "Sökning misslyckades",
             "SearchFailedDescription": "Kunde inte söka tävlingar i extern leverantör."
           }

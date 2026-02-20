@@ -18,6 +18,7 @@ const GET_EVENT = gql`
         name
       }
       date
+      timezone
       zeroTime
       externalSource
       externalEventId
