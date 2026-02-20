@@ -105,6 +105,9 @@ const envSchema = z.object({
   DATABASE_URL: z.string().default(DEFAULT_DATABASE_URL),
   JWT_TOKEN_SECRET_KEY: z.string().default("change-me-in-production"),
   ENCRYPTION_SECRET_KEY: z.string().optional(),
+  ORIS_API_BASE_URL: z.string().url().default("https://oris.orientacnisporty.cz/API/"),
+  EVENTOR_API_BASE_URL: z.string().url().default("https://eventor.orienteering.sport/api"),
+  EVENTOR_API_KEY: z.string().optional(),
 
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   CORS_METHODS: z.string().default("GET,HEAD,POST,PUT,DELETE,OPTIONS"),

@@ -39,10 +39,17 @@ import {
   storeCompetitor,
   updateCompetitor,
 } from './event.service.js';
+import {
+  ExternalImportError,
+  loadExternalEventPreview,
+  searchExternalEvents,
+} from './event.import.service.js';
 import type { Prisma } from "../../generated/prisma/client";
 import type { AppBindings } from "../../types";
 import {
   changelogQuerySchema,
+  eventImportPreviewBodySchema,
+  eventImportSearchBodySchema,
   externalCompetitorUpdateBodySchema,
   eventCompetitorExternalParamsSchema,
   eventCompetitorParamsSchema,
@@ -326,6 +333,50 @@ const getImageExtension = (format: "png" | "webp" | "jpeg") => {
 const createCompetitorBodySchema = createCompetitorSchema;
 const updateCompetitorBodySchema = updateCompetitorSchema;
 
+router.post(
+  "/import/search",
+  routeWithValidation(
+    { bodySchema: eventImportSearchBodySchema },
+    async ({ req, res }) => {
+      try {
+        const importedEvents = await searchExternalEvents(req.body);
+
+        return res
+          .status(200)
+          .json(successResponse('OK', { data: importedEvents }, res.statusCode));
+      } catch (error) {
+        if (error instanceof ExternalImportError) {
+          return res.status(error.statusCode).json(errorResponse(error.message, res.statusCode));
+        }
+
+        return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+      }
+    },
+  ),
+);
+
+router.post(
+  "/import/preview",
+  routeWithValidation(
+    { bodySchema: eventImportPreviewBodySchema },
+    async ({ req, res }) => {
+      try {
+        const importedEventPreview = await loadExternalEventPreview(req.body);
+
+        return res
+          .status(200)
+          .json(successResponse('OK', { data: importedEventPreview }, res.statusCode));
+      } catch (error) {
+        if (error instanceof ExternalImportError) {
+          return res.status(error.statusCode).json(errorResponse(error.message, res.statusCode));
+        }
+
+        return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+      }
+    },
+  ),
+);
+
 // Readable password generator for Node.js backend service
 const generatePassword = (wordCount = 3) => {
   const wordList = [
@@ -510,6 +561,8 @@ router.post(
     published,
     sportId,
     relay,
+    externalSource,
+    externalEventId,
   } = req.body;
 
   const userId = getNumericJwtUserId(req);
@@ -540,6 +593,8 @@ router.post(
         published,
         sportId,
         relay,
+        externalSource,
+        externalEventId,
         authorId: userId,
       },
     });
@@ -799,6 +854,8 @@ router.put(
     published,
     sportId,
     relay,
+    externalSource,
+    externalEventId,
   } = req.body;
 
   const ownership = await authorizeOwnedEvent(req, res, eventId, {
@@ -838,6 +895,8 @@ router.put(
         published,
         sportId,
         relay,
+        externalSource,
+        externalEventId,
         authorId: userId,
       },
     });

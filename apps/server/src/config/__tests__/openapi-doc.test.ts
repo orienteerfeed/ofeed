@@ -104,6 +104,20 @@ describe("openapi doc", () => {
       },
       {
         method: "post",
+        path: `${EVENT_OPENAPI.basePath}/import/search`,
+        contentType: "application/json",
+        properties: ["provider", "query", "apiKey", "limit"],
+        required: ["provider", "query"],
+      },
+      {
+        method: "post",
+        path: `${EVENT_OPENAPI.basePath}/import/preview`,
+        contentType: "application/json",
+        properties: ["provider", "externalEventId", "apiKey"],
+        required: ["provider", "externalEventId"],
+      },
+      {
+        method: "post",
         path: `${EVENT_OPENAPI.basePath}/revoke-password`,
         contentType: "application/json",
         properties: ["eventId"],

@@ -31,6 +31,21 @@ export const stateChangeBodySchema = z.object({
   status: z.enum(["Inactive", "Active", "DidNotStart", "Cancelled", "LateStart"]),
 });
 
+export const externalEventProviderSchema = z.enum(["ORIS", "EVENTOR"]);
+
+export const eventImportSearchBodySchema = z.object({
+  provider: externalEventProviderSchema,
+  query: z.string().trim().min(2).max(255),
+  apiKey: z.string().trim().min(1).max(255).optional(),
+  limit: z.coerce.number().int().min(1).max(20).optional(),
+});
+
+export const eventImportPreviewBodySchema = z.object({
+  provider: externalEventProviderSchema,
+  externalEventId: z.string().trim().min(1).max(128),
+  apiKey: z.string().trim().min(1).max(255).optional(),
+});
+
 export const externalCompetitorUpdateBodySchema = updateCompetitorSchema.extend({
   useExternalId: z.boolean(),
   classExternalId: z.string().max(191).optional().nullable(),
@@ -45,4 +60,7 @@ export type EventCompetitorExternalParams = z.infer<typeof eventCompetitorExtern
 export type ChangelogQuery = z.infer<typeof changelogQuerySchema>;
 export type GeneratePasswordBody = z.infer<typeof generatePasswordBodySchema>;
 export type StateChangeBody = z.infer<typeof stateChangeBodySchema>;
+export type ExternalEventProvider = z.infer<typeof externalEventProviderSchema>;
+export type EventImportSearchBody = z.infer<typeof eventImportSearchBodySchema>;
+export type EventImportPreviewBody = z.infer<typeof eventImportPreviewBodySchema>;
 export type ExternalCompetitorUpdateBody = z.infer<typeof externalCompetitorUpdateBodySchema>;

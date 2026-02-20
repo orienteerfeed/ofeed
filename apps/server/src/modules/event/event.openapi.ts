@@ -7,6 +7,8 @@ import {
 } from "../../config/openapi.helpers";
 import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types";
 import {
+  eventImportPreviewBodySchema,
+  eventImportSearchBodySchema,
   externalCompetitorUpdateBodySchema,
   generatePasswordBodySchema,
   stateChangeBodySchema,
@@ -55,6 +57,12 @@ const generatePasswordRequestBodySchema = zodToOpenApiSchema(
 const competitorStatusChangeBodySchema = zodToOpenApiSchema(
   stateChangeBodySchema,
 );
+const eventImportSearchRequestBodySchema = zodToOpenApiSchema(
+  eventImportSearchBodySchema,
+);
+const eventImportPreviewRequestBodySchema = zodToOpenApiSchema(
+  eventImportPreviewBodySchema,
+);
 const competitorUpdateBodySchema = zodToOpenApiSchema(updateCompetitorSchema);
 const competitorExternalUpdateRequestBodySchema = zodToOpenApiSchema(
   externalCompetitorUpdateBodySchema,
@@ -88,6 +96,37 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         401: okJson("Unauthorized"),
         422: okJson("Validation error"),
         500: okJson("Internal server error"),
+      },
+    },
+  },
+  [`${eventsBase}/import/search`]: {
+    post: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: "eventImportSearch",
+      summary: "Search events in external systems",
+      security: bearerOrBasicSecurity,
+      requestBody: jsonBody(eventImportSearchRequestBodySchema),
+      responses: {
+        200: okJson("External event search results", "legacy-no-meta"),
+        401: okJson("Unauthorized", "legacy-no-meta"),
+        422: okJson("Validation error", "legacy-no-meta"),
+        502: okJson("External provider error", "legacy-no-meta"),
+      },
+    },
+  },
+  [`${eventsBase}/import/preview`]: {
+    post: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: "eventImportPreview",
+      summary: "Load external event and map it to OFeed draft",
+      security: bearerOrBasicSecurity,
+      requestBody: jsonBody(eventImportPreviewRequestBodySchema),
+      responses: {
+        200: okJson("External event mapped to event draft", "legacy-no-meta"),
+        401: okJson("Unauthorized", "legacy-no-meta"),
+        404: okJson("External event not found", "legacy-no-meta"),
+        422: okJson("Validation error", "legacy-no-meta"),
+        502: okJson("External provider error", "legacy-no-meta"),
       },
     },
   },

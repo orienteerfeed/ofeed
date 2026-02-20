@@ -219,6 +219,7 @@
         "ZeroTime": "Zero time",
         "Location": "Location",
         "Organizer": "Organizer",
+        "OpenInExternalSystem": "Open in {{provider}}",
         "Classes": "Classes",
         "ShowAllClasses": "Show all classes",
         "ShowLessClasses": "Show fewer classes",
@@ -291,6 +292,40 @@
           "Longitude": "Enter longitude (e.g., 14.4378)",
           "Country": "Select country",
           "CoefRanking": "1.02"
+        },
+        "Import": {
+          "Title": "Import from external IS",
+          "Description": "Search event by name or load by external event ID and prefill this form.",
+          "Provider": "Provider",
+          "ExternalEventId": "External event ID",
+          "ApiKey": "Eventor API key",
+          "ApiKeyHelper": "API key is required for Eventor import and search.",
+          "SearchByName": "Search external events by name",
+          "MinCharacters": "Enter at least 2 characters to search.",
+          "Searching": "Searching...",
+          "NoResults": "No matching events found.",
+          "Open": "Import from external IS",
+          "Hide": "Hide import",
+          "LoadPreview": "Load and prefill form",
+          "Placeholders": {
+            "ExternalEventId": "e.g. 8300",
+            "ApiKey": "Enter Eventor API key",
+            "SearchByName": "Type at least 2 characters..."
+          },
+          "Providers": {
+            "ORIS": "ORIS",
+            "EVENTOR": "Eventor"
+          },
+          "Toast": {
+            "ExternalIdRequired": "External event ID is required.",
+            "EventorApiKeyRequired": "Eventor API key is required for Eventor provider.",
+            "InvalidResponse": "Unable to process imported event data.",
+            "PrefillSuccess": "Event form has been prefilled from external system.",
+            "PrefillFailedTitle": "Import failed",
+            "PrefillFailedDescription": "Unable to load event data from external provider.",
+            "SearchFailedTitle": "Search failed",
+            "SearchFailedDescription": "Unable to search events in external provider."
+          }
         },
         "Toast": {
           "CreateSuccess": "The event as created successfully!",

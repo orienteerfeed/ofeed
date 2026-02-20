@@ -49,6 +49,8 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}`,
   generateEventPassword: (): string => `${apiPrefix}/events/generate-password`,
   revokeEventPassword: (): string => `${apiPrefix}/events/revoke-password`,
+  searchExternalEvents: (): string => `${apiPrefix}/events/import/search`,
+  importEventPreview: (): string => `${apiPrefix}/events/import/preview`,
   deleteEventCompetitors: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}/competitors`,
   deleteEventData: (eventId: string | number): string =>

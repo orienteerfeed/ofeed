@@ -18,7 +18,16 @@ export const eventWriteSchema = z.object({
   coefRanking: z.coerce.number().optional().nullable(),
   countryCode: z.string().min(2).max(2).optional(),
   country: z.string().min(2).max(2).optional(),
-}).passthrough();
+  externalSource: z.enum(["ORIS", "EVENTOR"]).optional(),
+  externalEventId: z.string().min(1).max(128).optional(),
+}).refine(
+  value =>
+    Boolean(value.externalSource) === Boolean(value.externalEventId),
+  {
+    message: "externalSource and externalEventId must be provided together.",
+    path: ["externalSource"],
+  },
+).passthrough();
 
 export type EventWrite = z.infer<typeof eventWriteSchema>;
 

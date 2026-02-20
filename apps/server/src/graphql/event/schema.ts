@@ -1,4 +1,9 @@
 export const typeDef = /* GraphQL */ `
+  enum ExternalEventProvider {
+    ORIS
+    EVENTOR
+  }
+
   enum EventFilter {
     ALL
     TODAY
@@ -66,6 +71,8 @@ export const typeDef = /* GraphQL */ `
     organizer: String
     date: Date!
     timezone: String!
+    externalSource: ExternalEventProvider
+    externalEventId: String
     location: String
     latitude: Float
     longitude: Float

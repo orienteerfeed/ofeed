@@ -219,6 +219,7 @@
         "ZeroTime": "Čas startu",
         "Location": "Lokalita",
         "Organizer": "Pořadatel",
+        "OpenInExternalSystem": "Otevřít v {{provider}}",
         "Classes": "Kategorie",
         "ShowAllClasses": "Zobrazit všechny kategorie",
         "ShowLessClasses": "Zobrazit méně",
@@ -291,6 +292,40 @@
           "Longitude": "Zadej gps délku (např., 14.4378)",
           "Country": "Vyberte zemi",
           "CoefRanking": "1.02"
+        },
+        "Import": {
+          "Title": "Import z externího IS",
+          "Description": "Vyhledej akci podle názvu nebo načti data podle externího ID a předvyplň formulář.",
+          "Provider": "Provider",
+          "ExternalEventId": "Externí ID akce",
+          "ApiKey": "Eventor API key",
+          "ApiKeyHelper": "Pro import a vyhledávání v Eventoru je potřeba API key.",
+          "SearchByName": "Vyhledat externí akci podle názvu",
+          "MinCharacters": "Pro vyhledání zadej alespoň 2 znaky.",
+          "Searching": "Vyhledávám...",
+          "NoResults": "Nebyla nalezena žádná odpovídající akce.",
+          "Open": "Importovat z externího IS",
+          "Hide": "Skrýt import",
+          "LoadPreview": "Načíst a předvyplnit formulář",
+          "Placeholders": {
+            "ExternalEventId": "např. 8300",
+            "ApiKey": "Zadej Eventor API key",
+            "SearchByName": "Začni psát název akce..."
+          },
+          "Providers": {
+            "ORIS": "ORIS",
+            "EVENTOR": "Eventor"
+          },
+          "Toast": {
+            "ExternalIdRequired": "Externí ID akce je povinné.",
+            "EventorApiKeyRequired": "Pro provider Eventor je potřeba API key.",
+            "InvalidResponse": "Nepodařilo se zpracovat importovaná data akce.",
+            "PrefillSuccess": "Formulář akce byl předvyplněn daty z externího systému.",
+            "PrefillFailedTitle": "Import se nezdařil",
+            "PrefillFailedDescription": "Nepodařilo se načíst data akce z externího systému.",
+            "SearchFailedTitle": "Vyhledání se nezdařilo",
+            "SearchFailedDescription": "Nepodařilo se vyhledat akce v externím systému."
+          }
         },
         "Toast": {
           "CreateSuccess": "Akce byla úspěšně založena!",

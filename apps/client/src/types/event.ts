@@ -39,6 +39,8 @@ export interface Event {
   discipline?: EventDiscipline;
   zeroTime?: string; // ISO 8601
   timezone?: string; // IANA timezone (e.g., 'Europe/Prague', 'America/New_York')
+  externalSource?: 'ORIS' | 'EVENTOR';
+  externalEventId?: string;
   relay: boolean;
   ranking: boolean;
   coefRanking?: number;
@@ -105,6 +107,8 @@ export interface EventFormData {
   relay: boolean;
   hundredthPrecision: boolean;
   published: boolean;
+  externalSource?: 'ORIS' | 'EVENTOR';
+  externalEventId?: string;
 }
 
 // Helper types for form conversion

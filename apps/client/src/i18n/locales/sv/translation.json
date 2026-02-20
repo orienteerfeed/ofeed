@@ -219,6 +219,7 @@
         "ZeroTime": "Nolltid",
         "Location": "Plats",
         "Organizer": "Arrangör",
+        "OpenInExternalSystem": "Öppna i {{provider}}",
         "Classes": "Klasser",
         "ShowAllClasses": "Visa alla klasser",
         "ShowLessClasses": "Visa färre klasser",
@@ -291,6 +292,40 @@
           "Longitude": "Ange longitude (t.ex. 18.065205)",
           "Country": "Välj land",
           "CoefRanking": "1.02"
+        },
+        "Import": {
+          "Title": "Importera från externt system",
+          "Description": "Sök tävling efter namn eller ladda data via externt id och förifyll formuläret.",
+          "Provider": "Provider",
+          "ExternalEventId": "Externt tävlings-id",
+          "ApiKey": "Eventor API-nyckel",
+          "ApiKeyHelper": "API-nyckel krävs för import och sökning i Eventor.",
+          "SearchByName": "Sök externa tävlingar efter namn",
+          "MinCharacters": "Ange minst 2 tecken för att söka.",
+          "Searching": "Söker...",
+          "NoResults": "Inga matchande tävlingar hittades.",
+          "Open": "Importera från externt system",
+          "Hide": "Dölj import",
+          "LoadPreview": "Ladda och förifyll formulär",
+          "Placeholders": {
+            "ExternalEventId": "t.ex. 8300",
+            "ApiKey": "Ange Eventor API-nyckel",
+            "SearchByName": "Skriv minst 2 tecken..."
+          },
+          "Providers": {
+            "ORIS": "ORIS",
+            "EVENTOR": "Eventor"
+          },
+          "Toast": {
+            "ExternalIdRequired": "Externt tävlings-id är obligatoriskt.",
+            "EventorApiKeyRequired": "Eventor API-nyckel krävs för Eventor-provider.",
+            "InvalidResponse": "Kunde inte bearbeta importerad tävlingsdata.",
+            "PrefillSuccess": "Formuläret har förifyllts med data från externt system.",
+            "PrefillFailedTitle": "Import misslyckades",
+            "PrefillFailedDescription": "Kunde inte läsa in tävlingsdata från extern leverantör.",
+            "SearchFailedTitle": "Sökning misslyckades",
+            "SearchFailedDescription": "Kunde inte söka tävlingar i extern leverantör."
+          }
         },
         "Toast": {
           "CreateSuccess": "Tävlingen har skapats!",

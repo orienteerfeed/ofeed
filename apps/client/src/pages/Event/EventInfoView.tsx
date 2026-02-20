@@ -1,9 +1,22 @@
+import { EventorIcon, OrisIcon } from '@/assets/icons';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatTimeToHms, getLocaleKey } from '@/lib/date';
+import {
+  buildExternalEventUrl,
+  externalEventSystems,
+  type ExternalEventSystemProvider,
+} from '@/lib/paths/externalLinks';
 import { Event } from '@/types/event';
 import { Link } from '@tanstack/react-router';
-import { Calendar, Clock, MapPin, Trophy, Users } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CountryFlag } from '../../components/atoms';
@@ -21,6 +34,17 @@ export function EventInfoView({ event }: EventInfoViewProps) {
     if (!event.classes) return [];
     return [...event.classes].sort((a, b) => a.name.localeCompare(b.name));
   }, [event.classes]);
+
+  const externalProvider: ExternalEventSystemProvider =
+    event.externalSource === 'EVENTOR' ? 'EVENTOR' : 'ORIS';
+  const externalEventUrl = buildExternalEventUrl(
+    event.externalSource,
+    event.externalEventId
+  );
+  const externalProviderLabel = externalEventSystems[externalProvider].label;
+  const ExternalProviderLogo =
+    externalProvider === 'EVENTOR' ? EventorIcon : OrisIcon;
+
   // Helper function to determine badge variant based on event status
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -138,6 +162,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                 </div>
               </div>
             )}
+
           </div>
 
           {/* Rest of the content remains in single column */}
@@ -182,6 +207,27 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                     ))}
                   </div>
                 </div>
+                {externalEventUrl && (
+                  <div className="mt-3">
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="px-3 [&_svg]:h-5 [&_svg]:w-auto"
+                    >
+                      <a
+                        href={externalEventUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={t('Pages.Event.Detail.OpenInExternalSystem', {
+                          provider: externalProviderLabel,
+                        })}
+                        className="inline-flex h-full items-center justify-center"
+                      >
+                        <ExternalProviderLogo />
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -219,6 +219,7 @@
         "ZeroTime": "Hora cero",
         "Location": "Ubicación",
         "Organizer": "Organizador",
+        "OpenInExternalSystem": "Abrir en {{provider}}",
         "Classes": "Categorías",
         "ShowAllClasses": "Ver todas las categorías",
         "ShowLessClasses": "Ver menos",
@@ -291,6 +292,40 @@
           "Longitude": "Introduzca la longitud (p.ej., 14.4378)",
           "Country": "Seleccione un país",
           "CoefRanking": "1.02"
+        },
+        "Import": {
+          "Title": "Importar desde sistema externo",
+          "Description": "Busca un evento por nombre o carga datos por ID externo para rellenar este formulario.",
+          "Provider": "Proveedor",
+          "ExternalEventId": "ID externo del evento",
+          "ApiKey": "API key de Eventor",
+          "ApiKeyHelper": "La API key es obligatoria para importar y buscar en Eventor.",
+          "SearchByName": "Buscar eventos externos por nombre",
+          "MinCharacters": "Introduce al menos 2 caracteres para buscar.",
+          "Searching": "Buscando...",
+          "NoResults": "No se encontraron eventos coincidentes.",
+          "Open": "Importar desde sistema externo",
+          "Hide": "Ocultar importación",
+          "LoadPreview": "Cargar y rellenar formulario",
+          "Placeholders": {
+            "ExternalEventId": "p. ej. 8300",
+            "ApiKey": "Introduce la API key de Eventor",
+            "SearchByName": "Escribe al menos 2 caracteres..."
+          },
+          "Providers": {
+            "ORIS": "ORIS",
+            "EVENTOR": "Eventor"
+          },
+          "Toast": {
+            "ExternalIdRequired": "El ID externo del evento es obligatorio.",
+            "EventorApiKeyRequired": "La API key de Eventor es obligatoria para el proveedor Eventor.",
+            "InvalidResponse": "No se pudieron procesar los datos importados del evento.",
+            "PrefillSuccess": "El formulario se ha rellenado con datos del sistema externo.",
+            "PrefillFailedTitle": "Importación fallida",
+            "PrefillFailedDescription": "No se pudieron cargar datos del evento desde el proveedor externo.",
+            "SearchFailedTitle": "Búsqueda fallida",
+            "SearchFailedDescription": "No se pudieron buscar eventos en el proveedor externo."
+          }
         },
         "Toast": {
           "CreateSuccess": "¡El evento se ha creado correctamente!",

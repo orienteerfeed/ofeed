@@ -94,6 +94,8 @@ model Event {
   longitude          Float? // GPS Longitude (nullable)
   countryId          String?         @db.Char(2)
   country            Country?        @relation(fields: [countryId], references: [countryCode])
+  externalSource     ExternalSource?
+  externalEventId    String?         @db.VarChar(128)
   featuredImageKey   String?         @db.VarChar(512)
   zeroTime           DateTime        @db.DateTime()
   relay              Boolean         @default(false)
@@ -112,6 +114,7 @@ model Event {
   eventPasswords     EventPassword[]
 
   @@fulltext([name, organizer, location])
+  @@index([externalSource, externalEventId])
 }
 
 model Class {
@@ -355,4 +358,9 @@ enum StartMode {
   Pursuit
   Wave
   ScoreO
+}
+
+enum ExternalSource {
+  ORIS
+  EVENTOR
 }

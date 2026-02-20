@@ -19,6 +19,8 @@ const GET_EVENT = gql`
       }
       date
       zeroTime
+      externalSource
+      externalEventId
       ranking
       coefRanking
       startMode

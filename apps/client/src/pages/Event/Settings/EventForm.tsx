@@ -1,5 +1,6 @@
 import { ButtonWithSpinner } from '@/components/molecules';
 import { Field, type AnyReactFormApi } from '@/components/organisms';
+import { Input, Select } from '@/components/atoms';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -9,8 +10,9 @@ import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { format, toDate } from 'date-fns-tz';
 import { TFunction } from 'i18next';
-import { Upload, X } from 'lucide-react';
+import { Download, Loader2, Search, Upload, X } from 'lucide-react';
 import React, { useEffect } from 'react';
+import { useApi } from '../../../hooks';
 import { useRequest } from '../../../hooks/useRequest';
 import { ENDPOINTS } from '../../../lib/api/endpoints';
 import { PATHNAMES } from '../../../lib/paths/pathnames';
@@ -49,6 +51,91 @@ interface EventFormProps {
     canSubmit: boolean;
   }) => React.ReactNode;
 }
+
+type ExternalProvider = 'ORIS' | 'EVENTOR';
+
+type ExternalEventSearchItem = {
+  provider: ExternalProvider;
+  externalEventId: string;
+  name: string;
+  date?: string;
+  organizer?: string;
+  location?: string;
+};
+
+type ExternalEventSearchResponse = {
+  data?: ExternalEventSearchItem[];
+};
+
+type ExternalEventPreviewDraft = {
+  provider: ExternalProvider;
+  externalEventId: string;
+  name: string;
+  sportId?: number;
+  date?: string;
+  timezone?: string;
+  organizer?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
+  countryCode?: string;
+  zeroTime?: string;
+  ranking?: boolean;
+  coefRanking?: number;
+  relay?: boolean;
+  published?: boolean;
+  hundredthPrecision?: boolean;
+};
+
+type ExternalEventPreviewResponse = {
+  data?: ExternalEventPreviewDraft;
+};
+
+const normalizeDateInputValue = (value?: string): string | undefined => {
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  const directMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (directMatch) return directMatch[1];
+
+  const parsedDate = new Date(trimmed);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return parsedDate.toISOString().slice(0, 10);
+  }
+
+  return undefined;
+};
+
+const normalizeDateTimeInputValue = (
+  value?: string,
+  fallbackDate?: string
+): string | undefined => {
+  if (!value && fallbackDate) {
+    return `${fallbackDate}T00:00`;
+  }
+
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  const directMatch = trimmed.match(
+    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/
+  );
+
+  if (directMatch) {
+    return `${directMatch[1]}-${directMatch[2]}-${directMatch[3]}T${directMatch[4]}:${directMatch[5]}`;
+  }
+
+  const parsedDate = new Date(trimmed);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return parsedDate.toISOString().slice(0, 16);
+  }
+
+  if (fallbackDate) {
+    return `${fallbackDate}T00:00`;
+  }
+
+  return undefined;
+};
 
 // Helper function to convert EventFormData to EventFormValues
 const convertToFormValues = (
@@ -110,11 +197,40 @@ export const EventForm: React.FC<EventFormProps> = ({
   renderSubmitButton,
 }) => {
   const navigate = useNavigate();
+  const { post } = useApi();
   const request = useRequest();
   const imageRequest = useRequest();
+  const isCreateMode = !initialData?.id;
+  const apiPostRef = React.useRef(post);
+
   const [featuredImage, setFeaturedImage] = React.useState<File | null>(null);
   const [isDraggingImage, setIsDraggingImage] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const [externalProvider, setExternalProvider] =
+    React.useState<ExternalProvider>('ORIS');
+  const [externalEventId, setExternalEventId] = React.useState('');
+  const [externalApiKey, setExternalApiKey] = React.useState('');
+  const [externalSearchQuery, setExternalSearchQuery] = React.useState('');
+  const [externalSearchResults, setExternalSearchResults] = React.useState<
+    ExternalEventSearchItem[]
+  >([]);
+  const [isSearchingExternal, setIsSearchingExternal] = React.useState(false);
+  const [isLoadingExternalPreview, setIsLoadingExternalPreview] =
+    React.useState(false);
+  const [showExternalSearchResults, setShowExternalSearchResults] =
+    React.useState(false);
+  const [isImportPanelOpen, setIsImportPanelOpen] = React.useState(false);
+  const [importedExternalSource, setImportedExternalSource] =
+    React.useState<ExternalProvider | null>(null);
+  const [importedExternalEventId, setImportedExternalEventId] =
+    React.useState<string | null>(null);
+  const latestSearchIdRef = React.useRef(0);
+  const externalSearchTimeoutRef = React.useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  const isEventorProvider = externalProvider === 'EVENTOR';
 
   const maxFeaturedImageSize = 2 * 1024 * 1024;
   const allowedFeaturedImageTypes = new Set([
@@ -128,6 +244,13 @@ export const EventForm: React.FC<EventFormProps> = ({
     return URL.createObjectURL(featuredImage);
   }, [featuredImage]);
 
+  const clearExternalSearchTimeout = React.useCallback(() => {
+    if (externalSearchTimeoutRef.current !== null) {
+      clearTimeout(externalSearchTimeoutRef.current);
+      externalSearchTimeoutRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     return () => {
       if (featuredImagePreview) {
@@ -135,6 +258,153 @@ export const EventForm: React.FC<EventFormProps> = ({
       }
     };
   }, [featuredImagePreview]);
+
+  useEffect(() => {
+    apiPostRef.current = post;
+  }, [post]);
+
+  useEffect(() => {
+    setExternalSearchResults([]);
+    setShowExternalSearchResults(false);
+    setIsSearchingExternal(false);
+    setImportedExternalSource(null);
+    setImportedExternalEventId(null);
+    clearExternalSearchTimeout();
+  }, [clearExternalSearchTimeout, externalProvider]);
+
+  useEffect(() => {
+    if (isImportPanelOpen) return;
+    clearExternalSearchTimeout();
+    setIsSearchingExternal(false);
+    setShowExternalSearchResults(false);
+  }, [clearExternalSearchTimeout, isImportPanelOpen]);
+
+  const runExternalSearch = React.useCallback(
+    async (rawQuery: string, source: 'auto' | 'manual' = 'auto') => {
+      const query = rawQuery.trim();
+
+      if (query.length < 2) {
+        setExternalSearchResults([]);
+        setShowExternalSearchResults(false);
+        return;
+      }
+
+      if (isEventorProvider && !externalApiKey.trim()) {
+        setExternalSearchResults([]);
+        setShowExternalSearchResults(false);
+        if (source === 'manual') {
+          toast({
+            title: t('Operations.Error', { ns: 'common' }),
+            description: t(
+              'Pages.Event.Form.Import.Toast.EventorApiKeyRequired',
+              'Eventor API key is required for Eventor provider.'
+            ),
+            variant: 'error',
+          });
+        }
+        return;
+      }
+
+      const searchId = latestSearchIdRef.current + 1;
+      latestSearchIdRef.current = searchId;
+      setIsSearchingExternal(true);
+
+      try {
+        const payload = await apiPostRef.current<ExternalEventSearchResponse>(
+          ENDPOINTS.searchExternalEvents(),
+          {
+            provider: externalProvider,
+            query,
+            apiKey: isEventorProvider ? externalApiKey.trim() || undefined : undefined,
+            limit: 8,
+          }
+        );
+
+        if (latestSearchIdRef.current !== searchId) {
+          return;
+        }
+
+        setExternalSearchResults(payload?.data ?? []);
+        setShowExternalSearchResults(true);
+      } catch (error) {
+        if (latestSearchIdRef.current !== searchId) {
+          return;
+        }
+
+        setExternalSearchResults([]);
+        setShowExternalSearchResults(false);
+
+        if (source === 'manual') {
+          toast({
+            title: t('Pages.Event.Form.Import.Toast.SearchFailedTitle', {
+              defaultValue: 'Search failed',
+            }),
+            description:
+              error instanceof Error
+                ? error.message
+                : t(
+                    'Pages.Event.Form.Import.Toast.SearchFailedDescription',
+                    'Unable to search events in external provider.'
+                  ),
+            variant: 'error',
+          });
+        }
+      } finally {
+        if (latestSearchIdRef.current === searchId) {
+          setIsSearchingExternal(false);
+        }
+      }
+    },
+    [externalApiKey, externalProvider, isEventorProvider, t]
+  );
+
+  useEffect(() => {
+    return () => {
+      clearExternalSearchTimeout();
+    };
+  }, [clearExternalSearchTimeout]);
+
+  const scheduleExternalSearch = React.useCallback(
+    (rawQuery: string) => {
+      clearExternalSearchTimeout();
+
+      const query = rawQuery.trim();
+      if (!isCreateMode || !isImportPanelOpen) {
+        return;
+      }
+
+      if (query.length < 2) {
+        setExternalSearchResults([]);
+        setShowExternalSearchResults(false);
+        setIsSearchingExternal(false);
+        return;
+      }
+
+      externalSearchTimeoutRef.current = setTimeout(() => {
+        void runExternalSearch(query, 'auto');
+      }, 350);
+    },
+    [clearExternalSearchTimeout, isCreateMode, isImportPanelOpen, runExternalSearch]
+  );
+
+  useEffect(() => {
+    if (!isCreateMode || !isImportPanelOpen || !showExternalSearchResults) {
+      return;
+    }
+
+    const query = externalSearchQuery.trim();
+    if (query.length < 2) return;
+
+    scheduleExternalSearch(query);
+  }, [
+    externalApiKey,
+    externalProvider,
+    externalSearchQuery,
+    isCreateMode,
+    isImportPanelOpen,
+    scheduleExternalSearch,
+    showExternalSearchResults,
+  ]);
 
   const validateFeaturedImage = (file: File): boolean => {
     if (!allowedFeaturedImageTypes.has(file.type)) {
@@ -406,6 +676,8 @@ export const EventForm: React.FC<EventFormProps> = ({
             relay: value.relay,
             published: value.published,
             hundredthPrecision: value.hundredthPrecision,
+            externalSource: importedExternalSource || undefined,
+            externalEventId: importedExternalEventId || undefined,
           }),
           onSuccess: (response: unknown) => {
             toast({
@@ -499,6 +771,166 @@ export const EventForm: React.FC<EventFormProps> = ({
     },
   });
 
+  const applyImportedDraft = (draft: ExternalEventPreviewDraft) => {
+    if (draft.name) {
+      form.setFieldValue('eventName', draft.name);
+    }
+
+    if (draft.sportId) {
+      form.setFieldValue('sportId', String(draft.sportId));
+    }
+
+    const normalizedDate = normalizeDateInputValue(draft.date);
+    if (normalizedDate) {
+      form.setFieldValue('date', normalizedDate);
+    }
+
+    if (draft.timezone) {
+      form.setFieldValue('timezone', draft.timezone);
+    }
+
+    if (draft.organizer) {
+      form.setFieldValue('organizer', draft.organizer);
+    }
+
+    if (draft.location) {
+      form.setFieldValue('location', draft.location);
+    }
+
+    if (draft.latitude !== undefined) {
+      form.setFieldValue('latitude', String(draft.latitude));
+    }
+
+    if (draft.longitude !== undefined) {
+      form.setFieldValue('longitude', String(draft.longitude));
+    }
+
+    if (draft.countryCode) {
+      form.setFieldValue('countryCode', draft.countryCode.toUpperCase());
+    }
+
+    const normalizedZeroTime = normalizeDateTimeInputValue(
+      draft.zeroTime,
+      normalizedDate
+    );
+    if (normalizedZeroTime) {
+      form.setFieldValue('zeroTime', normalizedZeroTime);
+    }
+
+    if (typeof draft.ranking === 'boolean') {
+      form.setFieldValue('ranking', draft.ranking);
+    }
+
+    if (draft.coefRanking !== undefined && draft.coefRanking !== null) {
+      form.setFieldValue('coefRanking', String(draft.coefRanking));
+    }
+
+    if (typeof draft.relay === 'boolean') {
+      form.setFieldValue('relay', draft.relay);
+    }
+
+    if (typeof draft.published === 'boolean') {
+      form.setFieldValue('published', draft.published);
+    }
+
+    if (typeof draft.hundredthPrecision === 'boolean') {
+      form.setFieldValue('hundredthPrecision', draft.hundredthPrecision);
+    }
+  };
+
+  const handleExternalPreviewLoad = async (externalIdOverride?: string) => {
+    const trimmedId = (externalIdOverride ?? externalEventId).trim();
+    if (!trimmedId) {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description: t(
+          'Pages.Event.Form.Import.Toast.ExternalIdRequired',
+          'External event ID is required.'
+        ),
+        variant: 'error',
+      });
+      return;
+    }
+
+    if (isEventorProvider && !externalApiKey.trim()) {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description: t(
+          'Pages.Event.Form.Import.Toast.EventorApiKeyRequired',
+          'Eventor API key is required for Eventor provider.'
+        ),
+        variant: 'error',
+      });
+      return;
+    }
+
+    setIsLoadingExternalPreview(true);
+
+    try {
+      const payload = await apiPostRef.current<ExternalEventPreviewResponse>(
+        ENDPOINTS.importEventPreview(),
+        {
+          provider: externalProvider,
+          externalEventId: trimmedId,
+          apiKey: isEventorProvider ? externalApiKey.trim() || undefined : undefined,
+        }
+      );
+
+      if (!payload?.data) {
+        toast({
+          title: t('Operations.Error', { ns: 'common' }),
+          description: t(
+            'Pages.Event.Form.Import.Toast.InvalidResponse',
+            'Unable to process imported event data.'
+          ),
+          variant: 'error',
+        });
+        return;
+      }
+
+      applyImportedDraft(payload.data);
+      setImportedExternalSource(payload.data.provider ?? externalProvider);
+      setImportedExternalEventId(payload.data.externalEventId ?? trimmedId);
+
+      toast({
+        title: t('Operations.Success', { ns: 'common' }),
+        description: t(
+          'Pages.Event.Form.Import.Toast.PrefillSuccess',
+          'Event form has been prefilled from external system.'
+        ),
+      });
+    } catch (error) {
+      toast({
+        title: t('Pages.Event.Form.Import.Toast.PrefillFailedTitle', {
+          defaultValue: 'Import failed',
+        }),
+        description:
+          error instanceof Error
+            ? error.message
+            : t(
+                'Pages.Event.Form.Import.Toast.PrefillFailedDescription',
+                'Unable to load event data from external provider.'
+              ),
+        variant: 'error',
+      });
+    } finally {
+      setIsLoadingExternalPreview(false);
+    }
+  };
+
+  const handleSearchResultSelect = (item: ExternalEventSearchItem) => {
+    const selectedExternalEventId = item.externalEventId;
+    clearExternalSearchTimeout();
+    latestSearchIdRef.current += 1;
+    setIsSearchingExternal(false);
+    setExternalEventId(selectedExternalEventId);
+    setExternalSearchQuery(item.name);
+    setShowExternalSearchResults(false);
+    setImportedExternalSource(null);
+    setImportedExternalEventId(null);
+    void handleExternalPreviewLoad(selectedExternalEventId);
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -529,6 +961,234 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">
+      {isCreateMode && (
+        <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">
+                {t('Pages.Event.Form.Import.Title', 'Import from external IS')}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  'Pages.Event.Form.Import.Description',
+                  'Search event by name or load by external event ID and prefill this form.'
+                )}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsImportPanelOpen(current => !current)}
+            >
+              {isImportPanelOpen
+                ? t('Pages.Event.Form.Import.Hide', 'Hide import')
+                : t(
+                    'Pages.Event.Form.Import.Open',
+                    'Import from external IS'
+                  )}
+            </Button>
+          </div>
+
+          {isImportPanelOpen && (
+            <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    {t('Pages.Event.Form.Import.Provider', 'Provider')}
+                  </Label>
+                  <Select
+                    value={externalProvider}
+                    onValueChange={value =>
+                      setExternalProvider(value as ExternalProvider)
+                    }
+                    options={[
+                      {
+                        value: 'ORIS',
+                        label: t('Pages.Event.Form.Import.Providers.ORIS', 'ORIS'),
+                      },
+                      {
+                        value: 'EVENTOR',
+                        label: t(
+                          'Pages.Event.Form.Import.Providers.EVENTOR',
+                          'Eventor'
+                        ),
+                      },
+                    ]}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    {t(
+                      'Pages.Event.Form.Import.ExternalEventId',
+                      'External event ID'
+                    )}
+                  </Label>
+                  <Input
+                    value={externalEventId}
+                    onChange={e => {
+                      setExternalEventId(e.target.value);
+                      setImportedExternalSource(null);
+                      setImportedExternalEventId(null);
+                    }}
+                    placeholder={t(
+                      'Pages.Event.Form.Import.Placeholders.ExternalEventId',
+                      'e.g. 8300'
+                    )}
+                  />
+                </div>
+              </div>
+
+              {isEventorProvider && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    {t('Pages.Event.Form.Import.ApiKey', 'Eventor API key')}
+                  </Label>
+                  <Input
+                    value={externalApiKey}
+                    onChange={e => setExternalApiKey(e.target.value)}
+                    type="password"
+                    placeholder={t(
+                      'Pages.Event.Form.Import.Placeholders.ApiKey',
+                      'Enter Eventor API key'
+                    )}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      'Pages.Event.Form.Import.ApiKeyHelper',
+                      'API key is required for Eventor import and search.'
+                    )}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  {t(
+                    'Pages.Event.Form.Import.SearchByName',
+                    'Search external events by name'
+                  )}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={externalSearchQuery}
+                      onChange={e => {
+                        const query = e.target.value;
+                        setExternalSearchQuery(query);
+                        setShowExternalSearchResults(true);
+                        scheduleExternalSearch(query);
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          void runExternalSearch(externalSearchQuery, 'manual');
+                        }
+                      }}
+                      placeholder={t(
+                        'Pages.Event.Form.Import.Placeholders.SearchByName',
+                        'Type at least 2 characters...'
+                      )}
+                      className="pl-9"
+                      disabled={isEventorProvider && !externalApiKey.trim()}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={
+                      isSearchingExternal ||
+                      externalSearchQuery.trim().length < 2 ||
+                      (isEventorProvider && !externalApiKey.trim())
+                    }
+                    onClick={() =>
+                      void runExternalSearch(externalSearchQuery, 'manual')
+                    }
+                  >
+                    {isSearchingExternal ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                {externalSearchQuery.trim().length < 2 ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      'Pages.Event.Form.Import.MinCharacters',
+                      'Enter at least 2 characters to search.'
+                    )}
+                  </p>
+                ) : null}
+              </div>
+
+              {showExternalSearchResults &&
+              (isSearchingExternal || externalSearchResults.length > 0) ? (
+                <div className="space-y-2 rounded-md border border-border bg-background p-2">
+                  {isSearchingExternal ? (
+                    <div className="flex items-center gap-2 px-2 py-1 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t('Pages.Event.Form.Import.Searching', 'Searching...')}
+                    </div>
+                  ) : (
+                    externalSearchResults.map(item => (
+                      <button
+                        key={`${item.provider}-${item.externalEventId}`}
+                        type="button"
+                        onClick={() => handleSearchResultSelect(item)}
+                        className="w-full rounded-md border border-transparent px-3 py-2 text-left transition-colors hover:border-border hover:bg-muted/50"
+                      >
+                        <div className="text-sm font-medium">{item.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {`${item.externalEventId}${
+                            item.date ? ` • ${item.date}` : ''
+                          }${item.location ? ` • ${item.location}` : ''}`}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : null}
+
+              {showExternalSearchResults &&
+              !isSearchingExternal &&
+              externalSearchQuery.trim().length >= 2 &&
+              externalSearchResults.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    'Pages.Event.Form.Import.NoResults',
+                    'No matching events found.'
+                  )}
+                </p>
+              ) : null}
+
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  onClick={() => void handleExternalPreviewLoad()}
+                  disabled={
+                    isLoadingExternalPreview ||
+                    !externalEventId.trim() ||
+                    (isEventorProvider && !externalApiKey.trim())
+                  }
+                >
+                  {isLoadingExternalPreview ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="mr-2 h-4 w-4" />
+                  )}
+                  {t(
+                    'Pages.Event.Form.Import.LoadPreview',
+                    'Load and prefill form'
+                  )}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Základní informace - 2 sloupce */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Event Name - plná šířka na mobile, 2 sloupce na desktopu */}
