@@ -1004,7 +1004,14 @@ router.delete("/:eventId", routeWithValidation({ paramsSchema: eventIdParamsSche
 
     await deleteAllEventData(eventId);
 
-    await deletePublicObjectsByPrefix(`events/${eventId}/`);
+    try {
+      await deletePublicObjectsByPrefix(`events/${eventId}/`);
+    } catch (storageError) {
+      logEndpoint(req.c, 'warn', 'Failed to delete event assets from storage during event deletion', {
+        eventId,
+        ...getErrorDetails(storageError),
+      });
+    }
 
     await prisma.event.delete({
       where: { id: eventId },
