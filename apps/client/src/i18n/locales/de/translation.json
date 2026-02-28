@@ -228,27 +228,33 @@
                 "CoefRanking": "",
                 "Longitude": "",
                 "Latitude": "",
-                "Location": ""
+                "Location": "",
+                "Organizer": ""
             },
             "DangerZone": {
                 "DeleteAllEventData": {
                     "Button": "",
                     "ConfirmTitle": "",
                     "Title": "",
-                    "ConfirmButton": ""
+                    "ConfirmButton": "",
+                    "ConfirmDescription": "",
+                    "Description": ""
                 },
                 "DeleteEvent": {
                     "ConfirmButton": "",
                     "Button": "",
                     "ConfirmTitle": "",
-                    "Title": ""
+                    "Title": "",
+                    "Description": "",
+                    "ConfirmDescription": ""
                 },
                 "DeleteCompetitors": {
                     "Description": "",
                     "Title": "",
                     "ConfirmButton": "",
                     "Button": "",
-                    "ConfirmTitle": ""
+                    "ConfirmTitle": "",
+                    "ConfirmDescription": ""
                 },
                 "Toast": {
                     "DeleteFailTitle": "",
@@ -267,7 +273,9 @@
                         "EventUri": "",
                         "Event": "",
                         "Location": ""
-                    }
+                    },
+                    "Description": "",
+                    "Title": ""
                 },
                 "PrintWindow": {
                     "Title": "",
@@ -381,7 +389,8 @@
                 "Format": "",
                 "Sport": "",
                 "Country": "",
-                "Visibility": ""
+                "Visibility": "",
+                "Organizer": ""
             },
             "CompetitorsList": "",
             "Integration": {
@@ -400,12 +409,17 @@
                         }
                     },
                     "Navigator": {
-                        "Title": ""
+                        "Title": "",
+                        "Text": ""
                     },
                     "ApiBaseUrl": "",
                     "EventName": "",
                     "EventDate": "",
-                    "EventId": ""
+                    "EventId": "",
+                    "PrintQrCode": "",
+                    "Title": "",
+                    "ShareQrCode": "",
+                    "Description": ""
                 },
                 "Toast": {
                     "CopyBaseUrl": "",
@@ -466,7 +480,8 @@
             },
             "Password": {
                 "Card": {
-                    "Title": ""
+                    "Title": "",
+                    "Description": ""
                 },
                 "Toast": {
                     "RevokeFailTitle": "",
@@ -527,7 +542,8 @@
                     "UpdateFail": ""
                 },
                 "Card": {
-                    "Title": ""
+                    "Title": "",
+                    "Description": ""
                 }
             },
             "Description": "",
@@ -537,7 +553,8 @@
                 "Title": ""
             },
             "Card": {
-                "Title": ""
+                "Title": "",
+                "Description": ""
             }
         }
     },
@@ -576,7 +593,8 @@
                 "AllowedFormats": ""
             },
             "UploadIofXml": {
-                "Title": ""
+                "Title": "",
+                "Description": ""
             }
         }
     },
@@ -601,7 +619,8 @@
                 "ProcessingError": ""
             },
             "Done": "",
-            "OrDragAndDrop": ""
+            "OrDragAndDrop": "",
+            "SupportedFormats": ""
         },
         "LanguageSelector": {
             "SelectLanguage": "",
