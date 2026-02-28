@@ -411,21 +411,82 @@
                     "Tabs": {
                         "OChecklist": {
                             "Description": "Skanna QR-koden för att ställa in serveradress, tävlingsid och lösenord.\nScan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
+                        },
+                        "SIDroidConenctor": {
+                            "Description": ""
+                        },
+                        "QuickEvent": {
+                            "ExportInterval": "",
+                            "Description": ""
                         }
                     }
+                },
+                "Toast": {
+                    "CopyBaseUrl": "",
+                    "CopyEventId": ""
+                },
+                "PrintWindow": {
+                    "Header": "",
+                    "Footer": "",
+                    "Subheader": ""
+                }
+            },
+            "DangerZone": {
+                "DeleteAllEventData": {
+                    "Button": "",
+                    "ConfirmTitle": "",
+                    "Title": "",
+                    "ConfirmButton": ""
+                },
+                "DeleteEvent": {
+                    "ConfirmButton": "",
+                    "Button": "",
+                    "ConfirmTitle": "",
+                    "Title": ""
+                },
+                "DeleteCompetitors": {
+                    "Description": "",
+                    "Title": "",
+                    "ConfirmButton": "",
+                    "Button": "",
+                    "ConfirmTitle": ""
+                },
+                "Toast": {
+                    "DeleteFailTitle": "",
+                    "DeleteSuccessDescription": ""
+                },
+                "Title": "",
+                "Footer": "",
+                "Description": ""
+            },
+            "TroublesShooting": {
+                "Description": "",
+                "Description1": "",
+                "Description2": "",
+                "Title": "",
+                "GitHubIssues": "",
+                "Discord": ""
+            },
+            "Visibility": {
+                "Toast": {
+                    "UpdateSuccess": "",
+                    "UpdateFail": ""
+                },
+                "Card": {
+                    "Title": ""
                 }
             }
         },
         "Profile": {
             "MyEntries": {
-                "Title": "Mina anmälningar",
-                "Description": "Här hittar du alla dina anmälningar och ändringar i tävlingsregistreringar. Du kan visa, redigera och följa status."
+                "Title": "",
+                "Description": ""
             },
             "PersonalInfo": {
-                "Title": "Personuppgifter",
-                "Description": "Här kan du visa och uppdatera dina personuppgifter, kontaktinformation och andra profilinställningar.",
-                "SiCardNumber": "SportIdent-kortnummer",
-                "EmergencyContact": "Nödkontakt",
+                "Title": "",
+                "Description": "",
+                "SiCardNumber": "",
+                "EmergencyContact": "",
                 "Organization": "Organisation / klubb",
                 "Updated": "Profilen har uppdaterats"
             },
@@ -449,36 +510,36 @@
                 "SaveSuccess": "Brickan har sparats"
             },
             "OAuth2": {
-                "Title": "OAuth2 API-åtkomst",
-                "Description": "Generera inloggningsuppgifter för API-åtkomst med OAuth2. Du behöver ett Client ID och ett Client Secret.",
-                "ClientId": "Client ID",
-                "ClientSecret": "Client Secret",
-                "Generate": "Generera nytt Client Secret",
-                "Regenerate": "Generera om Client Secret",
-                "SecretWarning": "Viktig varning",
-                "SecretWarningDescription": "Ditt Client Secret är känslig information. Dela det inte med någon och spara det säkert. Det visas inte igen när du lämnar eller uppdaterar sidan.",
-                "Revoke": "Återkalla",
+                "Title": "",
+                "Description": "",
+                "ClientId": "",
+                "ClientSecret": "",
+                "Generate": "",
+                "Regenerate": "",
+                "SecretWarning": "",
+                "SecretWarningDescription": "",
+                "Revoke": "",
                 "Toast": {
-                    "GenerateSuccessDescription": "OAuth2-uppgifter har skapats!",
-                    "GenerateFailTitle": "Något gick fel, försök igen.",
-                    "RevokeSuccessDescription": "Uppgifterna har återkallats!",
-                    "RevokeFailTitle": "Kunde inte återkalla uppgifterna"
+                    "GenerateSuccessDescription": "",
+                    "GenerateFailTitle": "",
+                    "RevokeSuccessDescription": "",
+                    "RevokeFailTitle": ""
                 },
                 "HowToUse": {
-                    "Title": "Så använder du OAuth2",
-                    "Description": "Använd ditt Client ID och Client Secret i en begäran med grant_type=client_credentials till endpointen /auth/oauth2/token. Nedan finns ett exempel med curl."
+                    "Title": "",
+                    "Description": ""
                 }
             },
             "OtherIntegrations": {
-                "Title": "Andra integrationer",
-                "Description": "Koppla ditt konto till fler tjänster och verktyg. Nya integrationer kommer att visas här över tid."
+                "Title": "",
+                "Description": ""
             },
             "Security": {
-                "PasswordDescription": "Här kan du ändra kontots lösenord. Vi rekommenderar ett starkt och unikt lösenord.",
-                "CurrentPassword": "Nuvarande lösenord",
-                "NewPassword": "Nytt lösenord",
-                "ConfirmNewPassword": "Bekräfta nytt lösenord",
-                "UpdatePassword": "Uppdatera lösenord",
+                "PasswordDescription": "",
+                "CurrentPassword": "",
+                "NewPassword": "",
+                "ConfirmNewPassword": "",
+                "UpdatePassword": "",
                 "CurrentPasswordHelper": "Ange ditt nuvarande kontolösenord.",
                 "NewPasswordHelper": "Använd minst 8 tecken.",
                 "ConfirmNewPasswordHelper": "Upprepa det nya lösenordet för att bekräfta.",
@@ -505,19 +566,31 @@
                 "AddPaymentMethod": "Lägg till betalningsmetod"
             },
             "Tabs": {
-                "Profile": "Profil",
-                "Integrations": "Integrationer",
-                "Security": "Säkerhet",
+                "Profile": "",
+                "Integrations": "",
+                "Security": "",
                 "Notifications": "Aviseringar",
                 "billing": "Fakturering"
             }
         },
         "Home": {
             "Hero": {
-                "Subtitle": "Liveöversikt över sportevenemang. Löparspårning, kontinuerliga uppdateringar och ett stadigt informationsflöde på ett ställe.",
+                "Subtitle": "",
                 "LiveEventSynchronization": "Live-synkronisering av tävling",
                 "LastMinuteChanges": "Sista-minuten-ändringar",
                 "DetailedSplitAnalysis": "Detaljerad analys av mellantider"
+            },
+            "Infinite": {
+                "LoadingMore": "",
+                "FoundCount": "",
+                "ScrollMore": "",
+                "NoEvents": "",
+                "LoadingMoreInline": "",
+                "LoadingInitial": "",
+                "NoEventsHint": "",
+                "AllLoaded": "",
+                "EventsCount": "",
+                "LoadError": ""
             }
         }
     },
@@ -531,5 +604,124 @@
         "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
         "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
         "passwordsDoNotMatch": "Lösenorden matchar inte"
+    },
+    "Molecules": {
+        "DragDrop": {
+            "Toast": {
+                "InvalidFileFormat": {
+                    "Title": "",
+                    "Description": ""
+                },
+                "Error": {
+                    "DescriptionSingle": "",
+                    "DescriptionPlural": ""
+                },
+                "MaximumFiles": {
+                    "Description": "",
+                    "Title": ""
+                },
+                "ProcessingError": ""
+            },
+            "Done": "",
+            "OrdDragAndDrop": "",
+            "OrDragAndDrop": "",
+            "Delete": "",
+            "ClickToUpload": ""
+        },
+        "LanguageSelector": {
+            "SelectLanguage": "",
+            "Title": ""
+        },
+        "EventSearchDialog": {
+            "RecentEvents": "",
+            "NoEventsHint": "",
+            "StartTypingHint": "",
+            "Draft": "",
+            "StartTyping": "",
+            "Placeholder": "",
+            "Title": "",
+            "NoEventsFound": "",
+            "Searching": "",
+            "Hint": "",
+            "Organizer": ""
+        },
+        "SearchBox": {
+            "SearchResults": ""
+        }
+    },
+    "Organisms": {
+        "DragDrop": {
+            "Toast": {
+                "MaxSize": "",
+                "TryAgain": "",
+                "ProcessingError": "",
+                "FileTooLarge": "",
+                "UploadFail": "",
+                "UploadInProgress": "",
+                "InvalidFormat": "",
+                "UploadSuccess": "",
+                "AllowedFormats": ""
+            },
+            "UploadIofXml": {
+                "Title": ""
+            }
+        },
+        "AppDataTable": {
+            "Empty": "",
+            "Error": "",
+            "Loading": ""
+        },
+        "Footer": {
+            "Blog": "",
+            "Donate": "",
+            "ForOrienteering": "",
+            "MadeWith": "",
+            "Docs": "",
+            "Collaborate": ""
+        },
+        "Navbar": {
+            "SignIn": "",
+            "Pages": "",
+            "LogOut": "",
+            "MyProfile": "",
+            "SignUp": "",
+            "Placeholder": ""
+        }
+    },
+    "Templates": {
+        "Routes": {
+            "MRB": "",
+            "Events": "",
+            "GitHub": "",
+            "About": "",
+            "Contact": "",
+            "Docs": "",
+            "Home": ""
+        }
+    },
+    "Route": {
+        "Finances": "",
+        "Dashboard": "",
+        "Settings": "",
+        "Transactions": "",
+        "Events": ""
+    },
+    "Validations": {
+        "Longitude": "",
+        "Number": "",
+        "SelectRequired": "",
+        "EmailsContainNotEmail": "",
+        "Email": "",
+        "Time": "",
+        "Date": "",
+        "Latitude": "",
+        "PasswordsDontMatch": "",
+        "Required": "",
+        "TimeInZones": "",
+        "EmailsMinMax": "",
+        "NumberMin": "",
+        "FileRequired": "",
+        "EmailsUnique": "",
+        "RegistrationNumber": ""
     }
 }
