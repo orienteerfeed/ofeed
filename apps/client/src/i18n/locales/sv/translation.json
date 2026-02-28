@@ -1,535 +1,535 @@
 {
-  "Pages": {
-    "Auth": {
-      "User": {
-        "Firstname": "Förnamn",
-        "Lastname": "Efternamn",
-        "Club": "Klubb",
-        "Email": "Epost",
-        "Password": "Lösenord",
-        "Placeholder": {
-          "Firstname": "John",
-          "Lastname": "Nyman",
-          "Club": "Min klubb",
-          "Email": "nyman@mejl.se",
-          "Password": "Ditt lösenord",
-          "NewPassword": "Ditt nya lösenord",
-          "PasswordConfirmation": "Bekräfta lösenord"
-        }
-      },
-      "SignInUpPage": {
-        "CreateAnAccount": "Skapa ett konto",
-        "EnterYourInformation": "Fyll i uppgifterna nedan för att skapa ditt konto",
-        "EnterYourEmailToSignIn": "Ange din epost för att logga in på ditt konto",
-        "ClickConsent": "Genom att klicka på fortsätt godkänner du våra",
-        "TermsOfService": "Användarvillkor",
-        "PrivacyPolicy": "Integritetspolicy",
-        "SignUp": "Registrera dig",
-        "SignInWithEmail": "Logga in med epost",
-        "WelcomeBack": "Välkommen tillbaka",
-        "Login": "Logga in",
-        "DontHaveAnAccount": "Har du inget konto?"
-      },
-      "SignUpPage": {
-        "AlreadyHaveAnAccount": "Har du redan ett konto?",
-        "CreateAccount": "Skapa konto",
-        "CreatingAccount": "Skapar konto…"
-      },
-      "RequestPasswordResetPage": {
-        "ForgottenPassword": "Glömt lösenord",
-        "EnterYourEmail": "Ange din epost för att få en länk för att återställa ditt lösenord",
-        "ResetPassword": "Återställ lösenord",
-        "SendResetLink": "Skicka återställningslänk",
-        "Sending": "Sänder…",
-        "BackToSignIn": "Tillbaka till inloggning",
-        "CheckYourEmail": "Kontrollera din epost",
-        "PasswordResetLinkSent": "Länk för återställning av lösenord skickad"
-      },
-      "PasswordResetEmailSentPage": {
-        "CheckYourEmail": "Kontrollera din epost",
-        "PasswordResetInstructions1": "Om den här epostadressen är kopplad till ett konto kommer du snart att få ett länk för att återställa lösenordet. Kontrollera din inkorg och följ instruktionerna för att återställa lösenordet.",
-        "PasswordResetInstructions2": "Om du inte ser epostmeddelandet, kontrollera din skräppost.",
-        "PasswordResetInstructions3": "Om du inte har begärt en återställning av lösenordet kan du ignorera detta epostmeddelande."
-      },
-      "PasswordResetPage": {
-        "EnterYourNewPassword": "Ange nytt lösenord",
-        "ResetYourPassword": "Återställ ditt lösenord",
-        "NewPassword": "Nytt lösenord",
-        "ResettingPassword": "Återställer lösenordet…",
-        "ResetPassword": "Återställ lösenord"
-      }
-    },
-    "Event": {
-      "Description": "Tävlingsöversikt",
-      "CompetitorsList": "Deltagarlista",
-      "MyEvents": "Mina tävlingar",
-      "MyEventsDescription": "Översikt över alla tävlingar som du har skapat",
-      "NoCompetitorsFound": "Inga deltagare hittades för den valda klassen.",
-      "Classes": "Klasser",
-      "OrganizedBy": "Arrangerat av",
-      "Operations": {
-        "EditEvent": "Redigera tävling",
-        "EditDescription": "Redigera tävlingsinfo",
-        "CreateEvent": "Skapa tävling",
-        "CreateDescription": "Fyll i formuläret för att skapa en ny tävling",
-        "DeleteEvent": "Radera tävling",
-        "SelectClass": "Välj klass"
-      },
-      "Tables": {
-        "Name": "Namn",
-        "Organizer": "Arrangör",
-        "Date": "Datum",
-        "Location": "Plats",
-        "Visibility": "Synlighet",
-        "Actions": "Åtgärder",
-        "Format": "Format",
-        "Status": "Status",
-        "Sport": "Sport",
-        "Country": "Land",
-        "Entries": "Anmälningar",
-        "Competitors": "Deltagare"
-      },
-      "Tabs": {
-        "All": "Allt",
-        "Today": "Idag",
-        "Ongoing": "Pågående",
-        "Recent": "Senaste",
-        "Past": "Tidigare",
-        "Upcoming": "Kommande",
-        "Results": "Resultat",
-        "Splits": "Mellantider",
-        "Detail": "Detaljer",
-        "Info": "Info",
-        "Cards": "Brickor",
-        "List": "Lista",
-        "Cat": "Kat",
-        "Club": "Klubb",
-        "Live": "Live"
-      },
-      "Live": {
-        "Title": "Direktsändning",
-        "Description": "Realtidsuppdateringar kommer att visas här under tävlingen"
-      },
-      "Alert": {
-        "DemoTitle": "Detta är en demoapp",
-        "DemoDescription": "OFeed är en demoapp. Om du stöter på problem, vänligen rapportera det till Github.",
-        "EventDataNotAvailableTitle": "Tävlingsdata är inte tillgängliga",
-        "EventDataNotAvailableMessage": "Det finns för närvarande inga uppgifter tillgängliga för {{view}}. Kom tillbaka senare eller kontakta arrangören för mer info.",
-        "ViewResults": "resultat",
-        "ViewSplits": "mellantider",
-        "ViewClub": "klubbar"
-      },
-      "Report": {
-        "Title": "Ändringsrapport",
-        "Description": "Översikt över status- och brickändringar",
-        "CompetitorChangesTitle": "Ändringar för {{name}} (ID {{id}})",
-        "CompetitorChangesDescription": "Alla ändringar för den valda deltagaren i denna tävling.",
-        "CompetitorChangesEmpty": "Inga ändringar hittades för denna deltagare.",
-        "AutoRefresh": "Auto refresh: {{seconds}} s",
-        "LastUpdated": "Senaste uppdatering: {{time}}",
-        "NoTimestamp": "-",
-        "ActiveFilters": "Aktiva filter:",
-        "PresetsTitle": "Förinställda filter",
-        "Buttons": {
-          "RefreshData": "Ladda data",
-          "ExportCsv": "Exportera CSV",
-          "ExportPdf": "Exportera PDF",
-          "ClearFilters": "Rensa filter",
-          "ShowProcessed": "Visa bearbetade",
-          "HideProcessed": "Dölj bearbetade"
-        },
-        "Presets": {
-          "CardChanges": "Brickändringar",
-          "NoteChanges": "Kommentarsändringar",
-          "LateStarts": "Sena starter",
-          "DidNotStart": "Ej start",
-          "All": "Alla poster"
-        },
-        "Filters": {
-          "IdPlaceholder": "Filter ID",
-          "DateRange": "Välj tidsintervall",
-          "DateFrom": "Från",
-          "DateTo": "Till",
-          "TimeFrom": "Starttid",
-          "TimeTo": "Sluttid",
-          "TypePlaceholder": "Välj typ",
-          "CompetitorIdPlaceholder": "Filtrera deltagar-ID",
-          "LastnamePlaceholder": "Filtrera efternamn",
-          "FirstnamePlaceholder": "Filtrera förnamn",
-          "PreviousValuePlaceholder": "Filtrera fåregående värde",
-          "NewValuePlaceholder": "Filtrera nytt värde",
-          "OriginPlaceholder": "Välj ursprung",
-          "SelectedCount": "{{count}} valda",
-          "ClearSelection": "Rensa urvalet"
-        },
-        "TypeLabels": {
-          "class_change": "Klassbyte",
-          "firstname_change": "Ändring av förnamn",
-          "lastname_change": "Ändring av efternamn",
-          "bibNumber_change": "Ändring av nummerlapp",
-          "nationality_change": "Ändring av nationalitet",
-          "registration_change": "Ändring av registrering",
-          "license_change": "Ändring av licens",
-          "ranking_change": "Ändring av rankning",
-          "rank_points_avg_change": "Genomsnittlig förändring av rankningspoäng",
-          "organisation_change": "Ändring av klubb",
-          "short_name_change": "Ändring av kortnamn",
-          "si_card_change": "Ändring av SI-bricka",
-          "start_time_change": "Ändring av starttid",
-          "finish_time_change": "Ändring av måltid",
-          "time_change": "Ändring av tid",
-          "team_change": "Ändring av team",
-          "leg_change": "Ändring av sträcka",
-          "status_change": "Ändring av status",
-          "late_start_change": "Ändring av sen start",
-          "note_change": "Ändring av kommentar",
-          "external_id_change": "Ändring av externt id"
-        },
-        "OriginLabels": {
-          "START": "Start",
-          "OFFICE": "Expedition",
-          "FINISH": "Mål",
-          "IT": "IT"
-        },
-        "Pagination": {
-          "RowsPerPage": "Rader per sida",
-          "RowsOption": "{{count}}",
-          "PageOf": "Sida {{page}} av {{total}}",
-          "Previous": "Föregående sida",
-          "Next": "Nästa sida"
-        },
-        "Table": {
-          "Id": "ID",
-          "DateTime": "Datum och tid",
-          "Type": "Typ",
-          "CompetitorId": "Deltagar-ID",
-          "Lastname": "Efternamn",
-          "Firstname": "Förnamn",
-          "PreviousValue": "Föregående värde",
-          "NewValue": "Nytt värde",
-          "Origin": "Ursprung"
-        }
-      },
-      "Settings": {
-        "Loading": "Laddar tävlingens inställningar"
-      },
-      "Detail": {
-        "EventInformation": "Tävlingsinfo",
-        "Date": "Datum",
-        "ZeroTime": "Nolltid",
-        "Location": "Plats",
-        "Organizer": "Arrangör",
-        "OpenInExternalSystem": "Öppna i {{provider}}",
-        "Classes": "Klasser",
-        "ShowAllClasses": "Visa alla klasser",
-        "ShowLessClasses": "Visa färre klasser",
-        "Format": "Format",
-        "RelayRace": "Stafett",
-        "Ranking": "Rankning",
-        "Coefficient": "Koefficient",
-        "EventStatus": "Tävlingsstatus",
-        "AdditionalDetails": "Mer info",
-        "Sport": "Sport",
-        "EventId": "Tävlings-ID",
-        "Author": "Författare",
-        "Report": "Rapport",
-        "Status": {
-          "Completed": "SLUTFÖRD",
-          "Live": "LIVE",
-          "Upcoming": "KOMMANDE",
-          "Draft": "UTKAST"
-        },
-        "StatusText": {
-          "Completed": "Slutgiltiga resultat",
-          "Live": "Tävlingen pågår",
-          "Upcoming": "Anmälan öppen"
-        },
-        "Alert": {
-          "UnpublishedTitle": "Tävlingen är ännu inte publicerad",
-          "UnpublishedDescription": "Denna tävling är för närvarande i utkastläge och är inte allmänt synlig."
-        },
-        "ErrorTitle": "Fel vid inläsning av tävling",
-        "ErrorDescription": "Kunde inte läsa in tävlingsdata",
-        "Loading": "Läser in tävlingen"
-      },
-      "Results": {
-        "Loading": "Läser in resultat",
-        "LoadingClubs": "Läser in klubbar",
-        "LoadingClubResults": "Läser in klubbresultat",
-        "ErrorLoadingClubResults": "Fel vid inläsning av klubbresultat: {{message}}"
-      },
-      "Splits": {
-        "LoadingChart": "Läser in graf med mellantider",
-        "LoadingTimes": "Läser in mellantider"
-      },
-      "Form": {
-        "EventName": "Tävlingsnamn",
-        "Sport": "Sport",
-        "Date": "Datum",
-        "Timezone": "Tidszon",
-        "Organizer": "Arrangör",
-        "Location": "Plats",
-        "Latitude": "GPS latitude",
-        "Longitude": "GPS longitude",
-        "Country": "Land",
-        "ZeroTime": "Nolltid",
-        "FeaturedImage": "Presentationsbild",
-        "FeaturedImageHint": "JPEG, PNG eller WEBP, max 2 MB.",
-        "FeaturedImageButton": "Lägg till bild",
-        "FeaturedImageRemove": "Ta bort",
-        "Ranking": "Rankning",
-        "CoefRanking": "Rankningskoefficient",
-        "Relay": "Stafett",
-        "HundredthPrecision": "Hundradels precision",
-        "Published": "Publicerad",
-        "Placeholders": {
-          "EventName": "Min första tävling",
-          "Sport": "Välj sport",
-          "Timezone": "Välj tidszon",
-          "Organizer": "Arrangörsnamn",
-          "Location": "Plats",
-          "Latitude": "Ange latitud (t.ex. 59.332562)",
-          "Longitude": "Ange longitude (t.ex. 18.065205)",
-          "Country": "Välj land",
-          "CoefRanking": "1.02"
-        },
-        "Import": {
-          "Title": "Importera från externt system",
-          "Description": "Sök tävling efter namn eller ladda data via externt id och förifyll formuläret.",
-          "CurrentLink": "Nuvarande länkning",
-          "NoLink": "Denna tävling är inte länkad till något externt system.",
-          "Unlink": "Ta bort länkning",
-          "Provider": "Provider",
-          "ExternalEventId": "Externt tävlings-id",
-          "ApiKey": "Eventor API-nyckel",
-          "ApiKeyHelper": "API-nyckel krävs för import och sökning i Eventor.",
-          "SearchByName": "Sök externa tävlingar efter namn",
-          "MinCharacters": "Ange minst 2 tecken för att söka.",
-          "Searching": "Söker...",
-          "NoResults": "Inga matchande tävlingar hittades.",
-          "Open": "Importera från externt system",
-          "Hide": "Dölj import",
-          "SaveLink": "Spara länkning",
-          "LoadPreview": "Ladda och förifyll formulär",
-          "Placeholders": {
-            "ExternalEventId": "t.ex. 8300",
-            "ApiKey": "Ange Eventor API-nyckel",
-            "SearchByName": "Skriv minst 2 tecken..."
-          },
-          "Providers": {
-            "ORIS": "ORIS",
-            "EVENTOR": "Eventor"
-          },
-          "Toast": {
-            "ExternalIdRequired": "Externt tävlings-id är obligatoriskt.",
-            "EventorApiKeyRequired": "Eventor API-nyckel krävs för Eventor-provider.",
-            "InvalidResponse": "Kunde inte bearbeta importerad tävlingsdata.",
-            "PrefillSuccess": "Formuläret har förifyllts med data från externt system.",
-            "PrefillFailedTitle": "Import misslyckades",
-            "PrefillFailedDescription": "Kunde inte läsa in tävlingsdata från extern leverantör.",
-            "LinkSaved": "Extern länkning sparades.",
-            "LinkRemoved": "Extern länkning togs bort.",
-            "LinkRemovedPendingSave": "Extern länkning tas bort när tävlingen sparas.",
-            "SearchFailedTitle": "Sökning misslyckades",
-            "SearchFailedDescription": "Kunde inte söka tävlingar i extern leverantör."
-          }
-        },
-        "Toast": {
-          "CreateSuccess": "Tävlingen har skapats!",
-          "EditSuccess": "Tävlingen har uppdaterats!",
-          "FeaturedImageUploadSuccess": "Presentationsbilden har laddats upp.",
-          "FeaturedImageUploadError": "Kunde inte ladda upp presentationsbilden."
-        }
-      },
-      "Card": {
-        "Title": "Tävlingsinformation",
-        "Description": "Fyll i formuläret nedan för att uppdatera tävlingsinformationen."
-      },
-      "Password": {
-        "GeneratePassword": "Skapa lösenord",
-        "RegeneratePassword": "Generera nytt lösenord",
-        "PassportExpiration": "Lösenordets giltighetstid",
-        "NoExpirationSet": "Ingen giltighetstid angiven",
-        "Copy": "Kopiera",
-        "Revoke": "Återkalla",
-        "Card": {
-          "Title": "Tävlingslösenord",
-          "Description": "Ange tävlingens lösenord. Det används när appar begär åtkomst via webb-API."
-        },
-        "Field": {
-          "Name": "Tävlingens lösenord",
-          "Placeholders": {
-            "Name": "Tävlingens lösenord"
-          }
-        },
-        "Toast": {
-          "UpdateSuccessDescription": "Lösenordet har uppdaterats!",
-          "UpdateFailTitle": "Något gick fel. Försök igen.",
-          "RevokeSuccessDescription": "Lösenordet har återkallats!",
-          "RevokeFailTitle": "Något gick fel. Försök igen.",
-          "CopySuccessDescription": "Lösenordet har kopierats. Förvara det säkert."
-        }
-      },
-      "Link": {
-        "Card": {
-          "Title": "Länk till tävlingen",
-          "Description": "Dela en länk till ett evenemang – du kan kopiera, dela eller skriva ut QR-koden för enkel åtkomst till live-resultat.",
-          "Navigator": {
-            "Title": "OFeed",
-            "Event": "Tävling",
-            "Location": "Plats",
-            "Date": "Datum",
-            "EventUri": "Visa live-resultat",
-            "UrlDescription": "Skanna QR-koden och få omedelbart online-resultat i din telefon!"
-          }
-        },
-        "PrintWindow": {
-          "Title": "QR-kod - OFeed live-resultat",
-          "Header": "OFeed",
-          "EventQR": "Tävlingens QR-kod",
-          "Info": "Skanna QR-koden for att visa live-resultat online."
-        },
-        "Toast": {
-          "CopySuccessDescription": "Länken finns nu i ditt urklipp, dela den!"
-        }
-      },
-      "Integration": {
-        "Card": {
-          "Title": "Konfigurering av appar",
-          "Description": "Hur man konfigurerar appar för anslutning till OFeed.",
-          "ApiBaseUrl": "URL",
-          "EventId": "Tävlings-id",
-          "EventPassword": "Tävlingens lösenord",
-          "EventName": "Namn",
-          "EventDate": "Datum",
-          "ShareQrCode": "Dela QR",
-          "PrintQrCode": "Skriv ut QR",
-          "Navigator": {
-            "Title": "OFeed QR-kod",
-            "Text": "Här är QR-koden för tävlingen som du använder för att ansluta O Checklist till OFeed!"
-          },
-          "Tabs": {
-            "OChecklist": {
-              "Description": "Skanna QR-koden för att ställa in serveradress, tävlingsid och lösenord.\nScan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
+    "Pages": {
+        "Auth": {
+            "User": {
+                "Firstname": "Förnamn",
+                "Lastname": "Efternamn",
+                "Club": "Klubb",
+                "Email": "Epost",
+                "Password": "Lösenord",
+                "Placeholder": {
+                    "Firstname": "John",
+                    "Lastname": "Nyman",
+                    "Club": "Min klubb",
+                    "Email": "nyman@mejl.se",
+                    "Password": "Ditt lösenord",
+                    "NewPassword": "Ditt nya lösenord",
+                    "PasswordConfirmation": "Bekräfta lösenord"
+                }
+            },
+            "SignInUpPage": {
+                "CreateAnAccount": "Skapa ett konto",
+                "EnterYourInformation": "Fyll i uppgifterna nedan för att skapa ditt konto",
+                "EnterYourEmailToSignIn": "Ange din epost för att logga in på ditt konto",
+                "ClickConsent": "Genom att klicka på fortsätt godkänner du våra",
+                "TermsOfService": "Användarvillkor",
+                "PrivacyPolicy": "Integritetspolicy",
+                "SignUp": "Registrera dig",
+                "SignInWithEmail": "Logga in med epost",
+                "WelcomeBack": "Välkommen tillbaka",
+                "Login": "Logga in",
+                "DontHaveAnAccount": "Har du inget konto?"
+            },
+            "SignUpPage": {
+                "AlreadyHaveAnAccount": "Har du redan ett konto?",
+                "CreateAccount": "Skapa konto",
+                "CreatingAccount": "Skapar konto…"
+            },
+            "RequestPasswordResetPage": {
+                "ForgottenPassword": "Glömt lösenord",
+                "EnterYourEmail": "Ange din epost för att få en länk för att återställa ditt lösenord",
+                "ResetPassword": "Återställ lösenord",
+                "SendResetLink": "Skicka återställningslänk",
+                "Sending": "Sänder…",
+                "BackToSignIn": "Tillbaka till inloggning",
+                "CheckYourEmail": "Kontrollera din epost",
+                "PasswordResetLinkSent": "Länk för återställning av lösenord skickad"
+            },
+            "PasswordResetEmailSentPage": {
+                "CheckYourEmail": "Kontrollera din epost",
+                "PasswordResetInstructions1": "Om den här epostadressen är kopplad till ett konto kommer du snart att få ett länk för att återställa lösenordet. Kontrollera din inkorg och följ instruktionerna för att återställa lösenordet.",
+                "PasswordResetInstructions2": "Om du inte ser epostmeddelandet, kontrollera din skräppost.",
+                "PasswordResetInstructions3": "Om du inte har begärt en återställning av lösenordet kan du ignorera detta epostmeddelande."
+            },
+            "PasswordResetPage": {
+                "EnterYourNewPassword": "Ange nytt lösenord",
+                "ResetYourPassword": "Återställ ditt lösenord",
+                "NewPassword": "Nytt lösenord",
+                "ResettingPassword": "Återställer lösenordet…",
+                "ResetPassword": "Återställ lösenord"
             }
-          }
-        }
-      }
-    },
-    "Profile": {
-      "MyEntries": {
-        "Title": "Mina anmälningar",
-        "Description": "Här hittar du alla dina anmälningar och ändringar i tävlingsregistreringar. Du kan visa, redigera och följa status."
-      },
-      "PersonalInfo": {
-        "Title": "Personuppgifter",
-        "Description": "Här kan du visa och uppdatera dina personuppgifter, kontaktinformation och andra profilinställningar.",
-        "SiCardNumber": "SportIdent-kortnummer",
-        "EmergencyContact": "Nödkontakt",
-        "Organization": "Organisation / klubb",
-        "Updated": "Profilen har uppdaterats"
-      },
-      "Cards": {
-        "Title": "Brickor",
-        "Description": "Hantera dina personliga brickor för varje sport",
-        "Sport": "Sport",
-        "Type": "Typ",
-        "Number": "Bricknummer",
-        "SetAsDefault": "Ange som standard för den här sporten",
-        "Empty": "Inga brickor sparade ännu. Lägg till din första bricka.",
-        "DefaultBadge": "Standard för den här sporten",
-        "MakeDefault": "Gör till standard",
-        "Delete": "Ta bort",
-        "DeleteTitle": "Ta bort bricka",
-        "DeleteConfirm": "Ta bort den här brickan?",
-        "EditTitle": "Redigera bricka",
-        "EditDescription": "Uppdatera brickinställningar för vald sport",
-        "SportRequired": "Sport är obligatorisk",
-        "CardNumberRequired": "Bricknummer är obligatoriskt",
-        "SaveSuccess": "Brickan har sparats"
-      },
-      "OAuth2": {
-        "Title": "OAuth2 API-åtkomst",
-        "Description": "Generera inloggningsuppgifter för API-åtkomst med OAuth2. Du behöver ett Client ID och ett Client Secret.",
-        "ClientId": "Client ID",
-        "ClientSecret": "Client Secret",
-        "Generate": "Generera nytt Client Secret",
-        "Regenerate": "Generera om Client Secret",
-        "SecretWarning": "Viktig varning",
-        "SecretWarningDescription": "Ditt Client Secret är känslig information. Dela det inte med någon och spara det säkert. Det visas inte igen när du lämnar eller uppdaterar sidan.",
-        "Revoke": "Återkalla",
-        "Toast": {
-          "GenerateSuccessDescription": "OAuth2-uppgifter har skapats!",
-          "GenerateFailTitle": "Något gick fel, försök igen.",
-          "RevokeSuccessDescription": "Uppgifterna har återkallats!",
-          "RevokeFailTitle": "Kunde inte återkalla uppgifterna"
         },
-        "HowToUse": {
-          "Title": "Så använder du OAuth2",
-          "Description": "Använd ditt Client ID och Client Secret i en begäran med grant_type=client_credentials till endpointen /auth/oauth2/token. Nedan finns ett exempel med curl."
+        "Event": {
+            "Description": "Tävlingsöversikt",
+            "CompetitorsList": "Deltagarlista",
+            "MyEvents": "Mina tävlingar",
+            "MyEventsDescription": "Översikt över alla tävlingar som du har skapat",
+            "NoCompetitorsFound": "Inga deltagare hittades för den valda klassen.",
+            "Classes": "Klasser",
+            "OrganizedBy": "Arrangerat av",
+            "Operations": {
+                "EditEvent": "Redigera tävling",
+                "EditDescription": "Redigera tävlingsinfo",
+                "CreateEvent": "Skapa tävling",
+                "CreateDescription": "Fyll i formuläret för att skapa en ny tävling",
+                "DeleteEvent": "Radera tävling",
+                "SelectClass": "Välj klass"
+            },
+            "Tables": {
+                "Name": "Namn",
+                "Organizer": "Arrangör",
+                "Date": "Datum",
+                "Location": "Plats",
+                "Visibility": "Synlighet",
+                "Actions": "Åtgärder",
+                "Format": "Format",
+                "Status": "Status",
+                "Sport": "Sport",
+                "Country": "Land",
+                "Entries": "Anmälningar",
+                "Competitors": "Deltagare"
+            },
+            "Tabs": {
+                "All": "Allt",
+                "Today": "Idag",
+                "Ongoing": "Pågående",
+                "Recent": "Senaste",
+                "Past": "Tidigare",
+                "Upcoming": "Kommande",
+                "Results": "Resultat",
+                "Splits": "Mellantider",
+                "Detail": "Detaljer",
+                "Info": "Info",
+                "Cards": "Brickor",
+                "List": "Lista",
+                "Cat": "Kat",
+                "Club": "Klubb",
+                "Live": "Live"
+            },
+            "Live": {
+                "Title": "Direktsändning",
+                "Description": "Realtidsuppdateringar kommer att visas här under tävlingen"
+            },
+            "Alert": {
+                "DemoTitle": "Detta är en demoapp",
+                "DemoDescription": "OFeed är en demoapp. Om du stöter på problem, vänligen rapportera det till Github.",
+                "EventDataNotAvailableTitle": "Tävlingsdata är inte tillgängliga",
+                "EventDataNotAvailableMessage": "Det finns för närvarande inga uppgifter tillgängliga för {{view}}. Kom tillbaka senare eller kontakta arrangören för mer info.",
+                "ViewResults": "resultat",
+                "ViewSplits": "mellantider",
+                "ViewClub": "klubbar"
+            },
+            "Report": {
+                "Title": "Ändringsrapport",
+                "Description": "Översikt över status- och brickändringar",
+                "CompetitorChangesTitle": "Ändringar för {{name}} (ID {{id}})",
+                "CompetitorChangesDescription": "Alla ändringar för den valda deltagaren i denna tävling.",
+                "CompetitorChangesEmpty": "Inga ändringar hittades för denna deltagare.",
+                "AutoRefresh": "Auto refresh: {{seconds}} s",
+                "LastUpdated": "Senaste uppdatering: {{time}}",
+                "NoTimestamp": "-",
+                "ActiveFilters": "Aktiva filter:",
+                "PresetsTitle": "Förinställda filter",
+                "Buttons": {
+                    "RefreshData": "Ladda data",
+                    "ExportCsv": "Exportera CSV",
+                    "ExportPdf": "Exportera PDF",
+                    "ClearFilters": "Rensa filter",
+                    "ShowProcessed": "Visa bearbetade",
+                    "HideProcessed": "Dölj bearbetade"
+                },
+                "Presets": {
+                    "CardChanges": "Brickändringar",
+                    "NoteChanges": "Kommentarsändringar",
+                    "LateStarts": "Sena starter",
+                    "DidNotStart": "Ej start",
+                    "All": "Alla poster"
+                },
+                "Filters": {
+                    "IdPlaceholder": "Filter ID",
+                    "DateRange": "Välj tidsintervall",
+                    "DateFrom": "Från",
+                    "DateTo": "Till",
+                    "TimeFrom": "Starttid",
+                    "TimeTo": "Sluttid",
+                    "TypePlaceholder": "Välj typ",
+                    "CompetitorIdPlaceholder": "Filtrera deltagar-ID",
+                    "LastnamePlaceholder": "Filtrera efternamn",
+                    "FirstnamePlaceholder": "Filtrera förnamn",
+                    "PreviousValuePlaceholder": "Filtrera fåregående värde",
+                    "NewValuePlaceholder": "Filtrera nytt värde",
+                    "OriginPlaceholder": "Välj ursprung",
+                    "SelectedCount": "{{count}} valda",
+                    "ClearSelection": "Rensa urvalet"
+                },
+                "TypeLabels": {
+                    "class_change": "Klassbyte",
+                    "firstname_change": "Ändring av förnamn",
+                    "lastname_change": "Ändring av efternamn",
+                    "bibNumber_change": "Ändring av nummerlapp",
+                    "nationality_change": "Ändring av nationalitet",
+                    "registration_change": "Ändring av registrering",
+                    "license_change": "Ändring av licens",
+                    "ranking_change": "Ändring av rankning",
+                    "rank_points_avg_change": "Genomsnittlig förändring av rankningspoäng",
+                    "organisation_change": "Ändring av klubb",
+                    "short_name_change": "Ändring av kortnamn",
+                    "si_card_change": "Ändring av SI-bricka",
+                    "start_time_change": "Ändring av starttid",
+                    "finish_time_change": "Ändring av måltid",
+                    "time_change": "Ändring av tid",
+                    "team_change": "Ändring av team",
+                    "leg_change": "Ändring av sträcka",
+                    "status_change": "Ändring av status",
+                    "late_start_change": "Ändring av sen start",
+                    "note_change": "Ändring av kommentar",
+                    "external_id_change": "Ändring av externt id"
+                },
+                "OriginLabels": {
+                    "START": "Start",
+                    "OFFICE": "Expedition",
+                    "FINISH": "Mål",
+                    "IT": "IT"
+                },
+                "Pagination": {
+                    "RowsPerPage": "Rader per sida",
+                    "RowsOption": "{{count}}",
+                    "PageOf": "Sida {{page}} av {{total}}",
+                    "Previous": "Föregående sida",
+                    "Next": "Nästa sida"
+                },
+                "Table": {
+                    "Id": "ID",
+                    "DateTime": "Datum och tid",
+                    "Type": "Typ",
+                    "CompetitorId": "Deltagar-ID",
+                    "Lastname": "Efternamn",
+                    "Firstname": "Förnamn",
+                    "PreviousValue": "Föregående värde",
+                    "NewValue": "Nytt värde",
+                    "Origin": "Ursprung"
+                }
+            },
+            "Settings": {
+                "Loading": "Laddar tävlingens inställningar"
+            },
+            "Detail": {
+                "EventInformation": "Tävlingsinfo",
+                "Date": "Datum",
+                "ZeroTime": "Nolltid",
+                "Location": "Plats",
+                "Organizer": "Arrangör",
+                "OpenInExternalSystem": "Öppna i {{provider}}",
+                "Classes": "Klasser",
+                "ShowAllClasses": "Visa alla klasser",
+                "ShowLessClasses": "Visa färre klasser",
+                "Format": "Format",
+                "RelayRace": "Stafett",
+                "Ranking": "Rankning",
+                "Coefficient": "Koefficient",
+                "EventStatus": "Tävlingsstatus",
+                "AdditionalDetails": "Mer info",
+                "Sport": "Sport",
+                "EventId": "Tävlings-ID",
+                "Author": "Författare",
+                "Report": "Rapport",
+                "Status": {
+                    "Completed": "SLUTFÖRD",
+                    "Live": "LIVE",
+                    "Upcoming": "KOMMANDE",
+                    "Draft": "UTKAST"
+                },
+                "StatusText": {
+                    "Completed": "Slutgiltiga resultat",
+                    "Live": "Tävlingen pågår",
+                    "Upcoming": "Anmälan öppen"
+                },
+                "Alert": {
+                    "UnpublishedTitle": "Tävlingen är ännu inte publicerad",
+                    "UnpublishedDescription": "Denna tävling är för närvarande i utkastläge och är inte allmänt synlig."
+                },
+                "ErrorTitle": "Fel vid inläsning av tävling",
+                "ErrorDescription": "Kunde inte läsa in tävlingsdata",
+                "Loading": "Läser in tävlingen"
+            },
+            "Results": {
+                "Loading": "Läser in resultat",
+                "LoadingClubs": "Läser in klubbar",
+                "LoadingClubResults": "Läser in klubbresultat",
+                "ErrorLoadingClubResults": "Fel vid inläsning av klubbresultat: {{message}}"
+            },
+            "Splits": {
+                "LoadingChart": "Läser in graf med mellantider",
+                "LoadingTimes": "Läser in mellantider"
+            },
+            "Form": {
+                "EventName": "Tävlingsnamn",
+                "Sport": "Sport",
+                "Date": "Datum",
+                "Timezone": "Tidszon",
+                "Organizer": "Arrangör",
+                "Location": "Plats",
+                "Latitude": "GPS latitude",
+                "Longitude": "GPS longitude",
+                "Country": "Land",
+                "ZeroTime": "Nolltid",
+                "FeaturedImage": "Presentationsbild",
+                "FeaturedImageHint": "JPEG, PNG eller WEBP, max 2 MB.",
+                "FeaturedImageButton": "Lägg till bild",
+                "FeaturedImageRemove": "Ta bort",
+                "Ranking": "Rankning",
+                "CoefRanking": "Rankningskoefficient",
+                "Relay": "Stafett",
+                "HundredthPrecision": "Hundradels precision",
+                "Published": "Publicerad",
+                "Placeholders": {
+                    "EventName": "Min första tävling",
+                    "Sport": "Välj sport",
+                    "Timezone": "Välj tidszon",
+                    "Organizer": "Arrangörsnamn",
+                    "Location": "Plats",
+                    "Latitude": "Ange latitud (t.ex. 59.332562)",
+                    "Longitude": "Ange longitude (t.ex. 18.065205)",
+                    "Country": "Välj land",
+                    "CoefRanking": "1.02"
+                },
+                "Import": {
+                    "Title": "Importera från externt system",
+                    "Description": "Sök tävling efter namn eller ladda data via externt id och förifyll formuläret.",
+                    "CurrentLink": "Nuvarande länkning",
+                    "NoLink": "Denna tävling är inte länkad till något externt system.",
+                    "Unlink": "Ta bort länkning",
+                    "Provider": "Provider",
+                    "ExternalEventId": "Externt tävlings-id",
+                    "ApiKey": "Eventor API-nyckel",
+                    "ApiKeyHelper": "API-nyckel krävs för import och sökning i Eventor.",
+                    "SearchByName": "Sök externa tävlingar efter namn",
+                    "MinCharacters": "Ange minst 2 tecken för att söka.",
+                    "Searching": "Söker...",
+                    "NoResults": "Inga matchande tävlingar hittades.",
+                    "Open": "Importera från externt system",
+                    "Hide": "Dölj import",
+                    "SaveLink": "Spara länkning",
+                    "LoadPreview": "Ladda och förifyll formulär",
+                    "Placeholders": {
+                        "ExternalEventId": "t.ex. 8300",
+                        "ApiKey": "Ange Eventor API-nyckel",
+                        "SearchByName": "Skriv minst 2 tecken..."
+                    },
+                    "Providers": {
+                        "ORIS": "ORIS",
+                        "EVENTOR": "Eventor"
+                    },
+                    "Toast": {
+                        "ExternalIdRequired": "Externt tävlings-id är obligatoriskt.",
+                        "EventorApiKeyRequired": "Eventor API-nyckel krävs för Eventor-provider.",
+                        "InvalidResponse": "Kunde inte bearbeta importerad tävlingsdata.",
+                        "PrefillSuccess": "Formuläret har förifyllts med data från externt system.",
+                        "PrefillFailedTitle": "Import misslyckades",
+                        "PrefillFailedDescription": "Kunde inte läsa in tävlingsdata från extern leverantör.",
+                        "LinkSaved": "Extern länkning sparades.",
+                        "LinkRemoved": "Extern länkning togs bort.",
+                        "LinkRemovedPendingSave": "Extern länkning tas bort när tävlingen sparas.",
+                        "SearchFailedTitle": "Sökning misslyckades",
+                        "SearchFailedDescription": "Kunde inte söka tävlingar i extern leverantör."
+                    }
+                },
+                "Toast": {
+                    "CreateSuccess": "Tävlingen har skapats!",
+                    "EditSuccess": "Tävlingen har uppdaterats!",
+                    "FeaturedImageUploadSuccess": "Presentationsbilden har laddats upp.",
+                    "FeaturedImageUploadError": "Kunde inte ladda upp presentationsbilden."
+                }
+            },
+            "Card": {
+                "Title": "Tävlingsinformation",
+                "Description": "Fyll i formuläret nedan för att uppdatera tävlingsinformationen."
+            },
+            "Password": {
+                "GeneratePassword": "Skapa lösenord",
+                "RegeneratePassword": "Generera nytt lösenord",
+                "PassportExpiration": "Lösenordets giltighetstid",
+                "NoExpirationSet": "Ingen giltighetstid angiven",
+                "Copy": "Kopiera",
+                "Revoke": "Återkalla",
+                "Card": {
+                    "Title": "Tävlingslösenord",
+                    "Description": "Ange tävlingens lösenord. Det används när appar begär åtkomst via webb-API."
+                },
+                "Field": {
+                    "Name": "Tävlingens lösenord",
+                    "Placeholders": {
+                        "Name": "Tävlingens lösenord"
+                    }
+                },
+                "Toast": {
+                    "UpdateSuccessDescription": "Lösenordet har uppdaterats!",
+                    "UpdateFailTitle": "Något gick fel. Försök igen.",
+                    "RevokeSuccessDescription": "Lösenordet har återkallats!",
+                    "RevokeFailTitle": "Något gick fel. Försök igen.",
+                    "CopySuccessDescription": "Lösenordet har kopierats. Förvara det säkert."
+                }
+            },
+            "Link": {
+                "Card": {
+                    "Title": "Länk till tävlingen",
+                    "Description": "Dela en länk till ett evenemang – du kan kopiera, dela eller skriva ut QR-koden för enkel åtkomst till live-resultat.",
+                    "Navigator": {
+                        "Title": "OFeed",
+                        "Event": "Tävling",
+                        "Location": "Plats",
+                        "Date": "Datum",
+                        "EventUri": "Visa live-resultat",
+                        "UrlDescription": "Skanna QR-koden och få omedelbart online-resultat i din telefon!"
+                    }
+                },
+                "PrintWindow": {
+                    "Title": "QR-kod - OFeed live-resultat",
+                    "Header": "OFeed",
+                    "EventQR": "Tävlingens QR-kod",
+                    "Info": "Skanna QR-koden for att visa live-resultat online."
+                },
+                "Toast": {
+                    "CopySuccessDescription": "Länken finns nu i ditt urklipp, dela den!"
+                }
+            },
+            "Integration": {
+                "Card": {
+                    "Title": "Konfigurering av appar",
+                    "Description": "Hur man konfigurerar appar för anslutning till OFeed.",
+                    "ApiBaseUrl": "URL",
+                    "EventId": "Tävlings-id",
+                    "EventPassword": "Tävlingens lösenord",
+                    "EventName": "Namn",
+                    "EventDate": "Datum",
+                    "ShareQrCode": "Dela QR",
+                    "PrintQrCode": "Skriv ut QR",
+                    "Navigator": {
+                        "Title": "OFeed QR-kod",
+                        "Text": "Här är QR-koden för tävlingen som du använder för att ansluta O Checklist till OFeed!"
+                    },
+                    "Tabs": {
+                        "OChecklist": {
+                            "Description": "Skanna QR-koden för att ställa in serveradress, tävlingsid och lösenord.\nScan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
+                        }
+                    }
+                }
+            }
+        },
+        "Profile": {
+            "MyEntries": {
+                "Title": "Mina anmälningar",
+                "Description": "Här hittar du alla dina anmälningar och ändringar i tävlingsregistreringar. Du kan visa, redigera och följa status."
+            },
+            "PersonalInfo": {
+                "Title": "Personuppgifter",
+                "Description": "Här kan du visa och uppdatera dina personuppgifter, kontaktinformation och andra profilinställningar.",
+                "SiCardNumber": "SportIdent-kortnummer",
+                "EmergencyContact": "Nödkontakt",
+                "Organization": "Organisation / klubb",
+                "Updated": "Profilen har uppdaterats"
+            },
+            "Cards": {
+                "Title": "Brickor",
+                "Description": "Hantera dina personliga brickor för varje sport",
+                "Sport": "Sport",
+                "Type": "Typ",
+                "Number": "Bricknummer",
+                "SetAsDefault": "Ange som standard för den här sporten",
+                "Empty": "Inga brickor sparade ännu. Lägg till din första bricka.",
+                "DefaultBadge": "Standard för den här sporten",
+                "MakeDefault": "Gör till standard",
+                "Delete": "Ta bort",
+                "DeleteTitle": "Ta bort bricka",
+                "DeleteConfirm": "Ta bort den här brickan?",
+                "EditTitle": "Redigera bricka",
+                "EditDescription": "Uppdatera brickinställningar för vald sport",
+                "SportRequired": "Sport är obligatorisk",
+                "CardNumberRequired": "Bricknummer är obligatoriskt",
+                "SaveSuccess": "Brickan har sparats"
+            },
+            "OAuth2": {
+                "Title": "OAuth2 API-åtkomst",
+                "Description": "Generera inloggningsuppgifter för API-åtkomst med OAuth2. Du behöver ett Client ID och ett Client Secret.",
+                "ClientId": "Client ID",
+                "ClientSecret": "Client Secret",
+                "Generate": "Generera nytt Client Secret",
+                "Regenerate": "Generera om Client Secret",
+                "SecretWarning": "Viktig varning",
+                "SecretWarningDescription": "Ditt Client Secret är känslig information. Dela det inte med någon och spara det säkert. Det visas inte igen när du lämnar eller uppdaterar sidan.",
+                "Revoke": "Återkalla",
+                "Toast": {
+                    "GenerateSuccessDescription": "OAuth2-uppgifter har skapats!",
+                    "GenerateFailTitle": "Något gick fel, försök igen.",
+                    "RevokeSuccessDescription": "Uppgifterna har återkallats!",
+                    "RevokeFailTitle": "Kunde inte återkalla uppgifterna"
+                },
+                "HowToUse": {
+                    "Title": "Så använder du OAuth2",
+                    "Description": "Använd ditt Client ID och Client Secret i en begäran med grant_type=client_credentials till endpointen /auth/oauth2/token. Nedan finns ett exempel med curl."
+                }
+            },
+            "OtherIntegrations": {
+                "Title": "Andra integrationer",
+                "Description": "Koppla ditt konto till fler tjänster och verktyg. Nya integrationer kommer att visas här över tid."
+            },
+            "Security": {
+                "PasswordDescription": "Här kan du ändra kontots lösenord. Vi rekommenderar ett starkt och unikt lösenord.",
+                "CurrentPassword": "Nuvarande lösenord",
+                "NewPassword": "Nytt lösenord",
+                "ConfirmNewPassword": "Bekräfta nytt lösenord",
+                "UpdatePassword": "Uppdatera lösenord",
+                "CurrentPasswordHelper": "Ange ditt nuvarande kontolösenord.",
+                "NewPasswordHelper": "Använd minst 8 tecken.",
+                "ConfirmNewPasswordHelper": "Upprepa det nya lösenordet för att bekräfta.",
+                "PasswordUpdated": "Lösenordet har uppdaterats",
+                "Errors": {
+                    "CurrentPasswordRequired": "Nuvarande lösenord är obligatoriskt",
+                    "NewPasswordRequired": "Nytt lösenord är obligatoriskt",
+                    "CurrentPasswordIncorrect": "Nuvarande lösenord är felaktigt.",
+                    "NewPasswordMustDiffer": "Det nya lösenordet måste skilja sig från det nuvarande lösenordet."
+                }
+            },
+            "Notifications": {
+                "Title": "Aviseringar",
+                "Description": "Hantera dina inställningar för aviseringar.",
+                "EventReminders": "Tävlingspåminnelser",
+                "EventRemindersDescription": "Få påminnelser innan dina tävlingar börjar.",
+                "ResultsUpdates": "Resultatuppdateringar",
+                "ResultsUpdatesDescription": "Få en avisering när resultat publiceras."
+            },
+            "Billing": {
+                "Title": "Fakturering",
+                "Description": "Hantera faktureringsinställningar och betalningsmetoder.",
+                "NoPaymentMethods": "Inga betalningsmetoder tillagda ännu.",
+                "AddPaymentMethod": "Lägg till betalningsmetod"
+            },
+            "Tabs": {
+                "Profile": "Profil",
+                "Integrations": "Integrationer",
+                "Security": "Säkerhet",
+                "Notifications": "Aviseringar",
+                "billing": "Fakturering"
+            }
+        },
+        "Home": {
+            "Hero": {
+                "Subtitle": "Liveöversikt över sportevenemang. Löparspårning, kontinuerliga uppdateringar och ett stadigt informationsflöde på ett ställe.",
+                "LiveEventSynchronization": "Live-synkronisering av tävling",
+                "LastMinuteChanges": "Sista-minuten-ändringar",
+                "DetailedSplitAnalysis": "Detaljerad analys av mellantider"
+            }
         }
-      },
-      "OtherIntegrations": {
-        "Title": "Andra integrationer",
-        "Description": "Koppla ditt konto till fler tjänster och verktyg. Nya integrationer kommer att visas här över tid."
-      },
-      "Security": {
-        "PasswordDescription": "Här kan du ändra kontots lösenord. Vi rekommenderar ett starkt och unikt lösenord.",
-        "CurrentPassword": "Nuvarande lösenord",
-        "NewPassword": "Nytt lösenord",
-        "ConfirmNewPassword": "Bekräfta nytt lösenord",
-        "UpdatePassword": "Uppdatera lösenord",
-        "CurrentPasswordHelper": "Ange ditt nuvarande kontolösenord.",
-        "NewPasswordHelper": "Använd minst 8 tecken.",
-        "ConfirmNewPasswordHelper": "Upprepa det nya lösenordet för att bekräfta.",
-        "PasswordUpdated": "Lösenordet har uppdaterats",
-        "Errors": {
-          "CurrentPasswordRequired": "Nuvarande lösenord är obligatoriskt",
-          "NewPasswordRequired": "Nytt lösenord är obligatoriskt",
-          "CurrentPasswordIncorrect": "Nuvarande lösenord är felaktigt.",
-          "NewPasswordMustDiffer": "Det nya lösenordet måste skilja sig från det nuvarande lösenordet."
-        }
-      },
-      "Notifications": {
-        "Title": "Aviseringar",
-        "Description": "Hantera dina inställningar för aviseringar.",
-        "EventReminders": "Tävlingspåminnelser",
-        "EventRemindersDescription": "Få påminnelser innan dina tävlingar börjar.",
-        "ResultsUpdates": "Resultatuppdateringar",
-        "ResultsUpdatesDescription": "Få en avisering när resultat publiceras."
-      },
-      "Billing": {
-        "Title": "Fakturering",
-        "Description": "Hantera faktureringsinställningar och betalningsmetoder.",
-        "NoPaymentMethods": "Inga betalningsmetoder tillagda ännu.",
-        "AddPaymentMethod": "Lägg till betalningsmetod"
-      },
-      "Tabs": {
-        "Profile": "Profil",
-        "Integrations": "Integrationer",
-        "Security": "Säkerhet",
-        "Notifications": "Aviseringar",
-        "billing": "Fakturering"
-      }
     },
-    "Home": {
-      "Hero": {
-        "Subtitle": "Liveöversikt över sportevenemang. Löparspårning, kontinuerliga uppdateringar och ett stadigt informationsflöde på ett ställe.",
-        "LiveEventSynchronization": "Live-synkronisering av tävling",
-        "LastMinuteChanges": "Sista-minuten-ändringar",
-        "DetailedSplitAnalysis": "Detaljerad analys av mellantider"
-      }
+    "Errors": {
+        "Generic": "Något gick fel",
+        "UpdatePasswordFailedTitle": "Det gick inte att uppdatera lösenordet",
+        "UpdateProfileFailedTitle": "Det gick inte att uppdatera profilen"
+    },
+    "validation": {
+        "passwordRequired": "Lösenord är obligatoriskt",
+        "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
+        "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
+        "passwordsDoNotMatch": "Lösenorden matchar inte"
     }
-  },
-  "Errors": {
-    "Generic": "Något gick fel",
-    "UpdatePasswordFailedTitle": "Det gick inte att uppdatera lösenordet",
-    "UpdateProfileFailedTitle": "Det gick inte att uppdatera profilen"
-  },
-  "validation": {
-    "passwordRequired": "Lösenord är obligatoriskt",
-    "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
-    "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
-    "passwordsDoNotMatch": "Lösenorden matchar inte"
-  }
 }
