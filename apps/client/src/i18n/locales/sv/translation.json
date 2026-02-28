@@ -436,20 +436,25 @@
                     "Button": "",
                     "ConfirmTitle": "",
                     "Title": "",
-                    "ConfirmButton": ""
+                    "ConfirmButton": "",
+                    "ConfirmDescription": "",
+                    "Description": ""
                 },
                 "DeleteEvent": {
                     "ConfirmButton": "",
                     "Button": "",
                     "ConfirmTitle": "",
-                    "Title": ""
+                    "Title": "",
+                    "Description": "",
+                    "ConfirmDescription": ""
                 },
                 "DeleteCompetitors": {
                     "Description": "",
                     "Title": "",
                     "ConfirmButton": "",
                     "Button": "",
-                    "ConfirmTitle": ""
+                    "ConfirmTitle": "",
+                    "ConfirmDescription": ""
                 },
                 "Toast": {
                     "DeleteFailTitle": "",
@@ -473,7 +478,8 @@
                     "UpdateFail": ""
                 },
                 "Card": {
-                    "Title": ""
+                    "Title": "",
+                    "Description": ""
                 }
             }
         },
@@ -626,7 +632,8 @@
             "OrdDragAndDrop": "",
             "OrDragAndDrop": "",
             "Delete": "",
-            "ClickToUpload": ""
+            "ClickToUpload": "",
+            "SupportedFormats": ""
         },
         "LanguageSelector": {
             "SelectLanguage": "",
@@ -663,7 +670,8 @@
                 "AllowedFormats": ""
             },
             "UploadIofXml": {
-                "Title": ""
+                "Title": "",
+                "Description": ""
             }
         },
         "AppDataTable": {
