@@ -1,173 +1,674 @@
 {
-  "Pages": {
-    "Auth": {
-      "User": {
-        "Firstname": "Vorname",
-        "Lastname": "Nachname",
-        "Club": "Verein",
-        "Email": "Email",
-        "Password": "Passwort",
-        "Placeholder": {
-          "Firstname": "Hans",
-          "Lastname": "Neumann",
-          "Club": "Mein Verein",
-          "Email": "newman@example.com",
-          "Password": "Ihr Passwort",
-          "NewPassword": "Ihr neues Passwort",
-          "PasswordConfirmation": "Passwort bestätigung"
-        }
-      },
-      "SignInUpPage": {
-        "Login": "Login",
-        "DontHaveAnAccount": "Haben sie noch kein Zugang?",
-        "CreateAnAccount": "Konto erstellen",
-        "EnterYourInformation": "Füllen Sie die u.s. Infos aus um ihr Account zu erstellen",
-        "EnterYourEmailToSignIn": "Geben Sie ihre Mailadresse an um sich anmelden zu können",
-        "ClickConsent": "Wenn Sie fortfahren klicken, stimmen sie unseren",
-        "TermsOfService": "Agbs"
-      },
-      "RequestPasswordResetPage": {
-        "ForgottenPassword": "Passwort vergessen"
-      }
-    },
-    "Profile": {
-      "MyEntries": {
-        "Title": "Meine Anmeldungen",
-        "Description": "Hier findest du alle deine Anmeldungen und Änderungen bei Event-Registrierungen. Du kannst sie ansehen, bearbeiten oder ihren Status verfolgen."
-      },
-      "PersonalInfo": {
-        "Title": "Persönliche Daten",
-        "Description": "Hier kannst du deine persönlichen Daten, Kontaktinformationen und andere Profileinstellungen ansehen und aktualisieren.",
-        "SiCardNumber": "SportIdent-Kartennummer",
-        "EmergencyContact": "Notfallkontakt",
-        "Organization": "Organisation / Verein",
-        "Updated": "Profil erfolgreich aktualisiert"
-      },
-      "Cards": {
-        "Title": "Chips",
-        "Description": "Verwalte deine persönlichen Chips für jede Sportart",
-        "Sport": "Sport",
-        "Type": "Typ",
-        "Number": "Chipnummer",
-        "SetAsDefault": "Als Standard für diese Sportart festlegen",
-        "Empty": "Noch keine Chips gespeichert. Füge deinen ersten Chip hinzu.",
-        "DefaultBadge": "Standard für diese Sportart",
-        "MakeDefault": "Als Standard festlegen",
-        "Delete": "Löschen",
-        "DeleteTitle": "Chip löschen",
-        "DeleteConfirm": "Diesen Chip löschen?",
-        "EditTitle": "Chip bearbeiten",
-        "EditDescription": "Chip-Einstellungen für die ausgewählte Sportart aktualisieren",
-        "SportRequired": "Sport ist erforderlich",
-        "CardNumberRequired": "Chipnummer ist erforderlich",
-        "SaveSuccess": "Chip erfolgreich gespeichert"
-      },
-      "OAuth2": {
-        "Title": "OAuth2 API-Zugriff",
-        "Description": "Generiere Zugangsdaten für den API-Zugriff über OAuth2. Du benötigst eine Client-ID und ein Client-Secret.",
-        "ClientId": "Client-ID",
-        "ClientSecret": "Client-Secret",
-        "Generate": "Neues Client-Secret generieren",
-        "Regenerate": "Client-Secret neu generieren",
-        "SecretWarning": "Wichtiger Hinweis",
-        "SecretWarningDescription": "Dein Client-Secret ist vertraulich. Teile es mit niemandem und bewahre es sicher auf. Nach dem Verlassen oder Neuladen dieser Seite wird es nicht erneut angezeigt.",
-        "Revoke": "Widerrufen",
-        "Toast": {
-          "GenerateSuccessDescription": "OAuth2-Zugangsdaten wurden erfolgreich generiert!",
-          "GenerateFailTitle": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
-          "RevokeSuccessDescription": "Zugangsdaten wurden erfolgreich widerrufen!",
-          "RevokeFailTitle": "Zugangsdaten konnten nicht widerrufen werden"
+    "Pages": {
+        "Auth": {
+            "User": {
+                "Firstname": "Vorname",
+                "Lastname": "Nachname",
+                "Club": "Verein",
+                "Email": "Email",
+                "Password": "Passwort",
+                "Placeholder": {
+                    "Firstname": "Hans",
+                    "Lastname": "Neumann",
+                    "Club": "Mein Verein",
+                    "Email": "newman@example.com",
+                    "Password": "Ihr Passwort",
+                    "NewPassword": "Ihr neues Passwort",
+                    "PasswordConfirmation": "Passwort bestätigung"
+                }
+            },
+            "SignInUpPage": {
+                "Login": "Login",
+                "DontHaveAnAccount": "Haben sie noch kein Zugang?",
+                "CreateAnAccount": "Konto erstellen",
+                "EnterYourInformation": "Füllen Sie die u.s. Infos aus um ihr Account zu erstellen",
+                "EnterYourEmailToSignIn": "Geben Sie ihre Mailadresse an um sich anmelden zu können",
+                "ClickConsent": "Wenn Sie fortfahren klicken, stimmen sie unseren",
+                "TermsOfService": "Agbs",
+                "WelcomeBack": "",
+                "SignInWithEmail": "",
+                "PrivacyPolicy": "",
+                "SignUp": ""
+            },
+            "RequestPasswordResetPage": {
+                "ForgottenPassword": "Passwort vergessen",
+                "PasswordResetLinkSent": "",
+                "CheckYourEmail": "",
+                "SendResetLink": "",
+                "Sending": "",
+                "EnterYourEmail": "",
+                "BackToSignIn": "",
+                "ResetPassword": ""
+            },
+            "PasswordResetEmailSentPage": {
+                "PasswordResetInstructions1": "",
+                "PasswordResetInstructions3": "",
+                "PasswordResetInstructions2": "",
+                "CheckYourEmail": ""
+            },
+            "PasswordResetPage": {
+                "ResettingPassword": "",
+                "ResetPassword": "",
+                "EnterYourNewPassword": "",
+                "NewPassword": "",
+                "ResetYourPassword": ""
+            },
+            "SignUpPage": {
+                "CreatingAccount": "",
+                "CreateAccount": "",
+                "AlreadyHaveAnAccount": ""
+            }
         },
-        "HowToUse": {
-          "Title": "So verwendest du OAuth2",
-          "Description": "Verwende deine Client-ID und dein Client-Secret in einer Anfrage mit grant_type=client_credentials an den Endpunkt /auth/oauth2/token. Unten findest du ein Beispiel mit curl."
+        "Profile": {
+            "MyEntries": {
+                "Title": "",
+                "Description": ""
+            },
+            "PersonalInfo": {
+                "Title": "",
+                "Description": "",
+                "SiCardNumber": "",
+                "EmergencyContact": "",
+                "Organization": "Organisation / Verein",
+                "Updated": "Profil erfolgreich aktualisiert"
+            },
+            "Cards": {
+                "Title": "Chips",
+                "Description": "Verwalte deine persönlichen Chips für jede Sportart",
+                "Sport": "Sport",
+                "Type": "Typ",
+                "Number": "Chipnummer",
+                "SetAsDefault": "Als Standard für diese Sportart festlegen",
+                "Empty": "Noch keine Chips gespeichert. Füge deinen ersten Chip hinzu.",
+                "DefaultBadge": "Standard für diese Sportart",
+                "MakeDefault": "Als Standard festlegen",
+                "Delete": "Löschen",
+                "DeleteTitle": "Chip löschen",
+                "DeleteConfirm": "Diesen Chip löschen?",
+                "EditTitle": "Chip bearbeiten",
+                "EditDescription": "Chip-Einstellungen für die ausgewählte Sportart aktualisieren",
+                "SportRequired": "Sport ist erforderlich",
+                "CardNumberRequired": "Chipnummer ist erforderlich",
+                "SaveSuccess": "Chip erfolgreich gespeichert"
+            },
+            "OAuth2": {
+                "Title": "",
+                "Description": "",
+                "ClientId": "",
+                "ClientSecret": "",
+                "Generate": "",
+                "Regenerate": "",
+                "SecretWarning": "",
+                "SecretWarningDescription": "",
+                "Revoke": "",
+                "Toast": {
+                    "GenerateSuccessDescription": "",
+                    "GenerateFailTitle": "",
+                    "RevokeSuccessDescription": "",
+                    "RevokeFailTitle": ""
+                },
+                "HowToUse": {
+                    "Title": "",
+                    "Description": ""
+                }
+            },
+            "OtherIntegrations": {
+                "Title": "",
+                "Description": ""
+            },
+            "Security": {
+                "PasswordDescription": "",
+                "CurrentPassword": "",
+                "NewPassword": "",
+                "ConfirmNewPassword": "",
+                "UpdatePassword": "",
+                "CurrentPasswordHelper": "Gib dein aktuelles Kontopasswort ein.",
+                "NewPasswordHelper": "Verwende mindestens 8 Zeichen.",
+                "ConfirmNewPasswordHelper": "Wiederhole das neue Passwort zur Bestätigung.",
+                "PasswordUpdated": "Passwort erfolgreich aktualisiert",
+                "Errors": {
+                    "CurrentPasswordRequired": "Aktuelles Passwort ist erforderlich",
+                    "NewPasswordRequired": "Neues Passwort ist erforderlich",
+                    "CurrentPasswordIncorrect": "Aktuelles Passwort ist falsch.",
+                    "NewPasswordMustDiffer": "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden."
+                }
+            },
+            "Notifications": {
+                "Title": "Benachrichtigungen",
+                "Description": "Verwalte deine Benachrichtigungseinstellungen.",
+                "EventReminders": "Event-Erinnerungen",
+                "EventRemindersDescription": "Erhalte Erinnerungen, bevor deine Events beginnen.",
+                "ResultsUpdates": "Ergebnis-Updates",
+                "ResultsUpdatesDescription": "Erhalte eine Benachrichtigung, wenn Ergebnisse veröffentlicht werden."
+            },
+            "Billing": {
+                "Title": "Abrechnung",
+                "Description": "Verwalte deine Abrechnungseinstellungen und Zahlungsmethoden.",
+                "NoPaymentMethods": "Noch keine Zahlungsmethoden hinzugefügt.",
+                "AddPaymentMethod": "Zahlungsmethode hinzufügen"
+            },
+            "Tabs": {
+                "Profile": "",
+                "Integrations": "",
+                "Security": "",
+                "Notifications": "Benachrichtigungen",
+                "billing": "Abrechnung"
+            }
+        },
+        "Home": {
+            "Hero": {
+                "Subtitle": "",
+                "LiveEventSynchronization": "Live-Event-Synchronisierung",
+                "LastMinuteChanges": "Änderungen in letzter Minute",
+                "DetailedSplitAnalysis": "Detaillierte Zwischenzeitanalyse"
+            },
+            "Infinite": {
+                "LoadingMore": "",
+                "FoundCount": "",
+                "ScrollMore": "",
+                "NoEvents": "",
+                "LoadingMoreInline": "",
+                "LoadingInitial": "",
+                "NoEventsHint": "",
+                "AllLoaded": "",
+                "EventsCount": "",
+                "LoadError": ""
+            }
+        },
+        "Event": {
+            "Tabs": {
+                "List": "",
+                "Info": "",
+                "Results": "",
+                "Ongoing": "",
+                "Club": "",
+                "Detail": "",
+                "Cat": "",
+                "Upcoming": "",
+                "Today": "",
+                "Cards": "",
+                "Live": "",
+                "Recent": "",
+                "Splits": "",
+                "All": "",
+                "Past": ""
+            },
+            "Form": {
+                "Placeholders": {
+                    "CoefRanking": "",
+                    "Country": "",
+                    "Sport": "",
+                    "Longitude": "",
+                    "Organizer": "",
+                    "Location": "",
+                    "Latitude": "",
+                    "EventName": "",
+                    "Timezone": ""
+                },
+                "Country": "",
+                "Date": "",
+                "EventName": "",
+                "Timezone": "",
+                "Toast": {
+                    "CreateSuccess": "",
+                    "FeaturedImageUploadError": "",
+                    "EditSuccess": "",
+                    "FeaturedImageUploadSuccess": ""
+                },
+                "FeaturedImageButton": "",
+                "Relay": "",
+                "Published": "",
+                "FeaturedImage": "",
+                "Sport": "",
+                "FeaturedImageRemove": "",
+                "HundredthPrecision": "",
+                "Ranking": "",
+                "ZeroTime": "",
+                "FeaturedImageHint": "",
+                "CoefRanking": "",
+                "Longitude": "",
+                "Latitude": "",
+                "Location": ""
+            },
+            "DangerZone": {
+                "DeleteAllEventData": {
+                    "Button": "",
+                    "ConfirmTitle": "",
+                    "Title": "",
+                    "ConfirmButton": ""
+                },
+                "DeleteEvent": {
+                    "ConfirmButton": "",
+                    "Button": "",
+                    "ConfirmTitle": "",
+                    "Title": ""
+                },
+                "DeleteCompetitors": {
+                    "Description": "",
+                    "Title": "",
+                    "ConfirmButton": "",
+                    "Button": "",
+                    "ConfirmTitle": ""
+                },
+                "Toast": {
+                    "DeleteFailTitle": "",
+                    "DeleteSuccessDescription": ""
+                },
+                "Title": "",
+                "Footer": "",
+                "Description": ""
+            },
+            "Link": {
+                "Card": {
+                    "Navigator": {
+                        "Title": "",
+                        "Date": "",
+                        "UrlDescription": "",
+                        "EventUri": "",
+                        "Event": "",
+                        "Location": ""
+                    }
+                },
+                "PrintWindow": {
+                    "Title": "",
+                    "Info": "",
+                    "EventQR": "",
+                    "Header": ""
+                },
+                "Toast": {
+                    "CopySuccessDescription": ""
+                }
+            },
+            "Report": {
+                "Filters": {
+                    "LastnamePlaceholder": "",
+                    "DateFrom": "",
+                    "PreviousValuePlaceholder": "",
+                    "NewValuePlaceholder": "",
+                    "TimeTo": "",
+                    "ClearSelection": "",
+                    "SelectedCount": "",
+                    "TypePlaceholder": "",
+                    "DateTo": "",
+                    "FirstnamePlaceholder": "",
+                    "IdPlaceholder": "",
+                    "OriginPlaceholder": "",
+                    "DateRange": "",
+                    "CompetitorIdPlaceholder": "",
+                    "TimeFrom": ""
+                },
+                "Title": "",
+                "TypeLabels": {
+                    "nationality_change": "",
+                    "late_start_change": "",
+                    "status_change": "",
+                    "rank_points_avg_change": "",
+                    "external_id_change": "",
+                    "class_change": "",
+                    "bibNumber_change": "",
+                    "finish_time_change": "",
+                    "firstname_change": "",
+                    "registration_change": "",
+                    "si_card_change": "",
+                    "short_name_change": "",
+                    "time_change": "",
+                    "lastname_change": "",
+                    "organisation_change": "",
+                    "team_change": "",
+                    "start_time_change": "",
+                    "ranking_change": "",
+                    "license_change": "",
+                    "leg_change": "",
+                    "note_change": ""
+                },
+                "Table": {
+                    "PreviousValue": "",
+                    "NewValue": "",
+                    "Id": "",
+                    "Origin": "",
+                    "Firstname": "",
+                    "DateTime": "",
+                    "Lastname": "",
+                    "CompetitorId": "",
+                    "Type": ""
+                },
+                "Pagination": {
+                    "PageOf": "",
+                    "Next": "",
+                    "RowsOption": "",
+                    "RowsPerPage": "",
+                    "Previous": ""
+                },
+                "CompetitorChangesTitle": "",
+                "Buttons": {
+                    "RefreshData": "",
+                    "HideProcessed": "",
+                    "ExportCsv": "",
+                    "ClearFilters": "",
+                    "ExportPdf": "",
+                    "ShowProcessed": ""
+                },
+                "Presets": {
+                    "All": "",
+                    "LateStarts": "",
+                    "DidNotStart": "",
+                    "CardChanges": "",
+                    "NoteChanges": ""
+                },
+                "CompetitorChangesDescription": "",
+                "OriginLabels": {
+                    "OFFICE": "",
+                    "IT": "",
+                    "START": "",
+                    "FINISH": ""
+                },
+                "AutoRefresh": "",
+                "NoTimestamp": "",
+                "CompetitorChangesEmpty": "",
+                "PresetsTitle": "",
+                "LastUpdated": "",
+                "ActiveFilters": "",
+                "Description": ""
+            },
+            "Tables": {
+                "Actions": "",
+                "Entries": "",
+                "Location": "",
+                "Date": "",
+                "Status": "",
+                "Competitors": "",
+                "Name": "",
+                "Format": "",
+                "Sport": "",
+                "Country": "",
+                "Visibility": ""
+            },
+            "CompetitorsList": "",
+            "Integration": {
+                "Card": {
+                    "EventPassword": "",
+                    "Tabs": {
+                        "SIDroidConenctor": {
+                            "Description": ""
+                        },
+                        "OChecklist": {
+                            "Description": ""
+                        },
+                        "QuickEvent": {
+                            "ExportInterval": "",
+                            "Description": ""
+                        }
+                    },
+                    "Navigator": {
+                        "Title": ""
+                    },
+                    "ApiBaseUrl": "",
+                    "EventName": "",
+                    "EventDate": "",
+                    "EventId": ""
+                },
+                "Toast": {
+                    "CopyBaseUrl": "",
+                    "CopyEventId": ""
+                },
+                "PrintWindow": {
+                    "Header": "",
+                    "Footer": "",
+                    "Subheader": ""
+                }
+            },
+            "Detail": {
+                "StatusText": {
+                    "Upcoming": "",
+                    "Live": "",
+                    "Completed": ""
+                },
+                "Loading": "",
+                "Status": {
+                    "Upcoming": "",
+                    "Live": "",
+                    "Completed": "",
+                    "Draft": ""
+                },
+                "ErrorTitle": "",
+                "Ranking": "",
+                "EventStatus": "",
+                "Report": "",
+                "Alert": {
+                    "UnpublishedTitle": "",
+                    "UnpublishedDescription": ""
+                },
+                "Classes": "",
+                "ShowLessClasses": "",
+                "Author": "",
+                "Date": "",
+                "Location": "",
+                "RelayRace": "",
+                "ZeroTime": "",
+                "EventId": "",
+                "Organizer": "",
+                "Sport": "",
+                "ShowAllClasses": "",
+                "Format": "",
+                "AdditionalDetails": "",
+                "Coefficient": "",
+                "ErrorDescription": "",
+                "EventInformation": ""
+            },
+            "MyEventsDescription": "",
+            "Operations": {
+                "CreateEvent": "",
+                "CreateDescription": "",
+                "EditEvent": "",
+                "SelectClass": "",
+                "DeleteEvent": "",
+                "EditDescription": ""
+            },
+            "Password": {
+                "Card": {
+                    "Title": ""
+                },
+                "Toast": {
+                    "RevokeFailTitle": "",
+                    "CopySuccessDescription": "",
+                    "RevokeSuccessDescription": "",
+                    "UpdateSuccessDescription": "",
+                    "UpdateFailTitle": ""
+                },
+                "Revoke": "",
+                "Field": {
+                    "Placeholders": {
+                        "Name": ""
+                    },
+                    "Name": ""
+                },
+                "NoExpirationSet": "",
+                "RegeneratePassword": "",
+                "PassportExpiration": "",
+                "GeneratePassword": "",
+                "Copy": ""
+            },
+            "Splits": {
+                "LoadingChart": "",
+                "LoadingTimes": ""
+            },
+            "Results": {
+                "Loading": "",
+                "LoadingClubs": "",
+                "LoadingClubResults": "",
+                "ErrorLoadingClubResults": ""
+            },
+            "Settings": {
+                "Loading": ""
+            },
+            "Classes": "",
+            "Alert": {
+                "EventDataNotAvailableTitle": "",
+                "DemoDescription": "",
+                "ViewResults": "",
+                "ViewSplits": "",
+                "EventDataNotAvailableMessage": "",
+                "DemoTitle": "",
+                "ViewClub": ""
+            },
+            "TroublesShooting": {
+                "Description": "",
+                "Description1": "",
+                "Description2": "",
+                "Title": "",
+                "GitHubIssues": "",
+                "Discord": ""
+            },
+            "NoCompetitorsFound": "",
+            "MyEvents": "",
+            "Visibility": {
+                "Toast": {
+                    "UpdateSuccess": "",
+                    "UpdateFail": ""
+                },
+                "Card": {
+                    "Title": ""
+                }
+            },
+            "Description": "",
+            "OrganizedBy": "",
+            "Live": {
+                "Description": "",
+                "Title": ""
+            },
+            "Card": {
+                "Title": ""
+            }
         }
-      },
-      "OtherIntegrations": {
-        "Title": "Weitere Integrationen",
-        "Description": "Verbinde dein Konto mit zusätzlichen Diensten und Tools. Neue Integrationen werden hier nach und nach erscheinen."
-      },
-      "Security": {
-        "PasswordDescription": "Hier kannst du dein Kontopasswort ändern. Wir empfehlen ein starkes, einzigartiges Passwort.",
-        "CurrentPassword": "Aktuelles Passwort",
-        "NewPassword": "Neues Passwort",
-        "ConfirmNewPassword": "Neues Passwort bestätigen",
-        "UpdatePassword": "Passwort aktualisieren",
-        "CurrentPasswordHelper": "Gib dein aktuelles Kontopasswort ein.",
-        "NewPasswordHelper": "Verwende mindestens 8 Zeichen.",
-        "ConfirmNewPasswordHelper": "Wiederhole das neue Passwort zur Bestätigung.",
-        "PasswordUpdated": "Passwort erfolgreich aktualisiert",
-        "Errors": {
-          "CurrentPasswordRequired": "Aktuelles Passwort ist erforderlich",
-          "NewPasswordRequired": "Neues Passwort ist erforderlich",
-          "CurrentPasswordIncorrect": "Aktuelles Passwort ist falsch.",
-          "NewPasswordMustDiffer": "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden."
+    },
+    "Organisms": {
+        "Navbar": {
+            "Pages": "Seiten",
+            "SignIn": "",
+            "LogOut": "",
+            "MyProfile": "",
+            "SignUp": "",
+            "Placeholder": ""
+        },
+        "Footer": {
+            "Docs": "Dokumente",
+            "Donate": "Spenden",
+            "Blog": "Blog",
+            "MadeWith": "Gemacht mit",
+            "ForOrienteering": "für orientierungslauf",
+            "Collaborate": ""
+        },
+        "AppDataTable": {
+            "Empty": "Es gibt keine Daten.",
+            "Loading": "Wid geladen...",
+            "Error": "Dateiupload fehlgeschlagen."
+        },
+        "DragDrop": {
+            "Toast": {
+                "MaxSize": "",
+                "TryAgain": "",
+                "ProcessingError": "",
+                "FileTooLarge": "",
+                "UploadFail": "",
+                "UploadInProgress": "",
+                "InvalidFormat": "",
+                "UploadSuccess": "",
+                "AllowedFormats": ""
+            },
+            "UploadIofXml": {
+                "Title": ""
+            }
         }
-      },
-      "Notifications": {
-        "Title": "Benachrichtigungen",
-        "Description": "Verwalte deine Benachrichtigungseinstellungen.",
-        "EventReminders": "Event-Erinnerungen",
-        "EventRemindersDescription": "Erhalte Erinnerungen, bevor deine Events beginnen.",
-        "ResultsUpdates": "Ergebnis-Updates",
-        "ResultsUpdatesDescription": "Erhalte eine Benachrichtigung, wenn Ergebnisse veröffentlicht werden."
-      },
-      "Billing": {
-        "Title": "Abrechnung",
-        "Description": "Verwalte deine Abrechnungseinstellungen und Zahlungsmethoden.",
-        "NoPaymentMethods": "Noch keine Zahlungsmethoden hinzugefügt.",
-        "AddPaymentMethod": "Zahlungsmethode hinzufügen"
-      },
-      "Tabs": {
-        "Profile": "Profil",
-        "Integrations": "Integrationen",
-        "Security": "Sicherheit",
-        "Notifications": "Benachrichtigungen",
-        "billing": "Abrechnung"
-      }
     },
-    "Home": {
-      "Hero": {
-        "Subtitle": "Live-Überblick über Sportevents. Läufer-Tracking, kontinuierliche Updates und ein stetiger Informationsfluss an einem Ort.",
-        "LiveEventSynchronization": "Live-Event-Synchronisierung",
-        "LastMinuteChanges": "Änderungen in letzter Minute",
-        "DetailedSplitAnalysis": "Detaillierte Zwischenzeitanalyse"
-      }
-    }
-  },
-  "Organisms": {
-    "Navbar": {
-      "Pages": "Seiten"
+    "Molecules": {
+        "DragDrop": {
+            "ClickToUpload": "Klicken sie hier für upload",
+            "Delete": "Löschen",
+            "OrdDragAndDrop": "oder drag and drop",
+            "Toast": {
+                "InvalidFileFormat": {
+                    "Title": "",
+                    "Description": ""
+                },
+                "Error": {
+                    "DescriptionSingle": "",
+                    "DescriptionPlural": ""
+                },
+                "MaximumFiles": {
+                    "Description": "",
+                    "Title": ""
+                },
+                "ProcessingError": ""
+            },
+            "Done": "",
+            "OrDragAndDrop": ""
+        },
+        "LanguageSelector": {
+            "SelectLanguage": "",
+            "Title": ""
+        },
+        "EventSearchDialog": {
+            "RecentEvents": "",
+            "NoEventsHint": "",
+            "StartTypingHint": "",
+            "Draft": "",
+            "StartTyping": "",
+            "Placeholder": "",
+            "Title": "",
+            "NoEventsFound": "",
+            "Searching": "",
+            "Hint": "",
+            "Organizer": ""
+        },
+        "SearchBox": {
+            "SearchResults": ""
+        }
     },
-    "Footer": {
-      "Docs": "Dokumente",
-      "Donate": "Spenden",
-      "Blog": "Blog",
-      "MadeWith": "Gemacht mit",
-      "ForOrienteering": "für orientierungslauf"
+    "Errors": {
+        "Generic": "Etwas ist schiefgelaufen",
+        "UpdatePasswordFailedTitle": "Passwort konnte nicht aktualisiert werden",
+        "UpdateProfileFailedTitle": "Profil konnte nicht aktualisiert werden"
     },
-    "AppDataTable": {
-      "Empty": "Es gibt keine Daten.",
-      "Loading": "Wid geladen...",
-      "Error": "Dateiupload fehlgeschlagen."
+    "validation": {
+        "passwordRequired": "Passwort ist erforderlich",
+        "passwordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
+        "confirmPasswordRequired": "Bitte bestätige dein neues Passwort",
+        "passwordsDoNotMatch": "Passwörter stimmen nicht überein"
+    },
+    "Templates": {
+        "Routes": {
+            "MRB": "",
+            "Events": "",
+            "GitHub": "",
+            "About": "",
+            "Contact": "",
+            "Docs": "",
+            "Home": ""
+        }
+    },
+    "Route": {
+        "Finances": "",
+        "Dashboard": "",
+        "Settings": "",
+        "Transactions": "",
+        "Events": ""
+    },
+    "Validations": {
+        "Longitude": "",
+        "Number": "",
+        "SelectRequired": "",
+        "EmailsContainNotEmail": "",
+        "Email": "",
+        "Time": "",
+        "Date": "",
+        "Latitude": "",
+        "PasswordsDontMatch": "",
+        "Required": "",
+        "TimeInZones": "",
+        "EmailsMinMax": "",
+        "NumberMin": "",
+        "FileRequired": "",
+        "EmailsUnique": "",
+        "RegistrationNumber": ""
     }
-  },
-  "Molecules": {
-    "DragDrop": {
-      "ClickToUpload": "Klicken sie hier für upload",
-      "Delete": "Löschen",
-      "OrdDragAndDrop": "oder drag and drop"
-    }
-  },
-  "Errors": {
-    "Generic": "Etwas ist schiefgelaufen",
-    "UpdatePasswordFailedTitle": "Passwort konnte nicht aktualisiert werden",
-    "UpdateProfileFailedTitle": "Profil konnte nicht aktualisiert werden"
-  },
-  "validation": {
-    "passwordRequired": "Passwort ist erforderlich",
-    "passwordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
-    "confirmPasswordRequired": "Bitte bestätige dein neues Passwort",
-    "passwordsDoNotMatch": "Passwörter stimmen nicht überein"
-  }
 }
