@@ -1,735 +1,735 @@
 {
-  "Pages": {
-    "Auth": {
-      "User": {
-        "Firstname": "Jméno",
-        "Lastname": "Příjmení",
-        "Club": "Klub",
-        "Email": "Email",
-        "Password": "Heslo",
-        "Placeholder": {
-          "Firstname": "Jan",
-          "Lastname": "Novák",
-          "Club": "Můj klub",
-          "Email": "novak@priklad.cz",
-          "Password": "Tvoje tajné heslo",
-          "NewPassword": "Tvoje nové tajné heslo",
-          "PasswordConfirmation": "Potvrzení hesla"
-        }
-      },
-      "SignInUpPage": {
-        "Login": "Přihlásit",
-        "DontHaveAnAccount": "Ještě nemáš svůj účet?",
-        "CreateAnAccount": "Vytvořit účet",
-        "EnterYourInformation": "Zadej své údaje níže pro vytvoření účtu",
-        "EnterYourEmailToSignIn": "Vlož svůj e-mail pro přihlášení do svého účtu",
-        "ClickConsent": "Kliknutím na tlačítko souhlasíš s",
-        "TermsOfService": "Podmínkami služby",
-        "PrivacyPolicy": "Zásadami ochrany osobních údajů",
-        "SignUp": "Zaregistruj se",
-        "SignInWithEmail": "Přihlásit se přes e-mail",
-        "WelcomeBack": "Vítej zpět"
-      },
-      "RequestPasswordResetPage": {
-        "ForgottenPassword": "Zapomenuté heslo",
-        "EnterYourEmail": "Vlož svůj e-mail pro zaslání odkazu pro obnovu hesla",
-        "ResetPassword": "Obnovit heslo",
-        "SendResetLink": "Poslat odkaz pro obnovení",
-        "Sending": "Odesílám...",
-        "BackToSignIn": "Zpět na přihlášení",
-        "CheckYourEmail": "Zkontroluj svůj e-mail",
-        "PasswordResetLinkSent": "Odkaz pro obnovení hesla odeslán"
-      },
-      "SignUpPage": {
-        "AlreadyHaveAnAccount": "Už máš účet?",
-        "CreateAccount": "Vytvořit účet",
-        "CreatingAccount": "Vytvářím účet..."
-      },
-      "PasswordResetEmailSentPage": {
-        "CheckYourEmail": "Zkontroluj svůj e-mail",
-        "PasswordResetInstructions1": "Pokud je tato e-mailová adresa spojena s účtem, brzy obdržíš odkaz pro obnovení hesla. Zkontroluj prosím svou e-mailovou schránku a postupuj podle pokynů k obnovení hesla.",
-        "PasswordResetInstructions2": "Pokud se ti e-mail nezobrazí, zkontroluj složku se spamem.",
-        "PasswordResetInstructions3": "Pokud jsi o obnovení hesla nepožádal, můžeš tento e-mail ignorovat."
-      },
-      "PasswordResetPage": {
-        "EnterYourNewPassword": "Zadej tvoje nové heslo",
-        "ResetYourPassword": "Obnovit tvoje heslo",
-        "NewPassword": "Nové heslo",
-        "ResettingPassword": "Obnovuji heslo...",
-        "ResetPassword": "Obnovit heslo"
-      }
-    },
-    "Event": {
-      "Description": "Přehled všech akcí",
-      "CompetitorsList": "Seznam závodníků",
-      "MyEvents": "Moje akce",
-      "MyEventsDescription": "Přehled všech tvých akcí",
-      "NoCompetitorsFound": "Kategorie neobsahuje žádné závodníky.",
-      "Classes": "Kategorie",
-      "OrganizedBy": "Organizuje",
-      "Operations": {
-        "EditEvent": "Upravit akci",
-        "EditDescription": "Upravit detaily akce",
-        "CreateEvent": "Přidat akci",
-        "CreateDescription": "Vyplň formulář daty nové akce",
-        "DeleteEvent": "Odstranit akci",
-        "SelectClass": "Vyber kategorii"
-      },
-      "Tables": {
-        "Name": "Název",
-        "Organizer": "Pořadatel",
-        "Location": "Lokalita",
-        "Date": "Datum",
-        "Visibility": "Viditelnost",
-        "Actions": "Akce",
-        "Format": "Formát",
-        "Status": "Stav",
-        "Sport": "Sport",
-        "Country": "Země",
-        "Entries": "Přihlášky",
-        "Competitors": "Závodníků"
-      },
-      "Tabs": {
-        "All": "Všechny",
-        "Today": "Dnes",
-        "Ongoing": "Probíhající",
-        "Recent": "Nedávné",
-        "Past": "Uskutečněné",
-        "Upcoming": "Plánované",
-        "Results": "Výsledky",
-        "Splits": "Mezičasy",
-        "Detail": "Detail",
-        "Info": "Info",
-        "Cards": "Dlaždice",
-        "List": "Seznam",
-        "Cat": "Kat",
-        "Club": "Klub",
-        "Live": "Živě"
-      },
-      "Live": {
-        "Title": "Živé přenosy",
-        "Description": "Aktuální aktualizace se zde zobrazí během závodu"
-      },
-      "Alert": {
-        "DemoTitle": "Zkušební provoz",
-        "DemoDescription": "Jedná se o první prototyp aplikace, který může obsahovat chyby. Budeme rádi za jejich reportování v Githubu.",
-        "EventDataNotAvailableTitle": "Akce nemá k dispozici žádná data",
-        "EventDataNotAvailableMessage": "Pro zobrazení {{view}} zatím nejsou dostupná žádná data. Zkus to prosím později nebo se informuj u pořadatele.",
-        "ViewResults": "výsledků",
-        "ViewSplits": "mezičasů",
-        "ViewClub": "klubů"
-      },
-      "Report": {
-        "Title": "Report změn",
-        "Description": "Přehled změn stavů a čipů závodníků",
-        "CompetitorChangesTitle": "Změny pro {{name}} (ID {{id}})",
-        "CompetitorChangesDescription": "Všechny změny pro vybraného závodníka v rámci tohoto závodu.",
-        "CompetitorChangesEmpty": "Pro tohoto závodníka nebyly nalezeny žádné změny.",
-        "AutoRefresh": "Automatická obnova: {{seconds}} s",
-        "LastUpdated": "Poslední aktualizace: {{time}}",
-        "NoTimestamp": "-",
-        "ActiveFilters": "Aktivní filtry:",
-        "PresetsTitle": "Předdefinované filtry",
-        "Buttons": {
-          "RefreshData": "Načíst data",
-          "ExportCsv": "Export CSV",
-          "ExportPdf": "Export PDF",
-          "ClearFilters": "Vyčistit filtry",
-          "ShowProcessed": "Zobrazit zpracované",
-          "HideProcessed": "Skrýt zpracované"
-        },
-        "Presets": {
-          "CardChanges": "Změny čipů",
-          "NoteChanges": "Změny poznámek",
-          "LateStarts": "Zpožděné starty",
-          "DidNotStart": "Nestartující",
-          "All": "Všechny záznamy"
-        },
-        "Filters": {
-          "IdPlaceholder": "Filtr ID",
-          "DateRange": "Vyber rozsah",
-          "DateFrom": "Od",
-          "DateTo": "Do",
-          "TimeFrom": "Čas od",
-          "TimeTo": "Čas do",
-          "TypePlaceholder": "Vyber typ",
-          "CompetitorIdPlaceholder": "Filtr ID závodníka",
-          "LastnamePlaceholder": "Filtr příjmení",
-          "FirstnamePlaceholder": "Filtr jméno",
-          "PreviousValuePlaceholder": "Filtr původní hodnota",
-          "NewValuePlaceholder": "Filtr nová hodnota",
-          "OriginPlaceholder": "Vyber původ",
-          "SelectedCount": "{{count}} vybráno",
-          "ClearSelection": "Vyčistit výběr"
-        },
-        "TypeLabels": {
-          "class_change": "Změna kategorie",
-          "firstname_change": "Změna jména",
-          "lastname_change": "Změna příjmení",
-          "bibNumber_change": "Změna startovního čísla",
-          "nationality_change": "Změna národnosti",
-          "registration_change": "Změna registrace",
-          "license_change": "Změna licence",
-          "ranking_change": "Změna rankingu",
-          "rank_points_avg_change": "Změna průměru ranking bodů",
-          "organisation_change": "Změna oddílu",
-          "short_name_change": "Změna zkratky",
-          "si_card_change": "Změna SI čipu",
-          "start_time_change": "Změna času startu",
-          "finish_time_change": "Změna času cíle",
-          "time_change": "Změna času",
-          "team_change": "Změna týmu",
-          "leg_change": "Změna úseku",
-          "status_change": "Změna stavu",
-          "late_start_change": "Zpožděný start",
-          "note_change": "Změna poznámky",
-          "external_id_change": "Změna externího ID"
-        },
-        "OriginLabels": {
-          "START": "Start",
-          "OFFICE": "Kancelář",
-          "FINISH": "Cíl",
-          "IT": "IT"
-        },
-        "Pagination": {
-          "RowsPerPage": "Řádků na stránku",
-          "RowsOption": "{{count}}",
-          "PageOf": "Strana {{page}} z {{total}}",
-          "Previous": "Předchozí stránka",
-          "Next": "Další stránka"
-        },
-        "Table": {
-          "Id": "ID",
-          "DateTime": "Datum a čas",
-          "Type": "Typ",
-          "CompetitorId": "ID závodníka",
-          "Lastname": "Příjmení",
-          "Firstname": "Jméno",
-          "PreviousValue": "Původní hodnota",
-          "NewValue": "Nová hodnota",
-          "Origin": "Původ"
-        }
-      },
-      "Settings": {
-        "Loading": "Načítám nastavení závodu"
-      },
-      "Detail": {
-        "EventInformation": "Informace o závodu",
-        "Date": "Datum",
-        "ZeroTime": "Čas startu",
-        "Location": "Lokalita",
-        "Organizer": "Pořadatel",
-        "OpenInExternalSystem": "Otevřít v {{provider}}",
-        "Classes": "Kategorie",
-        "ShowAllClasses": "Zobrazit všechny kategorie",
-        "ShowLessClasses": "Zobrazit méně",
-        "Format": "Formát",
-        "RelayRace": "Štafetový závod",
-        "Ranking": "Ranking",
-        "Coefficient": "Koeficient",
-        "EventStatus": "Stav závodu",
-        "AdditionalDetails": "Další informace",
-        "Sport": "Sport",
-        "EventId": "ID akce",
-        "Author": "Autor",
-        "Report": "Report",
-        "Status": {
-          "Completed": "DOKONČENO",
-          "Live": "PROBÍHÁ",
-          "Upcoming": "NADCHÁZEJÍCÍ",
-          "Draft": "KONCEPT"
-        },
-        "StatusText": {
-          "Completed": "Výsledky jsou finální",
-          "Live": "Závod právě probíhá",
-          "Upcoming": "Registrace je otevřená"
-        },
-        "Alert": {
-          "UnpublishedTitle": "Závod ještě není publikován",
-          "UnpublishedDescription": "Tento závod je v režimu konceptu a není veřejně viditelný."
-        },
-        "ErrorTitle": "Chyba při načítání závodu",
-        "ErrorDescription": "Nepodařilo se načíst data závodu",
-        "Loading": "Načítám závod"
-      },
-      "Results": {
-        "Loading": "Načítám výsledky",
-        "LoadingClubs": "Načítám kluby",
-        "LoadingClubResults": "Načítám klubové výsledky",
-        "ErrorLoadingClubResults": "Chyba při načítání klubových výsledků: {{message}}"
-      },
-      "Splits": {
-        "LoadingChart": "Načítám graf mezičasů",
-        "LoadingTimes": "Načítám mezičasy"
-      },
-      "Form": {
-        "EventName": "Název akce",
-        "Sport": "Sport",
-        "Date": "Datum konání",
-        "Timezone": "Časová zóna",
-        "Organizer": "Pořadatel",
-        "Location": "Lokalita",
-        "Latitude": "Zeměpisná šířka",
-        "Longitude": "Zeměpisná délka",
-        "Country": "Země",
-        "ZeroTime": "Čas startu",
-        "FeaturedImage": "Úvodní obrázek",
-        "FeaturedImageHint": "JPEG, PNG nebo WEBP, max 2 MB.",
-        "FeaturedImageButton": "Přidat obrázek",
-        "FeaturedImageRemove": "Odebrat",
-        "Ranking": "Ranking",
-        "CoefRanking": "Rankingový koeficient",
-        "Relay": "Štafety",
-        "HundredthPrecision": "Setinová přesnost",
-        "Published": "Zveřejněno",
-        "Placeholders": {
-          "EventName": "Moje první akce",
-          "Sport": "Vyberte sport",
-          "Timezone": "Vyberte časové pásmo",
-          "Organizer": "Název organizátora",
-          "Location": "Místo konání",
-          "Latitude": "Zadej gps šířku (např., 50.0755)",
-          "Longitude": "Zadej gps délku (např., 14.4378)",
-          "Country": "Vyberte zemi",
-          "CoefRanking": "1.02"
-        },
-        "Import": {
-          "Title": "Import z externího IS",
-          "Description": "Vyhledej akci podle názvu nebo načti data podle externího ID a předvyplň formulář.",
-          "CurrentLink": "Aktuální propojení",
-          "NoLink": "Tato akce není propojena s externím systémem.",
-          "Unlink": "Zrušit propojení",
-          "Provider": "Provider",
-          "ExternalEventId": "Externí ID akce",
-          "ApiKey": "Eventor API key",
-          "ApiKeyHelper": "Pro import a vyhledávání v Eventoru je potřeba API key.",
-          "SearchByName": "Vyhledat externí akci podle názvu",
-          "MinCharacters": "Pro vyhledání zadej alespoň 2 znaky.",
-          "Searching": "Vyhledávám...",
-          "NoResults": "Nebyla nalezena žádná odpovídající akce.",
-          "Open": "Importovat z externího IS",
-          "Hide": "Skrýt import",
-          "SaveLink": "Uložit propojení",
-          "LoadPreview": "Načíst a předvyplnit formulář",
-          "Placeholders": {
-            "ExternalEventId": "např. 8300",
-            "ApiKey": "Zadej Eventor API key",
-            "SearchByName": "Začni psát název akce..."
-          },
-          "Providers": {
-            "ORIS": "ORIS",
-            "EVENTOR": "Eventor"
-          },
-          "Toast": {
-            "ExternalIdRequired": "Externí ID akce je povinné.",
-            "EventorApiKeyRequired": "Pro provider Eventor je potřeba API key.",
-            "InvalidResponse": "Nepodařilo se zpracovat importovaná data akce.",
-            "PrefillSuccess": "Formulář akce byl předvyplněn daty z externího systému.",
-            "PrefillFailedTitle": "Import se nezdařil",
-            "PrefillFailedDescription": "Nepodařilo se načíst data akce z externího systému.",
-            "LinkSaved": "Propojení s externí akcí bylo úspěšně uloženo.",
-            "LinkRemoved": "Propojení s externí akcí bylo úspěšně odstraněno.",
-            "LinkRemovedPendingSave": "Propojení s externí akcí bude odstraněno po uložení změn.",
-            "SearchFailedTitle": "Vyhledání se nezdařilo",
-            "SearchFailedDescription": "Nepodařilo se vyhledat akce v externím systému."
-          }
-        },
-        "Toast": {
-          "CreateSuccess": "Akce byla úspěšně založena!",
-          "EditSuccess": "Akce byla úspěšně aktualizována!",
-          "FeaturedImageUploadSuccess": "Obrázek byl úspěšně nahrán.",
-          "FeaturedImageUploadError": "Nahrání obrázku se nezdařilo."
-        }
-      },
-      "Card": {
-        "Title": "Parametry akce",
-        "Description": "Vyplň jednotlivé detaily akce."
-      },
-      "Password": {
-        "GeneratePassword": "Generovat heslo",
-        "RegeneratePassword": "Přegenerovat heslo",
-        "PassportExpiration": "Expirace hesla",
-        "NoExpirationSet": "Není nastavena expirace",
-        "Copy": "Kopírovat",
-        "Revoke": "Zneplatnit",
-        "Card": {
-          "Title": "Heslo akce",
-          "Description": "Nastav si heslo, které zabezpečuje poskytování dat přes API."
-        },
-        "Field": {
-          "Name": "Heslo",
-          "Placeholders": {
-            "Name": "Tvoje heslo"
-          }
-        },
-        "Toast": {
-          "UpdateSuccessDescription": "Heslo úspěšně aktualizováno!",
-          "UpdateFailTitle": "Něco se pokazilo, zkus operaci opakovat.",
-          "RevokeSuccessDescription": "Heslo úspěšně zneplatněno!",
-          "RevokeFailTitle": "Něco se pokazilo, zkus operaci opakovat.",
-          "CopySuccessDescription": "Heslo zkopírováno! Drž ho v bezpečí."
-        }
-      },
-      "Link": {
-        "Card": {
-          "Title": "Odkaz na akci",
-          "Description": "Rychlé sdílení odkazu na akci – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k aktuálním výsledkům.",
-          "Navigator": {
-            "Title": "OFeed",
-            "Event": "Akce",
-            "Location": "Lokalita",
-            "Date": "Datum",
-            "EventUri": "Odkaz na akci",
-            "UrlDescription": "Naskenuj QR kód a okamžitě máš online výsledky v telefonu!"
-          }
-        },
-        "PrintWindow": {
-          "Title": "QR kód - OFeed online výsledky",
-          "Header": "OFeed",
-          "EventQR": "QR kód pro akci",
-          "Info": "Naskenuj QR kód pro zobrazení online výsledků."
-        },
-        "Toast": {
-          "CopySuccessDescription": "Hop! Odkaz je teď ve schránce, sdílej dál!"
-        }
-      },
-      "Integration": {
-        "Card": {
-          "Title": "Nastavení aplikací",
-          "Description": "Jak nastavit připojení aplikací k OFeedu.",
-          "ApiBaseUrl": "Url",
-          "EventId": "Id akce",
-          "EventPassword": "Heslo",
-          "EventName": "Název",
-          "EventDate": "Datum",
-          "ShareQrCode": "Sdílet QR",
-          "PrintQrCode": "Vytisknout QR",
-          "Navigator": {
-            "Title": "OFeed QR kód",
-            "Text": "Tady máš QR kód k OFeed akci, abys mohl snadno propojit s O Checklistem!"
-          },
-          "Tabs": {
-            "OChecklist": {
-              "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování. Můžeš také využít tlačítko s ikonou aplikace pro sdílení odkazu s přihlašovacími údaji na zařízení co právě používáš."
+    "Pages": {
+        "Auth": {
+            "User": {
+                "Firstname": "Jméno",
+                "Lastname": "Příjmení",
+                "Club": "Klub",
+                "Email": "Email",
+                "Password": "Heslo",
+                "Placeholder": {
+                    "Firstname": "Jan",
+                    "Lastname": "Novák",
+                    "Club": "Můj klub",
+                    "Email": "novak@priklad.cz",
+                    "Password": "Tvoje tajné heslo",
+                    "NewPassword": "Tvoje nové tajné heslo",
+                    "PasswordConfirmation": "Potvrzení hesla"
+                }
             },
-            "QuickEvent": {
-              "Description": "V nastavení OFeed služby zadej do přihlašovacích údajů tyto hodnoty.",
-              "ExportInterval": "Interval pro exportování"
+            "SignInUpPage": {
+                "Login": "Přihlásit",
+                "DontHaveAnAccount": "Ještě nemáš svůj účet?",
+                "CreateAnAccount": "Vytvořit účet",
+                "EnterYourInformation": "Zadej své údaje níže pro vytvoření účtu",
+                "EnterYourEmailToSignIn": "Vlož svůj e-mail pro přihlášení do svého účtu",
+                "ClickConsent": "Kliknutím na tlačítko souhlasíš s",
+                "TermsOfService": "Podmínkami služby",
+                "PrivacyPolicy": "Zásadami ochrany osobních údajů",
+                "SignUp": "Zaregistruj se",
+                "SignInWithEmail": "Přihlásit se přes e-mail",
+                "WelcomeBack": "Vítej zpět"
             },
-            "SIDroidConenctor": {
-              "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování. Můžeš také využít tlačítko s ikonou aplikace pro sdílení odkazu s přihlašovacími údaji na zařízení co právě používáš."
+            "RequestPasswordResetPage": {
+                "ForgottenPassword": "Zapomenuté heslo",
+                "EnterYourEmail": "Vlož svůj e-mail pro zaslání odkazu pro obnovu hesla",
+                "ResetPassword": "Obnovit heslo",
+                "SendResetLink": "Poslat odkaz pro obnovení",
+                "Sending": "Odesílám...",
+                "BackToSignIn": "Zpět na přihlášení",
+                "CheckYourEmail": "Zkontroluj svůj e-mail",
+                "PasswordResetLinkSent": "Odkaz pro obnovení hesla odeslán"
+            },
+            "SignUpPage": {
+                "AlreadyHaveAnAccount": "Už máš účet?",
+                "CreateAccount": "Vytvořit účet",
+                "CreatingAccount": "Vytvářím účet..."
+            },
+            "PasswordResetEmailSentPage": {
+                "CheckYourEmail": "Zkontroluj svůj e-mail",
+                "PasswordResetInstructions1": "Pokud je tato e-mailová adresa spojena s účtem, brzy obdržíš odkaz pro obnovení hesla. Zkontroluj prosím svou e-mailovou schránku a postupuj podle pokynů k obnovení hesla.",
+                "PasswordResetInstructions2": "Pokud se ti e-mail nezobrazí, zkontroluj složku se spamem.",
+                "PasswordResetInstructions3": "Pokud jsi o obnovení hesla nepožádal, můžeš tento e-mail ignorovat."
+            },
+            "PasswordResetPage": {
+                "EnterYourNewPassword": "Zadej tvoje nové heslo",
+                "ResetYourPassword": "Obnovit tvoje heslo",
+                "NewPassword": "Nové heslo",
+                "ResettingPassword": "Obnovuji heslo...",
+                "ResetPassword": "Obnovit heslo"
             }
-          }
         },
-        "PrintWindow": {
-          "Header": "OFeed",
-          "Subheader": "Naskenuj QR kód pro snadné propojení s mobilní aplikací {{appName}}.",
-          "Footer": "Prosíme drž informace na bezpečném místě. Pokud Ti něco nefunguje, tak nám dej prosím vědět."
+        "Event": {
+            "Description": "Přehled všech akcí",
+            "CompetitorsList": "Seznam závodníků",
+            "MyEvents": "Moje akce",
+            "MyEventsDescription": "Přehled všech tvých akcí",
+            "NoCompetitorsFound": "Kategorie neobsahuje žádné závodníky.",
+            "Classes": "Kategorie",
+            "OrganizedBy": "Organizuje",
+            "Operations": {
+                "EditEvent": "Upravit akci",
+                "EditDescription": "Upravit detaily akce",
+                "CreateEvent": "Přidat akci",
+                "CreateDescription": "Vyplň formulář daty nové akce",
+                "DeleteEvent": "Odstranit akci",
+                "SelectClass": "Vyber kategorii"
+            },
+            "Tables": {
+                "Name": "Název",
+                "Organizer": "Pořadatel",
+                "Location": "Lokalita",
+                "Date": "Datum",
+                "Visibility": "Viditelnost",
+                "Actions": "Akce",
+                "Format": "Formát",
+                "Status": "Stav",
+                "Sport": "Sport",
+                "Country": "Země",
+                "Entries": "Přihlášky",
+                "Competitors": "Závodníků"
+            },
+            "Tabs": {
+                "All": "Všechny",
+                "Today": "Dnes",
+                "Ongoing": "Probíhající",
+                "Recent": "Nedávné",
+                "Past": "Uskutečněné",
+                "Upcoming": "Plánované",
+                "Results": "Výsledky",
+                "Splits": "Mezičasy",
+                "Detail": "Detail",
+                "Info": "Info",
+                "Cards": "Dlaždice",
+                "List": "Seznam",
+                "Cat": "Kat",
+                "Club": "Klub",
+                "Live": "Živě"
+            },
+            "Live": {
+                "Title": "Živé přenosy",
+                "Description": "Aktuální aktualizace se zde zobrazí během závodu"
+            },
+            "Alert": {
+                "DemoTitle": "Zkušební provoz",
+                "DemoDescription": "Jedná se o první prototyp aplikace, který může obsahovat chyby. Budeme rádi za jejich reportování v Githubu.",
+                "EventDataNotAvailableTitle": "Akce nemá k dispozici žádná data",
+                "EventDataNotAvailableMessage": "Pro zobrazení {{view}} zatím nejsou dostupná žádná data. Zkus to prosím později nebo se informuj u pořadatele.",
+                "ViewResults": "výsledků",
+                "ViewSplits": "mezičasů",
+                "ViewClub": "klubů"
+            },
+            "Report": {
+                "Title": "Report změn",
+                "Description": "Přehled změn stavů a čipů závodníků",
+                "CompetitorChangesTitle": "Změny pro {{name}} (ID {{id}})",
+                "CompetitorChangesDescription": "Všechny změny pro vybraného závodníka v rámci tohoto závodu.",
+                "CompetitorChangesEmpty": "Pro tohoto závodníka nebyly nalezeny žádné změny.",
+                "AutoRefresh": "Automatická obnova: {{seconds}} s",
+                "LastUpdated": "Poslední aktualizace: {{time}}",
+                "NoTimestamp": "-",
+                "ActiveFilters": "Aktivní filtry:",
+                "PresetsTitle": "Předdefinované filtry",
+                "Buttons": {
+                    "RefreshData": "Načíst data",
+                    "ExportCsv": "Export CSV",
+                    "ExportPdf": "Export PDF",
+                    "ClearFilters": "Vyčistit filtry",
+                    "ShowProcessed": "Zobrazit zpracované",
+                    "HideProcessed": "Skrýt zpracované"
+                },
+                "Presets": {
+                    "CardChanges": "Změny čipů",
+                    "NoteChanges": "Změny poznámek",
+                    "LateStarts": "Zpožděné starty",
+                    "DidNotStart": "Nestartující",
+                    "All": "Všechny záznamy"
+                },
+                "Filters": {
+                    "IdPlaceholder": "Filtr ID",
+                    "DateRange": "Vyber rozsah",
+                    "DateFrom": "Od",
+                    "DateTo": "Do",
+                    "TimeFrom": "Čas od",
+                    "TimeTo": "Čas do",
+                    "TypePlaceholder": "Vyber typ",
+                    "CompetitorIdPlaceholder": "Filtr ID závodníka",
+                    "LastnamePlaceholder": "Filtr příjmení",
+                    "FirstnamePlaceholder": "Filtr jméno",
+                    "PreviousValuePlaceholder": "Filtr původní hodnota",
+                    "NewValuePlaceholder": "Filtr nová hodnota",
+                    "OriginPlaceholder": "Vyber původ",
+                    "SelectedCount": "{{count}} vybráno",
+                    "ClearSelection": "Vyčistit výběr"
+                },
+                "TypeLabels": {
+                    "class_change": "Změna kategorie",
+                    "firstname_change": "Změna jména",
+                    "lastname_change": "Změna příjmení",
+                    "bibNumber_change": "Změna startovního čísla",
+                    "nationality_change": "Změna národnosti",
+                    "registration_change": "Změna registrace",
+                    "license_change": "Změna licence",
+                    "ranking_change": "Změna rankingu",
+                    "rank_points_avg_change": "Změna průměru ranking bodů",
+                    "organisation_change": "Změna oddílu",
+                    "short_name_change": "Změna zkratky",
+                    "si_card_change": "Změna SI čipu",
+                    "start_time_change": "Změna času startu",
+                    "finish_time_change": "Změna času cíle",
+                    "time_change": "Změna času",
+                    "team_change": "Změna týmu",
+                    "leg_change": "Změna úseku",
+                    "status_change": "Změna stavu",
+                    "late_start_change": "Zpožděný start",
+                    "note_change": "Změna poznámky",
+                    "external_id_change": "Změna externího ID"
+                },
+                "OriginLabels": {
+                    "START": "Start",
+                    "OFFICE": "Kancelář",
+                    "FINISH": "Cíl",
+                    "IT": "IT"
+                },
+                "Pagination": {
+                    "RowsPerPage": "Řádků na stránku",
+                    "RowsOption": "{{count}}",
+                    "PageOf": "Strana {{page}} z {{total}}",
+                    "Previous": "Předchozí stránka",
+                    "Next": "Další stránka"
+                },
+                "Table": {
+                    "Id": "ID",
+                    "DateTime": "Datum a čas",
+                    "Type": "Typ",
+                    "CompetitorId": "ID závodníka",
+                    "Lastname": "Příjmení",
+                    "Firstname": "Jméno",
+                    "PreviousValue": "Původní hodnota",
+                    "NewValue": "Nová hodnota",
+                    "Origin": "Původ"
+                }
+            },
+            "Settings": {
+                "Loading": "Načítám nastavení závodu"
+            },
+            "Detail": {
+                "EventInformation": "Informace o závodu",
+                "Date": "Datum",
+                "ZeroTime": "Čas startu",
+                "Location": "Lokalita",
+                "Organizer": "Pořadatel",
+                "OpenInExternalSystem": "Otevřít v {{provider}}",
+                "Classes": "Kategorie",
+                "ShowAllClasses": "Zobrazit všechny kategorie",
+                "ShowLessClasses": "Zobrazit méně",
+                "Format": "Formát",
+                "RelayRace": "Štafetový závod",
+                "Ranking": "Ranking",
+                "Coefficient": "Koeficient",
+                "EventStatus": "Stav závodu",
+                "AdditionalDetails": "Další informace",
+                "Sport": "Sport",
+                "EventId": "ID akce",
+                "Author": "Autor",
+                "Report": "Report",
+                "Status": {
+                    "Completed": "DOKONČENO",
+                    "Live": "PROBÍHÁ",
+                    "Upcoming": "NADCHÁZEJÍCÍ",
+                    "Draft": "KONCEPT"
+                },
+                "StatusText": {
+                    "Completed": "Výsledky jsou finální",
+                    "Live": "Závod právě probíhá",
+                    "Upcoming": "Registrace je otevřená"
+                },
+                "Alert": {
+                    "UnpublishedTitle": "Závod ještě není publikován",
+                    "UnpublishedDescription": "Tento závod je v režimu konceptu a není veřejně viditelný."
+                },
+                "ErrorTitle": "Chyba při načítání závodu",
+                "ErrorDescription": "Nepodařilo se načíst data závodu",
+                "Loading": "Načítám závod"
+            },
+            "Results": {
+                "Loading": "Načítám výsledky",
+                "LoadingClubs": "Načítám kluby",
+                "LoadingClubResults": "Načítám klubové výsledky",
+                "ErrorLoadingClubResults": "Chyba při načítání klubových výsledků: {{message}}"
+            },
+            "Splits": {
+                "LoadingChart": "Načítám graf mezičasů",
+                "LoadingTimes": "Načítám mezičasy"
+            },
+            "Form": {
+                "EventName": "Název akce",
+                "Sport": "Sport",
+                "Date": "Datum konání",
+                "Timezone": "Časová zóna",
+                "Organizer": "Pořadatel",
+                "Location": "Lokalita",
+                "Latitude": "Zeměpisná šířka",
+                "Longitude": "Zeměpisná délka",
+                "Country": "Země",
+                "ZeroTime": "Čas startu",
+                "FeaturedImage": "Úvodní obrázek",
+                "FeaturedImageHint": "JPEG, PNG nebo WEBP, max 2 MB.",
+                "FeaturedImageButton": "Přidat obrázek",
+                "FeaturedImageRemove": "Odebrat",
+                "Ranking": "Ranking",
+                "CoefRanking": "Rankingový koeficient",
+                "Relay": "Štafety",
+                "HundredthPrecision": "Setinová přesnost",
+                "Published": "Zveřejněno",
+                "Placeholders": {
+                    "EventName": "Moje první akce",
+                    "Sport": "Vyberte sport",
+                    "Timezone": "Vyberte časové pásmo",
+                    "Organizer": "Název organizátora",
+                    "Location": "Místo konání",
+                    "Latitude": "Zadej gps šířku (např., 50.0755)",
+                    "Longitude": "Zadej gps délku (např., 14.4378)",
+                    "Country": "Vyberte zemi",
+                    "CoefRanking": "1.02"
+                },
+                "Import": {
+                    "Title": "Import z externího IS",
+                    "Description": "Vyhledej akci podle názvu nebo načti data podle externího ID a předvyplň formulář.",
+                    "CurrentLink": "Aktuální propojení",
+                    "NoLink": "Tato akce není propojena s externím systémem.",
+                    "Unlink": "Zrušit propojení",
+                    "Provider": "Provider",
+                    "ExternalEventId": "Externí ID akce",
+                    "ApiKey": "Eventor API key",
+                    "ApiKeyHelper": "Pro import a vyhledávání v Eventoru je potřeba API key.",
+                    "SearchByName": "Vyhledat externí akci podle názvu",
+                    "MinCharacters": "Pro vyhledání zadej alespoň 2 znaky.",
+                    "Searching": "Vyhledávám...",
+                    "NoResults": "Nebyla nalezena žádná odpovídající akce.",
+                    "Open": "Importovat z externího IS",
+                    "Hide": "Skrýt import",
+                    "SaveLink": "Uložit propojení",
+                    "LoadPreview": "Načíst a předvyplnit formulář",
+                    "Placeholders": {
+                        "ExternalEventId": "např. 8300",
+                        "ApiKey": "Zadej Eventor API key",
+                        "SearchByName": "Začni psát název akce..."
+                    },
+                    "Providers": {
+                        "ORIS": "ORIS",
+                        "EVENTOR": "Eventor"
+                    },
+                    "Toast": {
+                        "ExternalIdRequired": "Externí ID akce je povinné.",
+                        "EventorApiKeyRequired": "Pro provider Eventor je potřeba API key.",
+                        "InvalidResponse": "Nepodařilo se zpracovat importovaná data akce.",
+                        "PrefillSuccess": "Formulář akce byl předvyplněn daty z externího systému.",
+                        "PrefillFailedTitle": "Import se nezdařil",
+                        "PrefillFailedDescription": "Nepodařilo se načíst data akce z externího systému.",
+                        "LinkSaved": "Propojení s externí akcí bylo úspěšně uloženo.",
+                        "LinkRemoved": "Propojení s externí akcí bylo úspěšně odstraněno.",
+                        "LinkRemovedPendingSave": "Propojení s externí akcí bude odstraněno po uložení změn.",
+                        "SearchFailedTitle": "Vyhledání se nezdařilo",
+                        "SearchFailedDescription": "Nepodařilo se vyhledat akce v externím systému."
+                    }
+                },
+                "Toast": {
+                    "CreateSuccess": "Akce byla úspěšně založena!",
+                    "EditSuccess": "Akce byla úspěšně aktualizována!",
+                    "FeaturedImageUploadSuccess": "Obrázek byl úspěšně nahrán.",
+                    "FeaturedImageUploadError": "Nahrání obrázku se nezdařilo."
+                }
+            },
+            "Card": {
+                "Title": "Parametry akce",
+                "Description": "Vyplň jednotlivé detaily akce."
+            },
+            "Password": {
+                "GeneratePassword": "Generovat heslo",
+                "RegeneratePassword": "Přegenerovat heslo",
+                "PassportExpiration": "Expirace hesla",
+                "NoExpirationSet": "Není nastavena expirace",
+                "Copy": "Kopírovat",
+                "Revoke": "Zneplatnit",
+                "Card": {
+                    "Title": "Heslo akce",
+                    "Description": "Nastav si heslo, které zabezpečuje poskytování dat přes API."
+                },
+                "Field": {
+                    "Name": "Heslo",
+                    "Placeholders": {
+                        "Name": "Tvoje heslo"
+                    }
+                },
+                "Toast": {
+                    "UpdateSuccessDescription": "Heslo úspěšně aktualizováno!",
+                    "UpdateFailTitle": "Něco se pokazilo, zkus operaci opakovat.",
+                    "RevokeSuccessDescription": "Heslo úspěšně zneplatněno!",
+                    "RevokeFailTitle": "Něco se pokazilo, zkus operaci opakovat.",
+                    "CopySuccessDescription": "Heslo zkopírováno! Drž ho v bezpečí."
+                }
+            },
+            "Link": {
+                "Card": {
+                    "Title": "Odkaz na akci",
+                    "Description": "Rychlé sdílení odkazu na akci – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k aktuálním výsledkům.",
+                    "Navigator": {
+                        "Title": "OFeed",
+                        "Event": "Akce",
+                        "Location": "Lokalita",
+                        "Date": "Datum",
+                        "EventUri": "Odkaz na akci",
+                        "UrlDescription": "Naskenuj QR kód a okamžitě máš online výsledky v telefonu!"
+                    }
+                },
+                "PrintWindow": {
+                    "Title": "QR kód - OFeed online výsledky",
+                    "Header": "OFeed",
+                    "EventQR": "QR kód pro akci",
+                    "Info": "Naskenuj QR kód pro zobrazení online výsledků."
+                },
+                "Toast": {
+                    "CopySuccessDescription": "Hop! Odkaz je teď ve schránce, sdílej dál!"
+                }
+            },
+            "Integration": {
+                "Card": {
+                    "Title": "Nastavení aplikací",
+                    "Description": "Jak nastavit připojení aplikací k OFeedu.",
+                    "ApiBaseUrl": "Url",
+                    "EventId": "Id akce",
+                    "EventPassword": "Heslo",
+                    "EventName": "Název",
+                    "EventDate": "Datum",
+                    "ShareQrCode": "Sdílet QR",
+                    "PrintQrCode": "Vytisknout QR",
+                    "Navigator": {
+                        "Title": "OFeed QR kód",
+                        "Text": "Tady máš QR kód k OFeed akci, abys mohl snadno propojit s O Checklistem!"
+                    },
+                    "Tabs": {
+                        "OChecklist": {
+                            "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování. Můžeš také využít tlačítko s ikonou aplikace pro sdílení odkazu s přihlašovacími údaji na zařízení co právě používáš."
+                        },
+                        "QuickEvent": {
+                            "Description": "V nastavení OFeed služby zadej do přihlašovacích údajů tyto hodnoty.",
+                            "ExportInterval": "Interval pro exportování"
+                        },
+                        "SIDroidConenctor": {
+                            "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování. Můžeš také využít tlačítko s ikonou aplikace pro sdílení odkazu s přihlašovacími údaji na zařízení co právě používáš."
+                        }
+                    }
+                },
+                "PrintWindow": {
+                    "Header": "OFeed",
+                    "Subheader": "Naskenuj QR kód pro snadné propojení s mobilní aplikací {{appName}}.",
+                    "Footer": "Prosíme drž informace na bezpečném místě. Pokud Ti něco nefunguje, tak nám dej prosím vědět."
+                },
+                "Toast": {
+                    "CopyBaseUrl": "Hop! Base URL je teď ve schránce, sdílej dál!",
+                    "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!"
+                }
+            },
+            "Visibility": {
+                "Card": {
+                    "Title": "Viditelnost",
+                    "Description": "Určuje, zda bude akce veřejná nebo privátní. Veřejné akce se zobrazují v seznamu na hlavní stránce OFeedu, zatímco privátní akce jsou viditelné pouze pro jejich organizátora."
+                },
+                "Toast": {
+                    "UpdateSuccess": "Akce je nyní {{status}}!",
+                    "UpdateFail": "Nepodařilo se aktualizovat viditelnost akce."
+                }
+            },
+            "DangerZone": {
+                "Title": "Nebezpečná zóna",
+                "Description": "Nevratné akce, které trvale vymažou data. Postupuj s maximální opatrností.",
+                "Footer": "Tyto operace nelze vrátit zpět. Ujisti se, že máš k dispozici příslušné zálohy.",
+                "DeleteCompetitors": {
+                    "Title": "Smazat závodníky",
+                    "Description": "Pokud nahraješ startovku nebo výsledky do špatné akce, tak můžeš všechny závodníky smazat a začít znovu. Toto tlačítko odstraní úplně všechny závodníky (startovku & výsledky).",
+                    "Button": "Smazat",
+                    "ConfirmTitle": "Smazat všechny závodníky",
+                    "ConfirmDescription": "Opravdu chceš smazat všechny závodníky? Operace je nevratná!",
+                    "ConfirmButton": "Smazat závodníky"
+                },
+                "DeleteAllEventData": {
+                    "Title": "Smazat všechna data akce",
+                    "Description": "Pokud potřebuješ odstranit všechna data akce (závodníky, kategorie, štafety a výsledky), tak použij toto tlačítko. Pozor, operace je nevratná!",
+                    "Button": "Smazat",
+                    "ConfirmTitle": "Smazat všechna data akce",
+                    "ConfirmDescription": "Opravdu chceš smazat všechna data akce? Tím odstraníš všechny výsledky a operace je nevratná!",
+                    "ConfirmButton": "Smazat všechna data"
+                },
+                "DeleteEvent": {
+                    "Title": "Smazat akci",
+                    "Description": "Smaže akci. Je potřeba nejprve smazat všechna data. Smazání je trvalé a nelze vrátit zpět!",
+                    "Button": "Smazat",
+                    "ConfirmTitle": "Smazat akci",
+                    "ConfirmDescription": "Opravdu chceš smazat celou tuto akci? Operace je nevratná!",
+                    "ConfirmButton": "Smazat akci"
+                },
+                "Toast": {
+                    "DeleteFailTitle": "Chyba při mazání dat",
+                    "DeleteSuccessDescription": "Data úspěšně smazána"
+                }
+            },
+            "TroublesShooting": {
+                "Title": "Potřebuješ pomoc nebo máš dotazy?",
+                "Description": "Pokud narazíš na chybu nebo potřebuješ pomoc, neváhej nás kontaktovat.",
+                "Description1": "Pokusíme se poradit při problémech s používáním nebo zodpovědět dotazy. Kontaktuj nás na adrese",
+                "Description2": "prosíme přilož případně problémové soubory.",
+                "Discord": "Připojit se na Discord",
+                "GitHubIssues": "Otevřít GitHub Issues"
+            }
         },
-        "Toast": {
-          "CopyBaseUrl": "Hop! Base URL je teď ve schránce, sdílej dál!",
-          "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!"
+        "Home": {
+            "Hero": {
+                "Subtitle": "Živý přehled ze sportovních akcí. Sledování běžců, průběžné změny a nepřetržitý tok informací na jednom místě.",
+                "LiveEventSynchronization": "Synchronizace akce živě",
+                "LastMinuteChanges": "Last-minute změny",
+                "DetailedSplitAnalysis": "Detailní analýza mezičasů"
+            },
+            "Infinite": {
+                "LoadingInitial": "Načítám akce...",
+                "LoadingMore": "Načítám další akce...",
+                "LoadingMoreInline": "Načítají se další...",
+                "ScrollMore": "Posuňte dolů pro více akcí",
+                "AllLoaded": "Všechny akce načteny",
+                "EventsCount": "{{count}} akcí",
+                "FoundCount": "Zobrazeno {{count}} akcí",
+                "LoadError": "Chyba při načítání akcí: {{message}}",
+                "NoEvents": "Žádné akce nenalezeny",
+                "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
+            }
+        },
+        "Profile": {
+            "MyEntries": {
+                "Title": "Moje přihlášky",
+                "Description": "Zde najdeš všechny své přihlášky a změny v registracích na akci. Můžeš je prohlížet, upravovat nebo sledovat jejich stav."
+            },
+            "PersonalInfo": {
+                "Title": "Osobní údaje",
+                "Description": "Zde si můžeš zobrazit a upravit své osobní údaje, kontaktní informace a další nastavení profilu.",
+                "SiCardNumber": "Číslo Sportident čipu",
+                "EmergencyContact": "Kontakt pro případ nouze",
+                "Organization": "Organizace / klub",
+                "Updated": "Profil byl úspěšně aktualizován"
+            },
+            "OAuth2": {
+                "Title": "OAuth2 přístup k API",
+                "Description": "Vygeneruj si údaje pro přístup k API pomocí OAuth2. Budeš potřebovat Client ID a Client Secret.",
+                "ClientId": "ID klienta",
+                "ClientSecret": "Tajný klíč klienta (Client Secret)",
+                "Generate": "Vygenerovat nový Client Secret",
+                "Regenerate": "Přegenerovat Client Secret",
+                "SecretWarning": "Důležité upozornění",
+                "SecretWarningDescription": "Client Secret je citlivý údaj. Nikomu ho nesdílej, bezpečně si ho ulož. Po opuštění nebo obnovení této stránky už nebude znovu zobrazen.",
+                "Revoke": "Zneplatnit",
+                "Toast": {
+                    "GenerateSuccessDescription": "OAuth2 přístupové údaje byly úspěšně vygenerované!",
+                    "GenerateFailTitle": "Něco se pokazilo, zkus operaci opakovat.",
+                    "RevokeSuccessDescription": "Zneplatnění přístupových údajů bylo úspěšné!",
+                    "RevokeFailTitle": "Nezdařilo se zneplatnit přístupové údaje"
+                },
+                "HowToUse": {
+                    "Title": "Jak OAuth2 použít",
+                    "Description": "Použij své Client ID a Client Secret v požadavku s grant_type=client_credentials na endpoint /auth/oauth2/token. Níže je ukázka požadavku pomocí curl."
+                }
+            },
+            "OtherIntegrations": {
+                "Title": "Další integrace",
+                "Description": "Propoj svůj účet s dalšími aplikacemi a nástroji. Nové integrace zde budou průběžně přibývat."
+            },
+            "Security": {
+                "PasswordDescription": "Zde si můžeš změnit heslo k účtu. Doporučujeme použít silné a jedinečné heslo.",
+                "CurrentPassword": "Aktuální heslo",
+                "NewPassword": "Nové heslo",
+                "ConfirmNewPassword": "Potvrdit nové heslo",
+                "UpdatePassword": "Změnit heslo",
+                "CurrentPasswordHelper": "Zadej své aktuální heslo k účtu.",
+                "NewPasswordHelper": "Použij alespoň 8 znaků.",
+                "ConfirmNewPasswordHelper": "Pro potvrzení zadej nové heslo znovu.",
+                "PasswordUpdated": "Heslo bylo úspěšně změněno",
+                "Errors": {
+                    "CurrentPasswordRequired": "Aktuální heslo je povinné",
+                    "NewPasswordRequired": "Nové heslo je povinné",
+                    "CurrentPasswordIncorrect": "Aktuální heslo není správné.",
+                    "NewPasswordMustDiffer": "Nové heslo se musí lišit od aktuálního hesla."
+                }
+            },
+            "Tabs": {
+                "Profile": "Profil",
+                "Integrations": "Integrace",
+                "Security": "Zabezpečení",
+                "Notifications": "Notifikace",
+                "billing": "Fakturace"
+            },
+            "Cards": {
+                "Title": "Čipy",
+                "Description": "Spravuj své osobní čipy pro jednotlivé sporty",
+                "Sport": "Sport",
+                "Type": "Typ",
+                "Number": "Číslo čipu",
+                "SetAsDefault": "Nastavit jako výchozí pro tento sport",
+                "Empty": "Zatím nemáš uložené žádné čipy. Přidej svůj první čip.",
+                "DefaultBadge": "Výchozí pro tento sport",
+                "MakeDefault": "Nastavit jako výchozí",
+                "Delete": "Smazat",
+                "DeleteTitle": "Smazat čip",
+                "DeleteConfirm": "Opravdu chceš tento čip smazat?",
+                "EditTitle": "Upravit čip",
+                "EditDescription": "Uprav nastavení čipu pro vybraný sport",
+                "SportRequired": "Sport je povinný",
+                "CardNumberRequired": "Číslo čipu je povinné",
+                "SaveSuccess": "Čip byl úspěšně uložen"
+            },
+            "Notifications": {
+                "Title": "Notifikace",
+                "Description": "Spravuj své preference upozornění.",
+                "EventReminders": "Připomínky akcí",
+                "EventRemindersDescription": "Dostávej připomínky před začátkem akcí.",
+                "ResultsUpdates": "Aktualizace výsledků",
+                "ResultsUpdatesDescription": "Nech si posílat upozornění při zveřejnění výsledků."
+            },
+            "Billing": {
+                "Title": "Fakturace",
+                "Description": "Spravuj fakturační údaje a platební metody.",
+                "NoPaymentMethods": "Zatím nemáš přidané žádné platební metody.",
+                "AddPaymentMethod": "Přidat platební metodu"
+            }
         }
-      },
-      "Visibility": {
-        "Card": {
-          "Title": "Viditelnost",
-          "Description": "Určuje, zda bude akce veřejná nebo privátní. Veřejné akce se zobrazují v seznamu na hlavní stránce OFeedu, zatímco privátní akce jsou viditelné pouze pro jejich organizátora."
-        },
-        "Toast": {
-          "UpdateSuccess": "Akce je nyní {{status}}!",
-          "UpdateFail": "Nepodařilo se aktualizovat viditelnost akce."
-        }
-      },
-      "DangerZone": {
-        "Title": "Nebezpečná zóna",
-        "Description": "Nevratné akce, které trvale vymažou data. Postupuj s maximální opatrností.",
-        "Footer": "Tyto operace nelze vrátit zpět. Ujisti se, že máš k dispozici příslušné zálohy.",
-        "DeleteCompetitors": {
-          "Title": "Smazat závodníky",
-          "Description": "Pokud nahraješ startovku nebo výsledky do špatné akce, tak můžeš všechny závodníky smazat a začít znovu. Toto tlačítko odstraní úplně všechny závodníky (startovku & výsledky).",
-          "Button": "Smazat",
-          "ConfirmTitle": "Smazat všechny závodníky",
-          "ConfirmDescription": "Opravdu chceš smazat všechny závodníky? Operace je nevratná!",
-          "ConfirmButton": "Smazat závodníky"
-        },
-        "DeleteAllEventData": {
-          "Title": "Smazat všechna data akce",
-          "Description": "Pokud potřebuješ odstranit všechna data akce (závodníky, kategorie, štafety a výsledky), tak použij toto tlačítko. Pozor, operace je nevratná!",
-          "Button": "Smazat",
-          "ConfirmTitle": "Smazat všechna data akce",
-          "ConfirmDescription": "Opravdu chceš smazat všechna data akce? Tím odstraníš všechny výsledky a operace je nevratná!",
-          "ConfirmButton": "Smazat všechna data"
-        },
-        "DeleteEvent": {
-          "Title": "Smazat akci",
-          "Description": "Smaže akci. Je potřeba nejprve smazat všechna data. Smazání je trvalé a nelze vrátit zpět!",
-          "Button": "Smazat",
-          "ConfirmTitle": "Smazat akci",
-          "ConfirmDescription": "Opravdu chceš smazat celou tuto akci? Operace je nevratná!",
-          "ConfirmButton": "Smazat akci"
-        },
-        "Toast": {
-          "DeleteFailTitle": "Chyba při mazání dat",
-          "DeleteSuccessDescription": "Data úspěšně smazána"
-        }
-      },
-      "TroublesShooting": {
-        "Title": "Potřebuješ pomoc nebo máš dotazy?",
-        "Description": "Pokud narazíš na chybu nebo potřebuješ pomoc, neváhej nás kontaktovat.",
-        "Description1": "Pokusíme se poradit při problémech s používáním nebo zodpovědět dotazy. Kontaktuj nás na adrese",
-        "Description2": "prosíme přilož případně problémové soubory.",
-        "Discord": "Připojit se na Discord",
-        "GitHubIssues": "Otevřít GitHub Issues"
-      }
     },
-    "Home": {
-      "Hero": {
-        "Subtitle": "Živý přehled ze sportovních akcí. Sledování běžců, průběžné změny a nepřetržitý tok informací na jednom místě.",
-        "LiveEventSynchronization": "Synchronizace akce živě",
-        "LastMinuteChanges": "Last-minute změny",
-        "DetailedSplitAnalysis": "Detailní analýza mezičasů"
-      },
-      "Infinite": {
-        "LoadingInitial": "Načítám akce...",
-        "LoadingMore": "Načítám další akce...",
-        "LoadingMoreInline": "Načítají se další...",
-        "ScrollMore": "Posuňte dolů pro více akcí",
-        "AllLoaded": "Všechny akce načteny",
-        "EventsCount": "{{count}} akcí",
-        "FoundCount": "Zobrazeno {{count}} akcí",
-        "LoadError": "Chyba při načítání akcí: {{message}}",
-        "NoEvents": "Žádné akce nenalezeny",
-        "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
-      }
-    },
-    "Profile": {
-      "MyEntries": {
-        "Title": "Moje přihlášky",
-        "Description": "Zde najdeš všechny své přihlášky a změny v registracích na akci. Můžeš je prohlížet, upravovat nebo sledovat jejich stav."
-      },
-      "PersonalInfo": {
-        "Title": "Osobní údaje",
-        "Description": "Zde si můžeš zobrazit a upravit své osobní údaje, kontaktní informace a další nastavení profilu.",
-        "SiCardNumber": "Číslo Sportident čipu",
-        "EmergencyContact": "Kontakt pro případ nouze",
-        "Organization": "Organizace / klub",
-        "Updated": "Profil byl úspěšně aktualizován"
-      },
-      "OAuth2": {
-        "Title": "OAuth2 přístup k API",
-        "Description": "Vygeneruj si údaje pro přístup k API pomocí OAuth2. Budeš potřebovat Client ID a Client Secret.",
-        "ClientId": "ID klienta",
-        "ClientSecret": "Tajný klíč klienta (Client Secret)",
-        "Generate": "Vygenerovat nový Client Secret",
-        "Regenerate": "Přegenerovat Client Secret",
-        "SecretWarning": "Důležité upozornění",
-        "SecretWarningDescription": "Client Secret je citlivý údaj. Nikomu ho nesdílej, bezpečně si ho ulož. Po opuštění nebo obnovení této stránky už nebude znovu zobrazen.",
-        "Revoke": "Zneplatnit",
-        "Toast": {
-          "GenerateSuccessDescription": "OAuth2 přístupové údaje byly úspěšně vygenerované!",
-          "GenerateFailTitle": "Něco se pokazilo, zkus operaci opakovat.",
-          "RevokeSuccessDescription": "Zneplatnění přístupových údajů bylo úspěšné!",
-          "RevokeFailTitle": "Nezdařilo se zneplatnit přístupové údaje"
+    "Organisms": {
+        "DragDrop": {
+            "UploadIofXml": {
+                "Title": "Nahrát IOF XML",
+                "Description": "Nahrát IOF XML soubory se startovkami a výsledky."
+            },
+            "Toast": {
+                "UploadSuccess": "Soubory úspěšně nahrány!",
+                "UploadFail": "Něco se pokazilo, zkus operaci opakovat.",
+                "UploadInProgress": "Nahrávání souborů probíhá",
+                "InvalidFormat": "Nepodporovaný formát",
+                "AllowedFormats": "Povolené formáty jsou: {{formats}}",
+                "FileTooLarge": "Soubor je příliš velký",
+                "MaxSize": "Maximální velikost je {{size}} MB",
+                "ProcessingError": "Chyba při zpracování souboru",
+                "TryAgain": "Zkus to znovu"
+            }
         },
-        "HowToUse": {
-          "Title": "Jak OAuth2 použít",
-          "Description": "Použij své Client ID a Client Secret v požadavku s grant_type=client_credentials na endpoint /auth/oauth2/token. Níže je ukázka požadavku pomocí curl."
+        "Navbar": {
+            "Placeholder": "Napiš co chceš hledat...",
+            "SignIn": "Přihlásit",
+            "SignUp": "Registrovat",
+            "LogOut": "Odhlásit",
+            "MyProfile": "Můj profil",
+            "Pages": "Stránky"
+        },
+        "Footer": {
+            "Collaborate": "Spolupracovat",
+            "Docs": "Dokumentace",
+            "Donate": "Podpořit",
+            "Blog": "Blog",
+            "MadeWith": "Vytvořeno s",
+            "ForOrienteering": "pro orientační sporty"
+        },
+        "AppDataTable": {
+            "Empty": "Tabulka neobsahuje žádná data.",
+            "Loading": "Načítání dat...",
+            "Error": "Nepodařilo se načíst data."
         }
-      },
-      "OtherIntegrations": {
-        "Title": "Další integrace",
-        "Description": "Propoj svůj účet s dalšími aplikacemi a nástroji. Nové integrace zde budou průběžně přibývat."
-      },
-      "Security": {
-        "PasswordDescription": "Zde si můžeš změnit heslo k účtu. Doporučujeme použít silné a jedinečné heslo.",
-        "CurrentPassword": "Aktuální heslo",
-        "NewPassword": "Nové heslo",
-        "ConfirmNewPassword": "Potvrdit nové heslo",
-        "UpdatePassword": "Změnit heslo",
-        "CurrentPasswordHelper": "Zadej své aktuální heslo k účtu.",
-        "NewPasswordHelper": "Použij alespoň 8 znaků.",
-        "ConfirmNewPasswordHelper": "Pro potvrzení zadej nové heslo znovu.",
-        "PasswordUpdated": "Heslo bylo úspěšně změněno",
-        "Errors": {
-          "CurrentPasswordRequired": "Aktuální heslo je povinné",
-          "NewPasswordRequired": "Nové heslo je povinné",
-          "CurrentPasswordIncorrect": "Aktuální heslo není správné.",
-          "NewPasswordMustDiffer": "Nové heslo se musí lišit od aktuálního hesla."
+    },
+    "Molecules": {
+        "DragDrop": {
+            "ClickToUpload": "Pro nahrání klikni",
+            "Delete": "Smazat",
+            "OrdDragAndDrop": "nebo drag & drop",
+            "SupportedFormats": "Podporovaný formát:",
+            "Done": "Hotovo",
+            "OrDragAndDrop": "nebo drag & drop",
+            "Toast": {
+                "MaximumFiles": {
+                    "Title": "Maximální počet souborů",
+                    "Description": "Pouze {{count}} souborů je možné nahrát"
+                },
+                "InvalidFileFormat": {
+                    "Title": "Špatný formát souboru",
+                    "Description": "Nahrávej prosím pouze"
+                },
+                "Error": {
+                    "DescriptionSingle": "Pouze {{count}} soubor může být nahrán současně",
+                    "DescriptionPlural": "Pouze {{count}} souborů může být nahráno současně"
+                },
+                "ProcessingError": "Chyba zpracování souboru"
+            }
+        },
+        "LanguageSelector": {
+            "Title": "Jazyk",
+            "SelectLanguage": "Vybrat jazyk"
+        },
+        "EventSearchDialog": {
+            "Title": "Hledat akce",
+            "Placeholder": "Hledejte podle názvu, místa, země nebo organizátora...",
+            "Hint": "Zkuste hledat podle: názvu akce, města, země nebo organizátora",
+            "Searching": "Vyhledávání akcí...",
+            "Organizer": "Organizátor",
+            "Draft": "Návrh",
+            "NoEventsFound": "Nebyly nalezeny žádné akce pro \"{{query}}\"",
+            "NoEventsHint": "Zkuste hledat podle názvu akce, místa, země nebo organizátora",
+            "RecentEvents": "Nedávné akce:",
+            "StartTyping": "Začněte psát pro vyhledání akcí",
+            "StartTypingHint": "Hledejte podle názvu akce, místa, země nebo organizátora"
+        },
+        "SearchBox": {
+            "SearchResults": "Výsledky hledání"
         }
-      },
-      "Tabs": {
-        "Profile": "Profil",
-        "Integrations": "Integrace",
-        "Security": "Zabezpečení",
-        "Notifications": "Notifikace",
-        "billing": "Fakturace"
-      },
-      "Cards": {
-        "Title": "Čipy",
-        "Description": "Spravuj své osobní čipy pro jednotlivé sporty",
-        "Sport": "Sport",
-        "Type": "Typ",
-        "Number": "Číslo čipu",
-        "SetAsDefault": "Nastavit jako výchozí pro tento sport",
-        "Empty": "Zatím nemáš uložené žádné čipy. Přidej svůj první čip.",
-        "DefaultBadge": "Výchozí pro tento sport",
-        "MakeDefault": "Nastavit jako výchozí",
-        "Delete": "Smazat",
-        "DeleteTitle": "Smazat čip",
-        "DeleteConfirm": "Opravdu chceš tento čip smazat?",
-        "EditTitle": "Upravit čip",
-        "EditDescription": "Uprav nastavení čipu pro vybraný sport",
-        "SportRequired": "Sport je povinný",
-        "CardNumberRequired": "Číslo čipu je povinné",
-        "SaveSuccess": "Čip byl úspěšně uložen"
-      },
-      "Notifications": {
-        "Title": "Notifikace",
-        "Description": "Spravuj své preference upozornění.",
-        "EventReminders": "Připomínky akcí",
-        "EventRemindersDescription": "Dostávej připomínky před začátkem akcí.",
-        "ResultsUpdates": "Aktualizace výsledků",
-        "ResultsUpdatesDescription": "Nech si posílat upozornění při zveřejnění výsledků."
-      },
-      "Billing": {
-        "Title": "Fakturace",
-        "Description": "Spravuj fakturační údaje a platební metody.",
-        "NoPaymentMethods": "Zatím nemáš přidané žádné platební metody.",
-        "AddPaymentMethod": "Přidat platební metodu"
-      }
+    },
+    "Route": {
+        "Dashboard": "Nástěnka",
+        "Events": "Akce",
+        "Finances": "Finance",
+        "Settings": "Nastavení",
+        "Transactions": "Transakce"
+    },
+    "Templates": {
+        "Routes": {
+            "Home": "Domů",
+            "Events": "Akce",
+            "About": "O nás",
+            "Docs": "Dokumentace",
+            "Contact": "Kontakty",
+            "MRB": "MyResultBoard",
+            "GitHub": "GitHub"
+        }
+    },
+    "Validations": {
+        "Required": "Povinný údaj",
+        "Email": "Neplatná e-mailová adresa",
+        "PasswordsDontMatch": "Hesla se neshodují",
+        "EmailsContainNotEmail": "Některý ze zadaných emailů není validní",
+        "EmailsUnique": "Zadané e-mailové adresy musí být unikátní",
+        "EmailsMinMax": "Počet emailů musí být minimálně {{min}} a maximálně {{max}}",
+        "SelectRequired": "Vyberte hodnotu",
+        "FileRequired": "Nahrajte soubor",
+        "NumberMin": "Zadejte číslo větší než {{min}}",
+        "Date": "Neplatné datum",
+        "RegistrationNumber": "Registrační číslo musí odpovídat platnému formátu ČSOS (např. XXX0101)",
+        "Number": "Zadaná hodnota musí být číslo",
+        "Time": "Čas musí být zadán ve formátu HH:MM:SS (např. 01:18:06)",
+        "TimeInZones": "Čas v zónách nesmí být delší než celkový čas aktivity",
+        "Latitude": "Zeměpisná šířka musí být mezi -90 a 90",
+        "Longitude": "Zeměpisná délka musí být mezi -180 a 180"
+    },
+    "Errors": {
+        "Generic": "Něco se pokazilo",
+        "UpdatePasswordFailedTitle": "Změna hesla selhala",
+        "UpdateProfileFailedTitle": "Aktualizace profilu selhala"
+    },
+    "validation": {
+        "passwordRequired": "Heslo je povinné",
+        "passwordMinLength": "Heslo musí mít alespoň 8 znaků",
+        "confirmPasswordRequired": "Potvrď prosím nové heslo",
+        "passwordsDoNotMatch": "Hesla se neshodují"
     }
-  },
-  "Organisms": {
-    "DragDrop": {
-      "UploadIofXml": {
-        "Title": "Nahrát IOF XML",
-        "Description": "Nahrát IOF XML soubory se startovkami a výsledky."
-      },
-      "Toast": {
-        "UploadSuccess": "Soubory úspěšně nahrány!",
-        "UploadFail": "Něco se pokazilo, zkus operaci opakovat.",
-        "UploadInProgress": "Nahrávání souborů probíhá",
-        "InvalidFormat": "Nepodporovaný formát",
-        "AllowedFormats": "Povolené formáty jsou: {{formats}}",
-        "FileTooLarge": "Soubor je příliš velký",
-        "MaxSize": "Maximální velikost je {{size}} MB",
-        "ProcessingError": "Chyba při zpracování souboru",
-        "TryAgain": "Zkus to znovu"
-      }
-    },
-    "Navbar": {
-      "Placeholder": "Napiš co chceš hledat...",
-      "SignIn": "Přihlásit",
-      "SignUp": "Registrovat",
-      "LogOut": "Odhlásit",
-      "MyProfile": "Můj profil",
-      "Pages": "Stránky"
-    },
-    "Footer": {
-      "Collaborate": "Spolupracovat",
-      "Docs": "Dokumentace",
-      "Donate": "Podpořit",
-      "Blog": "Blog",
-      "MadeWith": "Vytvořeno s",
-      "ForOrienteering": "pro orientační sporty"
-    },
-    "AppDataTable": {
-      "Empty": "Tabulka neobsahuje žádná data.",
-      "Loading": "Načítání dat...",
-      "Error": "Nepodařilo se načíst data."
-    }
-  },
-  "Molecules": {
-    "DragDrop": {
-      "ClickToUpload": "Pro nahrání klikni",
-      "Delete": "Smazat",
-      "OrdDragAndDrop": "nebo drag & drop",
-      "SupportedFormats": "Podporovaný formát:",
-      "Done": "Hotovo",
-      "OrDragAndDrop": "nebo drag & drop",
-      "Toast": {
-        "MaximumFiles": {
-          "Title": "Maximální počet souborů",
-          "Description": "Pouze {{count}} souborů je možné nahrát"
-        },
-        "InvalidFileFormat": {
-          "Title": "Špatný formát souboru",
-          "Description": "Nahrávej prosím pouze"
-        },
-        "Error": {
-          "DescriptionSingle": "Pouze {{count}} soubor může být nahrán současně",
-          "DescriptionPlural": "Pouze {{count}} souborů může být nahráno současně"
-        },
-        "ProcessingError": "Chyba zpracování souboru"
-      }
-    },
-    "LanguageSelector": {
-      "Title": "Jazyk",
-      "SelectLanguage": "Vybrat jazyk"
-    },
-    "EventSearchDialog": {
-      "Title": "Hledat akce",
-      "Placeholder": "Hledejte podle názvu, místa, země nebo organizátora...",
-      "Hint": "Zkuste hledat podle: názvu akce, města, země nebo organizátora",
-      "Searching": "Vyhledávání akcí...",
-      "Organizer": "Organizátor",
-      "Draft": "Návrh",
-      "NoEventsFound": "Nebyly nalezeny žádné akce pro \"{{query}}\"",
-      "NoEventsHint": "Zkuste hledat podle názvu akce, místa, země nebo organizátora",
-      "RecentEvents": "Nedávné akce:",
-      "StartTyping": "Začněte psát pro vyhledání akcí",
-      "StartTypingHint": "Hledejte podle názvu akce, místa, země nebo organizátora"
-    },
-    "SearchBox": {
-      "SearchResults": "Výsledky hledání"
-    }
-  },
-  "Route": {
-    "Dashboard": "Nástěnka",
-    "Events": "Akce",
-    "Finances": "Finance",
-    "Settings": "Nastavení",
-    "Transactions": "Transakce"
-  },
-  "Templates": {
-    "Routes": {
-      "Home": "Domů",
-      "Events": "Akce",
-      "About": "O nás",
-      "Docs": "Dokumentace",
-      "Contact": "Kontakty",
-      "MRB": "MyResultBoard",
-      "GitHub": "GitHub"
-    }
-  },
-  "Validations": {
-    "Required": "Povinný údaj",
-    "Email": "Neplatná e-mailová adresa",
-    "PasswordsDontMatch": "Hesla se neshodují",
-    "EmailsContainNotEmail": "Některý ze zadaných emailů není validní",
-    "EmailsUnique": "Zadané e-mailové adresy musí být unikátní",
-    "EmailsMinMax": "Počet emailů musí být minimálně {{min}} a maximálně {{max}}",
-    "SelectRequired": "Vyberte hodnotu",
-    "FileRequired": "Nahrajte soubor",
-    "NumberMin": "Zadejte číslo větší než {{min}}",
-    "Date": "Neplatné datum",
-    "RegistrationNumber": "Registrační číslo musí odpovídat platnému formátu ČSOS (např. XXX0101)",
-    "Number": "Zadaná hodnota musí být číslo",
-    "Time": "Čas musí být zadán ve formátu HH:MM:SS (např. 01:18:06)",
-    "TimeInZones": "Čas v zónách nesmí být delší než celkový čas aktivity",
-    "Latitude": "Zeměpisná šířka musí být mezi -90 a 90",
-    "Longitude": "Zeměpisná délka musí být mezi -180 a 180"
-  },
-  "Errors": {
-    "Generic": "Něco se pokazilo",
-    "UpdatePasswordFailedTitle": "Změna hesla selhala",
-    "UpdateProfileFailedTitle": "Aktualizace profilu selhala"
-  },
-  "validation": {
-    "passwordRequired": "Heslo je povinné",
-    "passwordMinLength": "Heslo musí mít alespoň 8 znaků",
-    "confirmPasswordRequired": "Potvrď prosím nové heslo",
-    "passwordsDoNotMatch": "Hesla se neshodují"
-  }
 }
