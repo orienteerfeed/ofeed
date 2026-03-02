@@ -31,7 +31,8 @@ export function buildExternalEventUrl(
 export const externalLinks = {
   mrb: (baseApi: string) => `${baseApi}/mrb`,
   docs: config.DOCS_URL,
-  buyMeCoffee: 'https://buymeacoffee.com/ofeed',
-  discord: 'https://discord.gg/YWURC23tHZ',
-  github: 'https://github.com/orienteerfeed/ofeed',
+  buyMeCoffee: config.BUY_ME_A_COFFEE_URL,
+  discord: config.DISCORD_INVITE_URL,
+  github: config.GITHUB_REPO_URL,
+  weblate: config.WEBLATE_URL,
 } as const;
