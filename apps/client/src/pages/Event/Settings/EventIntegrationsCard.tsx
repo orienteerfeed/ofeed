@@ -9,6 +9,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { config } from '@/config';
 import { TFunction } from 'i18next';
 import { Copy, Eye, EyeOff, Printer, Send } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -456,7 +457,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                   </Label>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                      {apiEventsEndpoint}
+                      {config.BASE_API_URL}
                     </p>
                     <Button
                       type="button"
