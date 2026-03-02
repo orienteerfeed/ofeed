@@ -43,6 +43,14 @@ export const config = {
     import.meta.env.VITE_GITHUB_REPO_URL,
     'https://github.com/orienteerfeed/ofeed'
   ),
+  WEBLATE_URL: optional(
+    import.meta.env.VITE_WEBLATE_URL,
+    'https://hosted.weblate.org/projects/ofeed'
+  ),
+  BUY_ME_A_COFFEE_URL: optional(
+    import.meta.env.VITE_BUY_ME_A_COFFEE_URL,
+    'https://buymeacoffee.com/ofeed'
+  ),
 
   // Debug flags - all controlled by VITE_DEBUG_LOGGING
   DEBUG_LOGGING: DEBUG,

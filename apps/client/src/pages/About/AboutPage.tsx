@@ -1,9 +1,11 @@
 import { Card } from '@/components/ui/card';
+import { externalLinks } from '@/lib/paths/externalLinks';
 import { useTranslation } from 'react-i18next';
 import { MainPageLayout } from '../../templates/MainPageLayout';
 
 export const AboutPage = () => {
   const { t } = useTranslation();
+  const contributeDocsUrl = `${externalLinks.docs.replace(/\/$/, '')}/contribute`;
   return (
     <MainPageLayout t={t} pageName={t('Templates.Routes.About')}>
       <section className="container mx-auto px-4 py-12 md:py-20">
@@ -151,14 +153,14 @@ export const AboutPage = () => {
                 </div>
 
                 <p className="text-sm md:text-base text-muted-foreground">
-                  We are orienteering enthusiasts who enjoy
-                  connecting technology with orienteering.
+                  We are orienteering enthusiasts who enjoy connecting
+                  technology with orienteering.
                 </p>
 
                 <p className="text-sm md:text-base text-muted-foreground">
-                  After using the core of the platform privately for many years, we
-                  decided to open it to the wider orienteering community to make
-                  event organization simpler, faster, and more reliable.
+                  After using the core of the platform privately for many years,
+                  we decided to open it to the wider orienteering community to
+                  make event organization simpler, faster, and more reliable.
                 </p>
               </div>
             </div>
@@ -168,7 +170,7 @@ export const AboutPage = () => {
             <p className="text-muted-foreground">
               Questions or feedback? Get in touch via{' '}
               <a
-                href="https://github.com/orienteerfeed"
+                href={externalLinks.github}
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary font-medium hover:underline underline-offset-4"
@@ -177,7 +179,7 @@ export const AboutPage = () => {
               </a>{' '}
               or check the{' '}
               <a
-                href="https://docs.orienteerfeed.com/"
+                href={externalLinks.docs}
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary font-medium hover:underline underline-offset-4"
@@ -185,6 +187,31 @@ export const AboutPage = () => {
                 documentation
               </a>{' '}
               for more details.
+            </p>
+          </Card>
+          <Card className="p-6 md:p-8 border-border">
+            <h2 className="text-2xl font-bold mb-4">Contribute</h2>
+            <p className="text-muted-foreground">
+              Help us improve localization in your language, we use{' '}
+              <a
+                href={externalLinks.weblate}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary font-medium hover:underline underline-offset-4"
+              >
+                Weblate
+              </a>{' '}
+              for translation management. You can find more detailed information
+              on how to join us in the{' '}
+              <a
+                href={contributeDocsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary font-medium hover:underline underline-offset-4"
+              >
+                documentation
+              </a>
+              .
             </p>
           </Card>
         </div>
