@@ -108,6 +108,7 @@ const envSchema = z.object({
   ORIS_API_BASE_URL: z.string().url().default("https://oris.orientacnisporty.cz/API/"),
   EVENTOR_API_BASE_URL: z.string().url().default("https://eventor.orienteering.sport/api"),
   EVENTOR_API_KEY: z.string().optional(),
+  MAPY_API_KEY: z.string().optional(),
 
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   CORS_METHODS: z.string().default("GET,HEAD,POST,PUT,DELETE,OPTIONS"),

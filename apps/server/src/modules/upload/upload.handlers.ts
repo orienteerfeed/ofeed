@@ -1,16 +1,16 @@
+import { z } from '@hono/zod-openapi';
 import { DOMParser } from '@xmldom/xmldom';
-import { z } from "@hono/zod-openapi";
 import { Parser } from 'xml2js';
 import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
-import { requireAuth } from '../../middlewares/require-jwt.js';
+import { Prisma } from '../../generated/prisma/client';
+import type { ProtocolType, ResultStatus, Sex } from '../../generated/prisma/enums';
+import { ResultStatus as ResultStatusEnum } from '../../generated/prisma/enums';
 import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
 import { toValidationIssues } from '../../lib/validation/zod.js';
+import { requireAuth } from '../../middlewares/require-jwt.js';
+import type { AppBindings, AppOpenAPI } from '../../types';
 import { ensureEventOwner, isAuthzError } from '../../utils/authz.js';
-import type { AppBindings, AppOpenAPI } from "../../types";
-import { Prisma } from "../../generated/prisma/client";
-import { ResultStatus as ResultStatusEnum } from "../../generated/prisma/enums";
-import type { ProtocolType, ResultStatus, Sex } from "../../generated/prisma/enums";
 
 import prisma from '../../utils/context.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
@@ -28,16 +28,18 @@ const parser = new Parser({ attrkey: 'ATTR', trim: true });
 const IOF_XML_SCHEMA =
   'https://raw.githubusercontent.com/international-orienteering-federation/datastandard-v3/master/IOF.xsd';
 
-const uploadIofBodySchema = z.object({
-  eventId: z.string().min(1),
-  validateXml: z.boolean().optional(),
-}).passthrough();
+const uploadIofBodySchema = z
+  .object({
+    eventId: z.string().min(1),
+    validateXml: z.boolean().optional(),
+  })
+  .passthrough();
 
 type UploadedFile = MultipartFile;
 type UploadLogLevel = 'info' | 'warn' | 'error';
 type CompressionType = 'none' | 'gzip' | 'zlib' | 'deflate' | 'unknown';
 type UploadContext = {
-  get: <K extends keyof AppBindings["Variables"]>(key: K) => AppBindings["Variables"][K];
+  get: <K extends keyof AppBindings['Variables']>(key: K) => AppBindings['Variables'][K];
   json: (body: unknown, status?: number) => Response;
 };
 type MaybeUnzipResult = {
@@ -100,7 +102,7 @@ type TeamWithBib = {
 type IofPayloadType = 'ResultList' | 'StartList' | 'CourseData';
 type IofTypeMatch = { isArray: true; jsonKey: IofPayloadType; jsonValue: unknown };
 const IOF_PAYLOAD_TYPES: readonly IofPayloadType[] = ['ResultList', 'StartList', 'CourseData'];
-type UploadScopedLogger = Pick<AppBindings["Variables"]["logger"], "info" | "warn" | "error">;
+type UploadScopedLogger = Pick<AppBindings['Variables']['logger'], 'info' | 'warn' | 'error'>;
 
 function isIofPayloadType(value: string): value is IofPayloadType {
   return (IOF_PAYLOAD_TYPES as readonly string[]).includes(value);
@@ -109,26 +111,29 @@ function isIofPayloadType(value: string): value is IofPayloadType {
 const RESULT_STATUSES = new Set<ResultStatus>(Object.values(ResultStatusEnum));
 
 const RESULT_STATUS_ALIASES: Record<string, ResultStatus> = {
-  DNS: "DidNotStart",
-  DNF: "DidNotFinish",
-  DSQ: "Disqualified",
-  MP: "MissingPunch",
-  OT: "OverTime",
-  NC: "NotCompeting",
-  NENT: "DidNotEnter",
+  DNS: 'DidNotStart',
+  DNF: 'DidNotFinish',
+  DSQ: 'Disqualified',
+  MP: 'MissingPunch',
+  OT: 'OverTime',
+  NC: 'NotCompeting',
+  NENT: 'DidNotEnter',
 };
 
 function normalizeStatusToken(value: string): string {
-  return value.trim().replace(/[\s_-]+/g, "").toUpperCase();
+  return value
+    .trim()
+    .replace(/[\s_-]+/g, '')
+    .toUpperCase();
 }
 
 function getIofTextValue(value: unknown): string | undefined {
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : undefined;
   }
 
-  if (typeof value === "number") {
+  if (typeof value === 'number') {
     return String(value);
   }
 
@@ -142,7 +147,7 @@ function getIofTextValue(value: unknown): string | undefined {
     return undefined;
   }
 
-  if (!value || typeof value !== "object") {
+  if (!value || typeof value !== 'object') {
     return undefined;
   }
 
@@ -150,19 +155,17 @@ function getIofTextValue(value: unknown): string | undefined {
   const direct =
     getIofTextValue(record._) ??
     getIofTextValue(record.value) ??
-    getIofTextValue(record["#text"]) ??
+    getIofTextValue(record['#text']) ??
     getIofTextValue(record.text);
   if (direct) {
     return direct;
   }
 
   const attrCandidate = record.ATTR;
-  if (attrCandidate && typeof attrCandidate === "object") {
+  if (attrCandidate && typeof attrCandidate === 'object') {
     const attrs = attrCandidate as Record<string, unknown>;
     const fromAttrs =
-      getIofTextValue(attrs.value) ??
-      getIofTextValue(attrs.status) ??
-      getIofTextValue(attrs.code);
+      getIofTextValue(attrs.value) ?? getIofTextValue(attrs.status) ?? getIofTextValue(attrs.code);
     if (fromAttrs) {
       return fromAttrs;
     }
@@ -176,6 +179,13 @@ function getIofTextValue(value: unknown): string | undefined {
   }
 
   return undefined;
+}
+
+function getIofDateTime(value: unknown): Date | undefined {
+  const raw = getIofTextValue(value);
+  if (!raw) return undefined;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
 function toResultStatus(value: unknown, fallback: ResultStatus): ResultStatus {
@@ -199,7 +209,7 @@ function toResultStatus(value: unknown, fallback: ResultStatus): ResultStatus {
 }
 
 function toSex(value: string | undefined, fallback: Sex): Sex {
-  if (value === "M" || value === "F" || value === "B") {
+  if (value === 'M' || value === 'F' || value === 'B') {
     return value;
   }
 
@@ -314,8 +324,8 @@ function getCompetitorKey(
       const id =
         person.Id.find(
           (sourceId: IofSourceId) =>
-            sourceId.ATTR?.type === 'CZE' && sourceId._ && sourceId._.trim() !== ''
-        )?._ || person.Id.find(sourceId => sourceId._ && sourceId._.trim() !== '')?._;
+            sourceId.ATTR?.type === 'CZE' && sourceId._ && sourceId._.trim() !== '',
+        )?._ || person.Id.find((sourceId) => sourceId._ && sourceId._.trim() !== '')?._;
 
       if (id) return id; // Return ID if available
       console.warn('No valid registration ID found for person:', person);
@@ -325,8 +335,8 @@ function getCompetitorKey(
     // Handle "system" key type
     else if (keyType === 'system') {
       // Prioritize the ID with type "QuickEvent", fallback to other IDs
-      const quickEventId = person.Id.find(sourceId => sourceId.ATTR?.type === 'QuickEvent');
-      const orisId = person.Id.find(sourceId => sourceId.ATTR?.type === 'ORIS');
+      const quickEventId = person.Id.find((sourceId) => sourceId.ATTR?.type === 'QuickEvent');
+      const orisId = person.Id.find((sourceId) => sourceId.ATTR?.type === 'ORIS');
       const id = quickEventId?._ || orisId?._ || person.Id[0]?._; // Prioritize QuickEvent, then ORIS, then fallback to the first ID
 
       if (id) return id; // Return ID if available
@@ -429,7 +439,10 @@ type XmlValidationResult = {
   errors?: XmlValidationIssue[];
 };
 
-const validateIofXml = async (xmlString: string, xsdString: string): Promise<XmlValidationResult> => {
+const validateIofXml = async (
+  xmlString: string,
+  xsdString: string,
+): Promise<XmlValidationResult> => {
   const returnState: XmlValidationResult = { state: false, message: '' };
   try {
     // First check if XML is well-formed
@@ -460,8 +473,8 @@ const validateIofXml = async (xmlString: string, xsdString: string): Promise<Xml
               typeof error === 'string'
                 ? error
                 : error && typeof error === 'object' && 'message' in error
-                  ? String(error.message)
-                  : 'Validation error',
+                ? String(error.message)
+                : 'Validation error',
             type: 'schema',
           }))
         : [
@@ -471,7 +484,7 @@ const validateIofXml = async (xmlString: string, xsdString: string): Promise<Xml
               type: 'schema',
             },
           ];
-      returnState.message = returnState.errors.map(issue => issue.msg).join("; ");
+      returnState.message = returnState.errors.map((issue) => issue.msg).join('; ');
       console.log(returnState.message);
     }
   } catch (err: unknown) {
@@ -489,7 +502,9 @@ const validateIofXml = async (xmlString: string, xsdString: string): Promise<Xml
  * @returns Class list with external identifiers.
  * @throws Error if database query fails.
  */
-async function getClassLists(eventId: string): Promise<Array<{ id: number; externalId: string | null }>> {
+async function getClassLists(
+  eventId: string,
+): Promise<Array<{ id: number; externalId: string | null }>> {
   try {
     return await prisma.class.findMany({
       where: { eventId: eventId },
@@ -520,10 +535,11 @@ async function upsertClass(
   const sourceClassId = classDetails.Id?.shift();
   const className = classDetails.Name.shift() ?? sourceClassId ?? '';
   const classIdentifier = sourceClassId || className;
-  const existingClass = dbClassLists.find(cls => cls.externalId === classIdentifier);
+  const existingClass = dbClassLists.find((cls) => cls.externalId === classIdentifier);
 
   // Determine sex based on the first letter of the class name
-  const inferredSex: Sex = className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
+  const inferredSex: Sex =
+    className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
   const classSex = toSex(classDetails.ATTR?.sex, inferredSex);
 
   if (!existingClass) {
@@ -612,7 +628,7 @@ async function upsertCompetitor(
   const hasFinishTime = Boolean(result?.FinishTime?.[0]);
   const fallbackStatus: ResultStatus = hasFinishTime
     ? 'OK'
-    : (dbCompetitorResponse?.status ?? 'Inactive');
+    : dbCompetitorResponse?.status ?? 'Inactive';
   const normalizedStatus = toResultStatus(result?.Status, fallbackStatus);
 
   // Prepare new data, giving preference to already stored values for certain fields
@@ -628,18 +644,19 @@ async function upsertCompetitor(
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber.shift())
       : start?.BibNumber
-        ? (parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber)
-        : null,
+      ? parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber
+      : null,
     startTime:
-      (result?.StartTime?.shift() || start?.StartTime?.shift()) ??
+      getIofDateTime(result?.StartTime) ??
+      getIofDateTime(start?.StartTime) ??
       (dbCompetitorResponse?.startTime || null),
-    finishTime: result?.FinishTime?.shift() ?? (dbCompetitorResponse?.finishTime || null),
-    time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitorResponse?.time ?? null),
+    finishTime: getIofDateTime(result?.FinishTime) ?? (dbCompetitorResponse?.finishTime || null),
+    time: result?.Time ? parseInt(result.Time[0]) : dbCompetitorResponse?.time ?? null,
     card: result?.ControlCard
       ? parseInt(result.ControlCard.shift())
       : start?.ControlCard
-        ? parseInt(start.ControlCard.shift())
-        : (dbCompetitorResponse?.card ?? null),
+      ? parseInt(start.ControlCard.shift())
+      : dbCompetitorResponse?.card ?? null,
     status: normalizedStatus,
     lateStart: dbCompetitorResponse?.lateStart || false,
     team: teamId ? { connect: { id: teamId } } : undefined,
@@ -691,7 +708,11 @@ async function upsertCompetitor(
     ];
 
     // Collect changes to be added to the protocol
-    const changes: Array<{ type: ProtocolType; previousValue: string | null; newValue: string | null }> = [];
+    const changes: Array<{
+      type: ProtocolType;
+      previousValue: string | null;
+      newValue: string | null;
+    }> = [];
 
     // Define a mapping of competitorData keys to their corresponding protocol types
     const keyToTypeMap: Record<string, ProtocolType> = {
@@ -775,7 +796,7 @@ const SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS = 10_000;
 const SPLIT_WRITE_TRANSACTION_TIMEOUT_MS = 20_000;
 const IOF_WRITE_CONCURRENCY = 8;
 
-const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function forEachWithConcurrency<T>(
   items: readonly T[],
@@ -827,7 +848,7 @@ async function withSplitWriteLock<T>(
 ): Promise<T> {
   const previous = splitWriteLocks.get(competitorId) || Promise.resolve();
   let release: (() => void) | undefined;
-  const gate = new Promise<void>(resolve => {
+  const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
   const tail = previous.then(() => gate);
@@ -914,12 +935,12 @@ async function upsertSplitsUnsafe(competitorId: number, result: IofResult) {
       controlCode: true,
       time: true,
     },
-    orderBy: { id: "asc" },
+    orderBy: { id: 'asc' },
   });
 
   const incomingSplits = normalizeIncomingSplits(result);
   const incomingByControlCode = new Map<number, number | null>(
-    incomingSplits.map(split => [split.controlCode, split.time]),
+    incomingSplits.map((split) => [split.controlCode, split.time]),
   );
 
   const existingByControlCode = new Map<number, { id: number; time: number | null }>();
@@ -965,14 +986,14 @@ async function upsertSplitsUnsafe(competitorId: number, result: IofResult) {
 
   // Replace all competitor splits atomically to avoid interleaving create/update/delete conflicts.
   await prisma.$transaction(
-    async tx => {
+    async (tx) => {
       await tx.split.deleteMany({
         where: { competitorId: competitorId },
       });
 
       if (incomingSplits.length > 0) {
         await tx.split.createMany({
-          data: incomingSplits.map(split => ({
+          data: incomingSplits.map((split) => ({
             competitorId: competitorId,
             controlCode: split.controlCode,
             time: split.time,
@@ -1014,7 +1035,7 @@ async function upsertSplitsUnsafe(competitorId: number, result: IofResult) {
  */
 async function upsertSplits(competitorId: number, result: IofResult) {
   return withSplitWriteLock(competitorId, () =>
-    withSplitWriteConflictRetry(competitorId, () => upsertSplitsUnsafe(competitorId, result))
+    withSplitWriteConflictRetry(competitorId, () => upsertSplitsUnsafe(competitorId, result)),
   );
 }
 
@@ -1156,7 +1177,7 @@ async function processClassStarts(
               eventId,
               classId,
               teamStart as TeamWithBib,
-              organisation
+              organisation,
             );
             // Process Team Member Starts
             if (teamStart.TeamMemberStart && teamStart.TeamMemberStart.length > 0) {
@@ -1176,7 +1197,7 @@ async function processClassStarts(
                     start,
                     null,
                     teamId,
-                    leg
+                    leg,
                   );
                 },
               );
@@ -1237,7 +1258,7 @@ async function processClassResults(
               person,
               organisation,
               null,
-              result
+              result,
             );
             const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
             if (updated || updatedSplits) updatedClasses.add(classId);
@@ -1265,7 +1286,7 @@ async function processClassResults(
               eventId,
               classId,
               teamResult as TeamWithBib,
-              organisation
+              organisation,
             );
             // Process Team Member Results
             if (teamResult.TeamMemberResult && teamResult.TeamMemberResult.length > 0) {
@@ -1295,7 +1316,7 @@ async function processClassResults(
                       null,
                       result,
                       teamId,
-                      leg
+                      leg,
                     );
                     const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
                     if (updated || updatedSplits) updatedClasses.add(classId);
@@ -1320,11 +1341,7 @@ async function processClassResults(
  */
 async function handleIofXmlUpload(
   c: UploadContext,
-  {
-    eventId,
-    validateXml,
-    file,
-  }: { eventId: string; validateXml?: boolean; file?: UploadedFile },
+  { eventId, validateXml, file }: { eventId: string; validateXml?: boolean; file?: UploadedFile },
 ) {
   const endpoint = '/rest/v1/upload/iof';
   const iofValidationEnabled = typeof validateXml === 'undefined' || validateXml !== false;
@@ -1389,7 +1406,7 @@ async function handleIofXmlUpload(
 
   let dbResponseEvent;
   try {
-    const ownership = await ensureEventOwner(prisma, c.get("authContext"), eventId, {
+    const ownership = await ensureEventOwner(prisma, c.get('authContext'), eventId, {
       select: { relay: true, ranking: true },
       eventNotFoundStatus: 404,
       eventNotFoundMessage: 'Event not found',
@@ -1439,7 +1456,7 @@ async function handleIofXmlUpload(
     ...uploadDetails,
     success: false,
     stage: 'xml-parsed',
-    detectedTypes: iofXmlType.map(type => type.jsonKey),
+    detectedTypes: iofXmlType.map((type) => type.jsonKey),
     detectedTypeCount: iofXmlType.length,
   });
 
@@ -1468,7 +1485,7 @@ async function handleIofXmlUpload(
 
   try {
     await Promise.all(
-      iofXmlType.map(async type => {
+      iofXmlType.map(async (type) => {
         if (type.jsonKey === 'ResultList') {
           const classResults = iofXml3.ResultList.ClassResult;
           logUploadEvent(c, 'info', 'IOF upload processing ResultList', {
@@ -1482,7 +1499,7 @@ async function handleIofXmlUpload(
               eventId,
               classResults,
               dbClassLists,
-              dbResponseEvent
+              dbResponseEvent,
             );
             notifyWinnerChanges(eventId);
             logUploadEvent(c, 'info', 'IOF upload ResultList processed', {
@@ -1496,13 +1513,18 @@ async function handleIofXmlUpload(
               try {
                 await publishUpdatedCompetitors(classId); // Process sequentially
               } catch (err) {
-                logUploadEvent(c, 'error', 'IOF upload failed while publishing updated competitors', {
-                  ...uploadDetails,
-                  success: false,
-                  stage: 'publish-updated-competitors',
-                  classId,
-                  reason: err instanceof Error ? err.message : 'Publish failed',
-                });
+                logUploadEvent(
+                  c,
+                  'error',
+                  'IOF upload failed while publishing updated competitors',
+                  {
+                    ...uploadDetails,
+                    success: false,
+                    stage: 'publish-updated-competitors',
+                    classId,
+                    reason: err instanceof Error ? err.message : 'Publish failed',
+                  },
+                );
               }
             }
           }
@@ -1552,7 +1574,7 @@ async function handleIofXmlUpload(
             courseCount: Array.isArray(courseData) ? courseData.length : 0,
           });
           await Promise.all(
-            courseData.map(async course => {
+            courseData.map(async (course) => {
               const classDetails = {
                 Name: [course.Name[0]],
                 Id: [],
@@ -1565,7 +1587,7 @@ async function handleIofXmlUpload(
               };
 
               await upsertClass(eventId, classDetails, dbClassLists, additionalData);
-            })
+            }),
           );
           logUploadEvent(c, 'info', 'IOF upload CourseData processed', {
             ...uploadDetails,
@@ -1574,7 +1596,7 @@ async function handleIofXmlUpload(
             courseCount: Array.isArray(courseData) ? courseData.length : 0,
           });
         }
-      })
+      }),
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Upload processing failed';
@@ -1594,10 +1616,7 @@ async function handleIofXmlUpload(
     eventName,
   });
 
-  return c.json(
-    success('OK', { data: 'Iof xml uploaded successfully: ' + eventName }, 200),
-    200,
-  );
+  return c.json(success('OK', { data: 'Iof xml uploaded successfully: ' + eventName }, 200), 200);
 }
 
 /**
@@ -1701,12 +1720,12 @@ function maybeUnzip(file: UploadedFile): MaybeUnzipResult {
  *  post:
  *    summary: Upload IOX XML 3
  *    description: |
- *      Upload a data file containing class specifications, start lists or result lists.  
- *      
+ *      Upload a data file containing class specifications, start lists or result lists.
+ *
  *      This endpoint accepts both plain XML files and compressed uploads. Decompression is handled automatically based on:
- *        - Magic bytes detected in the file buffer  
- *        - File extension  
- *        - MIME type information from the **Content-Type** header  
+ *        - Magic bytes detected in the file buffer
+ *        - File extension
+ *        - MIME type information from the **Content-Type** header
  *          (e.g., `application/gzip`, `application/x-gzip`, `application/zlib`, `application/deflate`)
  *    parameters:
  *      - in: body
@@ -1726,9 +1745,9 @@ function maybeUnzip(file: UploadedFile): MaybeUnzipResult {
 export function registerUploadRoutes(router: AppOpenAPI) {
   // Verify user authentication
   //TODO: Restrucure the code for better readability
-  router.use("*", requireAuth);
+  router.use('*', requireAuth);
 
-  router.post("/iof", async c => {
+  router.post('/iof', async (c) => {
     const endpoint = '/rest/v1/upload/iof';
     const { body, file } = await parseMultipartPayload(c);
     const parsedBody = uploadIofBodySchema.safeParse(body);
@@ -1757,28 +1776,28 @@ export function registerUploadRoutes(router: AppOpenAPI) {
     });
   });
 
-/**
- * @swagger
- * /rest/v1/upload/czech-ranking:
- *  post:
- *    summary: Upload CSV with Czech Ranking Data for the current month
- *    description: Upload data file containing ranking data for czech competition rules.
- *    parameters:
- *       - in: body
- *         name: file
- *         required: true
- *         description: CSV File downloaded from ORIS system.
- *         schema:
- *           type: file
- *    responses:
- *      200:
- *        description: Iof xml uploaded successfully
- *      422:
- *        description: Validation errors
- *      500:
- *        description: Internal server error
- */
-  router.post("/czech-ranking", async c => {
+  /**
+   * @swagger
+   * /rest/v1/upload/czech-ranking:
+   *  post:
+   *    summary: Upload CSV with Czech Ranking Data for the current month
+   *    description: Upload data file containing ranking data for czech competition rules.
+   *    parameters:
+   *       - in: body
+   *         name: file
+   *         required: true
+   *         description: CSV File downloaded from ORIS system.
+   *         schema:
+   *           type: file
+   *    responses:
+   *      200:
+   *        description: Iof xml uploaded successfully
+   *      422:
+   *        description: Validation errors
+   *      500:
+   *        description: Internal server error
+   */
+  router.post('/czech-ranking', async (c) => {
     const endpoint = '/rest/v1/upload/czech-ranking';
     const { file } = await parseMultipartPayload(c);
 
@@ -1840,8 +1859,8 @@ export function registerUploadRoutes(router: AppOpenAPI) {
           typeof processedRankingData === 'string'
             ? processedRankingData
             : Array.isArray(processedRankingData)
-              ? { processedItems: processedRankingData.length }
-              : processedRankingData,
+            ? { processedItems: processedRankingData.length }
+            : processedRankingData,
       });
       return c.json(
         success(
@@ -1849,7 +1868,7 @@ export function registerUploadRoutes(router: AppOpenAPI) {
           {
             data: 'Csv ranking Czech data uploaded successfully: ' + processedRankingData,
           },
-          200
+          200,
         ),
         200,
       );
