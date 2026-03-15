@@ -23,13 +23,15 @@ kubectl create namespace ofeed --dry-run=client -o yaml | kubectl apply -f -
 Do Vault path ulož:
 - `DATABASE_URL` (např. `mysql://ofeed:***@mariadb.database.svc.cluster.local:3306/ofeed`)
 - `JWT_TOKEN_SECRET_KEY` (min. 32 znaků)
+- `MAPY_API_KEY` (volitelné, pro mapový podklad Mapy.cz bez zveřejnění klíče ve frontendu)
 
 Příklad (KV v2):
 
 ```bash
 vault kv put kv/ofeed/api \
   DATABASE_URL='mysql://ofeed:password@mariadb.database.svc.cluster.local:3306/ofeed' \
-  JWT_TOKEN_SECRET_KEY='replace-with-long-random-secret-min-32-chars'
+  JWT_TOKEN_SECRET_KEY='replace-with-long-random-secret-min-32-chars' \
+  MAPY_API_KEY='replace-with-mapy-api-key'
 ```
 
 ## 4. Vault policy a role
