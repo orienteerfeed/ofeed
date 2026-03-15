@@ -62,6 +62,7 @@ export const GET_EVENT = gql`
         password
         expiresAt
       }
+      meosCompetitionId
     }
   }
 `;
@@ -79,6 +80,8 @@ export const EventSettingsPage = () => {
   });
 
   const apiEventsEndpoint = new URL(ENDPOINTS.events(), config.BASE_API_URL)
+    .href;
+  const meosMopEndpoint = new URL(ENDPOINTS.meosMop(), config.BASE_API_URL)
     .href;
 
   useEffect(() => {
@@ -203,6 +206,8 @@ export const EventSettingsPage = () => {
                   eventDate={formatDate(data.event.date)}
                   apiEventsEndpoint={apiEventsEndpoint}
                   apiBaseUrl={config.BASE_API_URL}
+                  meosMopEndpoint={meosMopEndpoint}
+                  meosCompetitionId={data.event.meosCompetitionId ?? 0}
                 />
               </div>
             )}

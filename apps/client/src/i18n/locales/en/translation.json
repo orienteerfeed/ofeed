@@ -399,6 +399,7 @@
           "Description": "How to set up the apps to connect to OFeed.",
           "ApiBaseUrl": "Url",
           "EventId": "Event id",
+          "MeOSCompetitionId": "MeOS competition ID",
           "EventPassword": "Event Password",
           "EventName": "Name",
           "EventDate": "Date",
@@ -416,6 +417,9 @@
               "Description": "Copy and paste these Credentials into OFeed service setup.",
               "ExportInterval": "Export Interval"
             },
+            "MeOS": {
+              "Description": "Configure MeOS Online Protocol export with this endpoint URL, generated numeric competition ID, and event password."
+            },
             "SIDroidConenctor": {
               "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
             }
@@ -428,7 +432,9 @@
         },
         "Toast": {
           "CopyBaseUrl": "Hop! Base URL is now in your clipboard, share it away!",
-          "CopyEventId": "Hop! Event ID is now in your clipboard, share it away!"
+          "CopyEventId": "Hop! Event ID is now in your clipboard, share it away!",
+          "CopyMeosMopEndpoint": "MeOS endpoint copied to clipboard.",
+          "CopyMeosCompetitionId": "MeOS competition ID copied to clipboard."
         }
       },
       "Visibility": {

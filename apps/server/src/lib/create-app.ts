@@ -22,6 +22,7 @@ import { metricsMiddleware } from "../middlewares/metrics.middleware";
 import { AUTH_OPENAPI } from "../modules/auth/auth.openapi";
 import { EVENT_OPENAPI } from "../modules/event/event.openapi";
 import { GRAPHQL_OPENAPI } from "../modules/graphql/graphql.openapi";
+import { MEOS_OPENAPI } from "../modules/meos/meos.openapi";
 import { UPLOAD_OPENAPI } from "../modules/upload/upload.openapi";
 import { structuredLogger } from "../middlewares/pino-logger";
 import { error as errorResponse } from "../utils/responseApi.js";
@@ -32,6 +33,7 @@ const authRateLimitPrefix = AUTH_OPENAPI.basePath;
 const restApiPrefix = API_DEFAULTS.BASE_PATH;
 const uploadBodyLimitPrefix = UPLOAD_OPENAPI.basePath;
 const eventsBodyLimitPrefix = EVENT_OPENAPI.basePath;
+const meosBodyLimitPrefix = MEOS_OPENAPI.basePath;
 
 function toRfc3339Timestamp() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -51,6 +53,9 @@ function shouldAttachMeta(path: string, contentType: string | null) {
 
 function shouldUseUploadBodyLimit(path: string) {
   if (path.startsWith(uploadBodyLimitPrefix)) {
+    return true;
+  }
+  if (path.startsWith(meosBodyLimitPrefix)) {
     return true;
   }
 

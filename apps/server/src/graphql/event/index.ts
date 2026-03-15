@@ -5,6 +5,7 @@ import * as subscriptions from './subscription.js';
 
 import { EVENT_OPENAPI } from '../../modules/event/event.openapi.js';
 import { getDecryptedEventPassword } from '../../modules/event/event.service.js';
+import { ensureEventMeosMap } from '../../modules/meos/meos.service.js';
 import { requireEventOwner } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
 import { normalizeUtcTimeString } from '../../utils/time.js';
@@ -56,6 +57,11 @@ const resolvers = {
         return null;
       }
       return decryptedPassword;
+    },
+    meosCompetitionId: async (parent, _, context) => {
+      const { prisma, auth } = context;
+      await requireEventOwner(prisma, auth, parent.id);
+      return ensureEventMeosMap(parent.id);
     },
     zeroTime: parent => normalizeUtcTimeString(parent.zeroTime) ?? "00:00:00",
     featuredImage: (parent) => buildPublicImageUrl(parent.featuredImageKey, parent.id),

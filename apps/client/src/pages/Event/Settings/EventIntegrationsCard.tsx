@@ -21,10 +21,12 @@ interface EventIntegrationsCardProps {
   t: TFunction;
   eventId: string;
   eventPassword: string;
+  meosCompetitionId: number;
   eventName: string;
   eventDate: string;
   apiEventsEndpoint: string;
   apiBaseUrl: string;
+  meosMopEndpoint: string;
 }
 
 interface QrTabPanelProps {
@@ -113,10 +115,12 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   t,
   eventId,
   eventPassword,
+  meosCompetitionId,
   eventName,
   eventDate,
   apiEventsEndpoint,
   apiBaseUrl,
+  meosMopEndpoint,
 }) => {
   const qrCodeOChecklistRef = useRef<HTMLCanvasElement>(null);
   const qrCodeConnectorRef = useRef<HTMLCanvasElement>(null);
@@ -405,9 +409,10 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
       </CardHeader>
       <CardContent className="space-y-0">
         <Tabs defaultValue="ochecklist" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="ochecklist">OChecklist</TabsTrigger>
             <TabsTrigger value="quickevent">QuickEvent</TabsTrigger>
+            <TabsTrigger value="meos">MeOS</TabsTrigger>
             <TabsTrigger value="connector">SI Droid Connector</TabsTrigger>
           </TabsList>
 
@@ -539,6 +544,120 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     </div>
 
                     {/* Copy Button */}
+                    <Button
+                      type="button"
+                      onClick={copyPasswordToClipboard}
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 shrink-0"
+                    >
+                      <Copy className="h-3 w-3" />
+                      <span className="sr-only">
+                        {t('Pages.Event.Password.Copy')}
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="meos" className="space-y-4">
+            <div className={panelClassName}>
+              <div className="space-y-2 mb-6">
+                <p className="text-sm text-muted-foreground">
+                  {t('Pages.Event.Integration.Card.Tabs.MeOS.Description')}
+                </p>
+
+                <div className="flex justify-between items-center gap-2">
+                  <Label className="text-sm font-medium">
+                    {t('Pages.Event.Integration.Card.ApiBaseUrl')}
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                      {meosMopEndpoint}
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        copyWithToast(
+                          meosMopEndpoint,
+                          t('Pages.Event.Integration.Toast.CopyMeosMopEndpoint')
+                        )
+                      }
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 shrink-0"
+                    >
+                      <Copy className="h-3 w-3" />
+                      <span className="sr-only">Copy MeOS endpoint</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center gap-2">
+                  <Label className="text-sm font-medium">
+                    {t('Pages.Event.Integration.Card.MeOSCompetitionId')}
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {meosCompetitionId}
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        copyWithToast(
+                          String(meosCompetitionId),
+                          t('Pages.Event.Integration.Toast.CopyMeosCompetitionId')
+                        )
+                      }
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 shrink-0"
+                    >
+                      <Copy className="h-3 w-3" />
+                      <span className="sr-only">Copy MeOS competition ID</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center gap-2">
+                  <Label className="text-sm font-medium">
+                    {t('Pages.Event.Integration.Card.EventPassword')}
+                  </Label>
+                  <div className="flex items-center gap-2 flex-1 max-w-[250px]">
+                    <div className="relative flex-1">
+                      <Input
+                        type={passwordVisible ? 'text' : 'password'}
+                        value={eventPassword}
+                        placeholder={t(
+                          'Pages.Event.Password.Field.Placeholders.Name'
+                        )}
+                        autoCapitalize="off"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        readOnly
+                        className="pr-10 h-8 text-sm"
+                      />
+
+                      <Button
+                        type="button"
+                        onClick={togglePasswordVisibility}
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                      >
+                        {passwordVisible ? (
+                          <EyeOff className="h-3 w-3" />
+                        ) : (
+                          <Eye className="h-3 w-3" />
+                        )}
+                        <span className="sr-only">
+                          {passwordVisible ? 'Hide password' : 'Show password'}
+                        </span>
+                      </Button>
+                    </div>
+
                     <Button
                       type="button"
                       onClick={copyPasswordToClipboard}

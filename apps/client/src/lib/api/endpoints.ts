@@ -64,6 +64,7 @@ export const ENDPOINTS = {
     params?: QueryParams
   ): string => `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
   uploadIofXml: (): string => `${apiPrefix}/upload/iof`,
+  meosMop: (): string => `${apiPrefix}/meos/mop`,
 } as const;
 
 export type EndpointKey = keyof typeof ENDPOINTS;

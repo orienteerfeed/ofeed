@@ -399,6 +399,7 @@
           "Description": "Hur man konfigurerar appar för anslutning till OFeed.",
           "ApiBaseUrl": "URL",
           "EventId": "Tävlings-id",
+          "MeOSCompetitionId": "MeOS tävlings-id",
           "EventPassword": "Tävlingens lösenord",
           "EventName": "Namn",
           "EventDate": "Datum",
@@ -411,8 +412,24 @@
           "Tabs": {
             "OChecklist": {
               "Description": "Skanna QR-koden för att ställa in serveradress, tävlingsid och lösenord.\nScan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
+            },
+            "QuickEvent": {
+              "Description": "Kopiera dessa uppgifter till OFeed-tjänstens inställningar.",
+              "ExportInterval": "Exportintervall"
+            },
+            "MeOS": {
+              "Description": "Konfigurera MeOS Online Protocol med endpoint-URL, numeriskt tävlings-id och lösenord."
+            },
+            "SIDroidConenctor": {
+              "Description": "Skanna QR-koden för att ställa in URL, tävlings-id och lösenord i OFeed-anslutningen."
             }
           }
+        },
+        "Toast": {
+          "CopyBaseUrl": "Bas-URL kopierad till urklipp.",
+          "CopyEventId": "Tävlings-id kopierat till urklipp.",
+          "CopyMeosMopEndpoint": "MeOS-endpoint kopierad till urklipp.",
+          "CopyMeosCompetitionId": "MeOS tävlings-id kopierat till urklipp."
         }
       }
     },

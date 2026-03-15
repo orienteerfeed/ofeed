@@ -93,6 +93,7 @@ export const typeDef = /* GraphQL */ `
     country: Country
     user: User
     eventPassword: EventPassword
+    meosCompetitionId: Int
     featuredImageKey: String
     featuredImage: String
   }

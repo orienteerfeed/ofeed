@@ -53,6 +53,7 @@ export interface Event {
 
   // Settings
   eventPassword?: EventPassword;
+  meosCompetitionId?: number | null;
 
   // Metadata
   createdAt: string;

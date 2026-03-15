@@ -399,6 +399,7 @@
           "Description": "Jak nastavit připojení aplikací k OFeedu.",
           "ApiBaseUrl": "Url",
           "EventId": "Id akce",
+          "MeOSCompetitionId": "MeOS ID závodu",
           "EventPassword": "Heslo",
           "EventName": "Název",
           "EventDate": "Datum",
@@ -416,6 +417,9 @@
               "Description": "V nastavení OFeed služby zadej do přihlašovacích údajů tyto hodnoty.",
               "ExportInterval": "Interval pro exportování"
             },
+            "MeOS": {
+              "Description": "Nastav export MeOS Online Protocol podle URL endpointu, číselného ID závodu a hesla akce."
+            },
             "SIDroidConenctor": {
               "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování. Můžeš také využít tlačítko s ikonou aplikace pro sdílení odkazu s přihlašovacími údaji na zařízení co právě používáš."
             }
@@ -428,7 +432,9 @@
         },
         "Toast": {
           "CopyBaseUrl": "Hop! Base URL je teď ve schránce, sdílej dál!",
-          "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!"
+          "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!",
+          "CopyMeosMopEndpoint": "MeOS endpoint zkopírován do schránky.",
+          "CopyMeosCompetitionId": "MeOS ID závodu zkopírováno do schránky."
         }
       },
       "Visibility": {

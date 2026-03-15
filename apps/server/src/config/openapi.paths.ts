@@ -11,6 +11,10 @@ import {
   GRAPHQL_OPENAPI_PATHS,
 } from "../modules/graphql/graphql.openapi";
 import {
+  MEOS_OPENAPI,
+  MEOS_OPENAPI_PATHS,
+} from "../modules/meos/meos.openapi";
+import {
   UPLOAD_OPENAPI,
   UPLOAD_OPENAPI_PATHS,
 } from "../modules/upload/upload.openapi";
@@ -31,6 +35,7 @@ export const OPENAPI_TAGS = [
     name: EVENT_OPENAPI.tag,
     description: "Events and competitor management endpoints",
   },
+  { name: MEOS_OPENAPI.tag, description: "MeOS online protocol ingestion endpoint" },
   { name: UPLOAD_OPENAPI.tag, description: "Upload and import endpoints" },
   { name: USER_OPENAPI.tag, description: "User scoped endpoints" },
 ] as const;
@@ -61,6 +66,7 @@ export const OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   ...GRAPHQL_OPENAPI_PATHS,
   ...AUTH_OPENAPI_PATHS,
   ...EVENT_OPENAPI_PATHS,
+  ...MEOS_OPENAPI_PATHS,
   ...UPLOAD_OPENAPI_PATHS,
   ...USER_OPENAPI_PATHS,
 };
