@@ -102,6 +102,7 @@
         "Info": "Info",
         "Cards": "Cards",
         "List": "List",
+        "Map": "Map",
         "Cat": "Cat",
         "Club": "Club",
         "Live": "Live"
@@ -500,7 +501,8 @@
         "FoundCount": "You found {{count}} events",
         "LoadError": "Error loading events: {{message}}",
         "NoEvents": "No events found",
-        "NoEventsHint": "Try changing the filter or check back later."
+        "NoEventsHint": "Try changing the filter or check back later.",
+        "MapNoCoordinates": "No events with valid coordinates are available for map view."
       }
     },
     "Profile": {
