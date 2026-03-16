@@ -55,7 +55,7 @@ export function registerMeosRoutes(router: AppOpenAPI) {
       return mopStatusResponse("BADPWD");
     }
 
-    const payload = await c.req.text();
+    const payload = Buffer.from(await c.req.arrayBuffer());
 
     try {
       await processMeosMopPayload(eventId, payload);

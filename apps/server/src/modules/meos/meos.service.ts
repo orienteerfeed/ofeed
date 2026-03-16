@@ -1,4 +1,5 @@
 import { Parser, processors } from "xml2js";
+import zlib from "node:zlib";
 import { Prisma } from "../../generated/prisma/client";
 import type { ResultStatus } from "../../generated/prisma/enums";
 import prisma from "../../utils/context.js";
@@ -68,6 +69,12 @@ type TeamAssignment = {
   teamId: number;
   leg: number | null;
 };
+
+const ZIP_LOCAL_FILE_HEADER_SIGNATURE = 0x04034b50;
+const ZIP_CENTRAL_DIRECTORY_SIGNATURE = 0x02014b50;
+const ZIP_EOCD_SIGNATURE = 0x06054b50;
+const ZIP_STORED_METHOD = 0;
+const ZIP_DEFLATE_METHOD = 8;
 
 export class MopProcessingError extends Error {
   readonly status: MopStatusCode;
@@ -373,6 +380,158 @@ function parseTeamAssignments(value: unknown) {
   return assignments;
 }
 
+function isZipBuffer(buffer: Buffer) {
+  if (buffer.length < 4) {
+    return false;
+  }
+
+  return (
+    buffer[0] === 0x50 &&
+    buffer[1] === 0x4b &&
+    (
+      (buffer[2] === 0x03 && buffer[3] === 0x04) ||
+      (buffer[2] === 0x05 && buffer[3] === 0x06) ||
+      (buffer[2] === 0x07 && buffer[3] === 0x08)
+    )
+  );
+}
+
+function findZipEocdOffset(buffer: Buffer) {
+  const minimumEocdLength = 22;
+  const maxCommentLength = 0xffff;
+  const searchStart = Math.max(0, buffer.length - minimumEocdLength - maxCommentLength);
+
+  for (let offset = buffer.length - minimumEocdLength; offset >= searchStart; offset -= 1) {
+    if (buffer.readUInt32LE(offset) === ZIP_EOCD_SIGNATURE) {
+      return offset;
+    }
+  }
+
+  return -1;
+}
+
+function extractLocalZipEntryData(
+  buffer: Buffer,
+  localHeaderOffset: number,
+  compressedSize: number,
+  compressionMethod: number,
+) {
+  const localHeaderSize = 30;
+  if (localHeaderOffset < 0 || localHeaderOffset + localHeaderSize > buffer.length) {
+    throw new MopProcessingError("BADXML", "ZIP local header offset is out of range.");
+  }
+
+  if (buffer.readUInt32LE(localHeaderOffset) !== ZIP_LOCAL_FILE_HEADER_SIGNATURE) {
+    throw new MopProcessingError("BADXML", "ZIP local header signature is invalid.");
+  }
+
+  const localFileNameLength = buffer.readUInt16LE(localHeaderOffset + 26);
+  const localExtraLength = buffer.readUInt16LE(localHeaderOffset + 28);
+  const dataStart = localHeaderOffset + localHeaderSize + localFileNameLength + localExtraLength;
+  const dataEnd = dataStart + compressedSize;
+
+  if (dataStart > buffer.length || dataEnd > buffer.length) {
+    throw new MopProcessingError("BADXML", "ZIP entry data is truncated.");
+  }
+
+  const compressedData = buffer.subarray(dataStart, dataEnd);
+
+  if (compressionMethod === ZIP_STORED_METHOD) {
+    return Buffer.from(compressedData);
+  }
+
+  if (compressionMethod === ZIP_DEFLATE_METHOD) {
+    try {
+      return zlib.inflateRawSync(compressedData);
+    } catch {
+      throw new MopProcessingError("BADXML", "Failed to decompress ZIP entry.");
+    }
+  }
+
+  throw new MopProcessingError("BADXML", `Unsupported ZIP compression method: ${compressionMethod}`);
+}
+
+function extractFirstXmlFromZip(buffer: Buffer) {
+  const eocdOffset = findZipEocdOffset(buffer);
+  if (eocdOffset < 0) {
+    throw new MopProcessingError("BADXML", "ZIP end-of-central-directory not found.");
+  }
+
+  const totalEntries = buffer.readUInt16LE(eocdOffset + 10);
+  const centralDirectoryOffset = buffer.readUInt32LE(eocdOffset + 16);
+
+  if (centralDirectoryOffset >= buffer.length) {
+    throw new MopProcessingError("BADXML", "ZIP central directory offset is out of range.");
+  }
+
+  const centralHeaderSize = 46;
+  let offset = centralDirectoryOffset;
+  const maxEntriesToRead = Math.max(totalEntries, 1);
+
+  for (let index = 0; index < maxEntriesToRead; index += 1) {
+    if (offset + centralHeaderSize > buffer.length) {
+      break;
+    }
+
+    if (buffer.readUInt32LE(offset) !== ZIP_CENTRAL_DIRECTORY_SIGNATURE) {
+      break;
+    }
+
+    const compressionMethod = buffer.readUInt16LE(offset + 10);
+    const compressedSize = buffer.readUInt32LE(offset + 20);
+    const fileNameLength = buffer.readUInt16LE(offset + 28);
+    const extraLength = buffer.readUInt16LE(offset + 30);
+    const commentLength = buffer.readUInt16LE(offset + 32);
+    const localHeaderOffset = buffer.readUInt32LE(offset + 42);
+
+    if (compressedSize === 0xffffffff) {
+      throw new MopProcessingError("BADXML", "ZIP64 archives are not supported.");
+    }
+
+    const fileNameStart = offset + centralHeaderSize;
+    const fileNameEnd = fileNameStart + fileNameLength;
+    if (fileNameEnd > buffer.length) {
+      break;
+    }
+
+    const fileName = buffer.toString("utf8", fileNameStart, fileNameEnd);
+    const isDirectory = fileName.endsWith("/");
+
+    if (!isDirectory) {
+      const xmlBuffer = extractLocalZipEntryData(
+        buffer,
+        localHeaderOffset,
+        compressedSize,
+        compressionMethod,
+      );
+      const xml = xmlBuffer.toString("utf8");
+      if (xml.trim().length > 0) {
+        return xml;
+      }
+    }
+
+    offset = fileNameEnd + extraLength + commentLength;
+  }
+
+  throw new MopProcessingError("BADXML", "ZIP archive does not contain readable XML entry.");
+}
+
+function normalizeMopPayload(payload: string | Buffer) {
+  if (typeof payload === "string") {
+    return payload;
+  }
+
+  if (payload.length === 0) {
+    return "";
+  }
+
+  if (isZipBuffer(payload)) {
+    return extractFirstXmlFromZip(payload);
+  }
+
+  return payload.toString("utf8");
+}
+
 async function clearManagedMeosData(eventId: string) {
   const meosClasses = await prisma.class.findMany({
     where: {
@@ -524,14 +683,11 @@ export async function parseMopXml(xmlPayload: string): Promise<{ rootName: MopRo
   return { rootName, root };
 }
 
-export async function processMeosMopPayload(eventId: string, xmlPayload: string) {
+export async function processMeosMopPayload(eventId: string, payload: string | Buffer) {
+  const xmlPayload = normalizeMopPayload(payload);
   const trimmedPayload = xmlPayload.trim();
   if (!trimmedPayload) {
     throw new MopProcessingError("BADXML", "Payload is empty.");
-  }
-
-  if (trimmedPayload.startsWith("PK")) {
-    throw new MopProcessingError("NOZIP", "ZIP payloads are not supported.");
   }
 
   let rootName: MopRootName;
@@ -982,4 +1138,7 @@ export const meosTestingHelpers = {
   parseMopXml,
   parseRadioSplits,
   parseTeamAssignments,
+  isZipBuffer,
+  extractFirstXmlFromZip,
+  normalizeMopPayload,
 };

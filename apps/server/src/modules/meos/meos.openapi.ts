@@ -40,6 +40,12 @@ export const MEOS_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
           "application/xml": {
             schema: { type: "string" },
           },
+          "application/zip": {
+            schema: { type: "string", format: "binary" },
+          },
+          "application/octet-stream": {
+            schema: { type: "string", format: "binary" },
+          },
         },
       },
       responses: {
