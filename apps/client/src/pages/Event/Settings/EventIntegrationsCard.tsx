@@ -125,6 +125,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   const qrCodeOChecklistRef = useRef<HTMLCanvasElement>(null);
   const qrCodeConnectorRef = useRef<HTMLCanvasElement>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const hasPassword = eventPassword.trim().length > 0;
 
   // Format the service credentials
   const ochecklistDeepLink = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
@@ -408,34 +409,39 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-0">
-        <Tabs defaultValue="ochecklist" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="ochecklist">OChecklist</TabsTrigger>
-            <TabsTrigger value="quickevent">QuickEvent</TabsTrigger>
-            <TabsTrigger value="meos">MeOS</TabsTrigger>
-            <TabsTrigger value="connector">SI Droid Connector</TabsTrigger>
-          </TabsList>
+        {!hasPassword ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {t('Pages.Event.Integration.Card.PasswordRequiredWarning')}
+          </div>
+        ) : (
+          <Tabs defaultValue="ochecklist" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="ochecklist">OChecklist</TabsTrigger>
+              <TabsTrigger value="quickevent">QuickEvent</TabsTrigger>
+              <TabsTrigger value="meos">MeOS</TabsTrigger>
+              <TabsTrigger value="connector">SI Droid Connector</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="ochecklist" className="space-y-4">
-            <QrTabPanel
-              description={t(
-                'Pages.Event.Integration.Card.Tabs.OChecklist.Description'
-              )}
-              shareLabel={t('Share', { ns: 'common' })}
-              printLabel={t('Print', { ns: 'common' })}
-              qrRef={qrCodeOChecklistRef}
-              deepLink={ochecklistDeepLink}
-              appName="ochecklist"
-              appNameLabel="O Checklist"
-              icon={OChecklistIcon}
-              onShare={handleShare}
-              onPrint={handlePrint}
-              onOpen={handleOpenDeepLink}
-              codeSize={codeSize}
-              errorCorrectionLevel={errorCorrectionLevel}
-              qrBackgroundColor={qrBackgroundColor}
-            />
-          </TabsContent>
+            <TabsContent value="ochecklist" className="space-y-4">
+              <QrTabPanel
+                description={t(
+                  'Pages.Event.Integration.Card.Tabs.OChecklist.Description'
+                )}
+                shareLabel={t('Share', { ns: 'common' })}
+                printLabel={t('Print', { ns: 'common' })}
+                qrRef={qrCodeOChecklistRef}
+                deepLink={ochecklistDeepLink}
+                appName="ochecklist"
+                appNameLabel="O Checklist"
+                icon={OChecklistIcon}
+                onShare={handleShare}
+                onPrint={handlePrint}
+                onOpen={handleOpenDeepLink}
+                codeSize={codeSize}
+                errorCorrectionLevel={errorCorrectionLevel}
+                qrBackgroundColor={qrBackgroundColor}
+              />
+            </TabsContent>
 
           <TabsContent value="quickevent" className="space-y-4">
             <div className={panelClassName}>
@@ -676,27 +682,28 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="connector" className="space-y-4">
-            <QrTabPanel
-              description={t(
-                'Pages.Event.Integration.Card.Tabs.SIDroidConenctor.Description'
-              )}
-              shareLabel={t('Share', { ns: 'common' })}
-              printLabel={t('Print', { ns: 'common' })}
-              qrRef={qrCodeConnectorRef}
-              deepLink={connectorDeepLink}
-              appName="si-droid-connector"
-              appNameLabel="SI-Droid Connector"
-              icon={ConnectorIcon}
-              onShare={handleShare}
-              onPrint={handlePrint}
-              onOpen={handleOpenDeepLink}
-              codeSize={codeSize}
-              errorCorrectionLevel={errorCorrectionLevel}
-              qrBackgroundColor={qrBackgroundColor}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="connector" className="space-y-4">
+              <QrTabPanel
+                description={t(
+                  'Pages.Event.Integration.Card.Tabs.SIDroidConenctor.Description'
+                )}
+                shareLabel={t('Share', { ns: 'common' })}
+                printLabel={t('Print', { ns: 'common' })}
+                qrRef={qrCodeConnectorRef}
+                deepLink={connectorDeepLink}
+                appName="si-droid-connector"
+                appNameLabel="SI-Droid Connector"
+                icon={ConnectorIcon}
+                onShare={handleShare}
+                onPrint={handlePrint}
+                onOpen={handleOpenDeepLink}
+                codeSize={codeSize}
+                errorCorrectionLevel={errorCorrectionLevel}
+                qrBackgroundColor={qrBackgroundColor}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </CardContent>
     </Card>
   );

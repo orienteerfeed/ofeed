@@ -397,6 +397,7 @@
         "Card": {
           "Title": "Configuración de aplicaciones",
           "Description": "Cómo configurar las aplicaciones para conectarse a OFeed.",
+          "PasswordRequiredWarning": "Primero genera la contraseña del evento para habilitar la configuración de integraciones.",
           "ApiBaseUrl": "URL",
           "EventId": "ID del evento",
           "MeOSCompetitionId": "ID de competición MeOS",

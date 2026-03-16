@@ -397,6 +397,7 @@
         "Card": {
           "Title": "Konfigurering av appar",
           "Description": "Hur man konfigurerar appar för anslutning till OFeed.",
+          "PasswordRequiredWarning": "Skapa först ett tävlingslösenord för att aktivera integrationsinställningar.",
           "ApiBaseUrl": "URL",
           "EventId": "Tävlings-id",
           "MeOSCompetitionId": "MeOS tävlings-id",

@@ -397,6 +397,7 @@
         "Card": {
           "Title": "Nastavení aplikací",
           "Description": "Jak nastavit připojení aplikací k OFeedu.",
+          "PasswordRequiredWarning": "Pro aktivaci nastavení integrací nejdřív vygeneruj heslo akce.",
           "ApiBaseUrl": "Url",
           "EventId": "Id akce",
           "MeOSCompetitionId": "MeOS ID závodu",

@@ -196,21 +196,19 @@ export const EventSettingsPage = () => {
               />
             </div>
 
-            {password && (
-              <div className="break-inside-avoid">
-                <EventIntegrationsCard
-                  t={t}
-                  eventId={eventId}
-                  eventPassword={password}
-                  eventName={data.event.name}
-                  eventDate={formatDate(data.event.date)}
-                  apiEventsEndpoint={apiEventsEndpoint}
-                  apiBaseUrl={config.BASE_API_URL}
-                  meosMopEndpoint={meosMopEndpoint}
-                  meosCompetitionId={data.event.meosCompetitionId ?? 0}
-                />
-              </div>
-            )}
+            <div className="break-inside-avoid">
+              <EventIntegrationsCard
+                t={t}
+                eventId={eventId}
+                eventPassword={password}
+                eventName={data.event.name}
+                eventDate={formatDate(data.event.date)}
+                apiEventsEndpoint={apiEventsEndpoint}
+                apiBaseUrl={config.BASE_API_URL}
+                meosMopEndpoint={meosMopEndpoint}
+                meosCompetitionId={data.event.meosCompetitionId ?? 0}
+              />
+            </div>
 
             {/* Right Column */}
             <div className="break-inside-avoid">
