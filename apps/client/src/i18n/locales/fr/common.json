@@ -38,5 +38,10 @@
     "Private": "Privé",
     "Search": "Rechercher",
     "Close": "Fermer",
-    "NoResults": "Aucun résutat"
+    "NoResults": "Aucun résutat",
+    "TypeAtLeastNCharacters": "Saisir au moins {{n}} caractères…",
+    "View": "Visualiser",
+    "ComingSoon": "Prochainement",
+    "NotImplementedTitle": "Pas encore implémenté",
+    "NotImplementedDescription": "Indisponible pour l'instant. Nous travaillons sur cette fonctionnalité."
 }
