@@ -102,6 +102,7 @@
         "Info": "Info",
         "Cards": "Dlaždice",
         "List": "Seznam",
+        "Map": "Mapa",
         "Cat": "Kat",
         "Club": "Klub",
         "Live": "Živě"
@@ -500,7 +501,8 @@
         "FoundCount": "Zobrazeno {{count}} akcí",
         "LoadError": "Chyba při načítání akcí: {{message}}",
         "NoEvents": "Žádné akce nenalezeny",
-        "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
+        "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později.",
+        "MapNoCoordinates": "Pro mapové zobrazení nejsou dostupné žádné akce s platnými souřadnicemi."
       }
     },
     "Profile": {

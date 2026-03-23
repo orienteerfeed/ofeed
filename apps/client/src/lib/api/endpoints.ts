@@ -63,6 +63,14 @@ export const ENDPOINTS = {
     eventId: string | number,
     params?: QueryParams
   ): string => `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
+  mapTile: (
+    mapset: string,
+    tileSize: string,
+    z: string | number,
+    x: string | number,
+    y: string | number
+  ): string =>
+    `${apiPrefix}/events/map-tiles/${mapset}/${tileSize}/${z}/${x}/${y}`,
   uploadIofXml: (): string => `${apiPrefix}/upload/iof`,
 } as const;
 

@@ -136,7 +136,13 @@ export default function createApp() {
     return defaultBodyLimit(c as never, next as never);
   });
 
-  app.use("*", secureHeaders());
+  app.use(
+    "*",
+    secureHeaders({
+      // Tiles/images are loaded cross-origin in local dev (3000 -> 3001).
+      crossOriginResourcePolicy: "cross-origin",
+    }),
+  );
   app.use("*", async (c, next) => {
     if (isCSPEnabled(env.NODE_ENV)) {
       const nonce = randomBytes(16).toString("base64");

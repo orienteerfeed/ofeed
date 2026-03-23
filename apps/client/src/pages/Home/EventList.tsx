@@ -10,11 +10,18 @@ import { Event, EventFilter } from '@/types/event';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
-import { LayoutGrid, List, Loader2 } from 'lucide-react';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { LayoutGrid, List, Loader2, Map } from 'lucide-react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Button } from '../../components/atoms';
 import { EventCard } from './EventCard';
+import { EventMapView } from './EventMapView';
 import { EventTableRow } from './EventTableRow';
 
 interface EventListProps {
@@ -28,6 +35,8 @@ interface GraphQLEvent {
   organizer: string;
   date: string; // timestamp as a string
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   featuredImage?: string | null;
   country: {
     countryCode: string;
@@ -66,7 +75,7 @@ interface EventsVariables {
   after?: string | null;
 }
 
-type ViewMode = 'card' | 'list';
+type ViewMode = 'card' | 'list' | 'map';
 
 const EVENTS_QUERY = gql`
   query Events($filter: EventFilter, $first: Int!, $after: String) {
@@ -78,6 +87,8 @@ const EVENTS_QUERY = gql`
           organizer
           date
           location
+          latitude
+          longitude
           featuredImage
           country {
             countryCode
@@ -149,8 +160,12 @@ const convertGraphQLEventToEvent = (graphqlEvent: GraphQLEvent): Event => {
       countryCode: graphqlEvent.country.countryCode,
       countryName: graphqlEvent.country.countryName,
     },
-    latitude: 0,
-    longitude: 0,
+    ...(typeof graphqlEvent.latitude === 'number'
+      ? { latitude: graphqlEvent.latitude }
+      : {}),
+    ...(typeof graphqlEvent.longitude === 'number'
+      ? { longitude: graphqlEvent.longitude }
+      : {}),
     sportId: graphqlEvent.sport.id,
     sport: graphqlEvent.sport,
     discipline: 'middle',
@@ -196,7 +211,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     try {
       const stored = localStorage.getItem(VIEW_MODE_KEY);
-      if (stored === 'card' || stored === 'list') {
+      if (stored === 'card' || stored === 'list' || stored === 'map') {
         return stored;
       }
     } catch {
@@ -208,6 +223,8 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const endCursorRef = useRef<string | null>(null);
+  const hasMoreRef = useRef(true);
 
   // Controlling concurrent loading
   const loadingRef = useRef(false);
@@ -238,6 +255,8 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     setEndCursor(null);
     setHasMore(true);
     setIsLoadingMore(false);
+    endCursorRef.current = null;
+    hasMoreRef.current = true;
     loadingRef.current = false;
     restoringRef.current = false;
     anchorIdRef.current = null;
@@ -250,6 +269,14 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
       // ignore storage errors
     }
   }, [viewMode]);
+
+  useEffect(() => {
+    endCursorRef.current = endCursor;
+  }, [endCursor]);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
 
   // Processes data from GraphQL - the main logic for loading data
   useEffect(() => {
@@ -275,7 +302,37 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
 
     setEndCursor(data.events.pageInfo.endCursor);
     setHasMore(data.events.pageInfo.hasNextPage);
+    endCursorRef.current = data.events.pageInfo.endCursor;
+    hasMoreRef.current = data.events.pageInfo.hasNextPage;
   }, [data, endCursor]);
+
+  const fetchMorePage = useCallback(
+    async (cursor: string): Promise<EventsData['events']['pageInfo'] | null> => {
+      const result = await fetchMore({
+        variables: {
+          filter: graphqlFilter,
+          first: 12,
+          after: cursor,
+        },
+        updateQuery: (previousResult, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return previousResult;
+
+          return {
+            events: {
+              ...fetchMoreResult.events,
+              edges: [
+                ...previousResult.events.edges,
+                ...fetchMoreResult.events.edges,
+              ],
+            },
+          };
+        },
+      });
+
+      return result.data?.events?.pageInfo ?? null;
+    },
+    [fetchMore, graphqlFilter]
+  );
 
   // After adding new events, return view to the last old item
   useLayoutEffect(() => {
@@ -307,6 +364,10 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
 
   // Manual scroll position check for better UX
   useEffect(() => {
+    if (viewMode === 'map') {
+      return;
+    }
+
     const checkScrollPosition = () => {
       if (!hasMore || isLoadingMore || loadingRef.current || !endCursor) return;
 
@@ -331,7 +392,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     return () => {
       scrollElement.removeEventListener('scroll', checkScrollPosition);
     };
-  }, [hasMore, isLoadingMore, endCursor, inView]);
+  }, [hasMore, isLoadingMore, endCursor, inView, viewMode]);
 
   // Trigger loading more pages when scrolling down - FIX: added more conditions
   useEffect(() => {
@@ -340,6 +401,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
 
     // Stricter conditions for loading
     const shouldLoadMore =
+      viewMode !== 'map' &&
       inView &&
       hasMore &&
       !loading &&
@@ -353,8 +415,65 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     if (shouldLoadMore) {
       void handleLoadMore();
     }
-     
-  }, [inView, hasMore, loading, isLoadingMore, endCursor]);
+  }, [inView, hasMore, loading, isLoadingMore, endCursor, viewMode]);
+
+  // In map mode, preload all pages so all event markers can be shown at once.
+  useEffect(() => {
+    if (
+      viewMode !== 'map' ||
+      loading ||
+      Boolean(error) ||
+      loadingRef.current ||
+      !hasMoreRef.current ||
+      !endCursorRef.current
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadAllEventsForMap = async () => {
+      while (
+        !cancelled &&
+        hasMoreRef.current &&
+        Boolean(endCursorRef.current) &&
+        !loadingRef.current
+      ) {
+        const cursor = endCursorRef.current;
+        if (!cursor) {
+          break;
+        }
+
+        loadingRef.current = true;
+        setIsLoadingMore(true);
+        lastLoadTimeRef.current = Date.now();
+
+        try {
+          const pageInfo = await fetchMorePage(cursor);
+          if (!pageInfo) {
+            break;
+          }
+
+          hasMoreRef.current = pageInfo.hasNextPage;
+          endCursorRef.current = pageInfo.endCursor;
+          setHasMore(pageInfo.hasNextPage);
+          setEndCursor(pageInfo.endCursor);
+        } catch (err) {
+          console.error('Error preloading events for map view:', err);
+          break;
+        } finally {
+          loadingRef.current = false;
+          setIsLoadingMore(false);
+        }
+      }
+    };
+
+    void loadAllEventsForMap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMode, loading, error, fetchMorePage]);
 
   const handleLoadMore = async () => {
     const timeSinceLastLoad = Date.now() - lastLoadTimeRef.current;
@@ -383,26 +502,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     lastLoadTimeRef.current = Date.now();
 
     try {
-      await fetchMore({
-        variables: {
-          filter: graphqlFilter,
-          first: 12,
-          after: endCursor,
-        },
-        updateQuery: (previousResult, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return previousResult;
-
-          return {
-            events: {
-              ...fetchMoreResult.events,
-              edges: [
-                ...previousResult.events.edges,
-                ...fetchMoreResult.events.edges,
-              ],
-            },
-          };
-        },
-      });
+      await fetchMorePage(endCursor);
     } catch (err) {
       console.error('Error loading more events:', err);
       restoringRef.current = false;
@@ -468,6 +568,17 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
               {t('Pages.Event.Tabs.List')}
             </span>
           </Button>
+          <Button
+            variant={viewMode === 'map' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('map')}
+            className="gap-2"
+          >
+            <Map className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {t('Pages.Event.Tabs.Map', { defaultValue: 'Map' })}
+            </span>
+          </Button>
         </div>
       </div>
 
@@ -488,7 +599,7 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
             </div>
           ))}
         </div>
-      ) : (
+      ) : viewMode === 'list' ? (
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
@@ -535,6 +646,8 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
             </TableBody>
           </Table>
         </div>
+      ) : (
+        <EventMapView events={loadedEvents} t={t} />
       )}
 
       {/* Sentinel for infinite scroll - FIX: increased height and better positioning */}
