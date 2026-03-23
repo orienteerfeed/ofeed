@@ -137,7 +137,7 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
               ),
               variant: 'default',
             });
-            navigate({ to: '/' });
+            navigate({ to: '/my-events' });
           },
           onError: (error: string | ApiError) => {
             console.error('Failed to delete event:', error);
