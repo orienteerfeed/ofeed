@@ -8,6 +8,7 @@ this repository.
 ## Ownership Areas
 
 - `ISSUE_TEMPLATE/*`: issue intake quality and triage structure.
+- `PULL_REQUEST_TEMPLATE.md`: contributor checklist and CLA acknowledgement.
 - `workflows/*`: CI, release, notifications, and publishing automation.
 - `.releaserc.json`: semantic-release behavior.
 - `dependabot.yaml`: dependency update policy.
@@ -24,6 +25,8 @@ this repository.
   delivery state.
 - PRs should link back to their issue and clearly state whether they close it or
   are only a partial delivery.
+- Keep contributor-facing templates aligned with `CLA.md` when contribution
+  policy or licensing language changes.
 
 ## Conventional Commits and SemVer
 

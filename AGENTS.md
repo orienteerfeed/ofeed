@@ -44,6 +44,8 @@ Important generated paths:
   it.
 - Update `README.md`, `CONTRIBUTING.md`, or `docs/` when behavior, public API,
   infrastructure, or configuration changes.
+- Preserve contributor-facing references to `CLA.md` when changing contribution,
+  licensing, or pull request workflows.
 - Never commit secrets. Only client-safe `VITE_*` variables may reach browser
   code.
 
