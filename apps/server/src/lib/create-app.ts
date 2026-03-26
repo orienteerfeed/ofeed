@@ -9,7 +9,7 @@ import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { timing } from "hono/timing";
 import { rateLimiter } from "hono-rate-limiter";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import type { AppBindings, AppOpenAPI, RateLimitOptions } from "../types";
 
@@ -22,6 +22,7 @@ import { metricsMiddleware } from "../middlewares/metrics.middleware";
 import { AUTH_OPENAPI } from "../modules/auth/auth.openapi";
 import { EVENT_OPENAPI } from "../modules/event/event.openapi";
 import { GRAPHQL_OPENAPI } from "../modules/graphql/graphql.openapi";
+import { MAP_OPENAPI } from "../modules/map/map.openapi";
 import { UPLOAD_OPENAPI } from "../modules/upload/upload.openapi";
 import { structuredLogger } from "../middlewares/pino-logger";
 import { error as errorResponse } from "../utils/responseApi.js";
@@ -32,6 +33,9 @@ const authRateLimitPrefix = AUTH_OPENAPI.basePath;
 const restApiPrefix = API_DEFAULTS.BASE_PATH;
 const uploadBodyLimitPrefix = UPLOAD_OPENAPI.basePath;
 const eventsBodyLimitPrefix = EVENT_OPENAPI.basePath;
+const mapTilesRoutePrefix = `${MAP_OPENAPI.basePath}/tiles`;
+const mapTilesPathPattern = `${MAP_OPENAPI.basePath}/tiles/*`;
+const publicEventImagePathPattern = `${EVENT_OPENAPI.basePath}/:eventId/image`;
 
 function toRfc3339Timestamp() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -101,6 +105,52 @@ function payloadTooLargeBody(c: Context<AppBindings>) {
   return mergeResponseMeta(c, payload);
 }
 
+async function allowCrossOriginEmbeds(c: Context<AppBindings>, next: () => Promise<void>) {
+  await next();
+  c.header("Cross-Origin-Resource-Policy", "cross-origin");
+}
+
+function extractClientIp(c: { req: { header: (name: string) => string | undefined } }) {
+  const forwardedFor = c.req.header("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim();
+  }
+
+  const directIp =
+    c.req.header("cf-connecting-ip") ??
+    c.req.header("x-real-ip");
+  if (directIp) {
+    return directIp.trim();
+  }
+
+  const standardizedForwarded = c.req.header("forwarded");
+  if (!standardizedForwarded) {
+    return null;
+  }
+
+  const match = standardizedForwarded.match(/for=(?:"?\[?)([^;\],"]+)/i);
+  return match?.[1]?.trim() ?? null;
+}
+
+function buildAnonymousRateLimitKey(c: { req: { header: (name: string) => string | undefined } }) {
+  const fingerprintParts = [
+    c.req.header("origin"),
+    c.req.header("referer"),
+    c.req.header("user-agent"),
+    c.req.header("accept-language"),
+  ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+
+  if (fingerprintParts.length === 0) {
+    return "anonymous";
+  }
+
+  const fingerprint = createHash("sha256")
+    .update(fingerprintParts.join("|"))
+    .digest("hex");
+
+  return `fingerprint:${fingerprint}`;
+}
+
 export function createRouter() {
   return new OpenAPIHono<AppBindings>({
     strict: false,
@@ -136,13 +186,10 @@ export default function createApp() {
     return defaultBodyLimit(c as never, next as never);
   });
 
-  app.use(
-    "*",
-    secureHeaders({
-      // Tiles/images are loaded cross-origin in local dev (3000 -> 3001).
-      crossOriginResourcePolicy: "cross-origin",
-    }),
-  );
+  // Only embeddable assets need a relaxed CORP policy for local dev (3000 -> 3001).
+  app.use(mapTilesPathPattern, allowCrossOriginEmbeds);
+  app.use(publicEventImagePathPattern, allowCrossOriginEmbeds);
+  app.use("*", secureHeaders());
   app.use("*", async (c, next) => {
     if (isCSPEnabled(env.NODE_ENV)) {
       const nonce = randomBytes(16).toString("base64");
@@ -171,13 +218,7 @@ export default function createApp() {
   app.use("*", authMiddleware);
 
   const keyGenerator = (c: { req: { header: (name: string) => string | undefined } }) => {
-    const forwardedFor = c.req.header("x-forwarded-for");
-
-    if (!forwardedFor) {
-      return "anonymous";
-    }
-
-    return forwardedFor.split(",")[0].trim();
+    return extractClientIp(c) ?? buildAnonymousRateLimitKey(c);
   };
 
   const defaultRateLimiter = rateLimiter({
@@ -201,8 +242,19 @@ export default function createApp() {
     keyGenerator,
   } as RateLimitOptions);
 
+  const mapTileRateLimiter = rateLimiter({
+    windowMs: env.MAP_TILE_RATE_LIMIT_WINDOW_MS,
+    limit: env.MAP_TILE_RATE_LIMIT_MAX,
+    standardHeaders: "draft-6",
+    keyGenerator,
+  } as RateLimitOptions);
+
   app.use("*", async (c, next) => {
     const path = c.req.path;
+
+    if (path.startsWith(mapTilesRoutePrefix)) {
+      return mapTileRateLimiter(c as never, next as never);
+    }
 
     if (isPublicPath(path)) {
       await next();

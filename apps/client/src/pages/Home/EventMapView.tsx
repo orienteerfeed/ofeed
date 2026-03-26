@@ -4,7 +4,9 @@ import type { Event } from '@/types/event';
 import { config } from '@/config';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { TFunction } from 'i18next';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import i18n, { TFunction } from 'i18next';
 import { useEffect, useMemo, useRef } from 'react';
 
 interface EventMapViewProps {
@@ -24,20 +26,33 @@ interface MappableEvent {
 
 const DEFAULT_CENTER: [number, number] = [49.8175, 15.473];
 const DEFAULT_ZOOM = 7;
-const FLAG_ICON_URL = 'https://oris.ceskyorientak.cz/images/control_flag1.png?v=2';
-const MAPSET = 'outdoor';
-const TILE_SIZE = '256';
+const FLAG_ICON_URL = '/images/icons/map_icon.svg';
 const MIN_ZOOM = 0;
 const MAX_ZOOM = 18;
 const MARKER_SIZE = 30;
+const MARKER_IMAGE_SIZE = 24;
+const CLUSTER_SIZE = 40;
+
+const normalizeTileLang = (value: string | undefined): string => {
+  const normalized = value?.trim().toLowerCase().split(/[-_]/)[0];
+  return normalized && normalized.length > 0 ? normalized : 'en';
+};
 
 const markerIcon = L.divIcon({
   className: 'event-map-marker',
-  html: `<img src="${FLAG_ICON_URL}" alt="Orienteering flag" style="display:block;width:${MARKER_SIZE}px;height:${MARKER_SIZE}px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.35));" />`,
+  html: `<img src="${FLAG_ICON_URL}" alt="Orienteering flag" style="display:block;width:${MARKER_IMAGE_SIZE}px;height:${MARKER_IMAGE_SIZE}px;margin:${(MARKER_SIZE - MARKER_IMAGE_SIZE) / 2}px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.35));" />`,
   iconSize: [MARKER_SIZE, MARKER_SIZE],
   iconAnchor: [MARKER_SIZE / 2, MARKER_SIZE / 2],
   popupAnchor: [0, -(MARKER_SIZE / 2)],
 });
+
+const createClusterIcon = (cluster: L.MarkerCluster) =>
+  L.divIcon({
+    className: 'event-map-cluster',
+    html: `<div><span>${cluster.getChildCount()}</span></div>`,
+    iconSize: [CLUSTER_SIZE, CLUSTER_SIZE],
+    iconAnchor: [CLUSTER_SIZE / 2, CLUSTER_SIZE / 2],
+  });
 
 const hasValidCoordinate = (value: unknown, min: number, max: number): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
@@ -75,6 +90,16 @@ const resolveFeaturedImageUrl = (featuredImage?: string): string | null => {
 
 export const EventMapView = ({ events, t }: EventMapViewProps) => {
   const mapElementRef = useRef<HTMLDivElement>(null);
+  const tileLang = normalizeTileLang(i18n.resolvedLanguage ?? i18n.language);
+  const zoomInTitle = t('Pages.Home.Infinite.MapZoomIn', {
+    defaultValue: 'Zoom in',
+  });
+  const zoomOutTitle = t('Pages.Home.Infinite.MapZoomOut', {
+    defaultValue: 'Zoom out',
+  });
+  const mapAttributionOthers = t('Pages.Home.Infinite.MapAttributionOthers', {
+    defaultValue: 'and others',
+  });
 
   const mapEvents = useMemo(
     () =>
@@ -90,18 +115,34 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
     }
 
     const map = L.map(mapElementRef.current, {
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: true,
     });
 
-    L.tileLayer(apiUrl('mapTile', MAPSET, TILE_SIZE, '{z}', '{x}', '{y}'), {
+    L.tileLayer(apiUrl('mapTile', '{z}', '{x}', '{y}', { lang: tileLang }), {
       minZoom: MIN_ZOOM,
       maxZoom: MAX_ZOOM,
       maxNativeZoom: MAX_ZOOM,
       tileSize: 256,
       attribution:
-        '<a href="https://api.mapy.com/copyright" target="_blank" rel="noopener noreferrer">&copy; Seznam.cz a.s. a dalsi</a>',
+        `<a href="https://api.mapy.com/copyright" target="_blank" rel="noopener noreferrer">&copy; Seznam.cz a.s. ${mapAttributionOthers}</a>`,
     }).addTo(map);
+
+    const zoomControl = L.control.zoom({
+      position: 'topleft',
+      zoomInTitle,
+      zoomOutTitle,
+    });
+    zoomControl.addTo(map);
+
+    const clusterGroup = L.markerClusterGroup({
+      chunkedLoading: true,
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      zoomToBoundsOnClick: true,
+      maxClusterRadius: 42,
+      iconCreateFunction: createClusterIcon,
+    });
 
     const LogoControl = L.Control.extend({
       options: {
@@ -140,7 +181,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
     for (const event of mapEvents) {
       const marker = L.marker([event.latitude, event.longitude], {
         icon: markerIcon,
-      }).addTo(map);
+      });
 
       const popupWrapper = document.createElement('div');
       popupWrapper.style.width = '220px';
@@ -194,7 +235,11 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
       marker.bindPopup(popupWrapper, {
         className: 'event-map-popup',
       });
+
+      clusterGroup.addLayer(marker);
     }
+
+    clusterGroup.addTo(map);
 
     const resizeTimer = window.setTimeout(() => {
       map.invalidateSize();
@@ -202,10 +247,12 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
 
     return () => {
       window.clearTimeout(resizeTimer);
+      clusterGroup.remove();
+      zoomControl.remove();
       logoControl.remove();
       map.remove();
     };
-  }, [mapEvents]);
+  }, [mapAttributionOthers, mapEvents, tileLang, zoomInTitle, zoomOutTitle]);
 
   return (
     <div className="space-y-3">
