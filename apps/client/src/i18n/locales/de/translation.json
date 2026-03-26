@@ -132,6 +132,12 @@
         "LiveEventSynchronization": "Live-Event-Synchronisierung",
         "LastMinuteChanges": "Änderungen in letzter Minute",
         "DetailedSplitAnalysis": "Detaillierte Zwischenzeitanalyse"
+      },
+      "Infinite": {
+        "MapNoCoordinates": "Keine Events mit gültigen Koordinaten sind für die Kartenansicht verfügbar.",
+        "MapZoomIn": "Vergrößern",
+        "MapZoomOut": "Verkleinern",
+        "MapAttributionOthers": "und andere"
       }
     }
   },

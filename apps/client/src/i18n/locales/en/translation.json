@@ -502,7 +502,10 @@
         "LoadError": "Error loading events: {{message}}",
         "NoEvents": "No events found",
         "NoEventsHint": "Try changing the filter or check back later.",
-        "MapNoCoordinates": "No events with valid coordinates are available for map view."
+        "MapNoCoordinates": "No events with valid coordinates are available for map view.",
+        "MapZoomIn": "Zoom in",
+        "MapZoomOut": "Zoom out",
+        "MapAttributionOthers": "and others"
       }
     },
     "Profile": {

@@ -116,6 +116,8 @@ const envSchema = z.object({
 
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().default(200),
+  MAP_TILE_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
+  MAP_TILE_RATE_LIMIT_MAX: z.coerce.number().default(2000),
 
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   LOG_DIR: z.string().default("logs"),

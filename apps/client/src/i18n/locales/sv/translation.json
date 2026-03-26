@@ -519,6 +519,12 @@
         "LiveEventSynchronization": "Live-synkronisering av tävling",
         "LastMinuteChanges": "Sista-minuten-ändringar",
         "DetailedSplitAnalysis": "Detaljerad analys av mellantider"
+      },
+      "Infinite": {
+        "MapNoCoordinates": "Det finns inga t�vlingar med giltiga koordinater f�r kartvyn.",
+        "MapZoomIn": "Zooma in",
+        "MapZoomOut": "Zooma ut",
+        "MapAttributionOthers": "och andra"
       }
     }
   },

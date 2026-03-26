@@ -502,7 +502,10 @@
         "LoadError": "Error al cargar eventos: {{message}}",
         "NoEvents": "No se encontraron eventos",
         "NoEventsHint": "Prueba a cambiar el filtro o vuelve más tarde.",
-        "MapNoCoordinates": "No hay eventos con coordenadas válidas para mostrar en el mapa."
+        "MapNoCoordinates": "No hay eventos con coordenadas válidas para mostrar en el mapa.",
+        "MapZoomIn": "Acercar",
+        "MapZoomOut": "Alejar",
+        "MapAttributionOthers": "y otros"
       }
     },
     "Profile": {
