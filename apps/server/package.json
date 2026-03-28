@@ -30,15 +30,15 @@
   "author": "Martin Křivda",
   "license": "GPL-3.0",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1014.0",
+    "@aws-sdk/client-s3": "^3.1019.0",
     "@graphql-tools/schema": "^9.0.19",
     "@hono/node-server": "^1.19.11",
-    "@hono/zod-openapi": "^1.2.3",
+    "@hono/zod-openapi": "^1.2.4",
     "@node-oauth/oauth2-server": "^5.2.1",
-    "@prisma/adapter-mariadb": "^7.5.0",
-    "@prisma/client": "^7.5.0",
+    "@prisma/adapter-mariadb": "^7.6.0",
+    "@prisma/client": "^7.6.0",
     "@repo/shared": "workspace:*",
-    "@scalar/hono-api-reference": "^0.10.4",
+    "@scalar/hono-api-reference": "^0.10.5",
     "@sendgrid/mail": "^8.1.6",
     "@xmldom/xmldom": "^0.8.11",
     "argon2": "^0.44.0",
@@ -48,7 +48,7 @@
     "graphql-constraint-directive": "^5.4.3",
     "graphql-subscriptions": "^3.0.0",
     "graphql-yoga": "^5.18.1",
-    "graphql-ws": "^6.0.7",
+    "graphql-ws": "^6.0.8",
     "hono": "^4.12.9",
     "hono-rate-limiter": "^0.5.3",
     "jsonwebtoken": "^9.0.3",
@@ -59,7 +59,7 @@
     "sharp": "^0.34.5",
     "ws": "^8.20.0",
     "xml2js": "^0.6.2",
-    "xmllint-wasm": "^5.1.0"
+    "xmllint-wasm": "^5.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.11.0",
