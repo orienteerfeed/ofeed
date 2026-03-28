@@ -45,8 +45,8 @@ import {
   loadExternalEventPreview,
   searchExternalEvents,
 } from './event.import.service.js';
-import type { Prisma } from "../../generated/prisma/client";
-import type { AppBindings } from "../../types";
+import type { Prisma } from "../../generated/prisma/client.js";
+import type { AppBindings } from "../../types/index.js";
 import {
   changelogQuerySchema,
   eventImportPreviewBodySchema,

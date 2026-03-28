@@ -64,11 +64,14 @@ export const ENDPOINTS = {
     params?: QueryParams
   ): string => `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
   mapTile: (
+    mapset: string,
+    tileSize: string,
     z: string | number,
     x: string | number,
     y: string | number,
     params?: QueryParams
-  ): string => `${apiPrefix}/map/tiles/${z}/${x}/${y}${qs(params)}`,
+  ): string =>
+    `${apiPrefix}/maps/tiles/raster/${mapset}/${tileSize}/${z}/${x}/${y}${qs(params)}`,
   uploadIofXml: (): string => `${apiPrefix}/upload/iof`,
 } as const;
 

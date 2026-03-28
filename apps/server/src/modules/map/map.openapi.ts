@@ -1,40 +1,48 @@
-import { API_DEFAULTS } from "../../constants/index.js";
-import type { OpenApiPathItem } from "../../config/openapi.types";
+import {
+  SUPPORTED_MAP_TILE_LANGS,
+  SUPPORTED_MAP_TILE_MAPSETS,
+  SUPPORTED_MAP_TILE_SIZES,
+} from "@repo/shared";
 
-const SUPPORTED_LANGS = [
-  "cs",
-  "de",
-  "el",
-  "en",
-  "es",
-  "fr",
-  "it",
-  "nl",
-  "pl",
-  "pt",
-  "ru",
-  "sk",
-  "tr",
-  "uk",
-] as const;
+import { API_DEFAULTS } from "../../constants/index.js";
+import type { OpenApiPathItem } from "../../config/openapi.types.js";
 
 export const MAP_OPENAPI = {
   tag: "Map",
-  basePath: `${API_DEFAULTS.BASE_PATH}/map`,
+  basePath: `${API_DEFAULTS.BASE_PATH}/maps`,
 } as const;
 
-const mapTilesPath = `${MAP_OPENAPI.basePath}/tiles/{z}/{x}/{y}`;
+const mapTilesPath =
+  `${MAP_OPENAPI.basePath}/tiles/raster/{mapset}/{tileSize}/{z}/{x}/{y}`;
 
 export const MAP_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   [mapTilesPath]: {
     get: {
       tags: [MAP_OPENAPI.tag],
-      operationId: "mapTileProxy",
-      summary: "Get localized outdoor map tile",
+      operationId: "mapRasterTileProxy",
+      summary: "Get raster map tile",
       description:
-        "App-specific proxy for Mapy.cz outdoor raster tiles with a fixed 256 tile size.",
+        "App-specific proxy for Mapy.com raster tiles with configurable mapset, tile size, zoom and localized labels.",
       security: [],
       parameters: [
+        {
+          name: "mapset",
+          in: "path",
+          required: true,
+          schema: {
+            type: "string",
+            enum: [...SUPPORTED_MAP_TILE_MAPSETS],
+          },
+        },
+        {
+          name: "tileSize",
+          in: "path",
+          required: true,
+          schema: {
+            type: "string",
+            enum: [...SUPPORTED_MAP_TILE_SIZES],
+          },
+        },
         {
           name: "z",
           in: "path",
@@ -57,7 +65,7 @@ export const MAP_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
           name: "lang",
           in: "query",
           required: false,
-          schema: { type: "string", enum: [...SUPPORTED_LANGS] },
+          schema: { type: "string", enum: [...SUPPORTED_MAP_TILE_LANGS] },
         },
       ],
       responses: {

@@ -1,5 +1,5 @@
 import prisma from '../../utils/context.js';
-import type { Prisma } from '../../generated/prisma/client';
+import type { Prisma } from '../../generated/prisma/client.js';
 
 type EventFilter = 'ALL' | 'TODAY' | 'UPCOMING' | 'RECENT';
 

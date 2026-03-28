@@ -4,7 +4,7 @@ import {
   healthResponseSchema,
   liveResponseSchema,
   readyResponseSchema,
-} from "./health.schema";
+} from "./health.schema.js";
 
 const tags = ["Health"];
 

@@ -1,5 +1,5 @@
 import { requireEventOwner } from '../../utils/authz.js';
-import type { Prisma } from '../../generated/prisma/client';
+import type { Prisma } from '../../generated/prisma/client.js';
 
 export const changelogByEvent = async (_, args, context) => {
   const { eventId, origin, classId, since } = args;

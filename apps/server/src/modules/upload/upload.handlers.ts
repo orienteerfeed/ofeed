@@ -3,13 +3,13 @@ import { DOMParser } from '@xmldom/xmldom';
 import { Parser } from 'xml2js';
 import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
-import { Prisma } from '../../generated/prisma/client';
-import type { ProtocolType, ResultStatus, Sex } from '../../generated/prisma/enums';
-import { ResultStatus as ResultStatusEnum } from '../../generated/prisma/enums';
+import { Prisma } from '../../generated/prisma/client.js';
+import type { ProtocolType, ResultStatus, Sex } from '../../generated/prisma/enums.js';
+import { ResultStatus as ResultStatusEnum } from '../../generated/prisma/enums.js';
 import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
 import { toValidationIssues } from '../../lib/validation/zod.js';
 import { requireAuth } from '../../middlewares/require-jwt.js';
-import type { AppBindings, AppOpenAPI } from '../../types';
+import type { AppBindings, AppOpenAPI } from '../../types/index.js';
 import { ensureEventOwner, isAuthzError } from '../../utils/authz.js';
 
 import prisma from '../../utils/context.js';

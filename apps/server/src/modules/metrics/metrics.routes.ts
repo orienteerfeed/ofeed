@@ -1,7 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 import { z } from "@hono/zod-openapi";
 
-import { HTTP_STATUS } from "../../constants";
+import { HTTP_STATUS } from "../../constants/index.js";
 
 export const getMetrics = createRoute({
   tags: ["Monitoring"],

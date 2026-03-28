@@ -1,13 +1,13 @@
 import { Scalar } from "@scalar/hono-api-reference";
 import type { RouteConfig } from "@hono/zod-openapi";
 
-import type { AppOpenAPI } from "../types";
+import type { AppOpenAPI } from "../types/index.js";
 
-import env from "./env";
+import env from "./env.js";
 import packageJson from "../../../../package.json" with { type: "json" };
-import { OPENAPI_PATHS, OPENAPI_TAGS } from "./openapi.paths";
-import { OPENAPI_SECURITY_SCHEMES } from "./security";
-import type { OpenApiPathItem } from "./openapi.types";
+import { OPENAPI_PATHS, OPENAPI_TAGS } from "./openapi.paths.js";
+import { OPENAPI_SECURITY_SCHEMES } from "./security.js";
+import type { OpenApiPathItem } from "./openapi.types.js";
 
 export const OPENAPI_CONFIG = {
   title: env.OPENAPI_TITLE,

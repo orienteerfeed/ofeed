@@ -1,4 +1,8 @@
 const asBool = (v: string | boolean | undefined) => v === true || v === 'true';
+const optionalBool = (
+  value: string | boolean | undefined,
+  defaultValue: boolean
+): boolean => (value === undefined ? defaultValue : asBool(value));
 
 function required(
   name: keyof ImportMetaEnv,
@@ -43,6 +47,7 @@ export const config = {
     import.meta.env.VITE_GITHUB_REPO_URL,
     'https://github.com/orienteerfeed/ofeed'
   ),
+  ENABLE_MAP_VIEW: optionalBool(import.meta.env.VITE_ENABLE_MAP_VIEW, true),
 
   // Debug flags - all controlled by VITE_DEBUG_LOGGING
   DEBUG_LOGGING: DEBUG,

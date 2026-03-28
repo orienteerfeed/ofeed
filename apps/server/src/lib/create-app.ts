@@ -11,23 +11,23 @@ import { timing } from "hono/timing";
 import { rateLimiter } from "hono-rate-limiter";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
-import type { AppBindings, AppOpenAPI, RateLimitOptions } from "../types";
+import type { AppBindings, AppOpenAPI, RateLimitOptions } from "../types/index.js";
 
-import { buildCSPHeaderValue, env, isCSPEnabled } from "../config";
-import { API_DEFAULTS, HTTP_STATUS } from "../constants";
-import { prisma } from "../db/prisma";
-import { accessLoggerMiddleware } from "../middlewares/access-logger";
-import { authMiddleware, isPublicPath } from "../middlewares/auth.middleware";
-import { metricsMiddleware } from "../middlewares/metrics.middleware";
-import { AUTH_OPENAPI } from "../modules/auth/auth.openapi";
-import { EVENT_OPENAPI } from "../modules/event/event.openapi";
-import { GRAPHQL_OPENAPI } from "../modules/graphql/graphql.openapi";
-import { MAP_OPENAPI } from "../modules/map/map.openapi";
-import { UPLOAD_OPENAPI } from "../modules/upload/upload.openapi";
-import { structuredLogger } from "../middlewares/pino-logger";
+import { buildCSPHeaderValue, env, isCSPEnabled } from "../config/index.js";
+import { API_DEFAULTS, HTTP_STATUS } from "../constants/index.js";
+import { prisma } from "../db/prisma.js";
+import { accessLoggerMiddleware } from "../middlewares/access-logger.js";
+import { authMiddleware, isPublicPath } from "../middlewares/auth.middleware.js";
+import { metricsMiddleware } from "../middlewares/metrics.middleware.js";
+import { AUTH_OPENAPI } from "../modules/auth/auth.openapi.js";
+import { EVENT_OPENAPI } from "../modules/event/event.openapi.js";
+import { GRAPHQL_OPENAPI } from "../modules/graphql/graphql.openapi.js";
+import { MAP_OPENAPI } from "../modules/map/map.openapi.js";
+import { UPLOAD_OPENAPI } from "../modules/upload/upload.openapi.js";
+import { structuredLogger } from "../middlewares/pino-logger.js";
 import { error as errorResponse } from "../utils/responseApi.js";
 
-import { logger } from "./logging";
+import { logger } from "./logging.js";
 
 const authRateLimitPrefix = AUTH_OPENAPI.basePath;
 const restApiPrefix = API_DEFAULTS.BASE_PATH;

@@ -6,7 +6,7 @@ import {
   buildCSPDirectives,
   buildCSPHeaderValue,
   isCSPEnabled,
-} from "../security";
+} from "../security.js";
 
 describe("config/security", () => {
   it("exposes Bearer and Basic OpenAPI security schemes", () => {

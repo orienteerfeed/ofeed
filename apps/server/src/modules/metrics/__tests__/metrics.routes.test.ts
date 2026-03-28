@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getMetrics } from "../metrics.routes";
+import { getMetrics } from "../metrics.routes.js";
 
 describe("metrics.routes", () => {
   it("defines /metrics path", () => {

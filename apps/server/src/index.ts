@@ -1,11 +1,11 @@
 import { serve } from "@hono/node-server";
 import type { Server as HttpServer } from "node:http";
 
-import { env } from "./config";
-import { attachGraphQLWebSocketServer } from "./graphql/server";
-import { logger } from "./lib/logging";
+import { env } from "./config/index.js";
+import { attachGraphQLWebSocketServer } from "./graphql/server.js";
+import { logger } from "./lib/logging.js";
 
-import app from "./app";
+import app from "./app.js";
 
 const server = serve(
   {

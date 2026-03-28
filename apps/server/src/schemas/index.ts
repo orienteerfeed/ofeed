@@ -1,2 +1,2 @@
-export * from "./common.schema";
-export * from "./envelope.schema";
+export * from "./common.schema.js";
+export * from "./envelope.schema.js";

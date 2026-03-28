@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 
-import userRouter from "../user.routes";
+import userRouter from "../user.routes.js";
 
 describe("user routes (hono)", () => {
   it("returns 401 for /my-events without jwt auth context", async () => {

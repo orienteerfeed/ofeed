@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import env from "./env";
+import env from "./env.js";
 
 export interface LogRotationConfig {
   frequency: "daily" | "hourly" | "weekly";

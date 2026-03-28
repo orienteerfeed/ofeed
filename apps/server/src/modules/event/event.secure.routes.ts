@@ -1,4 +1,4 @@
-import { createRouter } from '../../lib/create-app';
+import { createRouter } from '../../lib/create-app.js';
 
 import { registerSecureEventRoutes } from './event.secure.handlers.js';
 

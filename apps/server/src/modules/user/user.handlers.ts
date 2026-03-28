@@ -1,9 +1,9 @@
 import type { Context } from "hono";
 
-import type { AppBindings } from "../../types";
+import type { AppBindings } from "../../types/index.js";
 
 import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";
-import { getJwtNumericUserId } from "../../middlewares/require-jwt";
+import { getJwtNumericUserId } from "../../middlewares/require-jwt.js";
 import { error as errorResponse, success as successResponse } from "../../utils/responseApi.js";
 
 import { listMyEvents } from "./user.service.js";

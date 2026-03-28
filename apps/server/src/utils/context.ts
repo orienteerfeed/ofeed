@@ -1,3 +1,3 @@
-import { prisma } from "../db/prisma";
+import { prisma } from "../db/prisma.js";
 
 export default prisma;
