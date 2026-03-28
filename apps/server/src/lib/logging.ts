@@ -4,14 +4,14 @@ import path from "node:path";
 import pino from "pino";
 import { createStream } from "rotating-file-stream";
 
-import env from "../config/env";
+import env from "../config/env.js";
 import {
   getLogRotationConfig,
   isAccessLogEnabled,
   isAppLogEnabled,
   isRotationEnabled,
   LOG_DIR,
-} from "../config/logging";
+} from "../config/logging.js";
 
 if (!fs.existsSync(LOG_DIR)) {
   fs.mkdirSync(LOG_DIR, { recursive: true });

@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 
-import type { AppBindings } from "../../types";
+import type { AppBindings } from "../../types/index.js";
 
 import { collectDefaultMetrics, register } from "prom-client";
 

@@ -6,12 +6,12 @@ import argon2 from "argon2";
 
 import type { Context } from "hono";
 
-import type { AppBindings, AppOpenAPI } from "../../types";
+import type { AppBindings, AppOpenAPI } from "../../types/index.js";
 
 import { AuthenticationError, ValidationError } from "../../exceptions/index.js";
 import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";
 import { toLowerCaseHeaderRecord } from "../../lib/http/headers.js";
-import { getJwtNumericUserId, requireJwtAuth } from "../../middlewares/require-jwt";
+import { getJwtNumericUserId, requireJwtAuth } from "../../middlewares/require-jwt.js";
 import prisma from "../../utils/context.js";
 import { error as errorResponse, success as successResponse, validation as validationResponse } from "../../utils/responseApi.js";
 import { generateRandomHex } from "../../lib/crypto/random.js";

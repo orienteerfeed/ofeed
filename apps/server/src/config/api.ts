@@ -1,5 +1,5 @@
-import { API_DEFAULTS } from "../constants";
-import env from "./env";
+import { API_DEFAULTS } from "../constants/index.js";
+import env from "./env.js";
 
 export const API_PREFIX = API_DEFAULTS.BASE_PATH;
 

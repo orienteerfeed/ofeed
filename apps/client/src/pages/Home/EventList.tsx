@@ -1,3 +1,4 @@
+import { config } from '@/config';
 import {
   Table,
   TableBody,
@@ -11,7 +12,8 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import { LayoutGrid, List, Loader2, Map } from 'lucide-react';
-import React, {
+import {
+  type FC,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -76,6 +78,31 @@ interface EventsVariables {
 }
 
 type ViewMode = 'card' | 'list' | 'map';
+
+const VIEW_MODE_KEY = 'homeEventsViewMode';
+const DEFAULT_VIEW_MODE: Exclude<ViewMode, 'map'> = 'card';
+
+function isViewMode(value: string | null): value is ViewMode {
+  return value === 'card' || value === 'list' || value === 'map';
+}
+
+function resolveInitialViewMode(mapViewEnabled: boolean): ViewMode {
+  try {
+    const stored = localStorage.getItem(VIEW_MODE_KEY);
+
+    if (isViewMode(stored)) {
+      if (!mapViewEnabled && stored === 'map') {
+        return DEFAULT_VIEW_MODE;
+      }
+
+      return stored;
+    }
+  } catch {
+    // ignore storage errors
+  }
+
+  return DEFAULT_VIEW_MODE;
+}
 
 const EVENTS_QUERY = gql`
   query Events($filter: EventFilter, $first: Int!, $after: String) {
@@ -199,8 +226,8 @@ function mapFilterToGraphQL(filter: EventFilter): string | null {
   }
 }
 
-export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
-  const VIEW_MODE_KEY = 'homeEventsViewMode';
+export const EventList: FC<EventListProps> = ({ t, filter }) => {
+  const mapViewEnabled = config.ENABLE_MAP_VIEW;
   // Sentinel for infinite scroll - FIX: larger threshold and rootMargin
   const { ref, inView } = useInView({
     threshold: 0.8, // Must be visible 80% of the sentinel
@@ -208,17 +235,9 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     rootMargin: '50px', // Larger margin - loads earlier, but only when we're close to the end
   });
 
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    try {
-      const stored = localStorage.getItem(VIEW_MODE_KEY);
-      if (stored === 'card' || stored === 'list' || stored === 'map') {
-        return stored;
-      }
-    } catch {
-      // ignore storage errors
-    }
-    return 'card';
-  });
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    resolveInitialViewMode(mapViewEnabled)
+  );
   const [loadedEvents, setLoadedEvents] = useState<Event[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
@@ -261,6 +280,12 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
     restoringRef.current = false;
     anchorIdRef.current = null;
   }, [filter]);
+
+  useEffect(() => {
+    if (!mapViewEnabled && viewMode === 'map') {
+      setViewMode(DEFAULT_VIEW_MODE);
+    }
+  }, [mapViewEnabled, viewMode]);
 
   useEffect(() => {
     try {
@@ -568,17 +593,19 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
               {t('Pages.Event.Tabs.List')}
             </span>
           </Button>
-          <Button
-            variant={viewMode === 'map' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('map')}
-            className="gap-2"
-          >
-            <Map className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {t('Pages.Event.Tabs.Map', { defaultValue: 'Map' })}
-            </span>
-          </Button>
+          {mapViewEnabled ? (
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('map')}
+              className="gap-2"
+            >
+              <Map className="w-4 h-4" />
+              <span className="hidden sm:inline">
+                {t('Pages.Event.Tabs.Map', { defaultValue: 'Map' })}
+              </span>
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -646,9 +673,9 @@ export const EventList: React.FC<EventListProps> = ({ t, filter }) => {
             </TableBody>
           </Table>
         </div>
-      ) : (
+      ) : mapViewEnabled ? (
         <EventMapView events={loadedEvents} t={t} />
-      )}
+      ) : null}
 
       {/* Sentinel for infinite scroll - FIX: increased height and better positioning */}
       {hasMore && (

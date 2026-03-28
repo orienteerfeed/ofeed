@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { competitorSchema } from "./competitor";
-import { dateLikeSchema, originSchema, protocolTypeSchema, resultStatusSchema } from "./common";
+import { competitorSchema } from "./competitor.js";
+import { dateLikeSchema, originSchema, protocolTypeSchema, resultStatusSchema } from "./common.js";
 
 export const protocolSchema = z.object({
   id: z.number().int(),

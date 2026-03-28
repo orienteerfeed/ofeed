@@ -1,29 +1,29 @@
 import {
   AUTH_OPENAPI,
   AUTH_OPENAPI_PATHS,
-} from "../modules/auth/auth.openapi";
+} from "../modules/auth/auth.openapi.js";
 import {
   EVENT_OPENAPI,
   EVENT_OPENAPI_PATHS,
-} from "../modules/event/event.openapi";
+} from "../modules/event/event.openapi.js";
 import {
   MAP_OPENAPI,
   MAP_OPENAPI_PATHS,
-} from "../modules/map/map.openapi";
+} from "../modules/map/map.openapi.js";
 import {
   GRAPHQL_OPENAPI,
   GRAPHQL_OPENAPI_PATHS,
-} from "../modules/graphql/graphql.openapi";
+} from "../modules/graphql/graphql.openapi.js";
 import {
   UPLOAD_OPENAPI,
   UPLOAD_OPENAPI_PATHS,
-} from "../modules/upload/upload.openapi";
+} from "../modules/upload/upload.openapi.js";
 import {
   USER_OPENAPI,
   USER_OPENAPI_PATHS,
-} from "../modules/user/user.openapi";
-import { okJson, okText } from "./openapi.helpers";
-import type { OpenApiPathItem } from "./openapi.types";
+} from "../modules/user/user.openapi.js";
+import { okJson, okText } from "./openapi.helpers.js";
+import type { OpenApiPathItem } from "./openapi.types.js";
 
 export const OPENAPI_TAGS = [
   { name: "Index", description: "Service meta endpoints" },

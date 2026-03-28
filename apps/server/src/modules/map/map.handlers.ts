@@ -1,42 +1,37 @@
 import type { Context } from "hono";
 import { z } from "@hono/zod-openapi";
+import {
+  getMapTileLangCandidate,
+  isSupportedMapTileMapset,
+  isSupportedMapTileSize,
+  resolveSupportedMapTileLang,
+  supportsRetinaMapTileSize,
+} from "@repo/shared";
 
 import env from "../../config/env.js";
 import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";
 import { error, validation } from "../../utils/responseApi.js";
 
-const supportedLangs = [
-  "cs",
-  "de",
-  "el",
-  "en",
-  "es",
-  "fr",
-  "it",
-  "nl",
-  "pl",
-  "pt",
-  "ru",
-  "sk",
-  "tr",
-  "uk",
-] as const;
-
-const supportedLangSet = new Set<string>(supportedLangs);
-
 const mapTileParamsSchema = z.object({
+  mapset: z.string().min(1),
+  tileSize: z.string().min(1),
   z: z.string().regex(/^\d+$/),
   x: z.string().regex(/^\d+$/),
   y: z.string().regex(/^\d+$/),
 });
 
 function normalizeMapLang(value: string | undefined) {
-  const normalized = value?.trim().toLowerCase().split(/[-_]/)[0];
-  if (!normalized) {
+  const lang = resolveSupportedMapTileLang(value);
+
+  if (lang) {
+    return lang;
+  }
+
+  if (!getMapTileLangCandidate(value)) {
     return undefined;
   }
 
-  return supportedLangSet.has(normalized) ? normalized : "en";
+  return "en";
 }
 
 export const getMapTileHandler = async (c: Context) => {
@@ -50,10 +45,31 @@ export const getMapTileHandler = async (c: Context) => {
     return c.json(error("Map tiles are not configured on the server", 503), 503);
   }
 
-  const { z: zoom, x, y } = parsedParams.data;
+  const {
+    mapset,
+    tileSize,
+    z: zoom,
+    x,
+    y,
+  } = parsedParams.data;
   const zoomNumber = Number(zoom);
   const xNumber = Number(x);
   const yNumber = Number(y);
+
+  if (!isSupportedMapTileMapset(mapset)) {
+    return c.json(error("Unsupported mapset", 422), 422);
+  }
+
+  if (!isSupportedMapTileSize(tileSize)) {
+    return c.json(error("Unsupported tile size", 422), 422);
+  }
+
+  if (!supportsRetinaMapTileSize(mapset, tileSize)) {
+    return c.json(
+      error("Tile size 256@2x is supported only for basic and outdoor mapsets", 422),
+      422,
+    );
+  }
 
   if (zoomNumber < 0 || zoomNumber > 20) {
     return c.json(error("Unsupported zoom level", 422), 422);
@@ -69,7 +85,7 @@ export const getMapTileHandler = async (c: Context) => {
     search.set("lang", lang);
   }
 
-  const tileUrl = `https://api.mapy.com/v1/maptiles/outdoor/256/${zoom}/${x}/${y}${search.toString().length > 0 ? `?${search.toString()}` : ""}`;
+  const tileUrl = `https://api.mapy.com/v1/maptiles/${mapset}/${tileSize}/${zoom}/${x}/${y}${search.toString().length > 0 ? `?${search.toString()}` : ""}`;
 
   try {
     const upstreamResponse = await fetch(tileUrl, {

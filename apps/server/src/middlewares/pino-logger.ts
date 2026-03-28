@@ -1,9 +1,9 @@
 import type { Context, Next } from "hono";
 
-import type { LogContext } from "../lib/logging";
+import type { LogContext } from "../lib/logging.js";
 
-import { logger } from "../lib/logging";
-import { extractClientIp, sanitizeLogString } from "../utils/sanitize";
+import { logger } from "../lib/logging.js";
+import { extractClientIp, sanitizeLogString } from "../utils/sanitize.js";
 
 declare module "hono" {
   interface ContextVariableMap {

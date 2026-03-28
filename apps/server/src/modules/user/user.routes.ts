@@ -1,5 +1,5 @@
-import { createRouter } from "../../lib/create-app";
-import { requireJwtAuth } from "../../middlewares/require-jwt";
+import { createRouter } from "../../lib/create-app.js";
+import { requireJwtAuth } from "../../middlewares/require-jwt.js";
 
 import { getMyEventsHandler } from "./user.handlers.js";
 

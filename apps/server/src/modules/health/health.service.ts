@@ -1,7 +1,7 @@
-import type { PrismaClient } from "../../generated/prisma/client";
+import type { PrismaClient } from "../../generated/prisma/client.js";
 
-import { HEALTH_CONFIG } from "../../constants";
-import type { CheckResult, HealthResponse } from "./health.schema";
+import { HEALTH_CONFIG } from "../../constants/index.js";
+import type { CheckResult, HealthResponse } from "./health.schema.js";
 
 import packageJson from "../../../../../package.json" with { type: "json" };
 

@@ -1,9 +1,9 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 
-import { HTTP_STATUS } from "../constants";
-import { createRouter } from "../lib/create-app";
-import type { AppBindings } from "../types";
+import { HTTP_STATUS } from "../constants/index.js";
+import { createRouter } from "../lib/create-app.js";
+import type { AppBindings } from "../types/index.js";
 import { success } from "../utils/responseApi.js";
 import packageJson from "../../../../package.json" with { type: "json" };
 

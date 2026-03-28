@@ -1,5 +1,5 @@
 import { DatabaseError, ValidationError } from '../../exceptions/index.js';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../generated/prisma/client.js';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';

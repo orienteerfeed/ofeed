@@ -4,8 +4,8 @@ import {
   okJson,
   multipartBody,
   zodToOpenApiSchema,
-} from "../../config/openapi.helpers";
-import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types";
+} from "../../config/openapi.helpers.js";
+import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types.js";
 import {
   eventImportPreviewBodySchema,
   eventImportSearchBodySchema,

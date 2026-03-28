@@ -1,5 +1,5 @@
 import { DatabaseError, NotFoundError, ValidationError } from '../exceptions/index.js';
-import type { ResultStatus } from '../generated/prisma/client';
+import type { ResultStatus } from '../generated/prisma/client.js';
 import prisma from './context.js';
 
 const CZ_INDIVIDUAL_START = 0.0;

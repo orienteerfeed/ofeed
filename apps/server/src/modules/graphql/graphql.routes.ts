@@ -1,4 +1,4 @@
-import { createRouter } from "../../lib/create-app";
+import { createRouter } from "../../lib/create-app.js";
 
 import { graphQLHttpHandler } from "./graphql.handlers.js";
 import { GRAPHQL_OPENAPI } from "./graphql.openapi.js";

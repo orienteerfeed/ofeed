@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import OAuth2Server from "@node-oauth/oauth2-server";
 import argon2 from "argon2";
 
-import type { Prisma } from "../../generated/prisma/client";
+import type { Prisma } from "../../generated/prisma/client.js";
 
 import prisma from "../../utils/context.js";
 import { generateRandomHex } from "../../lib/crypto/random.js";

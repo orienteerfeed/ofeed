@@ -1,4 +1,4 @@
-import { createRouter } from "../../lib/create-app";
+import { createRouter } from "../../lib/create-app.js";
 
 import { REST_ROUTE_REGISTRY } from "./registry.js";
 
