@@ -1,0 +1,172 @@
+# Prompt for read-only GitHub CLI inspection commands.
+# For common mutating GitHub CLI commands, fail fast with a clear message.
+
+prefix_rule(
+  pattern = ["gh", "issue", ["list", "view", "status"]],
+  decision = "prompt",
+  justification = "GitHub issue inspection is allowed with approval.",
+  match = [
+    "gh issue list",
+    "gh issue view 123",
+    "gh issue status",
+    "gh issue list --repo acme/api",
+  ],
+  not_match = [
+    "gh issue create",
+    "gh issue edit 123",
+    "gh issue close 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "pr", ["list", "view", "status", "checks", "diff"]],
+  decision = "prompt",
+  justification = "GitHub pull request inspection is allowed with approval.",
+  match = [
+    "gh pr list",
+    "gh pr view 123",
+    "gh pr status",
+    "gh pr checks 123",
+    "gh pr diff 123",
+  ],
+  not_match = [
+    "gh pr create",
+    "gh pr merge 123",
+    "gh pr review 123 --approve",
+    "gh pr checkout 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "project", ["list", "view", "item-list"]],
+  decision = "prompt",
+  justification = "GitHub Projects inspection is allowed with approval.",
+  match = [
+    "gh project list --owner acme",
+    "gh project view 7 --owner acme",
+    "gh project item-list 7 --owner acme",
+  ],
+  not_match = [
+    "gh project item-edit --id PVT_xxx --project-id PVT_yyy",
+    "gh project item-archive 7 --id PVT_xxx --owner acme",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "workflow", ["list", "view"]],
+  decision = "prompt",
+  justification = "GitHub Actions workflow inspection is allowed with approval.",
+  match = [
+    "gh workflow list",
+    "gh workflow view ci.yml",
+  ],
+  not_match = [
+    "gh workflow run ci.yml",
+    "gh workflow enable ci.yml",
+    "gh workflow disable ci.yml",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "run", ["list", "view", "watch"]],
+  decision = "prompt",
+  justification = "GitHub Actions run inspection is allowed with approval.",
+  match = [
+    "gh run list",
+    "gh run view 123",
+    "gh run watch 123",
+  ],
+  not_match = [
+    "gh run download 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "repo", ["list", "view"]],
+  decision = "prompt",
+  justification = "GitHub repository inspection is allowed with approval.",
+  match = [
+    "gh repo list openai",
+    "gh repo view",
+    "gh repo view acme/api",
+  ],
+  not_match = [
+    "gh repo create acme/test --private",
+    "gh repo delete acme/test --yes",
+    "gh repo edit acme/test --description x",
+    "gh repo fork",
+    "gh repo clone acme/test",
+    "gh repo rename renamed-test",
+    "gh repo sync",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "status"],
+  decision = "prompt",
+  justification = "GitHub status inspection is allowed with approval.",
+  match = [
+    "gh status",
+    "gh status --org acme",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "issue", ["create", "edit", "close", "reopen", "delete", "comment", "lock", "unlock", "pin", "unpin", "transfer"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitHub issue command. Make issue changes manually outside Codex.",
+  match = [
+    "gh issue create",
+    "gh issue edit 123",
+    "gh issue close 123",
+    "gh issue comment 123 --body test",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "pr", ["create", "edit", "close", "reopen", "merge", "review", "ready", "update-branch", "checkout", "comment", "lock", "unlock"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitHub pull request command. Make PR changes manually outside Codex.",
+  match = [
+    "gh pr create",
+    "gh pr merge 123",
+    "gh pr review 123 --approve",
+    "gh pr checkout 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "project", ["item-edit", "item-archive"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitHub Projects command. Make project changes manually outside Codex.",
+  match = [
+    "gh project item-edit --id PVT_xxx --project-id PVT_yyy",
+    "gh project item-archive 7 --id PVT_xxx --owner acme",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "workflow", ["run", "enable", "disable"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitHub Actions workflow command. Trigger or modify workflows manually outside Codex.",
+  match = [
+    "gh workflow run ci.yml",
+    "gh workflow enable ci.yml",
+    "gh workflow disable ci.yml",
+  ],
+)
+
+prefix_rule(
+  pattern = ["gh", "repo", ["create", "delete", "edit", "fork", "clone", "rename", "sync", "archive", "unarchive"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitHub repository command. Change repository state manually outside Codex.",
+  match = [
+    "gh repo create acme/test --private",
+    "gh repo delete acme/test --yes",
+    "gh repo edit acme/test --description x",
+    "gh repo fork",
+    "gh repo clone acme/test",
+    "gh repo rename renamed-test",
+    "gh repo sync",
+  ],
+)

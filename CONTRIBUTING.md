@@ -7,13 +7,24 @@ before making a change.
 Please note we have a code of conduct, please follow it in all your interactions
 with the project.
 
+## Contributor License Agreement (CLA)
+
+This repository is published under `GPL-3.0`.
+
+By submitting a contribution to this repository, you agree that your
+contribution may be used in commercial products, SaaS services, and relicensed
+by the project owner under the terms of [CLA.md](./CLA.md).
+
+If you do not agree to those terms, do not submit a contribution.
+
 ## Pull Request Process
 
 1. Create a branch using lowercase branch prefix naming.
-2. Commit changes using Conventional Commits.
-3. Push your branch and open a Pull Request.
-4. Update README.md and docs when behavior, API, or configuration changes.
-5. You may merge a Pull Request after required review approval.
+2. Make sure you are able to contribute under [CLA.md](./CLA.md).
+3. Commit changes using Conventional Commits.
+4. Push your branch and open a Pull Request.
+5. Update README.md and docs when behavior, API, or configuration changes.
+6. You may merge a Pull Request after required review approval.
 
 ## Git Conventions
 
