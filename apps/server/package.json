@@ -48,7 +48,7 @@
     "graphql-constraint-directive": "^5.4.3",
     "graphql-subscriptions": "^3.0.0",
     "graphql-yoga": "^5.18.1",
-    "graphql-ws": "^6.0.7",
+    "graphql-ws": "^6.0.8",
     "hono": "^4.12.9",
     "hono-rate-limiter": "^0.5.3",
     "jsonwebtoken": "^9.0.3",
@@ -59,7 +59,7 @@
     "sharp": "^0.34.5",
     "ws": "^8.20.0",
     "xml2js": "^0.6.2",
-    "xmllint-wasm": "^5.1.0"
+    "xmllint-wasm": "^5.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.11.0",
