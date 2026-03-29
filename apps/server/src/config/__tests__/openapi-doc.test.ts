@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import app from "../../app";
-import { OPENAPI_PATHS } from "../openapi.paths";
-import { AUTH_OPENAPI } from "../../modules/auth/auth.openapi";
-import { EVENT_OPENAPI } from "../../modules/event/event.openapi";
-import { UPLOAD_OPENAPI } from "../../modules/upload/upload.openapi";
+import app from "../../app.js";
+import { OPENAPI_PATHS } from "../openapi.paths.js";
+import { AUTH_OPENAPI } from "../../modules/auth/auth.openapi.js";
+import { EVENT_OPENAPI } from "../../modules/event/event.openapi.js";
+import { UPLOAD_OPENAPI } from "../../modules/upload/upload.openapi.js";
 
 describe("openapi doc", () => {
   it("documents all registered API endpoint groups", async () => {

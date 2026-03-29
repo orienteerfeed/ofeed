@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { dateLikeSchema, resultStatusSchema } from "./common";
+import { dateLikeSchema, resultStatusSchema } from "./common.js";
 
 export const competitorSchema = z.object({
   id: z.number().int(),

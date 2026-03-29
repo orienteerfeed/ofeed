@@ -102,6 +102,7 @@
         "Info": "Info",
         "Cards": "Dlaždice",
         "List": "Seznam",
+        "Map": "Mapa",
         "Cat": "Kat",
         "Club": "Klub",
         "Live": "Živě"
@@ -447,7 +448,7 @@
         "Footer": "Tyto operace nelze vrátit zpět. Ujisti se, že máš k dispozici příslušné zálohy.",
         "DeleteCompetitors": {
           "Title": "Smazat závodníky",
-          "Description": "Pokud nahraješ startovku nebo výsledky do špatné akce, tak můžeš všechny závodníky smazat a začít znovu. Toto tlačítko odstraní úplně všechny závodníky (startovku & výsledky).",
+          "Description": "Pokud nahraješ startovku nebo výsledky do špatné akce, tak můžeš všechny závodníky smazat a začít znovu. Toto tlačítko odstraní úplně všechny závodníky (startovku \u0026 výsledky).",
           "Button": "Smazat",
           "ConfirmTitle": "Smazat všechny závodníky",
           "ConfirmDescription": "Opravdu chceš smazat všechny závodníky? Operace je nevratná!",
@@ -500,7 +501,11 @@
         "FoundCount": "Zobrazeno {{count}} akcí",
         "LoadError": "Chyba při načítání akcí: {{message}}",
         "NoEvents": "Žádné akce nenalezeny",
-        "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později."
+        "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později.",
+        "MapNoCoordinates": "Pro mapové zobrazení nejsou dostupné žádné akce s platnými souřadnicemi.",
+        "MapZoomIn": "Přiblížit",
+        "MapZoomOut": "Oddálit",
+        "MapAttributionOthers": "a další"
       }
     },
     "Profile": {
@@ -644,10 +649,10 @@
     "DragDrop": {
       "ClickToUpload": "Pro nahrání klikni",
       "Delete": "Smazat",
-      "OrdDragAndDrop": "nebo drag & drop",
+      "OrdDragAndDrop": "nebo drag \u0026 drop",
       "SupportedFormats": "Podporovaný formát:",
       "Done": "Hotovo",
-      "OrDragAndDrop": "nebo drag & drop",
+      "OrDragAndDrop": "nebo drag \u0026 drop",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximální počet souborů",

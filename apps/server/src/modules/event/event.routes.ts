@@ -1,5 +1,5 @@
-import { createRouter } from '../../lib/create-app';
-import { requireAuth } from '../../middlewares/require-jwt';
+import { createRouter } from '../../lib/create-app.js';
+import { requireAuth } from '../../middlewares/require-jwt.js';
 
 import publicEventRoutes from './event.public.routes.js';
 import secureEventRoutes from './event.secure.routes.js';

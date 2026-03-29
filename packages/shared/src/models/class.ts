@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { classStatusSchema, sexSchema } from "./common";
+import { classStatusSchema, sexSchema } from "./common.js";
 
 export const classSchema = z.object({
   id: z.number().int(),

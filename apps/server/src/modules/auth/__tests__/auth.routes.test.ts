@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 
-import { registerAuthRoutes } from "../auth.handlers";
+import { registerAuthRoutes } from "../auth.handlers.js";
 
 describe("auth routes (hono)", () => {
   const app = new Hono();

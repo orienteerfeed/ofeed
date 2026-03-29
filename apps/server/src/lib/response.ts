@@ -7,7 +7,7 @@ import type {
   SuccessEnvelope as SharedSuccessEnvelope,
 } from "@repo/shared";
 
-import type { ProblemDetails } from "./problem";
+import type { ProblemDetails } from "./problem.js";
 
 export type ResponseMeta = SharedResponseMeta;
 export type SuccessEnvelope<T> = SharedSuccessEnvelope<T>;

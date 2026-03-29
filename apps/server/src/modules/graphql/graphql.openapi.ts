@@ -1,5 +1,5 @@
-import { jsonBody, okJson, okText, zodToOpenApiSchema } from "../../config/openapi.helpers";
-import type { OpenApiPathItem } from "../../config/openapi.types";
+import { jsonBody, okJson, okText, zodToOpenApiSchema } from "../../config/openapi.helpers.js";
+import type { OpenApiPathItem } from "../../config/openapi.types.js";
 import { graphQLRequestSchema } from "./graphql.schema.js";
 
 export const GRAPHQL_OPENAPI = {

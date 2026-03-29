@@ -1,9 +1,9 @@
 import type { Context } from "hono";
 
-import type { AppBindings } from "../../types";
+import type { AppBindings } from "../../types/index.js";
 
 import { logEndpoint } from "../../lib/http/endpoint-logger.js";
-import { performFullHealthCheck, performReadinessCheck } from "./health.service";
+import { performFullHealthCheck, performReadinessCheck } from "./health.service.js";
 
 export function liveHandler(c: Context<AppBindings>) {
   c.header("Cache-Control", "no-store");
