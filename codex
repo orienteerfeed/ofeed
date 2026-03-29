@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export CODEX_HOME="$(pwd)/.codex"
+exec codex "$@"
