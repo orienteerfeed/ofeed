@@ -1,0 +1,27 @@
+model = "gpt-5.4"
+review_model = "gpt-5.4"
+
+model_reasoning_effort = "medium"
+model_reasoning_summary = "concise"
+model_verbosity = "medium"
+
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+allow_login_shell = false
+
+project_root_markers = [".git", "pnpm-workspace.yaml"]
+project_doc_max_bytes = 65536
+
+[sandbox_workspace_write]
+network_access = false
+exclude_tmpdir_env_var = false
+exclude_slash_tmp = false
+writable_roots = []
+
+[agents]
+max_threads = 4
+max_depth = 1
+job_max_runtime_seconds = 1800
+
+[mcp_servers.github]
+enabled = false
