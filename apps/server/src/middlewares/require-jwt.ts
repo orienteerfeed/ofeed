@@ -1,8 +1,8 @@
 import type { Context, MiddlewareHandler } from "hono";
 
-import type { AppBindings } from "../types";
+import type { AppBindings } from "../types/index.js";
 
-import { logger as fallbackLogger } from "../lib/logging";
+import { logger as fallbackLogger } from "../lib/logging.js";
 import { error as errorResponse } from "../utils/responseApi.js";
 
 type AuthContext = AppBindings["Variables"]["authContext"];

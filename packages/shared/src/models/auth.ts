@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { dateLikeSchema } from "./common";
+import { dateLikeSchema } from "./common.js";
 
 export const loginInputSchema = z.object({
   username: z.string(),

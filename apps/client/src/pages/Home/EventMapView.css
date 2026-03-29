@@ -1,0 +1,46 @@
+.event-map-view .react-mapy-marker-icon {
+  cursor: pointer;
+}
+
+.event-map-view .leaflet-tooltip.event-map-tooltip {
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(2, 8, 23, 0.28);
+  color: var(--popover-foreground);
+  padding: 0;
+}
+
+.event-map-view .leaflet-tooltip-top.event-map-tooltip::before {
+  border-top-color: var(--popover);
+}
+
+.event-map-view .event-map-tooltip-card {
+  overflow: hidden;
+  width: 220px;
+}
+
+.event-map-view .event-map-tooltip-card__image {
+  display: block;
+  height: 110px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.event-map-view .event-map-tooltip-card__body {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.event-map-view .event-map-tooltip-card__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.event-map-view .event-map-tooltip-card__meta {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}

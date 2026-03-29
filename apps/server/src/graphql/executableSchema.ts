@@ -89,7 +89,7 @@ const schema = makeExecutableSchema({
     changelogResolvers,
     countryResolvers,
     eventPasswordResolvers,
-    splitResolvers
+    splitResolvers,
   ),
 });
 

@@ -1,8 +1,8 @@
 import type { OpenAPIHono, RouteConfig, RouteHandler } from "@hono/zod-openapi";
 import type { Schema } from "hono";
 
-import type { prisma } from "../db/prisma";
-import type { LogContext, logger } from "../lib/logging";
+import type { prisma } from "../db/prisma.js";
+import type { LogContext, logger } from "../lib/logging.js";
 
 export interface AuthContext {
   isAuthenticated: boolean;

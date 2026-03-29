@@ -1,5 +1,5 @@
-import { createPrismaClient } from "../src/db/prisma-client";
-import { normalizeUtcTimeString, toPrismaTimeDate } from "../src/utils/time";
+import { createPrismaClient } from "../src/db/prisma-client.js";
+import { normalizeUtcTimeString, toPrismaTimeDate } from "../src/utils/time.js";
 
 const prisma = createPrismaClient();
 

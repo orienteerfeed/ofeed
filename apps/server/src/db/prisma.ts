@@ -1,6 +1,6 @@
-import type { AppPrismaClient } from "./prisma-client";
+import type { AppPrismaClient } from "./prisma-client.js";
 
-import { createPrismaClient } from "./prisma-client";
+import { createPrismaClient } from "./prisma-client.js";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: AppPrismaClient | undefined;

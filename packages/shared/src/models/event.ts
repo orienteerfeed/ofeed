@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { dateLikeSchema, eventFilterSchema, startModeSchema } from "./common";
+import { dateLikeSchema, eventFilterSchema, startModeSchema } from "./common.js";
 
 export const eventSchema = z.object({
   id: z.string(),
