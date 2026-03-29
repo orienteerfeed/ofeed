@@ -1,7 +1,7 @@
 import type { Context, Next } from "hono";
 
-import { accessLogger } from "../lib/logging";
-import { extractClientIp, sanitizeLogString, sanitizePath } from "../utils/sanitize";
+import { accessLogger } from "../lib/logging.js";
+import { extractClientIp, sanitizeLogString, sanitizePath } from "../utils/sanitize.js";
 
 export async function accessLoggerMiddleware(c: Context, next: Next) {
   const start = performance.now();

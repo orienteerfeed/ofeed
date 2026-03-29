@@ -1,0 +1,136 @@
+schema_version: 1
+
+project:
+  name: ts-monorepo-starter
+  description: >
+    Production-ready TypeScript monorepo with Vite + React client, Hono + Prisma server,
+    and shared Zod contracts.
+  repository_type: pnpm-workspace
+  license:
+    spdx: GPL-3.0-or-later
+    type: open-source
+    owner: Martin Křivda and contributors
+
+runtime:
+  node: ">=22.20.0"
+  pnpm: ">=10.20.0"
+  package_manager: pnpm
+  module_system: esm
+
+orchestration:
+  monorepo: turborepo
+  workspace_config: pnpm-workspace.yaml
+  root_scripts:
+    setup: pnpm setup:dev
+    dev: pnpm dev
+    build: pnpm build
+    lint: pnpm lint
+    typecheck: pnpm type-check
+    test: pnpm test
+    db_generate: pnpm db:generate
+    db_migrate: pnpm db:migrate
+
+workspaces:
+  - name: client
+    path: apps/client
+    purpose: Frontend SPA
+    stack:
+      framework: React 19
+      build_tool: Vite 7
+      router: TanStack Router
+      state: Zustand
+      data:
+        rest: TanStack Query
+        graphql: Apollo Client
+      styling:
+        - Tailwind CSS 4
+        - shadcn/ui
+      i18n: i18next
+      testing:
+        unit: Vitest + Testing Library
+        e2e: Playwright
+    env_file: apps/client/.env.local
+    default_port: 3000
+
+  - name: server
+    path: apps/server
+    purpose: Backend API
+    stack:
+      framework: Hono 4
+      orm: Prisma 7
+      database: PostgreSQL 16
+      api:
+        rest: OpenAPI (@hono/zod-openapi)
+        graphql: GraphQL Yoga + Pothos + graphql-ws
+      security:
+        auth: JWT (HS256)
+        hardening:
+          - GraphQL Armor
+          - rate limiting
+          - secure headers + CSP
+      observability:
+        logging: Pino
+        metrics: prom-client (Prometheus)
+      testing: Vitest + Supertest
+    env_file: apps/server/.env
+    default_port: 3001
+
+  - name: shared
+    path: packages/shared
+    purpose: Shared contracts
+    stack:
+      language: TypeScript
+      schema_library: Zod
+      exports:
+        - domain schemas
+        - inferred types
+
+architecture:
+  shared_contracts_package: "@repo/shared"
+  server_import_layers:
+    - utils
+    - config
+    - lib
+    - modules
+  server_rules:
+    - Keep notFound/error handling centralized on root app.
+    - Use createRouter() for feature routers to preserve validation hooks.
+  api_surface:
+    rest_docs_ui: /reference
+    openapi_json: /doc
+    graphql_http_ws: /graphql
+    health:
+      - /health/live
+      - /health/ready
+      - /health
+    metrics: /metrics
+
+coding_conventions:
+  language: TypeScript
+  formatting:
+    tool: Prettier
+    tab_width: 2
+    semicolons: true
+    quotes: single
+  naming:
+    client_components: PascalCase files
+    client_routes: lowercase file-based routes
+    server_files: kebab-case
+  tests:
+    client: apps/client/tests/**/*.{test,spec}.{ts,tsx}
+    server: apps/server/src/**/*.test.ts
+
+environment_rules:
+  runtime_env_scope:
+    - apps/server/.env
+    - apps/client/.env.local
+  root_env_runtime: false
+  client_public_env_prefix: VITE_
+
+assistant_context:
+  claude_specific:
+    - Keep GraphQL test config aligned with dual-package mitigation in apps/server/vitest.config.ts.
+    - Preserve strict server layer boundaries and middleware order.
+  codex_specific:
+    - Prefer fast repository search with rg.
+    - Keep edits consistent with workspace ESLint/Prettier rules and existing architecture constraints.

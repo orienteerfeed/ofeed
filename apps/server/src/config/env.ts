@@ -108,6 +108,7 @@ const envSchema = z.object({
   ORIS_API_BASE_URL: z.string().url().default("https://oris.orientacnisporty.cz/API/"),
   EVENTOR_API_BASE_URL: z.string().url().default("https://eventor.orienteering.sport/api"),
   EVENTOR_API_KEY: z.string().optional(),
+  MAPY_API_KEY: z.string().optional(),
 
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   CORS_METHODS: z.string().default("GET,HEAD,POST,PUT,DELETE,OPTIONS"),
@@ -115,6 +116,8 @@ const envSchema = z.object({
 
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().default(200),
+  MAP_TILE_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
+  MAP_TILE_RATE_LIMIT_MAX: z.coerce.number().default(2000),
 
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   LOG_DIR: z.string().default("logs"),

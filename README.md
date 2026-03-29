@@ -225,3 +225,10 @@ See [CHANGELOG.md](./CHANGELOG.md).
 ## License
 
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](/LICENSE)
+
+This repository is licensed under the GNU General Public License
+v3.0. See [LICENSE](./LICENSE).
+
+Contributions are accepted under the terms of [CLA.md](./CLA.md). By 
+contributing, you agree that your contributions may be relicensed
+and used in commercial products and SaaS offerings.

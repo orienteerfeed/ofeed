@@ -1,9 +1,9 @@
 import type { Context } from "hono";
 
-import type { AppBindings } from "../../types";
-import type { LogContext } from "../logging";
+import type { AppBindings } from "../../types/index.js";
+import type { LogContext } from "../logging.js";
 
-import { logger as appLogger } from "../logging";
+import { logger as appLogger } from "../logging.js";
 
 type EndpointLogLevel = "info" | "warn" | "error";
 

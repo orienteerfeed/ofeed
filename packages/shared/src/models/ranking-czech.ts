@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { dateLikeSchema } from "./common";
+import { dateLikeSchema } from "./common.js";
 
 export const rankingCzechSchema = z.object({
   id: z.number().int(),

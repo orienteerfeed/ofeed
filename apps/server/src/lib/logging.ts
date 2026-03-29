@@ -4,18 +4,20 @@ import path from "node:path";
 import pino from "pino";
 import { createStream } from "rotating-file-stream";
 
-import env from "../config/env";
+import env from "../config/env.js";
 import {
   getLogRotationConfig,
   isAccessLogEnabled,
   isAppLogEnabled,
   isRotationEnabled,
   LOG_DIR,
-} from "../config/logging";
+} from "../config/logging.js";
 
 if (!fs.existsSync(LOG_DIR)) {
   fs.mkdirSync(LOG_DIR, { recursive: true });
 }
+
+type RotationInterval = "1h" | "1d" | "7d";
 
 function calculateMaxFiles(retentionDays: number, frequency: string): number {
   switch (frequency) {
@@ -29,7 +31,7 @@ function calculateMaxFiles(retentionDays: number, frequency: string): number {
   }
 }
 
-function getRotationInterval(frequency: string): `${number}h` | `${number}d` {
+function getRotationInterval(frequency: string): RotationInterval {
   switch (frequency) {
     case "hourly":
       return "1h";
@@ -64,7 +66,7 @@ function createRotatingStream(filename: string) {
     return `${filename}.${year}-${month}-${day}${collisionSuffix}`;
   };
 
-  return createStream(generator, {
+  return createStream<RotationInterval>(generator, {
     path: LOG_DIR,
     interval: getRotationInterval(rotationConfig.frequency),
     intervalBoundary: rotationConfig.boundary,

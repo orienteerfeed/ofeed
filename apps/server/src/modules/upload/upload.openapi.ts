@@ -1,6 +1,6 @@
 import { API_DEFAULTS } from "../../constants/index.js";
-import { multipartBody, okJson } from "../../config/openapi.helpers";
-import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types";
+import { multipartBody, okJson } from "../../config/openapi.helpers.js";
+import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types.js";
 
 export const UPLOAD_OPENAPI = {
   tag: "Upload",

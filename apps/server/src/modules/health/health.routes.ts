@@ -1,14 +1,15 @@
 import { createRoute } from "@hono/zod-openapi";
+import type { RouteConfig } from "@hono/zod-openapi";
 
 import {
   healthResponseSchema,
   liveResponseSchema,
   readyResponseSchema,
-} from "./health.schema";
+} from "./health.schema.js";
 
 const tags = ["Health"];
 
-export const live = createRoute({
+const liveRouteConfig = {
   path: "/health/live",
   method: "get",
   tags,
@@ -23,9 +24,9 @@ export const live = createRoute({
       },
     },
   },
-});
+} satisfies RouteConfig;
 
-export const ready = createRoute({
+const readyRouteConfig = {
   path: "/health/ready",
   method: "get",
   tags,
@@ -48,9 +49,9 @@ export const ready = createRoute({
       },
     },
   },
-});
+} satisfies RouteConfig;
 
-export const health = createRoute({
+const healthRouteConfig = {
   path: "/health",
   method: "get",
   tags,
@@ -73,7 +74,11 @@ export const health = createRoute({
       },
     },
   },
-});
+} satisfies RouteConfig;
+
+export const live = createRoute(liveRouteConfig);
+export const ready = createRoute(readyRouteConfig);
+export const health = createRoute(healthRouteConfig);
 
 export type LiveRoute = typeof live;
 export type ReadyRoute = typeof ready;

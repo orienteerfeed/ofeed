@@ -1,6 +1,6 @@
 import { API_DEFAULTS } from "../../constants/index.js";
-import { jsonBody, okJson, zodToOpenApiSchema } from "../../config/openapi.helpers";
-import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types";
+import { jsonBody, okJson, zodToOpenApiSchema } from "../../config/openapi.helpers.js";
+import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types.js";
 import {
   oauthCredentialsBodySchema,
   passwordResetConfirmBodySchema,

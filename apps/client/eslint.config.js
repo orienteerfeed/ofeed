@@ -1,5 +1,4 @@
 import js from '@eslint/js';
-import typescript from '@typescript-eslint/eslint-plugin';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -33,7 +32,6 @@ export default defineConfig([
       },
     },
     plugins: {
-      '@typescript-eslint': typescript,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
     },

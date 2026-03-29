@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateHealthStatus, isReady } from "../health.service";
+import { calculateHealthStatus, isReady } from "../health.service.js";
 
 describe("health.service", () => {
   it("returns UP when all checks pass", () => {
