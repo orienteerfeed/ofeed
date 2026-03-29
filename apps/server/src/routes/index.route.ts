@@ -1,4 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
+import type { RouteConfig } from "@hono/zod-openapi";
 import type { Context } from "hono";
 
 import { HTTP_STATUS } from "../constants/index.js";
@@ -17,7 +18,7 @@ const versionResponseSchema = z.object({
   results: z.unknown().optional(),
 });
 
-const rootRoute = createRoute({
+const rootRouteConfig = {
   method: "get",
   path: "/",
   tags: ["Index"],
@@ -32,9 +33,9 @@ const rootRoute = createRoute({
       },
     },
   },
-});
+} satisfies RouteConfig;
 
-const readyRoute = createRoute({
+const readyRouteConfig = {
   method: "get",
   path: "/readyz",
   tags: ["Health"],
@@ -49,9 +50,9 @@ const readyRoute = createRoute({
       },
     },
   },
-});
+} satisfies RouteConfig;
 
-const versionRoute = createRoute({
+const versionRouteConfig = {
   method: "get",
   path: "/version",
   tags: ["Index"],
@@ -66,7 +67,11 @@ const versionRoute = createRoute({
       },
     },
   },
-});
+} satisfies RouteConfig;
+
+const rootRoute = createRoute(rootRouteConfig);
+const readyRoute = createRoute(readyRouteConfig);
+const versionRoute = createRoute(versionRouteConfig);
 
 const rootHandler = (c: Context<AppBindings>) => {
   return c.text("Hello World!", HTTP_STATUS.OK);

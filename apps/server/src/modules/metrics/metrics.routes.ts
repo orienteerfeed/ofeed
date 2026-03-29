@@ -1,9 +1,9 @@
-import { createRoute } from "@hono/zod-openapi";
-import { z } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
+import type { RouteConfig } from "@hono/zod-openapi";
 
 import { HTTP_STATUS } from "../../constants/index.js";
 
-export const getMetrics = createRoute({
+const getMetricsRouteConfig = {
   tags: ["Monitoring"],
   method: "get",
   path: "/metrics",
@@ -19,6 +19,8 @@ export const getMetrics = createRoute({
       },
     },
   },
-});
+} satisfies RouteConfig;
+
+export const getMetrics = createRoute(getMetricsRouteConfig);
 
 export type GetMetricsRoute = typeof getMetrics;
