@@ -171,18 +171,42 @@ Available compose overlays:
 
 ### Automated versioning and GitHub releases
 
-Releases are automated from `main` via `semantic-release` (`.github/workflows/release.yaml`).
+Releases are automated from `main` via `semantic-release`
+(`.github/workflows/release.yaml`), but only when a release is explicitly
+requested.
 
-Behavior:
+You can request a release in three ways:
 
-- every push to `main` (except `package.json`-only commits) creates a new release version (`patch` increment)
+- label a PR with one of `release:patch`, `release:minor`, `release:major`
+- add `Release-Type: patch|minor|major` to the commit body when pushing directly
+  to `main`
+- use `workflow_dispatch` and select the desired release type manually
+
+You can also use a commit marker like `[release:patch]`, but the
+`Release-Type:` trailer is preferred because it keeps the subject line clean.
+
+When a requested release reaches `main`, the workflow:
+
+- calculates the next version from the requested release type
+- updates `CHANGELOG.md`
+- updates the root `package.json` version
+- commits those files back to `main`
 - creates git tag `vX.Y.Z`
 - creates GitHub Release
-- after successful release, the same workflow creates/updates PR that syncs root `package.json` version to released tag
+
+If no explicit release request is present, the workflow exits without creating a
+new version.
 
 Note:
 
 - set optional secret `RELEASE_PLEASE_TOKEN` (PAT) to allow tag/release events to trigger downstream workflows (for example Docker publish). If it is not set, workflow falls back to `GITHUB_TOKEN`.
+
+Example direct push with explicit patch release:
+
+```bash
+git commit -m "fix(auth): handle invalid refresh token" -m "Release-Type: patch"
+git push origin main
+```
 
 ### Docker image publishing
 

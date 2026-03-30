@@ -69,6 +69,20 @@ git checkout -b chore/deps-update
 git commit -m "chore(server): update aws sdk dependencies"
 ```
 
+## Release Requests
+
+Releases are created only when explicitly requested.
+
+- For pull requests, add one label: `release:patch`, `release:minor`, or
+  `release:major`.
+- For direct pushes to `main`, you do not need a label. Use a commit trailer
+  instead:
+
+```bash
+git commit -m "fix(auth): handle invalid refresh token" -m "Release-Type: patch"
+git push origin main
+```
+
 ## Code of Conduct
 
 This project follows [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
