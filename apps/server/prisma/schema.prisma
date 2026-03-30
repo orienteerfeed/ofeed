@@ -259,6 +259,26 @@ model OAuthAccessToken {
   expiresAt DateTime
 }
 
+model SystemMessage {
+  id          Int                   @id @default(autoincrement()) @db.UnsignedInt
+  title       String?               @db.VarChar(255)
+  message     String                @db.Text
+  severity    SystemMessageSeverity @default(INFO)
+  publishedAt DateTime              @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([publishedAt, expiresAt])
+}
+
+enum SystemMessageSeverity {
+  INFO
+  WARNING
+  ERROR
+  SUCCESS
+}
+
 model OAuthAuthorizationCode {
   id          String      @id @default(cuid())
   code        String      @unique @db.VarChar(255)

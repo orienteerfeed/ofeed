@@ -28,6 +28,11 @@ import {
 
 // Import type definitions and resolvers for Split.
 import { typeDef as Split, resolvers as splitResolvers } from './split/index.js';
+// Import type definitions and resolvers for SystemMessage.
+import {
+  typeDef as SystemMessage,
+  resolvers as systemMessageResolvers,
+} from './systemMessage/index.js';
 
 // scalar
 import { typeDef as DateTypeDef, resolvers as dateResolvers } from './scalars/date.js';
@@ -74,6 +79,7 @@ const schema = makeExecutableSchema({
     Country,
     EventPassword,
     Split,
+    SystemMessage,
   ],
   resolvers: merge(
     {}, // Start with an empty object to avoid mutating the original resolvers
@@ -90,6 +96,7 @@ const schema = makeExecutableSchema({
     countryResolvers,
     eventPasswordResolvers,
     splitResolvers,
+    systemMessageResolvers,
   ),
 });
 

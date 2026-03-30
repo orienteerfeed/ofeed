@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { MainPageLayout } from '../../templates';
 import { EventsTabs } from './EventsTabs';
+import { SystemMessageAlerts } from './SystemMessageAlerts';
 
 const HeroScene: React.FC = () => {
   return (
@@ -125,8 +126,10 @@ export const HomePage: React.FC = () => {
   return (
     <MainPageLayout t={t} pageName={t('Templates.Routes.Home')}>
       {/* Hero Section with Orienteering Illustration */}
-      <section className="relative bg-gradient-to-b from-muted/50 to-background py-12 md:py-20 overflow-hidden">
-        <div className="container mx-auto px-4 relative">
+      <section className="relative bg-gradient-to-b from-muted/50 to-background overflow-hidden">
+        <SystemMessageAlerts />
+
+        <div className="container mx-auto px-4 relative py-12 md:py-20">
           <div className="grid lg:grid-cols-2">
             {/* Text column */}
             <div className="space-y-6">
