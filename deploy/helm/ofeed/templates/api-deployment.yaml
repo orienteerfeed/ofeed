@@ -45,17 +45,12 @@ spec:
               containerPort: {{ .Values.api.service.port }}
               protocol: TCP
           env:
+            - name: VAULT_ENV_FILE
+              value: {{ printf "/vault/secrets/%s" .Values.vault.injectFileName | quote }}
             {{- range $key, $value := .Values.api.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          command:
-            - /bin/sh
-            - -ec
-          args:
-            - |
-              . /vault/secrets/{{ .Values.vault.injectFileName }}
-              exec pnpm exec tsx src/index.ts
           readinessProbe:
             httpGet:
               path: /health/ready

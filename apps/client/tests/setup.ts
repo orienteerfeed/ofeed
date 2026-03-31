@@ -80,6 +80,7 @@ beforeAll(() => {
 // Mock environment variables for the client
 vi.stubGlobal('import.meta.env', {
   VITE_API_BASE_URL: 'http://test-api.local',
+  VITE_BASE_API_URL: 'http://test-api.local',
   VITE_APP_ENV: 'test',
   VITE_ENABLE_DEVTOOLS: 'false',
   VITE_REQUEST_LOGGING: 'false',

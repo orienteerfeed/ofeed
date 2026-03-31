@@ -4,6 +4,8 @@ Tento postup nasadí OFeed aplikaci do k3s:
 - frontend (`web`) + backend (`api`) + migration job přes Helm
 - externí MariaDB/MySQL (mimo tento chart)
 - `DATABASE_URL` a `JWT_TOKEN_SECRET_KEY` z HashiCorp Vault
+- backend image startuje built server přes `node dist/index.js`; Vault env soubor
+  se načítá v image entrypointu
 
 ## 1. Předpoklady
 
@@ -24,6 +26,7 @@ Do Vault path ulož:
 - `DATABASE_URL` (např. `mysql://ofeed:***@mariadb.database.svc.cluster.local:3306/ofeed`)
 - `JWT_TOKEN_SECRET_KEY` (min. 32 znaků)
 - `MAPY_API_KEY` (volitelné, pro mapový podklad Mapy.cz bez zveřejnění klíče ve frontendu)
+- `MAP_TILE_COOKIE_SECRET` (volitelné, doporučené, dedikovaný signing secret pro krátkodobou tile session cookie; když chybí, použije se `JWT_TOKEN_SECRET_KEY`)
 
 Příklad (KV v2):
 
@@ -31,7 +34,8 @@ Příklad (KV v2):
 vault kv put kv/ofeed/api \
   DATABASE_URL='mysql://ofeed:password@mariadb.database.svc.cluster.local:3306/ofeed' \
   JWT_TOKEN_SECRET_KEY='replace-with-long-random-secret-min-32-chars' \
-  MAPY_API_KEY='replace-with-mapy-api-key'
+  MAPY_API_KEY='replace-with-mapy-api-key' \
+  MAP_TILE_COOKIE_SECRET='replace-with-dedicated-map-tile-cookie-secret'
 ```
 
 ## 4. Vault policy a role

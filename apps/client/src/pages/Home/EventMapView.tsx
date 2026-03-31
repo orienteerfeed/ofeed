@@ -1,5 +1,9 @@
 import { config } from '@/config';
-import { createProxiedMapyProvider } from '@/lib/maps/mapy';
+import {
+  createProxiedMapyProvider,
+  MAP_TILE_SESSION_URL,
+  USE_SAME_ORIGIN_MAP_TILE_ACCESS,
+} from '@/lib/maps/mapy';
 import { PATHNAMES } from '@/lib/paths/pathnames';
 import type { Event } from '@/types/event';
 import {
@@ -9,6 +13,7 @@ import {
 import { useNavigate } from '@tanstack/react-router';
 import { divIcon, marker } from 'leaflet';
 import i18n, { type TFunction } from 'i18next';
+import { Loader2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import {
   LeafletMap,
@@ -16,7 +21,14 @@ import {
   markerPresets,
   useLeafletMap,
 } from 'react-mapy';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import './EventMapView.css';
 
 interface EventMapViewProps {
@@ -66,7 +78,7 @@ const normalizeTileLanguage = (value: string | undefined): string => {
 const hasValidCoordinate = (
   value: unknown,
   min: number,
-  max: number,
+  max: number
 ): value is number =>
   typeof value === 'number' &&
   Number.isFinite(value) &&
@@ -176,7 +188,7 @@ function FitMapToEvents({ points }: { points: readonly MapPoint[] }) {
         animate: false,
         maxZoom: MAX_BOUNDS_ZOOM,
         padding: [32, 32],
-      },
+      }
     );
   }, [map, points]);
 
@@ -200,7 +212,7 @@ function InitializeMapViewport({
           animate: false,
           maxZoom: MAX_BOUNDS_ZOOM,
           padding: [32, 32],
-        },
+        }
       );
     }
 
@@ -222,7 +234,7 @@ function EventMarkersLayer({
 
   const markerIcon = useMemo(
     () => buildOfeedMarkerIcon(markerColorScheme),
-    [markerColorScheme],
+    [markerColorScheme]
   );
 
   useEffect(() => {
@@ -236,7 +248,7 @@ function EventMarkersLayer({
             }
           : {
               riseOnHover: true,
-            },
+            }
       );
 
       markerLayer.bindTooltip(buildEventTooltipHtml(event), {
@@ -268,7 +280,7 @@ function EventMarkersLayer({
 export const EventMapView = ({ events, t }: EventMapViewProps) => {
   const { resolvedTheme } = useTheme();
   const tileLanguage = normalizeTileLanguage(
-    i18n.resolvedLanguage ?? i18n.language,
+    i18n.resolvedLanguage ?? i18n.language
   );
   const mapTheme = resolvedTheme === 'dark' ? 'dark' : 'neutral';
   const markerColorScheme = resolvedTheme === 'dark' ? 'dark' : 'light';
@@ -278,7 +290,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
       events
         .map(toMappableEvent)
         .filter((event): event is MappableEvent => event !== null),
-    [events],
+    [events]
   );
 
   const boundsPoints = useMemo(
@@ -287,7 +299,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
         lat: latitude,
         lng: longitude,
       })),
-    [mapEvents],
+    [mapEvents]
   );
 
   const provider = useMemo(
@@ -296,7 +308,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
         language: tileLanguage,
         variant: MAP_VARIANT,
       }),
-    [tileLanguage],
+    [tileLanguage]
   );
 
   const singleEvent = mapEvents.length === 1 ? mapEvents[0] : null;
@@ -309,21 +321,71 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
   const mapZoom = singleEvent ? DETAIL_ZOOM : DEFAULT_ZOOM;
   const mapInstanceKey = `${tileLanguage}:${mapTheme}`;
   const shouldDelayTileLayer = boundsPoints.length > 1;
-  const [isTileLayerReady, setIsTileLayerReady] = useState(
-    !shouldDelayTileLayer,
-  );
+  const [isTileLayerReady, setIsTileLayerReady] =
+    useState(!shouldDelayTileLayer);
+  const [tileAccessStatus, setTileAccessStatus] = useState<
+    'loading' | 'ready' | 'error'
+  >(USE_SAME_ORIGIN_MAP_TILE_ACCESS ? 'loading' : 'ready');
 
   useEffect(() => {
     setIsTileLayerReady(!shouldDelayTileLayer);
   }, [mapInstanceKey]);
 
+  useEffect(() => {
+    if (!USE_SAME_ORIGIN_MAP_TILE_ACCESS) {
+      setTileAccessStatus('ready');
+      return;
+    }
+
+    const abortController = new AbortController();
+    let isActive = true;
+
+    setTileAccessStatus('loading');
+
+    void fetch(MAP_TILE_SESSION_URL, {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      signal: abortController.signal,
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(
+            `Map tile session bootstrap failed: ${response.status}`
+          );
+        }
+
+        if (isActive) {
+          setTileAccessStatus('ready');
+        }
+      })
+      .catch(() => {
+        if (abortController.signal.aborted || !isActive) {
+          return;
+        }
+
+        setTileAccessStatus('error');
+      });
+
+    return () => {
+      isActive = false;
+      abortController.abort();
+    };
+  }, []);
+
   const handleViewportInitialized = useCallback(() => {
     setIsTileLayerReady(true);
   }, []);
 
+  const canRenderMapTiles = isTileLayerReady && tileAccessStatus === 'ready';
+  const showTileSessionOverlay =
+    USE_SAME_ORIGIN_MAP_TILE_ACCESS && tileAccessStatus === 'loading';
+  const showTileSessionError =
+    USE_SAME_ORIGIN_MAP_TILE_ACCESS && tileAccessStatus === 'error';
+
   return (
     <div className="event-map-view space-y-3">
-      <div className="h-[520px] w-full overflow-hidden rounded-lg border bg-muted/20">
+      <div className="relative h-[520px] w-full overflow-hidden rounded-lg border bg-muted/20">
         <LeafletMap
           key={mapInstanceKey}
           center={mapCenter}
@@ -337,15 +399,32 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
               points={boundsPoints}
             />
           ) : null}
-          {isTileLayerReady ? <MapTileLayer provider={provider} /> : null}
-          {isTileLayerReady && boundsPoints.length > 1 ? (
+          {canRenderMapTiles ? <MapTileLayer provider={provider} /> : null}
+          {canRenderMapTiles && boundsPoints.length > 1 ? (
             <FitMapToEvents points={boundsPoints} />
           ) : null}
-          <EventMarkersLayer
-            events={mapEvents}
-            markerColorScheme={markerColorScheme}
-          />
+          {canRenderMapTiles ? (
+            <EventMarkersLayer
+              events={mapEvents}
+              markerColorScheme={markerColorScheme}
+            />
+          ) : null}
         </LeafletMap>
+        {showTileSessionOverlay ? (
+          <div className="absolute inset-0 z-[400] flex items-center justify-center bg-background/70 backdrop-blur-sm">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : null}
+        {showTileSessionError ? (
+          <div className="absolute inset-0 z-[400] flex items-center justify-center bg-background/80 px-6 text-center">
+            <p className="max-w-sm text-sm text-muted-foreground">
+              {t('Pages.Home.Infinite.MapTileUnavailable', {
+                defaultValue:
+                  'Map background is temporarily unavailable. Please reload the page and try again.',
+              })}
+            </p>
+          </div>
+        ) : null}
       </div>
       {mapEvents.length === 0 ? (
         <p className="text-xs text-muted-foreground">

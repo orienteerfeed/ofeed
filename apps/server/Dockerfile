@@ -20,13 +20,24 @@ COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
   pnpm install --frozen-lockfile --filter ./apps/server... --filter ./packages/shared...
 
-FROM deps AS runner
+FROM deps AS builder
 COPY apps/server apps/server
 COPY packages/shared packages/shared
 WORKDIR /workspace/apps/server
 RUN DATABASE_URL="mysql://user:password@localhost:3306/orienteerfeed" pnpm exec prisma generate
+RUN pnpm build
+
+FROM base AS runner
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY --from=builder /workspace/node_modules ./node_modules
+COPY --from=builder /workspace/apps/server ./apps/server
+COPY --from=builder /workspace/packages/shared ./packages/shared
+COPY apps/server/docker-entrypoint.sh /usr/local/bin/ofeed-server-entrypoint
+WORKDIR /workspace/apps/server
+RUN chmod +x /usr/local/bin/ofeed-server-entrypoint
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV VAULT_ENV_FILE=/vault/secrets/api-env
 EXPOSE 3001
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["pnpm", "exec", "tsx", "src/index.ts"]
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/ofeed-server-entrypoint"]
+CMD ["node", "dist/index.js"]

@@ -6,6 +6,10 @@ Tento chart nasazuje OFeed aplikaci do k3s:
 - databáze se nenasazuje z chartu (očekává se externí MariaDB/MySQL)
 - `DATABASE_URL` a `JWT_TOKEN_SECRET_KEY` se načítají z HashiCorp Vault přes
   Vault Agent Injector
+- API image používá built runtime `node dist/index.js`; Vault env se načítá v
+  image entrypointu, takže deployment nemusí přepisovat command
+- produkční map tiles používají same-origin proxy `/rest/v1/maps/tiles/...` a
+  krátkodobou same-site cookie session
 
 ## Install
 

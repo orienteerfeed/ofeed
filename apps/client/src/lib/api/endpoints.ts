@@ -59,10 +59,8 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}`,
   uploadEventImage: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}/image`,
-  eventChangelog: (
-    eventId: string | number,
-    params?: QueryParams
-  ): string => `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
+  eventChangelog: (eventId: string | number, params?: QueryParams): string =>
+    `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
   mapTile: (
     mapset: string,
     tileSize: string,
@@ -72,6 +70,7 @@ export const ENDPOINTS = {
     params?: QueryParams
   ): string =>
     `${apiPrefix}/maps/tiles/raster/${mapset}/${tileSize}/${z}/${x}/${y}${qs(params)}`,
+  mapTileSession: (): string => `${apiPrefix}/maps/tiles/session`,
   uploadIofXml: (): string => `${apiPrefix}/upload/iof`,
 } as const;
 

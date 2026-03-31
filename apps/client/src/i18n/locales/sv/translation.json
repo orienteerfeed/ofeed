@@ -522,6 +522,7 @@
       },
       "Infinite": {
         "MapNoCoordinates": "Det finns inga t�vlingar med giltiga koordinater f�r kartvyn.",
+        "MapTileUnavailable": "Kartbakgrunden är tillfälligt otillgänglig. Ladda om sidan och försök igen.",
         "MapZoomIn": "Zooma in",
         "MapZoomOut": "Zooma ut",
         "MapAttributionOthers": "och andra"

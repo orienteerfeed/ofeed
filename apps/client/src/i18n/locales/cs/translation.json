@@ -503,6 +503,7 @@
         "NoEvents": "Žádné akce nenalezeny",
         "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později.",
         "MapNoCoordinates": "Pro mapové zobrazení nejsou dostupné žádné akce s platnými souřadnicemi.",
+        "MapTileUnavailable": "Mapový podklad je dočasně nedostupný. Obnovte prosím stránku a zkuste to znovu.",
         "MapZoomIn": "Přiblížit",
         "MapZoomOut": "Oddálit",
         "MapAttributionOthers": "a další"

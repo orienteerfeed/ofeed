@@ -25,6 +25,8 @@ api:
     CORS_HEADERS: "Content-Type,Authorization,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url"
     RATE_LIMIT_WINDOW_MS: "60000"
     RATE_LIMIT_MAX: "100"
+    MAP_TILE_SESSION_REQUIRED: "true"
+    MAP_TILE_SESSION_TTL_SECONDS: "900"
     LOG_LEVEL: info
     OPENAPI_DOC_PATH: "/doc"
     OPENAPI_REFERENCE_PATH: "/reference"

@@ -1,11 +1,13 @@
-import { serve } from "@hono/node-server";
-import type { Server as HttpServer } from "node:http";
+import { serve } from '@hono/node-server';
+import type { Server as HttpServer } from 'node:http';
 
-import { env } from "./config/index.js";
-import { attachGraphQLWebSocketServer } from "./graphql/server.js";
-import { logger } from "./lib/logging.js";
+import { env } from './config/index.js';
+import prisma from './db/prisma.js';
+import { attachGraphQLWebSocketServer } from './graphql/server.js';
+import { createGracefulShutdown } from './lib/graceful-shutdown.js';
+import { logger } from './lib/logging.js';
 
-import app from "./app.js";
+import app from './app.js';
 
 const server = serve(
   {
@@ -17,42 +19,12 @@ const server = serve(
   },
 );
 
-const disposeGraphQLWebSocket = attachGraphQLWebSocketServer(server as unknown as HttpServer);
-
-let shuttingDown = false;
-
-async function shutdown() {
-  if (shuttingDown) {
-    return;
-  }
-
-  shuttingDown = true;
-  logger.info("Graceful shutdown started...");
-
-  try {
-    await disposeGraphQLWebSocket();
-    await new Promise<void>((resolve, reject) => {
-      server.close((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      });
-    });
-  } catch (error) {
-    logger.error("Graceful shutdown failed", {
-      error: {
-        message: error instanceof Error ? error.message : "Unknown shutdown error",
-      },
-    });
-  }
-}
-
-process.on("SIGINT", () => {
-  void shutdown();
+const httpServer = server as unknown as HttpServer;
+const gracefulShutdown = createGracefulShutdown({
+  server: httpServer,
+  disposeGraphQLWebSocket: attachGraphQLWebSocketServer(httpServer),
+  prisma,
+  logger,
 });
 
-process.on("SIGTERM", () => {
-  void shutdown();
-});
+gracefulShutdown.registerSignalHandlers();

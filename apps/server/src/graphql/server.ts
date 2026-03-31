@@ -1,21 +1,21 @@
-import type { Server as HttpServer } from "node:http";
+import type { Server as HttpServer } from 'node:http';
 
-import { useServer } from "graphql-ws/use/ws";
-import { WebSocketServer } from "ws";
+import { useServer } from 'graphql-ws/use/ws';
+import { WebSocketServer } from 'ws';
 
-import { schemaWithDirectives } from "./executableSchema.js";
-import prisma from "../utils/context.js";
-import { buildAuthContextFromRequest } from "../utils/jwtToken.js";
+import { schemaWithDirectives } from './executableSchema.js';
+import prisma from '../utils/context.js';
+import { buildAuthContextFromRequest } from '../utils/jwtToken.js';
 
 function getAuthorizationHeader(connectionParams: unknown) {
-  if (!connectionParams || typeof connectionParams !== "object") {
+  if (!connectionParams || typeof connectionParams !== 'object') {
     return undefined;
   }
 
   const source = connectionParams as Record<string, unknown>;
   const authorization = source.authorization ?? source.Authorization;
 
-  if (typeof authorization !== "string") {
+  if (typeof authorization !== 'string') {
     return undefined;
   }
 
@@ -25,15 +25,15 @@ function getAuthorizationHeader(connectionParams: unknown) {
 export function attachGraphQLWebSocketServer(server: HttpServer) {
   const wsServer = new WebSocketServer({
     server,
-    path: "/graphql",
+    path: '/graphql',
   });
 
-  wsServer.on("connection", () => {
-    console.log("New WebSocket connection established");
+  wsServer.on('connection', () => {
+    console.log('New WebSocket connection established');
   });
 
-  wsServer.on("error", (err) => {
-    console.error("WebSocket server error:", err);
+  wsServer.on('error', (err) => {
+    console.error('WebSocket server error:', err);
   });
 
   const serverCleanup = useServer(
@@ -48,8 +48,8 @@ export function attachGraphQLWebSocketServer(server: HttpServer) {
         return {
           prisma,
           auth,
-          activationUrl: "localhost",
-          resetPasswordUrl: "localhost",
+          activationUrl: 'localhost',
+          resetPasswordUrl: 'localhost',
         };
       },
     },
@@ -58,8 +58,5 @@ export function attachGraphQLWebSocketServer(server: HttpServer) {
 
   return async () => {
     await serverCleanup.dispose();
-    await new Promise<void>((resolve) => {
-      wsServer.close(() => resolve());
-    });
   };
 }

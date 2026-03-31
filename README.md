@@ -112,12 +112,19 @@ Default local URLs:
 ### Server (`apps/server`)
 
 - `pnpm dev` / `pnpm start:dev` - run API in watch mode
+- `pnpm build` - build `@repo/shared` for Node and compile the server to `dist/index.js`
+- `pnpm start:dist` - run the built server from `dist/index.js`
 - `pnpm test` / `pnpm test:watch`
 - `pnpm lint` / `pnpm lint:fix`
 - `pnpm db:generate`
 - `pnpm db:migrate`
 - `pnpm db:migrate:deploy`
 - `pnpm db:seed`
+
+### Shared (`packages/shared`)
+
+- `pnpm build` - compile runtime JS to `dist/` for Node consumers such as the built server
+- `pnpm type-check`
 
 ### Client (`apps/client`)
 

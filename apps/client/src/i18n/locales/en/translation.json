@@ -503,6 +503,7 @@
         "NoEvents": "No events found",
         "NoEventsHint": "Try changing the filter or check back later.",
         "MapNoCoordinates": "No events with valid coordinates are available for map view.",
+        "MapTileUnavailable": "Map background is temporarily unavailable. Please reload the page and try again.",
         "MapZoomIn": "Zoom in",
         "MapZoomOut": "Zoom out",
         "MapAttributionOthers": "and others"
