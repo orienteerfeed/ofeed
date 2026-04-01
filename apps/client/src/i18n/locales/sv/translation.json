@@ -621,6 +621,8 @@
           "Description": "Hur man konfigurerar appar för anslutning till OFeed.",
           "MissingPasswordTitle": "Skapa tävlingslösenordet först",
           "MissingPasswordDescription": "Skapa först lösenordet i kortet för tävlingslösenord innan du konfigurerar apparna.",
+          "CopyCredentials": "Kopiera inloggningsuppgifter",
+          "OpenApp": "Öppna {{appName}}",
           "ApiBaseUrl": "URL",
           "EventId": "Tävlings-id",
           "EventPassword": "Tävlingens lösenord",

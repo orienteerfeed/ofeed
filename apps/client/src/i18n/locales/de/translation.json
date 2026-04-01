@@ -343,6 +343,8 @@
         "Card": {
           "MissingPasswordTitle": "Erstelle zuerst das Event-Passwort",
           "MissingPasswordDescription": "Erstelle zuerst das Passwort in der Karte für das Event-Passwort, bevor du die Apps konfigurierst.",
+          "CopyCredentials": "Zugangsdaten kopieren",
+          "OpenApp": "{{appName}} öffnen",
           "Tabs": {
             "QuickEvent": {
               "CopyLink": "Zugangsdaten kopieren"

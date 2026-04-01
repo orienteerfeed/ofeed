@@ -621,6 +621,8 @@
           "Description": "Cómo configurar las aplicaciones para conectarse a OFeed.",
           "MissingPasswordTitle": "Primero genera la contraseña del evento",
           "MissingPasswordDescription": "Genera primero la contraseña en la tarjeta de contraseña del evento antes de configurar las aplicaciones.",
+          "CopyCredentials": "Copiar credenciales",
+          "OpenApp": "Abrir {{appName}}",
           "ApiBaseUrl": "URL",
           "EventId": "ID del evento",
           "EventPassword": "Contraseña del evento",
