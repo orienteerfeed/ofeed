@@ -638,7 +638,8 @@
             },
             "QuickEvent": {
               "Description": "Copy and paste these Credentials into OFeed service setup.",
-              "ExportInterval": "Export Interval"
+              "ExportInterval": "Export Interval",
+              "CopyLink": "Copy credentials"
             },
             "SIDroidConenctor": {
               "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."

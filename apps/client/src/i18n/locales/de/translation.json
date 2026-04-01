@@ -342,7 +342,12 @@
       "Integration": {
         "Card": {
           "MissingPasswordTitle": "Erstelle zuerst das Event-Passwort",
-          "MissingPasswordDescription": "Erstelle zuerst das Passwort in der Karte für das Event-Passwort, bevor du die Apps konfigurierst."
+          "MissingPasswordDescription": "Erstelle zuerst das Passwort in der Karte für das Event-Passwort, bevor du die Apps konfigurierst.",
+          "Tabs": {
+            "QuickEvent": {
+              "CopyLink": "Zugangsdaten kopieren"
+            }
+          }
         }
       }
     }

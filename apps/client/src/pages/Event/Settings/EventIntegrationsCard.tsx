@@ -124,9 +124,20 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   const qrCodeConnectorRef = useRef<HTMLCanvasElement>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  // Format the service credentials
+  // Format the QuickEvent credentials link
+  const quickEventLinkUrl = new URL(config.PUBLIC_URL, window.location.origin);
+  quickEventLinkUrl.pathname = `${quickEventLinkUrl.pathname.replace(/\/$/, '')}/link`;
+  quickEventLinkUrl.search = new URLSearchParams({
+    v: '1',
+    app: 'quickevent',
+    url: apiEventsEndpoint,
+    auth: 'basic',
+    id: eventId,
+    pwd: eventPassword,
+  }).toString();
   const ochecklistDeepLink = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
   const connectorDeepLink = `https://stigning.se/connector?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
+  const quickEventCredentialsLink = quickEventLinkUrl.toString();
   const codeSize = 200;
   const errorCorrectionLevel = 'L' as const;
   const qrBackgroundColor = '#ffffff';
@@ -544,7 +555,9 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                             <Eye className="h-3 w-3" />
                           )}
                           <span className="sr-only">
-                            {passwordVisible ? 'Hide password' : 'Show password'}
+                            {passwordVisible
+                              ? 'Hide password'
+                              : 'Show password'}
                           </span>
                         </Button>
                       </div>
@@ -564,6 +577,21 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                       </Button>
                     </div>
                   </div>
+
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      copyWithToast(
+                        quickEventCredentialsLink,
+                        t('Operations.CopiedToClipboard', { ns: 'common' })
+                      )
+                    }
+                    variant="outline"
+                    className="w-full mt-4"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    {t('Pages.Event.Integration.Card.Tabs.QuickEvent.CopyLink')}
+                  </Button>
                 </div>
               </div>
             </TabsContent>

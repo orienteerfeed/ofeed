@@ -635,6 +635,11 @@
           "Tabs": {
             "OChecklist": {
               "Description": "Skanna QR-koden för att ställa in serveradress, tävlingsid och lösenord.\nScan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."
+            },
+            "QuickEvent": {
+              "Description": "Kopiera och klistra in dessa uppgifter i OFeed-tjänstens inställningar.",
+              "ExportInterval": "Intervall för export",
+              "CopyLink": "Kopiera inloggningsuppgifter"
             }
           }
         }
