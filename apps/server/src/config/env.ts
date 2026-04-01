@@ -63,6 +63,8 @@ function loadDotenvFiles() {
 loadDotenvFiles();
 
 const DEFAULT_DATABASE_URL = 'mysql://user:password@localhost:3306/orienteerfeed';
+const DEFAULT_ENCRYPTION_SECRET_KEY =
+  '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
 function hasTemplatePlaceholders(value: string) {
   return /\$\{[^}]+\}/.test(value);
@@ -104,7 +106,7 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().default(DEFAULT_DATABASE_URL),
   JWT_TOKEN_SECRET_KEY: z.string().default('change-me-in-production'),
-  ENCRYPTION_SECRET_KEY: z.string().optional(),
+  ENCRYPTION_SECRET_KEY: z.string().default(DEFAULT_ENCRYPTION_SECRET_KEY),
   ORIS_API_BASE_URL: z.string().url().default('https://oris.orientacnisporty.cz/API/'),
   EVENTOR_API_BASE_URL: z.string().url().default('https://eventor.orienteering.sport/api'),
   EVENTOR_API_KEY: z.string().optional(),
@@ -180,6 +182,11 @@ if (env.DATABASE_URL === DEFAULT_DATABASE_URL && fromMysqlEnv) {
 if (env.NODE_ENV === 'production') {
   if (env.JWT_TOKEN_SECRET_KEY === 'change-me-in-production') {
     console.error('Invalid production environment variable: JWT_TOKEN_SECRET_KEY must be set.');
+    process.exit(1);
+  }
+
+  if (env.ENCRYPTION_SECRET_KEY === DEFAULT_ENCRYPTION_SECRET_KEY) {
+    console.error('Invalid production environment variable: ENCRYPTION_SECRET_KEY must be set.');
     process.exit(1);
   }
 }
