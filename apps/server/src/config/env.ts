@@ -160,13 +160,17 @@ const fromMysqlEnv = buildDatabaseUrlFromMysqlEnv(env);
 
 if (!env.DATABASE_URL || hasTemplatePlaceholders(env.DATABASE_URL)) {
   if (!fromMysqlEnv) {
-    console.error(
-      'Invalid database configuration: DATABASE_URL contains placeholders but MYSQL_USER, MYSQL_HOST and MYSQL_DATABASE are not fully set.',
-    );
-    process.exit(1);
-  }
+    if (env.NODE_ENV === 'production') {
+      console.error(
+        'Invalid database configuration: DATABASE_URL contains placeholders but MYSQL_USER, MYSQL_HOST and MYSQL_DATABASE are not fully set.',
+      );
+      process.exit(1);
+    }
 
-  env.DATABASE_URL = fromMysqlEnv;
+    env.DATABASE_URL = DEFAULT_DATABASE_URL;
+  } else {
+    env.DATABASE_URL = fromMysqlEnv;
+  }
 }
 
 if (env.DATABASE_URL === DEFAULT_DATABASE_URL && fromMysqlEnv) {
