@@ -1,5 +1,202 @@
 {
   "Pages": {
+    "Admin": {
+      "Common": {
+        "Zone": "Adminbereich",
+        "Navigation": "Navigation"
+      },
+      "Navigation": {
+        "Dashboard": "Dashboard",
+        "Users": "Benutzer",
+        "Events": "Veranstaltungen",
+        "CzechRanking": "Tschechisches Ranking",
+        "BackToSite": "Zurück zur Website"
+      },
+      "Dashboard": {
+        "Title": "Administrationsübersicht",
+        "Description": "Zentrale Arbeitsfläche für Administratoren mit schnellem Überblick über Benutzer, Veranstaltungen und Veröffentlichungen.",
+        "ErrorTitle": "Admin-Daten konnten nicht geladen werden",
+        "ChartTitle": "Monatliche Aktivität",
+        "ChartDescription": "Neue Benutzer und neu erstellte Veranstaltungen in den letzten sechs Monaten.",
+        "ChartUsersSeries": "Neue Benutzer",
+        "ChartEventsSeries": "Neue Veranstaltungen",
+        "RecentUsersTitle": "Neueste Benutzer",
+        "RecentUsersDescription": "Zuletzt registrierte Konten in der Anwendung.",
+        "RecentEventsTitle": "Neueste Veranstaltungen",
+        "RecentEventsDescription": "Neueste Veranstaltungsdatensätze in OFeed.",
+        "Cards": {
+          "TotalUsers": "Benutzer gesamt",
+          "ActiveUsersDetail": "{{count}} Konten sind aktiv",
+          "TotalEvents": "Veranstaltungen gesamt",
+          "PublishedEventsDetail": "{{count}} Veranstaltungen sind veröffentlicht",
+          "RankingEvents": "Ranking-Veranstaltungen",
+          "UpcomingEventsDetail": "{{count}} kommende Veranstaltungen sind geplant",
+          "AdminUsers": "Administratoren",
+          "AdminUsersHint": "Benutzer mit Zugang zum Adminbereich"
+        }
+      },
+      "Users": {
+        "Title": "Benutzer",
+        "Description": "Die letzten {{count}} registrierten Benutzer mit Rolle und Aktivierungsstatus.",
+        "Actions": {
+          "Activate": "Aktivieren",
+          "Deactivate": "Deaktivieren",
+          "Delete": "Löschen"
+        },
+        "Confirm": {
+          "ActivateTitle": "Benutzerkonto aktivieren",
+          "ActivateDescription": "Diese Aktion erlaubt {{name}} die Anmeldung erneut.",
+          "DeactivateTitle": "Benutzerkonto deaktivieren",
+          "DeactivateDescription": "Diese Aktion sperrt die Anmeldung für {{name}}.",
+          "DeleteTitle": "Benutzerkonto löschen",
+          "DeleteDescription": "Diese Aktion entfernt {{name}} dauerhaft einschließlich verknüpfter Zugangsdaten. Dies kann nicht rückgängig gemacht werden."
+        },
+        "Toast": {
+          "ActivateSuccessTitle": "Konto aktiviert",
+          "DeactivateSuccessTitle": "Konto deaktiviert",
+          "DeleteSuccessTitle": "Konto gelöscht",
+          "StatusSuccessDescription": "Der Kontostatus von {{name}} wurde aktualisiert.",
+          "DeleteSuccessDescription": "{{name}} wurde gelöscht.",
+          "ActivateErrorTitle": "Konto konnte nicht aktiviert werden",
+          "DeactivateErrorTitle": "Konto konnte nicht deaktiviert werden",
+          "DeleteErrorTitle": "Konto konnte nicht gelöscht werden",
+          "UnknownError": "Ein unerwarteter Fehler ist aufgetreten."
+        }
+      },
+      "Events": {
+        "Title": "Veranstaltungen",
+        "Description": "Die letzten {{count}} Veranstaltungen mit Eigentümer, Disziplin und Veröffentlichungsstatus."
+      },
+      "CzechRanking": {
+        "Title": "Tschechische Ranking-Datenbasis",
+        "Description": "Admin-Werkzeuge für monatliche CSV-Snapshots, synchronisierte ORIS-Ranking-Ergebnisse und erzwungene Aktualisierung.",
+        "ErrorTitle": "Tschechische Ranking-Daten konnten nicht geladen werden",
+        "Cards": {
+          "SnapshotDatasets": "Snapshot-Datensätze",
+          "SnapshotDatasetsHint": "Hochgeladene monatliche CSV-Snapshots nach Typ und Kategorie gruppiert.",
+          "SnapshotEntries": "Snapshot-Zeilen",
+          "SnapshotEntriesHint": "Gesamtzahl der aktuell aus CSV-Uploads gespeicherten Ranking-Zeilen.",
+          "EventDatasets": "Synchronisierte Veranstaltungsdatensätze",
+          "EventDatasetsHint": "ORIS-Ranking-Ergebnisse gruppiert nach Veranstaltung, Rankingtyp und Kategorie.",
+          "EventResults": "Synchronisierte Ergebniszeilen",
+          "EventResultsHint": "Gesamtzahl der aktuell aus ORIS synchronisierten Einzelergebnisse."
+        },
+        "Actions": {
+          "ForceSync": "ORIS-Sync erzwingen",
+          "UploadSnapshot": "Snapshot hochladen",
+          "ClearAllSnapshots": "Alle Snapshots löschen",
+          "ClearAllEventResults": "Alle synchronisierten Ergebnisse löschen",
+          "ViewData": "Daten anzeigen",
+          "Clear": "Löschen",
+          "Cancel": "Abbrechen",
+          "Uploading": "Wird hochgeladen…",
+          "Syncing": "Synchronisiert…",
+          "OpenEvent": "Veranstaltung öffnen"
+        },
+        "Tabs": {
+          "Snapshots": "Snapshots",
+          "EventResults": "Synchronisierte Ergebnisse"
+        },
+        "SnapshotTable": {
+          "ValidForMonth": "Gültig für Monat",
+          "Type": "Rankingtyp",
+          "Category": "Kategorie",
+          "Entries": "Zeilen",
+          "Leader": "Leader",
+          "UpdatedAt": "Aktualisiert",
+          "Actions": "Aktionen"
+        },
+        "EventResultsTable": {
+          "Event": "Veranstaltung",
+          "Type": "Rankingtyp",
+          "Category": "Kategorie",
+          "Results": "Zeilen",
+          "SyncedAt": "Synchronisiert am",
+          "Actions": "Aktionen"
+        },
+        "UploadDialog": {
+          "Title": "Tschechischen Ranking-Snapshot hochladen",
+          "Description": "Lade einen monatlichen ORIS-Snapshot für den gewählten Rankingtyp und die gewählte Kategorie hoch. Die Event-Berechnung sucht immer zuerst den Snapshot des Vormonats zum Veranstaltungsdatum und verwendet, falls dieser fehlt, den zuletzt verfügbaren älteren Snapshot.",
+          "RankingType": "Rankingtyp",
+          "RankingCategory": "Kategorie",
+          "ValidForMonth": "Gültig für Monat",
+          "File": "CSV- oder TXT-Datei",
+          "Help": {
+            "RankingType": "Wähle, ob du einen Snapshot für Wald- oder Sprint-Ranking hochlädst.",
+            "RankingCategory": "M = Männer (H20/H21), F = Frauen (D20/D21). Jede Variante wird separat hochgeladen.",
+            "ValidForMonth": "Gib den Monat an, für den der Snapshot gilt, nicht den Upload-Monat. Für eine Veranstaltung im April 2026 wird normalerweise der Snapshot 2026-03 verwendet. Fehlt dieser Monat, nimmt das System den zuletzt verfügbaren älteren Snapshot zum Veranstaltungsdatum.",
+            "File": "Lade einen ORIS-Export als CSV- oder TXT-Datei hoch, sofern der Inhalt CSV-Daten mit Semikolon-Trennung enthält."
+          },
+          "ValidationTitle": "Snapshot-Upload ist unvollständig",
+          "MissingFile": "Wähle vor dem Upload eine CSV- oder TXT-Datei aus."
+        },
+        "SyncDialog": {
+          "Title": "ORIS-Synchronisierung erzwingen",
+          "Description": "Lädt offizielle tschechische Ranking-Ergebnisse aus ORIS für den ausgewählten Bereich.",
+          "Scope": "Bereich",
+          "ScopeAll": "Wald und Sprint",
+          "ScopeForest": "Nur Wald",
+          "ScopeSprint": "Nur Sprint"
+        },
+        "Detail": {
+          "SnapshotTitle": "Snapshot-Detail",
+          "SnapshotDescription": "{{rankingType}} / {{rankingCategory}} für {{month}}. {{count}} gespeicherte Zeilen werden angezeigt.",
+          "EventResultsTitle": "Detail synchronisierter Ergebnisse",
+          "EventResultsDescription": "{{event}} · {{rankingType}} / {{rankingCategory}}. {{count}} gespeicherte Zeilen werden angezeigt.",
+          "Loading": "Datensatzdetail wird geladen…",
+          "Place": "Platz",
+          "Registration": "Registrierung",
+          "Points": "Punkte",
+          "RankIndex": "Rankingwert",
+          "Class": "Klasse",
+          "Time": "Zeit",
+          "ReferenceValue": "Referenzwert"
+        },
+        "Confirm": {
+          "ClearSnapshotsTitle": "Tschechische Ranking-Snapshots löschen",
+          "ClearAllSnapshotsDescription": "Dadurch werden alle hochgeladenen monatlichen tschechischen Ranking-Snapshots aus der Datenbank entfernt.",
+          "ClearSnapshotDescription": "Dadurch wird der ausgewählte tschechische Ranking-Snapshot aus der Datenbank entfernt.",
+          "ClearEventResultsTitle": "Synchronisierte tschechische Ranking-Ergebnisse löschen",
+          "ClearAllEventResultsDescription": "Dadurch werden alle aus ORIS synchronisierten Ranking-Ergebnisse aus der Datenbank entfernt.",
+          "ClearEventResultsDescription": "Dadurch wird der ausgewählte synchronisierte Ranking-Ergebnisdatensatz aus der Datenbank entfernt."
+        },
+        "Toast": {
+          "UploadSuccessTitle": "Snapshot hochgeladen",
+          "UploadSuccessDescription": "{{count}} Zeilen wurden erfolgreich importiert.",
+          "UploadErrorTitle": "Snapshot-Upload fehlgeschlagen",
+          "SyncSuccessTitle": "ORIS-Synchronisierung abgeschlossen",
+          "SyncSuccessDescription": "{{count}} Veranstaltungsdatensätze wurden synchronisiert.",
+          "SyncErrorTitle": "ORIS-Synchronisierung fehlgeschlagen",
+          "ClearSnapshotsSuccessTitle": "Snapshots gelöscht",
+          "ClearSnapshotsErrorTitle": "Löschen der Snapshots fehlgeschlagen",
+          "ClearEventResultsSuccessTitle": "Synchronisierte Ergebnisse gelöscht",
+          "ClearEventResultsErrorTitle": "Löschen der synchronisierten Ergebnisse fehlgeschlagen",
+          "ClearSuccessDescription": "{{count}} Zeilen wurden entfernt.",
+          "UnknownError": "Ein unbekannter Fehler ist aufgetreten."
+        }
+      },
+      "Table": {
+        "Empty": "Keine Daten verfügbar.",
+        "Event": "Name",
+        "Date": "Datum",
+        "Organizer": "Veranstalter",
+        "Owner": "Eigentümer",
+        "Published": "Veröffentlicht",
+        "Ranking": "Ranking",
+        "Name": "Name",
+        "Email": "Email",
+        "Role": "Rolle",
+        "Status": "Status",
+        "Organization": "Organisation",
+        "CreatedAt": "Erstellt",
+        "Active": "Aktiv",
+        "Inactive": "Inaktiv",
+        "Actions": "Aktionen",
+        "Yes": "Ja",
+        "No": "Nein",
+        "Discipline": "Disziplin"
+      }
+    },
     "Auth": {
       "User": {
         "Firstname": "Vorname",
@@ -144,6 +341,7 @@
   },
   "Organisms": {
     "Navbar": {
+      "AdminZone": "Adminbereich",
       "Pages": "Seiten"
     },
     "Footer": {

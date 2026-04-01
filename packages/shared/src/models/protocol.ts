@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { competitorSchema } from "./competitor.js";
-import { dateLikeSchema, originSchema, protocolTypeSchema, resultStatusSchema } from "./common.js";
+import { competitorSchema } from './competitor.js';
+import { dateLikeSchema, originSchema, protocolTypeSchema, resultStatusSchema } from './common.js';
 
 export const protocolSchema = z.object({
   id: z.number().int(),
@@ -27,12 +27,17 @@ export const changelogSchema = z.object({
   createdAt: dateLikeSchema,
 });
 
-export const competitorStatusChangeSchema = z.enum(["Active", "Inactive", "DidNotStart", "LateStart"]);
+export const competitorStatusChangeSchema = z.enum([
+  'Active',
+  'Inactive',
+  'DidNotStart',
+  'LateStart',
+]);
 
 export const statusChangeInputSchema = z.object({
   eventId: z.string(),
   competitorId: z.number().int(),
-  origin: z.literal("START"),
+  origin: z.literal('START'),
   status: competitorStatusChangeSchema,
 });
 
@@ -47,8 +52,8 @@ export const updateCompetitorInputSchema = z.object({
   nationality: z.string().optional(),
   registration: z.string().optional(),
   license: z.string().optional(),
-  ranking: z.number().int().optional(),
-  rankPointsAvg: z.number().int().optional(),
+  rankingPoints: z.number().int().optional(),
+  rankingReferenceValue: z.number().int().optional(),
   organisation: z.string().optional(),
   shortName: z.string().optional(),
   card: z.number().int().optional(),
@@ -73,8 +78,8 @@ export const storeCompetitorInputSchema = z.object({
   nationality: z.string().optional(),
   registration: z.string().optional(),
   license: z.string().optional(),
-  ranking: z.number().int().optional(),
-  rankPointsAvg: z.number().int().optional(),
+  rankingPoints: z.number().int().optional(),
+  rankingReferenceValue: z.number().int().optional(),
   organisation: z.string().optional(),
   shortName: z.string().optional(),
   card: z.number().int().optional(),

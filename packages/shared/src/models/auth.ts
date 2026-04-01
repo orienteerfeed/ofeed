@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { dateLikeSchema } from "./common.js";
+import { dateLikeSchema, userRoleSchema } from './common.js';
 
 export const loginInputSchema = z.object({
   username: z.string(),
@@ -23,6 +23,7 @@ export const authPayloadSchema = z.object({
       email: z.string().email(),
       firstname: z.string(),
       lastname: z.string(),
+      role: userRoleSchema.optional(),
     })
     .nullable()
     .optional(),

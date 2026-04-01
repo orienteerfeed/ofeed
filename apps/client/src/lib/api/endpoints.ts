@@ -42,6 +42,20 @@ export const ENDPOINTS = {
   myEvents: (params?: PaginationParams): string =>
     `${apiPrefix}/my-events${qs(params)}`,
 
+  // Admin endpoints
+  adminDashboard: (): string => `${apiPrefix}/admin/dashboard`,
+  adminUsers: (): string => `${apiPrefix}/admin/users`,
+  adminUser: (userId: string | number): string =>
+    `${apiPrefix}/admin/users/${userId}`,
+  adminEvents: (): string => `${apiPrefix}/admin/events`,
+  adminCzechRankingOverview: (): string => `${apiPrefix}/admin/ranking/czech`,
+  adminCzechRankingSnapshots: (params?: QueryParams): string =>
+    `${apiPrefix}/admin/ranking/czech/snapshots${qs(params)}`,
+  adminCzechRankingEventResults: (params?: QueryParams): string =>
+    `${apiPrefix}/admin/ranking/czech/event-results${qs(params)}`,
+  adminCzechRankingOrisSync: (): string =>
+    `${apiPrefix}/admin/ranking/czech/oris-sync`,
+
   // Event endpoints
   events: (params?: PaginationParams): string =>
     `${apiPrefix}/events${qs(params)}`,

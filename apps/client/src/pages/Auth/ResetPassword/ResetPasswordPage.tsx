@@ -34,6 +34,7 @@ type ResetPasswordResponse = {
       firstname: string;
       lastname: string;
       email: string;
+      role: 'USER' | 'ADMIN';
       organisation?: string | null;
       emergencyContact?: string | null;
     };
@@ -51,6 +52,7 @@ const RESET_PASSWORD_MUTATION = gql`
         firstname
         lastname
         email
+        role
         organisation
         emergencyContact
       }

@@ -36,6 +36,12 @@ const SIGNUP_MUTATION = gql`
       token
       user {
         id
+        firstname
+        lastname
+        email
+        role
+        organisation
+        emergencyContact
       }
       message
     }
@@ -45,7 +51,15 @@ const SIGNUP_MUTATION = gql`
 type SignUpResponse = {
   signup: {
     token: string;
-    user: { id: number };
+    user: {
+      id: number;
+      firstname: string;
+      lastname: string;
+      email: string;
+      role: 'USER' | 'ADMIN';
+      organisation?: string | null;
+      emergencyContact?: string | null;
+    };
   };
 };
 type SignUpVars = {
@@ -203,11 +217,7 @@ export const SignUpPage = () => {
         }
 
         const user = {
-          id: payload.user.id,
-          email: value.email,
-          firstname: value.firstName,
-          lastname: value.lastName,
-          organisation: value.club || null,
+          ...payload.user,
           club: value.club,
         };
 

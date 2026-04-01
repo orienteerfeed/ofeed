@@ -32,6 +32,7 @@ type SignInResponse = {
       firstname: string;
       lastname: string;
       email: string;
+      role: 'USER' | 'ADMIN';
       organisation?: string | null;
       emergencyContact?: string | null;
     };
@@ -48,6 +49,7 @@ const SIGNIN_MUTATION = gql`
         firstname
         lastname
         email
+        role
         organisation
         emergencyContact
       }

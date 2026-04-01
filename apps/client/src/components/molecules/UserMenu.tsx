@@ -10,7 +10,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
-import { CalendarCheck, LogOut, Settings, UserIcon } from 'lucide-react';
+import {
+  CalendarCheck,
+  LogOut,
+  Settings,
+  Shield,
+  UserIcon,
+} from 'lucide-react';
 import { useAuth } from '../../hooks';
 import { PATHNAMES } from '../../lib/paths/pathnames';
 import type { User } from '../../types';
@@ -47,7 +53,9 @@ export const UserMenu = ({ user, t }: UserMenuProps) => {
             <span className="text-sm leading-none" aria-hidden>
               👋
             </span>
-            <p className="text-sm font-medium leading-none">Hey, {user.firstname}</p>
+            <p className="text-sm font-medium leading-none">
+              Hey, {user.firstname}
+            </p>
             {organisation && (
               <p className="col-start-2 text-xs leading-none text-muted-foreground">
                 {organisation}
@@ -74,6 +82,17 @@ export const UserMenu = ({ user, t }: UserMenuProps) => {
             <span>{t('Pages.Event.MyEvents')}</span>
           </Link>
         </DropdownMenuItem>
+        {user.role === 'ADMIN' && (
+          <DropdownMenuItem asChild>
+            <Link
+              {...PATHNAMES.adminDashboard()}
+              className="flex w-full cursor-pointer items-center"
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              <span>{t('Organisms.Navbar.AdminZone')}</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem asChild>
           <Link
             {...PATHNAMES.profile()}

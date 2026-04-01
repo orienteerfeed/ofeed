@@ -1,3 +1,5 @@
+import type { UserRole as SharedUserRole } from '@repo/shared';
+
 export interface User {
   id: number;
   email: string;
@@ -6,7 +8,9 @@ export interface User {
   organisation?: string | null;
   emergencyContact?: string | null;
   club?: string | null;
-  role?: string;
+  role?: UserRole;
   avatarUrl?: string | null;
   initials?: string;
 }
+
+export type UserRole = SharedUserRole;

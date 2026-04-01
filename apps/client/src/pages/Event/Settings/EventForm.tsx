@@ -86,6 +86,7 @@ type ExternalEventPreviewDraft = {
   longitude?: number;
   countryCode?: string;
   zeroTime?: string;
+  discipline?: EventFormData['discipline'];
   ranking?: boolean;
   coefRanking?: number;
   relay?: boolean;
@@ -134,6 +135,7 @@ const convertToFormValues = (
           event.timezone || fallbackTimezone
         )
       : event.zeroTime || '',
+  discipline: event.discipline || 'OTHER',
   ranking: event.ranking || false,
   coefRanking: event.coefRanking?.toString() || '',
   relay: event.relay || false,
@@ -197,9 +199,8 @@ export const EventForm: React.FC<EventFormProps> = ({
   const [isDraggingImage, setIsDraggingImage] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [externalProvider, setExternalProvider] = React.useState<ExternalProvider>(
-    initialExternalSource ?? 'ORIS'
-  );
+  const [externalProvider, setExternalProvider] =
+    React.useState<ExternalProvider>(initialExternalSource ?? 'ORIS');
   const [externalEventId, setExternalEventId] = React.useState(
     initialExternalEventId ?? ''
   );
@@ -218,8 +219,9 @@ export const EventForm: React.FC<EventFormProps> = ({
     React.useState(false);
   const [importedExternalSource, setImportedExternalSource] =
     React.useState<ExternalProvider | null>(initialExternalSource);
-  const [importedExternalEventId, setImportedExternalEventId] =
-    React.useState<string | null>(initialExternalEventId);
+  const [importedExternalEventId, setImportedExternalEventId] = React.useState<
+    string | null
+  >(initialExternalEventId);
   const latestSearchIdRef = React.useRef(0);
   const externalSearchTimeoutRef = React.useRef<ReturnType<
     typeof setTimeout
@@ -320,7 +322,9 @@ export const EventForm: React.FC<EventFormProps> = ({
           {
             provider: externalProvider,
             query,
-            apiKey: isEventorProvider ? externalApiKey.trim() || undefined : undefined,
+            apiKey: isEventorProvider
+              ? externalApiKey.trim() || undefined
+              : undefined,
             limit: 8,
           }
         );
@@ -439,7 +443,9 @@ export const EventForm: React.FC<EventFormProps> = ({
     setFeaturedImage(file);
   };
 
-  const handleFeaturedImageInput: React.ChangeEventHandler<HTMLInputElement> = e => {
+  const handleFeaturedImageInput: React.ChangeEventHandler<
+    HTMLInputElement
+  > = e => {
     const file = e.currentTarget.files?.[0];
     if (!file) return;
     handleFeaturedImageSelect(file);
@@ -455,13 +461,17 @@ export const EventForm: React.FC<EventFormProps> = ({
     if (file) handleFeaturedImageSelect(file);
   };
 
-  const handleFeaturedImageDragOver: React.DragEventHandler<HTMLDivElement> = e => {
+  const handleFeaturedImageDragOver: React.DragEventHandler<
+    HTMLDivElement
+  > = e => {
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingImage(true);
   };
 
-  const handleFeaturedImageDragLeave: React.DragEventHandler<HTMLDivElement> = e => {
+  const handleFeaturedImageDragLeave: React.DragEventHandler<
+    HTMLDivElement
+  > = e => {
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingImage(false);
@@ -598,26 +608,29 @@ export const EventForm: React.FC<EventFormProps> = ({
     return undefined;
   };
 
+  const defaultFormValues: EventFormValues = initialData
+    ? convertToFormValues(initialData, userTimezone)
+    : {
+        eventName: '',
+        sportId: '',
+        date: '',
+        timezone: 'Europe/Prague',
+        organizer: '',
+        location: '',
+        latitude: '',
+        longitude: '',
+        countryCode: '',
+        zeroTime: '',
+        discipline: 'OTHER',
+        ranking: false,
+        coefRanking: '',
+        relay: false,
+        published: false,
+        hundredthPrecision: false,
+      };
+
   const form = useForm({
-    defaultValues: initialData
-      ? convertToFormValues(initialData, userTimezone)
-      : {
-          eventName: '',
-          sportId: '',
-          date: '',
-          timezone: 'Europe/Prague',
-          organizer: '',
-          location: '',
-          latitude: '',
-          longitude: '',
-          countryCode: '',
-          zeroTime: '',
-          ranking: false,
-          coefRanking: '',
-          relay: false,
-          published: false,
-          hundredthPrecision: false,
-        },
+    defaultValues: defaultFormValues,
     validators: {
       onChange: ({ value }) => {
         const errors: Partial<Record<keyof EventFormValues, string>> = {};
@@ -673,6 +686,8 @@ export const EventForm: React.FC<EventFormProps> = ({
         value.date,
         value.timezone || userTimezone
       );
+      const isRelayDiscipline =
+        value.discipline === 'RELAY' || value.discipline === 'SPRINT_RELAY';
 
       let savedEventId: string | undefined;
 
@@ -705,11 +720,12 @@ export const EventForm: React.FC<EventFormProps> = ({
               : undefined,
             countryCode: value.countryCode || undefined,
             zeroTime: normalizedZeroTime,
+            discipline: value.discipline || 'OTHER',
             ranking: value.ranking,
             coefRanking: value.coefRanking
               ? parseFloat(value.coefRanking)
               : undefined,
-            relay: value.relay,
+            relay: value.relay || isRelayDiscipline,
             published: value.published,
             hundredthPrecision: value.hundredthPrecision,
             externalSource: externalSourcePayload,
@@ -724,12 +740,10 @@ export const EventForm: React.FC<EventFormProps> = ({
               variant: 'default',
             });
 
-            const responseData = response as
-              | {
-                  results?: { data?: { id?: string } };
-                  data?: { id?: string };
-                }
-              | null;
+            const responseData = response as {
+              results?: { data?: { id?: string } };
+              data?: { id?: string };
+            } | null;
             savedEventId =
               responseData?.results?.data?.id ?? responseData?.data?.id;
           },
@@ -742,22 +756,20 @@ export const EventForm: React.FC<EventFormProps> = ({
               'errors' in err &&
               Array.isArray((err as { errors?: unknown[] }).errors)
             ) {
-              (err as { errors: Array<{ param?: string; msg?: string }> }).errors.forEach(
-                error => {
+              (
+                err as { errors: Array<{ param?: string; msg?: string }> }
+              ).errors.forEach(error => {
                 toast({
                   title: 'Validation Error',
                   description: `${error.param}: ${error.msg}`,
                   variant: 'error',
                 });
-                }
-              );
+              });
             } else {
               toast({
                 title: t('Operations.Error', { ns: 'common' }),
                 description:
-                  err instanceof Error
-                    ? err.message
-                    : 'Failed to save event',
+                  err instanceof Error ? err.message : 'Failed to save event',
                 variant: 'error',
               });
             }
@@ -770,25 +782,32 @@ export const EventForm: React.FC<EventFormProps> = ({
           const formData = new FormData();
           formData.append('file', featuredImage);
 
-          await imageRequest.request(ENDPOINTS.uploadEventImage(uploadTargetId), {
-            method: 'POST',
-            body: formData,
-            onSuccess: () => {
-              toast({
-                title: t('Operations.Success', { ns: 'common' }),
-                description: t('Pages.Event.Form.Toast.FeaturedImageUploadSuccess'),
-                variant: 'default',
-              });
-              setFeaturedImage(null);
-            },
-            onError: () => {
-              toast({
-                title: t('Operations.Error', { ns: 'common' }),
-                description: t('Pages.Event.Form.Toast.FeaturedImageUploadError'),
-                variant: 'error',
-              });
-            },
-          });
+          await imageRequest.request(
+            ENDPOINTS.uploadEventImage(uploadTargetId),
+            {
+              method: 'POST',
+              body: formData,
+              onSuccess: () => {
+                toast({
+                  title: t('Operations.Success', { ns: 'common' }),
+                  description: t(
+                    'Pages.Event.Form.Toast.FeaturedImageUploadSuccess'
+                  ),
+                  variant: 'default',
+                });
+                setFeaturedImage(null);
+              },
+              onError: () => {
+                toast({
+                  title: t('Operations.Error', { ns: 'common' }),
+                  description: t(
+                    'Pages.Event.Form.Toast.FeaturedImageUploadError'
+                  ),
+                  variant: 'error',
+                });
+              },
+            }
+          );
         }
 
         if (savedEventId && !initialData?.id) {
@@ -856,6 +875,10 @@ export const EventForm: React.FC<EventFormProps> = ({
       form.setFieldValue('ranking', draft.ranking);
     }
 
+    if (draft.discipline) {
+      form.setFieldValue('discipline', draft.discipline);
+    }
+
     if (draft.coefRanking !== undefined && draft.coefRanking !== null) {
       form.setFieldValue('coefRanking', String(draft.coefRanking));
     }
@@ -907,7 +930,9 @@ export const EventForm: React.FC<EventFormProps> = ({
         {
           provider: externalProvider,
           externalEventId: trimmedId,
-          apiKey: isEventorProvider ? externalApiKey.trim() || undefined : undefined,
+          apiKey: isEventorProvider
+            ? externalApiKey.trim() || undefined
+            : undefined,
         }
       );
 
@@ -1015,65 +1040,62 @@ export const EventForm: React.FC<EventFormProps> = ({
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">
       {showExternalImportSection && (
-      <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold">
-              {t('Pages.Event.Form.Import.Title', 'Import from external IS')}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {t(
-                'Pages.Event.Form.Import.Description',
-                'Search event by name or load by external event ID and prefill this form.'
-              )}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsImportPanelOpen(current => !current)}
-          >
-            {isImportPanelOpen
-              ? t('Pages.Event.Form.Import.Hide', 'Hide import')
-              : t(
-                  'Pages.Event.Form.Import.Open',
-                  'Import from external IS'
+        <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">
+                {t('Pages.Event.Form.Import.Title', 'Import from external IS')}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  'Pages.Event.Form.Import.Description',
+                  'Search event by name or load by external event ID and prefill this form.'
                 )}
-          </Button>
-        </div>
-
-        {!isCreateMode && (
-          <div className="flex flex-col gap-2 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              {hasEffectiveExternalLink ? (
-                <>
-                  {t('Pages.Event.Form.Import.CurrentLink', 'Current link')}:{' '}
-                  <span className="font-medium text-foreground">
-                    {`${effectiveExternalSource} • ${effectiveExternalEventId}`}
-                  </span>
-                </>
-              ) : (
-                t(
-                  'Pages.Event.Form.Import.NoLink',
-                  'This event is not linked to any external system.'
-                )
-              )}
-            </p>
-            {hasEffectiveExternalLink && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleClearExternalLink}
-              >
-                {t('Pages.Event.Form.Import.Unlink', 'Remove link')}
-              </Button>
-            )}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsImportPanelOpen(current => !current)}
+            >
+              {isImportPanelOpen
+                ? t('Pages.Event.Form.Import.Hide', 'Hide import')
+                : t('Pages.Event.Form.Import.Open', 'Import from external IS')}
+            </Button>
           </div>
-        )}
 
-        {isImportPanelOpen && (
-          <>
+          {!isCreateMode && (
+            <div className="flex flex-col gap-2 rounded-md border border-border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                {hasEffectiveExternalLink ? (
+                  <>
+                    {t('Pages.Event.Form.Import.CurrentLink', 'Current link')}:{' '}
+                    <span className="font-medium text-foreground">
+                      {`${effectiveExternalSource} • ${effectiveExternalEventId}`}
+                    </span>
+                  </>
+                ) : (
+                  t(
+                    'Pages.Event.Form.Import.NoLink',
+                    'This event is not linked to any external system.'
+                  )
+                )}
+              </p>
+              {hasEffectiveExternalLink && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearExternalLink}
+                >
+                  {t('Pages.Event.Form.Import.Unlink', 'Remove link')}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {isImportPanelOpen && (
+            <>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">
@@ -1082,14 +1104,17 @@ export const EventForm: React.FC<EventFormProps> = ({
                   <Select
                     value={externalProvider}
                     onValueChange={value => {
-                      setExternalProvider(value as ExternalProvider)
+                      setExternalProvider(value as ExternalProvider);
                       setImportedExternalSource(null);
                       setImportedExternalEventId(null);
                     }}
                     options={[
                       {
                         value: 'ORIS',
-                        label: t('Pages.Event.Form.Import.Providers.ORIS', 'ORIS'),
+                        label: t(
+                          'Pages.Event.Form.Import.Providers.ORIS',
+                          'ORIS'
+                        ),
                       },
                       {
                         value: 'EVENTOR',
@@ -1272,7 +1297,7 @@ export const EventForm: React.FC<EventFormProps> = ({
               </div>
             </>
           )}
-      </div>
+        </div>
       )}
 
       {/* Základní informace - 2 sloupce */}
@@ -1515,6 +1540,62 @@ export const EventForm: React.FC<EventFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Levý sloupec - Ranking a Coef Ranking */}
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="discipline" className="text-sm font-medium">
+              {t('Pages.Event.Form.Discipline')}
+            </Label>
+            <ReactiveField
+              form={form}
+              name="discipline"
+              type="select"
+              className="w-full"
+              options={[
+                {
+                  value: 'SPRINT',
+                  label: t('Pages.Event.Form.DisciplineOptions.SPRINT'),
+                },
+                {
+                  value: 'MIDDLE',
+                  label: t('Pages.Event.Form.DisciplineOptions.MIDDLE'),
+                },
+                {
+                  value: 'LONG',
+                  label: t('Pages.Event.Form.DisciplineOptions.LONG'),
+                },
+                {
+                  value: 'ULTRALONG',
+                  label: t('Pages.Event.Form.DisciplineOptions.ULTRALONG'),
+                },
+                {
+                  value: 'NIGHT',
+                  label: t('Pages.Event.Form.DisciplineOptions.NIGHT'),
+                },
+                {
+                  value: 'KNOCKOUT_SPRINT',
+                  label: t(
+                    'Pages.Event.Form.DisciplineOptions.KNOCKOUT_SPRINT'
+                  ),
+                },
+                {
+                  value: 'RELAY',
+                  label: t('Pages.Event.Form.DisciplineOptions.RELAY'),
+                },
+                {
+                  value: 'SPRINT_RELAY',
+                  label: t('Pages.Event.Form.DisciplineOptions.SPRINT_RELAY'),
+                },
+                {
+                  value: 'TEAMS',
+                  label: t('Pages.Event.Form.DisciplineOptions.TEAMS'),
+                },
+                {
+                  value: 'OTHER',
+                  label: t('Pages.Event.Form.DisciplineOptions.OTHER'),
+                },
+              ]}
+            />
+          </div>
+
           <div className="flex items-center space-x-2">
             <ReactiveField
               form={form}

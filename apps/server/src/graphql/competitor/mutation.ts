@@ -3,12 +3,12 @@ import {
   storeCompetitor,
   updateCompetitor,
 } from '../../modules/event/event.service.js';
-import { requireEventOwner } from '../../utils/authz.js';
+import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 
 export const competitorStatusChange = async (_, { input }, context) => {
   const { eventId, competitorId, origin, status } = input;
   const { prisma, auth } = context;
-  const { userId } = await requireEventOwner(prisma, auth, eventId);
+  const { userId } = await requireEventOwnerOrAdmin(prisma, auth, eventId);
 
   try {
     const statusChangeMessage = await changeCompetitorStatus(
@@ -30,7 +30,7 @@ export const competitorStatusChange = async (_, { input }, context) => {
 export const competitorUpdate = async (_, { input }, context) => {
   const { eventId, competitorId, origin } = input;
   const { prisma, auth } = context;
-  const { userId } = await requireEventOwner(prisma, auth, eventId);
+  const { userId } = await requireEventOwnerOrAdmin(prisma, auth, eventId);
 
   // Build update object conditionally
   const fieldTypes = {
@@ -94,7 +94,7 @@ export const competitorUpdate = async (_, { input }, context) => {
 export const competitorCreate = async (_, { input }, context) => {
   const { eventId, origin, ...competitorData } = input;
   const { prisma, auth } = context;
-  const { userId } = await requireEventOwner(prisma, auth, eventId);
+  const { userId } = await requireEventOwnerOrAdmin(prisma, auth, eventId);
 
   try {
     const storeCompetitorResponse = await storeCompetitor(eventId, competitorData, userId, origin);

@@ -20,6 +20,7 @@ const GET_EVENT = gql`
       date
       timezone
       zeroTime
+      discipline
       externalSource
       externalEventId
       ranking

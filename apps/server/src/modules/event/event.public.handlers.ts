@@ -1,18 +1,22 @@
-import { z } from "@hono/zod-openapi";
+import { z } from '@hono/zod-openapi';
 
-import prisma from "../../utils/context.js";
-import { normalizeUtcTimeString } from "../../utils/time.js";
-import { getPublicObject } from "../../lib/storage/s3.js";
-import { error, success, validation } from "../../utils/responseApi.js";
-import { calculateCompetitorRankingPoints } from "../../utils/ranking.js";
-import { getErrorDetails, logEndpoint } from "../../lib/http/endpoint-logger.js";
+import prisma from '../../utils/context.js';
+import { normalizeUtcTimeString } from '../../utils/time.js';
+import { getPublicObject } from '../../lib/storage/s3.js';
+import { error, success, validation } from '../../utils/responseApi.js';
+import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
+import { getErrorDetails, logEndpoint } from '../../lib/http/endpoint-logger.js';
 import {
   toValidationIssues as zodToValidationIssues,
   toValidationMessage,
-} from "../../lib/validation/zod.js";
+} from '../../lib/validation/zod.js';
 
-import { getEventCompetitorDetail } from "./event.service.js";
-import { eventCompetitorExternalParamsSchema, eventCompetitorParamsSchema, eventIdParamsSchema } from "./event.schema.js";
+import { getEventCompetitorDetail } from './event.service.js';
+import {
+  eventCompetitorExternalParamsSchema,
+  eventCompetitorParamsSchema,
+  eventIdParamsSchema,
+} from './event.schema.js';
 
 function responseValidationIssues(issues: z.ZodIssue[]) {
   return validation(zodToValidationIssues(issues));
@@ -28,7 +32,7 @@ export function registerPublicEventRoutes(router) {
     lastUpdate: z.string().datetime({ offset: true }).optional(),
   });
 
-  router.get("/:eventId/image", async c => {
+  router.get('/:eventId/image', async (c) => {
     const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
 
     if (!parsedParams.success) {
@@ -44,38 +48,38 @@ export function registerPublicEventRoutes(router) {
       });
 
       if (!event || !event.featuredImageKey || !event.published) {
-        return c.json(error("Image not found", 404), 404);
+        return c.json(error('Image not found', 404), 404);
       }
 
       const s3Object = await getPublicObject(event.featuredImageKey);
       if (!s3Object?.Body) {
-        return c.json(error("Image not found", 404), 404);
+        return c.json(error('Image not found', 404), 404);
       }
 
       const headers = new Headers();
 
       if (s3Object.ContentType) {
-        headers.set("Content-Type", s3Object.ContentType);
+        headers.set('Content-Type', s3Object.ContentType);
       }
       if (s3Object.ContentLength) {
-        headers.set("Content-Length", String(s3Object.ContentLength));
+        headers.set('Content-Length', String(s3Object.ContentLength));
       }
-      headers.set("Cache-Control", "public, max-age=3600");
+      headers.set('Cache-Control', 'public, max-age=3600');
 
       return new Response(s3Object.Body as BodyInit, {
         status: 200,
         headers,
       });
     } catch (err) {
-      logEndpoint(c, "error", "Public event image stream failed", {
+      logEndpoint(c, 'error', 'Public event image stream failed', {
         eventId,
         ...getErrorDetails(err),
       });
-      return c.json(error("Failed to load image", 500), 500);
+      return c.json(error('Failed to load image', 500), 500);
     }
   });
 
-  router.get("/", async c => {
+  router.get('/', async (c) => {
     let dbResponse;
     try {
       dbResponse = await prisma.event.findMany({
@@ -92,14 +96,14 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      logEndpoint(c, "error", "Public event list query failed", getErrorDetails(err));
+      logEndpoint(c, 'error', 'Public event list query failed', getErrorDetails(err));
       return c.json(error(`Database error${err.message}`, 500), 500);
     } finally {
-      return c.json(success("OK", { data: dbResponse }, 200), 200);
+      return c.json(success('OK', { data: dbResponse }, 200), 200);
     }
   });
 
-  router.get("/:eventId", async c => {
+  router.get('/:eventId', async (c) => {
     const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
     if (!parsedParams.success) {
       return c.json(responseValidationIssues(parsedParams.error.issues), 422);
@@ -122,6 +126,7 @@ export function registerPublicEventRoutes(router) {
           country: true,
           organizer: true,
           relay: true,
+          discipline: true,
           ranking: true,
           coefRanking: true,
           sport: true,
@@ -131,7 +136,7 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      logEndpoint(c, "error", "Public event detail query failed", {
+      logEndpoint(c, 'error', 'Public event detail query failed', {
         eventId,
         ...getErrorDetails(err),
       });
@@ -142,14 +147,17 @@ export function registerPublicEventRoutes(router) {
     }
 
     if (!dbResponse) {
-      return c.json(validation(`Event with ID ${eventId} does not exist in the database`, 422), 422);
+      return c.json(
+        validation(`Event with ID ${eventId} does not exist in the database`, 422),
+        422,
+      );
     }
 
     const zeroTime = normalizeUtcTimeString(dbResponse.zeroTime);
 
     return c.json(
       success(
-        "OK",
+        'OK',
         {
           data: {
             ...dbResponse,
@@ -162,7 +170,7 @@ export function registerPublicEventRoutes(router) {
     );
   });
 
-  router.get("/:eventId/competitors", async c => {
+  router.get('/:eventId/competitors', async (c) => {
     const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
     const parsedQuery = eventCompetitorsQuerySchema.safeParse(c.req.query());
 
@@ -188,7 +196,7 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      logEndpoint(c, "error", "Public competitors event lookup failed", {
+      logEndpoint(c, 'error', 'Public competitors event lookup failed', {
         eventId,
         ...getErrorDetails(err),
       });
@@ -199,7 +207,10 @@ export function registerPublicEventRoutes(router) {
     }
 
     if (!dbResponseEvent) {
-      return c.json(validation(`Event with ID ${eventId} does not exist in the database`, 422), 422);
+      return c.json(
+        validation(`Event with ID ${eventId} does not exist in the database`, 422),
+        422,
+      );
     }
 
     let eventData;
@@ -236,8 +247,8 @@ export function registerPublicEventRoutes(router) {
                     registration: true,
                     bibNumber: true,
                     license: true,
-                    ranking: true,
-                    rankPointsAvg: true,
+                    rankingPoints: true,
+                    rankingReferenceValue: true,
                     card: true,
                     startTime: true,
                     finishTime: true,
@@ -254,7 +265,7 @@ export function registerPublicEventRoutes(router) {
           },
         });
       } catch (err: any) {
-        logEndpoint(c, "error", "Public individual competitors query failed", {
+        logEndpoint(c, 'error', 'Public individual competitors query failed', {
           eventId,
           ...getErrorDetails(err),
         });
@@ -317,7 +328,7 @@ export function registerPublicEventRoutes(router) {
           },
         });
       } catch (err: any) {
-        logEndpoint(c, "error", "Public relay competitors query failed", {
+        logEndpoint(c, 'error', 'Public relay competitors query failed', {
           eventId,
           ...getErrorDetails(err),
         });
@@ -327,22 +338,21 @@ export function registerPublicEventRoutes(router) {
         );
       }
 
-      const teamClassesResults = (dbRelayResponse?.classes ?? []).map(classesResponse => {
-        const teams = classesResponse.teams.map(team => {
+      const teamClassesResults = (dbRelayResponse?.classes ?? []).map((classesResponse) => {
+        const teams = classesResponse.teams.map((team) => {
           const notAllInactiveCompetitors = !team.competitors.every(
-            competitor => competitor.status === "Inactive",
+            (competitor) => competitor.status === 'Inactive',
           );
 
           let status;
           if (notAllInactiveCompetitors) {
-            status = team.competitors.some(competitor => competitor.status !== "OK")
+            status = team.competitors.some((competitor) => competitor.status !== 'OK')
               ? team.competitors.find(
-                  competitor =>
-                    competitor.status !== "OK" || competitor.status !== "Inactive",
+                  (competitor) => competitor.status !== 'OK' || competitor.status !== 'Inactive',
                 )?.status
-              : "OK";
+              : 'OK';
           } else {
-            status = "Inactive";
+            status = 'Inactive';
           }
 
           const totalTime = team.competitors.reduce(
@@ -352,7 +362,7 @@ export function registerPublicEventRoutes(router) {
 
           const competitors = team.competitors
             .sort((a, b) => a.leg - b.leg)
-            .map(competitor => ({
+            .map((competitor) => ({
               ...competitor,
               bibNumber: `${team.bibNumber}.${competitor.leg}`,
             }));
@@ -360,7 +370,7 @@ export function registerPublicEventRoutes(router) {
           return {
             ...team,
             competitors,
-            time: status === "DidNotFinish" || status === "OK" ? totalTime : 0,
+            time: status === 'DidNotFinish' || status === 'OK' ? totalTime : 0,
             status,
           };
         });
@@ -375,10 +385,10 @@ export function registerPublicEventRoutes(router) {
       eventData = { ...dbRelayResponse, classes: teamClassesResults };
     }
 
-    return c.json(success("OK", { data: eventData }, 200), 200);
+    return c.json(success('OK', { data: eventData }, 200), 200);
   });
 
-  router.get("/:eventId/competitors/:competitorId", async c => {
+  router.get('/:eventId/competitors/:competitorId', async (c) => {
     const parsedParams = eventCompetitorParamsSchema.safeParse(c.req.param());
     if (!parsedParams.success) {
       return c.json(responseValidationIssues(parsedParams.error.issues), 422);
@@ -396,7 +406,7 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      logEndpoint(c, "error", "Public competitor detail event lookup failed", {
+      logEndpoint(c, 'error', 'Public competitor detail event lookup failed', {
         eventId,
         competitorId,
         ...getErrorDetails(err),
@@ -405,15 +415,18 @@ export function registerPublicEventRoutes(router) {
     }
 
     if (!dbResponseEvent) {
-      return c.json(validation(`Event with ID ${eventId} does not exist in the database`, 422), 422);
+      return c.json(
+        validation(`Event with ID ${eventId} does not exist in the database`, 422),
+        422,
+      );
     }
 
     const competitorData = await getEventCompetitorDetail(eventId, competitorId, dbResponseEvent);
 
-    return c.json(success("OK", { data: competitorData }, 200), 200);
+    return c.json(success('OK', { data: competitorData }, 200), 200);
   });
 
-  router.get("/:eventId/competitors/:competitorExternalId/external-id", async c => {
+  router.get('/:eventId/competitors/:competitorExternalId/external-id', async (c) => {
     const parsedParams = eventCompetitorExternalParamsSchema.safeParse(c.req.param());
     if (!parsedParams.success) {
       return c.json(responseValidationIssues(parsedParams.error.issues), 422);
@@ -431,7 +444,7 @@ export function registerPublicEventRoutes(router) {
         },
       });
     } catch (err: any) {
-      logEndpoint(c, "error", "Public external competitor event lookup failed", {
+      logEndpoint(c, 'error', 'Public external competitor event lookup failed', {
         eventId,
         competitorExternalId,
         ...getErrorDetails(err),
@@ -440,7 +453,10 @@ export function registerPublicEventRoutes(router) {
     }
 
     if (!dbResponseEvent) {
-      return c.json(validation(`Event with ID ${eventId} does not exist in the database`, 422), 422);
+      return c.json(
+        validation(`Event with ID ${eventId} does not exist in the database`, 422),
+        422,
+      );
     }
 
     const dbCompetitorResponse = await prisma.competitor.findFirst({
@@ -454,7 +470,7 @@ export function registerPublicEventRoutes(router) {
     });
 
     if (!dbCompetitorResponse) {
-      return c.json(error("Competitor not found", 404), 404);
+      return c.json(error('Competitor not found', 404), 404);
     }
 
     const competitorData = await getEventCompetitorDetail(
@@ -463,18 +479,18 @@ export function registerPublicEventRoutes(router) {
       dbResponseEvent,
     );
 
-    return c.json(success("OK", { data: competitorData }, 200), 200);
+    return c.json(success('OK', { data: competitorData }, 200), 200);
   });
 
-  router.post("/:eventId/ranking", async c => {
+  router.post('/:eventId/czech-ranking', async (c) => {
     const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
     if (!parsedParams.success) {
       return c.json(responseValidationIssues(parsedParams.error.issues), 422);
     }
 
     const { eventId } = parsedParams.data;
-    calculateCompetitorRankingPoints(eventId);
+    await calculateCzechRankingPointsForEvent(eventId);
 
-    return c.json(success("OK", { data: "Calculate ranking" }, 200), 200);
+    return c.json(success('OK', { data: 'Calculate Czech ranking' }, 200), 200);
   });
 }

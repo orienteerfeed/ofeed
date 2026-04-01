@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { redirect } from '@tanstack/react-router';
+import type { UserRole } from '@/types/user';
 import { apolloClient } from '../providers/apolloClient';
 import { getSession, type Session } from '../stores/auth/session';
 
@@ -13,6 +14,8 @@ interface EventAuthUsers {
 interface GetEventAuthUsersResponse {
   event: EventAuthUsers;
 }
+
+const ADMIN_ROLE: UserRole = 'ADMIN';
 
 const GET_EVENT_AUTH_USERS = gql`
   query GetEventAuthUsers($eventId: String!) {
@@ -44,7 +47,15 @@ export async function requireAuth({
 
 export async function requireAdmin(opts: { location: { href: string } }) {
   const session = await requireAuth(opts);
-  if (session.user.role !== 'admin') {
+  if (session.user.role !== ADMIN_ROLE) {
+    throw new ForbiddenError();
+  }
+  return session;
+}
+
+export async function requireAdminOrForbidden() {
+  const session = await getSession();
+  if (!session || session.user.role !== ADMIN_ROLE) {
     throw new ForbiddenError();
   }
   return session;
@@ -60,6 +71,7 @@ export async function requireEventAccess({
   const session = await requireAuth({ location });
   const evt = await getEventAuthUsers(params.eventId);
   const allowed =
+    session.user.role === ADMIN_ROLE ||
     evt.authorId === session.user.id ||
     (evt.teamUserIds ?? []).includes(session.user.id);
   if (!allowed) {
@@ -80,6 +92,7 @@ export async function requireEventAccessOrForbidden({
 
   const evt = await getEventAuthUsers(params.eventId);
   const allowed =
+    session.user.role === ADMIN_ROLE ||
     evt.authorId === session.user.id ||
     (evt.teamUserIds ?? []).includes(session.user.id);
   if (!allowed) {

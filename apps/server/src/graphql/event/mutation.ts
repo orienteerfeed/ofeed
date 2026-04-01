@@ -1,10 +1,10 @@
-import { requireEventOwner } from '../../utils/authz.js';
+import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 
 export const updateEventVisibility = async (_, { eventId, published }, context) => {
   try {
     const { prisma, auth } = context;
 
-    await requireEventOwner(prisma, auth, eventId);
+    await requireEventOwnerOrAdmin(prisma, auth, eventId);
 
     const eventResponse = await prisma.event.update({
       where: { id: eventId },

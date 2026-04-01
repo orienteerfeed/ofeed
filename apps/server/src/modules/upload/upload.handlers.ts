@@ -10,19 +10,19 @@ import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-p
 import { toValidationIssues } from '../../lib/validation/zod.js';
 import { requireAuth } from '../../middlewares/require-jwt.js';
 import type { AppBindings, AppOpenAPI } from '../../types/index.js';
-import { ensureEventOwner, isAuthzError } from '../../utils/authz.js';
+import { ensureEventOwnerOrAdmin, isAuthzError } from '../../utils/authz.js';
 
 import prisma from '../../utils/context.js';
+import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import { normalizeValue } from '../../utils/normalize.js';
-import { calculateCompetitorRankingPoints } from '../../utils/ranking.js';
 import { error, success, validation } from '../../utils/responseApi.js';
 import {
   publishUpdatedCompetitor,
   publishUpdatedCompetitors,
 } from '../../utils/subscriptionUtils.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
-import { storeCzechRankingData } from './upload.service.js';
+import { normalizeCzechRankingMonthInput, storeCzechRankingData } from './upload.service.js';
 
 const parser = new Parser({ attrkey: 'ATTR', trim: true });
 const IOF_XML_SCHEMA =
@@ -34,6 +34,12 @@ const uploadIofBodySchema = z
     validateXml: z.boolean().optional(),
   })
   .passthrough();
+
+const uploadCzechRankingBodySchema = z.object({
+  rankingType: z.enum(['FOREST', 'SPRINT']),
+  rankingCategory: z.enum(['M', 'F']),
+  validForMonth: z.string().regex(/^\d{4}-\d{2}$/),
+});
 
 type UploadedFile = MultipartFile;
 type UploadLogLevel = 'info' | 'warn' | 'error';
@@ -473,8 +479,8 @@ const validateIofXml = async (
               typeof error === 'string'
                 ? error
                 : error && typeof error === 'object' && 'message' in error
-                ? String(error.message)
-                : 'Validation error',
+                  ? String(error.message)
+                  : 'Validation error',
             type: 'schema',
           }))
         : [
@@ -628,7 +634,7 @@ async function upsertCompetitor(
   const hasFinishTime = Boolean(result?.FinishTime?.[0]);
   const fallbackStatus: ResultStatus = hasFinishTime
     ? 'OK'
-    : dbCompetitorResponse?.status ?? 'Inactive';
+    : (dbCompetitorResponse?.status ?? 'Inactive');
   const normalizedStatus = toResultStatus(result?.Status, fallbackStatus);
 
   // Prepare new data, giving preference to already stored values for certain fields
@@ -644,19 +650,19 @@ async function upsertCompetitor(
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber.shift())
       : start?.BibNumber
-      ? parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber
-      : null,
+        ? (parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber)
+        : null,
     startTime:
       getIofDateTime(result?.StartTime) ??
       getIofDateTime(start?.StartTime) ??
       (dbCompetitorResponse?.startTime || null),
     finishTime: getIofDateTime(result?.FinishTime) ?? (dbCompetitorResponse?.finishTime || null),
-    time: result?.Time ? parseInt(result.Time[0]) : dbCompetitorResponse?.time ?? null,
+    time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitorResponse?.time ?? null),
     card: result?.ControlCard
       ? parseInt(result.ControlCard.shift())
       : start?.ControlCard
-      ? parseInt(start.ControlCard.shift())
-      : dbCompetitorResponse?.card ?? null,
+        ? parseInt(start.ControlCard.shift())
+        : (dbCompetitorResponse?.card ?? null),
     status: normalizedStatus,
     lateStart: dbCompetitorResponse?.lateStart || false,
     team: teamId ? { connect: { id: teamId } } : undefined,
@@ -1264,12 +1270,6 @@ async function processClassResults(
             if (updated || updatedSplits) updatedClasses.add(classId);
           },
         );
-        if (dbResponseEvent.ranking) {
-          const rankingCalculation = calculateCompetitorRankingPoints(eventId);
-          if (!rankingCalculation) {
-            console.log('Ranking points cannot be calculated');
-          }
-        }
       } else {
         // Process Relay Results
         if (!classResult.TeamResult || classResult.TeamResult.length === 0) return;
@@ -1406,7 +1406,7 @@ async function handleIofXmlUpload(
 
   let dbResponseEvent;
   try {
-    const ownership = await ensureEventOwner(prisma, c.get('authContext'), eventId, {
+    const ownership = await ensureEventOwnerOrAdmin(prisma, c.get('authContext'), eventId, {
       select: { relay: true, ranking: true },
       eventNotFoundStatus: 404,
       eventNotFoundMessage: 'Event not found',
@@ -1501,6 +1501,12 @@ async function handleIofXmlUpload(
               dbClassLists,
               dbResponseEvent,
             );
+            if (dbResponseEvent.ranking) {
+              const rankingCalculation = await calculateCzechRankingPointsForEvent(eventId);
+              if (!rankingCalculation) {
+                console.log('Ranking points cannot be calculated');
+              }
+            }
             notifyWinnerChanges(eventId);
             logUploadEvent(c, 'info', 'IOF upload ResultList processed', {
               ...uploadDetails,
@@ -1799,7 +1805,7 @@ export function registerUploadRoutes(router: AppOpenAPI) {
    */
   router.post('/czech-ranking', async (c) => {
     const endpoint = '/rest/v1/upload/czech-ranking';
-    const { file } = await parseMultipartPayload(c);
+    const { body, file } = await parseMultipartPayload(c);
 
     if (!file) {
       logUploadEvent(c, 'warn', 'Czech ranking upload failed: missing file', {
@@ -1816,8 +1822,21 @@ export function registerUploadRoutes(router: AppOpenAPI) {
       return c.json(validation('No file uploaded', 422), 422);
     }
 
+    const parsedBody = uploadCzechRankingBodySchema.safeParse(body);
+    if (!parsedBody.success) {
+      return c.json(validation(toValidationIssues(parsedBody.error.issues)), 422);
+    }
+
+    const validForMonth = normalizeCzechRankingMonthInput(parsedBody.data.validForMonth);
+    if (!validForMonth) {
+      return c.json(validation('Invalid validForMonth. Expected YYYY-MM', 422), 422);
+    }
+
     const uploadDetails = {
       endpoint,
+      rankingType: parsedBody.data.rankingType,
+      rankingCategory: parsedBody.data.rankingCategory,
+      validForMonth: parsedBody.data.validForMonth,
       ...getUploadFileMeta(file),
       compressionEnabled: false,
       compressedInput: false,
@@ -1850,7 +1869,12 @@ export function registerUploadRoutes(router: AppOpenAPI) {
     });
 
     try {
-      const processedRankingData = await storeCzechRankingData(file.buffer.toString());
+      const processedRankingData = await storeCzechRankingData({
+        csvData: file.buffer.toString(),
+        rankingType: parsedBody.data.rankingType,
+        rankingCategory: parsedBody.data.rankingCategory,
+        validForMonth,
+      });
       logUploadEvent(c, 'info', 'Czech ranking upload completed', {
         ...uploadDetails,
         success: true,
@@ -1859,8 +1883,8 @@ export function registerUploadRoutes(router: AppOpenAPI) {
           typeof processedRankingData === 'string'
             ? processedRankingData
             : Array.isArray(processedRankingData)
-            ? { processedItems: processedRankingData.length }
-            : processedRankingData,
+              ? { processedItems: processedRankingData.length }
+              : processedRankingData,
       });
       return c.json(
         success(

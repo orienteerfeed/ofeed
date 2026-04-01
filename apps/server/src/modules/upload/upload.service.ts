@@ -1,9 +1,38 @@
 import { parse } from 'csv-parse/sync';
+import type { CzechRankingCategory, CzechRankingType } from '../../generated/prisma/client.js';
 
 import { DatabaseError } from '../../exceptions/index.js';
 import prisma from '../../utils/context.js';
 
-export const storeCzechRankingData = async csvData => {
+export function normalizeCzechRankingMonthInput(input: string): Date | null {
+  const normalized = input.trim();
+  const match = normalized.match(/^(\d{4})-(\d{2})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const year = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+    return null;
+  }
+
+  return new Date(Date.UTC(year, month - 1, 1));
+}
+
+export const storeCzechRankingData = async ({
+  csvData,
+  rankingType,
+  rankingCategory,
+  validForMonth,
+}: {
+  csvData: string;
+  rankingType: CzechRankingType;
+  rankingCategory: CzechRankingCategory;
+  validForMonth: Date;
+}) => {
   // Parsing CSV string into an array of objects
   const records = parse(csvData, {
     from_line: 2, // Start parsing from the second line
@@ -12,34 +41,37 @@ export const storeCzechRankingData = async csvData => {
     delimiter: ';',
   });
 
-  let affectedRecords = 0;
-  for (const record of records) {
-    try {
-      const rankingRecord = await prisma.rankingCzech.upsert({
-        where: { registration: record[3] },
-        update: {
-          place: parseInt(record[0]),
-          firstName: record[2],
-          lastName: record[1],
-          points: parseInt(record[4]),
-          rankIndex: parseInt(record[5]),
+  const rankingEntries = records
+    .map((record) => ({
+      rankingType,
+      rankingCategory,
+      validForMonth,
+      place: Number.parseInt(record[0], 10),
+      lastName: record[1],
+      firstName: record[2],
+      registration: String(record[3]).trim().toUpperCase(),
+      points: Number.parseInt(record[4], 10),
+      rankIndex: Number.parseInt(record[5], 10),
+    }))
+    .filter((entry) => entry.registration?.trim());
+
+  try {
+    await prisma.$transaction([
+      prisma.rankingCzech.deleteMany({
+        where: {
+          rankingType,
+          rankingCategory,
+          validForMonth,
         },
-        create: {
-          place: parseInt(record[0]),
-          firstName: record[2],
-          lastName: record[1],
-          registration: record[3],
-          points: parseInt(record[4]),
-          rankIndex: parseInt(record[5]),
-        },
-      });
-      affectedRecords++;
-      console.log(`Created ranking record with id: ${rankingRecord.id}`);
-    } catch (err) {
-      console.error(err);
-      throw new DatabaseError(`An error occurred: ` + err.message);
-    }
+      }),
+      prisma.rankingCzech.createMany({
+        data: rankingEntries,
+      }),
+    ]);
+  } catch (err) {
+    console.error(err);
+    throw new DatabaseError(`An error occurred: ` + err.message);
   }
 
-  return affectedRecords;
+  return rankingEntries.length;
 };

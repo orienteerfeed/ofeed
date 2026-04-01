@@ -1,4 +1,4 @@
-import { requireEventOwner } from '../../utils/authz.js';
+import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 
 export const changelogByEvent = async (_, args, context) => {
@@ -6,7 +6,7 @@ export const changelogByEvent = async (_, args, context) => {
   const { prisma, auth } = context;
 
   try {
-    await requireEventOwner(prisma, auth, eventId);
+    await requireEventOwnerOrAdmin(prisma, auth, eventId);
 
     const filters: Prisma.ProtocolWhereInput = { eventId };
 

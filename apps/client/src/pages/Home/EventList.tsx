@@ -6,8 +6,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { cn, formatDate, formatDateTime } from '@/lib/utils';
-import { Event, EventFilter } from '@/types/event';
+import { cn, formatDate } from '@/lib/utils';
+import type { Country } from '@/types/country';
+import type { EventDiscipline, EventFilter, EventSport } from '@/types/event';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
@@ -25,6 +26,7 @@ import { Button } from '../../components/atoms';
 import { EventCard } from './EventCard';
 import { EventMapView } from './EventMapView';
 import { EventTableRow } from './EventTableRow';
+import type { HomeEventListItem, HomeEventStatus } from './types';
 
 interface EventListProps {
   t: TFunction;
@@ -34,28 +36,19 @@ interface EventListProps {
 interface GraphQLEvent {
   id: string;
   name: string;
-  organizer: string;
+  organizer?: string | null;
   date: string; // timestamp as a string
-  location: string;
+  location?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   featuredImage?: string | null;
-  country: {
+  country?: {
     countryCode: string;
     countryName: string;
-  };
-  sport: {
-    id: number;
-    name: string;
-  };
-  timezone: string;
-  zeroTime: string; // UTC time-of-day (HH:mm:ss)
-  classes: {
-    id: number;
-    name: string;
-  }[];
-  createdAt: string;
-  updatedAt: string;
+  } | null;
+  sport: EventSport;
+  discipline: EventDiscipline;
+  relay: boolean;
 }
 
 interface EventsData {
@@ -125,14 +118,8 @@ const EVENTS_QUERY = gql`
             id
             name
           }
-          timezone
-          zeroTime
-          classes {
-            id
-            name
-          }
-          createdAt
-          updatedAt
+          relay
+          discipline
         }
         cursor
       }
@@ -145,9 +132,7 @@ const EVENTS_QUERY = gql`
 `;
 
 // Function for obtaining event status based on date
-const getEventStatus = (
-  dateTimestamp: string
-): 'upcoming' | 'ongoing' | 'past' => {
+const getEventStatus = (dateTimestamp: string): HomeEventStatus => {
   const eventDate = new Date(dateTimestamp);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -160,55 +145,52 @@ const getEventStatus = (
   return 'past';
 };
 
-const convertGraphQLEventToEvent = (graphqlEvent: GraphQLEvent): Event => {
+const toOptionalCountry = (
+  country: GraphQLEvent['country']
+): Country | undefined => {
+  if (!country?.countryCode || !country.countryName) {
+    return undefined;
+  }
+
+  return {
+    countryCode: country.countryCode,
+    countryName: country.countryName,
+  };
+};
+
+const convertGraphQLEventToHomeEvent = (
+  graphqlEvent: GraphQLEvent
+): HomeEventListItem => {
   const slug = graphqlEvent.name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
 
-  // Formatting data from a timestamp using formatDate from utils
   const formattedDate = formatDate(graphqlEvent.date);
-
-  // Determining the status of an event
   const status = getEventStatus(graphqlEvent.date);
+  const country = toOptionalCountry(graphqlEvent.country);
 
   return {
     id: graphqlEvent.id,
     slug,
     name: graphqlEvent.name,
     date: formattedDate,
-    description: `${graphqlEvent.organizer} pořádá ${graphqlEvent.name} v ${graphqlEvent.location}`,
-    organizer: graphqlEvent.organizer,
-    location: graphqlEvent.location,
+    ...(graphqlEvent.organizer ? { organizer: graphqlEvent.organizer } : {}),
+    ...(graphqlEvent.location ? { location: graphqlEvent.location } : {}),
     ...(graphqlEvent.featuredImage
       ? { featuredImage: graphqlEvent.featuredImage }
       : {}),
-    country: {
-      countryCode: graphqlEvent.country.countryCode,
-      countryName: graphqlEvent.country.countryName,
-    },
+    ...(country ? { country } : {}),
     ...(typeof graphqlEvent.latitude === 'number'
       ? { latitude: graphqlEvent.latitude }
       : {}),
     ...(typeof graphqlEvent.longitude === 'number'
       ? { longitude: graphqlEvent.longitude }
       : {}),
-    sportId: graphqlEvent.sport.id,
     sport: graphqlEvent.sport,
-    discipline: 'middle',
-    zeroTime: graphqlEvent.zeroTime,
-    classes: graphqlEvent.classes,
-    maxParticipants: 0,
-    currentParticipants: 0,
+    discipline: graphqlEvent.discipline,
     status,
-    createdAt: formatDateTime(graphqlEvent.createdAt),
-    updatedAt: formatDateTime(graphqlEvent.updatedAt),
-    publishedAt: formatDateTime(graphqlEvent.createdAt),
-    relay: false,
-    ranking: false,
-    published: true,
-    authorId: 0,
-    user: null,
+    relay: graphqlEvent.relay,
   };
 };
 
@@ -238,7 +220,7 @@ export const EventList: FC<EventListProps> = ({ t, filter }) => {
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     resolveInitialViewMode(mapViewEnabled)
   );
-  const [loadedEvents, setLoadedEvents] = useState<Event[]>([]);
+  const [loadedEvents, setLoadedEvents] = useState<HomeEventListItem[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -308,7 +290,7 @@ export const EventList: FC<EventListProps> = ({ t, filter }) => {
     if (!data?.events) return;
 
     const newEvents = data.events.edges.map(edge =>
-      convertGraphQLEventToEvent(edge.node)
+      convertGraphQLEventToHomeEvent(edge.node)
     );
 
     setLoadedEvents(prev => {
@@ -332,7 +314,9 @@ export const EventList: FC<EventListProps> = ({ t, filter }) => {
   }, [data, endCursor]);
 
   const fetchMorePage = useCallback(
-    async (cursor: string): Promise<EventsData['events']['pageInfo'] | null> => {
+    async (
+      cursor: string
+    ): Promise<EventsData['events']['pageInfo'] | null> => {
       const result = await fetchMore({
         variables: {
           filter: graphqlFilter,

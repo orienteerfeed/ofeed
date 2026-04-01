@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { dateLikeSchema, resultStatusSchema } from "./common.js";
+import { czechRankingCountReasonSchema, dateLikeSchema, resultStatusSchema } from './common.js';
 
 export const competitorSchema = z.object({
   id: z.number().int(),
@@ -11,8 +11,10 @@ export const competitorSchema = z.object({
   nationality: z.string().nullable().optional(),
   registration: z.string(),
   license: z.string().nullable().optional(),
-  ranking: z.number().int().nullable().optional(),
-  rankPointsAvg: z.number().int().nullable().optional(),
+  rankingPoints: z.number().int().nullable().optional(),
+  rankingReferenceValue: z.number().int().nullable().optional(),
+  countsTowardsRanking: z.boolean().nullable().optional(),
+  countsTowardsRankingReason: czechRankingCountReasonSchema.nullable().optional(),
   organisation: z.string().nullable().optional(),
   shortName: z.string().nullable().optional(),
   card: z.number().int().nullable().optional(),

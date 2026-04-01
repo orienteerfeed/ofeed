@@ -5,7 +5,7 @@ import * as subscriptions from './subscription.js';
 
 import { EVENT_OPENAPI } from '../../modules/event/event.openapi.js';
 import { getDecryptedEventPassword } from '../../modules/event/event.service.js';
-import { requireEventOwner } from '../../utils/authz.js';
+import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
 import { normalizeUtcTimeString } from '../../utils/time.js';
 
@@ -49,7 +49,7 @@ const resolvers = {
     },
     eventPassword: async (parent, _, context) => {
       const { prisma, auth } = context;
-      await requireEventOwner(prisma, auth, parent.id);
+      await requireEventOwnerOrAdmin(prisma, auth, parent.id);
       const decryptedPassword = await getDecryptedEventPassword(parent.id);
       // Return `null` if no password exists
       if (!decryptedPassword) {
@@ -57,7 +57,7 @@ const resolvers = {
       }
       return decryptedPassword;
     },
-    zeroTime: parent => normalizeUtcTimeString(parent.zeroTime) ?? "00:00:00",
+    zeroTime: (parent) => normalizeUtcTimeString(parent.zeroTime) ?? '00:00:00',
     featuredImage: (parent) => buildPublicImageUrl(parent.featuredImageKey, parent.id),
   },
 };

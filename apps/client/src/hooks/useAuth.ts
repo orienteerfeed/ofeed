@@ -5,6 +5,7 @@ import {
   useToken,
   useUser,
 } from '@/stores/auth';
+import type { UserRole } from '@/types/user';
 import { useMemo } from 'react';
 
 /**
@@ -25,8 +26,8 @@ export const useAuth = () => {
       isAuthenticated,
       signin,
       signout,
-      hasRole: (role: string) => user?.role === role,
-      isAdmin: () => user?.role === 'admin',
+      hasRole: (role: UserRole) => user?.role === role,
+      isAdmin: () => user?.role === 'ADMIN',
     }),
     [token, user, isAuthenticated, signin, signout]
   );

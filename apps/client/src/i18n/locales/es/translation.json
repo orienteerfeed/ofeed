@@ -1,5 +1,202 @@
 {
   "Pages": {
+    "Admin": {
+      "Common": {
+        "Zone": "Zona de administración",
+        "Navigation": "Navegación"
+      },
+      "Navigation": {
+        "Dashboard": "Dashboard",
+        "Users": "Usuarios",
+        "Events": "Eventos",
+        "CzechRanking": "Ranking checo",
+        "BackToSite": "Volver al sitio"
+      },
+      "Dashboard": {
+        "Title": "Resumen de administración",
+        "Description": "Espacio central para administradores con visibilidad rápida sobre usuarios, eventos y actividad de publicación.",
+        "ErrorTitle": "No se pudieron cargar los datos de administración",
+        "ChartTitle": "Actividad mensual",
+        "ChartDescription": "Nuevos usuarios y nuevos eventos creados durante los últimos seis meses.",
+        "ChartUsersSeries": "Usuarios creados",
+        "ChartEventsSeries": "Eventos creados",
+        "RecentUsersTitle": "Últimos usuarios",
+        "RecentUsersDescription": "Cuentas registradas más recientemente en la aplicación.",
+        "RecentEventsTitle": "Últimos eventos",
+        "RecentEventsDescription": "Registros de eventos más recientes almacenados en OFeed.",
+        "Cards": {
+          "TotalUsers": "Usuarios totales",
+          "ActiveUsersDetail": "{{count}} cuentas están activas",
+          "TotalEvents": "Eventos totales",
+          "PublishedEventsDetail": "{{count}} eventos están publicados",
+          "RankingEvents": "Eventos de ranking",
+          "UpcomingEventsDetail": "{{count}} próximos eventos están programados",
+          "AdminUsers": "Administradores",
+          "AdminUsersHint": "Usuarios con acceso a la zona de administración"
+        }
+      },
+      "Users": {
+        "Title": "Usuarios",
+        "Description": "Los últimos {{count}} usuarios registrados con su rol y estado de activación.",
+        "Actions": {
+          "Activate": "Activar",
+          "Deactivate": "Desactivar",
+          "Delete": "Eliminar"
+        },
+        "Confirm": {
+          "ActivateTitle": "Activar cuenta de usuario",
+          "ActivateDescription": "Esta acción restablece el acceso de inicio de sesión para {{name}}.",
+          "DeactivateTitle": "Desactivar cuenta de usuario",
+          "DeactivateDescription": "Esta acción bloquea el acceso de inicio de sesión para {{name}}.",
+          "DeleteTitle": "Eliminar cuenta de usuario",
+          "DeleteDescription": "Esta acción elimina permanentemente a {{name}} junto con las credenciales vinculadas. No se puede deshacer."
+        },
+        "Toast": {
+          "ActivateSuccessTitle": "Cuenta activada",
+          "DeactivateSuccessTitle": "Cuenta desactivada",
+          "DeleteSuccessTitle": "Cuenta eliminada",
+          "StatusSuccessDescription": "Se actualizó el estado de la cuenta de {{name}}.",
+          "DeleteSuccessDescription": "Se eliminó la cuenta de {{name}}.",
+          "ActivateErrorTitle": "No se pudo activar la cuenta",
+          "DeactivateErrorTitle": "No se pudo desactivar la cuenta",
+          "DeleteErrorTitle": "No se pudo eliminar la cuenta",
+          "UnknownError": "Se produjo un error inesperado."
+        }
+      },
+      "Events": {
+        "Title": "Eventos",
+        "Description": "Los últimos {{count}} eventos con propietario, disciplina y estado de publicación."
+      },
+      "CzechRanking": {
+        "Title": "Datos base del ranking checo",
+        "Description": "Herramientas de administración para snapshots CSV mensuales, resultados de ranking sincronizados desde ORIS y sincronización forzada.",
+        "ErrorTitle": "No se pudieron cargar los datos del ranking checo",
+        "Cards": {
+          "SnapshotDatasets": "Conjuntos de snapshots",
+          "SnapshotDatasetsHint": "Snapshots CSV mensuales cargados y agrupados por tipo y categoría.",
+          "SnapshotEntries": "Filas de snapshots",
+          "SnapshotEntriesHint": "Número total de filas de ranking almacenadas desde cargas CSV.",
+          "EventDatasets": "Conjuntos de eventos sincronizados",
+          "EventDatasetsHint": "Resultados ORIS agrupados por evento, tipo de ranking y categoría.",
+          "EventResults": "Filas de resultados sincronizadas",
+          "EventResultsHint": "Número total de filas individuales sincronizadas desde ORIS."
+        },
+        "Actions": {
+          "ForceSync": "Forzar sync ORIS",
+          "UploadSnapshot": "Subir snapshot",
+          "ClearAllSnapshots": "Limpiar todos los snapshots",
+          "ClearAllEventResults": "Limpiar todos los resultados sincronizados",
+          "ViewData": "Ver datos",
+          "Clear": "Limpiar",
+          "Cancel": "Cancelar",
+          "Uploading": "Subiendo…",
+          "Syncing": "Sincronizando…",
+          "OpenEvent": "Abrir evento"
+        },
+        "Tabs": {
+          "Snapshots": "Snapshots",
+          "EventResults": "Resultados sincronizados"
+        },
+        "SnapshotTable": {
+          "ValidForMonth": "Válido para el mes",
+          "Type": "Tipo de ranking",
+          "Category": "Categoría",
+          "Entries": "Filas",
+          "Leader": "Líder",
+          "UpdatedAt": "Actualizado",
+          "Actions": "Acciones"
+        },
+        "EventResultsTable": {
+          "Event": "Evento",
+          "Type": "Tipo de ranking",
+          "Category": "Categoría",
+          "Results": "Filas",
+          "SyncedAt": "Sincronizado",
+          "Actions": "Acciones"
+        },
+        "UploadDialog": {
+          "Title": "Subir snapshot del ranking checo",
+          "Description": "Sube un snapshot mensual de ORIS para el tipo de ranking y la categoría seleccionados. El cálculo del evento siempre intenta usar el snapshot del mes anterior a la fecha del evento y, si falta, usa el snapshot anterior más reciente disponible.",
+          "RankingType": "Tipo de ranking",
+          "RankingCategory": "Categoría",
+          "ValidForMonth": "Válido para el mes",
+          "File": "Archivo CSV o TXT",
+          "Help": {
+            "RankingType": "Elige si estás subiendo un snapshot del ranking checo de bosque o de sprint.",
+            "RankingCategory": "M = hombres (H20/H21), F = mujeres (D20/D21). Sube cada variante por separado.",
+            "ValidForMonth": "Introduce el mes para el que el snapshot es válido, no el mes de la carga. Por ejemplo, un evento en abril de 2026 normalmente usa el snapshot con valor 2026-03. Si ese mes no existe, el sistema usa el snapshot anterior más reciente disponible para la fecha del evento.",
+            "File": "Sube una exportación de ORIS en formato CSV o TXT, siempre que el contenido del archivo sea CSV separado por punto y coma."
+          },
+          "ValidationTitle": "La carga del snapshot no está completa",
+          "MissingFile": "Selecciona un archivo CSV o TXT antes de iniciar la carga."
+        },
+        "SyncDialog": {
+          "Title": "Forzar sincronización con ORIS",
+          "Description": "Descarga desde ORIS los resultados oficiales del ranking checo para el ámbito seleccionado.",
+          "Scope": "Ámbito",
+          "ScopeAll": "Bosque y sprint",
+          "ScopeForest": "Solo bosque",
+          "ScopeSprint": "Solo sprint"
+        },
+        "Detail": {
+          "SnapshotTitle": "Detalle del snapshot",
+          "SnapshotDescription": "{{rankingType}} / {{rankingCategory}} para {{month}}. Se muestran {{count}} filas guardadas.",
+          "EventResultsTitle": "Detalle de resultados sincronizados",
+          "EventResultsDescription": "{{event}} · {{rankingType}} / {{rankingCategory}}. Se muestran {{count}} filas guardadas.",
+          "Loading": "Cargando el detalle del conjunto…",
+          "Place": "Posición",
+          "Registration": "Registro",
+          "Points": "Puntos",
+          "RankIndex": "Índice de ranking",
+          "Class": "Categoría",
+          "Time": "Tiempo",
+          "ReferenceValue": "Valor de referencia"
+        },
+        "Confirm": {
+          "ClearSnapshotsTitle": "Limpiar snapshots del ranking checo",
+          "ClearAllSnapshotsDescription": "Esta acción eliminará de la base de datos todos los snapshots mensuales cargados del ranking checo.",
+          "ClearSnapshotDescription": "Esta acción eliminará de la base de datos el snapshot seleccionado del ranking checo.",
+          "ClearEventResultsTitle": "Limpiar resultados sincronizados del ranking checo",
+          "ClearAllEventResultsDescription": "Esta acción eliminará de la base de datos todos los resultados sincronizados desde ORIS.",
+          "ClearEventResultsDescription": "Esta acción eliminará de la base de datos el conjunto sincronizado de resultados seleccionado."
+        },
+        "Toast": {
+          "UploadSuccessTitle": "Snapshot subido",
+          "UploadSuccessDescription": "Se importaron correctamente {{count}} filas.",
+          "UploadErrorTitle": "La carga del snapshot falló",
+          "SyncSuccessTitle": "Sincronización con ORIS completada",
+          "SyncSuccessDescription": "Se sincronizaron {{count}} conjuntos de eventos.",
+          "SyncErrorTitle": "La sincronización con ORIS falló",
+          "ClearSnapshotsSuccessTitle": "Snapshots limpiados",
+          "ClearSnapshotsErrorTitle": "La limpieza de snapshots falló",
+          "ClearEventResultsSuccessTitle": "Resultados sincronizados limpiados",
+          "ClearEventResultsErrorTitle": "La limpieza de resultados sincronizados falló",
+          "ClearSuccessDescription": "Se eliminaron {{count}} filas.",
+          "UnknownError": "Ocurrió un error desconocido."
+        }
+      },
+      "Table": {
+        "Empty": "No hay datos disponibles.",
+        "Event": "Nombre",
+        "Date": "Fecha",
+        "Organizer": "Organizador",
+        "Owner": "Propietario",
+        "Published": "Publicado",
+        "Ranking": "Ranking",
+        "Name": "Nombre",
+        "Email": "Correo electrónico",
+        "Role": "Rol",
+        "Status": "Estado",
+        "Organization": "Organización",
+        "CreatedAt": "Creado",
+        "Active": "Activo",
+        "Inactive": "Inactivo",
+        "Actions": "Acciones",
+        "Yes": "Sí",
+        "No": "No",
+        "Discipline": "Disciplina"
+      }
+    },
     "Auth": {
       "User": {
         "Firstname": "Nombre",
@@ -173,6 +370,8 @@
           "license_change": "Cambio de licencia",
           "ranking_change": "Cambio de ranking",
           "rank_points_avg_change": "Cambio de promedio de puntos de ranking",
+          "ranking_points_change": "Cambio de puntos de ranking",
+          "ranking_reference_value_change": "Cambio del valor de referencia del ranking",
           "organisation_change": "Cambio de club",
           "short_name_change": "Cambio de abreviatura",
           "si_card_change": "Cambio de tarjeta SI",
@@ -257,7 +456,16 @@
         "Loading": "Cargando resultados",
         "LoadingClubs": "Cargando clubes",
         "LoadingClubResults": "Cargando resultados por club",
-        "ErrorLoadingClubResults": "Error al cargar resultados por club: {{message}}"
+        "ErrorLoadingClubResults": "Error al cargar resultados por club: {{message}}",
+        "Ranking": {
+          "Counts": "Cuenta para el ranking",
+          "DoesNotCount": "No cuenta para el ranking",
+          "ForestType": "ranking forestal",
+          "SprintType": "ranking de sprint",
+          "GenericType": "ranking",
+          "TooltipCounts": "Este resultado cuenta para el {{rankingType}} del atleta.",
+          "TooltipDoesNotCount": "Este resultado no cuenta para el {{rankingType}} del atleta."
+        }
       },
       "Splits": {
         "LoadingChart": "Cargando gráfico de parciales",
@@ -274,6 +482,7 @@
         "Longitude": "Longitud GPS",
         "Country": "País",
         "ZeroTime": "Hora cero",
+        "Discipline": "Disciplina",
         "FeaturedImage": "Imagen destacada",
         "FeaturedImageHint": "JPEG, PNG o WEBP, máx. 2 MB.",
         "FeaturedImageButton": "Añadir imagen",
@@ -283,6 +492,18 @@
         "Relay": "Relevo",
         "HundredthPrecision": "Precisión centésimas",
         "Published": "Publicado",
+        "DisciplineOptions": {
+          "SPRINT": "Sprint",
+          "MIDDLE": "Media",
+          "LONG": "Larga",
+          "ULTRALONG": "Ultralarga",
+          "NIGHT": "Nocturna",
+          "KNOCKOUT_SPRINT": "Sprint knock-out",
+          "RELAY": "Relevos",
+          "SPRINT_RELAY": "Relevo sprint",
+          "TEAMS": "Equipos",
+          "OTHER": "Otra"
+        },
         "Placeholders": {
           "EventName": "Mi primer evento",
           "Sport": "Seleccione un deporte",
@@ -630,6 +851,7 @@
       "SignUp": "Registrarse",
       "LogOut": "Cerrar sesión",
       "MyProfile": "Mi perfil",
+      "AdminZone": "Zona admin",
       "Pages": "Páginas"
     },
     "Footer": {

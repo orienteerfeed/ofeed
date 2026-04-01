@@ -1,31 +1,32 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { Event } from '@/types/event';
 import { config } from '@/config';
 import { Link } from '@tanstack/react-router';
 import { t } from 'i18next';
 import { Calendar, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
+import type { HomeEventListItem, HomeEventStatus } from './types';
 
 interface EventCardProps {
-  event: Event;
+  event: HomeEventListItem;
 }
 
-type EventStatus = 'ongoing' | 'upcoming' | 'past';
-
 export const EventCard = ({ event }: EventCardProps) => {
-  const statusColors: Record<EventStatus, string> = {
+  const statusColors: Record<HomeEventStatus, string> = {
     ongoing: 'bg-primary text-primary-foreground',
     upcoming: 'bg-secondary text-secondary-foreground',
     past: 'bg-muted text-muted-foreground',
   };
 
-  const statusLabels: Record<EventStatus, string> = {
+  const statusLabels: Record<HomeEventStatus, string> = {
     ongoing: 'Ongoing',
     upcoming: 'Upcoming',
     past: 'Past',
   };
+  const locationLabel =
+    [event.location, event.country?.countryName].filter(Boolean).join(', ') ||
+    '—';
 
   const getRandomEventPlaceholder = () => {
     const randomNum = Math.floor(Math.random() * 5) + 1; // 1-5
@@ -70,16 +71,12 @@ export const EventCard = ({ event }: EventCardProps) => {
 
           {/* User Entry & Country Flag */}
           <div className="absolute top-4 right-4 flex items-center gap-2">
-            {/* Pokud máte userEntry v Event typu, odkomentujte: */}
-            {/* {event.userEntry && (
-              <Badge className="bg-accent text-accent-foreground font-mono text-xs">
-                REGISTERED
-              </Badge>
-            )} */}
-            <CountryFlag
-              countryCode={event.country.countryCode.toLowerCase()}
-              className="w-8 h-6 shadow-lg rounded"
-            />
+            {event.country?.countryCode ? (
+              <CountryFlag
+                countryCode={event.country.countryCode.toLowerCase()}
+                className="w-8 h-6 shadow-lg rounded"
+              />
+            ) : null}
           </div>
 
           {/* Event Info Overlay */}
@@ -93,9 +90,7 @@ export const EventCard = ({ event }: EventCardProps) => {
             </h3>
             <div className="flex items-center gap-2 text-white text-sm">
               <MapPin className="w-4 h-4" />
-              <span className="line-clamp-1">
-                {event.location}, {event.country.countryName}
-              </span>
+              <span className="line-clamp-1">{locationLabel}</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,10 @@
 import { Country } from './country';
 import { User } from './user';
-import type { EventPassword as SharedEventPassword, Sport as SharedEventSport } from '@repo/shared';
+import type {
+  EventDiscipline as SharedEventDiscipline,
+  EventPassword as SharedEventPassword,
+  Sport as SharedEventSport,
+} from '@repo/shared';
 export type EventFilter =
   | 'all'
   | 'ongoing'
@@ -36,7 +40,7 @@ export interface Event {
   // Event details
   sportId: number;
   sport: EventSport;
-  discipline?: EventDiscipline;
+  discipline: EventDiscipline;
   zeroTime?: string; // UTC time-of-day (HH:mm:ss)
   timezone?: string; // IANA timezone (e.g., 'Europe/Prague', 'America/New_York')
   externalSource?: 'ORIS' | 'EVENTOR';
@@ -76,7 +80,7 @@ export interface EventsFilterParams {
 
 export type EventSport = SharedEventSport;
 
-export type EventDiscipline = 'middle' | 'long' | 'sprint' | 'relay';
+export type EventDiscipline = SharedEventDiscipline;
 
 export interface EventQueryData {
   event: Event;
@@ -102,6 +106,7 @@ export interface EventFormData {
   longitude?: number | undefined;
   countryCode?: string;
   zeroTime: string;
+  discipline: EventDiscipline;
   ranking: boolean;
   coefRanking?: number | undefined;
   relay: boolean;
@@ -123,6 +128,7 @@ export interface EventFormValues {
   longitude: string;
   countryCode: string;
   zeroTime: string;
+  discipline: EventDiscipline | '';
   ranking: boolean;
   coefRanking: string;
   relay: boolean;

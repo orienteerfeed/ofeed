@@ -18,14 +18,16 @@ interface EventPageProps {
 export const EventPage = ({ eventId, tab }: EventPageProps) => {
   const { t, i18n } = useTranslation();
   const { event, loading, error } = useEvent(eventId);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   console.log('Event ID:', eventId, 'Tab:', tab);
 
-  // Check if current user is the event owner
-  const isEventOwner =
-    isAuthenticated && user && event && user.id === event.authorId;
+  const hasEventOwnerAccess =
+    isAuthenticated &&
+    user &&
+    event &&
+    (user.id === event.authorId || isAdmin());
 
   const handleSettingsClick = () => {
     navigate(PATHNAMES.eventSettings(eventId));
@@ -101,8 +103,8 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
           </div>
           <div className="inline-flex items-center gap-3">
             <NotificationControlPanel />
-            {/* Settings button for event owner */}
-            {isEventOwner && (
+            {/* Settings button for event owner or admin */}
+            {hasEventOwnerAccess && (
               <>
                 <Button
                   variant="outline"

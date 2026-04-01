@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import type { User } from '../../types';
+import type { User, UserRole } from '../../types';
 import type { AuthStore } from './types';
 
 const initialState = {
@@ -29,7 +29,7 @@ export const useAuthStore = create<AuthStore>()(
         return !!token && !!user && !!user.id && !!user.email;
       },
 
-      hasRole: (role: string) => {
+      hasRole: (role: UserRole) => {
         const { user } = get();
         return user?.role === role;
       },

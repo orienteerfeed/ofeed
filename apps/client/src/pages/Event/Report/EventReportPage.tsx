@@ -47,12 +47,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -68,7 +63,6 @@ type DialogSortColumn =
   | 'newValue';
 
 const REFRESH_INTERVAL_SECONDS = 30;
-
 
 const DEFAULT_COLUMN_FILTERS: Record<ColumnFilter, string> = {
   id: '',
@@ -89,6 +83,8 @@ const TYPE_OPTIONS = [
   'license_change',
   'ranking_change',
   'rank_points_avg_change',
+  'ranking_points_change',
+  'ranking_reference_value_change',
   'organisation_change',
   'short_name_change',
   'si_card_change',
@@ -608,7 +604,6 @@ export const EventReportPage = () => {
     [t]
   );
 
-
   const filterLabels = useMemo(
     () => ({
       si_card_change: t('Pages.Event.Report.Presets.CardChanges'),
@@ -705,7 +700,7 @@ export const EventReportPage = () => {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+        .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
     const html = `<!doctype html>
@@ -818,8 +813,7 @@ export const EventReportPage = () => {
     const compare = (a: ChangelogEntry, b: ChangelogEntry) => {
       if (dialogSort.column === 'createdAt') {
         return (
-          (new Date(a.createdAt).getTime() -
-            new Date(b.createdAt).getTime()) *
+          (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) *
           direction
         );
       }
@@ -936,7 +930,9 @@ export const EventReportPage = () => {
               />
             );
           }}
-          emptyState={<AppTableEmptyState isLoading={isLoading} error={error} />}
+          emptyState={
+            <AppTableEmptyState isLoading={isLoading} error={error} />
+          }
           renderToolbar={
             <div className="flex items-center justify-end gap-2 sm:justify-between">
               <div className="hidden sm:block">

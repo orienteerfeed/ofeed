@@ -1,5 +1,202 @@
 {
   "Pages": {
+    "Admin": {
+      "Common": {
+        "Zone": "Adminzon",
+        "Navigation": "Navigering"
+      },
+      "Navigation": {
+        "Dashboard": "Dashboard",
+        "Users": "Användare",
+        "Events": "Tävlingar",
+        "CzechRanking": "Tjeckisk ranking",
+        "BackToSite": "Till webbplatsen"
+      },
+      "Dashboard": {
+        "Title": "Administrationsöversikt",
+        "Description": "En central arbetsyta för administratörer med snabb överblick över användare, tävlingar och publiceringsaktivitet.",
+        "ErrorTitle": "Kunde inte läsa in admin-data",
+        "ChartTitle": "Månatlig aktivitet",
+        "ChartDescription": "Nya användare och nya tävlingar skapade under de senaste sex månaderna.",
+        "ChartUsersSeries": "Skapade användare",
+        "ChartEventsSeries": "Skapade tävlingar",
+        "RecentUsersTitle": "Senaste användare",
+        "RecentUsersDescription": "Senast registrerade konton i applikationen.",
+        "RecentEventsTitle": "Senaste tävlingar",
+        "RecentEventsDescription": "Senaste tävlingsposterna som lagras i OFeed.",
+        "Cards": {
+          "TotalUsers": "Totalt antal användare",
+          "ActiveUsersDetail": "{{count}} konton är aktiva",
+          "TotalEvents": "Totalt antal tävlingar",
+          "PublishedEventsDetail": "{{count}} tävlingar är publicerade",
+          "RankingEvents": "Rankingtävlingar",
+          "UpcomingEventsDetail": "{{count}} kommande tävlingar är planerade",
+          "AdminUsers": "Administratörer",
+          "AdminUsersHint": "Användare med tillgång till adminzonen"
+        }
+      },
+      "Users": {
+        "Title": "Användare",
+        "Description": "De senaste {{count}} registrerade användarna med roll och aktiveringsstatus.",
+        "Actions": {
+          "Activate": "Aktivera",
+          "Deactivate": "Inaktivera",
+          "Delete": "Ta bort"
+        },
+        "Confirm": {
+          "ActivateTitle": "Aktivera användarkonto",
+          "ActivateDescription": "Den här åtgärden återställer inloggningsåtkomst för {{name}}.",
+          "DeactivateTitle": "Inaktivera användarkonto",
+          "DeactivateDescription": "Den här åtgärden blockerar inloggningsåtkomst för {{name}}.",
+          "DeleteTitle": "Ta bort användarkonto",
+          "DeleteDescription": "Den här åtgärden tar permanent bort {{name}} inklusive kopplade åtkomstuppgifter. Det går inte att ångra."
+        },
+        "Toast": {
+          "ActivateSuccessTitle": "Kontot aktiverat",
+          "DeactivateSuccessTitle": "Kontot inaktiverat",
+          "DeleteSuccessTitle": "Kontot borttaget",
+          "StatusSuccessDescription": "Kontostatusen för {{name}} uppdaterades.",
+          "DeleteSuccessDescription": "{{name}} togs bort.",
+          "ActivateErrorTitle": "Det gick inte att aktivera kontot",
+          "DeactivateErrorTitle": "Det gick inte att inaktivera kontot",
+          "DeleteErrorTitle": "Det gick inte att ta bort kontot",
+          "UnknownError": "Ett oväntat fel inträffade."
+        }
+      },
+      "Events": {
+        "Title": "Tävlingar",
+        "Description": "De senaste {{count}} tävlingarna med ägare, disciplin och publiceringsstatus."
+      },
+      "CzechRanking": {
+        "Title": "Underlag för tjeckisk ranking",
+        "Description": "Adminverktyg för månatliga CSV-snapshots, synkroniserade rankingresultat från ORIS och tvingad synkronisering.",
+        "ErrorTitle": "Kunde inte läsa in data för tjeckisk ranking",
+        "Cards": {
+          "SnapshotDatasets": "Snapshot-dataset",
+          "SnapshotDatasetsHint": "Uppladdade månatliga CSV-snapshots grupperade efter typ och kategori.",
+          "SnapshotEntries": "Snapshot-rader",
+          "SnapshotEntriesHint": "Totalt antal rankingrader som för närvarande lagras från CSV-uppladdningar.",
+          "EventDatasets": "Synkroniserade tävlingsdataset",
+          "EventDatasetsHint": "ORIS-rankingresultat grupperade efter tävling, rankingtyp och kategori.",
+          "EventResults": "Synkroniserade resultatrader",
+          "EventResultsHint": "Totalt antal individuella resultatrader som för närvarande synkroniserats från ORIS."
+        },
+        "Actions": {
+          "ForceSync": "Tvinga ORIS-sync",
+          "UploadSnapshot": "Ladda upp snapshot",
+          "ClearAllSnapshots": "Rensa alla snapshots",
+          "ClearAllEventResults": "Rensa alla synkade resultat",
+          "ViewData": "Visa data",
+          "Clear": "Rensa",
+          "Cancel": "Avbryt",
+          "Uploading": "Laddar upp…",
+          "Syncing": "Synkroniserar…",
+          "OpenEvent": "Öppna tävling"
+        },
+        "Tabs": {
+          "Snapshots": "Snapshots",
+          "EventResults": "Synkroniserade resultat"
+        },
+        "SnapshotTable": {
+          "ValidForMonth": "Gäller för månad",
+          "Type": "Rankingtyp",
+          "Category": "Kategori",
+          "Entries": "Rader",
+          "Leader": "Ledare",
+          "UpdatedAt": "Uppdaterad",
+          "Actions": "Åtgärder"
+        },
+        "EventResultsTable": {
+          "Event": "Tävling",
+          "Type": "Rankingtyp",
+          "Category": "Kategori",
+          "Results": "Rader",
+          "SyncedAt": "Synkad",
+          "Actions": "Åtgärder"
+        },
+        "UploadDialog": {
+          "Title": "Ladda upp tjeckisk ranking-snapshot",
+          "Description": "Ladda upp en månatlig ORIS-snapshot för vald rankingtyp och kategori. Vid eventberäkning används i första hand snapshoten för månaden före tävlingsdatumet, och om den saknas används den senast tillgängliga äldre snapshoten.",
+          "RankingType": "Rankingtyp",
+          "RankingCategory": "Kategori",
+          "ValidForMonth": "Gäller för månad",
+          "File": "CSV- eller TXT-fil",
+          "Help": {
+            "RankingType": "Välj om du laddar upp en snapshot för skogs- eller sprintranking i Tjeckien.",
+            "RankingCategory": "M = män (H20/H21), F = kvinnor (D20/D21). Ladda upp varje variant separat.",
+            "ValidForMonth": "Ange månaden som snapshoten gäller för, inte uppladdningsmånaden. En tävling i april 2026 använder normalt snapshoten med värdet 2026-03. Om den månaden saknas använder systemet den senaste äldre snapshot som finns tillgänglig för tävlingsdatumet.",
+            "File": "Ladda upp en ORIS-export i CSV- eller TXT-format, så länge filens innehåll är semikolonseparerad CSV-data."
+          },
+          "ValidationTitle": "Snapshot-uppladdningen är inte komplett",
+          "MissingFile": "Välj en CSV- eller TXT-fil innan uppladdningen startas."
+        },
+        "SyncDialog": {
+          "Title": "Tvinga synkronisering med ORIS",
+          "Description": "Hämtar officiella tjeckiska rankingresultat från ORIS för valt omfång.",
+          "Scope": "Omfång",
+          "ScopeAll": "Skog och sprint",
+          "ScopeForest": "Endast skog",
+          "ScopeSprint": "Endast sprint"
+        },
+        "Detail": {
+          "SnapshotTitle": "Snapshot-detalj",
+          "SnapshotDescription": "{{rankingType}} / {{rankingCategory}} för {{month}}. Visar {{count}} lagrade rader.",
+          "EventResultsTitle": "Detalj för synkroniserade resultat",
+          "EventResultsDescription": "{{event}} · {{rankingType}} / {{rankingCategory}}. Visar {{count}} lagrade rader.",
+          "Loading": "Laddar datasetdetalj…",
+          "Place": "Placering",
+          "Registration": "Registrering",
+          "Points": "Poäng",
+          "RankIndex": "Rankingtal",
+          "Class": "Klass",
+          "Time": "Tid",
+          "ReferenceValue": "Referensvärde"
+        },
+        "Confirm": {
+          "ClearSnapshotsTitle": "Rensa snapshots för tjeckisk ranking",
+          "ClearAllSnapshotsDescription": "Detta tar bort alla uppladdade månatliga snapshots för tjeckisk ranking från databasen.",
+          "ClearSnapshotDescription": "Detta tar bort valt snapshot-dataset för tjeckisk ranking från databasen.",
+          "ClearEventResultsTitle": "Rensa synkroniserade resultat för tjeckisk ranking",
+          "ClearAllEventResultsDescription": "Detta tar bort alla ORIS-synkroniserade rankingresultat från databasen.",
+          "ClearEventResultsDescription": "Detta tar bort valt synkroniserat resultatdataset från databasen."
+        },
+        "Toast": {
+          "UploadSuccessTitle": "Snapshot uppladdad",
+          "UploadSuccessDescription": "{{count}} rader importerades.",
+          "UploadErrorTitle": "Snapshot-uppladdningen misslyckades",
+          "SyncSuccessTitle": "ORIS-synkroniseringen slutförd",
+          "SyncSuccessDescription": "{{count}} tävlingsdataset synkroniserades.",
+          "SyncErrorTitle": "ORIS-synkroniseringen misslyckades",
+          "ClearSnapshotsSuccessTitle": "Snapshots rensade",
+          "ClearSnapshotsErrorTitle": "Rensning av snapshots misslyckades",
+          "ClearEventResultsSuccessTitle": "Synkroniserade resultat rensade",
+          "ClearEventResultsErrorTitle": "Rensning av synkroniserade resultat misslyckades",
+          "ClearSuccessDescription": "{{count}} rader togs bort.",
+          "UnknownError": "Ett okänt fel inträffade."
+        }
+      },
+      "Table": {
+        "Empty": "Inga data tillgängliga.",
+        "Event": "Namn",
+        "Date": "Datum",
+        "Organizer": "Arrangör",
+        "Owner": "Ägare",
+        "Published": "Publicerad",
+        "Ranking": "Ranking",
+        "Name": "Namn",
+        "Email": "E-post",
+        "Role": "Roll",
+        "Status": "Status",
+        "Organization": "Organisation",
+        "CreatedAt": "Skapad",
+        "Active": "Aktiv",
+        "Inactive": "Inaktiv",
+        "Actions": "Åtgärder",
+        "Yes": "Ja",
+        "No": "Nej",
+        "Discipline": "Disciplin"
+      }
+    },
     "Auth": {
       "User": {
         "Firstname": "Förnamn",
@@ -173,6 +370,8 @@
           "license_change": "Ändring av licens",
           "ranking_change": "Ändring av rankning",
           "rank_points_avg_change": "Genomsnittlig förändring av rankningspoäng",
+          "ranking_points_change": "Ändring av rankingpoäng",
+          "ranking_reference_value_change": "Ändring av rankingens referensvärde",
           "organisation_change": "Ändring av klubb",
           "short_name_change": "Ändring av kortnamn",
           "si_card_change": "Ändring av SI-bricka",
@@ -257,7 +456,16 @@
         "Loading": "Läser in resultat",
         "LoadingClubs": "Läser in klubbar",
         "LoadingClubResults": "Läser in klubbresultat",
-        "ErrorLoadingClubResults": "Fel vid inläsning av klubbresultat: {{message}}"
+        "ErrorLoadingClubResults": "Fel vid inläsning av klubbresultat: {{message}}",
+        "Ranking": {
+          "Counts": "Räknas till rankingen",
+          "DoesNotCount": "Räknas inte till rankingen",
+          "ForestType": "skogsrankingen",
+          "SprintType": "sprintrankingen",
+          "GenericType": "rankingen",
+          "TooltipCounts": "Detta resultat räknas till löparens {{rankingType}}.",
+          "TooltipDoesNotCount": "Detta resultat räknas inte till löparens {{rankingType}}."
+        }
       },
       "Splits": {
         "LoadingChart": "Läser in graf med mellantider",
@@ -274,6 +482,7 @@
         "Longitude": "GPS longitude",
         "Country": "Land",
         "ZeroTime": "Nolltid",
+        "Discipline": "Disciplin",
         "FeaturedImage": "Presentationsbild",
         "FeaturedImageHint": "JPEG, PNG eller WEBP, max 2 MB.",
         "FeaturedImageButton": "Lägg till bild",
@@ -283,6 +492,18 @@
         "Relay": "Stafett",
         "HundredthPrecision": "Hundradels precision",
         "Published": "Publicerad",
+        "DisciplineOptions": {
+          "SPRINT": "Sprint",
+          "MIDDLE": "Medel",
+          "LONG": "Lång",
+          "ULTRALONG": "Ultralång",
+          "NIGHT": "Natt",
+          "KNOCKOUT_SPRINT": "Knockoutsprint",
+          "RELAY": "Stafett",
+          "SPRINT_RELAY": "Sprintstafett",
+          "TEAMS": "Lag",
+          "OTHER": "Övrigt"
+        },
         "Placeholders": {
           "EventName": "Min första tävling",
           "Sport": "Välj sport",
@@ -527,6 +748,11 @@
         "MapZoomOut": "Zooma ut",
         "MapAttributionOthers": "och andra"
       }
+    }
+  },
+  "Organisms": {
+    "Navbar": {
+      "AdminZone": "Adminzon"
     }
   },
   "Errors": {

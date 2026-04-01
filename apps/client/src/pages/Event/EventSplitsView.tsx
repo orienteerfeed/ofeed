@@ -67,7 +67,7 @@ export const EventSplitsView: React.FC<EventSplitsViewProps> = ({
   };
 
   // Check if event is a relay
-  const isRelay = event.discipline === 'relay';
+  const isRelay = event.relay;
 
   return (
     <div className="space-y-6">

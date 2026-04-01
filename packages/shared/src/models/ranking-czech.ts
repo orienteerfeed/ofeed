@@ -1,9 +1,12 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { dateLikeSchema } from "./common.js";
+import { czechRankingCategorySchema, czechRankingTypeSchema, dateLikeSchema } from './common.js';
 
 export const rankingCzechSchema = z.object({
   id: z.number().int(),
+  rankingType: czechRankingTypeSchema,
+  rankingCategory: czechRankingCategorySchema,
+  validForMonth: dateLikeSchema,
   place: z.number().int(),
   firstName: z.string(),
   lastName: z.string(),

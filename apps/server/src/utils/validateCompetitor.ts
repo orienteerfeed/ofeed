@@ -1,6 +1,6 @@
-import { z } from "@hono/zod-openapi";
+import { z } from '@hono/zod-openapi';
 
-const validInputOrigin = ["START", "FINISH", "OFFICE", "IT"] as const;
+const validInputOrigin = ['START', 'FINISH', 'OFFICE', 'IT'] as const;
 
 const competitorSplitsSchema = z.array(
   z.object({
@@ -18,8 +18,8 @@ const competitorMutableFieldsSchema = {
   nationality: z.string().max(3).optional(),
   registration: z.string().max(10).optional(),
   license: z.string().max(1).optional(),
-  ranking: z.coerce.number().int().optional(),
-  rankPointsAvg: z.coerce.number().int().optional(),
+  rankingPoints: z.coerce.number().int().optional(),
+  rankingReferenceValue: z.coerce.number().int().optional(),
   organisation: z.string().optional(),
   shortName: z.string().max(10).optional(),
   card: z.coerce.number().int().optional(),
@@ -35,20 +35,25 @@ const competitorMutableFieldsSchema = {
   splits: competitorSplitsSchema.optional(),
 };
 
-export const createCompetitorSchema = z.object({
-  origin: z.enum(validInputOrigin),
-  ...competitorMutableFieldsSchema,
-  firstname: z.string().min(1),
-  lastname: z.string().min(1),
-}).passthrough().refine(
-  value => Boolean(value.classId) !== Boolean(value.classExternalId),
-  { message: "Either classId or classExternalId must be provided, but not both", path: ["classId"] },
-);
+export const createCompetitorSchema = z
+  .object({
+    origin: z.enum(validInputOrigin),
+    ...competitorMutableFieldsSchema,
+    firstname: z.string().min(1),
+    lastname: z.string().min(1),
+  })
+  .passthrough()
+  .refine((value) => Boolean(value.classId) !== Boolean(value.classExternalId), {
+    message: 'Either classId or classExternalId must be provided, but not both',
+    path: ['classId'],
+  });
 
-export const updateCompetitorSchema = z.object({
-  origin: z.enum(validInputOrigin),
-  ...competitorMutableFieldsSchema,
-}).passthrough();
+export const updateCompetitorSchema = z
+  .object({
+    origin: z.enum(validInputOrigin),
+    ...competitorMutableFieldsSchema,
+  })
+  .passthrough();
 
 export type CreateCompetitorInput = z.infer<typeof createCompetitorSchema>;
 export type UpdateCompetitorInput = z.infer<typeof updateCompetitorSchema>;

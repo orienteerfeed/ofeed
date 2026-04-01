@@ -1,4 +1,5 @@
 export * from './About';
+export * from './Admin';
 export * from './Auth';
 export * from './Event';
 export * from './Home';

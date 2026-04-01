@@ -22,15 +22,46 @@ model Country {
 }
 
 model RankingCzech {
-  id           Int      @id @default(autoincrement()) @db.UnsignedInt
-  place        Int
-  firstName    String
-  lastName     String
-  registration String   @unique @db.VarChar(10)
-  points       Int
-  rankIndex    Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              Int                   @id @default(autoincrement()) @db.UnsignedInt
+  rankingType     CzechRankingType
+  rankingCategory CzechRankingCategory
+  validForMonth   DateTime              @db.Date
+  place           Int
+  firstName       String
+  lastName        String
+  registration    String                @db.VarChar(10)
+  points          Int
+  rankIndex       Int
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@unique([registration, rankingType, rankingCategory, validForMonth], map: "ranking_czech_reg_type_cat_month_uq")
+  @@index([rankingType, rankingCategory, validForMonth], map: "ranking_czech_type_cat_month_idx")
+}
+
+model CzechRankingEventResult {
+  id                    Int                  @id @default(autoincrement()) @db.UnsignedInt
+  externalEventId       String               @db.VarChar(128)
+  eventDate             DateTime             @db.Date
+  rankingType           CzechRankingType
+  rankingCategory       CzechRankingCategory
+  classExternalId       String?              @db.VarChar(64)
+  className             String               @db.VarChar(32)
+  competitorName        String?              @db.VarChar(191)
+  registration          String               @db.VarChar(10)
+  place                 Int?                 @db.UnsignedInt
+  time                  String?              @db.VarChar(16)
+  rankingPoints         Int                  @db.UnsignedInt
+  rankingReferenceValue Int?                 @db.UnsignedInt
+  orisResultId          String?              @unique @db.VarChar(64)
+  orisUserId            String?              @db.VarChar(64)
+  syncedAt              DateTime             @default(now())
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  @@unique([externalEventId, rankingType, registration, className], map: "czech_rank_event_ext_type_reg_class_uq")
+  @@index([rankingType, eventDate])
+  @@index([registration, rankingType, eventDate])
 }
 
 model Sport {
@@ -45,6 +76,7 @@ model User {
   email                  String                   @unique
   firstname              String
   lastname               String
+  role                   UserRole                 @default(USER)
   organisation           String?
   emergencyContact       String?                  @db.VarChar(255)
   password               String                   @db.VarChar(255)
@@ -81,6 +113,11 @@ enum UserCardType {
   SPORTIDENT
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model Event {
   id                 String          @id @default(cuid())
   sport              Sport           @relation(fields: [sportId], references: [id])
@@ -99,6 +136,7 @@ model Event {
   featuredImageKey   String?         @db.VarChar(512)
   zeroTime           DateTime        @db.Time(0)
   relay              Boolean         @default(false)
+  discipline         EventDiscipline @default(OTHER)
   startMode          StartMode       @default(Individual)
   ranking            Boolean         @default(false)
   coefRanking        Float?
@@ -149,8 +187,8 @@ model Competitor {
   nationality   String?      @db.Char(3)
   registration  String       @db.VarChar(10)
   license       String?      @db.Char(1)
-  ranking       Int?         @db.UnsignedInt
-  rankPointsAvg Int?         @db.UnsignedInt
+  rankingPoints Int?         @db.UnsignedInt
+  rankingReferenceValue Int? @db.UnsignedInt
   organisation  String?
   shortName     String?      @db.VarChar(10)
   card          Int?         @db.UnsignedInt
@@ -357,6 +395,8 @@ enum ProtocolType {
   license_change
   ranking_change
   rank_points_avg_change
+  ranking_points_change
+  ranking_reference_value_change
   organisation_change
   short_name_change
   si_card_change
@@ -378,6 +418,29 @@ enum StartMode {
   Pursuit
   Wave
   ScoreO
+}
+
+enum EventDiscipline {
+  SPRINT
+  MIDDLE
+  LONG
+  ULTRALONG
+  NIGHT
+  KNOCKOUT_SPRINT
+  RELAY
+  SPRINT_RELAY
+  TEAMS
+  OTHER
+}
+
+enum CzechRankingType {
+  FOREST
+  SPRINT
+}
+
+enum CzechRankingCategory {
+  M
+  F
 }
 
 enum ExternalSource {

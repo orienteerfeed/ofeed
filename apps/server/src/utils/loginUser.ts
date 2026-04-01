@@ -13,14 +13,17 @@ export const getLoginSuccessPayload = async ({ userId, prisma }) => {
       firstname: true,
       lastname: true,
       email: true,
+      role: true,
       organisation: true,
       emergencyContact: true,
     },
   });
 
-  const dbPrivilegesResponse = await hasPrivilege(userId, prisma);
+  if (!dbResponse) {
+    throw new Error('Active user not found');
+  }
 
-  const privileges = dbPrivilegesResponse.map(privilege => privilege.name);
+  const privileges = dbResponse.role === 'ADMIN' ? ['ADMIN'] : [];
 
   const loginSuccessPayload = {
     token,
@@ -29,6 +32,7 @@ export const getLoginSuccessPayload = async ({ userId, prisma }) => {
       firstName: dbResponse.firstname,
       lastName: dbResponse.lastname,
       email: dbResponse.email,
+      role: dbResponse.role,
       organisation: dbResponse.organisation,
       emergencyContact: dbResponse.emergencyContact,
     },
@@ -36,18 +40,4 @@ export const getLoginSuccessPayload = async ({ userId, prisma }) => {
   };
 
   return loginSuccessPayload;
-};
-
-export const hasPrivilege = async (userId, prisma) => {
-  // TODO: implement privileges for users
-  /*   return await Permission.findAll({
-    include: [
-      {
-        model: Role,
-        required: true,
-        include: [{ model: User, required: true, where: { id: userId } }],
-      },
-    ],
-  }); */
-  return [];
 };

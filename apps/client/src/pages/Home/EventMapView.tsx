@@ -5,7 +5,6 @@ import {
   USE_SAME_ORIGIN_MAP_TILE_ACCESS,
 } from '@/lib/maps/mapy';
 import { PATHNAMES } from '@/lib/paths/pathnames';
-import type { Event } from '@/types/event';
 import {
   resolveSupportedMapTileLang,
   type SupportedMapTileMapset,
@@ -29,10 +28,11 @@ import {
   useRef,
   useState,
 } from 'react';
+import type { HomeEventListItem } from './types';
 import './EventMapView.css';
 
 interface EventMapViewProps {
-  events: Event[];
+  events: HomeEventListItem[];
   t: TFunction;
 }
 
@@ -85,7 +85,7 @@ const hasValidCoordinate = (
   value >= min &&
   value <= max;
 
-const toMappableEvent = (event: Event): MappableEvent | null => {
+const toMappableEvent = (event: HomeEventListItem): MappableEvent | null => {
   if (
     !hasValidCoordinate(event.latitude, -90, 90) ||
     !hasValidCoordinate(event.longitude, -180, 180)
@@ -97,7 +97,7 @@ const toMappableEvent = (event: Event): MappableEvent | null => {
     id: event.id,
     name: event.name,
     date: event.date,
-    location: event.location,
+    location: event.location || '',
     ...(event.featuredImage ? { featuredImage: event.featuredImage } : {}),
     latitude: event.latitude,
     longitude: event.longitude,

@@ -1,5 +1,202 @@
 {
   "Pages": {
+    "Admin": {
+      "Common": {
+        "Zone": "Admin zóna",
+        "Navigation": "Navigace"
+      },
+      "Navigation": {
+        "Dashboard": "Dashboard",
+        "Users": "Uživatelé",
+        "Events": "Akce",
+        "CzechRanking": "Český ranking",
+        "BackToSite": "Zpět na web"
+      },
+      "Dashboard": {
+        "Title": "Přehled administrace",
+        "Description": "Centrální pracovní prostor pro administrátory s rychlým přehledem o uživatelích, závodech a publikační aktivitě.",
+        "ErrorTitle": "Nepodařilo se načíst admin data",
+        "ChartTitle": "Měsíční aktivita",
+        "ChartDescription": "Noví uživatelé a nově vytvořené závody za posledních šest měsíců.",
+        "ChartUsersSeries": "Vytvoření uživatelé",
+        "ChartEventsSeries": "Vytvořené závody",
+        "RecentUsersTitle": "Poslední uživatelé",
+        "RecentUsersDescription": "Naposledy registrované účty v aplikaci.",
+        "RecentEventsTitle": "Poslední závody",
+        "RecentEventsDescription": "Nejnovější záznamy závodů aktuálně uložené v OFeed.",
+        "Cards": {
+          "TotalUsers": "Uživatelé celkem",
+          "ActiveUsersDetail": "{{count}} účtů je aktivních",
+          "TotalEvents": "Závody celkem",
+          "PublishedEventsDetail": "{{count}} závodů je publikovaných",
+          "RankingEvents": "Rankingové závody",
+          "UpcomingEventsDetail": "{{count}} nadcházejících závodů je naplánováno",
+          "AdminUsers": "Admin uživatelé",
+          "AdminUsersHint": "Uživatelé s přístupem do admin zóny"
+        }
+      },
+      "Users": {
+        "Title": "Uživatelé",
+        "Description": "Posledních {{count}} registrovaných uživatelů včetně aplikační role a stavu aktivace.",
+        "Actions": {
+          "Activate": "Aktivovat",
+          "Deactivate": "Deaktivovat",
+          "Delete": "Odstranit"
+        },
+        "Confirm": {
+          "ActivateTitle": "Aktivovat uživatelský účet",
+          "ActivateDescription": "Tato akce znovu povolí přihlášení pro účet {{name}}.",
+          "DeactivateTitle": "Deaktivovat uživatelský účet",
+          "DeactivateDescription": "Tato akce zablokuje přihlášení pro účet {{name}}.",
+          "DeleteTitle": "Odstranit uživatelský účet",
+          "DeleteDescription": "Tato akce trvale odstraní účet {{name}} včetně navázaných přístupových údajů. Tuto operaci nelze vrátit zpět."
+        },
+        "Toast": {
+          "ActivateSuccessTitle": "Účet aktivován",
+          "DeactivateSuccessTitle": "Účet deaktivován",
+          "DeleteSuccessTitle": "Účet odstraněn",
+          "StatusSuccessDescription": "Změna stavu účtu {{name}} byla uložena.",
+          "DeleteSuccessDescription": "Účet {{name}} byl odstraněn.",
+          "ActivateErrorTitle": "Nepodařilo se aktivovat účet",
+          "DeactivateErrorTitle": "Nepodařilo se deaktivovat účet",
+          "DeleteErrorTitle": "Nepodařilo se odstranit účet",
+          "UnknownError": "Došlo k neočekávané chybě."
+        }
+      },
+      "Events": {
+        "Title": "Závody",
+        "Description": "Posledních {{count}} závodů včetně vlastníka, disciplíny a stavu publikace."
+      },
+      "CzechRanking": {
+        "Title": "Podklady českého rankingu",
+        "Description": "Administrační správa měsíčních snapshotů českého rankingu, synchronizovaných rankingových výsledků z ORIS a vynuceného refreshu dat.",
+        "ErrorTitle": "Nepodařilo se načíst data českého rankingu",
+        "Cards": {
+          "SnapshotDatasets": "Sady snapshotů",
+          "SnapshotDatasetsHint": "Nahrané měsíční CSV snapshoty seskupené podle typu rankingu a kategorie.",
+          "SnapshotEntries": "Řádky snapshotů",
+          "SnapshotEntriesHint": "Celkový počet rankingových řádků aktuálně uložených z CSV uploadů.",
+          "EventDatasets": "Synchronizované sady závodů",
+          "EventDatasetsHint": "ORIS rankingové výsledky seskupené podle závodu, typu rankingu a kategorie.",
+          "EventResults": "Synchronizované řádky výsledků",
+          "EventResultsHint": "Celkový počet individuálních rankingových výsledků synchronizovaných z ORIS."
+        },
+        "Actions": {
+          "ForceSync": "Vynutit ORIS sync",
+          "UploadSnapshot": "Nahrát snapshot",
+          "ClearAllSnapshots": "Vyčistit všechny snapshoty",
+          "ClearAllEventResults": "Vyčistit všechny sync výsledky",
+          "ViewData": "Zobrazit data",
+          "Clear": "Vyčistit",
+          "Cancel": "Zrušit",
+          "Uploading": "Nahrávání…",
+          "Syncing": "Synchronizace…",
+          "OpenEvent": "Otevřít závod"
+        },
+        "Tabs": {
+          "Snapshots": "Snapshoty",
+          "EventResults": "Synchronizované výsledky"
+        },
+        "SnapshotTable": {
+          "ValidForMonth": "Platí pro měsíc",
+          "Type": "Typ rankingu",
+          "Category": "Kategorie",
+          "Entries": "Řádky",
+          "Leader": "Vedoucí závodník",
+          "UpdatedAt": "Aktualizováno",
+          "Actions": "Akce"
+        },
+        "EventResultsTable": {
+          "Event": "Závod",
+          "Type": "Typ rankingu",
+          "Category": "Kategorie",
+          "Results": "Řádky",
+          "SyncedAt": "Synchronizováno",
+          "Actions": "Akce"
+        },
+        "UploadDialog": {
+          "Title": "Nahrát snapshot českého rankingu",
+          "Description": "Nahraj měsíční snapshot z ORIS pro vybraný typ rankingu a kategorii. Výpočet závodu vždy hledá snapshot z předchozího měsíce k datu závodu, a když chybí, použije poslední starší dostupný snapshot.",
+          "RankingType": "Typ rankingu",
+          "RankingCategory": "Kategorie",
+          "ValidForMonth": "Platí pro měsíc",
+          "File": "CSV nebo TXT soubor",
+          "Help": {
+            "RankingType": "Vyber, jestli nahráváš snapshot lesního nebo sprintového českého rankingu.",
+            "RankingCategory": "M = muži (H20/H21), F = ženy (D20/D21). Nahraj vždy správnou variantu zvlášť.",
+            "ValidForMonth": "Zadej měsíc, pro který snapshot platí, ne měsíc nahrání. Například pro závod v dubnu 2026 se standardně použije snapshot s hodnotou 2026-03. Pokud tento měsíc chybí, systém vezme poslední starší snapshot dostupný k datu závodu.",
+            "File": "Nahraj ORIS export ve formátu CSV nebo TXT, pokud soubor uvnitř obsahuje CSV data oddělená středníkem."
+          },
+          "ValidationTitle": "Upload snapshotu není kompletní",
+          "MissingFile": "Před spuštěním uploadu vyber CSV nebo TXT soubor."
+        },
+        "SyncDialog": {
+          "Title": "Vynutit synchronizaci s ORIS",
+          "Description": "Načte oficiální sady českých rankingových výsledků z ORIS pro vybraný rozsah.",
+          "Scope": "Rozsah",
+          "ScopeAll": "Les i sprint",
+          "ScopeForest": "Jen les",
+          "ScopeSprint": "Jen sprint"
+        },
+        "Detail": {
+          "SnapshotTitle": "Detail snapshotu",
+          "SnapshotDescription": "{{rankingType}} / {{rankingCategory}} pro {{month}}. Zobrazeno {{count}} uložených řádků.",
+          "EventResultsTitle": "Detail synchronizovaných výsledků",
+          "EventResultsDescription": "{{event}} · {{rankingType}} / {{rankingCategory}}. Zobrazeno {{count}} uložených řádků.",
+          "Loading": "Načítání detailu datasetu…",
+          "Place": "Pořadí",
+          "Registration": "Registrace",
+          "Points": "Body",
+          "RankIndex": "Rankingové číslo",
+          "Class": "Kategorie",
+          "Time": "Čas",
+          "ReferenceValue": "Referenční hodnota"
+        },
+        "Confirm": {
+          "ClearSnapshotsTitle": "Vyčistit snapshoty českého rankingu",
+          "ClearAllSnapshotsDescription": "Tato akce odstraní z databáze všechny nahrané měsíční snapshoty českého rankingu.",
+          "ClearSnapshotDescription": "Tato akce odstraní z databáze vybranou sadu snapshotu českého rankingu.",
+          "ClearEventResultsTitle": "Vyčistit synchronizované výsledky českého rankingu",
+          "ClearAllEventResultsDescription": "Tato akce odstraní z databáze všechny synchronizované rankingové výsledky z ORIS.",
+          "ClearEventResultsDescription": "Tato akce odstraní z databáze vybranou synchronizovanou sadu rankingových výsledků."
+        },
+        "Toast": {
+          "UploadSuccessTitle": "Snapshot nahrán",
+          "UploadSuccessDescription": "Úspěšně bylo importováno {{count}} řádků.",
+          "UploadErrorTitle": "Upload snapshotu selhal",
+          "SyncSuccessTitle": "Synchronizace s ORIS dokončena",
+          "SyncSuccessDescription": "Synchronizovalo se {{count}} sad závodů.",
+          "SyncErrorTitle": "Synchronizace s ORIS selhala",
+          "ClearSnapshotsSuccessTitle": "Snapshoty vyčištěny",
+          "ClearSnapshotsErrorTitle": "Čištění snapshotů selhalo",
+          "ClearEventResultsSuccessTitle": "Synchronizované výsledky vyčištěny",
+          "ClearEventResultsErrorTitle": "Čištění synchronizovaných výsledků selhalo",
+          "ClearSuccessDescription": "Odstraněno bylo {{count}} řádků.",
+          "UnknownError": "Došlo k neznámé chybě."
+        }
+      },
+      "Table": {
+        "Empty": "Nejsou k dispozici žádná data.",
+        "Event": "Název",
+        "Date": "Datum",
+        "Organizer": "Pořadatel",
+        "Owner": "Vlastník",
+        "Published": "Publikováno",
+        "Ranking": "Ranking",
+        "Name": "Jméno",
+        "Email": "Email",
+        "Role": "Role",
+        "Status": "Stav",
+        "Organization": "Organizace",
+        "CreatedAt": "Vytvořeno",
+        "Active": "Aktivní",
+        "Inactive": "Neaktivní",
+        "Actions": "Akce",
+        "Yes": "Ano",
+        "No": "Ne",
+        "Discipline": "Disciplína"
+      }
+    },
     "Auth": {
       "User": {
         "Firstname": "Jméno",
@@ -173,6 +370,8 @@
           "license_change": "Změna licence",
           "ranking_change": "Změna rankingu",
           "rank_points_avg_change": "Změna průměru ranking bodů",
+          "ranking_points_change": "Změna rankingových bodů",
+          "ranking_reference_value_change": "Změna rankingové referenční hodnoty",
           "organisation_change": "Změna oddílu",
           "short_name_change": "Změna zkratky",
           "si_card_change": "Změna SI čipu",
@@ -257,7 +456,16 @@
         "Loading": "Načítám výsledky",
         "LoadingClubs": "Načítám kluby",
         "LoadingClubResults": "Načítám klubové výsledky",
-        "ErrorLoadingClubResults": "Chyba při načítání klubových výsledků: {{message}}"
+        "ErrorLoadingClubResults": "Chyba při načítání klubových výsledků: {{message}}",
+        "Ranking": {
+          "Counts": "Započítá se do rankingu",
+          "DoesNotCount": "Nezapočítá se do rankingu",
+          "ForestType": "lesního rankingu",
+          "SprintType": "sprintového rankingu",
+          "GenericType": "rankingu",
+          "TooltipCounts": "Výsledek se závodníkovi započítá do {{rankingType}}.",
+          "TooltipDoesNotCount": "Výsledek se závodníkovi nezapočítá do {{rankingType}}."
+        }
       },
       "Splits": {
         "LoadingChart": "Načítám graf mezičasů",
@@ -274,6 +482,7 @@
         "Longitude": "Zeměpisná délka",
         "Country": "Země",
         "ZeroTime": "Čas startu",
+        "Discipline": "Disciplína",
         "FeaturedImage": "Úvodní obrázek",
         "FeaturedImageHint": "JPEG, PNG nebo WEBP, max 2 MB.",
         "FeaturedImageButton": "Přidat obrázek",
@@ -283,6 +492,18 @@
         "Relay": "Štafety",
         "HundredthPrecision": "Setinová přesnost",
         "Published": "Zveřejněno",
+        "DisciplineOptions": {
+          "SPRINT": "Sprint",
+          "MIDDLE": "Střední trať",
+          "LONG": "Dlouhá trať",
+          "ULTRALONG": "Ultradlouhá trať",
+          "NIGHT": "Noční OB",
+          "KNOCKOUT_SPRINT": "Knock-out sprint",
+          "RELAY": "Štafety",
+          "SPRINT_RELAY": "Sprintové štafety",
+          "TEAMS": "Družstva",
+          "OTHER": "Ostatní"
+        },
         "Placeholders": {
           "EventName": "Moje první akce",
           "Sport": "Vyberte sport",
@@ -630,6 +851,7 @@
       "SignUp": "Registrovat",
       "LogOut": "Odhlásit",
       "MyProfile": "Můj profil",
+      "AdminZone": "Admin zóna",
       "Pages": "Stránky"
     },
     "Footer": {

@@ -17,11 +17,11 @@ export const events = async (_: unknown, { input = {} }: { input?: EventsInput }
   const sportId = normalizedInput.sportId ?? undefined;
   const search = normalizedInput.search ?? undefined;
   const first =
-    typeof normalizedInput.first === "number" && normalizedInput.first > 0
+    typeof normalizedInput.first === 'number' && normalizedInput.first > 0
       ? normalizedInput.first
       : 12;
   const after =
-    typeof normalizedInput.after === "string" && normalizedInput.after.length > 0
+    typeof normalizedInput.after === 'string' && normalizedInput.after.length > 0
       ? normalizedInput.after
       : undefined;
 
@@ -199,6 +199,7 @@ function generateMockEvents(first, after, filter) {
       sportId: 1,
       timezone: 'Europe/Prague',
       zeroTime: '09:00:00',
+      discipline: 'MIDDLE',
       createdAt: new Date(now.getTime() - (100 - i) * 24 * 60 * 60 * 1000).getTime().toString(),
       updatedAt: new Date(now.getTime() - (100 - i) * 24 * 60 * 60 * 1000).getTime().toString(),
       sport: {

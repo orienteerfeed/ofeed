@@ -31,11 +31,17 @@ export const typeDef = /* GraphQL */ `
     message: String
   }
 
+  enum UserRole {
+    USER
+    ADMIN
+  }
+
   type User {
     id: Int!
     email: String! @constraint(format: "email", maxLength: 255)
     firstname: String! @constraint(maxLength: 255)
     lastname: String! @constraint(maxLength: 255)
+    role: UserRole!
     organisation: String @constraint(maxLength: 191)
     emergencyContact: String @constraint(maxLength: 255)
     password: String! @constraint(maxLength: 255)

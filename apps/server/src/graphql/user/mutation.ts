@@ -1,10 +1,53 @@
+import { GraphQLError } from 'graphql';
 import {
   authenticateUser,
   changeAuthenticatedUserPassword,
-  signupUser,
   passwordResetRequest,
   passwordResetConfirm,
+  signupUser,
 } from '../../modules/auth/auth.service.js';
+import { AuthenticationError, ValidationError } from '../../exceptions/index.js';
+
+function toGraphQLUserMutationError(error: unknown) {
+  if (error instanceof GraphQLError) {
+    return error;
+  }
+
+  if (error instanceof AuthenticationError) {
+    return new GraphQLError(
+      error.message === 'Login failed' ? 'Invalid email or password' : error.message,
+      {
+        extensions: {
+          code: 'UNAUTHENTICATED',
+          http: { status: 401 },
+        },
+      },
+    );
+  }
+
+  if (error instanceof ValidationError) {
+    return new GraphQLError(error.message, {
+      extensions: {
+        code: 'BAD_USER_INPUT',
+        http: { status: 422 },
+      },
+    });
+  }
+
+  if (error instanceof Error) {
+    return new GraphQLError(error.message, {
+      extensions: {
+        code: 'INTERNAL_SERVER_ERROR',
+      },
+    });
+  }
+
+  return new GraphQLError('Unexpected error', {
+    extensions: {
+      code: 'INTERNAL_SERVER_ERROR',
+    },
+  });
+}
 
 function getAuthenticatedUserId(context) {
   const { auth } = context;
@@ -34,12 +77,13 @@ export const signin = async (_, { input }, context) => {
         firstname: loginSuccessPayload.user.firstName,
         lastname: loginSuccessPayload.user.lastName,
         email: loginSuccessPayload.user.email ?? username,
+        role: loginSuccessPayload.user.role,
         organisation: loginSuccessPayload.user.organisation ?? null,
         emergencyContact: loginSuccessPayload.user.emergencyContact ?? null,
       },
     };
   } catch (error) {
-    throw new Error(error.message);
+    throw toGraphQLUserMutationError(error);
   }
 };
 
@@ -55,7 +99,7 @@ export const signup = async (_, { input }, context) => {
       firstname,
       lastname,
       context.activationUrl,
-      organisation
+      organisation,
     );
     return {
       token: signUpPayload.token,
@@ -64,7 +108,9 @@ export const signup = async (_, { input }, context) => {
         firstname: firstname,
         lastname: lastname,
         email: email,
+        role: signUpPayload.user.role,
         organisation: signUpPayload.user.organisation ?? null,
+        emergencyContact: signUpPayload.user.emergencyContact ?? null,
       },
       message: 'User successfuly created',
     };
@@ -156,7 +202,7 @@ export const createUserCard = async (_, { input }, context) => {
   const type = input.type ?? 'SPORTIDENT';
 
   try {
-    return await prisma.$transaction(async tx => {
+    return await prisma.$transaction(async (tx) => {
       const sport = await tx.sport.findUnique({
         where: { id: sportId },
         select: { id: true },
@@ -219,7 +265,7 @@ export const updateUserCard = async (_, { input }, context) => {
   }
 
   try {
-    return await prisma.$transaction(async tx => {
+    return await prisma.$transaction(async (tx) => {
       const existing = await tx.userCard.findFirst({
         where: { id: input.id, userId },
         select: { id: true, sportId: true, isDefault: true },
@@ -287,7 +333,7 @@ export const deleteUserCard = async (_, { id }, context) => {
   const { prisma } = context;
   const userId = getAuthenticatedUserId(context);
 
-  await prisma.$transaction(async tx => {
+  await prisma.$transaction(async (tx) => {
     const existing = await tx.userCard.findFirst({
       where: { id, userId },
       select: { id: true, sportId: true, isDefault: true },
@@ -324,7 +370,7 @@ export const setDefaultUserCard = async (_, { id }, context) => {
   const { prisma } = context;
   const userId = getAuthenticatedUserId(context);
 
-  return prisma.$transaction(async tx => {
+  return prisma.$transaction(async (tx) => {
     const existing = await tx.userCard.findFirst({
       where: { id, userId },
       select: { id: true, sportId: true },
@@ -382,11 +428,7 @@ export const changeCurrentUserPassword = async (_, { input }, context) => {
   const userId = getAuthenticatedUserId(context);
 
   try {
-    return await changeAuthenticatedUserPassword(
-      userId,
-      input.currentPassword,
-      input.newPassword,
-    );
+    return await changeAuthenticatedUserPassword(userId, input.currentPassword, input.newPassword);
   } catch (error) {
     throw new Error(error.message);
   }

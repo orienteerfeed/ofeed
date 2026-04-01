@@ -13,13 +13,17 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminEventsRouteImport } from './routes/admin/events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
 import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventId/report'
 import { Route as AuthResetPasswordTokenRouteImport } from './routes/auth/reset-password/$token'
+import { Route as AdminRankingCzechRouteImport } from './routes/admin/ranking/czech'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -41,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -54,6 +63,16 @@ const AuthSigninRoute = AuthSigninRouteImport.update({
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
   path: '/auth/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEventsRoute = AdminEventsRouteImport.update({
+  id: '/admin/events',
+  path: '/admin/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
@@ -76,15 +95,24 @@ const AuthResetPasswordTokenRoute = AuthResetPasswordTokenRouteImport.update({
   path: '/auth/reset-password/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRankingCzechRoute = AdminRankingCzechRouteImport.update({
+  id: '/admin/ranking/czech',
+  path: '/admin/ranking/czech',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
+  '/admin/events': typeof AdminEventsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
@@ -95,9 +123,13 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
+  '/admin/events': typeof AdminEventsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
@@ -109,9 +141,13 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
+  '/admin/events': typeof AdminEventsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
@@ -124,9 +160,13 @@ export interface FileRouteTypes {
     | '/about'
     | '/my-events'
     | '/profile'
+    | '/admin/events'
+    | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/admin/'
+    | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
@@ -137,9 +177,13 @@ export interface FileRouteTypes {
     | '/about'
     | '/my-events'
     | '/profile'
+    | '/admin/events'
+    | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/admin'
+    | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
@@ -150,9 +194,13 @@ export interface FileRouteTypes {
     | '/about'
     | '/my-events'
     | '/profile'
+    | '/admin/events'
+    | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/admin/'
+    | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
@@ -164,9 +212,13 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   MyEventsRoute: typeof MyEventsRoute
   ProfileRoute: typeof ProfileRoute
+  AdminEventsRoute: typeof AdminEventsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminRankingCzechRoute: typeof AdminRankingCzechRoute
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
   EventsEventIdReportRoute: typeof EventsEventIdReportRoute
   EventsEventIdSettingsRoute: typeof EventsEventIdSettingsRoute
@@ -203,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/auth/signup'
@@ -222,6 +281,20 @@ declare module '@tanstack/react-router' {
       path: '/auth/forgot-password'
       fullPath: '/auth/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/events': {
+      id: '/admin/events'
+      path: '/admin/events'
+      fullPath: '/admin/events'
+      preLoaderRoute: typeof AdminEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events/$eventId/': {
@@ -252,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/ranking/czech': {
+      id: '/admin/ranking/czech'
+      path: '/admin/ranking/czech'
+      fullPath: '/admin/ranking/czech'
+      preLoaderRoute: typeof AdminRankingCzechRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -260,9 +340,13 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   MyEventsRoute: MyEventsRoute,
   ProfileRoute: ProfileRoute,
+  AdminEventsRoute: AdminEventsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminRankingCzechRoute: AdminRankingCzechRoute,
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
   EventsEventIdReportRoute: EventsEventIdReportRoute,
   EventsEventIdSettingsRoute: EventsEventIdSettingsRoute,

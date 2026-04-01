@@ -1,10 +1,13 @@
-import { z } from "zod";
+import { z } from 'zod';
+
+import { userRoleSchema } from './common.js';
 
 export const userSchema = z.object({
   id: z.number().int(),
   email: z.string().email(),
   firstname: z.string(),
   lastname: z.string(),
+  role: userRoleSchema.optional(),
   organisation: z.string().nullable().optional(),
   password: z.string().optional(),
   active: z.boolean().optional(),

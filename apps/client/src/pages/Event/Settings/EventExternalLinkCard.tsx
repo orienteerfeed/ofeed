@@ -66,11 +66,15 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
 
   const persistedExternalSource = initialData?.externalSource ?? null;
   const persistedExternalEventId = (initialData?.externalEventId ?? '').trim();
-  const currentExternalEventId = isUnlinkRequested ? '' : externalEventId.trim();
+  const currentExternalEventId = isUnlinkRequested
+    ? ''
+    : externalEventId.trim();
   const currentExternalSource = currentExternalEventId
     ? externalProvider
     : null;
-  const hasCurrentLink = Boolean(currentExternalSource && currentExternalEventId);
+  const hasCurrentLink = Boolean(
+    currentExternalSource && currentExternalEventId
+  );
   const hasPersistedLink = Boolean(
     persistedExternalSource && persistedExternalEventId
   );
@@ -91,7 +95,8 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
   }, [post]);
 
   React.useEffect(() => {
-    const nextSource = (initialData?.externalSource as ExternalProvider | null) ?? 'ORIS';
+    const nextSource =
+      (initialData?.externalSource as ExternalProvider | null) ?? 'ORIS';
     const nextEventId = initialData?.externalEventId ?? '';
 
     setExternalProvider(nextSource);
@@ -102,7 +107,11 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
     setIsSearching(false);
     setIsUnlinkRequested(false);
     clearSearchTimeout();
-  }, [clearSearchTimeout, initialData?.externalEventId, initialData?.externalSource]);
+  }, [
+    clearSearchTimeout,
+    initialData?.externalEventId,
+    initialData?.externalSource,
+  ]);
 
   React.useEffect(() => {
     return () => {
@@ -146,7 +155,9 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
           {
             provider: externalProvider,
             query,
-            apiKey: isEventorProvider ? externalApiKey.trim() || undefined : undefined,
+            apiKey: isEventorProvider
+              ? externalApiKey.trim() || undefined
+              : undefined,
             limit: 8,
           }
         );
@@ -262,6 +273,7 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
       longitude,
       countryCode,
       zeroTime,
+      discipline,
       ranking,
       coefRanking,
       relay,
@@ -318,6 +330,7 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
           longitude,
           countryCode,
           zeroTime,
+          discipline,
           ranking: ranking ?? false,
           coefRanking,
           relay: relay ?? false,
@@ -425,7 +438,10 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
                 },
                 {
                   value: 'EVENTOR',
-                  label: t('Pages.Event.Form.Import.Providers.EVENTOR', 'Eventor'),
+                  label: t(
+                    'Pages.Event.Form.Import.Providers.EVENTOR',
+                    'Eventor'
+                  ),
                 },
               ]}
             />
@@ -489,7 +505,9 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
                   'Type at least 2 characters...'
                 )}
                 className="pl-9"
-                disabled={isSaving || (isEventorProvider && !externalApiKey.trim())}
+                disabled={
+                  isSaving || (isEventorProvider && !externalApiKey.trim())
+                }
               />
             </div>
 
@@ -548,7 +566,9 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
               (!isUnlinkRequested && currentExternalEventId.length === 0)
             }
           >
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isSaving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             {t('Pages.Event.Form.Import.SaveLink', 'Save link')}
           </Button>
         </div>

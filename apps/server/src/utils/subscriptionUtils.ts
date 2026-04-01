@@ -1,5 +1,5 @@
 import { pubsub, COMPETITORS_BY_CLASS_UPDATED, COMPETITOR_UPDATED } from '../lib/pubsub.js';
-import prisma from './context.js';
+import { getCompetitorsByClass } from '../graphql/competitor/shared.js';
 
 /**
  * Publish updated competitors by class to subscribers
@@ -8,19 +8,13 @@ import prisma from './context.js';
 export const publishUpdatedCompetitors = async (classId: unknown): Promise<void> => {
   try {
     const normalizedClassId =
-      typeof classId === 'number'
-        ? classId
-        : typeof classId === 'string'
-          ? Number(classId)
-          : NaN;
+      typeof classId === 'number' ? classId : typeof classId === 'string' ? Number(classId) : NaN;
 
     if (!Number.isFinite(normalizedClassId)) {
       throw new Error('Invalid classId for subscription publishing');
     }
 
-    const updatedCompetitors = await prisma.competitor.findMany({
-      where: { classId: normalizedClassId },
-    });
+    const updatedCompetitors = await getCompetitorsByClass(normalizedClassId);
 
     const topic = `${COMPETITORS_BY_CLASS_UPDATED}_${normalizedClassId}`;
     console.log('Publishing to topic:', topic);

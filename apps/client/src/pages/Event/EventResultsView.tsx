@@ -23,7 +23,7 @@ import { TFunction } from 'i18next';
 import { ChevronDown, Loader2, Radio, Trophy, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import React, { useEffect, useRef, useState } from 'react';
-import { Badge, Button, CountryFlag } from '../../components/atoms';
+import { Badge, Button, CountryFlag, Tooltip } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
 import { CompetitorName } from './CompetitorName';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
@@ -42,8 +42,10 @@ const COMPETITORS_BY_CLASS_UPDATED = gql`
       startTime
       finishTime
       time
-      ranking
-      rankPointsAvg
+      rankingPoints
+      rankingReferenceValue
+      countsTowardsRanking
+      countsTowardsRankingReason
       status
       lateStart
       note
@@ -73,8 +75,10 @@ const COMPETITORS_BY_ORGANISATION = gql`
       startTime
       finishTime
       time
-      ranking
-      rankPointsAvg
+      rankingPoints
+      rankingReferenceValue
+      countsTowardsRanking
+      countsTowardsRankingReason
       status
       lateStart
       note
@@ -127,6 +131,7 @@ interface EventResultsViewProps {
 }
 
 type ViewMode = 'category' | 'club' | 'live';
+type CzechRankingType = 'FOREST' | 'SPRINT' | null;
 
 interface Competitor {
   id: string;
@@ -139,8 +144,10 @@ interface Competitor {
   startTime?: string;
   finishTime?: string;
   time?: number;
-  ranking?: number;
-  rankPointsAvg?: number;
+  rankingPoints?: number;
+  rankingReferenceValue?: number;
+  countsTowardsRanking?: boolean | null;
+  countsTowardsRankingReason?: string | null;
   status: string;
   lateStart?: boolean;
   note?: string;
@@ -203,8 +210,17 @@ interface RelayResult {
 }
 
 export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
-  const isRelay = event.discipline === 'relay';
+  const isRelay = event.relay;
   const navigate = useNavigate();
+  const czechRankingType: CzechRankingType =
+    event.discipline === 'SPRINT'
+      ? 'SPRINT'
+      : event.discipline === 'MIDDLE' ||
+          event.discipline === 'LONG' ||
+          event.discipline === 'NIGHT'
+        ? 'FOREST'
+        : null;
+  const isCzechRankingDiscipline = czechRankingType !== null;
 
   // Get current search params
   const searchParams = new URLSearchParams(window.location.search);
@@ -434,12 +450,19 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           eventId={event.id}
           classId={selectedClassId}
           className={selectedClass}
+          rankingType={czechRankingType}
+          onSelectClub={clubName => {
+            setSelectedClub(clubName);
+            setViewMode('club');
+          }}
           showRanking={
             event.ranking &&
-            (selectedClass.startsWith('D21') ||
-              selectedClass.startsWith('H21') ||
-              selectedClass.startsWith('M21') ||
-              selectedClass.startsWith('W21'))
+            event.country?.countryCode === 'CZ' &&
+            isCzechRankingDiscipline &&
+            (selectedClass.startsWith('D20') ||
+              selectedClass.startsWith('D21') ||
+              selectedClass.startsWith('H20') ||
+              selectedClass.startsWith('H21'))
           }
           onCompetitorsCountChange={setCategoryCompetitorsCount}
           onLoadingChange={setIsCategoryLoading}
@@ -466,6 +489,10 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           setSelectedClub={setSelectedClub}
           organisationsData={organisationsData}
           organisationsLoading={organisationsLoading}
+          onSelectClass={className => {
+            setSelectedClass(className);
+            setViewMode('category');
+          }}
         />
       )}
 
@@ -490,6 +517,8 @@ interface CategoryResultsViewProps {
   eventId: string;
   classId: number;
   className: string;
+  rankingType?: CzechRankingType;
+  onSelectClub: (clubName: string) => void;
   showRanking?: boolean;
   onCompetitorsCountChange?: (count: number) => void;
   onLoadingChange?: (loading: boolean) => void;
@@ -498,6 +527,8 @@ interface CategoryResultsViewProps {
 const CategoryResultsView = ({
   t,
   classId,
+  rankingType = null,
+  onSelectClub,
   showRanking,
   onCompetitorsCountChange,
   onLoadingChange,
@@ -583,6 +614,54 @@ const CategoryResultsView = ({
     }
   };
 
+  const getRankingTypeLabel = (): string => {
+    if (rankingType === 'FOREST') {
+      return t('Pages.Event.Results.Ranking.ForestType');
+    }
+
+    if (rankingType === 'SPRINT') {
+      return t('Pages.Event.Results.Ranking.SprintType');
+    }
+
+    return t('Pages.Event.Results.Ranking.GenericType');
+  };
+
+  const getRankingTooltipContent = (
+    competitor: ProcessedCompetitor
+  ): string => {
+    const rankingTypeLabel = getRankingTypeLabel();
+
+    if (competitor.countsTowardsRanking) {
+      return t('Pages.Event.Results.Ranking.TooltipCounts', {
+        rankingType: rankingTypeLabel,
+      });
+    }
+
+    return t('Pages.Event.Results.Ranking.TooltipDoesNotCount', {
+      rankingType: rankingTypeLabel,
+    });
+  };
+
+  const renderClubButton = (
+    clubName: string,
+    className: string
+  ): React.ReactNode => {
+    if (!clubName) {
+      return null;
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => onSelectClub(clubName)}
+        className={className}
+        title={clubName}
+      >
+        {clubName}
+      </button>
+    );
+  };
+
   if (loading && competitors.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -594,11 +673,7 @@ const CategoryResultsView = ({
 
   if (error) {
     return (
-      <Alert
-        severity="error"
-        variant="outlined"
-        title="Error loading results"
-      >
+      <Alert severity="error" variant="outlined" title="Error loading results">
         {error.message}
       </Alert>
     );
@@ -680,13 +755,17 @@ const CategoryResultsView = ({
                   <TableCell className="px-2 py-1 text-sm font-medium">
                     <div className="flex flex-col">
                       <CompetitorName competitor={competitor} />
-                      <span className="text-xs text-muted-foreground lg:hidden mt-0.5">
-                        {competitor.organisation}
-                      </span>
+                      {renderClubButton(
+                        competitor.organisation,
+                        'text-xs text-muted-foreground lg:hidden mt-0.5 text-left hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm'
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden lg:table-cell">
-                    {competitor.organisation}
+                    {renderClubButton(
+                      competitor.organisation,
+                      'hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm'
+                    )}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-xs font-mono hidden 2xl:table-cell">
                     {competitor.bibNumber}
@@ -717,18 +796,34 @@ const CategoryResultsView = ({
                   </TableCell>
                   {showRanking && (
                     <TableCell className="px-2 py-1 hidden lg:table-cell">
-                      {competitor.ranking && (
-                        <Badge
-                          variant={
-                            competitor.ranking > (competitor.rankPointsAvg || 0)
-                              ? 'default'
-                              : 'secondary'
-                          }
-                          className="text-xs"
-                        >
-                          {competitor.ranking}
-                        </Badge>
-                      )}
+                      {competitor.rankingPoints !== undefined &&
+                        competitor.rankingPoints !== null && (
+                          <Tooltip
+                            content={getRankingTooltipContent(competitor)}
+                            side="top"
+                            align="center"
+                          >
+                            <span className="inline-flex">
+                              <Badge
+                                variant={
+                                  competitor.countsTowardsRanking
+                                    ? 'default'
+                                    : 'secondary'
+                                }
+                                className="text-xs cursor-help"
+                                title={
+                                  competitor.countsTowardsRanking
+                                    ? t('Pages.Event.Results.Ranking.Counts')
+                                    : t(
+                                        'Pages.Event.Results.Ranking.DoesNotCount'
+                                      )
+                                }
+                              >
+                                {competitor.rankingPoints}
+                              </Badge>
+                            </span>
+                          </Tooltip>
+                        )}
                     </TableCell>
                   )}
                 </motion.tr>
@@ -749,6 +844,7 @@ interface ClubResultsViewProps {
   setSelectedClub: (club: string | null) => void;
   organisationsData: OrganisationsResponse | undefined;
   organisationsLoading: boolean;
+  onSelectClass: (className: string) => void;
 }
 
 const ClubResultsView = ({
@@ -758,6 +854,7 @@ const ClubResultsView = ({
   setSelectedClub,
   organisationsData,
   organisationsLoading,
+  onSelectClass,
 }: ClubResultsViewProps) => {
   const scrollPositionRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -837,14 +934,18 @@ const ClubResultsView = ({
       .filter(
         (
           comp
-        ): comp is { id?: string | number; status?: string | null; time: number } =>
+        ): comp is {
+          id?: string | number;
+          status?: string | null;
+          time: number;
+        } =>
           comp.status === 'OK' && comp.time !== null && comp.time !== undefined
       )
       .sort((a, b) => a.time - b.time);
 
     // Find best time in category (only from OK status competitors)
     const bestTime =
-      validCompetitors.length > 0 ? validCompetitors[0]?.time ?? null : null;
+      validCompetitors.length > 0 ? (validCompetitors[0]?.time ?? null) : null;
 
     // For non-OK status competitors, return appropriate position emoji
     if (competitor.status !== 'OK') {
@@ -1024,7 +1125,8 @@ const ClubResultsView = ({
               id: String(comp.id),
               firstname: comp.firstname,
               lastname: comp.lastname,
-              class: getCompetitorClassName(comp as CompetitorWithClass) || 'N/A',
+              class:
+                getCompetitorClassName(comp as CompetitorWithClass) || 'N/A',
               time: comp.time ? formatSecondsToTime(comp.time) : '-',
               status: comp.status,
               position: item.calculatedPosition,
@@ -1163,7 +1265,6 @@ const ClubResultsView = ({
       className="space-y-4 overflow-auto"
       style={{ maxHeight: 'calc(100vh - 200px)' }} // Adjust based on your layout
     >
-
       {competitorsLoading && clubResults.length === 0 && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -1253,9 +1354,19 @@ const ClubResultsView = ({
                             />
                           </TableCell>
                           <TableCell className="px-2 py-1">
-                            <Badge variant="secondary" className="text-xs">
-                              {runner.class}
-                            </Badge>
+                            <button
+                              type="button"
+                              onClick={() => onSelectClass(runner.class)}
+                              className="inline-flex cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              title={runner.class}
+                            >
+                              <Badge
+                                variant="secondary"
+                                className="text-xs hover:bg-secondary/80"
+                              >
+                                {runner.class}
+                              </Badge>
+                            </button>
                           </TableCell>
                           <TableCell className="px-2 py-1 text-xs font-mono hidden md:table-cell">
                             {formatStartTime(runner.startTime)}

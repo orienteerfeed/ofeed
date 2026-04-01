@@ -1,6 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { dateLikeSchema, eventFilterSchema, startModeSchema } from "./common.js";
+import {
+  dateLikeSchema,
+  eventDisciplineSchema,
+  eventFilterSchema,
+  startModeSchema,
+} from './common.js';
 
 export const eventSchema = z.object({
   id: z.string(),
@@ -16,8 +21,9 @@ export const eventSchema = z.object({
   featuredImageKey: z.string().nullable().optional(),
   zeroTime: z
     .string()
-    .regex(/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/, "Expected UTC time as HH:mm:ss"),
+    .regex(/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/, 'Expected UTC time as HH:mm:ss'),
   relay: z.boolean(),
+  discipline: eventDisciplineSchema,
   startMode: startModeSchema,
   ranking: z.boolean(),
   coefRanking: z.number().nullable().optional(),

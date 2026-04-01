@@ -4,6 +4,13 @@ export const PATHNAMES = {
   contact: () => ({ to: '/contact', params: {} as const }),
   event: () => ({ to: '/event', params: {} as const }),
   myEvents: () => ({ to: '/my-events', params: {} as const }),
+  adminDashboard: () => ({ to: '/admin', params: {} as const }),
+  adminUsers: () => ({ to: '/admin/users', params: {} as const }),
+  adminEvents: () => ({ to: '/admin/events', params: {} as const }),
+  adminCzechRanking: () => ({
+    to: '/admin/ranking/czech',
+    params: {} as const,
+  }),
   eventDetail: (eventId: string) => ({
     to: '/events/$eventId',
     params: { eventId } as const,

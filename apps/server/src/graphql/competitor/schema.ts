@@ -36,8 +36,10 @@ export const typeDef = /* GraphQL */ `
     nationality: String
     registration: String!
     license: String
-    ranking: Int
-    rankPointsAvg: Int
+    rankingPoints: Int
+    rankingReferenceValue: Int
+    countsTowardsRanking: Boolean
+    countsTowardsRankingReason: String
     organisation: String
     shortName: String
     card: Int
@@ -72,8 +74,8 @@ export const typeDef = /* GraphQL */ `
     nationality: String
     registration: String
     license: String
-    ranking: Int
-    rankPointsAvg: Int
+    rankingPoints: Int
+    rankingReferenceValue: Int
     organisation: String
     shortName: String
     card: Int
@@ -98,8 +100,8 @@ export const typeDef = /* GraphQL */ `
     nationality: String
     registration: String
     license: String
-    ranking: Int
-    rankPointsAvg: Int
+    rankingPoints: Int
+    rankingReferenceValue: Int
     organisation: String
     shortName: String
     card: Int

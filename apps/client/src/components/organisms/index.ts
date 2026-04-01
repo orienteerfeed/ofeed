@@ -1,4 +1,6 @@
 export * from './Alert';
+export * from './AdminHeader';
+export * from './AdminSidebar';
 export * from './AutoCompleteField';
 export * from './CountdownTimer';
 export * from './AppDataTable';

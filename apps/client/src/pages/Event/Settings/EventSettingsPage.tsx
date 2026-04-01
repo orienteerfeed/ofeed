@@ -1,8 +1,5 @@
 import { config } from '@/config';
-import {
-  formatDate,
-  formatDateForInput,
-} from '@/lib/utils';
+import { formatDate, formatDateForInput } from '@/lib/utils';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useParams } from '@tanstack/react-router';
@@ -45,6 +42,7 @@ export const GET_EVENT = gql`
       date
       timezone
       zeroTime
+      discipline
       externalSource
       externalEventId
       ranking
@@ -69,7 +67,7 @@ export const GET_EVENT = gql`
 export const EventSettingsPage = () => {
   const { t } = useTranslation();
   const { eventId } = useParams({ from: '/events/$eventId/settings' });
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const [password, setPassword] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
@@ -113,6 +111,7 @@ export const EventSettingsPage = () => {
         longitude: data.event.longitude,
         countryCode: data.event.country?.countryCode || '',
         zeroTime: data.event.zeroTime ?? '',
+        discipline: data.event.discipline,
         ranking: data.event.ranking || false,
         coefRanking: data.event.coefRanking,
         relay: data.event.relay || false,
@@ -154,7 +153,10 @@ export const EventSettingsPage = () => {
     );
   }
 
-  if (!data?.event || user?.id !== data.event.authorId) {
+  const hasEventOwnerAccess =
+    !!data?.event && (user?.id === data.event.authorId || isAdmin());
+
+  if (!data?.event || !hasEventOwnerAccess) {
     return <NotAuthorizedPage />;
   }
 

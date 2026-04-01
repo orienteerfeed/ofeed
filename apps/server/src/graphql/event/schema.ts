@@ -11,6 +11,19 @@ export const typeDef = /* GraphQL */ `
     RECENT
   }
 
+  enum EventDiscipline {
+    SPRINT
+    MIDDLE
+    LONG
+    ULTRALONG
+    NIGHT
+    KNOCKOUT_SPRINT
+    RELAY
+    SPRINT_RELAY
+    TEAMS
+    OTHER
+  }
+
   type EventConnection {
     edges: [EventEdge!]!
     pageInfo: PageInfo!
@@ -78,6 +91,7 @@ export const typeDef = /* GraphQL */ `
     longitude: Float
     zeroTime: String!
     relay: Boolean!
+    discipline: EventDiscipline!
     ranking: Boolean!
     coefRanking: Float
     hundredthPrecision: Boolean!

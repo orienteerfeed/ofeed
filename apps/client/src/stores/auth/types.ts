@@ -1,4 +1,4 @@
-import type { User } from '@/types/user';
+import type { User, UserRole } from '@/types/user';
 export interface AuthState {
   token: string | null;
   user: User | null;
@@ -10,5 +10,5 @@ export interface AuthStore extends AuthState {
   signout: () => void;
   // Utility functions
   isAuthenticated: () => boolean;
-  hasRole: (role: string) => boolean;
+  hasRole: (role: UserRole) => boolean;
 }
