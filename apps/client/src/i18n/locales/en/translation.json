@@ -619,6 +619,8 @@
         "Card": {
           "Title": "Configuration of apps",
           "Description": "How to set up the apps to connect to OFeed.",
+          "MissingPasswordTitle": "Generate the event password first",
+          "MissingPasswordDescription": "Generate the password in the Event Password card before configuring the apps.",
           "ApiBaseUrl": "Url",
           "EventId": "Event id",
           "EventPassword": "Event Password",

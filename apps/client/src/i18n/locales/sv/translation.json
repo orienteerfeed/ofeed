@@ -619,6 +619,8 @@
         "Card": {
           "Title": "Konfigurering av appar",
           "Description": "Hur man konfigurerar appar för anslutning till OFeed.",
+          "MissingPasswordTitle": "Skapa tävlingslösenordet först",
+          "MissingPasswordDescription": "Skapa först lösenordet i kortet för tävlingslösenord innan du konfigurerar apparna.",
           "ApiBaseUrl": "URL",
           "EventId": "Tävlings-id",
           "EventPassword": "Tävlingens lösenord",

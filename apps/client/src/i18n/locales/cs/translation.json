@@ -619,6 +619,8 @@
         "Card": {
           "Title": "Nastavení aplikací",
           "Description": "Jak nastavit připojení aplikací k OFeedu.",
+          "MissingPasswordTitle": "Nejprve vygeneruj heslo akce",
+          "MissingPasswordDescription": "Nejdříve v kartě Heslo akce vygeneruj heslo a teprve potom nastav aplikace.",
           "ApiBaseUrl": "Url",
           "EventId": "Id akce",
           "EventPassword": "Heslo",

@@ -337,6 +337,14 @@
         "MapZoomOut": "Verkleinern",
         "MapAttributionOthers": "und andere"
       }
+    },
+    "Event": {
+      "Integration": {
+        "Card": {
+          "MissingPasswordTitle": "Erstelle zuerst das Event-Passwort",
+          "MissingPasswordDescription": "Erstelle zuerst das Passwort in der Karte für das Event-Passwort, bevor du die Apps konfigurierst."
+        }
+      }
     }
   },
   "Organisms": {
