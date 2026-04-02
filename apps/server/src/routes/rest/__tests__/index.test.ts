@@ -1,9 +1,25 @@
 import { Hono } from 'hono';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import env from '../../../config/env.js';
 import restRouter from '../index.js';
 
 describe('rest router registry', () => {
+  const originalMapEnv = {
+    MAPY_API_KEY: env.MAPY_API_KEY,
+    MAP_TILE_SESSION_REQUIRED: env.MAP_TILE_SESSION_REQUIRED,
+  };
+
+  beforeEach(() => {
+    env.MAPY_API_KEY = 'test-mapy-key';
+    env.MAP_TILE_SESSION_REQUIRED = false;
+  });
+
+  afterEach(() => {
+    env.MAPY_API_KEY = originalMapEnv.MAPY_API_KEY;
+    env.MAP_TILE_SESSION_REQUIRED = originalMapEnv.MAP_TILE_SESSION_REQUIRED;
+  });
+
   it('mounts auth module routes', async () => {
     const app = new Hono();
     app.route('/', restRouter as any);
