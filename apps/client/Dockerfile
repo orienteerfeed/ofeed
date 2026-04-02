@@ -34,6 +34,6 @@ ENV API_UPSTREAM="http://api:3001"
 EXPOSE 80
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 \
-  CMD wget -qO- http://localhost:${PORT}/healthz >/dev/null || exit 1
+  CMD wget -qO- http://127.0.0.1:${PORT}/healthz >/dev/null || exit 1
 
 CMD ["/bin/sh", "-c", "envsubst '$API_UPSTREAM $PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]

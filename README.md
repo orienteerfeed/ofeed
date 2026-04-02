@@ -171,6 +171,13 @@ Available compose overlays:
 - `docker-compose.infra.yaml` - attach shared external network
 - `docker-compose.remote.yaml` - host networking variant (API)
 
+Docker Compose can also use a root `.env` only for Compose interpolation, for example:
+
+- `SERVER_PORT=3001`
+- `FRONTEND_PORT=3000`
+- `API_HOST=api.orienteerfeed.com`
+- `FRONTEND_HOST=orienteerfeed.com`
+
 ## Helm / k3s Deployment
 
 - Helm chart: `deploy/helm/ofeed`

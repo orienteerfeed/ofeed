@@ -1,6 +1,22 @@
 name: ofeed
 
 services:
+  api-bootstrap:
+    image: ofeed-server
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+      args:
+        NODE_VERSION: 22.20.0
+        PNPM_VERSION: 10.29.2
+    env_file: ./apps/server/.env
+    environment:
+      - NODE_ENV=production
+    command: ["sh", "-lc", "pnpm exec prisma migrate deploy && pnpm run db:seed"]
+    restart: "no"
+    networks:
+      - app-network
+
   api:
     image: ofeed-server
     build:
@@ -11,14 +27,17 @@ services:
         PNPM_VERSION: 10.29.2
     env_file: ./apps/server/.env
     ports:
-      - "3001:3001"
+      - "${SERVER_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
     networks:
       - app-network
+    depends_on:
+      api-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health/live >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/health/live >/dev/null || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -36,7 +55,7 @@ services:
         - client_env
     env_file: ./apps/client/.env
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-3000}:80"
     restart: unless-stopped
     networks:
       - app-network
@@ -44,7 +63,7 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80/healthz >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/healthz >/dev/null || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 10
