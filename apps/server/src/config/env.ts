@@ -66,6 +66,24 @@ const DEFAULT_DATABASE_URL = 'mysql://user:password@localhost:3306/orienteerfeed
 const DEFAULT_ENCRYPTION_SECRET_KEY =
   '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
+function normalizeRawEnv(source: NodeJS.ProcessEnv) {
+  const normalized: NodeJS.ProcessEnv = {};
+
+  for (const [key, value] of Object.entries(source)) {
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    if (value.trim() === '') {
+      continue;
+    }
+
+    normalized[key] = value;
+  }
+
+  return normalized;
+}
+
 function hasTemplatePlaceholders(value: string) {
   return /\$\{[^}]+\}/.test(value);
 }
@@ -148,7 +166,7 @@ const envSchema = z.object({
   ENABLE_COMPRESSION: z.coerce.boolean().default(true),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = envSchema.safeParse(normalizeRawEnv(process.env));
 
 if (!parsed.success) {
   console.error('Invalid environment variables:');
