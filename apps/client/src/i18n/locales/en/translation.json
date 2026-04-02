@@ -619,6 +619,10 @@
         "Card": {
           "Title": "Configuration of apps",
           "Description": "How to set up the apps to connect to OFeed.",
+          "MissingPasswordTitle": "Generate the event password first",
+          "MissingPasswordDescription": "Generate the password in the Event Password card before configuring the apps.",
+          "CopyCredentials": "Copy credentials",
+          "OpenApp": "Open {{appName}}",
           "ApiBaseUrl": "Url",
           "EventId": "Event id",
           "EventPassword": "Event Password",
@@ -636,7 +640,8 @@
             },
             "QuickEvent": {
               "Description": "Copy and paste these Credentials into OFeed service setup.",
-              "ExportInterval": "Export Interval"
+              "ExportInterval": "Export Interval",
+              "CopyLink": "Copy credentials"
             },
             "SIDroidConenctor": {
               "Description": "Scan the QR code to set url, event id and password into the settings of OFeed connection. Click on the QR code icon in the settings in the app to launch the camera. You can use the button with app icon to get link to share credentials on single device."

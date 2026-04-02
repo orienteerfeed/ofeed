@@ -619,6 +619,10 @@
         "Card": {
           "Title": "Nastavení aplikací",
           "Description": "Jak nastavit připojení aplikací k OFeedu.",
+          "MissingPasswordTitle": "Nejprve vygeneruj heslo akce",
+          "MissingPasswordDescription": "Nejdříve v kartě Heslo akce vygeneruj heslo a teprve potom nastav aplikace.",
+          "CopyCredentials": "Kopírovat přihlašovací údaje",
+          "OpenApp": "Otevřít {{appName}}",
           "ApiBaseUrl": "Url",
           "EventId": "Id akce",
           "EventPassword": "Heslo",
@@ -636,7 +640,8 @@
             },
             "QuickEvent": {
               "Description": "V nastavení OFeed služby zadej do přihlašovacích údajů tyto hodnoty.",
-              "ExportInterval": "Interval pro exportování"
+              "ExportInterval": "Interval pro exportování",
+              "CopyLink": "Kopírovat přihlašovací údaje"
             },
             "SIDroidConenctor": {
               "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování. Můžeš také využít tlačítko s ikonou aplikace pro sdílení odkazu s přihlašovacími údaji na zařízení co právě používáš."

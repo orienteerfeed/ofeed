@@ -1,4 +1,6 @@
 import { ConnectorIcon, OChecklistIcon } from '@/assets/icons';
+import connectorIconUrl from '@/assets/icons/connector_icon.svg';
+import oChecklistIconUrl from '@/assets/icons/o_checklist_icon.svg';
 import {
   Card,
   CardContent,
@@ -16,6 +18,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import type { ComponentType, RefObject } from 'react';
 import { useRef, useState } from 'react';
 import { Button } from '../../../components/atoms';
+import { Alert } from '../../../components/organisms';
 import { toast } from '../../../utils';
 
 interface EventIntegrationsCardProps {
@@ -32,8 +35,11 @@ interface QrTabPanelProps {
   description: string;
   shareLabel: string;
   printLabel: string;
+  copyLabel: string;
+  openLabel: string;
   qrRef: RefObject<HTMLCanvasElement | null>;
   deepLink: string;
+  qrCenterIconSrc?: string;
   appName: string;
   appNameLabel: string;
   icon: ComponentType<{ className?: string }>;
@@ -41,6 +47,7 @@ interface QrTabPanelProps {
     ref: RefObject<HTMLCanvasElement | null>,
     appName: string
   ) => Promise<void>;
+  onCopy: (deepLink: string) => void;
   onPrint: (ref: RefObject<HTMLCanvasElement | null>, appName: string) => void;
   onOpen: (deepLink: string) => void;
   codeSize: number;
@@ -54,61 +61,92 @@ const QrTabPanel = ({
   description,
   shareLabel,
   printLabel,
+  copyLabel,
+  openLabel,
   qrRef,
   deepLink,
+  qrCenterIconSrc,
   appName,
   appNameLabel,
   icon: Icon,
   onShare,
+  onCopy,
   onPrint,
   onOpen,
   codeSize,
   errorCorrectionLevel,
   qrBackgroundColor,
-}: QrTabPanelProps) => (
-  <div className={panelClassName}>
-    <div className="space-y-2 mb-6">
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </div>
-    <div className="flex justify-center">
-      <div className="p-2 rounded-xl bg-white">
-        <QRCodeCanvas
-          value={deepLink}
-          size={codeSize}
-          level={errorCorrectionLevel}
-          ref={qrRef}
-          bgColor={qrBackgroundColor}
-          marginSize={1}
-        />
+}: QrTabPanelProps) => {
+  const qrImageSettings = qrCenterIconSrc
+    ? {
+        src: qrCenterIconSrc,
+        height: Math.round(codeSize * 0.22),
+        width: Math.round(codeSize * 0.22),
+        excavate: true,
+      }
+    : null;
+
+  return (
+    <div className={panelClassName}>
+      <div className="space-y-2 mb-6">
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      <div className="flex justify-center">
+        <div className="p-2 rounded-xl bg-white">
+          <QRCodeCanvas
+            value={deepLink}
+            size={codeSize}
+            level={errorCorrectionLevel}
+            ref={qrRef}
+            bgColor={qrBackgroundColor}
+            marginSize={1}
+            {...(qrImageSettings ? { imageSettings: qrImageSettings } : {})}
+          />
+        </div>
+      </div>
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Button
+          onClick={() => onShare(qrRef, appName)}
+          variant="outline"
+          className="flex-1"
+        >
+          <Send className="h-4 w-4 mr-2" />
+          {shareLabel}
+        </Button>
+        <Button
+          onClick={() => onPrint(qrRef, appNameLabel)}
+          variant="outline"
+          className="flex-1"
+        >
+          <Printer className="h-4 w-4 mr-2" />
+          {printLabel}
+        </Button>
+        <Button
+          type="button"
+          onClick={() => onCopy(deepLink)}
+          variant="outline"
+          className="sm:w-10 sm:flex-none"
+          title={copyLabel}
+          aria-label={copyLabel}
+        >
+          <Copy className="h-4 w-4" />
+          <span className="sr-only">{copyLabel}</span>
+        </Button>
+        <Button
+          type="button"
+          onClick={() => onOpen(deepLink)}
+          variant="outline"
+          className="sm:w-10 sm:flex-none"
+          title={openLabel}
+          aria-label={openLabel}
+        >
+          <Icon className="h-4 w-4" />
+          <span className="sr-only">{openLabel}</span>
+        </Button>
       </div>
     </div>
-    <div className="flex flex-col sm:flex-row gap-2 mt-6">
-      <Button
-        onClick={() => onShare(qrRef, appName)}
-        variant="outline"
-        className="flex-1"
-      >
-        <Send className="h-4 w-4 mr-2" />
-        {shareLabel}
-      </Button>
-      <Button
-        onClick={() => onPrint(qrRef, appNameLabel)}
-        variant="outline"
-        className="flex-1"
-      >
-        <Printer className="h-4 w-4 mr-2" />
-        {printLabel}
-      </Button>
-      <Button
-        onClick={() => onOpen(deepLink)}
-        variant="outline"
-        className="flex-1"
-      >
-        <Icon className="h-4 w-4" />
-      </Button>
-    </div>
-  </div>
-);
+  );
+};
 
 export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   t,
@@ -123,9 +161,20 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   const qrCodeConnectorRef = useRef<HTMLCanvasElement>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  // Format the service credentials
+  // Format the QuickEvent credentials link
+  const quickEventLinkUrl = new URL(config.PUBLIC_URL, window.location.origin);
+  quickEventLinkUrl.pathname = `${quickEventLinkUrl.pathname.replace(/\/$/, '')}/link`;
+  quickEventLinkUrl.search = new URLSearchParams({
+    v: '1',
+    app: 'quickevent',
+    url: apiEventsEndpoint,
+    auth: 'basic',
+    id: eventId,
+    pwd: eventPassword,
+  }).toString();
   const ochecklistDeepLink = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
   const connectorDeepLink = `https://stigning.se/connector?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
+  const quickEventCredentialsLink = quickEventLinkUrl.toString();
   const codeSize = 200;
   const errorCorrectionLevel = 'L' as const;
   const qrBackgroundColor = '#ffffff';
@@ -136,11 +185,9 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   ) => {
     if (navigator.share && ref.current) {
       try {
-        // Access the canvas element directly from the QRCodeCanvas component
         const canvas = ref.current;
         if (!canvas) return;
 
-        // Create an offscreen canvas to add padding and border
         const offscreenCanvas = document.createElement('canvas');
         const ctx = offscreenCanvas.getContext('2d');
         if (!ctx) return;
@@ -153,11 +200,9 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
         offscreenCanvas.height =
           canvas.height + padding * 2 + border * 2 + textHeight;
 
-        // Fill the background with white
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
 
-        // Draw the black border
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(
           padding,
@@ -166,15 +211,12 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
           offscreenCanvas.height - padding * 2 - textHeight
         );
 
-        // Draw the QR code
         ctx.drawImage(canvas, padding + border, padding + border);
 
-        // Add the event name text
         ctx.fillStyle = '#000000';
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
 
-        // Check if the event name is too long and truncate if necessary
         let truncatedEventName = eventName;
         const maxWidth = offscreenCanvas.width - padding * 2;
         if (ctx.measureText(eventName).width > maxWidth) {
@@ -189,15 +231,12 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
           offscreenCanvas.width / 2,
           offscreenCanvas.height - padding - 20
         );
-
-        // Add the event date text
         ctx.fillText(
           eventDate,
           offscreenCanvas.width / 2,
           offscreenCanvas.height - padding
         );
 
-        // Convert the offscreen canvas to base64 PNG
         const finalDataUrl = offscreenCanvas.toDataURL('image/png');
         const blob = dataURLToBlob(finalDataUrl);
         const file = new File([blob], `ofeed-${appName}-qr.png`, {
@@ -215,6 +254,12 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
     } else {
       alert('Web Share API is not supported in your browser.');
     }
+  };
+
+  const handleCopyDeepLink = (deepLink: string) => {
+    if (!deepLink) return;
+
+    copyWithToast(deepLink, t('Operations.CopiedToClipboard', { ns: 'common' }));
   };
 
   const handlePrint = (
@@ -320,35 +365,12 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
     }
   };
 
-  const handleOpenDeepLink = async (deepLink: string) => {
+  const handleOpenDeepLink = (deepLink: string) => {
     if (!deepLink) return;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t('Pages.Event.Integration.Card.Navigator.Title'),
-          text: t('Pages.Event.Integration.Card.Navigator.Text'),
-          url: deepLink,
-        });
-        return;
-      } catch (error) {
-        console.error('Error sharing deep link:', error);
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(deepLink);
-      toast({
-        title: t('Operations.Success', { ns: 'common' }),
-        description: t('Operations.CopiedToClipboard', { ns: 'common' }),
-        variant: 'default',
-      });
-    } catch {
-      window.open(deepLink, '_blank');
-    }
+    window.location.assign(deepLink);
   };
 
-  // Utility to convert base64 data URL to Blob
   const dataURLToBlob = (dataUrl: string): Blob => {
     const arr = dataUrl.split(',');
     if (!arr[0]) {
@@ -404,181 +426,220 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
           {t('Pages.Event.Integration.Card.Description')}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-0">
-        <Tabs defaultValue="ochecklist" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="ochecklist">OChecklist</TabsTrigger>
-            <TabsTrigger value="quickevent">QuickEvent</TabsTrigger>
-            <TabsTrigger value="connector">SI Droid Connector</TabsTrigger>
-          </TabsList>
+      <CardContent className="space-y-4">
+        {!eventPassword ? (
+          <Alert
+            severity="warning"
+            variant="outlined"
+            title={t('Pages.Event.Integration.Card.MissingPasswordTitle')}
+          >
+            {t('Pages.Event.Integration.Card.MissingPasswordDescription')}
+          </Alert>
+        ) : (
+          <Tabs defaultValue="ochecklist" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="ochecklist">O Checklist</TabsTrigger>
+              <TabsTrigger value="quickevent">QuickEvent</TabsTrigger>
+              <TabsTrigger value="connector">SI Droid Connector</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="ochecklist" className="space-y-4">
-            <QrTabPanel
-              description={t(
-                'Pages.Event.Integration.Card.Tabs.OChecklist.Description'
-              )}
-              shareLabel={t('Share', { ns: 'common' })}
-              printLabel={t('Print', { ns: 'common' })}
-              qrRef={qrCodeOChecklistRef}
-              deepLink={ochecklistDeepLink}
-              appName="ochecklist"
-              appNameLabel="O Checklist"
-              icon={OChecklistIcon}
-              onShare={handleShare}
-              onPrint={handlePrint}
-              onOpen={handleOpenDeepLink}
-              codeSize={codeSize}
-              errorCorrectionLevel={errorCorrectionLevel}
-              qrBackgroundColor={qrBackgroundColor}
-            />
-          </TabsContent>
+            <TabsContent value="ochecklist" className="space-y-4">
+              <QrTabPanel
+                description={t(
+                  'Pages.Event.Integration.Card.Tabs.OChecklist.Description'
+                )}
+                shareLabel={t('Share', { ns: 'common' })}
+                printLabel={t('Print', { ns: 'common' })}
+                copyLabel={t('Pages.Event.Integration.Card.CopyCredentials')}
+                openLabel={t('Pages.Event.Integration.Card.OpenApp', {
+                  appName: 'O Checklist',
+                })}
+                qrRef={qrCodeOChecklistRef}
+                deepLink={ochecklistDeepLink}
+                qrCenterIconSrc={oChecklistIconUrl}
+                appName="ochecklist"
+                appNameLabel="O Checklist"
+                icon={OChecklistIcon}
+                onShare={handleShare}
+                onCopy={handleCopyDeepLink}
+                onPrint={handlePrint}
+                onOpen={handleOpenDeepLink}
+                codeSize={codeSize}
+                errorCorrectionLevel={errorCorrectionLevel}
+                qrBackgroundColor={qrBackgroundColor}
+              />
+            </TabsContent>
 
-          <TabsContent value="quickevent" className="space-y-4">
-            <div className={panelClassName}>
-              <div className="space-y-2 mb-6">
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'Pages.Event.Integration.Card.Tabs.QuickEvent.Description'
-                  )}
-                </p>
-
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium">
+            <TabsContent value="quickevent" className="space-y-4">
+              <div className={panelClassName}>
+                <div className="space-y-2 mb-6">
+                  <p className="text-sm text-muted-foreground">
                     {t(
-                      'Pages.Event.Integration.Card.Tabs.QuickEvent.ExportInterval'
+                      'Pages.Event.Integration.Card.Tabs.QuickEvent.Description'
                     )}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">60 s</p>
-                </div>
+                  </p>
 
-                <div className="flex justify-between items-center gap-2">
-                  <Label className="text-sm font-medium">
-                    {t('Pages.Event.Integration.Card.ApiBaseUrl')}
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                      {config.BASE_API_URL}
-                    </p>
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        copyWithToast(
-                          apiEventsEndpoint,
-                          t('Pages.Event.Integration.Toast.CopyBaseUrl')
-                        )
-                      }
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 shrink-0"
-                    >
-                      <Copy className="h-3 w-3" />
-                      <span className="sr-only">Copy API endpoint</span>
-                    </Button>
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-medium">
+                      {t(
+                        'Pages.Event.Integration.Card.Tabs.QuickEvent.ExportInterval'
+                      )}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">60 s</p>
                   </div>
-                </div>
 
-                <div className="flex justify-between items-center gap-2">
-                  <Label className="text-sm font-medium">
-                    {t('Pages.Event.Integration.Card.EventId')}
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground">{eventId}</p>
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        copyWithToast(
-                          eventId,
-                          t('Pages.Event.Integration.Toast.CopyEventId')
-                        )
-                      }
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 shrink-0"
-                    >
-                      <Copy className="h-3 w-3" />
-                      <span className="sr-only">Copy event ID</span>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center gap-2">
-                  <Label className="text-sm font-medium">
-                    {t('Pages.Event.Integration.Card.EventPassword')}
-                  </Label>
-                  <div className="flex items-center gap-2 flex-1 max-w-[250px]">
-                    <div className="relative flex-1">
-                      <Input
-                        type={passwordVisible ? 'text' : 'password'}
-                        value={eventPassword}
-                        placeholder={t(
-                          'Pages.Event.Password.Field.Placeholders.Name'
-                        )}
-                        autoCapitalize="off"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        readOnly
-                        className="pr-10 h-8 text-sm"
-                      />
-
-                      {/* Visibility Toggle Button */}
+                  <div className="flex justify-between items-center gap-2">
+                    <Label className="text-sm font-medium">
+                      {t('Pages.Event.Integration.Card.ApiBaseUrl')}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                        {config.BASE_API_URL}
+                      </p>
                       <Button
                         type="button"
-                        onClick={togglePasswordVisibility}
+                        onClick={() =>
+                          copyWithToast(
+                            apiEventsEndpoint,
+                            t('Pages.Event.Integration.Toast.CopyBaseUrl')
+                          )
+                        }
                         variant="ghost"
                         size="sm"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                        className="h-6 w-6 p-0 shrink-0"
                       >
-                        {passwordVisible ? (
-                          <EyeOff className="h-3 w-3" />
-                        ) : (
-                          <Eye className="h-3 w-3" />
-                        )}
+                        <Copy className="h-3 w-3" />
+                        <span className="sr-only">Copy API endpoint</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center gap-2">
+                    <Label className="text-sm font-medium">
+                      {t('Pages.Event.Integration.Card.EventId')}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">{eventId}</p>
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          copyWithToast(
+                            eventId,
+                            t('Pages.Event.Integration.Toast.CopyEventId')
+                          )
+                        }
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 shrink-0"
+                      >
+                        <Copy className="h-3 w-3" />
+                        <span className="sr-only">Copy event ID</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center gap-2">
+                    <Label className="text-sm font-medium">
+                      {t('Pages.Event.Integration.Card.EventPassword')}
+                    </Label>
+                    <div className="flex items-center gap-2 flex-1 max-w-[250px]">
+                      <div className="relative flex-1">
+                        <Input
+                          type={passwordVisible ? 'text' : 'password'}
+                          value={eventPassword}
+                          placeholder={t(
+                            'Pages.Event.Password.Field.Placeholders.Name'
+                          )}
+                          autoCapitalize="off"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          readOnly
+                          className="pr-10 h-8 text-sm"
+                        />
+
+                        {/* Visibility Toggle Button */}
+                        <Button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                        >
+                          {passwordVisible ? (
+                            <EyeOff className="h-3 w-3" />
+                          ) : (
+                            <Eye className="h-3 w-3" />
+                          )}
+                          <span className="sr-only">
+                            {passwordVisible
+                              ? 'Hide password'
+                              : 'Show password'}
+                          </span>
+                        </Button>
+                      </div>
+
+                      {/* Copy Button */}
+                      <Button
+                        type="button"
+                        onClick={copyPasswordToClipboard}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 shrink-0"
+                      >
+                        <Copy className="h-3 w-3" />
                         <span className="sr-only">
-                          {passwordVisible ? 'Hide password' : 'Show password'}
+                          {t('Pages.Event.Password.Copy')}
                         </span>
                       </Button>
                     </div>
-
-                    {/* Copy Button */}
-                    <Button
-                      type="button"
-                      onClick={copyPasswordToClipboard}
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 shrink-0"
-                    >
-                      <Copy className="h-3 w-3" />
-                      <span className="sr-only">
-                        {t('Pages.Event.Password.Copy')}
-                      </span>
-                    </Button>
                   </div>
+
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      copyWithToast(
+                        quickEventCredentialsLink,
+                        t('Operations.CopiedToClipboard', { ns: 'common' })
+                      )
+                    }
+                    variant="outline"
+                    className="w-full mt-4"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    {t('Pages.Event.Integration.Card.Tabs.QuickEvent.CopyLink')}
+                  </Button>
                 </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value="connector" className="space-y-4">
-            <QrTabPanel
-              description={t(
-                'Pages.Event.Integration.Card.Tabs.SIDroidConenctor.Description'
-              )}
-              shareLabel={t('Share', { ns: 'common' })}
-              printLabel={t('Print', { ns: 'common' })}
-              qrRef={qrCodeConnectorRef}
-              deepLink={connectorDeepLink}
-              appName="si-droid-connector"
-              appNameLabel="SI-Droid Connector"
-              icon={ConnectorIcon}
-              onShare={handleShare}
-              onPrint={handlePrint}
-              onOpen={handleOpenDeepLink}
-              codeSize={codeSize}
-              errorCorrectionLevel={errorCorrectionLevel}
-              qrBackgroundColor={qrBackgroundColor}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="connector" className="space-y-4">
+              <QrTabPanel
+                description={t(
+                  'Pages.Event.Integration.Card.Tabs.SIDroidConenctor.Description'
+                )}
+                shareLabel={t('Share', { ns: 'common' })}
+                printLabel={t('Print', { ns: 'common' })}
+                copyLabel={t('Pages.Event.Integration.Card.CopyCredentials')}
+                openLabel={t('Pages.Event.Integration.Card.OpenApp', {
+                  appName: 'SI-Droid Connector',
+                })}
+                qrRef={qrCodeConnectorRef}
+                deepLink={connectorDeepLink}
+                qrCenterIconSrc={connectorIconUrl}
+                appName="si-droid-connector"
+                appNameLabel="SI-Droid Connector"
+                icon={ConnectorIcon}
+                onShare={handleShare}
+                onCopy={handleCopyDeepLink}
+                onPrint={handlePrint}
+                onOpen={handleOpenDeepLink}
+                codeSize={codeSize}
+                errorCorrectionLevel={errorCorrectionLevel}
+                qrBackgroundColor={qrBackgroundColor}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </CardContent>
     </Card>
   );
