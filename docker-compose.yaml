@@ -1,6 +1,22 @@
 name: ofeed
 
 services:
+  api-bootstrap:
+    image: ofeed-server
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+      args:
+        NODE_VERSION: 22.20.0
+        PNPM_VERSION: 10.29.2
+    env_file: ./apps/server/.env
+    environment:
+      - NODE_ENV=production
+    command: ["sh", "-lc", "pnpm exec prisma migrate deploy && pnpm run db:seed"]
+    restart: "no"
+    networks:
+      - app-network
+
   api:
     image: ofeed-server
     build:
@@ -17,6 +33,9 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    depends_on:
+      api-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/health/live >/dev/null || exit 1"]
       interval: 10s
