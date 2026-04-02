@@ -3,6 +3,7 @@
 [![Nodejs Version](https://img.shields.io/badge/node.js-22.20%20LTS-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/orienteerfeed/ofeed/actions/workflows/ci.yaml/badge.svg)](https://github.com/orienteerfeed/ofeed/actions/workflows/ci.yaml)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/orienteerfeed/ofeed?label=GitHub%20Stars)](https://github.com/orienteerfeed/ofeed/stargazers)
 
 OrienteerFeed (OFeed) is a monorepo web platform for orienteering event data, combining REST + GraphQL APIs, real-time event workflows, and a modern React frontend.
 

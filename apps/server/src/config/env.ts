@@ -63,6 +63,26 @@ function loadDotenvFiles() {
 loadDotenvFiles();
 
 const DEFAULT_DATABASE_URL = 'mysql://user:password@localhost:3306/orienteerfeed';
+const DEFAULT_ENCRYPTION_SECRET_KEY =
+  '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
+function normalizeRawEnv(source: NodeJS.ProcessEnv) {
+  const normalized: NodeJS.ProcessEnv = {};
+
+  for (const [key, value] of Object.entries(source)) {
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    if (value.trim() === '') {
+      continue;
+    }
+
+    normalized[key] = value;
+  }
+
+  return normalized;
+}
 
 function hasTemplatePlaceholders(value: string) {
   return /\$\{[^}]+\}/.test(value);
@@ -104,7 +124,7 @@ const envSchema = z.object({
 
   DATABASE_URL: z.string().default(DEFAULT_DATABASE_URL),
   JWT_TOKEN_SECRET_KEY: z.string().default('change-me-in-production'),
-  ENCRYPTION_SECRET_KEY: z.string().optional(),
+  ENCRYPTION_SECRET_KEY: z.string().default(DEFAULT_ENCRYPTION_SECRET_KEY),
   ORIS_API_BASE_URL: z.string().url().default('https://oris.orientacnisporty.cz/API/'),
   EVENTOR_API_BASE_URL: z.string().url().default('https://eventor.orienteering.sport/api'),
   EVENTOR_API_KEY: z.string().optional(),
@@ -146,7 +166,7 @@ const envSchema = z.object({
   ENABLE_COMPRESSION: z.coerce.boolean().default(true),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = envSchema.safeParse(normalizeRawEnv(process.env));
 
 if (!parsed.success) {
   console.error('Invalid environment variables:');
@@ -160,13 +180,17 @@ const fromMysqlEnv = buildDatabaseUrlFromMysqlEnv(env);
 
 if (!env.DATABASE_URL || hasTemplatePlaceholders(env.DATABASE_URL)) {
   if (!fromMysqlEnv) {
-    console.error(
-      'Invalid database configuration: DATABASE_URL contains placeholders but MYSQL_USER, MYSQL_HOST and MYSQL_DATABASE are not fully set.',
-    );
-    process.exit(1);
-  }
+    if (env.NODE_ENV === 'production') {
+      console.error(
+        'Invalid database configuration: DATABASE_URL contains placeholders but MYSQL_USER, MYSQL_HOST and MYSQL_DATABASE are not fully set.',
+      );
+      process.exit(1);
+    }
 
-  env.DATABASE_URL = fromMysqlEnv;
+    env.DATABASE_URL = DEFAULT_DATABASE_URL;
+  } else {
+    env.DATABASE_URL = fromMysqlEnv;
+  }
 }
 
 if (env.DATABASE_URL === DEFAULT_DATABASE_URL && fromMysqlEnv) {
@@ -176,6 +200,11 @@ if (env.DATABASE_URL === DEFAULT_DATABASE_URL && fromMysqlEnv) {
 if (env.NODE_ENV === 'production') {
   if (env.JWT_TOKEN_SECRET_KEY === 'change-me-in-production') {
     console.error('Invalid production environment variable: JWT_TOKEN_SECRET_KEY must be set.');
+    process.exit(1);
+  }
+
+  if (env.ENCRYPTION_SECRET_KEY === DEFAULT_ENCRYPTION_SECRET_KEY) {
+    console.error('Invalid production environment variable: ENCRYPTION_SECRET_KEY must be set.');
     process.exit(1);
   }
 }
