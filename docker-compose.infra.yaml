@@ -1,4 +1,8 @@
 services:
+  api-bootstrap:
+    networks:
+      - app-network
+      - ofeed-shared
   api:
     networks:
       - app-network
