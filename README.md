@@ -204,11 +204,15 @@ You can also use a commit marker like `[release:patch]`, but the
 When a requested release reaches `main`, the workflow:
 
 - calculates the next version from the requested release type
-- updates `CHANGELOG.md`
-- updates the root `package.json` version
-- commits those files back to `main`
 - creates git tag `vX.Y.Z`
 - creates GitHub Release
+- if needed, opens or updates a follow-up PR that syncs the root `package.json`
+  version to the released tag
+
+Because `main` is protected and changes must go through a pull request, the
+workflow does not push generated release commits directly back to `main`.
+Automated release notes live on the GitHub Release; keep `CHANGELOG.md`
+maintained manually when you want a repository-local summary.
 
 If no explicit release request is present, the workflow exits without creating a
 new version.

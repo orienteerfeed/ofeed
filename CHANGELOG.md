@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - REST API URL redesign to common standard
+- Release automation now publishes tags and GitHub Releases without pushing
+  generated commits directly to protected `main`; the root `package.json`
+  version is synced through a follow-up PR.
 
 ### Removed
 
