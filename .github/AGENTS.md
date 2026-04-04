@@ -67,8 +67,12 @@ this repository.
 
 - Releases run from pushes to `main`.
 - Tags use the `vX.Y.Z` format.
+- Release level is derived from explicit release intent and passed to
+  `semantic-release` via `SEMANTIC_RELEASE_FORCE_LEVEL`.
+- Release automation must not push generated commits directly to protected
+  `main`.
 - A follow-up PR syncs the root `package.json` version to the latest release
   tag.
-- The current `.releaserc.json` forces a patch release on `main`. If you want
-  commit-type-driven semver, change the release config deliberately and update
-  the surrounding docs in the same change.
+- GitHub Releases are the automated release notes. Update `CHANGELOG.md`
+  deliberately when you want repository-local release notes or release-process
+  documentation.
