@@ -44,10 +44,10 @@ export function registerPublicEventRoutes(router) {
     try {
       const event = await prisma.event.findUnique({
         where: { id: eventId },
-        select: { featuredImageKey: true, published: true },
+        select: { featuredImageKey: true },
       });
 
-      if (!event || !event.featuredImageKey || !event.published) {
+      if (!event || !event.featuredImageKey) {
         return c.json(error('Image not found', 404), 404);
       }
 
