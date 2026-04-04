@@ -43,6 +43,9 @@ export function buildOpenApiReferenceCSPDirectives(
   return {
     ...directives,
     scriptSrc: [...directives.scriptSrc, SCALAR_CSP_SCRIPT_SOURCE],
+    connectSrc: [...directives.connectSrc, SCALAR_CSP_SCRIPT_SOURCE],
+    styleSrcElem: ["'self'", "'unsafe-inline'"],
+    styleSrcAttr: ["'unsafe-inline'"],
   } as const;
 }
 
@@ -50,6 +53,8 @@ const directiveKeyMap: Record<string, string> = {
   defaultSrc: 'default-src',
   scriptSrc: 'script-src',
   styleSrc: 'style-src',
+  styleSrcElem: 'style-src-elem',
+  styleSrcAttr: 'style-src-attr',
   connectSrc: 'connect-src',
   imgSrc: 'img-src',
   fontSrc: 'font-src',
