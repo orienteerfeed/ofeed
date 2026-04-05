@@ -9,6 +9,7 @@
         "Dashboard": "Dashboard",
         "Users": "Uživatelé",
         "Events": "Akce",
+        "SystemMessages": "Systémové zprávy",
         "CzechRanking": "Český ranking",
         "BackToSite": "Zpět na web"
       },
@@ -66,6 +67,70 @@
       "Events": {
         "Title": "Závody",
         "Description": "Posledních {{count}} závodů včetně vlastníka, disciplíny a stavu publikace."
+      },
+      "SystemMessages": {
+        "Title": "Systémové zprávy",
+        "Description": "Správa oznámení na homepage, servisních informací a další komunikace pro celou platformu. Aktuálně je uloženo {{count}} zpráv.",
+        "Actions": {
+          "Add": "Přidat zprávu",
+          "Create": "Vytvořit zprávu",
+          "Save": "Uložit změny",
+          "Edit": "Upravit",
+          "Publish": "Publikovat",
+          "Unpublish": "Znepublikovat",
+          "Delete": "Smazat",
+          "Cancel": "Zrušit"
+        },
+        "Fields": {
+          "Title": "Nadpis",
+          "Message": "Zpráva",
+          "Severity": "Závažnost",
+          "ExpiresAt": "Platí do",
+          "ExpiresAtHelp": "Nech prázdné, pokud má zpráva zůstat aktivní do ručního znepublikování nebo smazání.",
+          "Published": "Publikováno",
+          "PublishedHelp": "Pokud je vypnuto, zpráva se uloží jako draft a na homepage se nezobrazí."
+        },
+        "Dialog": {
+          "CreateTitle": "Přidat systémovou zprávu",
+          "CreateDescription": "Vytvoř novou zprávu pro veřejnou homepage. Můžeš ji uložit jako draft nebo rovnou publikovat.",
+          "EditTitle": "Upravit systémovou zprávu",
+          "EditDescription": "Uprav obsah zprávy, časování i viditelnost.",
+          "Untitled": "Zpráva bez názvu"
+        },
+        "Status": {
+          "Draft": "Draft",
+          "Published": "Publikováno",
+          "Expired": "Expirované"
+        },
+        "Severity": {
+          "INFO": "Info",
+          "WARNING": "Varování",
+          "ERROR": "Chyba",
+          "SUCCESS": "Úspěch"
+        },
+        "Table": {
+          "TitleMessage": "Nadpis a zpráva",
+          "PublishedAt": "Publikováno"
+        },
+        "Confirm": {
+          "DeleteTitle": "Smazat systémovou zprávu",
+          "DeleteDescription": "Tato akce trvale smaže {{name}}. Tuto operaci nelze vrátit zpět."
+        },
+        "Toast": {
+          "CreateSuccessTitle": "Systémová zpráva vytvořena",
+          "CreateSuccessDescription": "Zpráva byla úspěšně uložena.",
+          "UpdateSuccessTitle": "Systémová zpráva upravena",
+          "UpdateSuccessDescription": "Změny zprávy byly uloženy.",
+          "DeleteSuccessTitle": "Systémová zpráva smazána",
+          "DeleteSuccessDescription": "{{name}} byla smazána.",
+          "PublishSuccessTitle": "Systémová zpráva publikována",
+          "UnpublishSuccessTitle": "Systémová zpráva znepublikována",
+          "StatusSuccessDescription": "Viditelnost zprávy {{name}} byla upravena.",
+          "ActionErrorTitle": "Akce nad systémovou zprávou selhala",
+          "ValidationErrorTitle": "Zpráva není kompletní",
+          "MessageRequired": "Před uložením vyplň text zprávy.",
+          "UnknownError": "Došlo k neočekávané chybě."
+        }
       },
       "CzechRanking": {
         "Title": "Podklady českého rankingu",
@@ -189,6 +254,9 @@
         "Status": "Stav",
         "Organization": "Organizace",
         "CreatedAt": "Vytvořeno",
+        "UpdatedAt": "Aktualizováno",
+        "ExpiresAt": "Platí do",
+        "Severity": "Závažnost",
         "Active": "Aktivní",
         "Inactive": "Neaktivní",
         "Actions": "Akce",

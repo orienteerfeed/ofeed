@@ -9,6 +9,7 @@
         "Dashboard": "Dashboard",
         "Users": "Användare",
         "Events": "Tävlingar",
+        "SystemMessages": "Systemmeddelanden",
         "CzechRanking": "Tjeckisk ranking",
         "BackToSite": "Till webbplatsen"
       },
@@ -66,6 +67,70 @@
       "Events": {
         "Title": "Tävlingar",
         "Description": "De senaste {{count}} tävlingarna med ägare, disciplin och publiceringsstatus."
+      },
+      "SystemMessages": {
+        "Title": "Systemmeddelanden",
+        "Description": "Hantera startsidesnotiser, driftmeddelanden och annan kommunikation som gäller hela plattformen. Just nu finns {{count}} meddelanden sparade.",
+        "Actions": {
+          "Add": "Lägg till meddelande",
+          "Create": "Skapa meddelande",
+          "Save": "Spara ändringar",
+          "Edit": "Redigera",
+          "Publish": "Publicera",
+          "Unpublish": "Avpublicera",
+          "Delete": "Ta bort",
+          "Cancel": "Avbryt"
+        },
+        "Fields": {
+          "Title": "Titel",
+          "Message": "Meddelande",
+          "Severity": "Allvarlighetsgrad",
+          "ExpiresAt": "Gäller till",
+          "ExpiresAtHelp": "Lämna tomt om meddelandet ska vara aktivt tills det avpubliceras eller tas bort manuellt.",
+          "Published": "Publicerad",
+          "PublishedHelp": "Om den är avstängd sparas meddelandet som utkast och visas inte på startsidan."
+        },
+        "Dialog": {
+          "CreateTitle": "Lägg till systemmeddelande",
+          "CreateDescription": "Skapa ett nytt meddelande för den publika startsidan. Du kan spara det som utkast eller publicera det direkt.",
+          "EditTitle": "Redigera systemmeddelande",
+          "EditDescription": "Uppdatera innehåll, tid och synlighet för meddelandet.",
+          "Untitled": "Meddelande utan titel"
+        },
+        "Status": {
+          "Draft": "Utkast",
+          "Published": "Publicerad",
+          "Expired": "Utgånget"
+        },
+        "Severity": {
+          "INFO": "Info",
+          "WARNING": "Varning",
+          "ERROR": "Fel",
+          "SUCCESS": "Lyckat"
+        },
+        "Table": {
+          "TitleMessage": "Titel och meddelande",
+          "PublishedAt": "Publicerad"
+        },
+        "Confirm": {
+          "DeleteTitle": "Ta bort systemmeddelande",
+          "DeleteDescription": "Den här åtgärden tar bort {{name}} permanent. Det går inte att ångra."
+        },
+        "Toast": {
+          "CreateSuccessTitle": "Systemmeddelande skapat",
+          "CreateSuccessDescription": "Meddelandet sparades.",
+          "UpdateSuccessTitle": "Systemmeddelande uppdaterat",
+          "UpdateSuccessDescription": "Ändringarna i meddelandet sparades.",
+          "DeleteSuccessTitle": "Systemmeddelande borttaget",
+          "DeleteSuccessDescription": "{{name}} togs bort.",
+          "PublishSuccessTitle": "Systemmeddelande publicerat",
+          "UnpublishSuccessTitle": "Systemmeddelande avpublicerat",
+          "StatusSuccessDescription": "Synligheten för {{name}} uppdaterades.",
+          "ActionErrorTitle": "Åtgärden för systemmeddelandet misslyckades",
+          "ValidationErrorTitle": "Meddelandet är inte komplett",
+          "MessageRequired": "Ange meddelandetext innan du sparar.",
+          "UnknownError": "Ett oväntat fel inträffade."
+        }
       },
       "CzechRanking": {
         "Title": "Underlag för tjeckisk ranking",
@@ -189,6 +254,9 @@
         "Status": "Status",
         "Organization": "Organisation",
         "CreatedAt": "Skapad",
+        "UpdatedAt": "Uppdaterad",
+        "ExpiresAt": "Gäller till",
+        "Severity": "Allvarlighetsgrad",
         "Active": "Aktiv",
         "Inactive": "Inaktiv",
         "Actions": "Åtgärder",
