@@ -25,6 +25,8 @@ network boundary.
 - Keep exports intentional. Update barrel exports when adding new models.
 - Favor additive changes; if a contract change is breaking, make that explicit
   in the change summary and update both consumers in the same work.
+- Rebuild this package after changing shared contracts before validating
+  consuming apps.
 
 ## Validation Guidance
 
@@ -35,9 +37,10 @@ network boundary.
 
 ## Verification
 
-This package has no dedicated scripts. Validate changes from the repo root:
+Validate shared-contract changes from the repo root:
 
-- `pnpm type-check`
+- `pnpm --filter @repo/shared build`
+- `pnpm --filter @repo/shared type-check`
 - `pnpm test:client`
 - `pnpm test:server`
 

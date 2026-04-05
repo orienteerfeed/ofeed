@@ -6,6 +6,7 @@ export const activeSystemMessages = async () => {
   return prisma.systemMessage.findMany({
     where: {
       publishedAt: {
+        not: null,
         lte: now,
       },
       OR: [

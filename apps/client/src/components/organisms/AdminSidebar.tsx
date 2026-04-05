@@ -20,6 +20,7 @@ import {
   ExternalLink,
   LayoutDashboard,
   Medal,
+  Megaphone,
   Shield,
   Users,
 } from 'lucide-react';
@@ -27,7 +28,12 @@ import { useTranslation } from 'react-i18next';
 
 import { PATHNAMES } from '@/lib/paths/pathnames';
 
-type AdminNavItemKey = 'dashboard' | 'users' | 'events' | 'ranking';
+type AdminNavItemKey =
+  | 'dashboard'
+  | 'users'
+  | 'events'
+  | 'systemMessages'
+  | 'ranking';
 
 type AdminSidebarProps = {
   activeItem: AdminNavItemKey;
@@ -69,6 +75,13 @@ export function AdminSidebar({ activeItem }: AdminSidebarProps) {
       label: t('Pages.Admin.Navigation.Events'),
       icon: CalendarDays,
       active: activeItem === 'events',
+    },
+    {
+      key: 'systemMessages' as const,
+      to: PATHNAMES.adminSystemMessages().to,
+      label: t('Pages.Admin.Navigation.SystemMessages'),
+      icon: Megaphone,
+      active: activeItem === 'systemMessages',
     },
     {
       key: 'ranking' as const,

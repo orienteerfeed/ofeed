@@ -9,6 +9,7 @@
         "Dashboard": "Dashboard",
         "Users": "Usuarios",
         "Events": "Eventos",
+        "SystemMessages": "Mensajes del sistema",
         "CzechRanking": "Ranking checo",
         "BackToSite": "Volver al sitio"
       },
@@ -66,6 +67,70 @@
       "Events": {
         "Title": "Eventos",
         "Description": "Los últimos {{count}} eventos con propietario, disciplina y estado de publicación."
+      },
+      "SystemMessages": {
+        "Title": "Mensajes del sistema",
+        "Description": "Gestiona avisos de la página principal, mensajes de mantenimiento y otra comunicación visible para toda la plataforma. Actualmente hay {{count}} mensajes almacenados.",
+        "Actions": {
+          "Add": "Añadir mensaje",
+          "Create": "Crear mensaje",
+          "Save": "Guardar cambios",
+          "Edit": "Editar",
+          "Publish": "Publicar",
+          "Unpublish": "Despublicar",
+          "Delete": "Eliminar",
+          "Cancel": "Cancelar"
+        },
+        "Fields": {
+          "Title": "Título",
+          "Message": "Mensaje",
+          "Severity": "Severidad",
+          "ExpiresAt": "Expira el",
+          "ExpiresAtHelp": "Déjalo vacío si el mensaje debe seguir activo hasta que se despublique o elimine manualmente.",
+          "Published": "Publicado",
+          "PublishedHelp": "Si está desactivado, el mensaje se guarda como borrador y no se muestra en la página principal."
+        },
+        "Dialog": {
+          "CreateTitle": "Añadir mensaje del sistema",
+          "CreateDescription": "Crea un nuevo mensaje para la página principal pública. Puedes guardarlo como borrador o publicarlo inmediatamente.",
+          "EditTitle": "Editar mensaje del sistema",
+          "EditDescription": "Actualiza el contenido, el tiempo y la visibilidad del mensaje.",
+          "Untitled": "Mensaje sin título"
+        },
+        "Status": {
+          "Draft": "Borrador",
+          "Published": "Publicado",
+          "Expired": "Expirado"
+        },
+        "Severity": {
+          "INFO": "Info",
+          "WARNING": "Aviso",
+          "ERROR": "Error",
+          "SUCCESS": "Éxito"
+        },
+        "Table": {
+          "TitleMessage": "Título y mensaje",
+          "PublishedAt": "Publicado el"
+        },
+        "Confirm": {
+          "DeleteTitle": "Eliminar mensaje del sistema",
+          "DeleteDescription": "Esta acción elimina permanentemente {{name}}. No se puede deshacer."
+        },
+        "Toast": {
+          "CreateSuccessTitle": "Mensaje del sistema creado",
+          "CreateSuccessDescription": "El mensaje se guardó correctamente.",
+          "UpdateSuccessTitle": "Mensaje del sistema actualizado",
+          "UpdateSuccessDescription": "Se guardaron los cambios del mensaje.",
+          "DeleteSuccessTitle": "Mensaje del sistema eliminado",
+          "DeleteSuccessDescription": "Se eliminó {{name}}.",
+          "PublishSuccessTitle": "Mensaje del sistema publicado",
+          "UnpublishSuccessTitle": "Mensaje del sistema despublicado",
+          "StatusSuccessDescription": "Se actualizó la visibilidad de {{name}}.",
+          "ActionErrorTitle": "Falló la acción del mensaje del sistema",
+          "ValidationErrorTitle": "El mensaje está incompleto",
+          "MessageRequired": "Introduce el contenido del mensaje antes de guardarlo.",
+          "UnknownError": "Se produjo un error inesperado."
+        }
       },
       "CzechRanking": {
         "Title": "Datos base del ranking checo",
@@ -189,6 +254,9 @@
         "Status": "Estado",
         "Organization": "Organización",
         "CreatedAt": "Creado",
+        "UpdatedAt": "Actualizado",
+        "ExpiresAt": "Expira el",
+        "Severity": "Severidad",
         "Active": "Activo",
         "Inactive": "Inactivo",
         "Actions": "Acciones",

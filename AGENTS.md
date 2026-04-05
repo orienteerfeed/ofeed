@@ -38,12 +38,15 @@ Important generated paths:
 
 - TypeScript + ESM is the default across apps and packages.
 - Prefer small, targeted changes over broad refactors.
+- For frontend user-facing text, use the existing i18n locale resources or add
+  new locale entries when needed rather than hard-coded copy.
 - Keep cross-service API contracts and reusable validation schemas in
   `packages/shared` whenever both client and server depend on them.
 - If a schema is server-only or UI-only, keep it close to the feature that owns
   it.
 - Update `README.md`, `CONTRIBUTING.md`, or `docs/` when behavior, public API,
   infrastructure, or configuration changes.
+- Use the `.yaml` extension for YAML files; do not introduce new `.yml` files.
 - Preserve contributor-facing references to `CLA.md` when changing contribution,
   licensing, or pull request workflows.
 - Never commit secrets. Only client-safe `VITE_*` variables may reach browser
@@ -61,6 +64,8 @@ Run from the repository root unless noted otherwise.
 - `pnpm format`: format the repo with Prettier.
 - `pnpm format:check`: verify formatting.
 - `pnpm type-check`: run TypeScript checks across workspaces.
+- `pnpm --filter @repo/shared build`: rebuild shared contracts after changing
+  `packages/shared`.
 - `pnpm test`: run workspace tests.
 - `pnpm test:watch`: run watch-mode tests in parallel.
 - `pnpm test:client`: run client tests only.
@@ -86,11 +91,17 @@ when validating a single workspace.
 - Use Zod-based schemas as the main validation source of truth.
 - Reuse shared schemas between frontend forms and backend handlers when the same
   payload crosses the network.
+- Prefer GraphQL for first-party internal app communication and REST for
+  external, integration-facing, or public API surfaces.
+- For REST endpoints, keep the existing response API structure consistent with
+  current server response helpers.
 - Keep REST, GraphQL, and form validation behavior aligned.
 
 ## Testing Expectations
 
 - Run the narrowest meaningful checks for the area you changed.
+- Prefer focused unit tests for new behavior and regressions; add or update them
+  together with the code change when practical.
 - Frontend changes should usually run relevant client Vitest commands and, for
   route/form flows, Playwright when practical.
 - Backend changes should run relevant server Vitest commands; schema changes

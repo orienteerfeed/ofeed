@@ -8,6 +8,10 @@ import {
   adminCzechRankingSnapshotDetailSchema,
   adminDashboardSchema,
   adminEventListSchema,
+  adminSystemMessageListSchema,
+  adminSystemMessageMutationResultSchema,
+  adminSystemMessageUpdateInputSchema,
+  adminSystemMessageUpsertInputSchema,
   adminUserActiveUpdateInputSchema,
   adminUserListSchema,
   adminUserMutationResultSchema,
@@ -52,6 +56,10 @@ const dashboardEnvelopeSchema = createEnvelopeSchema(adminDashboardSchema);
 const usersEnvelopeSchema = createEnvelopeSchema(adminUserListSchema);
 const userMutationEnvelopeSchema = createEnvelopeSchema(adminUserMutationResultSchema);
 const eventsEnvelopeSchema = createEnvelopeSchema(adminEventListSchema);
+const systemMessagesEnvelopeSchema = createEnvelopeSchema(adminSystemMessageListSchema);
+const systemMessageMutationEnvelopeSchema = createEnvelopeSchema(
+  adminSystemMessageMutationResultSchema,
+);
 const czechRankingOverviewEnvelopeSchema = createEnvelopeSchema(adminCzechRankingOverviewSchema);
 const czechRankingSnapshotDetailEnvelopeSchema = createEnvelopeSchema(
   adminCzechRankingSnapshotDetailSchema,
@@ -86,6 +94,24 @@ const eventsOkResponse = {
   content: {
     'application/json': {
       schema: eventsEnvelopeSchema,
+    },
+  },
+};
+
+const systemMessagesOkResponse = {
+  description: 'Admin system messages list',
+  content: {
+    'application/json': {
+      schema: systemMessagesEnvelopeSchema,
+    },
+  },
+};
+
+const systemMessageMutationOkResponse = {
+  description: 'Admin system message mutation result',
+  content: {
+    'application/json': {
+      schema: systemMessageMutationEnvelopeSchema,
     },
   },
 };
@@ -155,6 +181,7 @@ const czechRankingClearOkResponse = {
 
 const adminBase = ADMIN_OPENAPI.basePath;
 const adminUserPath = `${adminBase}/users/{userId}`;
+const adminSystemMessagePath = `${adminBase}/system-messages/{messageId}`;
 const czechRankingBase = `${adminBase}/ranking/czech`;
 const czechRankingSnapshotsPath = `${czechRankingBase}/snapshots`;
 const czechRankingEventResultsPath = `${czechRankingBase}/event-results`;
@@ -244,6 +271,77 @@ export const ADMIN_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         200: eventsOkResponse,
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
+      },
+    },
+  },
+  [`${adminBase}/system-messages`]: {
+    get: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminSystemMessages',
+      summary: 'Get admin system messages list',
+      security: bearerSecurity,
+      responses: {
+        200: systemMessagesOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+      },
+    },
+    post: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminCreateSystemMessage',
+      summary: 'Create admin system message',
+      security: bearerSecurity,
+      requestBody: jsonBody(zodToOpenApiSchema(adminSystemMessageUpsertInputSchema)),
+      responses: {
+        200: systemMessageMutationOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        422: okJson('Validation error'),
+      },
+    },
+  },
+  [adminSystemMessagePath]: {
+    patch: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminUpdateSystemMessage',
+      summary: 'Update admin system message',
+      security: bearerSecurity,
+      parameters: [
+        {
+          name: 'messageId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+        },
+      ],
+      requestBody: jsonBody(zodToOpenApiSchema(adminSystemMessageUpdateInputSchema)),
+      responses: {
+        200: systemMessageMutationOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        404: okJson('System message not found'),
+        422: okJson('Validation error'),
+      },
+    },
+    delete: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminDeleteSystemMessage',
+      summary: 'Delete admin system message',
+      security: bearerSecurity,
+      parameters: [
+        {
+          name: 'messageId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+        },
+      ],
+      responses: {
+        200: systemMessageMutationOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        404: okJson('System message not found'),
+        422: okJson('Validation error'),
       },
     },
   },
