@@ -62,7 +62,8 @@ render page components from `src/pages`.
 
 ## Localization
 
-- Never hard-code user-facing copy in components when it belongs in i18n.
+- Never hard-code user-facing copy in components when it belongs in i18n; use
+  existing locale keys or add new ones when needed.
 - Current locale resources exist for `en`, `cs`, `es`, `de`, and `sv`.
 - The target locale set also includes `fr`. When doing localization-heavy work
   or introducing new namespaces, add and maintain French resources instead of
