@@ -7,8 +7,12 @@ import {
   adminCzechRankingUploadResultSchema,
   adminDashboardSchema,
   adminEventListSchema,
+  adminSystemMessageListSchema,
+  adminSystemMessageMutationResultSchema,
   adminUserMutationResultSchema,
   adminUserListSchema,
+  type AdminSystemMessageUpdateInput,
+  type AdminSystemMessageUpsertInput,
   type CzechRankingCategory,
   type CzechRankingType,
 } from '@repo/shared';
@@ -131,6 +135,57 @@ export function useAdminEventsQuery() {
     queryKey: ['admin', 'events'],
     queryFn: async () =>
       adminEventListSchema.parse(await api.get(ENDPOINTS.adminEvents())),
+  });
+}
+
+export function useAdminSystemMessagesQuery() {
+  const api = useApi();
+
+  return useQuery({
+    queryKey: ['admin', 'system-messages'],
+    queryFn: async () =>
+      adminSystemMessageListSchema.parse(
+        await api.get(ENDPOINTS.adminSystemMessages())
+      ),
+  });
+}
+
+export function useAdminSystemMessageCreateMutation() {
+  const api = useApi();
+
+  return useMutation({
+    mutationFn: async (input: AdminSystemMessageUpsertInput) =>
+      adminSystemMessageMutationResultSchema.parse(
+        await api.post(ENDPOINTS.adminSystemMessages(), input)
+      ),
+  });
+}
+
+export function useAdminSystemMessageUpdateMutation() {
+  const api = useApi();
+
+  return useMutation({
+    mutationFn: async (input: {
+      messageId: number;
+      data: AdminSystemMessageUpdateInput;
+    }) =>
+      adminSystemMessageMutationResultSchema.parse(
+        await api.patch(
+          ENDPOINTS.adminSystemMessage(input.messageId),
+          input.data
+        )
+      ),
+  });
+}
+
+export function useAdminSystemMessageDeleteMutation() {
+  const api = useApi();
+
+  return useMutation({
+    mutationFn: async (messageId: number) =>
+      adminSystemMessageMutationResultSchema.parse(
+        await api.delete(ENDPOINTS.adminSystemMessage(messageId))
+      ),
   });
 }
 

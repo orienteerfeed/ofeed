@@ -36,6 +36,7 @@ const eventsBodyLimitPrefix = EVENT_OPENAPI.basePath;
 const mapTilesRoutePrefix = `${MAP_OPENAPI.basePath}/tiles`;
 const mapTilesPathPattern = `${MAP_OPENAPI.basePath}/tiles/*`;
 const publicEventImagePathPattern = `${EVENT_OPENAPI.basePath}/:eventId/image`;
+const defaultCorsMethods = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] as const;
 
 function toRfc3339Timestamp() {
   return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -158,6 +159,15 @@ function buildAnonymousRateLimitKey(c: { req: { header: (name: string) => string
   return `fingerprint:${fingerprint}`;
 }
 
+function normalizeConfiguredCorsMethods(rawValue: string | undefined) {
+  const configured = (rawValue ?? '')
+    .split(',')
+    .map((value) => value.trim().toUpperCase())
+    .filter(Boolean);
+
+  return Array.from(new Set([...defaultCorsMethods, ...configured]));
+}
+
 export function createRouter() {
   return new OpenAPIHono<AppBindings>({
     strict: false,
@@ -219,7 +229,7 @@ export default function createApp() {
     '*',
     cors({
       origin: env.CORS_ORIGIN?.split(',') ?? ['*'],
-      allowMethods: env.CORS_METHODS?.split(',') ?? ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowMethods: normalizeConfiguredCorsMethods(env.CORS_METHODS),
       allowHeaders: env.CORS_HEADERS?.split(',') ?? ['Content-Type', 'Authorization'],
       credentials: true,
     }),

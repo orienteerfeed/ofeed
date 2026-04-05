@@ -9,6 +9,7 @@
         "Dashboard": "Dashboard",
         "Users": "Users",
         "Events": "Events",
+        "SystemMessages": "System messages",
         "CzechRanking": "Czech ranking",
         "BackToSite": "Back to site"
       },
@@ -66,6 +67,70 @@
       "Events": {
         "Title": "Events",
         "Description": "Latest {{count}} events with owner, discipline, and publication state."
+      },
+      "SystemMessages": {
+        "Title": "System messages",
+        "Description": "Manage homepage announcements, maintenance notices, and other platform-wide communication. {{count}} messages are currently stored.",
+        "Actions": {
+          "Add": "Add message",
+          "Create": "Create message",
+          "Save": "Save changes",
+          "Edit": "Edit",
+          "Publish": "Publish",
+          "Unpublish": "Unpublish",
+          "Delete": "Delete",
+          "Cancel": "Cancel"
+        },
+        "Fields": {
+          "Title": "Title",
+          "Message": "Message",
+          "Severity": "Severity",
+          "ExpiresAt": "Expires at",
+          "ExpiresAtHelp": "Leave empty if the message should stay active until manually unpublished or deleted.",
+          "Published": "Published",
+          "PublishedHelp": "If disabled, the message is stored as a draft and is not shown on the homepage."
+        },
+        "Dialog": {
+          "CreateTitle": "Add system message",
+          "CreateDescription": "Create a new message for the public homepage. Save it as draft or publish it immediately.",
+          "EditTitle": "Edit system message",
+          "EditDescription": "Update the message content, timing, and visibility.",
+          "Untitled": "Untitled message"
+        },
+        "Status": {
+          "Draft": "Draft",
+          "Published": "Published",
+          "Expired": "Expired"
+        },
+        "Severity": {
+          "INFO": "Info",
+          "WARNING": "Warning",
+          "ERROR": "Error",
+          "SUCCESS": "Success"
+        },
+        "Table": {
+          "TitleMessage": "Title & message",
+          "PublishedAt": "Published at"
+        },
+        "Confirm": {
+          "DeleteTitle": "Delete system message",
+          "DeleteDescription": "This action permanently deletes {{name}}. This cannot be undone."
+        },
+        "Toast": {
+          "CreateSuccessTitle": "System message created",
+          "CreateSuccessDescription": "The message was saved successfully.",
+          "UpdateSuccessTitle": "System message updated",
+          "UpdateSuccessDescription": "The message changes were saved.",
+          "DeleteSuccessTitle": "System message deleted",
+          "DeleteSuccessDescription": "{{name}} was deleted.",
+          "PublishSuccessTitle": "System message published",
+          "UnpublishSuccessTitle": "System message unpublished",
+          "StatusSuccessDescription": "Visibility for {{name}} was updated.",
+          "ActionErrorTitle": "System message action failed",
+          "ValidationErrorTitle": "Message is incomplete",
+          "MessageRequired": "Enter the message body before saving.",
+          "UnknownError": "An unexpected error occurred."
+        }
       },
       "CzechRanking": {
         "Title": "Czech ranking backing data",
@@ -189,6 +254,9 @@
         "Status": "Status",
         "Organization": "Organization",
         "CreatedAt": "Created",
+        "UpdatedAt": "Updated",
+        "ExpiresAt": "Expires at",
+        "Severity": "Severity",
         "Active": "Active",
         "Inactive": "Inactive",
         "Actions": "Actions",

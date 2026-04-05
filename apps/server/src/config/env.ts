@@ -132,7 +132,7 @@ const envSchema = z.object({
   MAP_TILE_COOKIE_SECRET: z.string().optional(),
 
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
-  CORS_METHODS: z.string().default('GET,HEAD,POST,PUT,DELETE,OPTIONS'),
+  CORS_METHODS: z.string().default('GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS'),
   CORS_HEADERS: z
     .string()
     .default(

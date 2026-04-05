@@ -302,7 +302,7 @@ model SystemMessage {
   title       String?               @db.VarChar(255)
   message     String                @db.Text
   severity    SystemMessageSeverity @default(INFO)
-  publishedAt DateTime              @default(now())
+  publishedAt DateTime?
   expiresAt   DateTime?
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
