@@ -7,6 +7,7 @@ import {
   eventDisciplineSchema,
   userRoleSchema,
 } from './common.js';
+import { systemMessageSeveritySchema } from './system-message.js';
 
 export const adminDashboardSummarySchema = z.object({
   totalUsers: z.number().int().nonnegative(),
@@ -70,6 +71,48 @@ export const adminUserMutationResultSchema = z.object({
 export const adminEventListSchema = z.object({
   total: z.number().int().nonnegative(),
   items: z.array(adminEventListItemSchema),
+});
+
+const adminSystemMessageDateInputSchema = z.union([z.string(), z.date()]);
+
+export const adminSystemMessageItemSchema = z.object({
+  id: z.number().int(),
+  title: z.string().nullable().optional(),
+  message: z.string(),
+  severity: systemMessageSeveritySchema,
+  publishedAt: dateLikeSchema.nullable().optional(),
+  expiresAt: dateLikeSchema.nullable().optional(),
+  createdAt: dateLikeSchema,
+  updatedAt: dateLikeSchema,
+});
+
+export const adminSystemMessageListSchema = z.object({
+  total: z.number().int().nonnegative(),
+  items: z.array(adminSystemMessageItemSchema),
+});
+
+export const adminSystemMessageUpsertInputSchema = z.object({
+  title: z.string().trim().max(255).nullish(),
+  message: z.string().trim().min(1).max(5000),
+  severity: systemMessageSeveritySchema.default('INFO'),
+  expiresAt: adminSystemMessageDateInputSchema.nullish(),
+  published: z.boolean().default(false),
+});
+
+export const adminSystemMessageUpdateInputSchema = z
+  .object({
+    title: z.string().trim().max(255).nullish(),
+    message: z.string().trim().min(1).max(5000).optional(),
+    severity: systemMessageSeveritySchema.optional(),
+    expiresAt: adminSystemMessageDateInputSchema.nullish(),
+    published: z.boolean().optional(),
+  })
+  .refine(value => Object.keys(value).length > 0, {
+    message: 'At least one field must be provided.',
+  });
+
+export const adminSystemMessageMutationResultSchema = z.object({
+  systemMessage: adminSystemMessageItemSchema,
 });
 
 export const adminCzechRankingSnapshotDatasetSchema = z.object({
@@ -173,6 +216,13 @@ export type AdminUserList = z.infer<typeof adminUserListSchema>;
 export type AdminUserActiveUpdateInput = z.infer<typeof adminUserActiveUpdateInputSchema>;
 export type AdminUserMutationResult = z.infer<typeof adminUserMutationResultSchema>;
 export type AdminEventList = z.infer<typeof adminEventListSchema>;
+export type AdminSystemMessageItem = z.infer<typeof adminSystemMessageItemSchema>;
+export type AdminSystemMessageList = z.infer<typeof adminSystemMessageListSchema>;
+export type AdminSystemMessageUpsertInput = z.infer<typeof adminSystemMessageUpsertInputSchema>;
+export type AdminSystemMessageUpdateInput = z.infer<typeof adminSystemMessageUpdateInputSchema>;
+export type AdminSystemMessageMutationResult = z.infer<
+  typeof adminSystemMessageMutationResultSchema
+>;
 export type AdminCzechRankingSnapshotDataset = z.infer<
   typeof adminCzechRankingSnapshotDatasetSchema
 >;

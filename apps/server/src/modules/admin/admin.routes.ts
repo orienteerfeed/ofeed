@@ -2,16 +2,20 @@ import { createRouter } from '../../lib/create-app.js';
 import { requireAdminAccess } from '../../middlewares/require-admin.js';
 
 import {
+  createAdminSystemMessageHandler,
   clearAdminCzechRankingEventResultsHandler,
   clearAdminCzechRankingSnapshotsHandler,
+  deleteAdminSystemMessageHandler,
   deleteAdminUserHandler,
   getAdminCzechRankingEventDetailHandler,
   getAdminCzechRankingOverviewHandler,
   getAdminCzechRankingSnapshotDetailHandler,
   getAdminDashboardHandler,
   getAdminEventsHandler,
+  getAdminSystemMessagesHandler,
   getAdminUsersHandler,
   syncAdminCzechRankingEventResultsHandler,
+  updateAdminSystemMessageHandler,
   updateAdminUserHandler,
   uploadAdminCzechRankingSnapshotHandler,
 } from './admin.handlers.js';
@@ -25,6 +29,10 @@ router.get('/users', getAdminUsersHandler);
 router.patch('/users/:userId', updateAdminUserHandler);
 router.delete('/users/:userId', deleteAdminUserHandler);
 router.get('/events', getAdminEventsHandler);
+router.get('/system-messages', getAdminSystemMessagesHandler);
+router.post('/system-messages', createAdminSystemMessageHandler);
+router.patch('/system-messages/:messageId', updateAdminSystemMessageHandler);
+router.delete('/system-messages/:messageId', deleteAdminSystemMessageHandler);
 router.get('/ranking/czech', getAdminCzechRankingOverviewHandler);
 router.get('/ranking/czech/snapshots', getAdminCzechRankingSnapshotDetailHandler);
 router.post('/ranking/czech/snapshots', uploadAdminCzechRankingSnapshotHandler);

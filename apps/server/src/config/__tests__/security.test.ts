@@ -57,12 +57,18 @@ describe('config/security', () => {
     expect(directives.scriptSrc).toContain("'self'");
     expect(directives.scriptSrc).toContain("'nonce-abc123'");
     expect(directives.scriptSrc).toContain(SCALAR_CSP_SCRIPT_SOURCE);
+    expect(directives.connectSrc).toContain(SCALAR_CSP_SCRIPT_SOURCE);
+    expect(directives.styleSrcElem).toEqual(["'self'", "'unsafe-inline'"]);
+    expect(directives.styleSrcAttr).toEqual(["'unsafe-inline'"]);
   });
 
   it('builds OpenAPI reference CSP header with the Scalar CDN', () => {
     const header = buildOpenApiReferenceCSPHeaderValue('production', 'nonce-value');
 
     expect(header).toContain(`script-src 'self' 'nonce-nonce-value' ${SCALAR_CSP_SCRIPT_SOURCE}`);
+    expect(header).toContain(`connect-src 'self' ${SCALAR_CSP_SCRIPT_SOURCE}`);
+    expect(header).toContain(`style-src-elem 'self' 'unsafe-inline'`);
+    expect(header).toContain(`style-src-attr 'unsafe-inline'`);
   });
 
   it('enables CSP only in production', () => {

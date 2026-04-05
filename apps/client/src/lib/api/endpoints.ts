@@ -48,6 +48,9 @@ export const ENDPOINTS = {
   adminUser: (userId: string | number): string =>
     `${apiPrefix}/admin/users/${userId}`,
   adminEvents: (): string => `${apiPrefix}/admin/events`,
+  adminSystemMessages: (): string => `${apiPrefix}/admin/system-messages`,
+  adminSystemMessage: (messageId: string | number): string =>
+    `${apiPrefix}/admin/system-messages/${messageId}`,
   adminCzechRankingOverview: (): string => `${apiPrefix}/admin/ranking/czech`,
   adminCzechRankingSnapshots: (params?: QueryParams): string =>
     `${apiPrefix}/admin/ranking/czech/snapshots${qs(params)}`,

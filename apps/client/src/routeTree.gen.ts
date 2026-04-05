@@ -18,6 +18,7 @@ import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSystemMessagesRouteImport } from './routes/admin/system-messages'
 import { Route as AdminEventsRouteImport } from './routes/admin/events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
@@ -70,6 +71,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSystemMessagesRoute = AdminSystemMessagesRouteImport.update({
+  id: '/admin/system-messages',
+  path: '/admin/system-messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEventsRoute = AdminEventsRouteImport.update({
   id: '/admin/events',
   path: '/admin/events',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/system-messages': typeof AdminSystemMessagesRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/system-messages': typeof AdminSystemMessagesRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/system-messages': typeof AdminSystemMessagesRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/profile'
     | '/admin/events'
+    | '/admin/system-messages'
     | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/signin'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/profile'
     | '/admin/events'
+    | '/admin/system-messages'
     | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/signin'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/profile'
     | '/admin/events'
+    | '/admin/system-messages'
     | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/signin'
@@ -213,6 +225,7 @@ export interface RootRouteChildren {
   MyEventsRoute: typeof MyEventsRoute
   ProfileRoute: typeof ProfileRoute
   AdminEventsRoute: typeof AdminEventsRoute
+  AdminSystemMessagesRoute: typeof AdminSystemMessagesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSigninRoute: typeof AuthSigninRoute
@@ -290,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/system-messages': {
+      id: '/admin/system-messages'
+      path: '/admin/system-messages'
+      fullPath: '/admin/system-messages'
+      preLoaderRoute: typeof AdminSystemMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/events': {
       id: '/admin/events'
       path: '/admin/events'
@@ -341,6 +361,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyEventsRoute: MyEventsRoute,
   ProfileRoute: ProfileRoute,
   AdminEventsRoute: AdminEventsRoute,
+  AdminSystemMessagesRoute: AdminSystemMessagesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSigninRoute: AuthSigninRoute,
