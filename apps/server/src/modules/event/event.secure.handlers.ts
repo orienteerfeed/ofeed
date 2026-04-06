@@ -231,6 +231,45 @@ function normalizeOptionalCoordinate(
   return numericValue === 0 ? null : numericValue;
 }
 
+function normalizeOptionalIntegerField(
+  value: unknown,
+  fieldName: string,
+): number | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === '' || value === null) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  if (!Number.isInteger(numericValue)) {
+    throw new ValidationError(`Invalid ${fieldName}. Expected integer value.`);
+  }
+
+  return numericValue;
+}
+
+function normalizeOptionalDateField(value: unknown, fieldName: string): Date | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === '' || value === null) {
+    return null;
+  }
+
+  const dateValue = new Date(String(value));
+
+  if (Number.isNaN(dateValue.getTime())) {
+    throw new ValidationError(`Invalid ${fieldName}. Expected ISO datetime value.`);
+  }
+
+  return dateValue;
+}
+
 function logSecureRouteResult(c: Context<AppBindings>, statusCode: number) {
   const details = {
     method: c.req.method,
@@ -909,6 +948,7 @@ export function registerSecureEventRoutes(router) {
           coefRanking,
           discipline,
           startMode,
+          hundredthPrecision,
           published,
           sportId,
           relay,
@@ -953,6 +993,7 @@ export function registerSecureEventRoutes(router) {
               coefRanking,
               discipline,
               startMode,
+              hundredthPrecision,
               published,
               sportId,
               relay,
@@ -1698,46 +1739,49 @@ export function registerSecureEventRoutes(router) {
     // Everything went fine.
     try {
       // Build update object conditionally
-      const fieldTypes = {
-        classId: 'number',
+      const fieldTypes: Record<string, 'integer' | 'string' | 'boolean' | 'date' | 'array'> = {
+        classId: 'integer',
         firstname: 'string',
         lastname: 'string',
         nationality: 'string',
         registration: 'string',
         license: 'string',
+        rankingPoints: 'integer',
+        rankingReferenceValue: 'integer',
         organisation: 'string',
         shortName: 'string',
-        card: 'number',
-        bibNumber: 'number',
+        card: 'integer',
+        bibNumber: 'integer',
         startTime: 'date',
         finishTime: 'date',
-        time: 'number',
+        time: 'integer',
         status: 'string',
         lateStart: 'boolean',
-        teamId: 'number',
-        leg: 'number',
+        teamId: 'integer',
+        leg: 'integer',
         note: 'string',
         externalId: 'string',
         splits: 'array',
       };
 
-      const updateData = Object.keys(req.body).reduce((acc, field) => {
-        if (req.body[field] !== undefined && fieldTypes[field]) {
+      const updateData = Object.keys(req.body).reduce<Record<string, unknown>>((acc, field) => {
+        const value = req.body[field];
+        if (value !== undefined && fieldTypes[field]) {
           switch (fieldTypes[field]) {
-            case 'number':
-              acc[field] = parseInt(req.body[field], 10);
+            case 'integer':
+              acc[field] = normalizeOptionalIntegerField(value, field);
               break;
             case 'boolean':
-              acc[field] = Boolean(req.body[field]);
+              acc[field] = value;
               break;
             case 'date':
-              acc[field] = new Date(req.body[field]);
+              acc[field] = normalizeOptionalDateField(value, field);
               break;
             case 'array':
-              acc[field] = Array.isArray(req.body[field]) ? req.body[field] : [req.body[field]];
+              acc[field] = Array.isArray(value) ? value : [value];
               break;
             default:
-              acc[field] = req.body[field];
+              acc[field] = value;
           }
         }
         return acc;

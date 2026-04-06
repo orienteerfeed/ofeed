@@ -18,7 +18,14 @@ export const eventCompetitorExternalParamsSchema = z.object({
 export const changelogQuerySchema = z.object({
   since: z.string().datetime({ offset: true }).optional(),
   origin: z.enum(["START", "FINISH", "IT", "OFFICE"]).optional(),
-  group: z.boolean().optional(),
+  group: z.preprocess(
+    (value) => {
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+      return value;
+    },
+    z.boolean(),
+  ).optional(),
   classId: z.string().regex(/^\d+$/).optional(),
 });
 
