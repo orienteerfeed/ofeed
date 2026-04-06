@@ -1,0 +1,73 @@
+{
+  "id": "ofeed-server-dev",
+  "name": "OFeed Server - dev",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "defaultTestPassword",
+      "value": "Postman123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "sportId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventTimezone",
+      "value": "Europe/Prague",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventZeroTime",
+      "value": "10:00:00",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventCountryCode",
+      "value": "CZ",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "validateXml",
+      "value": "false",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "oauthScope",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureQuickEventXml",
+      "value": "fixtures/quickevent/qe-results-kam-251016.xml",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureMeosXml",
+      "value": "fixtures/meos/meos-startlist-fra-260321.xml",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureSiDroidXml",
+      "value": "fixtures/si-droid/sidroid-results-shk-230122.xml",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

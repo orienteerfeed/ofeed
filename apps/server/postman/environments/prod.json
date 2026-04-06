@@ -1,0 +1,73 @@
+{
+  "id": "ofeed-server-prod",
+  "name": "OFeed Server - prod",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "<set-me>",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "defaultTestPassword",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "sportId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventTimezone",
+      "value": "Europe/Prague",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventZeroTime",
+      "value": "10:00:00",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventCountryCode",
+      "value": "CZ",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "validateXml",
+      "value": "false",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "oauthScope",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureQuickEventXml",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureMeosXml",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureSiDroidXml",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
