@@ -35,7 +35,7 @@ export const eventWriteSchema = z
     hundredthPrecision: z.boolean().optional(),
     published: z.boolean().optional(),
     ranking: z.boolean().optional(),
-    startMode: z.string().optional(),
+    startMode: z.enum(['Individual', 'Mass', 'Handicap', 'Pursuit', 'Wave', 'ScoreO']).optional(),
     coefRanking: z.coerce.number().optional().nullable(),
     countryCode: z.string().min(2).max(2).optional(),
     country: z.string().min(2).max(2).optional(),

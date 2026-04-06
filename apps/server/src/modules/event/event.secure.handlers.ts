@@ -210,6 +210,27 @@ function getNumericJwtUserId(req: EventRouteRequest) {
   return null;
 }
 
+function normalizeOptionalCoordinate(
+  value: unknown,
+  fieldName: 'latitude' | 'longitude',
+): number | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === '' || value === null) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    throw new ValidationError(`Invalid ${fieldName}. Expected numeric value.`);
+  }
+
+  return numericValue === 0 ? null : numericValue;
+}
+
 function logSecureRouteResult(c: Context<AppBindings>, statusCode: number) {
   const details = {
     method: c.req.method,
@@ -681,7 +702,7 @@ export function registerSecureEventRoutes(router) {
     '/:eventId/image',
     routeWithValidation(
       { paramsSchema: eventIdParamsSchema, bodyMode: 'form' },
-      async ({ req, res }) => {
+      async ({ c, req, res }) => {
         try {
           validateImageFile(req.file);
         } catch (error) {
@@ -871,15 +892,17 @@ export function registerSecureEventRoutes(router) {
     '/:eventId',
     routeWithValidation(
       { paramsSchema: eventIdParamsSchema, bodySchema: eventBodySchema },
-      async ({ req, res }) => {
+      async ({ c, req, res }) => {
         const { eventId } = req.params;
         const {
           name,
           date,
+          timezone,
           organizer,
           location,
           latitude,
           longitude,
+          countryCode,
           country,
           zeroTime,
           ranking,
@@ -902,8 +925,6 @@ export function registerSecureEventRoutes(router) {
           return ownership.response;
         }
 
-        const { userId } = ownership;
-
         try {
           const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
           if (!normalizedZeroTime) {
@@ -913,25 +934,20 @@ export function registerSecureEventRoutes(router) {
           // TODO: Add permission checks to ensure the user is allowed to edit the event
 
           // 🔥 Normalize latitude and longitude
-          const dbLatitude =
-            latitude === '' || latitude === null || Number(latitude) === 0
-              ? null
-              : Number(latitude);
-          const dbLongitude =
-            longitude === '' || longitude === null || Number(longitude) === 0
-              ? null
-              : Number(longitude);
+          const dbLatitude = normalizeOptionalCoordinate(latitude, 'latitude');
+          const dbLongitude = normalizeOptionalCoordinate(longitude, 'longitude');
 
           const updatedEvent = await prisma.event.update({
             where: { id: eventId },
             data: {
               name,
               date: new Date(date),
+              timezone,
               organizer,
               location,
               latitude: dbLatitude,
               longitude: dbLongitude,
-              countryId: country,
+              countryId: countryCode ?? country,
               zeroTime: toPrismaTimeDate(normalizedZeroTime),
               ranking,
               coefRanking,
@@ -942,7 +958,6 @@ export function registerSecureEventRoutes(router) {
               relay,
               externalSource,
               externalEventId,
-              authorId: userId,
             },
           });
 
@@ -964,6 +979,7 @@ export function registerSecureEventRoutes(router) {
           } else if (error instanceof AuthenticationError) {
             return res.status(401).json(errorResponse(error.message, res.statusCode));
           }
+          logEndpoint(c, 'error', 'Event update failed', getErrorDetails(error));
           return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
         }
       },
