@@ -51,6 +51,12 @@
       "enabled": true
     },
     {
+      "key": "oauthRedirectUris",
+      "value": "https://example.test/callback,https://example.test/alt",
+      "type": "default",
+      "enabled": true
+    },
+    {
       "key": "fixtureQuickEventXml",
       "value": "fixtures/quickevent/qe-results-kam-251016.xml",
       "type": "default",

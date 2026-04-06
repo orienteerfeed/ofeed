@@ -32,17 +32,33 @@
                   "const compactTimestamp = now.toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);",
                   "const seed = `${compactTimestamp}-${Math.floor(Math.random() * 9000) + 1000}`;",
                   "const numericSeed = String(now.getTime()).slice(-8);",
-                  "['accessToken','userId','oauthClientId','oauthClientSecret','oauthAccessToken','eventId','eventPassword','eventPasswordExpiresAt','classId','createdCompetitorId'].forEach(key => pm.collectionVariables.unset(key));",
+                  "const oauthScopeRequested = pm.environment.get('oauthScope') || 'results:read results:write';",
+                  "const oauthScopeCsv = oauthScopeRequested.split(/[\\s,]+/).filter(Boolean).join(',');",
+                  "const oauthRedirectUris = pm.environment.get('oauthRedirectUris') || `https://example.test/callback/${seed},https://example.test/alt/${seed}`;",
+                  "['accessToken','userId','oauthClientId','oauthClientSecret','oauthAccessToken','eventId','eventPassword','eventPasswordExpiresAt','classId','classExternalId','createdCompetitorId','changelogSince','oauthScopeRequested','oauthScopeCsv','oauthRedirectUris','eventExternalEventId','updatedEventExternalEventId','updatedCompetitorExternalId','updatedCompetitorRegistration','createdCompetitorStartTime','createdCompetitorFinishTime','createdCompetitorTime','updatedCompetitorStartTime','updatedCompetitorFinishTime','updatedCompetitorTime'].forEach(key => pm.collectionVariables.unset(key));",
                   "pm.collectionVariables.set('runId', seed);",
                   "pm.collectionVariables.set('testEmail', `postman+${seed}@example.test`);",
                   "pm.collectionVariables.set('testPassword', pm.environment.get('defaultTestPassword') || 'Postman123!');",
+                  "pm.collectionVariables.set('oauthScopeRequested', oauthScopeRequested);",
+                  "pm.collectionVariables.set('oauthScopeCsv', oauthScopeCsv);",
+                  "pm.collectionVariables.set('oauthRedirectUris', oauthRedirectUris);",
                   "pm.collectionVariables.set('eventName', `Postman Event ${seed}`);",
                   "pm.collectionVariables.set('updatedEventName', `Postman Event ${seed} Updated`);",
                   "pm.collectionVariables.set('eventDate', now.toISOString());",
+                  "pm.collectionVariables.set('eventExternalEventId', `PM-${seed}-CREATE`);",
+                  "pm.collectionVariables.set('updatedEventExternalEventId', `PM-${seed}-UPDATE`);",
                   "pm.collectionVariables.set('createdCompetitorExternalId', `postman-${seed}`);",
+                  "pm.collectionVariables.set('updatedCompetitorExternalId', `postman-${seed}-updated`);",
                   "pm.collectionVariables.set('createdCompetitorRegistration', `PM${numericSeed}`);",
+                  "pm.collectionVariables.set('updatedCompetitorRegistration', `PU${String(now.getTime()).slice(-6)}`);",
                   "pm.collectionVariables.set('createdCompetitorCard', String(800000 + Number(String(now.getTime()).slice(-5))));",
                   "pm.collectionVariables.set('updatedCompetitorCard', String(900000 + Number(String(now.getTime()).slice(-5))));",
+                  "pm.collectionVariables.set('createdCompetitorStartTime', new Date(now.getTime() + 5 * 60 * 1000).toISOString());",
+                  "pm.collectionVariables.set('createdCompetitorFinishTime', new Date(now.getTime() + 42 * 60 * 1000).toISOString());",
+                  "pm.collectionVariables.set('createdCompetitorTime', '2220');",
+                  "pm.collectionVariables.set('updatedCompetitorStartTime', new Date(now.getTime() + 6 * 60 * 1000).toISOString());",
+                  "pm.collectionVariables.set('updatedCompetitorFinishTime', new Date(now.getTime() + 39 * 60 * 1000).toISOString());",
+                  "pm.collectionVariables.set('updatedCompetitorTime', '1980');",
                   "pm.collectionVariables.set('updatedCompetitorNote', `Updated by Postman ${seed}`);",
                   ""
                 ]
@@ -685,7 +701,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"grants\": \"client_credentials\",\n  \"scopes\": \"{{oauthScope}}\"\n}",
+              "raw": "{\n  \"grants\": \"client_credentials\",\n  \"scopes\": \"{{oauthScopeCsv}}\",\n  \"redirectUris\": \"{{oauthRedirectUris}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -794,6 +810,7 @@
                   "assertLegacySuccess(body, 'OK');",
                   "assertString(body.results.data.client_id, 'client_id');",
                   "assertString(body.results.data.client_secret, 'client_secret');",
+                  "pm.expect(body.results.data.redirect_uri).to.eql(requireCollectionVar('oauthRedirectUris'));",
                   "pm.collectionVariables.set('oauthClientId', body.results.data.client_id);",
                   "pm.collectionVariables.set('oauthClientSecret', body.results.data.client_secret);",
                   ""
@@ -833,6 +850,11 @@
                 {
                   "key": "grant_type",
                   "value": "client_credentials",
+                  "type": "text"
+                },
+                {
+                  "key": "scope",
+                  "value": "{{oauthScopeRequested}}",
                   "type": "text"
                 }
               ]
@@ -939,6 +961,7 @@
                   "assertString(body.access_token, 'access_token');",
                   "assertString(body.token_type, 'token_type');",
                   "assertNumber(body.expires_in, 'expires_in');",
+                  "pm.expect(body.scope).to.eql(requireCollectionVar('oauthScopeRequested'));",
                   "pm.collectionVariables.set('oauthAccessToken', body.access_token);",
                   ""
                 ]
@@ -974,7 +997,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{eventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"Prague\",\n  \"zeroTime\": \"{{eventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"SPRINT\",\n  \"hundredthPrecision\": false,\n  \"published\": true,\n  \"ranking\": false,\n  \"startMode\": \"Individual\",\n  \"countryCode\": \"{{eventCountryCode}}\"\n}",
+              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{eventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"Prague\",\n  \"latitude\": 50.0874654,\n  \"longitude\": 14.4212535,\n  \"zeroTime\": \"{{eventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"SPRINT\",\n  \"hundredthPrecision\": true,\n  \"published\": true,\n  \"ranking\": true,\n  \"startMode\": \"Individual\",\n  \"coefRanking\": 1.11,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"EVENTOR\",\n  \"externalEventId\": \"{{eventExternalEventId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1083,6 +1106,24 @@
                   "assertLegacySuccess(body, 'OK');",
                   "assertString(body.results.data.id, 'id');",
                   "pm.collectionVariables.set('eventId', body.results.data.id);",
+                  "pm.expect(body.results.data.name).to.eql(requireCollectionVar('eventName'));",
+                  "pm.expect(body.results.data.organizer).to.eql('Postman Club');",
+                  "pm.expect(body.results.data.location).to.eql('Prague');",
+                  "pm.expect(body.results.data.timezone).to.eql(pm.environment.get('eventTimezone'));",
+                  "pm.expect(body.results.data.sportId).to.eql(Number(pm.environment.get('sportId')));",
+                  "pm.expect(body.results.data.latitude).to.be.closeTo(50.0874654, 0.000001);",
+                  "pm.expect(body.results.data.longitude).to.be.closeTo(14.4212535, 0.000001);",
+                  "pm.expect(body.results.data.zeroTime).to.eql(pm.environment.get('eventZeroTime'));",
+                  "pm.expect(body.results.data.relay).to.eql(false);",
+                  "pm.expect(body.results.data.discipline).to.eql('SPRINT');",
+                  "pm.expect(body.results.data.hundredthPrecision).to.eql(true);",
+                  "pm.expect(body.results.data.published).to.eql(true);",
+                  "pm.expect(body.results.data.ranking).to.eql(true);",
+                  "pm.expect(body.results.data.startMode).to.eql('Individual');",
+                  "pm.expect(body.results.data.coefRanking).to.be.closeTo(1.11, 0.000001);",
+                  "pm.expect(body.results.data.countryId).to.eql(pm.environment.get('eventCountryCode'));",
+                  "pm.expect(body.results.data.externalSource).to.eql('EVENTOR');",
+                  "pm.expect(body.results.data.externalEventId).to.eql(requireCollectionVar('eventExternalEventId'));",
                   ""
                 ]
               }
@@ -1242,7 +1283,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{updatedEventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"{{updatedEventName}} HQ\",\n  \"zeroTime\": \"{{eventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"SPRINT\",\n  \"hundredthPrecision\": false,\n  \"published\": true,\n  \"ranking\": false,\n  \"startMode\": \"Individual\",\n  \"countryCode\": \"{{eventCountryCode}}\"\n}",
+              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{updatedEventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club Updated\",\n  \"location\": \"{{updatedEventName}} HQ\",\n  \"latitude\": 50.0755381,\n  \"longitude\": 14.4378005,\n  \"zeroTime\": \"{{eventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"MIDDLE\",\n  \"hundredthPrecision\": false,\n  \"published\": false,\n  \"ranking\": false,\n  \"startMode\": \"Mass\",\n  \"coefRanking\": 1.27,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"EVENTOR\",\n  \"externalEventId\": \"{{updatedEventExternalEventId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1350,6 +1391,22 @@
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
                   "pm.expect(body.results.data.name).to.eql(requireCollectionVar('updatedEventName'));",
+                  "pm.expect(body.results.data.organizer).to.eql('Postman Club Updated');",
+                  "pm.expect(body.results.data.location).to.eql(`${requireCollectionVar('updatedEventName')} HQ`);",
+                  "pm.expect(body.results.data.timezone).to.eql(pm.environment.get('eventTimezone'));",
+                  "pm.expect(body.results.data.latitude).to.be.closeTo(50.0755381, 0.000001);",
+                  "pm.expect(body.results.data.longitude).to.be.closeTo(14.4378005, 0.000001);",
+                  "pm.expect(body.results.data.zeroTime).to.eql(pm.environment.get('eventZeroTime'));",
+                  "pm.expect(body.results.data.relay).to.eql(false);",
+                  "pm.expect(body.results.data.discipline).to.eql('MIDDLE');",
+                  "pm.expect(body.results.data.hundredthPrecision).to.eql(false);",
+                  "pm.expect(body.results.data.published).to.eql(false);",
+                  "pm.expect(body.results.data.ranking).to.eql(false);",
+                  "pm.expect(body.results.data.startMode).to.eql('Mass');",
+                  "pm.expect(body.results.data.coefRanking).to.be.closeTo(1.27, 0.000001);",
+                  "pm.expect(body.results.data.countryId).to.eql(pm.environment.get('eventCountryCode'));",
+                  "pm.expect(body.results.data.externalSource).to.eql('EVENTOR');",
+                  "pm.expect(body.results.data.externalEventId).to.eql(requireCollectionVar('updatedEventExternalEventId'));",
                   ""
                 ]
               }
@@ -2252,7 +2309,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"classId\": {{classId}},\n  \"origin\": \"START\",\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Competitor\",\n  \"externalId\": \"{{createdCompetitorExternalId}}\",\n  \"card\": {{createdCompetitorCard}},\n  \"registration\": \"{{createdCompetitorRegistration}}\",\n  \"organisation\": \"Postman Club\",\n  \"note\": \"Created by Postman\"\n}",
+              "raw": "{\n  \"classId\": {{classId}},\n  \"origin\": \"START\",\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Competitor\",\n  \"externalId\": \"{{createdCompetitorExternalId}}\",\n  \"nationality\": \"CZE\",\n  \"registration\": \"{{createdCompetitorRegistration}}\",\n  \"license\": \"A\",\n  \"rankingPoints\": 4876,\n  \"rankingReferenceValue\": 5010,\n  \"organisation\": \"Postman Club\",\n  \"shortName\": \"PMAN\",\n  \"card\": {{createdCompetitorCard}},\n  \"bibNumber\": 501,\n  \"startTime\": \"{{createdCompetitorStartTime}}\",\n  \"finishTime\": \"{{createdCompetitorFinishTime}}\",\n  \"time\": {{createdCompetitorTime}},\n  \"teamId\": null,\n  \"leg\": 1,\n  \"status\": \"Active\",\n  \"lateStart\": false,\n  \"note\": \"Created by Postman\",\n  \"splits\": [\n    {\n      \"controlCode\": 31,\n      \"time\": 345\n    },\n    {\n      \"controlCode\": 32,\n      \"time\": 721\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2267,6 +2324,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.collectionVariables.set('changelogSince', new Date(Date.now() - 1000).toISOString());",
                   "if (!pm.collectionVariables.get('classId')) {",
                   "  throw new Error('classId is not set. Upload an IOF XML fixture that creates at least one class before running competitor CRUD.');",
                   "}",
@@ -2371,7 +2429,12 @@
                   "assertStatus(200);",
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
-                  "assertString(body.results.data, 'body.results.data');",
+                  "assertObject(body.results.data, 'body.results.data');",
+                  "pm.expect(body.results.data.message).to.eql('Competitor has been successfully created');",
+                  "assertObject(body.results.data.competitor, 'body.results.data.competitor');",
+                  "pm.expect(String(body.results.data.competitor.classId)).to.eql(requireCollectionVar('classId'));",
+                  "pm.expect(body.results.data.competitor.firstname).to.eql('Postman');",
+                  "pm.expect(body.results.data.competitor.lastname).to.eql('Competitor');",
                   ""
                 ]
               }
@@ -2498,7 +2561,30 @@
                   "assertLegacySuccess(body, 'OK');",
                   "assertNumber(body.results.data.id, 'id');",
                   "assertOptionalString(body.results.data.externalId, 'externalId');",
+                  "pm.expect(String(body.results.data.classId)).to.eql(requireCollectionVar('classId'));",
+                  "pm.expect(body.results.data.firstname).to.eql('Postman');",
+                  "pm.expect(body.results.data.lastname).to.eql('Competitor');",
+                  "pm.expect(body.results.data.nationality).to.eql('CZE');",
+                  "pm.expect(body.results.data.registration).to.eql(requireCollectionVar('createdCompetitorRegistration'));",
+                  "pm.expect(body.results.data.license).to.eql('A');",
+                  "pm.expect(body.results.data.rankingPoints).to.eql(4876);",
+                  "pm.expect(body.results.data.rankingReferenceValue).to.eql(5010);",
+                  "pm.expect(body.results.data.organisation).to.eql('Postman Club');",
+                  "pm.expect(body.results.data.shortName).to.eql('PMAN');",
+                  "pm.expect(String(body.results.data.card)).to.eql(requireCollectionVar('createdCompetitorCard'));",
+                  "pm.expect(body.results.data.bibNumber).to.eql(501);",
+                  "pm.expect(body.results.data.startTime).to.eql(requireCollectionVar('createdCompetitorStartTime'));",
+                  "pm.expect(body.results.data.finishTime).to.eql(requireCollectionVar('createdCompetitorFinishTime'));",
+                  "pm.expect(body.results.data.time).to.eql(Number(requireCollectionVar('createdCompetitorTime')));",
+                  "pm.expect(body.results.data.teamId).to.eql(null);",
+                  "pm.expect(body.results.data.leg).to.eql(1);",
+                  "pm.expect(body.results.data.status).to.eql('Active');",
+                  "pm.expect(body.results.data.lateStart).to.eql(false);",
+                  "pm.expect(body.results.data.note).to.eql('Created by Postman');",
                   "pm.expect(body.results.data.externalId).to.eql(requireCollectionVar('createdCompetitorExternalId'));",
+                  "assertArray(body.results.data.splits, 'body.results.data.splits');",
+                  "pm.expect(body.results.data.splits.map(split => split.controlCode)).to.deep.eql([31, 32]);",
+                  "pm.expect(body.results.data.splits.map(split => split.time)).to.deep.eql([345, 721]);",
                   "pm.collectionVariables.set('createdCompetitorId', String(body.results.data.id));",
                   ""
                 ]
@@ -2533,7 +2619,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"origin\": \"START\",\n  \"card\": {{updatedCompetitorCard}},\n  \"note\": \"{{updatedCompetitorNote}}\"\n}",
+              "raw": "{\n  \"origin\": \"START\",\n  \"classId\": {{classId}},\n  \"firstname\": \"Postman Updated\",\n  \"lastname\": \"Competitor Updated\",\n  \"externalId\": \"{{updatedCompetitorExternalId}}\",\n  \"nationality\": \"SVK\",\n  \"registration\": \"{{updatedCompetitorRegistration}}\",\n  \"license\": \"B\",\n  \"rankingPoints\": 5123,\n  \"rankingReferenceValue\": 4988,\n  \"organisation\": \"Updated Postman Club\",\n  \"shortName\": \"PMUPD\",\n  \"card\": {{updatedCompetitorCard}},\n  \"bibNumber\": 701,\n  \"startTime\": \"{{updatedCompetitorStartTime}}\",\n  \"finishTime\": \"{{updatedCompetitorFinishTime}}\",\n  \"time\": {{updatedCompetitorTime}},\n  \"teamId\": null,\n  \"leg\": 2,\n  \"status\": \"Active\",\n  \"lateStart\": false,\n  \"note\": \"{{updatedCompetitorNote}}\",\n  \"splits\": [\n    {\n      \"controlCode\": 31,\n      \"time\": 333\n    },\n    {\n      \"controlCode\": 32,\n      \"time\": 666\n    },\n    {\n      \"controlCode\": 33,\n      \"time\": 999\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2652,7 +2738,33 @@
                   "assertStatus(200);",
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
-                  "assertString(body.results.data, 'body.results.data');",
+                  "assertObject(body.results.data, 'body.results.data');",
+                  "pm.expect(body.results.data.message).to.eql('Competitor has been successfully updated');",
+                  "assertObject(body.results.data.updatedFields, 'body.results.data.updatedFields');",
+                  "pm.expect(String(body.results.data.updatedFields.classId)).to.eql(requireCollectionVar('classId'));",
+                  "pm.expect(body.results.data.updatedFields.firstname).to.eql('Postman Updated');",
+                  "pm.expect(body.results.data.updatedFields.lastname).to.eql('Competitor Updated');",
+                  "pm.expect(body.results.data.updatedFields.externalId).to.eql(requireCollectionVar('updatedCompetitorExternalId'));",
+                  "pm.expect(body.results.data.updatedFields.nationality).to.eql('SVK');",
+                  "pm.expect(body.results.data.updatedFields.registration).to.eql(requireCollectionVar('updatedCompetitorRegistration'));",
+                  "pm.expect(body.results.data.updatedFields.license).to.eql('B');",
+                  "pm.expect(body.results.data.updatedFields.rankingPoints).to.eql(5123);",
+                  "pm.expect(body.results.data.updatedFields.rankingReferenceValue).to.eql(4988);",
+                  "pm.expect(body.results.data.updatedFields.organisation).to.eql('Updated Postman Club');",
+                  "pm.expect(body.results.data.updatedFields.shortName).to.eql('PMUPD');",
+                  "pm.expect(body.results.data.updatedFields.card).to.eql(Number(requireCollectionVar('updatedCompetitorCard')));",
+                  "pm.expect(body.results.data.updatedFields.bibNumber).to.eql(701);",
+                  "pm.expect(body.results.data.updatedFields.startTime).to.eql(requireCollectionVar('updatedCompetitorStartTime'));",
+                  "pm.expect(body.results.data.updatedFields.finishTime).to.eql(requireCollectionVar('updatedCompetitorFinishTime'));",
+                  "pm.expect(body.results.data.updatedFields.time).to.eql(Number(requireCollectionVar('updatedCompetitorTime')));",
+                  "pm.expect(body.results.data.updatedFields.teamId).to.eql(null);",
+                  "pm.expect(body.results.data.updatedFields.leg).to.eql(2);",
+                  "pm.expect(body.results.data.updatedFields.status).to.eql('Active');",
+                  "pm.expect(body.results.data.updatedFields.lateStart).to.eql(false);",
+                  "pm.expect(body.results.data.updatedFields.note).to.eql(requireCollectionVar('updatedCompetitorNote'));",
+                  "assertArray(body.results.data.updatedFields.splits, 'body.results.data.updatedFields.splits');",
+                  "pm.expect(body.results.data.updatedFields.splits.map(split => split.controlCode)).to.deep.eql([31, 32, 33]);",
+                  "pm.expect(body.results.data.updatedFields.splits.map(split => split.time)).to.deep.eql([333, 666, 999]);",
                   ""
                 ]
               }
@@ -2930,10 +3042,30 @@
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
                   "pm.expect(String(body.results.data.id)).to.eql(requireCollectionVar('createdCompetitorId'));",
-                  "pm.expect(body.results.data.externalId).to.eql(requireCollectionVar('createdCompetitorExternalId'));",
+                  "pm.expect(String(body.results.data.classId)).to.eql(requireCollectionVar('classId'));",
+                  "pm.expect(body.results.data.firstname).to.eql('Postman Updated');",
+                  "pm.expect(body.results.data.lastname).to.eql('Competitor Updated');",
+                  "pm.expect(body.results.data.nationality).to.eql('SVK');",
+                  "pm.expect(body.results.data.registration).to.eql(requireCollectionVar('updatedCompetitorRegistration'));",
+                  "pm.expect(body.results.data.license).to.eql('B');",
+                  "pm.expect(body.results.data.rankingPoints).to.eql(5123);",
+                  "pm.expect(body.results.data.rankingReferenceValue).to.eql(4988);",
+                  "pm.expect(body.results.data.organisation).to.eql('Updated Postman Club');",
+                  "pm.expect(body.results.data.shortName).to.eql('PMUPD');",
                   "pm.expect(String(body.results.data.card)).to.eql(requireCollectionVar('updatedCompetitorCard'));",
+                  "pm.expect(body.results.data.bibNumber).to.eql(701);",
+                  "pm.expect(body.results.data.startTime).to.eql(requireCollectionVar('updatedCompetitorStartTime'));",
+                  "pm.expect(body.results.data.finishTime).to.eql(requireCollectionVar('updatedCompetitorFinishTime'));",
+                  "pm.expect(body.results.data.time).to.eql(Number(requireCollectionVar('updatedCompetitorTime')));",
+                  "pm.expect(body.results.data.teamId).to.eql(null);",
+                  "pm.expect(body.results.data.leg).to.eql(2);",
                   "pm.expect(body.results.data.note).to.eql(requireCollectionVar('updatedCompetitorNote'));",
-                  "pm.expect(body.results.data.status).to.eql('LateStart');",
+                  "pm.expect(body.results.data.externalId).to.eql(requireCollectionVar('updatedCompetitorExternalId'));",
+                  "pm.expect(body.results.data.status).to.eql('Active');",
+                  "pm.expect(body.results.data.lateStart).to.eql(true);",
+                  "assertArray(body.results.data.splits, 'body.results.data.splits');",
+                  "pm.expect(body.results.data.splits.map(split => split.controlCode)).to.deep.eql([31, 32, 33]);",
+                  "pm.expect(body.results.data.splits.map(split => split.time)).to.deep.eql([333, 666, 999]);",
                   ""
                 ]
               }
@@ -2946,13 +3078,25 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/changelog?group=true",
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/changelog?since={{changelogSince}}&origin=START&group=true&classId={{classId}}",
               "host": ["{{baseUrl}}"],
               "path": ["rest", "v1", "events", "{{eventId}}", "changelog"],
               "query": [
                 {
+                  "key": "since",
+                  "value": "{{changelogSince}}"
+                },
+                {
+                  "key": "origin",
+                  "value": "START"
+                },
+                {
                   "key": "group",
                   "value": "true"
+                },
+                {
+                  "key": "classId",
+                  "value": "{{classId}}"
                 }
               ]
             },
@@ -3073,6 +3217,17 @@
                   "assertLegacySuccess(body, 'OK');",
                   "assertArray(body.results.data, 'body.results.data');",
                   "pm.expect(body.results.data.length, 'Changelog should contain at least one grouped change after competitor CRUD operations.').to.be.greaterThan(0);",
+                  "const changelogSince = new Date(requireCollectionVar('changelogSince')).getTime();",
+                  "const createdCompetitorId = requireCollectionVar('createdCompetitorId');",
+                  "pm.expect(body.results.data.some(entry => String(entry.competitorId) === createdCompetitorId)).to.eql(true);",
+                  "body.results.data.forEach(entry => {",
+                  "  pm.expect(String(entry.competitor.classId)).to.eql(requireCollectionVar('classId'));",
+                  "  assertArray(entry.changes, 'entry.changes');",
+                  "  entry.changes.forEach(change => {",
+                  "    pm.expect(change.origin).to.eql('START');",
+                  "    pm.expect(new Date(change.createdAt).getTime()).to.be.at.least(changelogSince);",
+                  "  });",
+                  "});",
                   ""
                 ]
               }

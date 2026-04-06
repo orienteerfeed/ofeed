@@ -7,6 +7,9 @@ Before running XML and competitor scenarios:
 - Put your XML files under `fixtures/quickevent`, `fixtures/meos`, or
   `fixtures/si-droid`.
 - In Postman Desktop, set your Working Directory to `apps/server/postman`.
+- The collection now sends the full safe parameter set for the covered auth,
+  event, upload, and competitor requests. `oauthRedirectUris` can be adjusted in
+  the environment if you want a custom OAuth redirect URI list.
 - The collection stores concrete file paths in the upload requests:
   `fixtures/quickevent/qe-results-kam-251016.xml`,
   `fixtures/meos/meos-startlist-fra-260321.xml`, and
@@ -18,6 +21,9 @@ Before running XML and competitor scenarios:
   edit the request body file path directly after import.
 - Keep `validateXml=false` for local runs unless you explicitly want remote IOF
   XSD validation.
+- The competitor scenario includes `teamId`, but uses `null` by default because
+  this API scenario does not create a relay team that can be referenced reliably
+  across arbitrary fixtures.
 
 Newman example:
 
