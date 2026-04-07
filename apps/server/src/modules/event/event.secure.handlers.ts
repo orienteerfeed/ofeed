@@ -407,6 +407,11 @@ export function registerSecureEventRoutes(router) {
   router.post(
     '/import/search',
     routeWithValidation({ bodySchema: eventImportSearchBodySchema }, async ({ req, res }) => {
+      const errors = getValidationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json(validationResponse(errors.array()));
+      }
+
       try {
         const importedEvents = await searchExternalEvents(req.body);
 
@@ -426,6 +431,11 @@ export function registerSecureEventRoutes(router) {
   router.post(
     '/import/preview',
     routeWithValidation({ bodySchema: eventImportPreviewBodySchema }, async ({ req, res }) => {
+      const errors = getValidationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json(validationResponse(errors.array()));
+      }
+
       try {
         const importedEventPreview = await loadExternalEventPreview(req.body);
 
