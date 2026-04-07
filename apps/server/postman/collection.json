@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "7924d426-bbda-4d73-af0f-09687b760b1f",
     "name": "OFeed Server API Scenarios",
-    "description": "Scenario-driven REST API collection for the OFeed server.\n\nImportant notes:\n- Configure a Postman environment before running the collection.\n- XML and image file uploads use paths relative to apps/server/postman. For Newman use --working-dir apps/server/postman.\n- validateXml defaults to false so local runs do not depend on fetching the external IOF XSD.\n- Password reset confirm is optional and requires passwordResetToken plus runPasswordResetConfirm=true.\n- Event image upload and public image fetch are optional and require runEventImageScenario=true plus working public storage configuration on the server.\n- External import defaults to ORIS because it runs without an Eventor API key. Switch provider/api key in the environment when needed.",
+    "description": "Scenario-driven REST API collection for the OFeed server.\n\nImportant notes:\n- Configure a Postman environment before running the collection.\n- XML and image file uploads use paths relative to apps/server/postman. For Newman use --working-dir apps/server/postman.\n- validateXml defaults to false so local runs do not depend on fetching the external IOF XSD.\n- Password reset confirm is optional and requires passwordResetToken plus runPasswordResetConfirm=true.\n- Event image upload and public image fetch are optional and require runEventImageScenario=true plus working public storage configuration on the server.\n- Admin scenarios are optional and require runAdminScenarios=true plus a valid adminBearerToken.\n- External import defaults to ORIS because it runs without an Eventor API key. Switch provider/api key in the environment when needed.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "00 - Setup",
-      "description": "Initialize runtime variables and confirm the local server is reachable.",
+      "description": "Initialize runtime variables and confirm the local server, platform endpoints, docs, GraphQL, and map smoke routes are reachable.",
       "item": [
         {
           "name": "[GET] /version - Initialize run context",
@@ -37,7 +37,7 @@
                   "const oauthRedirectUris = pm.environment.get('oauthRedirectUris') || `https://example.test/callback/${seed},https://example.test/alt/${seed}`;",
                   "const eventTimezone = pm.environment.get('eventTimezone') || 'Europe/Prague';",
                   "const runtimeEventZeroTime = new Intl.DateTimeFormat('en-GB', { timeZone: eventTimezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(now);",
-                  "['accessToken','userId','oauthClientId','oauthClientSecret','oauthAccessToken','eventId','eventPassword','eventPasswordExpiresAt','classId','classExternalId','createdCompetitorId','changelogSince','oauthScopeRequested','oauthScopeCsv','oauthRedirectUris','eventExternalEventId','updatedEventExternalEventId','updatedCompetitorExternalId','updatedCompetitorRegistration','createdCompetitorStartTime','createdCompetitorFinishTime','createdCompetitorTime','updatedCompetitorStartTime','updatedCompetitorFinishTime','updatedCompetitorTime','runtimeEventZeroTime','externalImportEventId','externalImportEventName','publicCompetitorId','publicCompetitorExternalId','featuredImageKey'].forEach(key => pm.collectionVariables.unset(key));",
+                  "['accessToken','userId','oauthClientId','oauthClientSecret','oauthAccessToken','eventId','eventPassword','eventPasswordExpiresAt','classId','classExternalId','createdCompetitorId','changelogSince','oauthScopeRequested','oauthScopeCsv','oauthRedirectUris','eventExternalEventId','updatedEventExternalEventId','updatedCompetitorExternalId','updatedCompetitorRegistration','createdCompetitorStartTime','createdCompetitorFinishTime','createdCompetitorTime','updatedCompetitorStartTime','updatedCompetitorFinishTime','updatedCompetitorTime','runtimeEventZeroTime','externalImportEventId','externalImportEventName','externalImportSelectedIndex','createEventPayload','publishEventPayload','publicCompetitorId','publicCompetitorExternalId','featuredImageKey'].forEach(key => pm.collectionVariables.unset(key));",
                   "pm.collectionVariables.set('runId', seed);",
                   "pm.collectionVariables.set('testEmail', `postman+${seed}@example.test`);",
                   "pm.collectionVariables.set('testPassword', pm.environment.get('defaultTestPassword') || 'Postman123!');",
@@ -283,6 +283,371 @@
                   "pm.test('Ready response is OK', function () {",
                   "  pm.expect(pm.response.text()).to.eql('OK');",
                   "});",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] / - Root endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is plain text', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('text/plain'); });",
+                  "pm.test('Root body says hello', function () { pm.expect(pm.response.text()).to.include('Hello World!'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /health/live - Liveness probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/live",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "live"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Status is alive', function () { pm.expect(body.status).to.eql('alive'); });",
+                  "pm.test('Timestamp is present', function () { pm.expect(body.timestamp).to.be.a('string').and.not.empty; });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /health/ready - Readiness probe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "ready"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('Status is 200 or 503', function () { pm.expect([200, 503]).to.include(status); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Ready payload has status', function () { pm.expect(['ready', 'not_ready']).to.include(body.status); });",
+                  "pm.test('Ready payload has checks array', function () { pm.expect(body.checks).to.be.an('array'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /health - Full health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('Status is 200 or 503', function () { pm.expect([200, 503]).to.include(status); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Health payload has status', function () { pm.expect(['UP', 'DEGRADED', 'DOWN']).to.include(body.status); });",
+                  "pm.test('Health payload has version', function () { pm.expect(body.version).to.be.a('string').and.not.empty; });",
+                  "pm.test('Health payload has uptime', function () { pm.expect(body.uptime).to.be.a('number'); });",
+                  "pm.test('Health payload has checks array', function () { pm.expect(body.checks).to.be.an('array'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /metrics - Prometheus metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["metrics"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Metrics are plain text', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('text/plain'); });",
+                  "pm.test('Metrics body is not empty', function () { pm.expect(pm.response.text().length).to.be.greaterThan(0); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /doc - OpenAPI document",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doc",
+              "host": ["{{baseUrl}}"],
+              "path": ["doc"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Document has openapi version', function () { pm.expect(body.openapi).to.be.a('string').and.not.empty; });",
+                  "pm.test('Document has paths', function () { pm.expect(body.paths).to.be.an('object'); });",
+                  "pm.test('Document includes events endpoint', function () { pm.expect(body.paths).to.have.property('/rest/v1/events'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /reference - Scalar API reference",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reference",
+              "host": ["{{baseUrl}}"],
+              "path": ["reference"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Reference is HTML', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('text/html'); });",
+                  "pm.test('Reference body looks like HTML', function () { pm.expect(pm.response.text().toLowerCase()).to.include('<html'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[OPTIONS] /graphql - GraphQL preflight",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('Status is 200 or 204', function () { pm.expect([200, 204]).to.include(status); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /graphql - GraphQL GET query",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/graphql?query=%7B%20__typename%20%7D",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "{ __typename }"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('GraphQL GET returned query typename', function () { pm.expect(body.data && body.data.__typename).to.eql('Query'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /graphql - GraphQL POST query",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": ["{{baseUrl}}"],
+              "path": ["graphql"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ __typename }\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('GraphQL POST returned query typename', function () { pm.expect(body.data && body.data.__typename).to.eql('Query'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/maps/tiles/session - Create tile session or report unconfigured",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/maps/tiles/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "maps", "tiles", "session"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('Status is 204 or 503', function () { pm.expect([204, 503]).to.include(status); });",
+                  "if (status === 503) {",
+                  "  pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Map session explains configuration issue', function () { pm.expect(JSON.stringify(body)).to.include('Map tiles are not configured'); });",
+                  "}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/maps/tiles/raster/unsupported/256/0/0/0 - Map tile smoke",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/maps/tiles/raster/unsupported/256/0/0/0?lang=cs",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "maps", "tiles", "raster", "unsupported", "256", "0", "0", "0"],
+              "query": [
+                {
+                  "key": "lang",
+                  "value": "cs"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('Status is 403, 422, or 503', function () { pm.expect([403, 422, 503]).to.include(status); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Map tile smoke error is expected', function () { pm.expect(JSON.stringify(body)).to.match(/Map tile access denied|Map tiles are not configured|Unsupported/); });",
                   ""
                 ]
               }
@@ -817,6 +1182,45 @@
                   "pm.expect(body.results.data.redirect_uri).to.eql(requireCollectionVar('oauthRedirectUris'));",
                   "pm.collectionVariables.set('oauthClientId', body.results.data.client_id);",
                   "pm.collectionVariables.set('oauthClientSecret', body.results.data.client_secret);",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/auth/oauth2-credentials - Read OAuth client id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/auth/oauth2-credentials",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "auth", "oauth2-credentials"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('OAuth credential response contains client id', function () { pm.expect(body.results && body.results.data && body.results.data.client_id).to.be.a('string').and.not.empty; });",
+                  "pm.test('OAuth credential response matches created client id', function () { pm.expect(body.results.data.client_id).to.eql(pm.collectionVariables.get('oauthClientId')); });",
                   ""
                 ]
               }
@@ -1539,12 +1943,15 @@
                   "assertLegacySuccess(body, 'OK');",
                   "assertArray(body.results.data, 'body.results.data');",
                   "pm.expect(body.results.data.length, 'External search should return at least one result. Adjust externalImportQuery if ORIS/Eventor has no current matches.').to.be.greaterThan(0);",
-                  "assertObject(body.results.data[0], 'body.results.data[0]');",
-                  "pm.expect(body.results.data[0].provider).to.eql(pm.environment.get('externalImportProvider') || 'ORIS');",
-                  "assertString(body.results.data[0].externalEventId, 'body.results.data[0].externalEventId');",
-                  "assertString(body.results.data[0].name, 'body.results.data[0].name');",
-                  "pm.collectionVariables.set('externalImportEventId', String(body.results.data[0].externalEventId));",
-                  "pm.collectionVariables.set('externalImportEventName', String(body.results.data[0].name));",
+                  "const selectedIndex = Math.floor(Math.random() * body.results.data.length);",
+                  "const selected = body.results.data[selectedIndex];",
+                  "assertObject(selected, `body.results.data[${selectedIndex}]`);",
+                  "pm.expect(selected.provider).to.eql(pm.environment.get('externalImportProvider') || 'ORIS');",
+                  "assertString(selected.externalEventId, 'selected.externalEventId');",
+                  "assertString(selected.name, 'selected.name');",
+                  "pm.collectionVariables.set('externalImportSelectedIndex', String(selectedIndex));",
+                  "pm.collectionVariables.set('externalImportEventId', String(selected.externalEventId));",
+                  "pm.collectionVariables.set('externalImportEventName', String(selected.name));",
                   ""
                 ]
               }
@@ -1681,13 +2088,36 @@
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
                   "assertObject(body.results.data, 'body.results.data');",
-                  "pm.expect(body.results.data.provider).to.eql(pm.environment.get('externalImportProvider') || 'ORIS');",
-                  "pm.expect(body.results.data.externalEventId).to.eql(requireCollectionVar('externalImportEventId'));",
-                  "assertString(body.results.data.name, 'body.results.data.name');",
-                  "assertOptionalString(body.results.data.organizer, 'body.results.data.organizer');",
-                  "assertOptionalString(body.results.data.location, 'body.results.data.location');",
-                  "pm.expect(body.results.data.published).to.eql(false);",
-                  "pm.expect(body.results.data.hundredthPrecision).to.eql(false);",
+                  "const previewData = body.results.data;",
+                  "pm.expect(previewData.provider).to.eql(pm.environment.get('externalImportProvider') || 'ORIS');",
+                  "pm.expect(previewData.externalEventId).to.eql(requireCollectionVar('externalImportEventId'));",
+                  "assertString(previewData.name, 'body.results.data.name');",
+                  "assertOptionalString(previewData.organizer, 'body.results.data.organizer');",
+                  "assertOptionalString(previewData.location, 'body.results.data.location');",
+                  "const relay = previewData.relay === true;",
+                  "const payload = {",
+                  "  sportId: Number(previewData.sportId || pm.environment.get('sportId') || 1),",
+                  "  name: `${String(previewData.name)} - Postman test`,",
+                  "  date: String(previewData.date || pm.collectionVariables.get('eventDate')),",
+                  "  timezone: String(previewData.timezone || pm.environment.get('eventTimezone') || 'Europe/Prague'),",
+                  "  organizer: String(previewData.organizer || 'Imported organizer'),",
+                  "  location: String(previewData.location || 'Imported location'),",
+                  "  latitude: previewData.latitude ?? null,",
+                  "  longitude: previewData.longitude ?? null,",
+                  "  zeroTime: String(previewData.zeroTime || pm.collectionVariables.get('runtimeEventZeroTime')),",
+                  "  relay,",
+                  "  discipline: previewData.discipline || (relay ? 'RELAY' : 'OTHER'),",
+                  "  hundredthPrecision: previewData.hundredthPrecision === true,",
+                  "  published: previewData.published === true,",
+                  "  ranking: previewData.ranking === true,",
+                  "  startMode: 'Individual',",
+                  "  coefRanking: previewData.coefRanking ?? null,",
+                  "  countryCode: String(previewData.countryCode || pm.environment.get('eventCountryCode') || 'CZ'),",
+                  "  externalSource: String(previewData.provider),",
+                  "  externalEventId: String(previewData.externalEventId),",
+                  "};",
+                  "pm.collectionVariables.set('createEventPayload', JSON.stringify(payload, null, 2));",
+                  "pm.collectionVariables.set('publishEventPayload', JSON.stringify({ ...payload, published: true }, null, 2));",
                   ""
                 ]
               }
@@ -2368,6 +2798,64 @@
               }
             }
           ]
+        },
+        {
+          "name": "[POST] /rest/v1/upload/czech-ranking - Reject missing ranking csv",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/upload/czech-ranking",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "upload", "czech-ranking"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "rankingType",
+                  "value": "FOREST",
+                  "type": "text"
+                },
+                {
+                  "key": "rankingCategory",
+                  "value": "M",
+                  "type": "text"
+                },
+                {
+                  "key": "validForMonth",
+                  "value": "2026-04",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Missing file validation is reported', function () { pm.expect(JSON.stringify(body)).to.include('No file uploaded'); });",
+                  ""
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -2397,7 +2885,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{eventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"Prague\",\n  \"latitude\": 50.0874654,\n  \"longitude\": 14.4212535,\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"SPRINT\",\n  \"hundredthPrecision\": true,\n  \"published\": true,\n  \"ranking\": true,\n  \"startMode\": \"Individual\",\n  \"coefRanking\": 1.11,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"EVENTOR\",\n  \"externalEventId\": \"{{eventExternalEventId}}\"\n}",
+              "raw": "{{createEventPayload}}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2504,26 +2992,27 @@
                   "assertStatus(200);",
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
+                  "const expected = JSON.parse(requireCollectionVar('createEventPayload'));",
                   "assertString(body.results.data.id, 'id');",
                   "pm.collectionVariables.set('eventId', body.results.data.id);",
-                  "pm.expect(body.results.data.name).to.eql(requireCollectionVar('eventName'));",
-                  "pm.expect(body.results.data.organizer).to.eql('Postman Club');",
-                  "pm.expect(body.results.data.location).to.eql('Prague');",
-                  "pm.expect(body.results.data.timezone).to.eql(pm.environment.get('eventTimezone'));",
-                  "pm.expect(body.results.data.sportId).to.eql(Number(pm.environment.get('sportId')));",
-                  "pm.expect(body.results.data.latitude).to.be.closeTo(50.0874654, 0.000001);",
-                  "pm.expect(body.results.data.longitude).to.be.closeTo(14.4212535, 0.000001);",
-                  "pm.expect(body.results.data.zeroTime).to.eql(requireCollectionVar('runtimeEventZeroTime'));",
-                  "pm.expect(body.results.data.relay).to.eql(false);",
-                  "pm.expect(body.results.data.discipline).to.eql('SPRINT');",
-                  "pm.expect(body.results.data.hundredthPrecision).to.eql(true);",
-                  "pm.expect(body.results.data.published).to.eql(true);",
-                  "pm.expect(body.results.data.ranking).to.eql(true);",
-                  "pm.expect(body.results.data.startMode).to.eql('Individual');",
-                  "pm.expect(body.results.data.coefRanking).to.be.closeTo(1.11, 0.000001);",
-                  "pm.expect(body.results.data.countryId).to.eql(pm.environment.get('eventCountryCode'));",
-                  "pm.expect(body.results.data.externalSource).to.eql('EVENTOR');",
-                  "pm.expect(body.results.data.externalEventId).to.eql(requireCollectionVar('eventExternalEventId'));",
+                  "pm.expect(body.results.data.name).to.eql(expected.name);",
+                  "pm.expect(body.results.data.organizer).to.eql(expected.organizer);",
+                  "pm.expect(body.results.data.location).to.eql(expected.location);",
+                  "pm.expect(body.results.data.timezone).to.eql(expected.timezone);",
+                  "pm.expect(body.results.data.sportId).to.eql(expected.sportId);",
+                  "if (expected.latitude === null) { pm.expect(body.results.data.latitude).to.eql(null); } else { pm.expect(body.results.data.latitude).to.be.closeTo(Number(expected.latitude), 0.000001); }",
+                  "if (expected.longitude === null) { pm.expect(body.results.data.longitude).to.eql(null); } else { pm.expect(body.results.data.longitude).to.be.closeTo(Number(expected.longitude), 0.000001); }",
+                  "pm.expect(body.results.data.zeroTime).to.eql(expected.zeroTime);",
+                  "pm.expect(body.results.data.relay).to.eql(expected.relay);",
+                  "pm.expect(body.results.data.discipline).to.eql(expected.discipline);",
+                  "pm.expect(body.results.data.hundredthPrecision).to.eql(expected.hundredthPrecision);",
+                  "pm.expect(body.results.data.published).to.eql(expected.published);",
+                  "pm.expect(body.results.data.ranking).to.eql(expected.ranking);",
+                  "pm.expect(body.results.data.startMode).to.eql(expected.startMode);",
+                  "if (expected.coefRanking === null) { pm.expect(body.results.data.coefRanking).to.eql(null); } else { pm.expect(body.results.data.coefRanking).to.be.closeTo(Number(expected.coefRanking), 0.000001); }",
+                  "pm.expect(body.results.data.countryId).to.eql(expected.countryCode);",
+                  "pm.expect(body.results.data.externalSource).to.eql(expected.externalSource);",
+                  "pm.expect(body.results.data.externalEventId).to.eql(expected.externalEventId);",
                   ""
                 ]
               }
@@ -2683,7 +3172,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{updatedEventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club Updated\",\n  \"location\": \"{{updatedEventName}} HQ\",\n  \"latitude\": 50.0755381,\n  \"longitude\": 14.4378005,\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"MIDDLE\",\n  \"hundredthPrecision\": false,\n  \"published\": false,\n  \"ranking\": false,\n  \"startMode\": \"Mass\",\n  \"coefRanking\": 1.27,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"EVENTOR\",\n  \"externalEventId\": \"{{updatedEventExternalEventId}}\"\n}",
+              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{updatedEventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club Updated\",\n  \"location\": \"{{updatedEventName}} HQ\",\n  \"latitude\": 50.0755381,\n  \"longitude\": 14.4378005,\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"MIDDLE\",\n  \"hundredthPrecision\": false,\n  \"published\": false,\n  \"ranking\": false,\n  \"startMode\": \"Mass\",\n  \"coefRanking\": 1.27,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"{{externalImportProvider}}\",\n  \"externalEventId\": \"{{externalImportEventId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2805,8 +3294,8 @@
                   "pm.expect(body.results.data.startMode).to.eql('Mass');",
                   "pm.expect(body.results.data.coefRanking).to.be.closeTo(1.27, 0.000001);",
                   "pm.expect(body.results.data.countryId).to.eql(pm.environment.get('eventCountryCode'));",
-                  "pm.expect(body.results.data.externalSource).to.eql('EVENTOR');",
-                  "pm.expect(body.results.data.externalEventId).to.eql(requireCollectionVar('updatedEventExternalEventId'));",
+                  "pm.expect(body.results.data.externalSource).to.eql(pm.environment.get('externalImportProvider') || 'ORIS');",
+                  "pm.expect(body.results.data.externalEventId).to.eql(requireCollectionVar('externalImportEventId'));",
                   ""
                 ]
               }
@@ -3689,6 +4178,102 @@
               }
             }
           ]
+        },
+        {
+          "name": "[POST] /rest/v1/upload/czech-ranking - Upload Czech ranking CSV",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/upload/czech-ranking",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "upload", "czech-ranking"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "rankingType",
+                  "value": "{{czechRankingType}}",
+                  "type": "text"
+                },
+                {
+                  "key": "rankingCategory",
+                  "value": "{{czechRankingCategory}}",
+                  "type": "text"
+                },
+                {
+                  "key": "validForMonth",
+                  "value": "{{czechRankingValidForMonth}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "src": "fixtures/czech-ranking/export_ranking_2026-03-31_2_20260407_222017.txt",
+                  "type": "file"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "const message = String(body.results && body.results.data || \"\");",
+                  "pm.test('Czech ranking upload reports success', function () { pm.expect(message).to.include('Csv ranking Czech data uploaded successfully'); });",
+                  "const match = message.match(/(\\d+)$/);",
+                  "pm.test('Czech ranking upload reports imported row count', function () { pm.expect(match, 'response should end with imported row count').to.not.eql(null); pm.expect(Number(match[1])).to.be.greaterThan(0); });",
+                  "if (match) { pm.collectionVariables.set('czechRankingImportedEntries', match[1]); }",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/events/{{eventId}}/czech-ranking - Recalculate Czech ranking",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/czech-ranking",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "czech-ranking"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Czech ranking recalculation response is successful', function () { pm.expect(body.results && body.results.data).to.be.a('string'); });",
+                  "pm.test('Czech ranking recalculation response mentions ranking', function () { pm.expect(body.results.data).to.include('Czech ranking'); });",
+                  ""
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -4482,6 +5067,138 @@
           ]
         },
         {
+          "name": "[PUT] /rest/v1/events/{{eventId}}/competitors/{{updatedCompetitorExternalId}}/external-id - Update competitor by external id",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/competitors/{{updatedCompetitorExternalId}}/external-id",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "rest",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "competitors",
+                "{{updatedCompetitorExternalId}}",
+                "external-id"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{{externalCompetitorUpdatePayload}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const runId = pm.collectionVariables.get('runId') || String(Date.now());",
+                  "const payload = {",
+                  "  useExternalId: true,",
+                  "  origin: 'IT',",
+                  "  registration: pm.collectionVariables.get('updatedCompetitorRegistration'),",
+                  "  bibNumber: 777,",
+                  "  note: `Updated via external id ${runId}`,",
+                  "  lateStart: false,",
+                  "};",
+                  "const classExternalId = pm.collectionVariables.get('classExternalId');",
+                  "if (classExternalId && classExternalId !== 'null' && classExternalId !== 'undefined') {",
+                  "  payload.classExternalId = classExternalId;",
+                  "} else {",
+                  "  payload.classId = Number(pm.collectionVariables.get('classId'));",
+                  "}",
+                  "pm.collectionVariables.set('externalIdUpdateNote', payload.note);",
+                  "pm.collectionVariables.set('externalCompetitorUpdatePayload', JSON.stringify(payload, null, 2));",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('External-id update returned success payload', function () { pm.expect(body.error).to.eql(false); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/events/{{eventId}}/competitors/{{updatedCompetitorExternalId}}/external-id - Read competitor after external-id update",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/competitors/{{updatedCompetitorExternalId}}/external-id",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "rest",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "competitors",
+                "{{updatedCompetitorExternalId}}",
+                "external-id"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "const competitor = body.results && body.results.data;",
+                  "pm.test('Competitor detail exists', function () { pm.expect(competitor).to.be.an('object'); });",
+                  "pm.test('External-id update preserved the same internal competitor id', function () { pm.expect(String(competitor.id)).to.eql(pm.collectionVariables.get('createdCompetitorId')); });",
+                  "pm.test('External-id update kept updated external id', function () { pm.expect(competitor.externalId).to.eql(pm.collectionVariables.get('updatedCompetitorExternalId')); });",
+                  "pm.test('External-id update changed registration', function () { pm.expect(competitor.registration).to.eql(pm.collectionVariables.get('updatedCompetitorRegistration')); });",
+                  "pm.test('External-id update changed note', function () { pm.expect(competitor.note).to.eql(pm.collectionVariables.get('externalIdUpdateNote')); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "[GET] /rest/v1/events/{{eventId}}/changelog?group=true - Inspect changelog",
           "request": {
             "method": "GET",
@@ -4637,6 +5354,113 @@
                   "    pm.expect(new Date(change.createdAt).getTime()).to.be.at.least(changelogSince);",
                   "  });",
                   "});",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/events/{{eventId}}/competitors - Create competitor for external-id delete",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/competitors",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "competitors"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classId\": {{classId}},\n  \"origin\": \"START\",\n  \"firstname\": \"Delete\",\n  \"lastname\": \"By ExternalId\",\n  \"externalId\": \"{{externalDeleteCompetitorExternalId}}\",\n  \"nationality\": \"CZE\",\n  \"registration\": \"{{externalDeleteCompetitorRegistration}}\",\n  \"organisation\": \"Postman Club\",\n  \"card\": {{externalDeleteCompetitorCard}},\n  \"bibNumber\": 778,\n  \"status\": \"Active\",\n  \"lateStart\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const runId = pm.collectionVariables.get('runId') || String(Date.now());",
+                  "pm.expect(pm.collectionVariables.get('classId'), 'classId should be set').to.be.a('string').and.not.empty;",
+                  "pm.collectionVariables.set('externalDeleteCompetitorExternalId', `postman-${runId}-delete-ext`);",
+                  "pm.collectionVariables.set('externalDeleteCompetitorRegistration', `XD${String(Date.now()).slice(-6)}`);",
+                  "pm.collectionVariables.set('externalDeleteCompetitorCard', String(700000 + Number(String(Date.now()).slice(-5))));",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('External-id delete competitor create returned success payload', function () { pm.expect(body.error).to.eql(false); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[DELETE] /rest/v1/events/{{eventId}}/competitors/{{externalDeleteCompetitorExternalId}}/external-id - Delete competitor by external id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/competitors/{{externalDeleteCompetitorExternalId}}/external-id",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "rest",
+                "v1",
+                "events",
+                "{{eventId}}",
+                "competitors",
+                "{{externalDeleteCompetitorExternalId}}",
+                "external-id"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('External-id delete returned success payload', function () { pm.expect(body.error).to.eql(false); });",
                   ""
                 ]
               }
@@ -5090,7 +5914,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{publicEventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club Public\",\n  \"location\": \"{{publicEventName}} Arena\",\n  \"latitude\": 50.0755381,\n  \"longitude\": 14.4378005,\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"MIDDLE\",\n  \"hundredthPrecision\": false,\n  \"published\": true,\n  \"ranking\": false,\n  \"startMode\": \"Mass\",\n  \"coefRanking\": 1.27,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"EVENTOR\",\n  \"externalEventId\": \"{{updatedEventExternalEventId}}\"\n}",
+              "raw": "{{publishEventPayload}}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5208,9 +6032,12 @@
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
                   "assertObject(body.results.data, 'body.results.data');",
-                  "pm.expect(body.results.data.name).to.eql(requireCollectionVar('publicEventName'));",
+                  "const expected = JSON.parse(requireCollectionVar('publishEventPayload'));",
+                  "pm.expect(body.results.data.name).to.eql(expected.name);",
+                  "pm.expect(body.results.data.location).to.eql(expected.location);",
+                  "pm.expect(body.results.data.timezone).to.eql(expected.timezone);",
                   "pm.expect(body.results.data.published).to.eql(true);",
-                  "pm.expect(body.results.data.zeroTime).to.eql(requireCollectionVar('runtimeEventZeroTime'));",
+                  "pm.expect(body.results.data.zeroTime).to.eql(expected.zeroTime);",
                   ""
                 ]
               }
@@ -5332,7 +6159,8 @@
                   "pm.test('Published event is visible in public list', function () {",
                   "  pm.expect(publicEvent).to.not.eql(undefined);",
                   "});",
-                  "pm.expect(publicEvent.name).to.eql(requireCollectionVar('publicEventName'));",
+                  "const expected = JSON.parse(requireCollectionVar('publishEventPayload'));",
+                  "pm.expect(publicEvent.name).to.eql(expected.name);",
                   "pm.expect(publicEvent.published).to.eql(true);",
                   ""
                 ]
@@ -5451,10 +6279,11 @@
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
                   "assertObject(body.results.data, 'body.results.data');",
-                  "pm.expect(body.results.data.name).to.eql(requireCollectionVar('publicEventName'));",
-                  "pm.expect(body.results.data.location).to.eql(`${requireCollectionVar('publicEventName')} Arena`);",
-                  "pm.expect(body.results.data.timezone).to.eql(pm.environment.get('eventTimezone'));",
-                  "pm.expect(body.results.data.zeroTime).to.eql(requireCollectionVar('runtimeEventZeroTime'));",
+                  "const expected = JSON.parse(requireCollectionVar('publishEventPayload'));",
+                  "pm.expect(body.results.data.name).to.eql(expected.name);",
+                  "pm.expect(body.results.data.location).to.eql(expected.location);",
+                  "pm.expect(body.results.data.timezone).to.eql(expected.timezone);",
+                  "pm.expect(body.results.data.zeroTime).to.eql(expected.zeroTime);",
                   "assertArray(body.results.data.classes, 'body.results.data.classes');",
                   ""
                 ]
@@ -6264,7 +7093,851 @@
       ]
     },
     {
-      "name": "10 - Cleanup",
+      "name": "10 - Admin (optional)",
+      "description": "Optional admin-only coverage. Enable with runAdminScenarios=true and provide adminBearerToken. Ranking write routes are exercised through safe validation failures to avoid destructive clears or external syncs by default.",
+      "item": [
+        {
+          "name": "[POST] /rest/v1/auth/signup - Create admin target user (optional)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-orienteerfeed-app-activate-user-url",
+                "value": "http://localhost:3000/activate",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "auth", "signup"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminTargetUserEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Admin Target\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "const runId = pm.collectionVariables.get('runId') || String(Date.now());",
+                  "pm.collectionVariables.set('adminTargetUserEmail', `postman-admin-target+${runId}@example.test`);",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Admin target signup returned a numeric user id', function () { pm.expect(body.results && body.results.data && body.results.data.user && body.results.data.user.id).to.be.a('number'); });",
+                  "pm.collectionVariables.set('adminTargetUserId', String(body.results.data.user.id));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/dashboard - Load admin dashboard (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "dashboard"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Dashboard summary exists', function () { pm.expect(body.results && body.results.summary).to.be.an('object'); });",
+                  "pm.test('Dashboard monthly activity exists', function () { pm.expect(body.results.monthlyActivity).to.be.an('array'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/users - Load admin users (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "users"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Admin users list exists', function () { pm.expect(body.results && body.results.items).to.be.an('array'); });",
+                  "pm.test('Admin users include the target user', function () { pm.expect(body.results.items.some(item => item.email === pm.collectionVariables.get('adminTargetUserEmail'))).to.eql(true); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[PATCH] /rest/v1/admin/users/{{adminTargetUserId}} - Deactivate target user (optional)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/users/{{adminTargetUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "users", "{{adminTargetUserId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Target user is inactive', function () { pm.expect(body.results && body.results.user && body.results.user.active).to.eql(false); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[PATCH] /rest/v1/admin/users/{{adminTargetUserId}} - Reactivate target user (optional)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/users/{{adminTargetUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "users", "{{adminTargetUserId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Target user is active again', function () { pm.expect(body.results && body.results.user && body.results.user.active).to.eql(true); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/events - Load admin events (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "events"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Admin events list exists', function () { pm.expect(body.results && body.results.items).to.be.an('array'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/ranking/czech - Load Czech ranking overview (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/ranking/czech",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "ranking", "czech"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Admin Czech ranking overview has summary', function () { pm.expect(body.results && body.results.summary).to.be.an('object'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/ranking/czech/snapshots - Reject missing snapshot query (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/ranking/czech/snapshots",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "ranking", "czech", "snapshots"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Snapshot detail validation error is returned', function () { pm.expect(JSON.stringify(body)).to.match(/rankingType|rankingCategory|validForMonth/); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/admin/ranking/czech/snapshots - Reject missing snapshot file (optional)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/ranking/czech/snapshots",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "ranking", "czech", "snapshots"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "rankingType",
+                  "value": "FOREST",
+                  "type": "text"
+                },
+                {
+                  "key": "rankingCategory",
+                  "value": "M",
+                  "type": "text"
+                },
+                {
+                  "key": "validForMonth",
+                  "value": "2026-04",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Snapshot upload validation reports missing file', function () { pm.expect(JSON.stringify(body)).to.include('No file uploaded'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[DELETE] /rest/v1/admin/ranking/czech/snapshots?validForMonth=2026-13 - Reject invalid snapshot clear month (optional)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/ranking/czech/snapshots?validForMonth=2026-13",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "ranking", "czech", "snapshots"],
+              "query": [
+                {
+                  "key": "validForMonth",
+                  "value": "2026-13"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Snapshot clear validation reports invalid month', function () { pm.expect(JSON.stringify(body)).to.include('Invalid validForMonth'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/ranking/czech/event-results - Reject missing event result query (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/ranking/czech/event-results",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "ranking", "czech", "event-results"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Event-result detail validation error is returned', function () { pm.expect(JSON.stringify(body)).to.match(/externalEventId|rankingType|rankingCategory/); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/admin/ranking/czech/oris-sync - Reject invalid sync scope (optional)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/ranking/czech/oris-sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "ranking", "czech", "oris-sync"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope\": \"INVALID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('ORIS sync validation rejects invalid scope', function () { pm.expect(JSON.stringify(body)).to.include('Invalid option'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[DELETE] /rest/v1/admin/ranking/czech/event-results?rankingType=INVALID - Reject invalid event-result clear query (optional)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/ranking/czech/event-results?rankingType=INVALID",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "ranking", "czech", "event-results"],
+              "query": [
+                {
+                  "key": "rankingType",
+                  "value": "INVALID"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Event-result clear validation rejects invalid rankingType', function () { pm.expect(JSON.stringify(body)).to.include('Invalid option'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[DELETE] /rest/v1/admin/users/{{adminTargetUserId}} - Delete target user (optional)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/users/{{adminTargetUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "users", "{{adminTargetUserId}}"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Deleted target user matches the created email', function () { pm.expect(body.results && body.results.user && body.results.user.email).to.eql(pm.collectionVariables.get('adminTargetUserEmail')); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11 - Cleanup",
       "description": "Revoke generated credentials and remove all scenario data from the local server.",
       "item": [
         {

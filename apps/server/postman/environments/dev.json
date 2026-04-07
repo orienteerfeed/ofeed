@@ -115,6 +115,30 @@
       "enabled": true
     },
     {
+      "key": "fixtureCzechRankingCsv",
+      "value": "fixtures/czech-ranking/export_ranking_2026-03-31_2_20260407_222017.txt",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "czechRankingType",
+      "value": "FOREST",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "czechRankingCategory",
+      "value": "M",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "czechRankingValidForMonth",
+      "value": "2026-03",
+      "type": "default",
+      "enabled": true
+    },
+    {
       "key": "fixtureEventImage",
       "value": "fixtures/images/ofeed-event-image.png",
       "enabled": true
@@ -127,6 +151,17 @@
     {
       "key": "deleteEventAtEnd",
       "value": "true",
+      "enabled": true
+    },
+    {
+      "key": "runAdminScenarios",
+      "value": "false",
+      "enabled": true
+    },
+    {
+      "key": "adminBearerToken",
+      "value": "",
+      "type": "secret",
       "enabled": true
     }
   ],
