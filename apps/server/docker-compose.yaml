@@ -4,8 +4,8 @@ services:
       context: ../..
       dockerfile: apps/server/Dockerfile
       args:
-        NODE_VERSION: 22.20.0
-        PNPM_VERSION: 10.29.2
+        NODE_VERSION: 24.14.1
+        PNPM_VERSION: 10.33.0
     image: ofeed/server:local
     env_file:
       - ./.env

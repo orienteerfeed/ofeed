@@ -25,8 +25,8 @@ Important generated paths:
 
 ## Environment
 
-- Use Node.js `22.20.0` from the root `.nvmrc`.
-- Use `pnpm` `10.29.2` via Corepack. The allowed range is `>=10.20.0 <11`.
+- Use Node.js `24.14.1` from the root `.nvmrc`.
+- Use `pnpm` `10.33.0` via Corepack. The allowed range is `>=10.33.0 <11`.
 - Runtime env files are app-local only:
   - `apps/client/.env`
   - `apps/server/.env`

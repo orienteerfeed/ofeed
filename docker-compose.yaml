@@ -7,8 +7,8 @@ services:
       context: .
       dockerfile: ./apps/server/Dockerfile
       args:
-        NODE_VERSION: 22.20.0
-        PNPM_VERSION: 10.29.2
+        NODE_VERSION: 24.14.1
+        PNPM_VERSION: 10.33.0
     env_file: ./apps/server/.env
     environment:
       - NODE_ENV=production
@@ -23,8 +23,8 @@ services:
       context: .
       dockerfile: ./apps/server/Dockerfile
       args:
-        NODE_VERSION: 22.20.0
-        PNPM_VERSION: 10.29.2
+        NODE_VERSION: 24.14.1
+        PNPM_VERSION: 10.33.0
     env_file: ./apps/server/.env
     ports:
       - "${SERVER_PORT:-3001}:3001"
@@ -49,8 +49,8 @@ services:
       context: .
       dockerfile: ./apps/client/Dockerfile
       args:
-        NODE_VERSION: 22.20.0
-        PNPM_VERSION: 10.29.2
+        NODE_VERSION: 24.14.1
+        PNPM_VERSION: 10.33.0
       secrets:
         - client_env
     env_file: ./apps/client/.env
