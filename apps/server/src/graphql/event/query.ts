@@ -164,7 +164,8 @@ export const eventsByUser = (_, { userId }, context) => {
 export const searchEvents = async (_, { query }) => {
   return prisma.$queryRaw`
     SELECT * FROM Event
-    WHERE MATCH(name, location, organizer) AGAINST(${query} IN BOOLEAN MODE);
+    WHERE published = true
+      AND MATCH(name, location, organizer) AGAINST(${query} IN BOOLEAN MODE);
   `;
 };
 
