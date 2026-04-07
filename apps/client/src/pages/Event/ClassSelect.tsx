@@ -5,6 +5,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  hasDisplayableCourseClimb,
+  hasDisplayableCourseInfo,
+  hasDisplayableCourseLength,
+} from '@/lib/course-info';
 import { ChevronDown } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { Button } from '../../components/atoms';
@@ -99,7 +104,11 @@ const ClassButton: React.FC<ClassButtonProps> = ({
   isSelected,
   onSelect,
 }) => {
-  const hasCourseInfo = classItem.length || classItem.climb;
+  const hasCourseInfo = hasDisplayableCourseInfo(classItem);
+  const showLength = hasDisplayableCourseLength(classItem.length);
+  const showClimb = hasDisplayableCourseClimb(classItem);
+  const lengthLabel = showLength ? `${((classItem.length ?? 0) / 1000).toFixed(1)}km` : null;
+  const climbLabel = showClimb ? `${classItem.climb ?? 0}m` : null;
 
   return (
     <Button
@@ -111,13 +120,11 @@ const ClassButton: React.FC<ClassButtonProps> = ({
         <span>{classItem.name}</span>
         {hasCourseInfo && (
           <div className="flex gap-2 text-xs font-normal opacity-80">
-            {classItem.length && (
-              <span>{(classItem.length / 1000).toFixed(1)}km</span>
-            )}
-            {classItem.climb && classItem.length && (
+            {lengthLabel && <span>{lengthLabel}</span>}
+            {showClimb && showLength && (
               <span className="text-muted-foreground">•</span>
             )}
-            {classItem.climb && <span>{classItem.climb}m</span>}
+            {climbLabel && <span>{climbLabel}</span>}
           </div>
         )}
       </div>

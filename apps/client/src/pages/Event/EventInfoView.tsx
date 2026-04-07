@@ -12,6 +12,10 @@ import {
   externalEventSystems,
   type ExternalEventSystemProvider,
 } from '@/lib/paths/externalLinks';
+import {
+  hasDisplayableCourseClimb,
+  hasDisplayableCourseLength,
+} from '@/lib/course-info';
 import { Event } from '@/types/event';
 import { Link } from '@tanstack/react-router';
 import {
@@ -198,7 +202,13 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                     ))}
                   </div>
                   <div className="hidden flex-wrap gap-2 sm:flex">
-                    {sortedClasses.map(cls => (
+                    {sortedClasses.map(cls => {
+                      const showLength = hasDisplayableCourseLength(cls.length);
+                      const showClimb = hasDisplayableCourseClimb(cls);
+                      const lengthLabel = showLength ? ` • ${cls.length ?? 0}m` : '';
+                      const climbLabel = showClimb ? ` • ${cls.climb ?? 0}m` : '';
+
+                      return (
                       <Link
                         key={cls.id}
                         to="/events/$eventId"
@@ -208,11 +218,12 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                       >
                         <Badge variant="secondary" className="cursor-pointer">
                           {cls.name}
-                          {cls.length && ` • ${cls.length}m`}
-                          {cls.climb && ` • ${cls.climb}m`}
+                          {lengthLabel}
+                          {climbLabel}
                         </Badge>
                       </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
                 {externalEventUrl && (

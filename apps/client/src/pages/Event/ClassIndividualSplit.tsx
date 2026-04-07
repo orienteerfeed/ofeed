@@ -1,6 +1,10 @@
 import { Alert } from '@/components/organisms';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  hasDisplayableCourseClimb,
+  hasDisplayableCourseLength,
+} from '@/lib/course-info';
 import { gql } from '@apollo/client';
 import { useSubscription } from '@apollo/client/react';
 import { TFunction } from 'i18next';
@@ -103,8 +107,6 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
   }, [selectedClass, event.classes, onClassChange]);
 
   const currentClass = event.classes.find(c => c.id === selectedClass);
-  const courseLengthInKm = (currentClass?.length ?? 0) / 1000;
-  const courseClimb = currentClass?.climb;
 
   if (!currentClass) {
     return (
@@ -113,6 +115,11 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
       </Alert>
     );
   }
+
+  const showLength = hasDisplayableCourseLength(currentClass.length);
+  const showClimb = hasDisplayableCourseClimb(currentClass);
+  const courseLengthLabel = showLength ? `${((currentClass.length ?? 0) / 1000).toFixed(1)} km` : null;
+  const courseClimbLabel = showClimb ? `${currentClass.climb ?? 0} m` : null;
 
   return (
     <div className="space-y-4">
@@ -146,14 +153,16 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary" className="gap-1 py-1">
-            <Route className="w-3 h-3" />
-            {courseLengthInKm.toFixed(1)} km
-          </Badge>
-          {courseClimb && (
+          {courseLengthLabel && (
+            <Badge variant="secondary" className="gap-1 py-1">
+              <Route className="w-3 h-3" />
+              {courseLengthLabel}
+            </Badge>
+          )}
+          {courseClimbLabel && (
             <Badge variant="secondary" className="gap-1 py-1">
               <Mountain className="w-3 h-3" />
-              {courseClimb} m
+              {courseClimbLabel}
             </Badge>
           )}
         </div>

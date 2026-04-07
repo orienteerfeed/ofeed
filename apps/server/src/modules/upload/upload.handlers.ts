@@ -23,6 +23,7 @@ import {
 } from '../../utils/subscriptionUtils.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
 import { normalizeCzechRankingMonthInput, storeCzechRankingData } from './upload.service.js';
+import { normalizeCourseMetrics } from './upload.course.js';
 
 const parser = new Parser({ attrkey: 'ATTR', trim: true });
 const IOF_XML_SCHEMA =
@@ -192,6 +193,14 @@ function getIofDateTime(value: unknown): Date | undefined {
   if (!raw) return undefined;
   const d = new Date(raw);
   return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
+function getIofIntegerValue(value: unknown): number | null {
+  const raw = getIofTextValue(value);
+  if (!raw) return null;
+
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 function toResultStatus(value: unknown, fallback: ResultStatus): ResultStatus {
@@ -1137,19 +1146,19 @@ async function processClassStarts(
         controlsCount = null;
 
       if (classStart.Course && classStart.Course.length > 0) {
-        length = classStart.Course[0].Length ? parseInt(classStart.Course[0].Length) : null;
-        climb = classStart.Course[0].Climb ? parseInt(classStart.Course[0].Climb) : null;
-        controlsCount = classStart.Course[0].NumberOfControls
-          ? parseInt(classStart.Course[0].NumberOfControls)
-          : null;
+        length = getIofIntegerValue(classStart.Course[0].Length);
+        climb = getIofIntegerValue(classStart.Course[0].Climb);
+        controlsCount = getIofIntegerValue(classStart.Course[0].NumberOfControls);
       }
       if (classStart.StartName) startName = classStart.StartName[0];
 
       const additionalData = {
-        length: length,
-        climb: climb,
         startName: startName,
-        controlsCount: controlsCount,
+        ...normalizeCourseMetrics({
+          length,
+          climb,
+          controlsCount,
+        }),
       };
 
       const classId = await upsertClass(eventId, classDetails, dbClassLists, additionalData);
@@ -1587,9 +1596,12 @@ async function handleIofXmlUpload(
                 ATTR: {},
               };
               const additionalData = {
-                length: course.Length && parseInt(course.Length[0]),
-                climb: course.Climb && parseInt(course.Climb[0]),
-                controlsCount: course.CourseControl && course.CourseControl.length - 2,
+                ...normalizeCourseMetrics({
+                  length: getIofIntegerValue(course.Length),
+                  climb: getIofIntegerValue(course.Climb),
+                  controlsCount:
+                    Array.isArray(course.CourseControl) ? course.CourseControl.length - 2 : null,
+                }),
               };
 
               await upsertClass(eventId, classDetails, dbClassLists, additionalData);
