@@ -1,6 +1,6 @@
 # OFeed
 
-[![Nodejs Version](https://img.shields.io/badge/node.js-22.20%20LTS-green.svg)](https://nodejs.org/)
+[![Nodejs Version](https://img.shields.io/badge/node.js-24.14.1%20LTS-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/orienteerfeed/ofeed/actions/workflows/ci.yaml/badge.svg)](https://github.com/orienteerfeed/ofeed/actions/workflows/ci.yaml)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/orienteerfeed/ofeed?label=GitHub%20Stars)](https://github.com/orienteerfeed/ofeed/stargazers)
@@ -40,8 +40,8 @@ packages/
 
 ## Requirements
 
-- Node.js version pinned in `.nvmrc` (`22.20.0`)
-- pnpm `>=10.20.0 <11` (recommended: `10.29.2`)
+- Node.js version pinned in `.nvmrc` (`24.14.1`)
+- pnpm `>=10.33.0 <11` (pinned via `packageManager` to `10.33.0`)
 
 Use nvm to install and activate the exact Node.js version from `.nvmrc`:
 
@@ -54,7 +54,7 @@ Use Corepack:
 
 ```bash
 corepack enable
-corepack prepare pnpm@10.29.2 --activate
+corepack use pnpm@10.33.0
 pnpm -v
 ```
 
