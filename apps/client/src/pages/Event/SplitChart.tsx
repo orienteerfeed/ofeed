@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatSecondsToTime } from '@/lib/date';
 import { Loader2, User } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   Tooltip as RechartsTooltip,
@@ -18,6 +18,15 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import {
+  createFastestSplitChartReferenceTimes,
+  createInitialSplitChartVisibility,
+  createSplitChartCheckpoints,
+} from './split-chart.utils';
+import {
+  filterValidSplitResultCompetitors,
+} from './split-results.utils';
+import type { SplitChartCheckpoint } from './split-chart.utils';
 
 // TODO: Refactor type definitions - move to shared types file
 // TODO: Define STATUS_PRIORITY in shared constants
@@ -46,8 +55,11 @@ interface SplitChartProps {
 }
 
 interface ChartPoint {
-  legIndex: number;
+  axisLabel: string;
+  checkpointIndex: number;
+  checkpointKind: SplitChartCheckpoint['kind'];
   controlCode: string;
+  legIndex?: number;
   [key: string]: number | string | undefined;
 }
 
@@ -63,6 +75,7 @@ interface RechartsCustomTooltipProps {
 }
 
 type PositionsByLeg = Array<Record<string, number>>;
+type SplitChartComparisonMode = 'leader' | 'fastest';
 
 // TODO: Move to shared constants - used in both SplitTable and SplitChart
 const STATUS_PRIORITY = {
@@ -85,8 +98,13 @@ const getCompetitorLabel = (c: Competitor) =>
 // Custom tooltip for Recharts - fixed types
 const makeCustomTooltip =
   (
+    formatCheckpointLabel: (
+      checkpointKind: SplitChartCheckpoint['kind'],
+      legIndex: number | undefined,
+      controlCode: string,
+    ) => string,
     competitorsById: Record<string, Competitor>,
-    positionsByLeg: PositionsByLeg
+    positionsByCheckpoint: PositionsByLeg
   ): React.FC<RechartsCustomTooltipProps> =>
   ({ active, payload }) => {
     // Check if tooltip should be displayed
@@ -96,14 +114,16 @@ const makeCustomTooltip =
     if (!first?.payload) return null;
     const data = first.payload as ChartPoint;
 
-    const legIndex = data.legIndex as number;
+    const checkpointIndex = data.checkpointIndex as number;
+    const checkpointKind = data.checkpointKind as SplitChartCheckpoint['kind'];
+    const legIndex = data.legIndex as number | undefined;
     const controlCode = data.controlCode as string;
-    const positionMap = positionsByLeg[legIndex - 1] || {};
+    const positionMap = positionsByCheckpoint[checkpointIndex] || {};
 
     return (
       <div className="rounded-md border bg-background px-3 py-2 text-xs shadow-md">
         <div className="mb-1 font-medium">
-          Leg {legIndex} ({controlCode})
+          {formatCheckpointLabel(checkpointKind, legIndex, controlCode)}
         </div>
         <div className="space-y-1">
           {payload.map(entry => {
@@ -147,6 +167,8 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   error,
 }) => {
   const { t } = useTranslation();
+  const [comparisonMode, setComparisonMode] =
+    useState<SplitChartComparisonMode>('leader');
   // Sort competitors same as in SplitTable (by status priority, then time)
   const sortedCompetitors = useMemo(() => {
     return [...competitors].sort((a, b) => {
@@ -159,21 +181,23 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     });
   }, [competitors]);
 
-  // Extract control codes from first competitor's splits
-  const controlCodes = useMemo(() => {
-    return sortedCompetitors[0]?.splits.map(s => s.controlCode) ?? [];
+  const checkpoints = useMemo(() => {
+    return createSplitChartCheckpoints(sortedCompetitors);
   }, [sortedCompetitors]);
+
+  const validReferenceCompetitors = useMemo(
+    () => filterValidSplitResultCompetitors(sortedCompetitors),
+    [sortedCompetitors],
+  );
 
   // Competitor visibility state for checkboxes
   const [visible, setVisible] = useState<Record<string, boolean>>({});
 
   // Initialize visibility state when competitors change
   useEffect(() => {
-    const initial: Record<string, boolean> = {};
-    sortedCompetitors.forEach(c => {
-      initial[c.id] = true;
-    });
-    setVisible(initial);
+    setVisible(prev =>
+      createInitialSplitChartVisibility(sortedCompetitors, prev),
+    );
   }, [sortedCompetitors]);
 
   // Filter competitors based on visibility
@@ -182,9 +206,32 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     [sortedCompetitors, visible]
   );
 
-  // Calculate chart data: loss to leader and positions for each leg
+  const getCheckpointAxisLabel = (
+    checkpointKind: SplitChartCheckpoint['kind'],
+    controlCode: string,
+  ) => {
+    if (checkpointKind === 'start') {
+      return String(t('Pages.Event.Splits.Start'));
+    }
+
+    if (checkpointKind === 'finish') {
+      return String(t('Pages.Event.Splits.Finish'));
+    }
+
+    return controlCode;
+  };
+
+  // Calculate chart data: cumulative loss to leader and positions for each checkpoint
   const { chartData, positionsByLeg, competitorsById } = useMemo(() => {
     const competitorsById: Record<string, Competitor> = {};
+    const fastestReferenceTimes = createFastestSplitChartReferenceTimes(
+      checkpoints,
+      validReferenceCompetitors,
+    );
+    const validReferenceCompetitorIds = new Set(
+      validReferenceCompetitors.map(competitor => competitor.id),
+    );
+
     sortedCompetitors.forEach(c => {
       competitorsById[c.id] = c;
     });
@@ -192,30 +239,45 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     const positionsByLeg: PositionsByLeg = [];
     const chartData: ChartPoint[] = [];
 
-    controlCodes.forEach((code, idx) => {
-      // Competitors with time at this split
-      const legResults: Array<{ id: string; time: number }> = [];
+    checkpoints.forEach((checkpoint, checkpointIndex) => {
+      const allResults: Array<{ id: string; time: number }> = [];
+      const referenceResults: Array<{ id: string; time: number }> = [];
 
       sortedCompetitors.forEach(c => {
-        const time = c.splits[idx]?.time;
+        let time: number | undefined;
+
+        if (checkpoint.kind === 'start') {
+          time = 0;
+        } else if (checkpoint.kind === 'finish') {
+          time = c.time;
+        } else if (typeof checkpoint.splitIndex === 'number') {
+          time = c.splits[checkpoint.splitIndex]?.time;
+        }
+
         if (typeof time === 'number' && !isNaN(time)) {
-          legResults.push({ id: c.id, time });
+          const result = { id: c.id, time };
+          allResults.push(result);
+
+          if (validReferenceCompetitorIds.has(c.id)) {
+            referenceResults.push(result);
+          }
         }
       });
 
-      // Skip if no results for this leg
-      if (legResults.length === 0) return;
+      if (allResults.length === 0 || referenceResults.length === 0) return;
 
-      // Sort by time to find leader and positions
-      legResults.sort((a, b) => a.time - b.time);
-      const leaderTime = legResults[0]?.time ?? null;
+      referenceResults.sort((a, b) => a.time - b.time);
+      const leaderTime = referenceResults[0]?.time ?? null;
+      const referenceTime =
+        comparisonMode === 'fastest'
+          ? fastestReferenceTimes[checkpointIndex] ?? leaderTime
+          : leaderTime;
 
-      // Calculate positions (handle ties)
       const positionMap: Record<string, number> = {};
       let currentPosition = 1;
       let lastTime: number | null = null;
 
-      legResults.forEach((res, i) => {
+      referenceResults.forEach((res, i) => {
         if (lastTime !== null && res.time !== lastTime) {
           currentPosition = i + 1;
         }
@@ -223,18 +285,22 @@ export const SplitChart: React.FC<SplitChartProps> = ({
         lastTime = res.time;
       });
 
-      positionsByLeg.push(positionMap);
+      positionsByLeg[checkpointIndex] = positionMap;
 
-      // Create chart data point for this leg
       const point: ChartPoint = {
-        legIndex: idx + 1,
-        controlCode: code,
+        axisLabel: getCheckpointAxisLabel(checkpoint.kind, checkpoint.controlCode),
+        checkpointIndex,
+        checkpointKind: checkpoint.kind,
+        controlCode: checkpoint.controlCode,
       };
 
-      // Calculate loss to leader for each competitor
-      legResults.forEach(res => {
-        if (leaderTime !== null) {
-          point[res.id] = res.time - leaderTime;
+      if (typeof checkpoint.legIndex === 'number') {
+        point.legIndex = checkpoint.legIndex;
+      }
+
+      allResults.forEach(res => {
+        if (referenceTime !== null) {
+          point[res.id] = res.time - referenceTime;
         }
       });
 
@@ -242,7 +308,13 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     });
 
     return { chartData, positionsByLeg, competitorsById };
-  }, [sortedCompetitors, controlCodes]);
+  }, [
+    checkpoints,
+    comparisonMode,
+    sortedCompetitors,
+    t,
+    validReferenceCompetitors,
+  ]);
 
   // Predefined colors for chart lines
   const lineColors = [
@@ -259,10 +331,38 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   const getLineColor = (index: number) =>
     lineColors[index % lineColors.length] ?? '#2563eb';
 
+  const competitorColorById = useMemo(
+    () =>
+      Object.fromEntries(
+        sortedCompetitors.map((competitor, index) => [
+          competitor.id,
+          getLineColor(index),
+        ]),
+      ),
+    [sortedCompetitors]
+  );
+
   // Memoized custom tooltip component
   const CustomTooltip = useMemo(
-    () => makeCustomTooltip(competitorsById, positionsByLeg),
-    [competitorsById, positionsByLeg]
+    () =>
+      makeCustomTooltip(
+        (checkpointKind, legIndex, controlCode) => {
+          if (checkpointKind === 'start') {
+            return String(t('Pages.Event.Splits.Start'));
+          }
+
+          if (checkpointKind === 'finish') {
+            return String(t('Pages.Event.Splits.Finish'));
+          }
+
+          return String(
+            t('Pages.Event.Splits.LegLabel', { legIndex, controlCode }),
+          );
+        },
+        competitorsById,
+        positionsByLeg,
+      ),
+    [t, competitorsById, positionsByLeg]
   );
 
   // Loading state
@@ -283,7 +383,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
       <Alert
         severity="error"
         variant="outlined"
-        title="Error loading split chart"
+        title={t('Pages.Event.Splits.ErrorLoadingChart')}
       >
         {error instanceof Error ? error.message : String(error)}
       </Alert>
@@ -291,7 +391,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   }
 
   // Empty state
-  if (!chartData.length || !controlCodes.length) {
+  if (chartData.length < 2) {
     return (
       <Alert severity="info" variant="outlined">
         {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
@@ -303,13 +403,43 @@ export const SplitChart: React.FC<SplitChartProps> = ({
 
   return (
     <Card className="w-full">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center justify-between gap-2 text-base">
-          <span>Race progression (loss to leader)</span>
+      <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-base">
+            {comparisonMode === 'leader'
+              ? t('Pages.Event.Splits.ChartTitle')
+              : t('Pages.Event.Splits.ChartTitleFastest')}
+          </CardTitle>
           <Badge variant="outline" className="text-xs font-normal">
-            {visibleCompetitors.length} runners
+            {t('Pages.Event.Splits.RunnersCount', {
+              count: visibleCompetitors.length,
+            })}
           </Badge>
-        </CardTitle>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {t('Pages.Event.Splits.CompareTo')}
+          </span>
+          <Tabs
+            value={comparisonMode}
+            onValueChange={value =>
+              setComparisonMode(
+                value === 'fastest' ? 'fastest' : 'leader',
+              )
+            }
+            className="w-auto"
+          >
+            <TabsList className="h-8">
+              <TabsTrigger value="leader" className="text-xs">
+                {t('Pages.Event.Splits.CompareToLeader')}
+              </TabsTrigger>
+              <TabsTrigger value="fastest" className="text-xs">
+                {t('Pages.Event.Splits.CompareToFastest')}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-6 lg:flex-row">
@@ -322,30 +452,32 @@ export const SplitChart: React.FC<SplitChartProps> = ({
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
-                dataKey="controlCode"
+                dataKey="axisLabel"
                 tick={{ fontSize: 10 }}
                 angle={-35}
                 textAnchor="end"
                 height={50}
               />
               <YAxis
+                reversed
+                allowDecimals={false}
                 tickFormatter={value =>
                   `+${formatSecondsToTime(Math.max(0, value as number))}`
                 }
               />
               {/* TODO: Fix TypeScript types for Recharts Tooltip content prop */}
               <RechartsTooltip content={<CustomTooltip />} />
-              <Legend />
 
-              {visibleCompetitors.map((c, idx) => (
+              {visibleCompetitors.map(c => (
                 <Line
                   key={c.id}
-                  type="monotone"
+                  type="linear"
                   dataKey={c.id}
                   name={getCompetitorLabel(c)}
-                  stroke={getLineColor(idx)}
+                  stroke={competitorColorById[c.id] ?? getLineColor(0)}
                   dot={false}
-                  strokeWidth={2}
+                  strokeWidth={1.5}
+                  activeDot={{ r: 3 }}
                   isAnimationActive={false}
                 />
               ))}
@@ -356,7 +488,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
         {/* Competitor selection panel on the right */}
         <div className="w-full lg:w-72 border-l border-border/60 lg:pl-4 lg:ml-2 pt-4 lg:pt-0">
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Runners</span>
+            <span>{t('Pages.Event.Splits.Runners')}</span>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -369,7 +501,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
                   setVisible(all);
                 }}
               >
-                All
+                {t('Pages.Event.Splits.SelectAll')}
               </button>
               <span>·</span>
               <button
@@ -383,7 +515,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
                   setVisible(none);
                 }}
               >
-                None
+                {t('Pages.Event.Splits.SelectNone')}
               </button>
             </div>
           </div>
@@ -424,7 +556,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
                   <div
                     className="h-3 w-3 rounded-full"
                     style={{
-                      backgroundColor: getLineColor(idx),
+                      backgroundColor: competitorColorById[c.id] ?? getLineColor(idx),
                     }}
                   />
                 </div>

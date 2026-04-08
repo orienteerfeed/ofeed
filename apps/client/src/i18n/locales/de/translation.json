@@ -419,6 +419,40 @@
             }
           }
         }
+      },
+      "Splits": {
+        "ChartTitle": "Rennverlauf (Rückstand auf die Spitze)",
+        "ChartTitleFastest": "Rennverlauf (Rückstand auf die schnellste Zeit)",
+        "CompareTo": "Vergleichen mit",
+        "CompareToFastest": "Schnellste Zeit",
+        "CompareToLeader": "Führender",
+        "ErrorLoadingChart": "Fehler beim Laden des Zwischenzeiten-Diagramms",
+        "Finish": "Ziel",
+        "LegLabel": "Abschnitt {{legIndex}} ({{controlCode}})",
+        "LegendBestCumulativeTime": "Beste kumulative Zeit",
+        "LegendCriticalDeviation": "Kritische Abweichung (>4.0σ)",
+        "LegendFastestLegTime": "Schnellste Abschnittszeit",
+        "LegendMajorDeviation": "Große Abweichung (>2.5σ)",
+        "LegendSignificantDeviation": "Erhebliche Abweichung (>1.5σ)",
+        "LoadingChart": "Zwischenzeiten-Diagramm wird geladen",
+        "LoadingTimes": "Zwischenzeiten werden geladen",
+        "ResetSort": "Sortierung zurücksetzen",
+        "Runners": "Läufer",
+        "RunnersCount_one": "{{count}} Läufer",
+        "RunnersCount_other": "{{count}} Läufer",
+        "SelectAll": "Alle",
+        "SelectNone": "Keine",
+        "SortDirectionAsc": "Auf",
+        "SortDirectionDesc": "Ab",
+        "SortFieldFinishTime": "Zielzeit",
+        "SortFieldFinalLegTime": "Zeit des Schlussabschnitts",
+        "SortFieldLeg": "Abschnitt {{number}}",
+        "SortFieldLossToLeader": "Rückstand auf die Spitze",
+        "SortFieldPosition": "Platzierung",
+        "SortFieldSplit": "Zwischenzeit {{number}}",
+        "SortedBy": "Sortiert nach:",
+        "SortSummary": "{{field}} ({{direction}})",
+        "Start": "Start"
       }
     }
   },
