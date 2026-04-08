@@ -37,7 +37,7 @@
                   "const oauthRedirectUris = pm.environment.get('oauthRedirectUris') || `https://example.test/callback/${seed},https://example.test/alt/${seed}`;",
                   "const eventTimezone = pm.environment.get('eventTimezone') || 'Europe/Prague';",
                   "const runtimeEventZeroTime = new Intl.DateTimeFormat('en-GB', { timeZone: eventTimezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(now);",
-                  "['accessToken','userId','oauthClientId','oauthClientSecret','oauthAccessToken','eventId','eventPassword','eventPasswordExpiresAt','classId','classExternalId','createdCompetitorId','changelogSince','oauthScopeRequested','oauthScopeCsv','oauthRedirectUris','eventExternalEventId','updatedEventExternalEventId','updatedCompetitorExternalId','updatedCompetitorRegistration','createdCompetitorStartTime','createdCompetitorFinishTime','createdCompetitorTime','updatedCompetitorStartTime','updatedCompetitorFinishTime','updatedCompetitorTime','runtimeEventZeroTime','externalImportEventId','externalImportEventName','externalImportSelectedIndex','createEventPayload','publishEventPayload','publicCompetitorId','publicCompetitorExternalId','featuredImageKey'].forEach(key => pm.collectionVariables.unset(key));",
+                  "['accessToken','userId','oauthClientId','oauthClientSecret','oauthAccessToken','eventId','eventPassword','eventPasswordExpiresAt','classId','classExternalId','createdCompetitorId','changelogSince','oauthScopeRequested','oauthScopeCsv','oauthRedirectUris','eventExternalEventId','updatedEventExternalEventId','updatedCompetitorExternalId','updatedCompetitorRegistration','createdCompetitorStartTime','createdCompetitorFinishTime','createdCompetitorTime','updatedCompetitorStartTime','updatedCompetitorFinishTime','updatedCompetitorTime','runtimeEventZeroTime','externalImportEventId','externalImportEventName','externalImportSelectedIndex','createEventPayload','publishEventPayload','publicCompetitorId','publicCompetitorExternalId','featuredImageKey','graphqlAccessToken','graphqlUserId','graphqlTestEmail','graphqlCurrentEmail','graphqlUpdatedEmail','graphqlInitialPassword','graphqlCurrentPassword','graphqlChangedPassword','graphqlUserCardIdOne','graphqlUserCardIdTwo','graphqlTeamId','graphqlCompetitorId','graphqlCompetitorExternalId','graphqlUpdatedCompetitorExternalId','graphqlCompetitorRegistration','graphqlUpdatedCompetitorRegistration','graphqlCompetitorCard','graphqlUpdatedCompetitorCard','graphqlCompetitorStartTime','graphqlCompetitorFinishTime','graphqlCompetitorTime','graphqlUpdatedCompetitorStartTime','graphqlUpdatedCompetitorFinishTime','graphqlUpdatedCompetitorTime','graphqlEventsAfterCursor','graphqlOrganisation','graphqlSearchOrganisationQuery','graphqlUserCardOneNumber','graphqlUserCardOneUpdatedNumber','graphqlUserCardTwoNumber','graphqlLastRequestAt'].forEach(key => pm.collectionVariables.unset(key));",
                   "pm.collectionVariables.set('runId', seed);",
                   "pm.collectionVariables.set('testEmail', `postman+${seed}@example.test`);",
                   "pm.collectionVariables.set('testPassword', pm.environment.get('defaultTestPassword') || 'Postman123!');",
@@ -7093,7 +7093,2494 @@
       ]
     },
     {
-      "name": "10 - Admin (optional)",
+      "name": "10 - GraphQL",
+      "description": "Exercise GraphQL queries and mutations with runtime data created by the REST scenario. Subscriptions are intentionally excluded because Postman/Newman are HTTP-only.",
+      "item": [
+        {
+          "name": "01 - Account",
+          "description": "GraphQL authentication, profile, card, and password flows.",
+          "item": [
+            {
+              "name": "[POST] /graphql - Sign up GraphQL scenario user",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "x-orienteerfeed-app-activate-user-url",
+                    "value": "http://localhost:3000/activate",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSignup\",\n  \"query\": \"mutation GraphqlSignup($input: UserInput) { signup(input: $input) { token message user { id email firstname lastname role organisation emergencyContact } } }\",\n  \"variables\": {\n    \"input\": {\n      \"email\": \"{{graphqlTestEmail}}\",\n      \"password\": \"{{graphqlInitialPassword}}\",\n      \"firstname\": \"GraphQL\",\n      \"lastname\": \"Postman\",\n      \"organisation\": \"{{graphqlOrganisation}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const now = new Date();",
+                      "const existingRunId = pm.collectionVariables.get('runId');",
+                      "const fallbackSeed = now.toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);",
+                      "const seed = existingRunId || fallbackSeed;",
+                      "const numericSeed = String(now.getTime()).slice(-8);",
+                      "function setIfMissing(name, value) {",
+                      "  if (!pm.collectionVariables.get(name)) {",
+                      "    pm.collectionVariables.set(name, value);",
+                      "  }",
+                      "}",
+                      "setIfMissing('graphqlTestEmail', `postman-graphql-${seed}@example.com`);",
+                      "setIfMissing('graphqlCurrentEmail', pm.collectionVariables.get('graphqlTestEmail'));",
+                      "setIfMissing('graphqlUpdatedEmail', `postman-graphql-updated-${seed}@example.com`);",
+                      "setIfMissing('graphqlInitialPassword', 'Graphql123!');",
+                      "setIfMissing('graphqlCurrentPassword', 'Graphql123!');",
+                      "setIfMissing('graphqlChangedPassword', 'Graphql456!');",
+                      "setIfMissing('graphqlOrganisation', `GraphQL Club ${numericSeed}`);",
+                      "setIfMissing('graphqlSearchOrganisationQuery', 'GraphQL');",
+                      "setIfMissing('graphqlUserCardOneNumber', `31${numericSeed}`);",
+                      "setIfMissing('graphqlUserCardOneUpdatedNumber', `32${numericSeed}`);",
+                      "setIfMissing('graphqlUserCardTwoNumber', `33${numericSeed}`);",
+                      "setIfMissing('graphqlCompetitorExternalId', `graphql-${seed}`);",
+                      "setIfMissing('graphqlUpdatedCompetitorExternalId', `graphql-${seed}-updated`);",
+                      "setIfMissing('graphqlCompetitorRegistration', `GQ${numericSeed}`);",
+                      "setIfMissing('graphqlUpdatedCompetitorRegistration', `GU${String(now.getTime()).slice(-6)}`);",
+                      "setIfMissing('graphqlCompetitorCard', String(700000 + Number(String(now.getTime()).slice(-5))));",
+                      "setIfMissing('graphqlUpdatedCompetitorCard', String(710000 + Number(String(now.getTime()).slice(-5))));",
+                      "setIfMissing('graphqlCompetitorStartTime', new Date(now.getTime() + 7 * 60 * 1000).toISOString());",
+                      "setIfMissing('graphqlCompetitorFinishTime', new Date(now.getTime() + 41 * 60 * 1000).toISOString());",
+                      "setIfMissing('graphqlCompetitorTime', '2040');",
+                      "setIfMissing('graphqlUpdatedCompetitorStartTime', new Date(now.getTime() + 8 * 60 * 1000).toISOString());",
+                      "setIfMissing('graphqlUpdatedCompetitorFinishTime', new Date(now.getTime() + 40 * 60 * 1000).toISOString());",
+                      "setIfMissing('graphqlUpdatedCompetitorTime', '1920');",
+                      ""
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.signup;",
+                      "pm.expect(payload.message).to.eql('User successfuly created');",
+                      "pm.expect(payload.token).to.be.a('string').and.not.eql('');",
+                      "pm.expect(payload.user.email).to.eql(requireCollectionVar('graphqlTestEmail'));",
+                      "pm.collectionVariables.set('graphqlUserId', String(payload.user.id));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Sign in GraphQL scenario user",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSignin\",\n  \"query\": \"mutation GraphqlSignin($input: LoginInput) { signin(input: $input) { token user { id email firstname lastname role organisation emergencyContact } } }\",\n  \"variables\": {\n    \"input\": {\n      \"username\": \"{{graphqlCurrentEmail}}\",\n      \"password\": \"{{graphqlCurrentPassword}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.signin;",
+                      "pm.expect(payload.token).to.be.a('string').and.not.eql('');",
+                      "pm.expect(payload.user.email).to.eql(requireCollectionVar('graphqlCurrentEmail'));",
+                      "pm.collectionVariables.set('graphqlAccessToken', payload.token);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Update current GraphQL user with all profile parameters",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlUpdateCurrentUser\",\n  \"query\": \"mutation GraphqlUpdateCurrentUser($input: UpdateCurrentUserInput!) { updateCurrentUser(input: $input) { id email firstname lastname organisation emergencyContact } }\",\n  \"variables\": {\n    \"input\": {\n      \"email\": \"{{graphqlUpdatedEmail}}\",\n      \"firstname\": \"GraphQL Updated\",\n      \"lastname\": \"Postman Updated\",\n      \"organisation\": \"{{graphqlOrganisation}} Updated\",\n      \"emergencyContact\": \"+420123456789\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const user = body.data.updateCurrentUser;",
+                      "pm.expect(user.email).to.eql(requireCollectionVar('graphqlUpdatedEmail'));",
+                      "pm.expect(user.firstname).to.eql('GraphQL Updated');",
+                      "pm.expect(user.lastname).to.eql('Postman Updated');",
+                      "pm.expect(user.organisation).to.eql(`${requireCollectionVar('graphqlOrganisation')} Updated`);",
+                      "pm.expect(user.emergencyContact).to.eql('+420123456789');",
+                      "pm.collectionVariables.set('graphqlCurrentEmail', user.email);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read current GraphQL user",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCurrentUser\",\n  \"query\": \"query GraphqlCurrentUser { currentUser { id email firstname lastname organisation emergencyContact role createdAt updatedAt } }\",\n  \"variables\": {}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const user = body.data.currentUser;",
+                      "pm.expect(String(user.id)).to.eql(requireCollectionVar('graphqlUserId'));",
+                      "pm.expect(user.email).to.eql(requireCollectionVar('graphqlCurrentEmail'));",
+                      "pm.expect(user.firstname).to.eql('GraphQL Updated');",
+                      "pm.expect(user.lastname).to.eql('Postman Updated');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Create GraphQL user card #1",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCreateUserCardOne\",\n  \"query\": \"mutation GraphqlCreateUserCardOne($input: CreateUserCardInput!) { createUserCard(input: $input) { id userId sportId type cardNumber isDefault sport { id name } } }\",\n  \"variables\": {\n    \"input\": {\n      \"sportId\": {{sportId}},\n      \"type\": \"SPORTIDENT\",\n      \"cardNumber\": \"{{graphqlUserCardOneNumber}}\",\n      \"isDefault\": true\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const card = body.data.createUserCard;",
+                      "pm.expect(String(card.userId)).to.eql(requireCollectionVar('graphqlUserId'));",
+                      "pm.expect(String(card.sportId)).to.eql(String(pm.environment.get('sportId') || '1'));",
+                      "pm.expect(card.cardNumber).to.eql(requireCollectionVar('graphqlUserCardOneNumber'));",
+                      "pm.expect(card.isDefault).to.eql(true);",
+                      "pm.collectionVariables.set('graphqlUserCardIdOne', String(card.id));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Create GraphQL user card #2",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCreateUserCardTwo\",\n  \"query\": \"mutation GraphqlCreateUserCardTwo($input: CreateUserCardInput!) { createUserCard(input: $input) { id userId sportId type cardNumber isDefault sport { id name } } }\",\n  \"variables\": {\n    \"input\": {\n      \"sportId\": {{sportId}},\n      \"type\": \"SPORTIDENT\",\n      \"cardNumber\": \"{{graphqlUserCardTwoNumber}}\",\n      \"isDefault\": false\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const card = body.data.createUserCard;",
+                      "pm.expect(card.cardNumber).to.eql(requireCollectionVar('graphqlUserCardTwoNumber'));",
+                      "pm.expect(card.isDefault).to.eql(false);",
+                      "pm.collectionVariables.set('graphqlUserCardIdTwo', String(card.id));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - List GraphQL user cards after creation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCurrentUserCardsAfterCreate\",\n  \"query\": \"query GraphqlCurrentUserCardsAfterCreate { currentUserCards { id sportId type cardNumber isDefault } }\",\n  \"variables\": {}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const cards = body.data.currentUserCards;",
+                      "pm.expect(cards).to.be.an('array').with.length(2);",
+                      "pm.expect(cards.map(card => String(card.id))).to.include.members([requireCollectionVar('graphqlUserCardIdOne'), requireCollectionVar('graphqlUserCardIdTwo')]);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Set GraphQL user card #2 as default",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSetDefaultUserCard\",\n  \"query\": \"mutation GraphqlSetDefaultUserCard($id: Int!) { setDefaultUserCard(id: $id) { id cardNumber isDefault } }\",\n  \"variables\": {\n    \"id\": {{graphqlUserCardIdTwo}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const card = body.data.setDefaultUserCard;",
+                      "pm.expect(String(card.id)).to.eql(requireCollectionVar('graphqlUserCardIdTwo'));",
+                      "pm.expect(card.isDefault).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Update GraphQL user card #1",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlUpdateUserCard\",\n  \"query\": \"mutation GraphqlUpdateUserCard($input: UpdateUserCardInput!) { updateUserCard(input: $input) { id sportId type cardNumber isDefault } }\",\n  \"variables\": {\n    \"input\": {\n      \"id\": {{graphqlUserCardIdOne}},\n      \"sportId\": {{sportId}},\n      \"type\": \"SPORTIDENT\",\n      \"cardNumber\": \"{{graphqlUserCardOneUpdatedNumber}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const card = body.data.updateUserCard;",
+                      "pm.expect(String(card.id)).to.eql(requireCollectionVar('graphqlUserCardIdOne'));",
+                      "pm.expect(card.cardNumber).to.eql(requireCollectionVar('graphqlUserCardOneUpdatedNumber'));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Delete GraphQL user card #2",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlDeleteUserCard\",\n  \"query\": \"mutation GraphqlDeleteUserCard($id: Int!) { deleteUserCard(id: $id) }\",\n  \"variables\": {\n    \"id\": {{graphqlUserCardIdTwo}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "pm.expect(body.data.deleteUserCard).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - List GraphQL user cards after deletion",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCurrentUserCardsAfterDelete\",\n  \"query\": \"query GraphqlCurrentUserCardsAfterDelete { currentUserCards { id sportId type cardNumber isDefault } }\",\n  \"variables\": {}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const cards = body.data.currentUserCards;",
+                      "pm.expect(cards).to.be.an('array').with.length(1);",
+                      "pm.expect(String(cards[0].id)).to.eql(requireCollectionVar('graphqlUserCardIdOne'));",
+                      "pm.expect(cards[0].cardNumber).to.eql(requireCollectionVar('graphqlUserCardOneUpdatedNumber'));",
+                      "pm.expect(cards[0].isDefault).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Request GraphQL password reset",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "x-ofeed-app-reset-password-url",
+                    "value": "{{passwordResetBaseUrl}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlRequestPasswordReset\",\n  \"query\": \"mutation GraphqlRequestPasswordReset($email: String!) { requestPasswordReset(email: $email) { success message } }\",\n  \"variables\": {\n    \"email\": \"{{graphqlCurrentEmail}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.requestPasswordReset;",
+                      "pm.expect(payload.success).to.eql(true);",
+                      "pm.expect(payload.message).to.be.a('string');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Change current GraphQL user password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{graphqlAccessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlChangeCurrentUserPassword\",\n  \"query\": \"mutation GraphqlChangeCurrentUserPassword($input: ChangeCurrentUserPasswordInput!) { changeCurrentUserPassword(input: $input) { success message } }\",\n  \"variables\": {\n    \"input\": {\n      \"currentPassword\": \"{{graphqlCurrentPassword}}\",\n      \"newPassword\": \"{{graphqlChangedPassword}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.changeCurrentUserPassword;",
+                      "pm.expect(payload.success).to.eql(true);",
+                      "pm.collectionVariables.set('graphqlCurrentPassword', requireCollectionVar('graphqlChangedPassword'));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Sign in GraphQL user with changed password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSigninAfterPasswordChange\",\n  \"query\": \"mutation GraphqlSigninAfterPasswordChange($input: LoginInput) { signin(input: $input) { token user { id email firstname lastname role organisation emergencyContact } } }\",\n  \"variables\": {\n    \"input\": {\n      \"username\": \"{{graphqlCurrentEmail}}\",\n      \"password\": \"{{graphqlCurrentPassword}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.signin;",
+                      "pm.expect(payload.token).to.be.a('string').and.not.eql('');",
+                      "pm.expect(payload.user.email).to.eql(requireCollectionVar('graphqlCurrentEmail'));",
+                      "pm.collectionVariables.set('graphqlAccessToken', payload.token);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "02 - Optional Password Reset Confirm",
+          "description": "Token-based resetPassword mutation. Skipped unless runGraphqlResetPasswordConfirm=true and graphqlPasswordResetToken is provided.",
+          "item": [
+            {
+              "name": "[POST] /graphql - Confirm GraphQL password reset (optional token)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlResetPassword\",\n  \"query\": \"mutation GraphqlResetPassword($token: String!, $newPassword: String!) { resetPassword(token: $token, newPassword: $newPassword) { token user { id email } } }\",\n  \"variables\": {\n    \"token\": \"{{graphqlPasswordResetToken}}\",\n    \"newPassword\": \"{{graphqlPasswordResetNewPassword}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const shouldRun = (pm.environment.get('runGraphqlResetPasswordConfirm') || 'false') === 'true';",
+                      "const token = pm.environment.get('graphqlPasswordResetToken') || '';",
+                      "if (!shouldRun || !token.trim()) {",
+                      "  pm.execution.skipRequest();",
+                      "}",
+                      ""
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.resetPassword;",
+                      "pm.expect(payload.token).to.be.a('string').and.not.eql('');",
+                      "pm.expect(payload.user.email).to.eql(requireCollectionVar('graphqlCurrentEmail'));",
+                      "pm.collectionVariables.set('graphqlAccessToken', payload.token);",
+                      "pm.collectionVariables.set('graphqlCurrentPassword', pm.environment.get('graphqlPasswordResetNewPassword'));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Sign in GraphQL user with reset password (optional)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSigninAfterResetPassword\",\n  \"query\": \"mutation GraphqlSigninAfterResetPassword($input: LoginInput) { signin(input: $input) { token user { id email } } }\",\n  \"variables\": {\n    \"input\": {\n      \"username\": \"{{graphqlCurrentEmail}}\",\n      \"password\": \"{{graphqlCurrentPassword}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const shouldRun = (pm.environment.get('runGraphqlResetPasswordConfirm') || 'false') === 'true';",
+                      "const token = pm.environment.get('graphqlPasswordResetToken') || '';",
+                      "if (!shouldRun || !token.trim()) {",
+                      "  pm.execution.skipRequest();",
+                      "}",
+                      ""
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.signin;",
+                      "pm.expect(payload.token).to.be.a('string').and.not.eql('');",
+                      "pm.expect(payload.user.email).to.eql(requireCollectionVar('graphqlCurrentEmail'));",
+                      "pm.collectionVariables.set('graphqlAccessToken', payload.token);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "03 - Public Queries",
+          "description": "GraphQL public queries that do not require auth.",
+          "item": [
+            {
+              "name": "[POST] /graphql - List sports",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSports\",\n  \"query\": \"query GraphqlSports { sports { id name } }\",\n  \"variables\": {}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const sports = body.data.sports;",
+                      "pm.expect(sports).to.be.an('array').and.not.empty;",
+                      "pm.expect(sports.some(sport => String(sport.id) === String(pm.environment.get('sportId') || '1'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read sport by id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSportById\",\n  \"query\": \"query GraphqlSportById($id: Int!) { sport(id: $id) { id name } }\",\n  \"variables\": {\n    \"id\": {{sportId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const sport = body.data.sport;",
+                      "pm.expect(String(sport.id)).to.eql(String(pm.environment.get('sportId') || '1'));",
+                      "pm.expect(sport.name).to.be.a('string').and.not.eql('');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - List countries",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCountries\",\n  \"query\": \"query GraphqlCountries { countries { countryCode countryName } }\",\n  \"variables\": {}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const countries = body.data.countries;",
+                      "pm.expect(countries).to.be.an('array').and.not.empty;",
+                      "pm.expect(countries.some(country => country.countryCode === (pm.environment.get('eventCountryCode') || 'CZ'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - List active system messages",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlActiveSystemMessages\",\n  \"query\": \"query GraphqlActiveSystemMessages { activeSystemMessages { id title message severity publishedAt expiresAt } }\",\n  \"variables\": {}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const messages = body.data.activeSystemMessages;",
+                      "pm.expect(messages).to.be.an('array');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "04 - Event & Competitor Operations",
+          "description": "Owner-authenticated GraphQL event, class, changelog, and competitor operations plus public event queries.",
+          "item": [
+            {
+              "name": "[POST] /graphql - Read event with nested owner-only password field",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlEventByIdOwner\",\n  \"query\": \"query GraphqlEventByIdOwner($id: String!) { event(id: $id) { id sportId name organizer date timezone externalSource externalEventId location latitude longitude zeroTime relay discipline ranking coefRanking hundredthPrecision startMode countryId published demo authorId featuredImageKey featuredImage sport { id name } country { countryCode countryName } classes { id name externalId competitorsCount } user { id email firstname lastname } eventPassword { eventId password expiresAt } } }\",\n  \"variables\": {\n    \"id\": \"{{eventId}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const event = body.data.event;",
+                      "pm.expect(event.id).to.eql(requireCollectionVar('eventId'));",
+                      "pm.expect(event.name).to.include('Postman test');",
+                      "pm.expect(event.externalEventId).to.eql(requireCollectionVar('externalImportEventId'));",
+                      "pm.expect(event.eventPassword.password).to.eql(requireCollectionVar('eventPassword'));",
+                      "pm.expect(event.eventPassword.eventId).to.eql(requireCollectionVar('eventId'));",
+                      "pm.expect(event.classes.some(eventClass => String(eventClass.id) === requireCollectionVar('classId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read my events",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlMyEvents\",\n  \"query\": \"query GraphqlMyEvents { myEvents { id name published externalEventId } }\",\n  \"variables\": {}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const events = body.data.myEvents;",
+                      "pm.expect(events).to.be.an('array');",
+                      "pm.expect(events.some(event => event.id === requireCollectionVar('eventId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Create competitor via GraphQL with all parameters",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorCreate\",\n  \"query\": \"mutation GraphqlCompetitorCreate($input: StoreCompetitorInput!) { competitorCreate(input: $input) { message competitor { id classId teamId leg firstname lastname bibNumber nationality registration license rankingPoints rankingReferenceValue organisation shortName card startTime finishTime time status lateStart note externalId splits { controlCode time } } } }\",\n  \"variables\": {\n    \"input\": {\n      \"eventId\": \"{{eventId}}\",\n      \"classId\": {{classId}},\n      \"origin\": \"START\",\n      \"firstname\": \"GraphQL\",\n      \"lastname\": \"Competitor\",\n      \"bibNumber\": 811,\n      \"nationality\": \"CZE\",\n      \"registration\": \"{{graphqlCompetitorRegistration}}\",\n      \"license\": \"C\",\n      \"rankingPoints\": 4333,\n      \"rankingReferenceValue\": 4700,\n      \"organisation\": \"{{graphqlOrganisation}}\",\n      \"shortName\": \"GQL\",\n      \"card\": {{graphqlCompetitorCard}},\n      \"startTime\": \"{{graphqlCompetitorStartTime}}\",\n      \"finishTime\": \"{{graphqlCompetitorFinishTime}}\",\n      \"time\": {{graphqlCompetitorTime}},\n      \"teamId\": null,\n      \"leg\": 3,\n      \"status\": \"Active\",\n      \"lateStart\": false,\n      \"note\": \"Created via GraphQL\",\n      \"externalId\": \"{{graphqlCompetitorExternalId}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.competitorCreate;",
+                      "pm.expect(payload.message).to.eql('Competitor successfully added');",
+                      "const competitor = payload.competitor;",
+                      "pm.expect(String(competitor.classId)).to.eql(requireCollectionVar('classId'));",
+                      "pm.expect(competitor.externalId).to.eql(requireCollectionVar('graphqlCompetitorExternalId'));",
+                      "pm.expect(competitor.organisation).to.eql(requireCollectionVar('graphqlOrganisation'));",
+                      "pm.expect(competitor.note).to.eql('Created via GraphQL');",
+                      "pm.collectionVariables.set('graphqlCompetitorId', String(competitor.id));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read GraphQL-created competitor by id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorById\",\n  \"query\": \"query GraphqlCompetitorById($id: Int!) { competitorById(id: $id) { id classId teamId leg firstname lastname bibNumber nationality registration license rankingPoints rankingReferenceValue organisation shortName card startTime finishTime time status lateStart note externalId class { id name externalId length climb controlsCount } splits { controlCode time } } }\",\n  \"variables\": {\n    \"id\": {{graphqlCompetitorId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const competitor = body.data.competitorById;",
+                      "pm.expect(String(competitor.id)).to.eql(requireCollectionVar('graphqlCompetitorId'));",
+                      "pm.expect(competitor.externalId).to.eql(requireCollectionVar('graphqlCompetitorExternalId'));",
+                      "pm.expect(competitor.registration).to.eql(requireCollectionVar('graphqlCompetitorRegistration'));",
+                      "pm.expect(competitor.organisation).to.eql(requireCollectionVar('graphqlOrganisation'));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read event classes",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlEventClasses\",\n  \"query\": \"query GraphqlEventClasses($eventId: String!) { eventClasses(eventId: $eventId) { id eventId externalId name startName length climb controlsCount competitorsCount printedMaps minAge maxAge sex status } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const classes = body.data.eventClasses;",
+                      "pm.expect(classes).to.be.an('array').and.not.empty;",
+                      "pm.expect(classes.some(eventClass => String(eventClass.id) === requireCollectionVar('classId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read event classes by ids",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlEventClassesByIds\",\n  \"query\": \"query GraphqlEventClassesByIds($eventId: String!, $ids: [Int!]) { eventClassesByIds(eventId: $eventId, ids: $ids) { id eventId name externalId } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"ids\": [{{classId}}]\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const classes = body.data.eventClassesByIds;",
+                      "pm.expect(classes).to.be.an('array').with.length(1);",
+                      "pm.expect(String(classes[0].id)).to.eql(requireCollectionVar('classId'));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read class by id with nested competitors and teams",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlClassById\",\n  \"query\": \"query GraphqlClassById($id: Int!) { classById(id: $id) { id eventId externalId name startName length climb controlsCount competitorsCount printedMaps minAge maxAge sex status competitors { id externalId firstname lastname } teams { id name organisation shortName bibNumber } } }\",\n  \"variables\": {\n    \"id\": {{classId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const eventClass = body.data.classById;",
+                      "pm.expect(String(eventClass.id)).to.eql(requireCollectionVar('classId'));",
+                      "pm.expect(eventClass.competitors.some(competitor => competitor.externalId === requireCollectionVar('graphqlCompetitorExternalId'))).to.eql(true);",
+                      "pm.collectionVariables.unset('graphqlTeamId');",
+                      "if (eventClass.teams.length > 0) { pm.collectionVariables.set('graphqlTeamId', String(eventClass.teams[0].id)); }",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read competitors by class",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorsByClass\",\n  \"query\": \"query GraphqlCompetitorsByClass($id: Int!) { competitorsByClass(id: $id) { id classId teamId leg firstname lastname organisation shortName registration externalId status lateStart } }\",\n  \"variables\": {\n    \"id\": {{classId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const competitors = body.data.competitorsByClass;",
+                      "pm.expect(competitors).to.be.an('array').and.not.empty;",
+                      "pm.expect(competitors.some(competitor => String(competitor.id) === requireCollectionVar('graphqlCompetitorId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - List organisations for the event",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlOrganisations\",\n  \"query\": \"query GraphqlOrganisations($eventId: String!) { organisations(eventId: $eventId) { name competitors } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const organisations = body.data.organisations;",
+                      "pm.expect(organisations).to.be.an('array').and.not.empty;",
+                      "pm.expect(organisations.some(org => org.name === requireCollectionVar('graphqlOrganisation'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Search organisations",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSearchOrganisations\",\n  \"query\": \"query GraphqlSearchOrganisations($eventId: String!, $q: String!) { searchOrganisations(eventId: $eventId, q: $q) { name competitors } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"q\": \"{{graphqlSearchOrganisationQuery}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const organisations = body.data.searchOrganisations;",
+                      "pm.expect(organisations).to.be.an('array');",
+                      "pm.expect(organisations.some(org => org.name === requireCollectionVar('graphqlOrganisation'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read competitors by organisation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorsByOrganisation\",\n  \"query\": \"query GraphqlCompetitorsByOrganisation($eventId: String!, $organisation: String!) { competitorsByOrganisation(eventId: $eventId, organisation: $organisation) { id classId firstname lastname organisation externalId } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"organisation\": \"{{graphqlOrganisation}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const competitors = body.data.competitorsByOrganisation;",
+                      "pm.expect(competitors).to.be.an('array').and.not.empty;",
+                      "pm.expect(competitors.some(competitor => String(competitor.id) === requireCollectionVar('graphqlCompetitorId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Update GraphQL-created competitor with all parameters",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorUpdate\",\n  \"query\": \"mutation GraphqlCompetitorUpdate($input: UpdateCompetitorInput!) { competitorUpdate(input: $input) { message } }\",\n  \"variables\": {\n    \"input\": {\n      \"eventId\": \"{{eventId}}\",\n      \"competitorId\": {{graphqlCompetitorId}},\n      \"origin\": \"START\",\n      \"classId\": {{classId}},\n      \"firstname\": \"GraphQL Updated\",\n      \"lastname\": \"Competitor Updated\",\n      \"bibNumber\": 812,\n      \"nationality\": \"SVK\",\n      \"registration\": \"{{graphqlUpdatedCompetitorRegistration}}\",\n      \"license\": \"B\",\n      \"rankingPoints\": 4555,\n      \"rankingReferenceValue\": 4800,\n      \"organisation\": \"{{graphqlOrganisation}} Updated\",\n      \"shortName\": \"GQLU\",\n      \"card\": {{graphqlUpdatedCompetitorCard}},\n      \"startTime\": \"{{graphqlUpdatedCompetitorStartTime}}\",\n      \"finishTime\": \"{{graphqlUpdatedCompetitorFinishTime}}\",\n      \"time\": {{graphqlUpdatedCompetitorTime}},\n      \"teamId\": null,\n      \"leg\": 4,\n      \"status\": \"Active\",\n      \"lateStart\": true,\n      \"note\": \"Updated via GraphQL\",\n      \"externalId\": \"{{graphqlUpdatedCompetitorExternalId}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.competitorUpdate;",
+                      "pm.expect(payload.message).to.be.a('string').and.not.eql('');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Change GraphQL-created competitor status",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorStatusChange\",\n  \"query\": \"mutation GraphqlCompetitorStatusChange($input: StatusChange!) { competitorStatusChange(input: $input) { message } }\",\n  \"variables\": {\n    \"input\": {\n      \"eventId\": \"{{eventId}}\",\n      \"competitorId\": {{graphqlCompetitorId}},\n      \"origin\": \"START\",\n      \"status\": \"LateStart\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.competitorStatusChange;",
+                      "pm.expect(payload.message).to.be.a('string').and.not.eql('');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read updated GraphQL-created competitor by id",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorByIdUpdated\",\n  \"query\": \"query GraphqlCompetitorByIdUpdated($id: Int!) { competitorById(id: $id) { id classId teamId leg firstname lastname bibNumber nationality registration license rankingPoints rankingReferenceValue organisation shortName card startTime finishTime time status lateStart note externalId } }\",\n  \"variables\": {\n    \"id\": {{graphqlCompetitorId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const competitor = body.data.competitorById;",
+                      "pm.expect(competitor.externalId).to.eql(requireCollectionVar('graphqlUpdatedCompetitorExternalId'));",
+                      "pm.expect(competitor.registration).to.eql(requireCollectionVar('graphqlUpdatedCompetitorRegistration'));",
+                      "pm.expect(competitor.organisation).to.eql(`${requireCollectionVar('graphqlOrganisation')} Updated`);",
+                      "pm.expect(competitor.status).to.eql('Active');",
+                      "pm.expect(competitor.lateStart).to.eql(true);",
+                      "pm.expect(competitor.note).to.eql('Updated via GraphQL');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read imported competitor splits",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorSplits\",\n  \"query\": \"query GraphqlCompetitorSplits($competitorId: Int!) { competitorSplits(competitorId: $competitorId) { id competitorId controlCode time } }\",\n  \"variables\": {\n    \"competitorId\": {{publicCompetitorId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const splits = body.data.competitorSplits;",
+                      "pm.expect(splits).to.be.an('array');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read teams by class",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlTeamsByClass\",\n  \"query\": \"query GraphqlTeamsByClass($id: Int!) { teamsByClass(id: $id) { id classId name organisation shortName bibNumber competitors { id firstname lastname } } }\",\n  \"variables\": {\n    \"id\": {{classId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const teams = body.data.teamsByClass;",
+                      "pm.expect(teams).to.be.an('array');",
+                      "pm.collectionVariables.unset('graphqlTeamId');",
+                      "if (teams.length > 0) { pm.collectionVariables.set('graphqlTeamId', String(teams[0].id)); }",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read team by id (conditional)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlTeamById\",\n  \"query\": \"query GraphqlTeamById($id: Int!) { teamById(id: $id) { id classId name organisation shortName bibNumber competitors { id firstname lastname } } }\",\n  \"variables\": {\n    \"id\": {{graphqlTeamId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('graphqlTeamId')) {",
+                      "  pm.execution.skipRequest();",
+                      "}",
+                      ""
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const team = body.data.teamById;",
+                      "pm.expect(String(team.id)).to.eql(requireCollectionVar('graphqlTeamId'));",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read competitors by team (conditional)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlCompetitorsByTeam\",\n  \"query\": \"query GraphqlCompetitorsByTeam($id: Int!) { competitorsByTeam(id: $id) { id teamId firstname lastname externalId } }\",\n  \"variables\": {\n    \"id\": {{graphqlTeamId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (!pm.collectionVariables.get('graphqlTeamId')) {",
+                      "  pm.execution.skipRequest();",
+                      "}",
+                      ""
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const competitors = body.data.competitorsByTeam;",
+                      "pm.expect(competitors).to.be.an('array');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read event changelog with all parameters",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlChangelogByEvent\",\n  \"query\": \"query GraphqlChangelogByEvent($eventId: String!, $origin: String, $classId: Int, $since: DateTime) { changelogByEvent(eventId: $eventId, origin: $origin, classId: $classId, since: $since) { id eventId competitorId origin type previousValue newValue createdAt competitor { id externalId } } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"origin\": \"START\",\n    \"classId\": {{classId}},\n    \"since\": \"{{changelogSince}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const changes = body.data.changelogByEvent;",
+                      "pm.expect(changes).to.be.an('array').and.not.empty;",
+                      "pm.expect(changes.every(change => change.eventId === requireCollectionVar('eventId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Set event visibility to private",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlUpdateEventVisibilityPrivate\",\n  \"query\": \"mutation GraphqlUpdateEventVisibilityPrivate($eventId: String!, $published: Boolean!) { updateEventVisibility(eventId: $eventId, published: $published) { message event { id published } } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"published\": false\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.updateEventVisibility;",
+                      "pm.expect(payload.message).to.include('Private');",
+                      "pm.expect(payload.event.id).to.eql(requireCollectionVar('eventId'));",
+                      "pm.expect(payload.event.published).to.eql(false);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Set event visibility to public",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlUpdateEventVisibilityPublic\",\n  \"query\": \"mutation GraphqlUpdateEventVisibilityPublic($eventId: String!, $published: Boolean!) { updateEventVisibility(eventId: $eventId, published: $published) { message event { id published } } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"published\": true\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const payload = body.data.updateEventVisibility;",
+                      "pm.expect(payload.message).to.include('Public');",
+                      "pm.expect(payload.event.id).to.eql(requireCollectionVar('eventId'));",
+                      "pm.expect(payload.event.published).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read paginated events with all input parameters",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlEventsConnectionFirstPage\",\n  \"query\": \"query GraphqlEventsConnectionFirstPage($input: EventsInput) { events(input: $input) { edges { cursor node { id name published externalEventId sportId timezone countryId } } pageInfo { hasNextPage hasPreviousPage startCursor endCursor } } }\",\n  \"variables\": {\n    \"input\": {\n      \"filter\": \"ALL\",\n      \"sportId\": {{sportId}},\n      \"search\": \"Postman\",\n      \"first\": 2\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const connection = body.data.events;",
+                      "pm.expect(connection.edges).to.be.an('array').and.not.empty;",
+                      "pm.expect(connection.pageInfo).to.be.an('object');",
+                      "const currentEventId = requireCollectionVar('eventId');",
+                      "const firstPageContainsCurrentEvent = connection.edges.some(edge => edge.node.id === currentEventId);",
+                      "pm.collectionVariables.set('graphqlEventsFirstPageContainsCurrentEvent', String(firstPageContainsCurrentEvent));",
+                      "pm.expect(connection.pageInfo.hasPreviousPage).to.eql(false);",
+                      "pm.expect(connection.pageInfo.endCursor || connection.edges[connection.edges.length - 1].cursor).to.be.a('string').and.not.eql('');",
+                      "pm.collectionVariables.set('graphqlEventsAfterCursor', connection.pageInfo.endCursor || connection.edges[connection.edges.length - 1].cursor);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read next events page using after cursor",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlEventsConnectionSecondPage\",\n  \"query\": \"query GraphqlEventsConnectionSecondPage($input: EventsInput) { events(input: $input) { edges { cursor node { id name } } pageInfo { hasNextPage hasPreviousPage startCursor endCursor } } }\",\n  \"variables\": {\n    \"input\": {\n      \"filter\": \"ALL\",\n      \"sportId\": {{sportId}},\n      \"search\": \"Postman\",\n      \"first\": 2,\n      \"after\": \"{{graphqlEventsAfterCursor}}\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const connection = body.data.events;",
+                      "pm.expect(connection.edges).to.be.an('array');",
+                      "pm.expect(connection.pageInfo).to.be.an('object');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read events by sport",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlEventsBySport\",\n  \"query\": \"query GraphqlEventsBySport($sportId: Int!) { eventsBySport(sportId: $sportId) { id name published externalEventId } }\",\n  \"variables\": {\n    \"sportId\": {{sportId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const events = body.data.eventsBySport;",
+                      "pm.expect(events).to.be.an('array').and.not.empty;",
+                      "pm.expect(events.some(event => event.id === requireCollectionVar('eventId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Read events by user",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlEventsByUser\",\n  \"query\": \"query GraphqlEventsByUser($userId: Int!) { eventsByUser(userId: $userId) { id name published externalEventId } }\",\n  \"variables\": {\n    \"userId\": {{userId}}\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const events = body.data.eventsByUser;",
+                      "pm.expect(events).to.be.an('array');",
+                      "pm.expect(events.some(event => event.id === requireCollectionVar('eventId'))).to.eql(true);",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "[POST] /graphql - Search events by full-text query",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/graphql",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["graphql"]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"operationName\": \"GraphqlSearchEvents\",\n  \"query\": \"query GraphqlSearchEvents($query: String!) { searchEvents(query: $query) { id name organizer location } }\",\n  \"variables\": {\n    \"query\": \"Postman*\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                      "const body = pm.response.json();",
+                      "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
+                      "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
+                      "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
+                      "const events = body.data.searchEvents;",
+                      "pm.expect(events).to.be.an('array');",
+                      ""
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const minDelayMs = Number(pm.environment.get('graphqlMinDelayMs') || '2200');",
+              "const lastRequestAt = Number(pm.collectionVariables.get('graphqlLastRequestAt') || '0');",
+              "const elapsedMs = Date.now() - lastRequestAt;",
+              "const waitMs = Math.max(0, minDelayMs - elapsedMs);",
+              "if (waitMs > 0) { console.log(`GraphQL throttle delay: ${waitMs}ms`); }",
+              "setTimeout(() => {",
+              "  pm.collectionVariables.set('graphqlLastRequestAt', String(Date.now()));",
+              "}, waitMs);",
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Admin (optional)",
       "description": "Optional admin-only coverage. Enable with runAdminScenarios=true and provide adminBearerToken. Ranking write routes are exercised through safe validation failures to avoid destructive clears or external syncs by default.",
       "item": [
         {
@@ -7937,7 +10424,7 @@
       ]
     },
     {
-      "name": "11 - Cleanup",
+      "name": "12 - Cleanup",
       "description": "Revoke generated credentials and remove all scenario data from the local server.",
       "item": [
         {

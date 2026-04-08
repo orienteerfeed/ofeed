@@ -14,8 +14,9 @@ Scenario order:
 - `07 - Competitor CRUD`
 - `08 - Event Image Upload`
 - `09 - Public Assertions & Bulk Delete`
-- `10 - Admin (optional)`
-- `11 - Cleanup`
+- `10 - GraphQL`
+- `11 - Admin (optional)`
+- `12 - Cleanup`
 
 Before running the full collection:
 
@@ -59,6 +60,9 @@ Optional scenarios:
   the event manually later. The OAuth client cleanup still runs.
 - Password reset confirm is skipped unless `runPasswordResetConfirm=true` and
   `passwordResetToken` contains a real token from your inbox or database.
+- GraphQL password reset confirm is skipped unless
+  `runGraphqlResetPasswordConfirm=true` and `graphqlPasswordResetToken` contains
+  a real token for the GraphQL scenario user.
 - Event image upload and public image fetch are skipped unless
   `runEventImageScenario=true`. Your running server must also have working
   public storage configuration for `/rest/v1/events/:eventId/image`.
@@ -75,6 +79,16 @@ Optional scenarios:
 - The final publish step reuses the imported event payload, so the event you
   inspect after the run keeps the ORIS-derived name/location/details and only
   adds the `- Postman test` suffix plus publication state.
+- `10 - GraphQL` exercises GraphQL queries and mutations with the runtime
+  event/class/competitor data created earlier in the collection. It covers
+  account/profile/card mutations, public queries, owner-authenticated event and
+  competitor operations, and event visibility changes. GraphQL subscriptions are
+  intentionally excluded because this Postman/Newman kit targets the HTTP
+  request surface.
+- GraphQL requests are throttled by `graphqlMinDelayMs` so the collection stays
+  under the server's `/graphql` rate limit during local and Newman runs. If you
+  raise or disable the server's GraphQL rate limit locally, you can lower this
+  delay.
 
 Current environment keys added for these scenarios:
 
@@ -83,6 +97,9 @@ Current environment keys added for these scenarios:
 - `passwordResetToken`
 - `passwordResetNewPassword`
 - `runPasswordResetConfirm`
+- `runGraphqlResetPasswordConfirm`
+- `graphqlPasswordResetToken`
+- `graphqlPasswordResetNewPassword`
 - `externalImportProvider`
 - `externalImportQuery`
 - `externalImportLimit`

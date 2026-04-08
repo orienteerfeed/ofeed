@@ -163,6 +163,30 @@
       "value": "",
       "type": "secret",
       "enabled": true
+    },
+    {
+      "key": "runGraphqlResetPasswordConfirm",
+      "value": "false",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "graphqlPasswordResetToken",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "graphqlPasswordResetNewPassword",
+      "value": "Graphql789!",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "graphqlMinDelayMs",
+      "value": "2200",
+      "enabled": true,
+      "type": "default"
     }
   ],
   "_postman_variable_scope": "environment"
