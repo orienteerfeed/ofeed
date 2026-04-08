@@ -5,27 +5,13 @@
     [
       "@semantic-release/exec",
       {
-        "analyzeCommitsCmd": "node ./scripts/release/analyze-commits.mjs",
-        "prepareCmd": "node ./scripts/release/update-package-version.mjs ${nextRelease.version}"
+        "analyzeCommitsCmd": "node ./scripts/release/analyze-commits.mjs"
       }
     ],
     [
       "@semantic-release/release-notes-generator",
       {
         "preset": "conventionalcommits"
-      }
-    ],
-    [
-      "@semantic-release/changelog",
-      {
-        "changelogFile": "CHANGELOG.md"
-      }
-    ],
-    [
-      "@semantic-release/git",
-      {
-        "assets": ["CHANGELOG.md", "package.json"],
-        "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
       }
     ],
     [

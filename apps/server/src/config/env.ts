@@ -65,6 +65,8 @@ loadDotenvFiles();
 const DEFAULT_DATABASE_URL = 'mysql://user:password@localhost:3306/orienteerfeed';
 const DEFAULT_ENCRYPTION_SECRET_KEY =
   '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+const TRUE_BOOLEAN_ENV_VALUES = new Set(['1', 'true', 'yes', 'on']);
+const FALSE_BOOLEAN_ENV_VALUES = new Set(['0', 'false', 'no', 'off']);
 
 function normalizeRawEnv(source: NodeJS.ProcessEnv) {
   const normalized: NodeJS.ProcessEnv = {};
@@ -86,6 +88,30 @@ function normalizeRawEnv(source: NodeJS.ProcessEnv) {
 
 function hasTemplatePlaceholders(value: string) {
   return /\$\{[^}]+\}/.test(value);
+}
+
+export function parseBooleanEnvValue(value: unknown) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+
+    if (TRUE_BOOLEAN_ENV_VALUES.has(normalized)) {
+      return true;
+    }
+
+    if (FALSE_BOOLEAN_ENV_VALUES.has(normalized)) {
+      return false;
+    }
+  }
+
+  return value;
+}
+
+function booleanEnv(defaultValue: boolean) {
+  return z.preprocess(parseBooleanEnvValue, z.boolean()).default(defaultValue);
 }
 
 function buildDatabaseUrlFromMysqlEnv(source: {
@@ -132,7 +158,7 @@ const envSchema = z.object({
   MAP_TILE_COOKIE_SECRET: z.string().optional(),
 
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
-  CORS_METHODS: z.string().default('GET,HEAD,POST,PUT,DELETE,OPTIONS'),
+  CORS_METHODS: z.string().default('GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS'),
   CORS_HEADERS: z
     .string()
     .default(
@@ -143,19 +169,19 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().default(200),
   MAP_TILE_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
   MAP_TILE_RATE_LIMIT_MAX: z.coerce.number().default(2000),
-  MAP_TILE_SESSION_REQUIRED: z.coerce.boolean().default(false),
+  MAP_TILE_SESSION_REQUIRED: booleanEnv(false),
   MAP_TILE_SESSION_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   LOG_DIR: z.string().default('logs'),
-  ENABLE_ACCESS_LOG: z.coerce.boolean().default(true),
-  ENABLE_APP_LOG: z.coerce.boolean().default(true),
-  LOG_ROTATION_ENABLED: z.coerce.boolean().default(true),
+  ENABLE_ACCESS_LOG: booleanEnv(true),
+  ENABLE_APP_LOG: booleanEnv(true),
+  LOG_ROTATION_ENABLED: booleanEnv(true),
   LOG_ROTATION_FREQUENCY: z.enum(['daily', 'hourly', 'weekly']).default('daily'),
   LOG_RETENTION_DAYS: z.coerce.number().min(1).max(365).default(14),
-  LOG_COMPRESSION: z.coerce.boolean().default(true),
-  LOG_ROTATION_BOUNDARY: z.coerce.boolean().default(true),
-  LOG_ROTATION_UTC: z.coerce.boolean().default(false),
+  LOG_COMPRESSION: booleanEnv(true),
+  LOG_ROTATION_BOUNDARY: booleanEnv(true),
+  LOG_ROTATION_UTC: booleanEnv(false),
 
   OPENAPI_TITLE: z.string().default('OrienteerFeed API'),
   OPENAPI_DOC_PATH: z.string().default('/doc'),
@@ -163,7 +189,7 @@ const envSchema = z.object({
 
   MAX_DEFAULT_BODY_SIZE_BYTES: z.coerce.number().default(1 * 1024 * 1024),
   MAX_UPLOAD_BODY_SIZE_BYTES: z.coerce.number().default(5 * 1024 * 1024),
-  ENABLE_COMPRESSION: z.coerce.boolean().default(true),
+  ENABLE_COMPRESSION: booleanEnv(true),
 });
 
 const parsed = envSchema.safeParse(normalizeRawEnv(process.env));

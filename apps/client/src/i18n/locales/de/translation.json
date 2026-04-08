@@ -9,6 +9,7 @@
         "Dashboard": "Dashboard",
         "Users": "Benutzer",
         "Events": "Veranstaltungen",
+        "SystemMessages": "Systemmeldungen",
         "CzechRanking": "Tschechisches Ranking",
         "BackToSite": "Zurück zur Website"
       },
@@ -66,6 +67,70 @@
       "Events": {
         "Title": "Veranstaltungen",
         "Description": "Die letzten {{count}} Veranstaltungen mit Eigentümer, Disziplin und Veröffentlichungsstatus."
+      },
+      "SystemMessages": {
+        "Title": "Systemmeldungen",
+        "Description": "Verwalte Hinweise auf der Startseite, Wartungsmeldungen und andere plattformweite Kommunikation. Aktuell sind {{count}} Meldungen gespeichert.",
+        "Actions": {
+          "Add": "Meldung hinzufügen",
+          "Create": "Meldung erstellen",
+          "Save": "Änderungen speichern",
+          "Edit": "Bearbeiten",
+          "Publish": "Veröffentlichen",
+          "Unpublish": "Zurückziehen",
+          "Delete": "Löschen",
+          "Cancel": "Abbrechen"
+        },
+        "Fields": {
+          "Title": "Titel",
+          "Message": "Meldung",
+          "Severity": "Schweregrad",
+          "ExpiresAt": "Läuft ab am",
+          "ExpiresAtHelp": "Leer lassen, wenn die Meldung aktiv bleiben soll, bis sie manuell zurückgezogen oder gelöscht wird.",
+          "Published": "Veröffentlicht",
+          "PublishedHelp": "Wenn deaktiviert, wird die Meldung als Entwurf gespeichert und nicht auf der Startseite angezeigt."
+        },
+        "Dialog": {
+          "CreateTitle": "Systemmeldung hinzufügen",
+          "CreateDescription": "Erstelle eine neue Meldung für die öffentliche Startseite. Du kannst sie als Entwurf speichern oder sofort veröffentlichen.",
+          "EditTitle": "Systemmeldung bearbeiten",
+          "EditDescription": "Aktualisiere Inhalt, Zeitpunkt und Sichtbarkeit der Meldung.",
+          "Untitled": "Unbenannte Meldung"
+        },
+        "Status": {
+          "Draft": "Entwurf",
+          "Published": "Veröffentlicht",
+          "Expired": "Abgelaufen"
+        },
+        "Severity": {
+          "INFO": "Info",
+          "WARNING": "Warnung",
+          "ERROR": "Fehler",
+          "SUCCESS": "Erfolg"
+        },
+        "Table": {
+          "TitleMessage": "Titel und Meldung",
+          "PublishedAt": "Veröffentlicht am"
+        },
+        "Confirm": {
+          "DeleteTitle": "Systemmeldung löschen",
+          "DeleteDescription": "Diese Aktion löscht {{name}} dauerhaft. Das kann nicht rückgängig gemacht werden."
+        },
+        "Toast": {
+          "CreateSuccessTitle": "Systemmeldung erstellt",
+          "CreateSuccessDescription": "Die Meldung wurde erfolgreich gespeichert.",
+          "UpdateSuccessTitle": "Systemmeldung aktualisiert",
+          "UpdateSuccessDescription": "Die Änderungen an der Meldung wurden gespeichert.",
+          "DeleteSuccessTitle": "Systemmeldung gelöscht",
+          "DeleteSuccessDescription": "{{name}} wurde gelöscht.",
+          "PublishSuccessTitle": "Systemmeldung veröffentlicht",
+          "UnpublishSuccessTitle": "Systemmeldung zurückgezogen",
+          "StatusSuccessDescription": "Die Sichtbarkeit von {{name}} wurde aktualisiert.",
+          "ActionErrorTitle": "Aktion für Systemmeldung fehlgeschlagen",
+          "ValidationErrorTitle": "Meldung ist unvollständig",
+          "MessageRequired": "Gib vor dem Speichern den Meldungstext ein.",
+          "UnknownError": "Ein unerwarteter Fehler ist aufgetreten."
+        }
       },
       "CzechRanking": {
         "Title": "Tschechische Ranking-Datenbasis",
@@ -189,6 +254,9 @@
         "Status": "Status",
         "Organization": "Organisation",
         "CreatedAt": "Erstellt",
+        "UpdatedAt": "Aktualisiert",
+        "ExpiresAt": "Läuft ab am",
+        "Severity": "Schweregrad",
         "Active": "Aktiv",
         "Inactive": "Inaktiv",
         "Actions": "Aktionen",

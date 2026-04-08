@@ -6,13 +6,16 @@ import { getPublicObject } from '../../lib/storage/s3.js';
 import { error, success, validation } from '../../utils/responseApi.js';
 import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
 import { getErrorDetails, logEndpoint } from '../../lib/http/endpoint-logger.js';
+import { parseJsonObjectSafe } from '../../lib/http/body-parser.js';
 import {
   toValidationIssues as zodToValidationIssues,
   toValidationMessage,
 } from '../../lib/validation/zod.js';
 
+import { validateEventConnection } from './event.connection.service.js';
 import { getEventCompetitorDetail } from './event.service.js';
 import {
+  eventConnectionCheckBodySchema,
   eventCompetitorExternalParamsSchema,
   eventCompetitorParamsSchema,
   eventIdParamsSchema,
@@ -44,10 +47,10 @@ export function registerPublicEventRoutes(router) {
     try {
       const event = await prisma.event.findUnique({
         where: { id: eventId },
-        select: { featuredImageKey: true, published: true },
+        select: { featuredImageKey: true },
       });
 
-      if (!event || !event.featuredImageKey || !event.published) {
+      if (!event || !event.featuredImageKey) {
         return c.json(error('Image not found', 404), 404);
       }
 
@@ -100,6 +103,39 @@ export function registerPublicEventRoutes(router) {
       return c.json(error(`Database error${err.message}`, 500), 500);
     } finally {
       return c.json(success('OK', { data: dbResponse }, 200), 200);
+    }
+  });
+
+  router.post('/:eventId/connection-check', async (c) => {
+    const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
+    const rawBody = await parseJsonObjectSafe(c);
+    const parsedBody = eventConnectionCheckBodySchema.safeParse(rawBody);
+
+    if (!parsedParams.success || !parsedBody.success) {
+      const issues: z.ZodIssue[] = [
+        ...(parsedParams.success ? [] : parsedParams.error.issues),
+        ...(parsedBody.success ? [] : parsedBody.error.issues),
+      ];
+      return c.json(responseValidationIssues(issues), 422);
+    }
+
+    const { eventId } = parsedParams.data;
+
+    try {
+      const result = await validateEventConnection(
+        prisma as never,
+        eventId,
+        c.get('authContext'),
+        parsedBody.data,
+      );
+
+      return c.json(success('OK', { data: result }, 200), 200);
+    } catch (err) {
+      logEndpoint(c, 'error', 'Event connection check failed', {
+        eventId,
+        ...getErrorDetails(err),
+      });
+      return c.json(error('Failed to validate event connection', 500), 500);
     }
   });
 

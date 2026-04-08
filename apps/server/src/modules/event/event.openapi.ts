@@ -7,6 +7,7 @@ import {
 } from '../../config/openapi.helpers.js';
 import type { OpenApiOperation, OpenApiPathItem } from '../../config/openapi.types.js';
 import {
+  eventConnectionCheckBodySchema,
   eventImportPreviewBodySchema,
   eventImportSearchBodySchema,
   externalCompetitorUpdateBodySchema,
@@ -49,6 +50,7 @@ const bearerOrBasicSecurity: NonNullable<OpenApiOperation['security']> = [
 
 const eventWriteBodySchema = zodToOpenApiSchema(eventWriteSchema);
 const generatePasswordRequestBodySchema = zodToOpenApiSchema(generatePasswordBodySchema);
+const connectionCheckRequestBodySchema = zodToOpenApiSchema(eventConnectionCheckBodySchema);
 const competitorStatusChangeBodySchema = zodToOpenApiSchema(stateChangeBodySchema);
 const eventImportSearchRequestBodySchema = zodToOpenApiSchema(eventImportSearchBodySchema);
 const eventImportPreviewRequestBodySchema = zodToOpenApiSchema(eventImportPreviewBodySchema);
@@ -198,6 +200,28 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         403: okJson('Forbidden'),
         404: okJson('Event not found'),
         422: okJson('Validation error'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/connection-check`]: {
+    post: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventConnectionCheck',
+      summary: 'Check event integration credentials and references',
+      security: [{ BasicAuth: [] }],
+      parameters: [eventIdParam],
+      requestBody: {
+        required: false,
+        content: {
+          'application/json': {
+            schema: connectionCheckRequestBodySchema as never,
+          },
+        },
+      },
+      responses: {
+        200: okJson('Event connection checked'),
+        422: okJson('Validation error'),
+        500: okJson('Connection check failed'),
       },
     },
   },

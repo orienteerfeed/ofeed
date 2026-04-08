@@ -7,6 +7,10 @@ export const PATHNAMES = {
   adminDashboard: () => ({ to: '/admin', params: {} as const }),
   adminUsers: () => ({ to: '/admin/users', params: {} as const }),
   adminEvents: () => ({ to: '/admin/events', params: {} as const }),
+  adminSystemMessages: () => ({
+    to: '/admin/system-messages',
+    params: {} as const,
+  }),
   adminCzechRanking: () => ({
     to: '/admin/ranking/czech',
     params: {} as const,

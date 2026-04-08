@@ -9,9 +9,8 @@ scripts.
 
 ## Requirements
 
-- Node.js 22.20.0 (use `nvm install && nvm use`)
-- pnpm >=10.20.0 (via
-  `corepack enable && corepack prepare pnpm@10.29.2 --activate`)
+- Node.js 24.14.1 (use `nvm install && nvm use`)
+- pnpm >=10.33.0 (via `corepack enable && corepack use pnpm@10.33.0`)
 - Docker (local MariaDB via
   `docker compose -f docker-compose.mysql.yaml up -d mysql`)
 
