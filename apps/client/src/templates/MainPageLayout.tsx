@@ -1,7 +1,11 @@
 import { TFunction } from 'i18next';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Footer, Navbar } from '../components/organisms';
-import { externalLinks } from '../lib/paths/externalLinks';
+import {
+  buildLocalizedDocsUrl,
+  externalLinks,
+} from '../lib/paths/externalLinks';
 
 export interface NavLink {
   path: string;
@@ -19,12 +23,19 @@ export const MainPageLayout: React.FC<EventPageLayoutProps> = ({
   children,
   t,
 }) => {
+  const { i18n } = useTranslation();
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const docsLink = React.useMemo(
+    () => buildLocalizedDocsUrl(currentLanguage),
+    [currentLanguage],
+  );
+
   const navLinks: NavLink[] = React.useMemo(
     () => [
       { path: '/', label: t('Templates.Routes.Events') },
       { path: '/about', label: t('Templates.Routes.About') },
       {
-        path: externalLinks.docs,
+        path: docsLink,
         label: t('Templates.Routes.Docs'),
         external: true,
       },
@@ -34,7 +45,7 @@ export const MainPageLayout: React.FC<EventPageLayoutProps> = ({
         external: true,
       },
     ],
-    [t]
+    [docsLink, t]
   );
 
   return (
