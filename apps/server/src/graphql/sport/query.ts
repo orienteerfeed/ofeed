@@ -4,7 +4,7 @@ export const sports = (parent, _, context) => {
 };
 
 export const sport = (_, { id }, context) => {
-  return prisma.event.findUnique({
+  return prisma.sport.findUnique({
     where: { id: id },
   });
 };

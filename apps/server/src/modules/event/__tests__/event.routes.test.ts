@@ -7,11 +7,11 @@ describe("event routes (hono)", () => {
   function createAuthenticatedApp() {
     const app = new Hono();
     app.use("*", async (c, next) => {
-      c.set("authContext", {
+      c.set("authContext" as never, {
         isAuthenticated: true,
         type: "jwt",
         userId: 1,
-      } as any);
+      } as never);
       await next();
     });
     app.route("/", eventRouter as any);

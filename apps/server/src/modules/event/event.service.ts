@@ -133,6 +133,7 @@ export const getDecryptedEventPassword = async eventId => {
       where: { eventId: eventId },
       select: {
         id: true,
+        eventId: true,
         password: true,
         expiresAt: true,
         createdAt: true,
