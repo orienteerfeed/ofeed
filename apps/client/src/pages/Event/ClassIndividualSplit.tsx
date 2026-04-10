@@ -1,23 +1,39 @@
-import { Alert } from '@/components/organisms';
+import { Alert, CountdownTimer } from '@/components/organisms';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   hasDisplayableCourseClimb,
   hasDisplayableCourseLength,
 } from '@/lib/course-info';
+import { formatDateTime, getLocaleKey } from '@/lib/date';
 import { gql } from '@apollo/client';
-import { useSubscription } from '@apollo/client/react';
+import { useQuery, useSubscription } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import { Mountain, Route } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
 import { SplitChart } from './SplitChart';
 import { SplitTable } from './SplitTable';
 
 // GraphQL subscription
-const COMPETITORS_WITH_SPLITS_BY_CLASS_UPDATED = gql`
-  subscription CompetitorsByClassUpdated($classId: Int!) {
-    competitorsByClassUpdated(classId: $classId) {
+const SPLIT_PUBLICATION_STATUS = gql`
+  query SplitPublicationStatus($classId: Int!) {
+    splitPublicationStatus(classId: $classId) {
+      eventId
+      classId
+      mode
+      isPublished
+      isAccessible
+      publishAt
+      reason
+    }
+  }
+`;
+
+const SPLIT_COMPETITORS_BY_CLASS_UPDATED = gql`
+  subscription SplitCompetitorsByClassUpdated($classId: Int!) {
+    splitCompetitorsByClassUpdated(classId: $classId) {
       id
       firstname
       lastname
@@ -55,7 +71,25 @@ interface Competitor {
 }
 
 interface SubscriptionData {
-  competitorsByClassUpdated: Competitor[];
+  splitCompetitorsByClassUpdated: Competitor[];
+}
+
+interface SplitPublicationStatus {
+  eventId: string;
+  classId: number;
+  mode: 'UNRESTRICTED' | 'LAST_START' | 'SCHEDULED' | 'DISABLED';
+  isPublished: boolean;
+  isAccessible: boolean;
+  publishAt?: string | null;
+  reason:
+    | 'PUBLISHED'
+    | 'WAITING_FOR_LAST_START'
+    | 'WAITING_FOR_SCHEDULED'
+    | 'DISABLED';
+}
+
+interface SplitPublicationStatusData {
+  splitPublicationStatus: SplitPublicationStatus;
 }
 
 interface ClassIndividualSplitProps {
@@ -80,19 +114,73 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
   selectedClass,
   onClassChange,
 }) => {
+  const { i18n } = useTranslation();
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
 
+  const {
+    data: splitPublicationData,
+    loading: splitPublicationLoading,
+    error: splitPublicationError,
+    refetch: refetchSplitPublicationStatus,
+  } = useQuery<SplitPublicationStatusData>(SPLIT_PUBLICATION_STATUS, {
+    variables: { classId: selectedClass || 0 },
+    skip: !selectedClass,
+    pollInterval: selectedClass ? 30000 : 0,
+    fetchPolicy: 'network-only',
+  });
+
+  const splitPublicationStatus =
+    splitPublicationData?.splitPublicationStatus?.classId === selectedClass
+      ? splitPublicationData.splitPublicationStatus
+      : null;
+
   const { loading, error, data } = useSubscription<SubscriptionData>(
-    COMPETITORS_WITH_SPLITS_BY_CLASS_UPDATED,
+    SPLIT_COMPETITORS_BY_CLASS_UPDATED,
     {
       variables: { classId: selectedClass || 0 },
-      skip: !selectedClass,
+      skip: !selectedClass || !splitPublicationStatus?.isAccessible,
     }
   );
 
   useEffect(() => {
-    if (data?.competitorsByClassUpdated) {
-      setCompetitors(data.competitorsByClassUpdated);
+    setCompetitors([]);
+  }, [selectedClass]);
+
+  useEffect(() => {
+    if (splitPublicationStatus && !splitPublicationStatus.isAccessible) {
+      setCompetitors([]);
+    }
+  }, [splitPublicationStatus]);
+
+  useEffect(() => {
+    if (
+      !splitPublicationStatus?.publishAt ||
+      splitPublicationStatus.isAccessible
+    ) {
+      return;
+    }
+
+    const publishAtMs = new Date(splitPublicationStatus.publishAt).getTime();
+    if (!Number.isFinite(publishAtMs)) {
+      return;
+    }
+
+    const delay = publishAtMs - Date.now();
+    if (delay <= 0) {
+      void refetchSplitPublicationStatus();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void refetchSplitPublicationStatus();
+    }, delay);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [refetchSplitPublicationStatus, splitPublicationStatus]);
+
+  useEffect(() => {
+    if (data?.splitCompetitorsByClassUpdated) {
+      setCompetitors(data.splitCompetitorsByClassUpdated);
     }
   }, [data]);
 
@@ -111,15 +199,107 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
   if (!currentClass) {
     return (
       <Alert severity="info" variant="outlined">
-        Please select a class to view split times.
+        {t(
+          'Pages.Event.Splits.SelectClass',
+          'Please select a class to view split times.'
+        )}
+      </Alert>
+    );
+  }
+
+  if (splitPublicationError) {
+    return (
+      <Alert
+        severity="error"
+        variant="outlined"
+        title={t(
+          'Pages.Event.Splits.Publication.ErrorTitle',
+          'Split publication settings could not be loaded'
+        )}
+      >
+        {splitPublicationError.message}
       </Alert>
     );
   }
 
   const showLength = hasDisplayableCourseLength(currentClass.length);
   const showClimb = hasDisplayableCourseClimb(currentClass);
-  const courseLengthLabel = showLength ? `${((currentClass.length ?? 0) / 1000).toFixed(1)} km` : null;
+  const courseLengthLabel = showLength
+    ? `${((currentClass.length ?? 0) / 1000).toFixed(1)} km`
+    : null;
   const courseClimbLabel = showClimb ? `${currentClass.climb ?? 0} m` : null;
+  const splitPublishAt = splitPublicationStatus?.publishAt
+    ? new Date(splitPublicationStatus.publishAt)
+    : null;
+  const locale = getLocaleKey(i18n.language);
+  const splitPublishAtLabel =
+    splitPublishAt && Number.isFinite(splitPublishAt.getTime())
+      ? formatDateTime(splitPublishAt, locale)
+      : null;
+  const showPublicationAlert =
+    Boolean(selectedClass) &&
+    !splitPublicationLoading &&
+    Boolean(splitPublicationStatus) &&
+    !splitPublicationStatus?.isAccessible;
+  const splitDataLoading =
+    splitPublicationLoading ||
+    (Boolean(splitPublicationStatus?.isAccessible) && loading);
+  const splitDataError = splitPublicationStatus?.isAccessible ? error : null;
+
+  const getPublicationAlertTitle = () => {
+    if (splitPublicationStatus?.reason === 'DISABLED') {
+      return t(
+        'Pages.Event.Splits.Publication.DisabledTitle',
+        'Split publication is disabled'
+      );
+    }
+
+    return t(
+      'Pages.Event.Splits.Publication.ScheduledTitle',
+      'Split times are not published yet'
+    );
+  };
+
+  const getPublicationAlertDescription = () => {
+    if (!splitPublicationStatus) {
+      return null;
+    }
+
+    if (splitPublicationStatus.reason === 'DISABLED') {
+      return t(
+        'Pages.Event.Splits.Publication.DisabledDescription',
+        'Split times are not published for this event.'
+      );
+    }
+
+    if (splitPublicationStatus.reason === 'WAITING_FOR_LAST_START') {
+      if (splitPublishAtLabel) {
+        return t(
+          'Pages.Event.Splits.Publication.LastStartWithTime',
+          'Split times will be published at the start of the last starter in this class: {{datetime}}.',
+          { datetime: splitPublishAtLabel }
+        );
+      }
+
+      return t(
+        'Pages.Event.Splits.Publication.LastStartPending',
+        'Split times will be published at the start of the last starter in this class.'
+      );
+    }
+
+    if (!splitPublishAtLabel) {
+      return t(
+        'Pages.Event.Splits.Publication.ScheduledPending',
+        'Split times will be published at the configured time.'
+      );
+    }
+
+    return t(
+      'Pages.Event.Splits.Publication.ScheduledDescription',
+      'Split times will be published at {{datetime}}.',
+      { datetime: splitPublishAtLabel }
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -147,7 +327,7 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
               onClassChange={onClassChange}
               currentClass={currentClass}
               competitorsCount={competitors.length}
-              loading={loading}
+              loading={splitDataLoading}
             />
           </div>
         </div>
@@ -167,21 +347,51 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
           )}
         </div>
 
-        <TabsContent value="table" className="mt-4">
-          <SplitTable
-            competitors={competitors}
-            isLoading={loading}
-            error={error}
-          />
-        </TabsContent>
+        {showPublicationAlert && (
+          <Alert
+            className="mt-1"
+            severity={
+              splitPublicationStatus?.reason === 'DISABLED' ? 'warning' : 'info'
+            }
+            variant="outlined"
+            title={getPublicationAlertTitle()}
+          >
+            <div className="space-y-3">
+              <p>{getPublicationAlertDescription()}</p>
+              {splitPublishAt && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide">
+                    {t(
+                      'Pages.Event.Splits.Publication.CountdownLabel',
+                      'Countdown to publication'
+                    )}
+                  </p>
+                  <CountdownTimer expiryDate={splitPublishAt} />
+                </div>
+              )}
+            </div>
+          </Alert>
+        )}
 
-        <TabsContent value="chart" className="mt-4">
-          <SplitChart
-            competitors={competitors}
-            isLoading={loading}
-            error={error}
-          />
-        </TabsContent>
+        {!showPublicationAlert && (
+          <>
+            <TabsContent value="table" className="mt-4">
+              <SplitTable
+                competitors={competitors}
+                isLoading={splitDataLoading}
+                error={splitDataError}
+              />
+            </TabsContent>
+
+            <TabsContent value="chart" className="mt-4">
+              <SplitChart
+                competitors={competitors}
+                isLoading={splitDataLoading}
+                error={splitDataError}
+              />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );

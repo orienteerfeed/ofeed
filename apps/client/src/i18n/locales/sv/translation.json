@@ -502,16 +502,36 @@
         "Author": "Författare",
         "Report": "Rapport",
         "Status": {
-          "Completed": "SLUTFÖRD",
-          "Live": "LIVE",
-          "Upcoming": "KOMMANDE",
-          "Draft": "UTKAST"
+          "Primary": {
+            "DONE": "SLUTFÖRD",
+            "LIVE": "LIVE",
+            "UPCOMING": "KOMMANDE",
+            "DRAFT": "UTKAST"
+          },
+          "Results": {
+            "NONE": "Inga resultat",
+            "LIVE": "Live-resultat",
+            "UNOFFICIAL": "Inofficiella resultat",
+            "OFFICIAL": "Officiella resultat"
+          },
+          "Entries": {
+            "OPEN": "Anmälan öppen",
+            "CLOSED": "Anmälan stängd"
+          }
         },
         "StatusText": {
-          "Completed": "Slutgiltiga resultat",
-          "Live": "Tävlingen pågår",
-          "Upcoming": "Anmälan öppen"
+          "Primary": {
+            "DONE": "Evenemanget är avslutat.",
+            "LIVE": "Evenemanget pågår just nu.",
+            "UPCOMING": "Evenemanget har inte börjat än.",
+            "DRAFT": "Evenemanget förbereds fortfarande."
+          },
+          "Results": {
+            "UNOFFICIAL": "Inofficiella resultat"
+          }
         },
+        "OfficialResultsLink": "Officiella resultat",
+        "ResultsCheckedAt": "Senaste externa kontroll: {{value}}",
         "Alert": {
           "UnpublishedTitle": "Tävlingen är ännu inte publicerad",
           "UnpublishedDescription": "Denna tävling är för närvarande i utkastläge och är inte allmänt synlig."
@@ -567,7 +587,19 @@
         "SortFieldSplit": "Mellantid {{number}}",
         "SortedBy": "Sorterat efter:",
         "SortSummary": "{{field}} ({{direction}})",
-        "Start": "Start"
+        "Start": "Start",
+        "SelectClass": "Välj en klass för att visa mellantider.",
+        "Publication": {
+          "ErrorTitle": "Inställningarna för publicering av mellantider kunde inte läsas in",
+          "DisabledTitle": "Publicering av mellantider är avstängd",
+          "ScheduledTitle": "Mellantiderna är ännu inte publicerade",
+          "DisabledDescription": "Mellantiderna är inte publicerade för denna tävling.",
+          "LastStartWithTime": "Mellantiderna publiceras när den sista startande i denna klass startar: {{datetime}}.",
+          "LastStartPending": "Mellantiderna publiceras när den sista startande i denna klass startar.",
+          "ScheduledPending": "Mellantiderna publiceras vid den konfigurerade tiden.",
+          "ScheduledDescription": "Mellantiderna publiceras {{datetime}}.",
+          "CountdownLabel": "Nedräkning till publicering"
+        }
       },
       "Form": {
         "EventName": "Tävlingsnamn",
@@ -590,6 +622,13 @@
         "Relay": "Stafett",
         "HundredthPrecision": "Hundradels precision",
         "Published": "Publicerad",
+        "EntriesOpenAt": "Anmälan öppnar",
+        "EntriesOpenAtHelper": "Lämna tomt om anmälan ska vara stängd tills vidare.",
+        "EntriesCloseAt": "Anmälan stänger",
+        "EntriesCloseAtHelper": "Lämna tomt om du inte vill sätta en fast sista anmälningsdag ännu.",
+        "ResultsOfficialManuallySetAt": "Slutgiltiga resultat bekräftade",
+        "ResultsOfficialManuallySetAtHelper": "Använd bara detta för lokala tävlingar utan ORIS- eller Eventor-integration.",
+        "ResultsOfficialManagedExternally": "Bekräftelse av officiella resultat hanteras av det länkade externa systemet.",
         "DisciplineOptions": {
           "SPRINT": "Sprint",
           "MIDDLE": "Medel",
@@ -630,6 +669,8 @@
           "Open": "Importera från externt system",
           "Hide": "Dölj import",
           "SaveLink": "Spara länkning",
+          "SyncOfficialResults": "Synkronisera officiella resultat",
+          "SyncOfficialResultsRequiresSavedLink": "Spara ändringarna i den externa länkningen innan du synkroniserar officiella resultat.",
           "LoadPreview": "Ladda och förifyll formulär",
           "Placeholders": {
             "ExternalEventId": "t.ex. 8300",
@@ -650,9 +691,17 @@
             "LinkSaved": "Extern länkning sparades.",
             "LinkRemoved": "Extern länkning togs bort.",
             "LinkRemovedPendingSave": "Extern länkning tas bort när tävlingen sparas.",
+            "OfficialResultsFound": "Officiella resultat hittades och synkroniserades.",
+            "OfficialResultsNotFound": "Officiella resultat är inte tillgängliga ännu.",
+            "OfficialResultsSyncFailedTitle": "Synkronisering av officiella resultat misslyckades",
+            "OfficialResultsSyncFailedDescription": "Det gick inte att synkronisera officiella resultat från det externa systemet.",
             "SearchFailedTitle": "Sökning misslyckades",
             "SearchFailedDescription": "Kunde inte söka tävlingar i extern leverantör."
           }
+        },
+        "Validation": {
+          "EntriesCloseAtAfterOpen": "Anmälan måste stänga efter att den har öppnat.",
+          "SplitPublicationAtRequired": "Publiceringstid krävs för schemalagd publicering av mellantider."
         },
         "Toast": {
           "CreateSuccess": "Tävlingen har skapats!",
@@ -664,6 +713,30 @@
       "Card": {
         "Title": "Tävlingsinformation",
         "Description": "Fyll i formuläret nedan för att uppdatera tävlingsinformationen."
+      },
+      "EntriesResults": {
+        "Card": {
+          "Title": "Publicering och tider",
+          "Description": "Hantera anmälningsfönster, när data publiceras och resultatstatus."
+        },
+        "ResultsOfficial": "Resultaten är officiella",
+        "ResultsOfficialHelper": "Använd den här växeln för lokala evenemang när resultaten är slutgiltiga.",
+        "ResultsOfficialManagedExternally": "Bekräftelse av officiella resultat hanteras av det länkade externa systemet.",
+        "SplitPublication": {
+          "Label": "Publicering av mellantider",
+          "Helper": "Ägaren till tävlingen kan alltid se mellantider utan begränsningar.",
+          "At": "Tid för publicering av mellantider",
+          "Options": {
+            "UNRESTRICTED": "Publicera utan begränsning",
+            "LAST_START": "Publicera när den sista startande i klassen startar",
+            "SCHEDULED": "Publicera vid en annan tidpunkt",
+            "DISABLED": "Inaktivera publicering av mellantider"
+          }
+        },
+        "Toast": {
+          "UpdateSuccess": "Inställningar för anmälningar och resultat uppdaterades.",
+          "UpdateFail": "Det gick inte att uppdatera inställningarna för anmälningar och resultat."
+        }
       },
       "Password": {
         "GeneratePassword": "Skapa lösenord",

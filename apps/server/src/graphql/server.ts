@@ -7,7 +7,7 @@ import { schemaWithDirectives } from './executableSchema.js';
 import prisma from '../utils/context.js';
 import { buildAuthContextFromRequest } from '../utils/jwtToken.js';
 
-function getAuthorizationHeader(connectionParams: unknown) {
+export function getAuthorizationHeader(connectionParams: unknown) {
   if (!connectionParams || typeof connectionParams !== 'object') {
     return undefined;
   }
@@ -15,11 +15,17 @@ function getAuthorizationHeader(connectionParams: unknown) {
   const source = connectionParams as Record<string, unknown>;
   const authorization = source.authorization ?? source.Authorization;
 
-  if (typeof authorization !== 'string') {
-    return undefined;
+  if (typeof authorization === 'string') {
+    return authorization;
   }
 
-  return authorization;
+  const headers =
+    source.headers && typeof source.headers === 'object'
+      ? (source.headers as Record<string, unknown>)
+      : null;
+
+  const nestedAuthorization = headers?.authorization ?? headers?.Authorization;
+  return typeof nestedAuthorization === 'string' ? nestedAuthorization : undefined;
 }
 
 export function attachGraphQLWebSocketServer(server: HttpServer) {

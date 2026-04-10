@@ -633,7 +633,10 @@ function extractCandidates(payload: unknown): InternalCandidate[] {
   return candidates;
 }
 
-function buildOrisUrl(method: 'getEventList' | 'getEvent', params: Record<string, string>): string {
+export function buildOrisUrl(
+  method: 'getEventList' | 'getEvent' | 'getEventResults',
+  params: Record<string, string>,
+): string {
   const url = new URL(ORIS_API_BASE_URL);
   url.searchParams.set('format', 'json');
   url.searchParams.set('method', method);
@@ -651,7 +654,7 @@ function ensureTrailingSlash(value: string): string {
   return value.endsWith('/') ? value : `${value}/`;
 }
 
-function buildEventorUrl(pathname: string, params: Record<string, string> = {}): string {
+export function buildEventorUrl(pathname: string, params: Record<string, string> = {}): string {
   const baseUrl = ensureTrailingSlash(EVENTOR_API_BASE_URL);
   const url = new URL(pathname.replace(/^\//, ''), baseUrl);
 
@@ -672,7 +675,7 @@ function formatEventorDateTime(date: Date, mode: 'start' | 'end'): string {
   return `${year}-${month}-${day} ${time}`;
 }
 
-function getEventorApiKey(credentials?: ProviderCredentials): string {
+export function getEventorApiKey(credentials?: ProviderCredentials): string {
   const apiKey = credentials?.apiKey?.trim() || env.EVENTOR_API_KEY?.trim();
 
   if (!apiKey) {
@@ -711,7 +714,7 @@ async function parseExternalResponse(response: Response): Promise<unknown> {
   }
 }
 
-async function fetchExternalPayload(
+export async function fetchExternalPayload(
   url: string,
   headers: Record<string, string> = {},
   timeoutMs: number = REQUEST_TIMEOUT_MS,

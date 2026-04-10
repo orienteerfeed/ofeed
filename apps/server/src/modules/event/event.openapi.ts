@@ -10,6 +10,7 @@ import {
   eventConnectionCheckBodySchema,
   eventImportPreviewBodySchema,
   eventImportSearchBodySchema,
+  eventOfficialResultsSyncBodySchema,
   externalCompetitorUpdateBodySchema,
   generatePasswordBodySchema,
   stateChangeBodySchema,
@@ -54,6 +55,9 @@ const connectionCheckRequestBodySchema = zodToOpenApiSchema(eventConnectionCheck
 const competitorStatusChangeBodySchema = zodToOpenApiSchema(stateChangeBodySchema);
 const eventImportSearchRequestBodySchema = zodToOpenApiSchema(eventImportSearchBodySchema);
 const eventImportPreviewRequestBodySchema = zodToOpenApiSchema(eventImportPreviewBodySchema);
+const eventOfficialResultsSyncRequestBodySchema = zodToOpenApiSchema(
+  eventOfficialResultsSyncBodySchema,
+);
 const competitorUpdateBodySchema = zodToOpenApiSchema(updateCompetitorSchema);
 const competitorExternalUpdateRequestBodySchema = zodToOpenApiSchema(
   externalCompetitorUpdateBodySchema,
@@ -116,6 +120,31 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         200: okJson('External event mapped to event draft', 'legacy-no-meta'),
         401: okJson('Unauthorized', 'legacy-no-meta'),
         404: okJson('External event not found', 'legacy-no-meta'),
+        422: okJson('Validation error', 'legacy-no-meta'),
+        502: okJson('External provider error', 'legacy-no-meta'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/import/sync-official-results`]: {
+    post: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventSyncOfficialResults',
+      summary: 'Check linked external system for official results',
+      security: [{ BearerAuth: [] }],
+      parameters: [eventIdParam],
+      requestBody: {
+        required: false,
+        content: {
+          'application/json': {
+            schema: eventOfficialResultsSyncRequestBodySchema as never,
+          },
+        },
+      },
+      responses: {
+        200: okJson('Official results sync completed', 'legacy-no-meta'),
+        401: okJson('Unauthorized', 'legacy-no-meta'),
+        403: okJson('Forbidden', 'legacy-no-meta'),
+        404: okJson('Event not found', 'legacy-no-meta'),
         422: okJson('Validation error', 'legacy-no-meta'),
         502: okJson('External provider error', 'legacy-no-meta'),
       },

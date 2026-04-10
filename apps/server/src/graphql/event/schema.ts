@@ -24,6 +24,38 @@ export const typeDef = /* GraphQL */ `
     OTHER
   }
 
+  enum EventLifecycleStatus {
+    DRAFT
+    UPCOMING
+    LIVE
+    DONE
+  }
+
+  enum EventPrimaryStatus {
+    DRAFT
+    UPCOMING
+    LIVE
+    DONE
+  }
+
+  enum EventResultsStatus {
+    NONE
+    LIVE
+    UNOFFICIAL
+    OFFICIAL
+  }
+
+  enum EventEntriesStatus {
+    CLOSED
+    OPEN
+  }
+
+  enum EventOfficialResultsSource {
+    ORIS
+    EVENTOR
+    LOCAL
+  }
+
   type EventConnection {
     edges: [EventEdge!]!
     pageInfo: PageInfo!
@@ -77,6 +109,18 @@ export const typeDef = /* GraphQL */ `
     name: String!
   }
 
+  type EventStatusSummary {
+    primary: EventPrimaryStatus!
+    lifecycle: EventLifecycleStatus!
+    results: EventResultsStatus!
+    entries: EventEntriesStatus!
+    entriesConfigured: Boolean!
+    officialResultsUrl: String
+    officialResultsSource: EventOfficialResultsSource
+    resultsOfficialAt: DateTime
+    resultsOfficialCheckedAt: DateTime
+  }
+
   type Event {
     id: String!
     sportId: Int!
@@ -99,6 +143,12 @@ export const typeDef = /* GraphQL */ `
     countryId: String
     published: Boolean!
     demo: Boolean!
+    entriesOpenAt: DateTime
+    entriesCloseAt: DateTime
+    splitPublicationMode: SplitPublicationMode!
+    splitPublicationAt: DateTime
+    resultsOfficialAt: DateTime
+    resultsOfficialManuallySetAt: DateTime
     authorId: Int
     createdAt: DateTime!
     updatedAt: DateTime!
@@ -109,5 +159,6 @@ export const typeDef = /* GraphQL */ `
     eventPassword: EventPassword
     featuredImageKey: String
     featuredImage: String
+    statusSummary: EventStatusSummary!
   }
 `;

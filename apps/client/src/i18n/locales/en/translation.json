@@ -502,16 +502,36 @@
         "Author": "Author",
         "Report": "Report",
         "Status": {
-          "Completed": "COMPLETED",
-          "Live": "LIVE",
-          "Upcoming": "UPCOMING",
-          "Draft": "DRAFT"
+          "Primary": {
+            "DONE": "DONE",
+            "LIVE": "LIVE",
+            "UPCOMING": "UPCOMING",
+            "DRAFT": "DRAFT"
+          },
+          "Results": {
+            "NONE": "No results",
+            "LIVE": "Live results",
+            "UNOFFICIAL": "Unofficial results",
+            "OFFICIAL": "Official results"
+          },
+          "Entries": {
+            "OPEN": "Entries open",
+            "CLOSED": "Entries closed"
+          }
         },
         "StatusText": {
-          "Completed": "Results are final",
-          "Live": "Event in progress",
-          "Upcoming": "Registration open"
+          "Primary": {
+            "DONE": "The event is complete.",
+            "LIVE": "The event is currently live.",
+            "UPCOMING": "The event has not started yet.",
+            "DRAFT": "The event is still being prepared."
+          },
+          "Results": {
+            "UNOFFICIAL": "Unofficial results"
+          }
         },
+        "OfficialResultsLink": "Official results",
+        "ResultsCheckedAt": "Last external check: {{value}}",
         "Alert": {
           "UnpublishedTitle": "Event is not published yet",
           "UnpublishedDescription": "This event is currently in draft mode and not visible to the public."
@@ -567,7 +587,19 @@
         "SortFieldSplit": "Split {{number}}",
         "SortedBy": "Sorted by:",
         "SortSummary": "{{field}} ({{direction}})",
-        "Start": "Start"
+        "Start": "Start",
+        "SelectClass": "Please select a class to view split times.",
+        "Publication": {
+          "ErrorTitle": "Split publication settings could not be loaded",
+          "DisabledTitle": "Split publication is disabled",
+          "ScheduledTitle": "Split times are not published yet",
+          "DisabledDescription": "Split times are not published for this event.",
+          "LastStartWithTime": "Split times will be published at the start of the last starter in this class: {{datetime}}.",
+          "LastStartPending": "Split times will be published at the start of the last starter in this class.",
+          "ScheduledPending": "Split times will be published at the configured time.",
+          "ScheduledDescription": "Split times will be published at {{datetime}}.",
+          "CountdownLabel": "Countdown to publication"
+        }
       },
       "Form": {
         "EventName": "Event name",
@@ -590,6 +622,13 @@
         "Relay": "Relay",
         "HundredthPrecision": "Hundredth precision",
         "Published": "Published",
+        "EntriesOpenAt": "Entries open at",
+        "EntriesOpenAtHelper": "Leave empty to keep entries closed until you decide otherwise.",
+        "EntriesCloseAt": "Entries close at",
+        "EntriesCloseAtHelper": "Leave empty to keep the entries window open without a fixed deadline.",
+        "ResultsOfficialManuallySetAt": "Final results confirmed at",
+        "ResultsOfficialManuallySetAtHelper": "Use this only for local events without ORIS or Eventor integration.",
+        "ResultsOfficialManagedExternally": "Official result confirmation is managed by the linked external system.",
         "DisciplineOptions": {
           "SPRINT": "Sprint",
           "MIDDLE": "Middle",
@@ -630,6 +669,8 @@
           "Open": "Import from external IS",
           "Hide": "Hide import",
           "SaveLink": "Save link",
+          "SyncOfficialResults": "Synchronize official results",
+          "SyncOfficialResultsRequiresSavedLink": "Save external link changes before synchronizing official results.",
           "LoadPreview": "Load and prefill form",
           "Placeholders": {
             "ExternalEventId": "e.g. 8300",
@@ -650,9 +691,17 @@
             "LinkSaved": "External event link saved successfully.",
             "LinkRemoved": "External event link removed successfully.",
             "LinkRemovedPendingSave": "External event link will be removed after saving the event.",
+            "OfficialResultsFound": "Official results were found and synchronized.",
+            "OfficialResultsNotFound": "Official results are not available yet.",
+            "OfficialResultsSyncFailedTitle": "Official results sync failed",
+            "OfficialResultsSyncFailedDescription": "Unable to synchronize official results from the external system.",
             "SearchFailedTitle": "Search failed",
             "SearchFailedDescription": "Unable to search events in external provider."
           }
+        },
+        "Validation": {
+          "EntriesCloseAtAfterOpen": "Entries close must be after entries open.",
+          "SplitPublicationAtRequired": "Publication time is required for scheduled split publication."
         },
         "Toast": {
           "CreateSuccess": "The event as created successfully!",
@@ -664,6 +713,30 @@
       "Card": {
         "Title": "Event Information",
         "Description": "Please fill in the form below to update the event details."
+      },
+      "EntriesResults": {
+        "Card": {
+          "Title": "Publishing and schedule",
+          "Description": "Manage entry windows, data publication timing, and result status."
+        },
+        "ResultsOfficial": "Results are official",
+        "ResultsOfficialHelper": "Use this switch for local events once the results are final.",
+        "ResultsOfficialManagedExternally": "Official result confirmation is managed by the linked external system.",
+        "SplitPublication": {
+          "Label": "Split publication",
+          "Helper": "The event owner can always view split times without restrictions.",
+          "At": "Split publication time",
+          "Options": {
+            "UNRESTRICTED": "Publish without restriction",
+            "LAST_START": "Publish at the start of the last starter in the class",
+            "SCHEDULED": "Publish at a different time",
+            "DISABLED": "Disable split publication"
+          }
+        },
+        "Toast": {
+          "UpdateSuccess": "Entries and results settings were updated.",
+          "UpdateFail": "Couldn't update entries and results settings."
+        }
       },
       "Password": {
         "GeneratePassword": "Generate Password",

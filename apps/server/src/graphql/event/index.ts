@@ -4,6 +4,7 @@ import { typeDef } from './schema.js';
 import * as subscriptions from './subscription.js';
 
 import { EVENT_OPENAPI } from '../../modules/event/event.openapi.js';
+import { getEventStatusSummary } from '../../modules/event/event.status.service.js';
 import { getDecryptedEventPassword } from '../../modules/event/event.service.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
@@ -59,5 +60,6 @@ const resolvers = {
     },
     zeroTime: (parent) => normalizeUtcTimeString(parent.zeroTime) ?? '00:00:00',
     featuredImage: (parent) => buildPublicImageUrl(parent.featuredImageKey, parent.id),
+    statusSummary: (parent) => getEventStatusSummary(prisma, parent),
   },
 };

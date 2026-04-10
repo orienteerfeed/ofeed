@@ -18,6 +18,7 @@ import { EventInfoCard } from './EventInfoCard';
 import { EventIntegrationsCard } from './EventIntegrationsCard';
 import { EventLinkCard } from './EventLinkCard';
 import { EventPasswordCard } from './EventPasswordCard';
+import { EventPublishingScheduleCard } from './EventPublishingScheduleCard';
 import { EventVisibilityCard } from './EventVisibilityCard';
 import { TroubleShootingCard } from './TroubleShootingCard';
 
@@ -45,6 +46,12 @@ export const GET_EVENT = gql`
       discipline
       externalSource
       externalEventId
+      entriesOpenAt
+      entriesCloseAt
+      splitPublicationMode
+      splitPublicationAt
+      resultsOfficialAt
+      resultsOfficialManuallySetAt
       ranking
       coefRanking
       startMode
@@ -172,6 +179,16 @@ export const EventSettingsPage = () => {
             {/* Left Column */}
             <div className="break-inside-avoid">
               <EventInfoCard t={t} initialData={initialData} />
+            </div>
+            <div className="break-inside-avoid">
+              <EventPublishingScheduleCard
+                t={t}
+                eventId={eventId}
+                eventData={data.event}
+                onUpdated={async () => {
+                  await refetch();
+                }}
+              />
             </div>
             <div className="break-inside-avoid">
               <EventExternalLinkCard

@@ -40,6 +40,7 @@ import { Button, VisibilityBadge } from '../../components/atoms';
 import { useApi } from '../../hooks';
 import { MainPageLayout } from '../../templates';
 import { EventForm } from '../Event/Settings/EventForm';
+import type { EventStatusPrimary } from '../../types/event';
 
 // Types based on your API response
 interface Event {
@@ -50,6 +51,9 @@ interface Event {
   organizer: string;
   published: boolean;
   relay: boolean;
+  statusSummary: {
+    primary: EventStatusPrimary;
+  };
 }
 
 // The API returns { data: Event[] }
@@ -80,41 +84,33 @@ const EventTypeBadge = ({ isRelay }: { isRelay: boolean }) => {
   );
 };
 
-const getEventStatus = (date: string): 'today' | 'upcoming' | 'past' => {
-  const eventDate = new Date(date);
-  const today = new Date();
-
-  // Reset times to compare only dates
-  const eventDateOnly = new Date(
-    eventDate.getFullYear(),
-    eventDate.getMonth(),
-    eventDate.getDate()
-  );
-  const todayOnly = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate()
-  );
-
-  if (eventDateOnly.getTime() === todayOnly.getTime()) {
-    return 'today';
-  } else if (eventDateOnly > todayOnly) {
-    return 'upcoming';
-  } else {
-    return 'past';
-  }
-};
-
-const getStatusBadge = (status: 'today' | 'upcoming' | 'past') => {
+const getStatusBadge = (t: TFunction, status: EventStatusPrimary) => {
   switch (status) {
-    case 'today':
-      return <Badge className="bg-green-500">Live</Badge>;
-    case 'upcoming':
-      return <Badge variant="secondary">Upcoming</Badge>;
-    case 'past':
-      return <Badge variant="outline">Completed</Badge>;
+    case 'LIVE':
+      return (
+        <Badge className="bg-primary text-primary-foreground">
+          {t('Pages.Event.Detail.Status.Primary.LIVE')}
+        </Badge>
+      );
+    case 'UPCOMING':
+      return (
+        <Badge variant="secondary">
+          {t('Pages.Event.Detail.Status.Primary.UPCOMING')}
+        </Badge>
+      );
+    case 'DONE':
+      return (
+        <Badge variant="outline">
+          {t('Pages.Event.Detail.Status.Primary.DONE')}
+        </Badge>
+      );
+    case 'DRAFT':
     default:
-      return null;
+      return (
+        <Badge variant="outline">
+          {t('Pages.Event.Detail.Status.Primary.DRAFT')}
+        </Badge>
+      );
   }
 };
 
@@ -203,8 +199,6 @@ const MyEventTable: React.FC<CreateEventDialogProps> = ({ t }) => {
       </TableHeader>
       <TableBody>
         {events.map((event: Event) => {
-          const status = getEventStatus(event.date);
-
           return (
             <TableRow
               key={event.id}
@@ -234,7 +228,9 @@ const MyEventTable: React.FC<CreateEventDialogProps> = ({ t }) => {
               <TableCell>
                 <EventTypeBadge isRelay={event.relay} />
               </TableCell>
-              <TableCell>{getStatusBadge(status)}</TableCell>
+              <TableCell>
+                {getStatusBadge(t, event.statusSummary.primary)}
+              </TableCell>
               <TableCell>
                 <VisibilityBadge isPublic={event.published} />
               </TableCell>

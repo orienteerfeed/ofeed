@@ -1616,8 +1616,9 @@ async function handleIofXmlUpload(
                 ...normalizeCourseMetrics({
                   length: getIofIntegerValue(course.Length),
                   climb: getIofIntegerValue(course.Climb),
-                  controlsCount:
-                    Array.isArray(course.CourseControl) ? course.CourseControl.length - 2 : null,
+                  controlsCount: Array.isArray(course.CourseControl)
+                    ? course.CourseControl.length - 2
+                    : null,
                 }),
               };
 

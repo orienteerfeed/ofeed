@@ -53,9 +53,8 @@ function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
   // --- Error handling using ErrorLink
   const errorLink = new ErrorLink(error => {
     if (error && typeof error === 'object' && 'graphQLErrors' in error) {
-      const graphQLErrors = (
-        error as { graphQLErrors?: unknown }
-      ).graphQLErrors;
+      const graphQLErrors = (error as { graphQLErrors?: unknown })
+        .graphQLErrors;
       console.warn(
         `[GQL errors] ${
           (error as { operation?: { operationName?: string } }).operation
@@ -85,9 +84,7 @@ function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
         const token = getToken();
         return token
           ? {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+              Authorization: `Bearer ${token}`,
             }
           : {};
       },

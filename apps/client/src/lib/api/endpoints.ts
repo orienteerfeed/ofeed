@@ -68,6 +68,8 @@ export const ENDPOINTS = {
   revokeEventPassword: (): string => `${apiPrefix}/events/revoke-password`,
   searchExternalEvents: (): string => `${apiPrefix}/events/import/search`,
   importEventPreview: (): string => `${apiPrefix}/events/import/preview`,
+  syncOfficialResults: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/import/sync-official-results`,
   deleteEventCompetitors: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}/competitors`,
   deleteEventData: (eventId: string | number): string =>

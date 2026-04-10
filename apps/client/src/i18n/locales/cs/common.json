@@ -44,6 +44,10 @@
   "ComingSoon": "Již brzy k dispozici",
   "NotImplementedTitle": "Zatím není implementováno",
   "NotImplementedDescription": "Zatím není k dispozici. Pracujeme na této funkci.",
+  "Experimental": {
+    "Label": "Experimentální",
+    "Description": "Tato funkce je stále ve fázi vývoje a testování. Může se ještě měnit a může obsahovat chyby."
+  },
   "Theme": {
     "Toggle": "Přepnout barevný režim"
   }

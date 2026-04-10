@@ -143,6 +143,12 @@ model Event {
   hundredthPrecision Boolean         @default(false) // Measure finish time in hundredths of a second
   published          Boolean         @default(false)
   demo               Boolean         @default(false)
+  entriesOpenAt      DateTime?
+  entriesCloseAt     DateTime?
+  splitPublicationMode SplitPublicationMode @default(UNRESTRICTED)
+  splitPublicationAt DateTime?
+  resultsOfficialAt  DateTime?
+  resultsOfficialManuallySetAt DateTime?
   author             User?           @relation(fields: [authorId], references: [id])
   authorId           Int?            @db.UnsignedInt
   createdAt          DateTime        @default(now())
@@ -150,6 +156,7 @@ model Event {
   classes            Class[]
   protocols          Protocol[]
   eventPasswords     EventPassword[]
+  externalResultsSync EventExternalResultsSyncState?
 
   @@fulltext([name, organizer, location])
   @@index([externalSource, externalEventId])
@@ -249,6 +256,22 @@ model EventPassword {
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model EventExternalResultsSyncState {
+  id                   Int                       @id @default(autoincrement()) @db.UnsignedInt
+  event                Event                      @relation(fields: [eventId], references: [id])
+  eventId              String                     @unique
+  provider             ExternalSource
+  lastCheckedAt        DateTime?
+  lastSuccessfulCheckAt DateTime?
+  lastDetectedOfficialAt DateTime?
+  lastStatus           ExternalResultsSyncStatus  @default(PENDING)
+  lastError            String?                    @db.Text
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+
+  @@index([provider, lastStatus])
 }
 
 model OAuthClient {
@@ -446,4 +469,18 @@ enum CzechRankingCategory {
 enum ExternalSource {
   ORIS
   EVENTOR
+}
+
+enum SplitPublicationMode {
+  UNRESTRICTED
+  LAST_START
+  SCHEDULED
+  DISABLED
+}
+
+enum ExternalResultsSyncStatus {
+  PENDING
+  OFFICIAL
+  NOT_FOUND
+  ERROR
 }
