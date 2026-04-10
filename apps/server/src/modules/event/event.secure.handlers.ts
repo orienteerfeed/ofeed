@@ -235,10 +235,6 @@ function normalizeOptionalIntegerField(
   value: unknown,
   fieldName: string,
 ): number | null | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
   if (value === '' || value === null) {
     return null;
   }
