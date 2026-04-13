@@ -25,6 +25,7 @@ const mapTileParamsSchema = z.object({
   x: z.string().regex(/^\d+$/),
   y: z.string().regex(/^\d+$/),
 });
+const MAP_TILE_UPSTREAM_TIMEOUT_MS = 10_000;
 
 function normalizeMapLang(value: string | undefined) {
   const lang = resolveSupportedMapTileLang(value);
@@ -90,13 +91,15 @@ export const getMapTileHandler = async (c: Context) => {
   }
 
   const tileUrl = `https://api.mapy.com/v1/maptiles/${mapset}/${tileSize}/${zoom}/${x}/${y}${search.toString().length > 0 ? `?${search.toString()}` : ''}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), MAP_TILE_UPSTREAM_TIMEOUT_MS);
 
   try {
     const upstreamResponse = await fetch(tileUrl, {
       headers: {
         'X-Mapy-Api-Key': env.MAPY_API_KEY,
       },
-      signal: AbortSignal.timeout(10_000),
+      signal: controller.signal,
     });
 
     if (!upstreamResponse.ok || !upstreamResponse.body) {
@@ -129,11 +132,21 @@ export const getMapTileHandler = async (c: Context) => {
       headers,
     });
   } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      logEndpoint(c, 'warn', 'Map tile upstream request timed out', {
+        timeoutMs: MAP_TILE_UPSTREAM_TIMEOUT_MS,
+        url: tileUrl,
+      });
+      return c.json(error('Map tile request timed out', 504), 504);
+    }
+
     logEndpoint(c, 'error', 'Map tile proxy failed', {
       url: tileUrl,
       ...getErrorDetails(err),
     });
     return c.json(error('Failed to load map tile', 502), 502);
+  } finally {
+    clearTimeout(timeout);
   }
 };
 

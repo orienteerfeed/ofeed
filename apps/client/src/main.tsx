@@ -1,9 +1,11 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
+import 'flag-icons/css/flag-icons.min.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet/dist/leaflet.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './i18n/i18n.ts';
-import 'flag-icons/css/flag-icons.min.css';
-import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { routeTree } from './routeTree.gen';
 
