@@ -2,6 +2,59 @@
   cursor: pointer;
 }
 
+.event-map-view .event-map-cluster-icon-wrapper {
+  background: transparent;
+  border: 0;
+}
+
+.event-map-view .event-map-cluster-icon {
+  align-items: center;
+  backdrop-filter: blur(8px);
+  border-radius: 999px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2);
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  height: 44px;
+  justify-content: center;
+  min-width: 44px;
+  padding: 0 10px;
+  transition:
+    transform 160ms ease,
+    width 160ms ease,
+    height 160ms ease;
+}
+
+.event-map-view .event-map-cluster-icon--light {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+.event-map-view .event-map-cluster-icon--dark {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+.event-map-view .event-map-cluster-icon--medium {
+  height: 48px;
+  min-width: 48px;
+}
+
+.event-map-view .event-map-cluster-icon--large {
+  height: 54px;
+  min-width: 54px;
+}
+
+.event-map-view .event-map-cluster-icon--far {
+  transform: scale(0.92);
+}
+
+.event-map-view .event-map-cluster-icon--zoomed {
+  transform: scale(1);
+}
+
 .event-map-view .leaflet-tooltip.event-map-tooltip {
   background: var(--popover);
   border: 1px solid var(--border);
