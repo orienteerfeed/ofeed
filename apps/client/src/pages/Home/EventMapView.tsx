@@ -10,16 +10,11 @@ import {
   type SupportedMapTileMapset,
 } from '@repo/shared';
 import { useNavigate } from '@tanstack/react-router';
-import { divIcon, marker } from 'leaflet';
 import i18n, { type TFunction } from 'i18next';
+import * as Leaflet from 'leaflet';
+import { divIcon, marker } from 'leaflet';
 import { Loader2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import {
-  LeafletMap,
-  MapTileLayer,
-  markerPresets,
-  useLeafletMap,
-} from 'react-mapy';
 import {
   useCallback,
   useEffect,
@@ -28,8 +23,15 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { HomeEventListItem } from './types';
+import {
+  LeafletMap,
+  loadLeafletMarkerCluster,
+  MapTileLayer,
+  markerPresets,
+  useLeafletMap,
+} from 'react-mapy';
 import './EventMapView.css';
+import type { HomeEventListItem } from './types';
 
 interface EventMapViewProps {
   events: HomeEventListItem[];
@@ -63,6 +65,34 @@ const MAX_BOUNDS_ZOOM = 17;
 const MAP_VARIANT: SupportedMapTileMapset = 'outdoor';
 const OFEED_MARKER_PRESET = markerPresets.ofeed as OfeedMarkerPreset;
 const MARKER_SIZE = OFEED_MARKER_PRESET.size;
+const CLUSTER_DISABLE_AT_ZOOM = 18;
+
+type MarkerClusterGroupInstance = Leaflet.Layer & {
+  addLayer(layer: Leaflet.Layer): MarkerClusterGroupInstance;
+  addTo(map: Leaflet.Map): MarkerClusterGroupInstance;
+  clearLayers(): MarkerClusterGroupInstance;
+  remove(): MarkerClusterGroupInstance;
+};
+
+interface MarkerClusterFactoryOptions {
+  chunkedLoading?: boolean;
+  disableClusteringAtZoom?: number;
+  iconCreateFunction?: (cluster: {
+    getChildCount(): number;
+  }) => Leaflet.DivIcon;
+  maxClusterRadius?: number | ((zoom: number) => number);
+  showCoverageOnHover?: boolean;
+}
+
+type LeafletMarkerClusterNamespace = typeof Leaflet & {
+  markerClusterGroup?: (
+    options?: MarkerClusterFactoryOptions
+  ) => MarkerClusterGroupInstance;
+};
+
+type LeafletMarkerClusterRuntime = typeof globalThis & {
+  L?: LeafletMarkerClusterNamespace;
+};
 
 const escapeHtml = (value: string): string =>
   value
@@ -134,7 +164,34 @@ const buildEventTooltipHtml = (event: MappableEvent): string => {
   `.trim();
 };
 
-const buildOfeedMarkerIcon = (colorScheme: EventMarkerColorScheme) => {
+const resolveMarkerSize = (zoom: number): readonly [number, number] => {
+  const [baseWidth, baseHeight] = MARKER_SIZE;
+
+  if (zoom >= 12) {
+    return [baseWidth, baseHeight] as const;
+  }
+
+  if (zoom >= 10) {
+    return [
+      Math.round(baseWidth * 0.88),
+      Math.round(baseHeight * 0.88),
+    ] as const;
+  }
+
+  if (zoom >= 8) {
+    return [
+      Math.round(baseWidth * 0.76),
+      Math.round(baseHeight * 0.76),
+    ] as const;
+  }
+
+  return [Math.round(baseWidth * 0.64), Math.round(baseHeight * 0.64)] as const;
+};
+
+const buildOfeedMarkerIcon = (
+  colorScheme: EventMarkerColorScheme,
+  zoom: number
+) => {
   const assetSrc =
     OFEED_MARKER_PRESET.assetSrcByColorScheme?.[colorScheme] ??
     OFEED_MARKER_PRESET.assetSrc;
@@ -143,7 +200,7 @@ const buildOfeedMarkerIcon = (colorScheme: EventMarkerColorScheme) => {
     return undefined;
   }
 
-  const [width, height] = MARKER_SIZE;
+  const [width, height] = resolveMarkerSize(zoom);
   const iconHtml = `
     <div class="react-mapy-marker-icon__inner" style="align-items:center;display:flex;height:100%;justify-content:center;width:100%">
       <img
@@ -167,6 +224,54 @@ const buildOfeedMarkerIcon = (colorScheme: EventMarkerColorScheme) => {
     iconSize: [width, height],
   });
 };
+
+const buildClusterIcon = (
+  count: number,
+  zoom: number,
+  colorScheme: EventMarkerColorScheme
+) => {
+  const tierClassName =
+    count >= 25
+      ? 'event-map-cluster-icon--large'
+      : count >= 10
+        ? 'event-map-cluster-icon--medium'
+        : 'event-map-cluster-icon--small';
+
+  const zoomClassName =
+    zoom >= 12
+      ? 'event-map-cluster-icon--zoomed'
+      : 'event-map-cluster-icon--far';
+
+  return divIcon({
+    className: 'event-map-cluster-icon-wrapper',
+    html: `
+      <div class="event-map-cluster-icon ${tierClassName} ${zoomClassName} event-map-cluster-icon--${colorScheme}">
+        <span>${count}</span>
+      </div>
+    `.trim(),
+    iconAnchor: [22, 22],
+    iconSize: [44, 44],
+  });
+};
+
+function useMapZoom() {
+  const map = useLeafletMap();
+  const [zoom, setZoom] = useState(() => map.getZoom());
+
+  useEffect(() => {
+    const handleZoomEnd = () => {
+      setZoom(map.getZoom());
+    };
+
+    map.on('zoomend', handleZoomEnd);
+
+    return () => {
+      map.off('zoomend', handleZoomEnd);
+    };
+  }, [map]);
+
+  return zoom;
+}
 
 function FitMapToEvents({ points }: { points: readonly MapPoint[] }) {
   const map = useLeafletMap();
@@ -223,21 +328,20 @@ function InitializeMapViewport({
 }
 
 function EventMarkersLayer({
+  clusteringEnabled,
   events,
   markerColorScheme,
 }: {
+  clusteringEnabled: boolean;
   events: readonly MappableEvent[];
   markerColorScheme: EventMarkerColorScheme;
 }) {
   const map = useLeafletMap();
   const navigate = useNavigate();
-
-  const markerIcon = useMemo(
-    () => buildOfeedMarkerIcon(markerColorScheme),
-    [markerColorScheme]
-  );
+  const zoom = useMapZoom();
 
   useEffect(() => {
+    const markerIcon = buildOfeedMarkerIcon(markerColorScheme, zoom);
     const markerLayers = events.map(event => {
       const markerLayer = marker(
         [event.latitude, event.longitude],
@@ -263,8 +367,50 @@ function EventMarkersLayer({
         navigate({ params: eventPath.params, to: eventPath.to });
       });
 
-      markerLayer.addTo(map);
       return markerLayer;
+    });
+
+    const shouldCluster = clusteringEnabled && events.length > 1;
+
+    if (shouldCluster) {
+      const markerClusterFactory = (globalThis as LeafletMarkerClusterRuntime).L
+        ?.markerClusterGroup;
+
+      if (!markerClusterFactory) {
+        markerLayers.forEach(layer => {
+          layer.addTo(map);
+        });
+
+        return () => {
+          markerLayers.forEach(layer => {
+            layer.remove();
+          });
+        };
+      }
+
+      const clusterGroup = markerClusterFactory({
+        chunkedLoading: true,
+        disableClusteringAtZoom: CLUSTER_DISABLE_AT_ZOOM,
+        iconCreateFunction: cluster =>
+          buildClusterIcon(cluster.getChildCount(), zoom, markerColorScheme),
+        maxClusterRadius: currentZoom => (currentZoom >= 12 ? 36 : 52),
+        showCoverageOnHover: false,
+      });
+
+      markerLayers.forEach(layer => {
+        clusterGroup.addLayer(layer);
+      });
+
+      clusterGroup.addTo(map);
+
+      return () => {
+        clusterGroup.clearLayers();
+        clusterGroup.remove();
+      };
+    }
+
+    markerLayers.forEach(layer => {
+      layer.addTo(map);
     });
 
     return () => {
@@ -272,7 +418,7 @@ function EventMarkersLayer({
         layer.remove();
       });
     };
-  }, [events, map, markerIcon, navigate]);
+  }, [clusteringEnabled, events, map, markerColorScheme, navigate, zoom]);
 
   return null;
 }
@@ -326,6 +472,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
   const [tileAccessStatus, setTileAccessStatus] = useState<
     'loading' | 'ready' | 'error'
   >(USE_SAME_ORIGIN_MAP_TILE_ACCESS ? 'loading' : 'ready');
+  const [clusterPluginReady, setClusterPluginReady] = useState(false);
 
   useEffect(() => {
     setIsTileLayerReady(!shouldDelayTileLayer);
@@ -373,6 +520,26 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    void loadLeafletMarkerCluster()
+      .then(() => {
+        if (isActive) {
+          setClusterPluginReady(true);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setClusterPluginReady(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const handleViewportInitialized = useCallback(() => {
     setIsTileLayerReady(true);
   }, []);
@@ -405,6 +572,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
           ) : null}
           {canRenderMapTiles ? (
             <EventMarkersLayer
+              clusteringEnabled={clusterPluginReady}
               events={mapEvents}
               markerColorScheme={markerColorScheme}
             />
