@@ -3562,6 +3562,8 @@
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
                   "pm.expect(body.results.data.password).to.eql(requireCollectionVar('eventPassword'));",
+                  "assertIsoDateString(body.results.data.expiresAt, 'expiresAt');",
+                  "pm.expect(body.results.data.expiresAt).to.eql(requireCollectionVar('eventPasswordExpiresAt'));",
                   ""
                 ]
               }
@@ -3707,6 +3709,7 @@
                   "assertObject(data, 'data');",
                   "assertHasKeys(data, ['valid', 'event', 'credentials', 'classes', 'competitors'], 'data');",
                   "assertBoolean(data.valid, 'data.valid');",
+                  "pm.expect(data.valid, 'data.valid should be true').to.eql(true);",
                   "",
                   "pm.test('data.event is object or null', function () {",
                   "  pm.expect(data.event === null || (typeof data.event === 'object' && !Array.isArray(data.event))).to.eql(true);",
@@ -3718,22 +3721,26 @@
                   "}",
                   "",
                   "assertObject(data.credentials, 'data.credentials');",
-                  "assertHasKeys(data.credentials, ['valid', 'authType', 'reason'], 'data.credentials');",
+                  "assertHasKeys(data.credentials, ['valid', 'authType', 'reason', 'expiresAt'], 'data.credentials');",
                   "assertBoolean(data.credentials.valid, 'data.credentials.valid');",
-                  "pm.test('data.credentials.authType is valid value or null', function () {",
-                  "  pm.expect(['eventBasic', 'jwt', null]).to.include(data.credentials.authType);",
-                  "});",
-                  "assertOptionalString(data.credentials.reason, 'data.credentials.reason');",
+                  "pm.expect(data.credentials.valid, 'data.credentials.valid should be true').to.eql(true);",
+                  "pm.expect(data.credentials.authType, 'data.credentials.authType should be eventBasic').to.eql('eventBasic');",
+                  "pm.expect(data.credentials.reason, 'data.credentials.reason should be null when credentials are valid').to.eql(null);",
+                  "assertIsoDateString(data.credentials.expiresAt, 'data.credentials.expiresAt');",
                   "",
                   "assertObject(data.classes, 'data.classes');",
                   "assertHasKeys(data.classes, ['valid', 'items'], 'data.classes');",
                   "assertBoolean(data.classes.valid, 'data.classes.valid');",
+                  "pm.expect(data.classes.valid, 'data.classes.valid should be true for empty input').to.eql(true);",
                   "assertArray(data.classes.items, 'data.classes.items');",
+                  "pm.expect(data.classes.items.length, 'data.classes.items should be empty').to.eql(0);",
                   "",
                   "assertObject(data.competitors, 'data.competitors');",
                   "assertHasKeys(data.competitors, ['valid', 'items'], 'data.competitors');",
                   "assertBoolean(data.competitors.valid, 'data.competitors.valid');",
+                  "pm.expect(data.competitors.valid, 'data.competitors.valid should be true for empty input').to.eql(true);",
                   "assertArray(data.competitors.items, 'data.competitors.items');",
+                  "pm.expect(data.competitors.items.length, 'data.competitors.items should be empty').to.eql(0);",
                   ""
                 ]
               }
@@ -4441,6 +4448,156 @@
                   "const body = pm.response.json();",
                   "pm.test('Czech ranking recalculation response is successful', function () { pm.expect(body.results && body.results.data).to.be.a('string'); });",
                   "pm.test('Czech ranking recalculation response mentions ranking', function () { pm.expect(body.results.data).to.include('Czech ranking'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/events/{{eventId}}/connection-check - Check class and competitor resolution after upload",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/connection-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "connection-check"]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{eventId}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{eventPassword}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classes\": [\n    { \"id\": {{classId}} }\n  ],\n  \"competitors\": [\n    { \"id\": {{publicCompetitorId}}, \"classId\": {{classId}} }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function assertStatus(expected) {",
+                  "  pm.test(`Status is ${expected}`, function () {",
+                  "    pm.response.to.have.status(expected);",
+                  "  });",
+                  "}",
+                  "",
+                  "function getJson() {",
+                  "  pm.test('Response is JSON', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "  });",
+                  "  return pm.response.json();",
+                  "}",
+                  "",
+                  "function assertString(value, label) {",
+                  "  pm.expect(value, `${label} should be string`).to.be.a('string');",
+                  "}",
+                  "",
+                  "function assertNumber(value, label) {",
+                  "  pm.expect(value, `${label} should be number`).to.be.a('number');",
+                  "}",
+                  "",
+                  "function assertBoolean(value, label) {",
+                  "  pm.expect(value, `${label} should be boolean`).to.be.a('boolean');",
+                  "}",
+                  "",
+                  "function assertArray(value, label) {",
+                  "  pm.expect(value, `${label} should be array`).to.be.an('array');",
+                  "}",
+                  "",
+                  "function assertObject(value, label) {",
+                  "  pm.expect(value, `${label} should be object`).to.be.an('object');",
+                  "  pm.expect(Array.isArray(value), `${label} should not be array`).to.eql(false);",
+                  "  pm.expect(value, `${label} should not be null`).to.not.eql(null);",
+                  "}",
+                  "",
+                  "function assertIsoDateString(value, label) {",
+                  "  pm.expect(value, `${label} should be string`).to.be.a('string');",
+                  "  pm.expect(Number.isNaN(Date.parse(value)), `${label} should be valid date`).to.eql(false);",
+                  "}",
+                  "",
+                  "function assertHasKeys(obj, keys, label) {",
+                  "  pm.expect(obj, `${label} should be object`).to.be.an('object');",
+                  "  keys.forEach(key => {",
+                  "    pm.expect(obj, `${label} should have key ${key}`).to.have.property(key);",
+                  "  });",
+                  "}",
+                  "",
+                  "function assertLegacySuccess(body, expectedMessage) {",
+                  "  assertHasKeys(body, ['message', 'error', 'code', 'results'], 'body');",
+                  "  pm.expect(body.error, 'body.error').to.eql(false);",
+                  "  pm.expect(body.code, 'body.code').to.eql(200);",
+                  "  if (expectedMessage) {",
+                  "    pm.expect(body.message, 'body.message').to.eql(expectedMessage);",
+                  "  }",
+                  "}",
+                  "",
+                  "function requireCollectionVar(name) {",
+                  "  const value = pm.collectionVariables.get(name);",
+                  "  pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql('');",
+                  "  return value;",
+                  "}",
+                  "",
+                  "assertStatus(200);",
+                  "const body = getJson();",
+                  "assertLegacySuccess(body, 'OK');",
+                  "",
+                  "const data = body.results.data;",
+                  "assertObject(data, 'data');",
+                  "assertHasKeys(data, ['valid', 'event', 'credentials', 'classes', 'competitors'], 'data');",
+                  "assertBoolean(data.valid, 'data.valid');",
+                  "pm.expect(data.valid, 'data.valid should be true').to.eql(true);",
+                  "",
+                  "assertObject(data.credentials, 'data.credentials');",
+                  "pm.expect(data.credentials.valid, 'data.credentials.valid should be true').to.eql(true);",
+                  "pm.expect(data.credentials.authType, 'data.credentials.authType should be eventBasic').to.eql('eventBasic');",
+                  "pm.expect(data.credentials.reason, 'data.credentials.reason should be null when valid').to.eql(null);",
+                  "assertIsoDateString(data.credentials.expiresAt, 'data.credentials.expiresAt');",
+                  "",
+                  "assertObject(data.classes, 'data.classes');",
+                  "pm.expect(data.classes.valid, 'data.classes.valid should be true').to.eql(true);",
+                  "assertArray(data.classes.items, 'data.classes.items');",
+                  "pm.expect(data.classes.items.length, 'data.classes.items should have 1 entry').to.eql(1);",
+                  "const classItem = data.classes.items[0];",
+                  "assertBoolean(classItem.valid, 'classItem.valid');",
+                  "pm.expect(classItem.valid, 'classItem.valid should be true').to.eql(true);",
+                  "pm.expect(['matched', 'remapped'], 'classItem.status should be matched or remapped').to.include(classItem.status);",
+                  "assertObject(classItem.resolved, 'classItem.resolved');",
+                  "assertNumber(classItem.resolved.id, 'classItem.resolved.id');",
+                  "assertString(classItem.resolved.name, 'classItem.resolved.name');",
+                  "",
+                  "assertObject(data.competitors, 'data.competitors');",
+                  "pm.expect(data.competitors.valid, 'data.competitors.valid should be true').to.eql(true);",
+                  "assertArray(data.competitors.items, 'data.competitors.items');",
+                  "pm.expect(data.competitors.items.length, 'data.competitors.items should have 1 entry').to.eql(1);",
+                  "const competitorItem = data.competitors.items[0];",
+                  "assertBoolean(competitorItem.valid, 'competitorItem.valid');",
+                  "pm.expect(competitorItem.valid, 'competitorItem.valid should be true').to.eql(true);",
+                  "pm.expect(['matched', 'remapped'], 'competitorItem.status should be matched or remapped').to.include(competitorItem.status);",
+                  "assertObject(competitorItem.resolved, 'competitorItem.resolved');",
+                  "assertNumber(competitorItem.resolved.id, 'competitorItem.resolved.id');",
+                  "assertNumber(competitorItem.resolved.classId, 'competitorItem.resolved.classId');",
+                  "pm.expect(competitorItem.resolved.classId, 'competitorItem.resolved.classId should match requested class').to.eql(Number(requireCollectionVar('classId')));",
                   ""
                 ]
               }
@@ -10743,7 +10900,8 @@
                   "assertStatus(200);",
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'OK');",
-                  "assertString(body.results.data.eventId, 'eventId');",
+                  "pm.expect(body.results.data.eventId, 'eventId should match collection var').to.eql(requireCollectionVar('eventId'));",
+                  "assertIsoDateString(body.results.data.expiresAt, 'expiresAt');",
                   ""
                 ]
               }
@@ -10926,6 +11084,7 @@
                   "    pm.execution.skipRequest();",
                   "  }",
                   "}",
+                  "pm.collectionVariables.set('deletedEventId', pm.collectionVariables.get('eventId') || '');",
                   ""
                 ]
               }
@@ -11027,7 +11186,57 @@
                   "assertStatus(200);",
                   "const body = getJson();",
                   "assertLegacySuccess(body, 'Event successfully deleted');",
+                  "pm.expect(Object.keys(body.results).length, 'body.results should be empty object').to.eql(0);",
                   "['eventId','eventPassword','eventPasswordExpiresAt','classId','createdCompetitorId'].forEach(key => pm.collectionVariables.unset(key));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/events/{{deletedEventId}} - Deleted event is no longer accessible",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{deletedEventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{deletedEventId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldDeleteEvent = (pm.environment.get('keepEventForInspection') || 'false').toLowerCase() !== 'true';",
+                  "if (!shouldDeleteEvent) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () {",
+                  "  pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('Deleted event is no longer accessible', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.error, 'body.error should be true').to.eql(true);",
+                  "  pm.expect(body.code, 'body.code should be 422').to.eql(422);",
+                  "  pm.expect(body.errors, 'body.errors should mention the event ID').to.include(pm.collectionVariables.get('deletedEventId'));",
+                  "});",
+                  "pm.collectionVariables.unset('deletedEventId');",
                   ""
                 ]
               }
