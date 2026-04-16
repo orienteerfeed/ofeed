@@ -55,9 +55,12 @@ Before running the full collection:
 
 Optional scenarios:
 
-- Set `deleteEventAtEnd=false` when you want to keep the generated event,
-  uploaded data, and event password after the run so you can inspect or delete
-  the event manually later. The OAuth client cleanup still runs.
+- Set `keepEventForInspection=true` when you want to pause cleanup and inspect
+  the final event state (uploaded data, competitors, results, password) before
+  deleting it manually. The cleanup folder requests that delete the event and
+  its data will be skipped; the OAuth client cleanup still runs. Reset to
+  `false` (the default) when you are ready to let the collection clean up
+  automatically.
 - Password reset confirm is skipped unless `runPasswordResetConfirm=true` and
   `passwordResetToken` contains a real token from your inbox or database.
 - GraphQL password reset confirm is skipped unless
@@ -92,7 +95,7 @@ Optional scenarios:
 
 Current environment keys added for these scenarios:
 
-- `deleteEventAtEnd`
+- `keepEventForInspection`
 - `passwordResetBaseUrl`
 - `passwordResetToken`
 - `passwordResetNewPassword`

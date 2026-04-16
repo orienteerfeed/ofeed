@@ -149,8 +149,8 @@
       "enabled": true
     },
     {
-      "key": "deleteEventAtEnd",
-      "value": "true",
+      "key": "keepEventForInspection",
+      "value": "false",
       "enabled": true
     },
     {

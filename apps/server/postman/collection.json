@@ -10636,7 +10636,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const shouldDeleteEvent = (pm.environment.get('deleteEventAtEnd') || 'true').toLowerCase() === 'true';",
+                  "const shouldDeleteEvent = (pm.environment.get('keepEventForInspection') || 'false').toLowerCase() !== 'true';",
                   "if (!shouldDeleteEvent) {",
                   "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
                   "    pm.execution.skipRequest();",
@@ -10778,7 +10778,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const shouldDeleteEvent = (pm.environment.get('deleteEventAtEnd') || 'true').toLowerCase() === 'true';",
+                  "const shouldDeleteEvent = (pm.environment.get('keepEventForInspection') || 'false').toLowerCase() !== 'true';",
                   "if (!shouldDeleteEvent) {",
                   "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
                   "    pm.execution.skipRequest();",
@@ -10920,7 +10920,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const shouldDeleteEvent = (pm.environment.get('deleteEventAtEnd') || 'true').toLowerCase() === 'true';",
+                  "const shouldDeleteEvent = (pm.environment.get('keepEventForInspection') || 'false').toLowerCase() !== 'true';",
                   "if (!shouldDeleteEvent) {",
                   "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
                   "    pm.execution.skipRequest();",
