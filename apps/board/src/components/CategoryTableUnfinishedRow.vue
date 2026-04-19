@@ -49,7 +49,7 @@ const gridClass = computed(() =>
     :class="[bgColor, gridClass]"
     class="grid table-row-grid gap-2 px-3 py-1.5 rounded-lg items-center"
   >
-    <span v-if="props.showEmojis && isDNS">🥺</span>
+    <span v-if="props.showEmojis && isDNS">🚷</span>
     <span v-else-if="props.showEmojis && isRunning">🏃</span>
     <span v-else-if="props.showEmojis && !isRunning">🛌🏻</span>
     <span v-else></span>
