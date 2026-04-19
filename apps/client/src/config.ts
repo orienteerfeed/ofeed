@@ -39,6 +39,10 @@ export const config = {
     import.meta.env.VITE_DOCS_URL,
     'https://docs.orienteerfeed.com'
   ),
+  BOARD_APP_URL: optional(
+    import.meta.env.VITE_BOARD_APP_URL,
+    'http://localhost:3002'
+  ),
   DISCORD_INVITE_URL: optional(
     import.meta.env.VITE_DISCORD_INVITE_URL,
     'https://discord.gg/QMvnurgKzU'

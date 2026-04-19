@@ -29,6 +29,21 @@ services:
     networks:
       - app-network
       - traefik
+  board:
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.board.rule=Host(`${BOARD_HOST:-board.ofeed.local}`)
+      - traefik.http.routers.board.entrypoints=${TRAEFIK_ENTRYPOINT:-https}
+      - traefik.http.routers.board.tls=true
+      - traefik.http.routers.board.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-le}
+      - traefik.http.services.board.loadbalancer.server.port=80
+      - traefik.http.middlewares.board-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.board-redirect.redirectscheme.permanent=true
+      - traefik.http.routers.board.middlewares=board-redirect
+    networks:
+      - app-network
+      - traefik
 
 networks:
   traefik:

@@ -501,6 +501,7 @@
         "EventId": "ID del evento",
         "Author": "Autor",
         "Report": "Reporte",
+        "OpenBoard": "Board",
         "Status": {
           "Primary": {
             "DONE": "COMPLETADO",
