@@ -19,11 +19,14 @@ const props = defineProps<{
 const bgColor = props.isEven ? 'bg-even' : 'bg-white'
 const { now, startTimeFormatter } = useTimeHelpers()
 
-const isRunning = computed(() =>
-  props.data.startTime
+const isDNS = computed(() => props.data.status === AthleteStatus.DidNotStart)
+
+const isRunning = computed(() => {
+  if (isDNS.value) return false
+  return props.data.startTime
     ? props.data.startTime < now.value
     : props.data.status === AthleteStatus.Running
-)
+})
 
 const startTimeFormatted = computed(() =>
   startTimeFormatter(props.data.startTime, props.timezone)
@@ -46,7 +49,8 @@ const gridClass = computed(() =>
     :class="[bgColor, gridClass]"
     class="grid table-row-grid gap-2 px-3 py-1.5 rounded-lg items-center"
   >
-    <span v-if="props.showEmojis && isRunning">🏃</span>
+    <span v-if="props.showEmojis && isDNS">🥺</span>
+    <span v-else-if="props.showEmojis && isRunning">🏃</span>
     <span v-else-if="props.showEmojis && !isRunning">🛌🏻</span>
     <span v-else></span>
     <span class="text-ellipsis overflow-hidden whitespace-nowrap"
@@ -55,18 +59,17 @@ const gridClass = computed(() =>
     <span v-if="!isCompact">{{ data.card }}</span>
     <span v-if="!isCompact">{{ data.club }}</span>
     <!-- TODO tabular-nums not nice override, special monospace font? -->
+    <span class="text-right" v-if="isDNS">DNS</span>
     <span
       class="block min-w-0 overflow-hidden whitespace-nowrap text-right text-xl leading-none tabular-nums"
-      v-if="isRunning"
+      v-else-if="isRunning"
       >{{ timeRunningDisplay }}</span
     >
     <span
       class="block min-w-0 overflow-hidden whitespace-nowrap text-right tabular-nums"
-      v-else-if="!isRunning"
-      >{{
-      startTimeFormatted
-    }}</span>
-    <span v-else></span>
+      v-else
+      >{{ startTimeFormatted }}</span
+    >
     <span
       v-if="isCompact && !isRunning && data.card"
       class="text-right text-2xl"

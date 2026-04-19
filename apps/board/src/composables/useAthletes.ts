@@ -41,7 +41,8 @@ export function useAthletes({
       (athletes, athlete) => {
         if (
           athlete.status === AthleteStatus.NotStarted ||
-          athlete.status === AthleteStatus.Running
+          athlete.status === AthleteStatus.Running ||
+          athlete.status === AthleteStatus.DidNotStart
         ) {
           athletes.unfinished.push(athlete)
         } else {
@@ -142,6 +143,9 @@ export function useUnfinishedAthletes(athletes: Ref<ClassifyAthletes>) {
 }
 
 function unfinishedAthleteSortFunction(a: RawAthlete, b: RawAthlete) {
+  const aIsDNS = a.status === AthleteStatus.DidNotStart
+  const bIsDNS = b.status === AthleteStatus.DidNotStart
+  if (aIsDNS !== bIsDNS) return aIsDNS ? 1 : -1
   if (a.startTime && b.startTime) return a.startTime > b.startTime ? 1 : -1
   if (a.status !== b.status) return a.status - b.status
   return a.surname < b.surname ? -1 : 1
