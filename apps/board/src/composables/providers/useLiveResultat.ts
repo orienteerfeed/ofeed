@@ -168,7 +168,11 @@ export function useLiveResultat() {
       refetchInterval: 15 * 1000,
     })
 
-    return { status, rawAthletes }
+    const courseInfo = computed<
+      { length?: number; climb?: number; controls?: number } | undefined
+    >(() => undefined)
+
+    return { status, rawAthletes, courseInfo }
   }
 
   return {

@@ -80,7 +80,12 @@ interface OfeedRelayTeam {
 }
 
 type OfeedCompetitionResultsResponse = OfeedEnvelope<{
-  classes: Array<{ competitors: OfeedAthlete[] }>
+  classes: Array<{
+    length?: number
+    climb?: number
+    controlsCount?: number
+    competitors: OfeedAthlete[]
+  }>
 }>
 
 type OfeedRelayResultsResponse = OfeedEnvelope<{
@@ -129,9 +134,15 @@ function unwrapResults<T>(payload: OfeedEnvelope<T> | T): T {
   return results as T
 }
 
-function extractClasses(
-  payload: unknown
-): Array<{ competitors?: OfeedAthlete[]; teams?: OfeedRelayTeam[] }> {
+type ClassEntry = {
+  competitors?: OfeedAthlete[]
+  teams?: OfeedRelayTeam[]
+  length?: number
+  climb?: number
+  controlsCount?: number
+}
+
+function extractClasses(payload: unknown): Array<ClassEntry> {
   let data = payload
 
   if (isRecord(payload) && 'results' in payload) {
@@ -153,10 +164,7 @@ function extractClasses(
     return []
   }
 
-  return data.classes as Array<{
-    competitors?: OfeedAthlete[]
-    teams?: OfeedRelayTeam[]
-  }>
+  return data.classes as Array<ClassEntry>
 }
 
 export function useOfeed() {
@@ -208,20 +216,31 @@ export function useOfeed() {
     category: Category
     fetchEnabled: Ref<boolean>
   }) => {
-    const { status, data: rawAthletes } = useQuery({
+    const { status, data } = useQuery({
       queryKey: ['athletes', key, competition.id, category.id],
       queryFn: async () => {
         const result = await fetchJson<OfeedCompetitionResultsResponse>(
           `${OFEED_REST_PREFIX}/events/${competition.id}/competitors?class=${category.id}`
         )
-        return formatOfeedAthletesToRaw(extractClasses(result)[0]?.competitors ?? [])
+        const classData = extractClasses(result)[0]
+        return {
+          athletes: formatOfeedAthletesToRaw(classData?.competitors ?? []),
+          courseInfo: {
+            length: classData?.length || undefined,
+            climb: classData?.climb || undefined,
+            controls: classData?.controlsCount || undefined,
+          },
+        }
       },
       enabled: computed(() => fetchEnabled.value),
       retry: true,
       refetchInterval: 15 * 1000,
     })
 
-    return { status, rawAthletes }
+    const rawAthletes = computed(() => data.value?.athletes)
+    const courseInfo = computed(() => data.value?.courseInfo)
+
+    return { status, rawAthletes, courseInfo }
   }
 
   const getRelayTeamsLoader = ({

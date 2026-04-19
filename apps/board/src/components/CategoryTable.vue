@@ -26,11 +26,18 @@ const { scrollItemRef, stickyRef, contentRef, isActive } = useScrollColumnItem(
   props.category.name
 )
 
-const { status, athletes, areAvailable } = useAthletes({
+const { status, athletes, areAvailable, courseInfo } = useAthletes({
   competition: props.competition,
   category: props.category,
   fetchEnabled: isActive,
 })
+
+const effectiveCategory = computed(() => ({
+  ...props.category,
+  length: props.category.length ?? courseInfo.value?.length,
+  climb: props.category.climb ?? courseInfo.value?.climb,
+  controls: props.category.controls ?? courseInfo.value?.controls,
+}))
 
 const athletesCount = computed(() => {
   return {
@@ -48,7 +55,7 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
     <div class="sticky top-0" ref="stickyRef">
       <TableHeader
         class="p-3"
-        :category="props.category"
+        :category="effectiveCategory"
         :athletes-count="athletesCount"
       />
       <!-- TODO Add 2rem text class -->

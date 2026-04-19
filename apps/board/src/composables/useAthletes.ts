@@ -27,7 +27,7 @@ export function useAthletes({
 }) {
   const { getAthletesLoader } = useDataProvider()
   /* Athletes can be passed with category in test table context */
-  const { rawAthletes, status } = getAthletesLoader({
+  const { rawAthletes, status, courseInfo } = getAthletesLoader({
     category,
     competition,
     fetchEnabled,
@@ -58,7 +58,7 @@ export function useAthletes({
       athletes.value.finished.length > 0 || athletes.value.unfinished.length > 0
   )
 
-  return { status, athletes, areAvailable }
+  return { status, athletes, areAvailable, courseInfo }
 }
 
 export function useFinishedAthletes(athletes: Ref<ClassifyAthletes>) {
