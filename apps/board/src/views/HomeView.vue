@@ -66,12 +66,10 @@ const activeTab = ref<DataProviders>(
       </template>
     </main>
     <section class="about flex flex-col gap-4 w-140 text-lg lg:pl-8">
-      <h2 class="text-2xl font-semibold uppercase text-header">
-        About OFeed Board
-      </h2>
+      <h2 class="text-2xl font-semibold uppercase text-header">About OFB</h2>
       <p>
-        OFeed Board is competition result presentation system intended for use
-        on result screens in the competition centre. OFeed Board is created by
+        OFeed Board (OFB) is competition result presentation system intended for
+        use on result screens in the competition centre. OFB is created by
         orienteering athletes for orienteering events but should be modular and
         easily extensible for other time-based sports.
       </p>
