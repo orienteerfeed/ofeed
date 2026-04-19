@@ -97,6 +97,7 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
             :is-visible="isActive"
             :is-compact="settingsStore.compactMode"
             :show-emojis="settingsStore.showEmojis"
+            :timezone="competition.timezone"
           >
           </TableUnfinishedRow>
         </template>

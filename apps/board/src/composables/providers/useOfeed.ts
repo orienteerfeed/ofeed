@@ -15,6 +15,7 @@ const OFEED_REST_PREFIX = '/rest/v1'
 
 type OfeedCompetition = Pick<Competition, 'id' | 'name' | 'organizer'> & {
   date: string
+  timezone?: string
   location: string
   relay: boolean
   published: boolean
@@ -284,6 +285,7 @@ function formatOfeedCompetitions(
     ...competition,
     isRelay: competition.relay,
     date: new Date(competition.date),
+    timezone: competition.timezone,
   }))
 }
 

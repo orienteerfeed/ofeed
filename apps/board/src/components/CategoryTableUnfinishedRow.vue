@@ -13,10 +13,11 @@ const props = defineProps<{
   isVisible: boolean
   isCompact: boolean
   showEmojis: boolean
+  timezone?: string
 }>()
 
 const bgColor = props.isEven ? 'bg-even' : 'bg-white'
-const { now, timeFormatter } = useTimeHelpers()
+const { now, startTimeFormatter } = useTimeHelpers()
 
 const isRunning = computed(() =>
   props.data.startTime
@@ -25,7 +26,7 @@ const isRunning = computed(() =>
 )
 
 const startTimeFormatted = computed(() =>
-  timeFormatter.format(props.data.startTime)
+  startTimeFormatter(props.data.startTime, props.timezone)
 )
 
 const timeRunning = computed(() => {

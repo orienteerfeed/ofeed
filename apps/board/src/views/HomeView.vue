@@ -90,11 +90,6 @@ const activeTab = ref<DataProviders>(
         <li>richer data content options</li>
         <li>and many more</li>
       </ul>
-      <p>
-        Its recommended to use Chrome as browser. StartTimes and LiveTime
-        calculation (if available for competition) might be off out of CET time
-        zone (known bug which shall be fixed in future release)
-      </p>
     </section>
     <footer class="footer text-center text-xl bg-slate-300 p-10">
       <h2>©2026 OFeed</h2>

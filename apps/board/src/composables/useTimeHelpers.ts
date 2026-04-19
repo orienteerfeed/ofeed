@@ -9,6 +9,15 @@ function _useTimeHelpers() {
     minute: 'numeric',
     second: 'numeric',
   })
+  function startTimeFormatter(date: Date | undefined, timezone?: string): string {
+    if (!date) return ''
+    return new Intl.DateTimeFormat('default', {
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      ...(timezone ? { timeZone: timezone } : {}),
+    }).format(date)
+  }
   const dateTimeFormatter = new Intl.DateTimeFormat('default', {
     year: 'numeric',
     month: 'numeric',
@@ -19,5 +28,5 @@ function _useTimeHelpers() {
   const now5s = useNow({ interval: 5000 })
   const nowFormatted = computed(() => timeFormatter.format(now.value))
 
-  return { dateTimeFormatter, timeFormatter, now, now5s, nowFormatted }
+  return { dateTimeFormatter, timeFormatter, startTimeFormatter, now, now5s, nowFormatted }
 }
