@@ -96,7 +96,7 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
       </div>
     </div>
     <div
-      v-if="!(status === 'success' && areAvailable)"
+      v-if="status !== 'success'"
       class="bg-gray-300 h-100 grid gap-4 place-content-center place-items-center"
     >
       <span class="relative flex h-3 w-3">
