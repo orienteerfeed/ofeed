@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 
 import DataProvider from '@/components/DataProvider.vue'
 import CompetitionList from '@/components/CompetitionList.vue'
@@ -11,13 +11,12 @@ type CompetitionProvider = {
 }
 
 const COMPETITION_PROVIDERS: CompetitionProvider[] = [
-  { name: 'LiveResultat events', value: 'liveResultat' },
-  { name: 'oFeed events', value: 'ofeed' },
+  { name: 'OFeed', value: 'ofeed' },
+  { name: 'LiveResultat', value: 'liveResultat' },
 ]
-const allowedProviders = (import.meta.env.VITE_PROVIDERS?.split(',') ?? [
-  'ofeed',
-  'liveResultat',
-]).filter((provider): provider is DataProviders =>
+const allowedProviders = (
+  import.meta.env.VITE_PROVIDERS?.split(',') ?? ['ofeed', 'liveResultat']
+).filter((provider): provider is DataProviders =>
   ['ofeed', 'liveResultat', 'test'].includes(provider)
 )
 const competitionsProviders = computed(() =>
@@ -26,6 +25,10 @@ const competitionsProviders = computed(() =>
     if (provider) acc.push(provider)
     return acc
   }, [] as CompetitionProvider[])
+)
+
+const activeTab = ref<DataProviders>(
+  competitionsProviders.value[0]?.value ?? 'ofeed'
 )
 </script>
 
@@ -41,22 +44,39 @@ const competitionsProviders = computed(() =>
     <main
       class="competition-list w-140 justify-self-center lg:justify-self-end lg:pr-4 lg:border-r-3 lg:border-female"
     >
-      <template v-for="{ name, value } in competitionsProviders" :key="value">
-        <DataProvider :provider="value">
-          <CompetitionList>{{ name }}</CompetitionList>
+      <div class="flex border-b border-gray-300 mb-4">
+        <button
+          v-for="{ name, value } in competitionsProviders"
+          :key="value"
+          @click="activeTab = value"
+          class="px-5 py-2 text-sm font-semibold border-b-2 transition-colors"
+          :class="
+            activeTab === value
+              ? 'border-header text-header'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          "
+        >
+          {{ name }}
+        </button>
+      </div>
+      <template v-for="{ value } in competitionsProviders" :key="value">
+        <DataProvider v-if="activeTab === value" :provider="value">
+          <CompetitionList />
         </DataProvider>
       </template>
     </main>
     <section class="about flex flex-col gap-4 w-140 text-lg lg:pl-8">
-      <h2 class="text-2xl font-semibold uppercase text-header">About MRB</h2>
+      <h2 class="text-2xl font-semibold uppercase text-header">
+        About OFeed Board
+      </h2>
       <p>
-        MyResultBoard is competition result presentation system intended for use
-        on result screens in the competition centre. MRB is created by
+        OFeed Board is competition result presentation system intended for use
+        on result screens in the competition centre. OFeed Board is created by
         orienteering athletes for orienteering events but should be modular and
         easily extensible for other time-based sports.
       </p>
       <p>
-        This preview currently supports both LiveResultat and oFeed-compatible
+        This preview currently supports both LiveResultat and OFeed-compatible
         APIs with limited configuration. It is intended for displaying
         orienteering event results on a presentation board.
       </p>
@@ -77,8 +97,8 @@ const competitionsProviders = computed(() =>
       </p>
     </section>
     <footer class="footer text-center text-xl bg-slate-300 p-10">
-      <h2>@MyResultBoard - Contact us</h2>
-      <a href="https://github.com/ChcJohnie/myresultboard2"
+      <h2>©2026 OFeed</h2>
+      <a href="https://github.com/orienteerfeed/ofeed/tree/main/apps/board"
         ><span class="i-mdi-github">GitHub</span></a
       >
     </footer>
