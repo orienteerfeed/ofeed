@@ -41,7 +41,7 @@ export const config = {
   ),
   BOARD_APP_URL: optional(
     import.meta.env.VITE_BOARD_APP_URL,
-    'http://localhost:3002'
+    'http://localhost:5173'
   ),
   DISCORD_INVITE_URL: optional(
     import.meta.env.VITE_DISCORD_INVITE_URL,
