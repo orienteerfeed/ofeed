@@ -6,3 +6,7 @@ services:
   frontend:
     deploy:
       replicas: 2
+
+  board:
+    deploy:
+      replicas: 2
