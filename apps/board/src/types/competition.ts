@@ -5,6 +5,7 @@ interface BaseCompetition {
   name: string
   organizer: string
   date: Date
+  timezone?: string
   timediff?: number // TODO can be removed?
   zeroTime: Date
 }

@@ -21,11 +21,32 @@ export const statusMap: { [lsStatus: number]: AthleteStatus } = {
   11: AthleteStatus.DidNotStart,
 }
 
+/**
+ * Returns the UTC timestamp for midnight in the Europe/Stockholm timezone
+ * on the same calendar date as the given UTC Date.
+ * Uses noon UTC to avoid DST-transition edge cases.
+ */
+export function getCETMidnight(date: Date): number {
+  const y = date.getUTCFullYear()
+  const m = date.getUTCMonth()
+  const d = date.getUTCDate()
+  const noonUTC = new Date(Date.UTC(y, m, d, 12))
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Stockholm',
+    hour: 'numeric',
+    hour12: false,
+  }).formatToParts(noonUTC)
+  const stockholmHour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '12')
+  const cetOffset = stockholmHour - 12 // +1 (CET) or +2 (CEST)
+  return Date.UTC(y, m, d) - cetOffset * 3_600_000
+}
+
+/**
+ * Converts a timestamp from competition-local time (CET + timediff) to CET.
+ */
 export const adjustStartTimeToCET = (
   startTime: number,
   timeDiffHours?: number
 ) => {
-  const timeDiffMilliseconds = (timeDiffHours ?? 0) * 60 * 60 * 1000
-  const startTimeCET = startTime - timeDiffMilliseconds
-  return startTimeCET
+  return startTime - (timeDiffHours ?? 0) * 3_600_000
 }

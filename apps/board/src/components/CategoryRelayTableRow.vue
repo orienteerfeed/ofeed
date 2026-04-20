@@ -11,6 +11,7 @@ const props = defineProps<{
   data: RelayTeamWithStats
   isEven: boolean
   legCount: number
+  timezone?: string
 }>()
 const { now5s } = useTimeHelpers()
 const rows = computed(() => props.legCount + 1)
@@ -50,6 +51,7 @@ const additionalLegSpaces = computed(() => {
       v-for="athlete in data.athletes"
       :key="athlete.id"
       :data="athlete"
+      :timezone="props.timezone"
     ></CategoryRelayTableRowAthlete>
     <template v-for="n in additionalLegSpaces" :key="data.id + '-' + n">
       <div class="table-row-grid text-table-small grid gap-2 px-3 py-1.5">

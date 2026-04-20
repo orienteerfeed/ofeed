@@ -1,6 +1,34 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useSettingStore } from '@/stores/settings'
+
 const settingsStore = useSettingStore()
+function close() {
+  settingsStore.setSettingsDisplayed(false)
+}
+
+const classFilter = ref('')
+
+const filteredCategories = computed(() => {
+  const q = classFilter.value.trim().toLowerCase()
+  if (!q) return settingsStore.categoriesDisplay
+  return settingsStore.categoriesDisplay.filter((c) =>
+    c.name.toLowerCase().startsWith(q)
+  )
+})
+
+const allFilteredSelected = computed(() =>
+  filteredCategories.value.length > 0 &&
+  filteredCategories.value.every((c) => c.selected)
+)
+
+const someFilteredSelected = computed(() =>
+  filteredCategories.value.some((c) => c.selected) && !allFilteredSelected.value
+)
+
+function toggleSelectAll() {
+  settingsStore.selectCategories(filteredCategories.value, !allFilteredSelected.value)
+}
 </script>
 
 <template>
@@ -8,7 +36,14 @@ const settingsStore = useSettingStore()
     class="overflow-auto shadow-lg border-t-4 bg-white mb-4 rounded-l-lg rounded-t border-header w-full md:w-1/4"
   >
     <div class="px-6 py-4 mt-4 mb-8">
-      <h3>Result table settings</h3>
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="m-0">Result table settings</h3>
+        <button
+          @click="close"
+          class="text-gray-400 hover:text-gray-700 text-xl leading-none"
+          aria-label="Close settings"
+        >✕</button>
+      </div>
       <form>
         <div class="mb-6">
           <h4>Column number</h4>
@@ -156,9 +191,29 @@ const settingsStore = useSettingStore()
           </div>
 
           <h5>Displayed classes</h5>
+          <div class="flex items-center gap-2 mb-2">
+            <input
+              id="class-filter"
+              v-model="classFilter"
+              type="text"
+              placeholder="Filter by name…"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block flex-1 p-1.5"
+            />
+            <input
+              id="select-all-classes"
+              type="checkbox"
+              :checked="allFilteredSelected"
+              :indeterminate="someFilteredSelected"
+              @change="toggleSelectAll"
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label for="select-all-classes" class="text-sm font-medium text-gray-900 whitespace-nowrap">
+              All
+            </label>
+          </div>
           <div class="flex flex-col flex-wrap gap-y-2">
             <div
-              v-for="category in settingsStore.categoriesDisplay"
+              v-for="category in filteredCategories"
               :key="category.name"
               class="grid grid-cols-5 gap-2"
             >

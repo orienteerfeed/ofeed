@@ -10,9 +10,9 @@ import { AthleteStatus, isResultItemPre } from '@/types/category'
 import type { RelayAthleteWithStats } from '@/types/category'
 import { isTableActiveKey } from '@/types/providers'
 
-const props = defineProps<{ data: RelayAthleteWithStats }>()
+const props = defineProps<{ data: RelayAthleteWithStats; timezone?: string }>()
 const isActive = inject(isTableActiveKey, ref(false))
-const { now, timeFormatter } = useTimeHelpers()
+const { now, startTimeFormatter } = useTimeHelpers()
 
 const timeFormatted = computed(() =>
   props.data.legResult.status === AthleteStatus.Ok
@@ -46,7 +46,7 @@ const isNotStarted = computed(
 )
 const startTimeFormatted = computed(() => {
   if (!props.data.startTime || !isNotStarted.value) return ''
-  return timeFormatter.format(props.data.startTime)
+  return startTimeFormatter(props.data.startTime, props.timezone)
 })
 </script>
 

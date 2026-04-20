@@ -154,6 +154,7 @@ describe('useAthletes', () => {
       const unfinishedStatuses = [
         AthleteStatus.Running,
         AthleteStatus.NotStarted,
+        AthleteStatus.DidNotStart,
       ]
 
       expect(result.status.value).toEqual('success')
@@ -411,6 +412,44 @@ describe('useAthletes', () => {
         expect(unfinishedAthletes.value[3].status).toEqual(
           AthleteStatus.NotStarted
         )
+      })
+
+      it('should sort DNS athletes last regardless of startTime', () => {
+        const now = new Date()
+        const athletes = ref<ClassifyAthletes>({
+          unfinished: [
+            {
+              ...TestUnfinishedAthlete,
+              id: 'dns-1',
+              status: AthleteStatus.DidNotStart,
+              startTime: addMinutes(now, 1),
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'running-1',
+              status: AthleteStatus.Running,
+              startTime: addMinutes(now, 3),
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'dns-2',
+              status: AthleteStatus.DidNotStart,
+              startTime: undefined,
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'notstarted-1',
+              status: AthleteStatus.NotStarted,
+              startTime: addMinutes(now, 5),
+            },
+          ],
+          finished: [],
+        })
+        const unfinishedAthletes = useUnfinishedAthletes(athletes)
+        expect(unfinishedAthletes.value[0].status).toEqual(AthleteStatus.Running)
+        expect(unfinishedAthletes.value[1].status).toEqual(AthleteStatus.NotStarted)
+        expect(unfinishedAthletes.value[2].status).toEqual(AthleteStatus.DidNotStart)
+        expect(unfinishedAthletes.value[3].status).toEqual(AthleteStatus.DidNotStart)
       })
     })
   })

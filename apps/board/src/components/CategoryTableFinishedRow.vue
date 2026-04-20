@@ -46,7 +46,7 @@ const emojisMapping: Record<AthleteStatus, string> = {
   [AthleteStatus.Disqualified]: '🏴',
   [AthleteStatus.Mispunch]: '🙈',
   [AthleteStatus.OverMaxTime]: '⏰',
-  [AthleteStatus.DidNotStart]: '🥺',
+  [AthleteStatus.DidNotStart]: '🚷',
   [AthleteStatus.NotStarted]: '🚪',
 }
 </script>

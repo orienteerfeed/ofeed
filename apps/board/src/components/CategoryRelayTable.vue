@@ -45,6 +45,7 @@ provide(isTableActiveKey, isActive)
           :is-even="index % 2 === 0"
           :data="item"
           :leg-count="legCount"
+          :timezone="props.competition.timezone"
         ></CategoryRelayTableRow>
       </div>
     </div>

@@ -1,11 +1,11 @@
 import { ref, computed, type Ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { startOfDay } from 'date-fns'
 
 import {
   fixEventJSONResponse,
   statusMap,
   adjustStartTimeToCET,
+  getCETMidnight,
 } from '@/utils/liveResultat'
 import { AthleteStatus, type Category, type RawAthlete } from '@/types/category'
 import type {
@@ -168,7 +168,11 @@ export function useLiveResultat() {
       refetchInterval: 15 * 1000,
     })
 
-    return { status, rawAthletes }
+    const courseInfo = computed<
+      { length?: number; climb?: number; controls?: number } | undefined
+    >(() => undefined)
+
+    return { status, rawAthletes, courseInfo }
   }
 
   return {
@@ -206,6 +210,7 @@ function formatLSCompetitionsToRaw(
     ...competition,
     id: competition.id.toString(),
     isRelay: false,
+    timezone: 'Europe/Stockholm',
     // TODO merge timediff with date
     date: new Date(competition.date),
   }))
@@ -216,7 +221,7 @@ function formatLSAthletesToRaw(
   athletes: LSAthlete[],
   competition: Competition
 ): RawAthlete[] {
-  const todayStartTimeStamp = startOfDay(competition.date).valueOf()
+  const todayStartTimeStamp = getCETMidnight(competition.date)
   return athletes.map((athlete) => {
     const id = athlete.name + athlete.club
     const timeMS = parseFloat(athlete.result) * 10
