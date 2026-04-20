@@ -69,9 +69,40 @@ services:
       retries: 10
       start_period: 10s
 
+  board:
+    image: ofeed-board
+    build:
+      context: .
+      dockerfile: ./apps/board/Dockerfile
+      args:
+        NODE_VERSION: 24.14.1
+        PNPM_VERSION: 10.33.0
+      secrets:
+        - board_env
+    env_file: ./apps/board/.env
+    ports:
+      - "${BOARD_PORT:-3002}:80"
+    environment:
+      - PORT=80
+      - BOARD_API_UPSTREAM=http://api:3001
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/healthz >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
 secrets:
   client_env:
     file: ./apps/client/.env
+  board_env:
+    file: ./apps/board/.env
 
 networks:
   app-network:
