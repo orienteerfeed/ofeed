@@ -501,6 +501,7 @@
         "EventId": "Tävlings-ID",
         "Author": "Författare",
         "Report": "Rapport",
+        "OpenBoard": "Board",
         "Status": {
           "Primary": {
             "DONE": "SLUTFÖRD",

@@ -501,6 +501,7 @@
         "EventId": "ID akce",
         "Author": "Autor",
         "Report": "Report",
+        "OpenBoard": "Board",
         "Status": {
           "Primary": {
             "DONE": "DOKONČENO",

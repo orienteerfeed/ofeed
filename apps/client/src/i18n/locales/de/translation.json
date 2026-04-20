@@ -459,6 +459,9 @@
           }
         }
       },
+      "Detail": {
+        "OpenBoard": "Board"
+      },
       "Splits": {
         "ChartTitle": "Rennverlauf (Rückstand auf die Spitze)",
         "ChartTitleFastest": "Rennverlauf (Rückstand auf die schnellste Zeit)",

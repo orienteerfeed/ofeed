@@ -21,6 +21,7 @@ We are using [Weblate](https://hosted.weblate.org/projects/ofeed/) free localiza
 ## Tech Stack
 
 - Client: Vite + React + TypeScript
+- Board: Vue 3 + Vite + TypeScript
 - Server: Hono + TypeScript + Prisma (MariaDB adapter)
 - UI: shadcn/ui + Tailwind CSS
 - Data and Routing: TanStack Query + TanStack Router
@@ -32,6 +33,7 @@ We are using [Weblate](https://hosted.weblate.org/projects/ofeed/) free localiza
 
 ```text
 apps/
+  board/     # Vite + Vue event board application
   client/    # Vite + React application
   server/    # Hono + Prisma API
 packages/
@@ -71,6 +73,7 @@ pnpm setup:dev
 - installs dependencies
 - creates `apps/server/.env` from `apps/server/.env.example` (if missing)
 - creates `apps/client/.env` from `apps/client/.env.example` (if missing)
+- creates `apps/board/.env` from `apps/board/.env.example` (if missing)
 
 Then run:
 
@@ -81,10 +84,17 @@ pnpm db:migrate
 pnpm dev
 ```
 
+Run the board only when needed:
+
+```bash
+pnpm dev:board
+```
+
 Default local URLs:
 
 - Client: `http://localhost:3000`
 - API: `http://localhost:3001`
+- Board dev server: `http://localhost:5173` when started with `pnpm dev:board`
 - GraphQL: `http://localhost:3001/graphql`
 - OpenAPI JSON: `http://localhost:3001/doc`
 - API Reference UI: `http://localhost:3001/reference`
@@ -95,6 +105,7 @@ Default local URLs:
 
 - `pnpm setup:dev` - bootstrap local dev environment
 - `pnpm dev` - run client + server in parallel via Turborepo
+- `pnpm dev:board` - run only the board app; it is intentionally excluded from `pnpm dev`
 - `pnpm build` - build all workspace packages/apps
 - `pnpm lint` - lint all workspace packages/apps
 - `pnpm format` - format repo files with Prettier
@@ -135,6 +146,14 @@ Default local URLs:
 - `pnpm lint` / `pnpm lint:fix`
 - `pnpm e2e`
 
+### Board (`apps/board`)
+
+- `pnpm dev`
+- `pnpm build`
+- `pnpm test:unit`
+- `pnpm lint` / `pnpm lint:fix`
+- `pnpm test:e2e`
+
 ## Database and Prisma
 
 - Prisma schema: `apps/server/prisma/schema.prisma`
@@ -148,12 +167,14 @@ Use app-level env files:
 
 - `apps/server/.env`
 - `apps/client/.env`
+- `apps/board/.env`
 
 Create them from examples:
 
 ```bash
 cp apps/server/.env.example apps/server/.env
 cp apps/client/.env.example apps/client/.env
+cp apps/board/.env.example apps/board/.env
 ```
 
 Start full app stack:
@@ -175,8 +196,13 @@ Docker Compose can also use a root `.env` only for Compose interpolation, for ex
 
 - `SERVER_PORT=3001`
 - `FRONTEND_PORT=3000`
+- `BOARD_PORT=3002`
 - `API_HOST=api.orienteerfeed.com`
 - `FRONTEND_HOST=orienteerfeed.com`
+- `BOARD_HOST=board.orienteerfeed.com`
+- `TRAEFIK_CERT_RESOLVER=le`
+
+An example Compose-only file is provided as [`.env.example`](/Users/martinkrivda/Workspace/orienteerfeed/.env.example). Keep in mind that this root `.env` is optional and is meant for Docker/Traefik interpolation only, not for app runtime configuration.
 
 ## Helm / k3s Deployment
 
