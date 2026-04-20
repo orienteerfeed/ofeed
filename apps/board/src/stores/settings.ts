@@ -128,6 +128,15 @@ export const useSettingStore = defineStore(
       category.order = newOrder
     }
 
+    function selectCategories(categories: CategoryDisplay[], selected: boolean) {
+      for (const category of categories) {
+        category.selected = selected
+        if (scrollColumnsCount.value === 1)
+          category.column = selected ? 1 : null
+      }
+      autoUpdateCategoryDisplayColumns()
+    }
+
     function autoUpdateCategoryDisplayColumns() {
       const categoriesByColumn = splitArrayIntoPartsImmutable(
         categoriesSelected.value,
@@ -166,6 +175,7 @@ export const useSettingStore = defineStore(
       setCategoryDisplayColumn,
       setCategoryDisplayOrder,
       setCategorySelected,
+      selectCategories,
     }
   },
   {

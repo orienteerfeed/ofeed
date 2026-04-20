@@ -67,7 +67,11 @@ export function useMockData({
       firstFetch.value ? 'success' : 'loading'
     )
 
-    return { status, rawAthletes }
+    const courseInfo = computed<
+      { length?: number; climb?: number; controls?: number } | undefined
+    >(() => undefined)
+
+    return { status, rawAthletes, courseInfo }
   }
 
   return {

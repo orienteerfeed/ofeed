@@ -27,7 +27,7 @@ export function useAthletes({
 }) {
   const { getAthletesLoader } = useDataProvider()
   /* Athletes can be passed with category in test table context */
-  const { rawAthletes, status } = getAthletesLoader({
+  const { rawAthletes, status, courseInfo } = getAthletesLoader({
     category,
     competition,
     fetchEnabled,
@@ -41,7 +41,8 @@ export function useAthletes({
       (athletes, athlete) => {
         if (
           athlete.status === AthleteStatus.NotStarted ||
-          athlete.status === AthleteStatus.Running
+          athlete.status === AthleteStatus.Running ||
+          athlete.status === AthleteStatus.DidNotStart
         ) {
           athletes.unfinished.push(athlete)
         } else {
@@ -58,7 +59,7 @@ export function useAthletes({
       athletes.value.finished.length > 0 || athletes.value.unfinished.length > 0
   )
 
-  return { status, athletes, areAvailable }
+  return { status, athletes, areAvailable, courseInfo }
 }
 
 export function useFinishedAthletes(athletes: Ref<ClassifyAthletes>) {
@@ -142,6 +143,9 @@ export function useUnfinishedAthletes(athletes: Ref<ClassifyAthletes>) {
 }
 
 function unfinishedAthleteSortFunction(a: RawAthlete, b: RawAthlete) {
+  const aIsDNS = a.status === AthleteStatus.DidNotStart
+  const bIsDNS = b.status === AthleteStatus.DidNotStart
+  if (aIsDNS !== bIsDNS) return aIsDNS ? 1 : -1
   if (a.startTime && b.startTime) return a.startTime > b.startTime ? 1 : -1
   if (a.status !== b.status) return a.status - b.status
   return a.surname < b.surname ? -1 : 1
