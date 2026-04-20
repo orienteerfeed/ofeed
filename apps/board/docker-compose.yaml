@@ -1,0 +1,34 @@
+services:
+  board:
+    build:
+      context: ../..
+      dockerfile: apps/board/Dockerfile
+      args:
+        NODE_VERSION: 24.14.1
+        PNPM_VERSION: 10.33.0
+      secrets:
+        - board_env
+    env_file:
+      - ./.env
+    environment:
+      PORT: 80
+      BOARD_API_UPSTREAM: http://host.docker.internal:3001
+    ports:
+      - '8080:80'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget -qO- http://127.0.0.1:80/healthz >/dev/null || exit 1',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+secrets:
+  board_env:
+    file: ./.env

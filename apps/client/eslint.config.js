@@ -3,7 +3,11 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import tseslint from 'typescript-eslint';
+
+const tsconfigRootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig([
   globalIgnores([
@@ -25,7 +29,12 @@ export default defineConfig([
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: './tsconfig.json',
+        project: [
+          './tsconfig.json',
+          './tsconfig.node.json',
+          './tsconfig.vitest.json',
+        ],
+        tsconfigRootDir,
         ecmaFeatures: {
           jsx: true,
         },

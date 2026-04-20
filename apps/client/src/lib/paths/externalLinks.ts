@@ -83,6 +83,24 @@ export function buildLocalizedDocsUrl(
   return url.toString();
 }
 
+export function buildBoardEventUrl(
+  eventId: string | null | undefined
+): string | null {
+  const normalizedEventId = eventId?.trim();
+  if (!normalizedEventId) {
+    return null;
+  }
+
+  try {
+    return new URL(
+      `/events/ofeed/${encodeURIComponent(normalizedEventId)}`,
+      config.BOARD_APP_URL
+    ).toString();
+  } catch {
+    return null;
+  }
+}
+
 export const externalLinks = {
   mrb: (baseApi: string) => `${baseApi}/mrb`,
   docs: config.DOCS_URL,
