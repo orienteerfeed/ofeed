@@ -773,7 +773,7 @@
             "Event": "Evento",
             "Location": "Ubicación",
             "Date": "Fecha",
-            "EventUri": "Ver resultados en directo",
+            "EventUri": "Ver detalle del evento",
             "UrlDescription": "¡Escanee el código QR para acceder al momento a los resultados en directo!"
           }
         },

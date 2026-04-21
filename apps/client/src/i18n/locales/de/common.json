@@ -19,6 +19,7 @@
   "Close": "Abbrechen",
   "ComingSoon": "Bald verfügbar",
   "Copy": "Kopieren",
+  "CopyLink": "Link kopieren",
   "Public": "Offentlich",
   "NotImplementedTitle": "Noch nicht implementiert worden",
   "Error": "Fehlermeldung",
@@ -35,6 +36,8 @@
     "Seconds": "sekunden"
   },
   "Share": "Teilen",
+  "ShareLink": "Link teilen",
+  "ShareQR": "QR teilen",
   "Print": "Drucken",
   "Private": "Privat",
   "Search": "Suche",

@@ -32,8 +32,11 @@
     "Seconds": "vteřin"
   },
   "Share": "Sdílet",
+  "ShareLink": "Sdílet odkaz",
+  "ShareQR": "Sdílet QR",
   "Print": "Tisk",
   "Copy": "Kopírovat",
+  "CopyLink": "Kopírovat odkaz",
   "Public": "Veřejná",
   "Private": "Soukromá",
   "Search": "Hledat",

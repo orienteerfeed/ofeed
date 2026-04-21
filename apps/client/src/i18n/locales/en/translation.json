@@ -773,7 +773,7 @@
             "Event": "Event",
             "Location": "Location",
             "Date": "Date",
-            "EventUri": "View Live Results",
+            "EventUri": "View Event Detail",
             "UrlDescription": "Scan the QR code to access live results instantly!"
           }
         },
