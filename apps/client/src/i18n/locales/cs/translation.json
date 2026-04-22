@@ -479,10 +479,10 @@
         }
       },
       "Settings": {
-        "Loading": "Načítám nastavení závodu"
+        "Loading": "Načítám nastavení akce"
       },
       "Detail": {
-        "EventInformation": "Informace o závodu",
+        "EventInformation": "Informace o akci",
         "Date": "Datum",
         "ZeroTime": "Čas startu",
         "Location": "Lokalita",
@@ -492,33 +492,54 @@
         "ShowAllClasses": "Zobrazit všechny kategorie",
         "ShowLessClasses": "Zobrazit méně",
         "Format": "Formát",
-        "RelayRace": "Štafetový závod",
+        "RelayRace": "Štafeta",
         "Ranking": "Ranking",
         "Coefficient": "Koeficient",
-        "EventStatus": "Stav závodu",
+        "EventStatus": "Stav akce",
         "AdditionalDetails": "Další informace",
         "Sport": "Sport",
         "EventId": "ID akce",
         "Author": "Autor",
         "Report": "Report",
+        "OpenBoard": "Board",
         "Status": {
-          "Completed": "DOKONČENO",
-          "Live": "PROBÍHÁ",
-          "Upcoming": "NADCHÁZEJÍCÍ",
-          "Draft": "KONCEPT"
+          "Primary": {
+            "DONE": "DOKONČENO",
+            "LIVE": "PROBÍHÁ",
+            "UPCOMING": "NADCHÁZEJÍCÍ",
+            "DRAFT": "KONCEPT"
+          },
+          "Results": {
+            "NONE": "Bez výsledků",
+            "LIVE": "Průběžné výsledky",
+            "UNOFFICIAL": "Neoficiální výsledky",
+            "OFFICIAL": "Oficiální výsledky"
+          },
+          "Entries": {
+            "OPEN": "Přihlášky otevřeny",
+            "CLOSED": "Přihlášky uzavřeny"
+          }
         },
         "StatusText": {
-          "Completed": "Výsledky jsou finální",
-          "Live": "Závod právě probíhá",
-          "Upcoming": "Registrace je otevřená"
+          "Primary": {
+            "DONE": "Akce je dokončena.",
+            "LIVE": "Akce právě probíhá.",
+            "UPCOMING": "Akce ještě nezačala.",
+            "DRAFT": "Akce se připravuje."
+          },
+          "Results": {
+            "UNOFFICIAL": "Neoficiální výsledky"
+          }
         },
+        "OfficialResultsLink": "Oficiální výsledky",
+        "ResultsCheckedAt": "Poslední kontrola externího zdroje: {{value}}",
         "Alert": {
-          "UnpublishedTitle": "Závod ještě není publikován",
-          "UnpublishedDescription": "Tento závod je v režimu konceptu a není veřejně viditelný."
+          "UnpublishedTitle": "Akce ještě není publikována",
+          "UnpublishedDescription": "Tato akce je v režimu konceptu a není veřejně viditelná."
         },
-        "ErrorTitle": "Chyba při načítání závodu",
-        "ErrorDescription": "Nepodařilo se načíst data závodu",
-        "Loading": "Načítám závod"
+        "ErrorTitle": "Chyba při načítání akce",
+        "ErrorDescription": "Nepodařilo se načíst data akce",
+        "Loading": "Načítám akci"
       },
       "Results": {
         "Loading": "Načítám výsledky",
@@ -536,8 +557,51 @@
         }
       },
       "Splits": {
+        "ChartTitle": "Průběh závodu (časová ztráta na vedoucího)",
+        "ChartTitleFastest": "Průběh závodu (časová ztráta na nejrychlejší čas)",
+        "CompareTo": "Porovnat vůči",
+        "CompareToFastest": "Nejrychlejší čas",
+        "CompareToLeader": "Vedoucí",
+        "ErrorLoadingChart": "Chyba při načítání grafu mezičasů",
+        "Finish": "Cíl",
+        "LegLabel": "Úsek {{legIndex}} ({{controlCode}})",
+        "LegendBestCumulativeTime": "Nejlepší kumulativní čas",
+        "LegendCriticalDeviation": "Kritická odchylka (>4.0σ)",
+        "LegendFastestLegTime": "Nejrychlejší čas úseku",
+        "LegendMajorDeviation": "Výrazná odchylka (>2.5σ)",
+        "LegendSignificantDeviation": "Zvýšená odchylka (>1.5σ)",
         "LoadingChart": "Načítám graf mezičasů",
-        "LoadingTimes": "Načítám mezičasy"
+        "LoadingTimes": "Načítám mezičasy",
+        "ResetSort": "Resetovat řazení",
+        "Runners": "Závodníci",
+        "RunnersCount_one": "{{count}} závodník",
+        "RunnersCount_few": "{{count}} závodníci",
+        "RunnersCount_other": "{{count}} závodníků",
+        "SelectAll": "Vše",
+        "SelectNone": "Nic",
+        "SortDirectionAsc": "Vzestupně",
+        "SortDirectionDesc": "Sestupně",
+        "SortFieldFinishTime": "Čas v cíli",
+        "SortFieldFinalLegTime": "Čas posledního úseku",
+        "SortFieldLeg": "Úsek {{number}}",
+        "SortFieldLossToLeader": "Ztráta na vedoucího",
+        "SortFieldPosition": "Pořadí",
+        "SortFieldSplit": "Mezičas {{number}}",
+        "SortedBy": "Řazeno podle:",
+        "SortSummary": "{{field}} ({{direction}})",
+        "Start": "Start",
+        "SelectClass": "Vyber kategorii pro zobrazení mezičasů.",
+        "Publication": {
+          "ErrorTitle": "Nepodařilo se načíst nastavení publikace mezičasů",
+          "DisabledTitle": "Publikace mezičasů je vypnutá",
+          "ScheduledTitle": "Mezičasy zatím nejsou zveřejněné",
+          "DisabledDescription": "Mezičasy pro tuto akci nejsou zveřejněné.",
+          "LastStartWithTime": "Mezičasy budou zveřejněné v okamžiku startu posledního startujícího v této kategorii: {{datetime}}.",
+          "LastStartPending": "Mezičasy budou zveřejněné v okamžiku startu posledního startujícího v této kategorii.",
+          "ScheduledPending": "Mezičasy budou zveřejněné v nastavený čas.",
+          "ScheduledDescription": "Mezičasy budou zveřejněné v {{datetime}}.",
+          "CountdownLabel": "Odpočet do zveřejnění"
+        }
       },
       "Form": {
         "EventName": "Název akce",
@@ -560,6 +624,13 @@
         "Relay": "Štafety",
         "HundredthPrecision": "Setinová přesnost",
         "Published": "Zveřejněno",
+        "EntriesOpenAt": "Přihlášky otevřeny od",
+        "EntriesOpenAtHelper": "Nech prázdné, pokud mají přihlášky zůstat zatím zavřené.",
+        "EntriesCloseAt": "Přihlášky uzavřeny od",
+        "EntriesCloseAtHelper": "Nech prázdné, pokud nechceš zatím nastavit pevnou uzávěrku.",
+        "ResultsOfficialManuallySetAt": "Finální výsledky potvrzeny",
+        "ResultsOfficialManuallySetAtHelper": "Použij jen pro lokální akce bez napojení na ORIS nebo Eventor.",
+        "ResultsOfficialManagedExternally": "Potvrzení finálních výsledků spravuje napojený externí systém.",
         "DisciplineOptions": {
           "SPRINT": "Sprint",
           "MIDDLE": "Střední trať",
@@ -600,6 +671,8 @@
           "Open": "Importovat z externího IS",
           "Hide": "Skrýt import",
           "SaveLink": "Uložit propojení",
+          "SyncOfficialResults": "Synchronizovat finální výsledky",
+          "SyncOfficialResultsRequiresSavedLink": "Nejdřív ulož změny externího propojení a teprve potom spusť synchronizaci finálních výsledků.",
           "LoadPreview": "Načíst a předvyplnit formulář",
           "Placeholders": {
             "ExternalEventId": "např. 8300",
@@ -620,9 +693,17 @@
             "LinkSaved": "Propojení s externí akcí bylo úspěšně uloženo.",
             "LinkRemoved": "Propojení s externí akcí bylo úspěšně odstraněno.",
             "LinkRemovedPendingSave": "Propojení s externí akcí bude odstraněno po uložení změn.",
+            "OfficialResultsFound": "Finální výsledky byly nalezeny a synchronizovány.",
+            "OfficialResultsNotFound": "Finální výsledky zatím nejsou k dispozici.",
+            "OfficialResultsSyncFailedTitle": "Synchronizace finálních výsledků se nezdařila",
+            "OfficialResultsSyncFailedDescription": "Nepodařilo se synchronizovat finální výsledky z externího systému.",
             "SearchFailedTitle": "Vyhledání se nezdařilo",
             "SearchFailedDescription": "Nepodařilo se vyhledat akce v externím systému."
           }
+        },
+        "Validation": {
+          "EntriesCloseAtAfterOpen": "Uzávěrka přihlášek musí být po otevření přihlášek.",
+          "SplitPublicationAtRequired": "Čas zveřejnění je povinný pro plánované zveřejnění mezičasů."
         },
         "Toast": {
           "CreateSuccess": "Akce byla úspěšně založena!",
@@ -634,6 +715,30 @@
       "Card": {
         "Title": "Parametry akce",
         "Description": "Vyplň jednotlivé detaily akce."
+      },
+      "EntriesResults": {
+        "Card": {
+          "Title": "Zveřejnění a termíny",
+          "Description": "Nastav termíny přihlášek, čas zveřejnění dat a stav výsledků."
+        },
+        "ResultsOfficial": "Výsledky jsou finální",
+        "ResultsOfficialHelper": "Použij tento přepínač u lokálních akcí, jakmile jsou výsledky finální.",
+        "ResultsOfficialManagedExternally": "Potvrzení finálních výsledků spravuje napojený externí systém.",
+        "SplitPublication": {
+          "Label": "Publikace mezičasů",
+          "Helper": "Vlastník akce vidí mezičasy vždy bez omezení.",
+          "At": "Čas zveřejnění mezičasů",
+          "Options": {
+            "UNRESTRICTED": "Zveřejnit bez omezení",
+            "LAST_START": "Zveřejnit v okamžiku startu posledního startujícího v kategorii",
+            "SCHEDULED": "Zveřejnit v jinou dobu",
+            "DISABLED": "Zakázat zveřejnění mezičasů"
+          }
+        },
+        "Toast": {
+          "UpdateSuccess": "Nastavení přihlášek a výsledků bylo aktualizováno.",
+          "UpdateFail": "Nepodařilo se aktualizovat nastavení přihlášek a výsledků."
+        }
       },
       "Password": {
         "GeneratePassword": "Generovat heslo",
@@ -669,7 +774,7 @@
             "Event": "Akce",
             "Location": "Lokalita",
             "Date": "Datum",
-            "EventUri": "Odkaz na akci",
+            "EventUri": "Detail akce",
             "UrlDescription": "Naskenuj QR kód a okamžitě máš online výsledky v telefonu!"
           }
         },

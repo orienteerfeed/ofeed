@@ -8,7 +8,13 @@ import {
 } from '@/components/ui/table';
 import { cn, formatDate } from '@/lib/utils';
 import type { Country } from '@/types/country';
-import type { EventDiscipline, EventFilter, EventSport } from '@/types/event';
+import type {
+  EventDiscipline,
+  EventEntriesStatus,
+  EventFilter,
+  EventSport,
+  EventStatusPrimary,
+} from '@/types/event';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
@@ -26,7 +32,7 @@ import { Button } from '../../components/atoms';
 import { EventCard } from './EventCard';
 import { EventMapView } from './EventMapView';
 import { EventTableRow } from './EventTableRow';
-import type { HomeEventListItem, HomeEventStatus } from './types';
+import type { HomeEventListItem } from './types';
 
 interface EventListProps {
   t: TFunction;
@@ -49,6 +55,11 @@ interface GraphQLEvent {
   sport: EventSport;
   discipline: EventDiscipline;
   relay: boolean;
+  statusSummary: {
+    primary: EventStatusPrimary;
+    entries: EventEntriesStatus;
+    entriesConfigured: boolean;
+  };
 }
 
 interface EventsData {
@@ -120,6 +131,11 @@ const EVENTS_QUERY = gql`
           }
           relay
           discipline
+          statusSummary {
+            primary
+            entries
+            entriesConfigured
+          }
         }
         cursor
       }
@@ -130,20 +146,6 @@ const EVENTS_QUERY = gql`
     }
   }
 `;
-
-// Function for obtaining event status based on date
-const getEventStatus = (dateTimestamp: string): HomeEventStatus => {
-  const eventDate = new Date(dateTimestamp);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const eventDay = new Date(eventDate);
-  eventDay.setHours(0, 0, 0, 0);
-
-  if (eventDay.getTime() === today.getTime()) return 'ongoing';
-  if (eventDay.getTime() > today.getTime()) return 'upcoming';
-  return 'past';
-};
 
 const toOptionalCountry = (
   country: GraphQLEvent['country']
@@ -167,7 +169,6 @@ const convertGraphQLEventToHomeEvent = (
     .replace(/(^-|-$)+/g, '');
 
   const formattedDate = formatDate(graphqlEvent.date);
-  const status = getEventStatus(graphqlEvent.date);
   const country = toOptionalCountry(graphqlEvent.country);
 
   return {
@@ -189,7 +190,9 @@ const convertGraphQLEventToHomeEvent = (
       : {}),
     sport: graphqlEvent.sport,
     discipline: graphqlEvent.discipline,
-    status,
+    status: graphqlEvent.statusSummary.primary,
+    entriesStatus: graphqlEvent.statusSummary.entries,
+    entriesConfigured: graphqlEvent.statusSummary.entriesConfigured,
     relay: graphqlEvent.relay,
   };
 };

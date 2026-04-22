@@ -1,50 +1,57 @@
 {
-    "Back": "Retour",
-    "Or": "Ou",
-    "And": "et",
-    "Table": {
-        "NoData": "Aucune donnée disponible dans le tableau"
-    },
-    "Operations": {
-        "Submit": "Envoyer",
-        "CopiedToClipboard": "Copié dans le presse-papier",
-        "Submitting": "Envoi en cours...",
-        "Success": "Réussi",
-        "Error": "Erreur",
-        "Create": "Créer",
-        "Update": "Mise à jour",
-        "Cancel": "Annuler",
-        "Save": "Sauvegarder",
-        "Configure": "Paramétrer"
-    },
-    "Settings": "Paramètres",
-    "Loading": "Chargement en cours...",
+  "Back": "Retour",
+  "Or": "Ou",
+  "And": "et",
+  "Table": {
+    "NoData": "Aucune donnée disponible dans le tableau"
+  },
+  "Operations": {
+    "Submit": "Envoyer",
+    "CopiedToClipboard": "Copié dans le presse-papier",
+    "Submitting": "Envoi en cours...",
+    "Success": "Réussi",
     "Error": "Erreur",
-    "ErrorMessage": "Oops! Il y a un problème.",
-    "UploadFail": "Echec du chargement",
-    "Orienteering": {
-        "Class": "Catégorie"
-    },
-    "Timer": {
-        "Days": "jours",
-        "Hours": "heures",
-        "Minutes": "minutes",
-        "Seconds": "secondes"
-    },
-    "Share": "Partager",
-    "Print": "Imprimer",
-    "Copy": "Copier",
-    "Public": "Publique",
-    "Private": "Privé",
-    "Search": "Rechercher",
-    "Close": "Fermer",
-    "NoResults": "Aucun résutat",
-    "TypeAtLeastNCharacters": "Saisir au moins {{n}} caractères…",
-    "View": "Visualiser",
-    "ComingSoon": "Prochainement",
-    "NotImplementedTitle": "Pas encore implémenté",
-    "NotImplementedDescription": "Indisponible pour l'instant. Nous travaillons sur cette fonctionnalité.",
-    "Theme": {
-        "Toggle": "Thème \"Toggle\""
-    }
+    "Create": "Créer",
+    "Update": "Mise à jour",
+    "Cancel": "Annuler",
+    "Save": "Sauvegarder",
+    "Configure": "Paramétrer"
+  },
+  "Settings": "Paramètres",
+  "Loading": "Chargement en cours...",
+  "Error": "Erreur",
+  "ErrorMessage": "Oops! Il y a un problème.",
+  "UploadFail": "Echec du chargement",
+  "Orienteering": {
+    "Class": "Catégorie"
+  },
+  "Timer": {
+    "Days": "jours",
+    "Hours": "heures",
+    "Minutes": "minutes",
+    "Seconds": "secondes"
+  },
+  "Share": "Partager",
+  "ShareLink": "Partager le lien",
+  "ShareQR": "Partager QR",
+  "Print": "Imprimer",
+  "Copy": "Copier",
+  "CopyLink": "Copier le lien",
+  "Public": "Publique",
+  "Private": "Privé",
+  "Search": "Rechercher",
+  "Close": "Fermer",
+  "NoResults": "Aucun résutat",
+  "TypeAtLeastNCharacters": "Saisir au moins {{n}} caractères…",
+  "View": "Visualiser",
+  "ComingSoon": "Prochainement",
+  "NotImplementedTitle": "Pas encore implémenté",
+  "NotImplementedDescription": "Indisponible pour l'instant. Nous travaillons sur cette fonctionnalité.",
+  "Experimental": {
+    "Label": "Expérimental",
+    "Description": "Cette fonctionnalité est encore en développement et en test. Elle peut encore évoluer et contenir des erreurs."
+  },
+  "Theme": {
+    "Toggle": "Thème \"Toggle\""
+  }
 }

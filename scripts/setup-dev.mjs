@@ -33,6 +33,7 @@ run("pnpm install");
 const envFiles = [
   ["apps/server/.env.example", "apps/server/.env"],
   ["apps/client/.env.example", "apps/client/.env"],
+  ["apps/board/.env.example", "apps/board/.env"],
 ];
 
 for (const [src, dest] of envFiles) {
@@ -50,3 +51,4 @@ console.log("1) docker compose -f docker-compose.mysql.yaml up -d mysql");
 console.log("2) pnpm db:generate");
 console.log("3) pnpm db:migrate");
 console.log("4) pnpm dev");
+console.log("5) pnpm dev:board  # optional, starts the board app separately");

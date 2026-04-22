@@ -1,10 +1,18 @@
 import { notFound, useNavigate } from '@tanstack/react-router';
-import { Calendar, FileText, Loader2, MapPin, Settings } from 'lucide-react';
+import {
+  Calendar,
+  FileText,
+  Loader2,
+  MapPin,
+  MonitorUp,
+  Settings,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, CountryFlag } from '../../components/atoms';
 import { useAuth } from '../../hooks/useAuth';
 import { useEvent } from '../../hooks/useEvent';
 import { formatDateWithDay, getLocaleKey } from '../../lib/date';
+import { buildBoardEventUrl } from '../../lib/paths/externalLinks';
 import PATHNAMES from '../../lib/paths/pathnames';
 import { MainPageLayout } from '../../templates/MainPageLayout';
 import { EventDetailTabs } from './EventDetailTabs';
@@ -34,6 +42,14 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
   };
   const handleReportClick = () => {
     navigate(PATHNAMES.eventReport(eventId));
+  };
+  const boardEventUrl = event ? buildBoardEventUrl(event.id) : null;
+  const handleBoardClick = () => {
+    if (!boardEventUrl) {
+      return;
+    }
+
+    window.open(boardEventUrl, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
@@ -103,6 +119,19 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
           </div>
           <div className="inline-flex items-center gap-3">
             <NotificationControlPanel />
+            {boardEventUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBoardClick}
+                className="flex items-center gap-2"
+              >
+                <MonitorUp className="w-4 h-4" />
+                <span className="hidden sm:block">
+                  {t('Pages.Event.Detail.OpenBoard')}
+                </span>
+              </Button>
+            )}
             {/* Settings button for event owner or admin */}
             {hasEventOwnerAccess && (
               <>

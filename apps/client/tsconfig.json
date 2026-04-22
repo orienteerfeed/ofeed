@@ -28,8 +28,7 @@
     "allowUnusedLabels": false,
 
     // Path mapping
-    "baseUrl": "src",
-    "paths": { "@/*": ["./*"] }
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src", "tests", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "coverage"],

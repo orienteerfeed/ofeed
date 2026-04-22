@@ -8,6 +8,9 @@ export const myEventSchema = z.object({
   location: z.string().nullable().optional(),
   relay: z.boolean(),
   published: z.boolean(),
+  statusSummary: z.object({
+    primary: z.enum(["DRAFT", "UPCOMING", "LIVE", "DONE"]),
+  }),
 });
 
 export const myEventsResponseSchema = z.object({
@@ -21,4 +24,3 @@ export const myEventsResponseSchema = z.object({
 
 export type MyEvent = z.infer<typeof myEventSchema>;
 export type MyEventsResponse = z.infer<typeof myEventsResponseSchema>;
-

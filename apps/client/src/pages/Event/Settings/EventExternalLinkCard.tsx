@@ -30,6 +30,24 @@ type ExternalEventSearchResponse = {
   data?: ExternalEventSearchItem[];
 };
 
+type OfficialResultsSyncStatus = 'OFFICIAL' | 'NOT_FOUND';
+
+type OfficialResultsSyncResult = {
+  provider: ExternalProvider;
+  status: OfficialResultsSyncStatus;
+  officialResultsDetected: boolean;
+  officialResultsUrl?: string | null;
+  lastCheckedAt: string;
+  lastSuccessfulCheckAt: string;
+  lastDetectedOfficialAt?: string | null;
+  resultsOfficialAt?: string | null;
+  lastError?: string | null;
+};
+
+type OfficialResultsSyncResponse = {
+  data?: OfficialResultsSyncResult;
+};
+
 interface EventExternalLinkCardProps {
   t: TFunction;
   eventId: string;
@@ -58,6 +76,8 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
   const [showSearchResults, setShowSearchResults] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isSyncingOfficialResults, setIsSyncingOfficialResults] =
+    React.useState(false);
   const [isUnlinkRequested, setIsUnlinkRequested] = React.useState(false);
   const latestSearchIdRef = React.useRef(0);
   const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
@@ -81,6 +101,8 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
   const hasLinkChange =
     currentExternalSource !== persistedExternalSource ||
     currentExternalEventId !== persistedExternalEventId;
+  const canSyncOfficialResults =
+    hasPersistedLink && !hasLinkChange && !isUnlinkRequested;
   const isEventorProvider = externalProvider === 'EVENTOR';
 
   const clearSearchTimeout = React.useCallback(() => {
@@ -259,6 +281,63 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
     });
   };
 
+  const handleSyncOfficialResults = async () => {
+    if (!canSyncOfficialResults) {
+      return;
+    }
+
+    setIsSyncingOfficialResults(true);
+
+    try {
+      const payload = await apiPostRef.current<OfficialResultsSyncResponse>(
+        ENDPOINTS.syncOfficialResults(eventId),
+        {
+          apiKey: isEventorProvider
+            ? externalApiKey.trim() || undefined
+            : undefined,
+        }
+      );
+
+      const syncResult = payload?.data;
+
+      toast({
+        title: t('Operations.Success', { ns: 'common' }),
+        description:
+          syncResult?.status === 'OFFICIAL'
+            ? t(
+                'Pages.Event.Form.Import.Toast.OfficialResultsFound',
+                'Official results were found and synchronized.'
+              )
+            : t(
+                'Pages.Event.Form.Import.Toast.OfficialResultsNotFound',
+                'Official results are not available yet.'
+              ),
+        variant: 'default',
+      });
+
+      if (onUpdated) {
+        await onUpdated();
+      }
+    } catch (error) {
+      toast({
+        title: t(
+          'Pages.Event.Form.Import.Toast.OfficialResultsSyncFailedTitle',
+          'Official results sync failed'
+        ),
+        description:
+          error instanceof Error
+            ? error.message
+            : t(
+                'Pages.Event.Form.Import.Toast.OfficialResultsSyncFailedDescription',
+                'Unable to synchronize official results from the external system.'
+              ),
+        variant: 'error',
+      });
+    } finally {
+      setIsSyncingOfficialResults(false);
+    }
+  };
+
   const handleSaveExternalLink = async () => {
     if (!initialData) return;
 
@@ -415,7 +494,7 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleUnlinkRequest}
-              disabled={isSaving}
+              disabled={isSaving || isSyncingOfficialResults}
             >
               <Unplug className="mr-2 h-4 w-4" />
               {t('Pages.Event.Form.Import.Unlink', 'Remove link')}
@@ -555,6 +634,43 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
             </div>
           ) : null}
         </div>
+
+        {hasPersistedLink && (
+          <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  void handleSyncOfficialResults();
+                }}
+                disabled={
+                  isSaving ||
+                  isSyncingOfficialResults ||
+                  !canSyncOfficialResults
+                }
+              >
+                {isSyncingOfficialResults && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t(
+                  'Pages.Event.Form.Import.SyncOfficialResults',
+                  'Synchronize official results'
+                )}
+              </Button>
+            </div>
+
+            {hasLinkChange && (
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  'Pages.Event.Form.Import.SyncOfficialResultsRequiresSavedLink',
+                  'Save external link changes before synchronizing official results.'
+                )}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex justify-end">
           <Button

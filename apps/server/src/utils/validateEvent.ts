@@ -41,11 +41,46 @@ export const eventWriteSchema = z
     country: z.string().min(2).max(2).optional(),
     externalSource: z.enum(['ORIS', 'EVENTOR']).optional().nullable(),
     externalEventId: z.string().min(1).max(128).optional().nullable(),
+    entriesOpenAt: z.string().datetime({ offset: true }).optional().nullable(),
+    entriesCloseAt: z.string().datetime({ offset: true }).optional().nullable(),
+    splitPublicationMode: z
+      .enum(['UNRESTRICTED', 'LAST_START', 'SCHEDULED', 'DISABLED'])
+      .optional(),
+    splitPublicationAt: z.string().datetime({ offset: true }).optional().nullable(),
+    resultsOfficialManuallySetAt: z.string().datetime({ offset: true }).optional().nullable(),
   })
   .refine((value) => Boolean(value.externalSource) === Boolean(value.externalEventId), {
     message: 'externalSource and externalEventId must be provided together.',
     path: ['externalSource'],
   })
+  .refine(
+    (value) =>
+      !value.entriesOpenAt ||
+      !value.entriesCloseAt ||
+      new Date(value.entriesOpenAt).getTime() <= new Date(value.entriesCloseAt).getTime(),
+    {
+      message: 'entriesCloseAt must be greater than or equal to entriesOpenAt.',
+      path: ['entriesCloseAt'],
+    },
+  )
+  .refine(
+    (value) =>
+      value.splitPublicationMode !== 'SCHEDULED' ||
+      Boolean(value.splitPublicationAt && value.splitPublicationAt.trim().length > 0),
+    {
+      message: 'splitPublicationAt is required when splitPublicationMode is SCHEDULED.',
+      path: ['splitPublicationAt'],
+    },
+  )
+  .refine(
+    (value) =>
+      !value.resultsOfficialManuallySetAt || (!value.externalSource && !value.externalEventId),
+    {
+      message:
+        'resultsOfficialManuallySetAt can only be set for local events without external provider.',
+      path: ['resultsOfficialManuallySetAt'],
+    },
+  )
   .passthrough();
 
 export type EventWrite = z.infer<typeof eventWriteSchema>;

@@ -5,12 +5,6 @@ export const competitorById = (_, { id }, context) => {
   return prisma.competitor.findUnique({
     where: { id: id },
     include: {
-      splits: {
-        select: {
-          controlCode: true,
-          time: true,
-        },
-      },
       class: {
         select: {
           id: true,
@@ -56,8 +50,8 @@ export const organisations = async (_, { eventId }) => {
   });
 
   return rows
-    .filter(r => r.organisation && r.organisation.trim() !== '')
-    .map(r => ({ name: r.organisation, competitors: r._count.organisation }));
+    .filter((r) => r.organisation && r.organisation.trim() !== '')
+    .map((r) => ({ name: r.organisation, competitors: r._count.organisation }));
 };
 export const searchOrganisations = async (_, { eventId, q }) => {
   const rows = await prisma.competitor.findMany({
@@ -70,6 +64,6 @@ export const searchOrganisations = async (_, { eventId, q }) => {
     take: 20,
   });
   return rows
-    .filter(r => r.organisation?.trim())
-    .map(r => ({ name: r.organisation, competitors: 0 }));
+    .filter((r) => r.organisation?.trim())
+    .map((r) => ({ name: r.organisation, competitors: 0 }));
 };

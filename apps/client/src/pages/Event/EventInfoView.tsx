@@ -12,15 +12,13 @@ import {
   externalEventSystems,
   type ExternalEventSystemProvider,
 } from '@/lib/paths/externalLinks';
+import {
+  hasDisplayableCourseClimb,
+  hasDisplayableCourseLength,
+} from '@/lib/course-info';
 import { Event } from '@/types/event';
 import { Link } from '@tanstack/react-router';
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  Trophy,
-  Users,
-} from 'lucide-react';
+import { Calendar, Clock, MapPin, Trophy, Users } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CountryFlag } from '../../components/atoms';
@@ -49,59 +47,92 @@ export function EventInfoView({ event }: EventInfoViewProps) {
   const ExternalProviderLogo =
     externalProvider === 'EVENTOR' ? EventorIcon : OrisIcon;
 
-  // Helper function to determine badge variant based on event status
-  const getStatusBadgeVariant = (status: string) => {
+  const getPrimaryBadgeVariant = (
+    status: typeof event.statusSummary.primary
+  ) => {
     switch (status) {
-      case 'completed':
+      case 'DONE':
         return 'default' as const;
-      case 'live':
+      case 'LIVE':
         return 'destructive' as const;
-      case 'upcoming':
+      case 'UPCOMING':
+      case 'DRAFT':
         return 'secondary' as const;
       default:
         return 'secondary' as const;
     }
   };
 
-  // Helper function to get status text
-  const getStatusText = (status: string) => {
+  const getPrimaryStatusText = (status: typeof event.statusSummary.primary) => {
     switch (status) {
-      case 'completed':
-        return t('Pages.Event.Detail.StatusText.Completed');
-      case 'live':
-        return t('Pages.Event.Detail.StatusText.Live');
-      case 'upcoming':
-        return t('Pages.Event.Detail.StatusText.Upcoming');
+      case 'DONE':
+        return t('Pages.Event.Detail.StatusText.Primary.DONE');
+      case 'LIVE':
+        return t('Pages.Event.Detail.StatusText.Primary.LIVE');
+      case 'UPCOMING':
+        return t('Pages.Event.Detail.StatusText.Primary.UPCOMING');
       default:
-        return '';
+        return t('Pages.Event.Detail.StatusText.Primary.DRAFT');
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusText = () => {
+    if (
+      event.statusSummary.results === 'UNOFFICIAL' ||
+      event.statusSummary.results === 'OFFICIAL'
+    ) {
+      return t(
+        `Pages.Event.Detail.Status.Results.${event.statusSummary.results}`,
+        event.statusSummary.results === 'OFFICIAL'
+          ? 'Final results'
+          : 'Unofficial results'
+      );
+    }
+
+    return getPrimaryStatusText(event.statusSummary.primary);
+  };
+
+  const getPrimaryStatusLabel = (
+    status: typeof event.statusSummary.primary
+  ) => {
     switch (status) {
-      case 'completed':
-        return t('Pages.Event.Detail.Status.Completed');
-      case 'live':
-        return t('Pages.Event.Detail.Status.Live');
-      case 'upcoming':
-        return t('Pages.Event.Detail.Status.Upcoming');
+      case 'DONE':
+        return t('Pages.Event.Detail.Status.Primary.DONE');
+      case 'LIVE':
+        return t('Pages.Event.Detail.Status.Primary.LIVE');
+      case 'UPCOMING':
+        return t('Pages.Event.Detail.Status.Primary.UPCOMING');
       default:
-        return t('Pages.Event.Detail.Status.Draft');
+        return t('Pages.Event.Detail.Status.Primary.DRAFT');
     }
   };
 
-  // Determine event status based on date and published status
-  const getEventStatus = (event: Event): string => {
-    const now = new Date();
-    const eventDate = new Date(event.date);
-
-    if (!event.published) return 'draft';
-    if (now > eventDate) return 'completed';
-    if (now.toDateString() === eventDate.toDateString()) return 'live';
-    return 'upcoming';
+  const getResultsBadgeVariant = (
+    status: typeof event.statusSummary.results
+  ) => {
+    switch (status) {
+      case 'OFFICIAL':
+        return 'default' as const;
+      case 'LIVE':
+        return 'outline' as const;
+      case 'UNOFFICIAL':
+        return 'outline' as const;
+      default:
+        return 'secondary' as const;
+    }
   };
 
-  const eventStatus = getEventStatus(event);
+  const getEntriesBadgeVariant = (
+    status: typeof event.statusSummary.entries
+  ) => (status === 'OPEN' ? ('outline' as const) : ('secondary' as const));
+
+  const officialResultsProvider =
+    event.statusSummary.officialResultsSource === 'EVENTOR'
+      ? 'EVENTOR'
+      : event.statusSummary.officialResultsSource === 'ORIS'
+        ? 'ORIS'
+        : null;
+  const showResultsBadge = event.statusSummary.results === 'LIVE';
 
   return (
     <div className="space-y-6">
@@ -170,7 +201,6 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                 </div>
               </div>
             )}
-
           </div>
 
           {/* Rest of the content remains in single column */}
@@ -198,42 +228,79 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                     ))}
                   </div>
                   <div className="hidden flex-wrap gap-2 sm:flex">
-                    {sortedClasses.map(cls => (
-                      <Link
-                        key={cls.id}
-                        to="/events/$eventId"
-                        params={{ eventId: event.id }}
-                        search={{ tab: 'results', class: cls.name }}
-                        className="inline-block"
-                      >
-                        <Badge variant="secondary" className="cursor-pointer">
-                          {cls.name}
-                          {cls.length && ` • ${cls.length}m`}
-                          {cls.climb && ` • ${cls.climb}m`}
-                        </Badge>
-                      </Link>
-                    ))}
+                    {sortedClasses.map(cls => {
+                      const showLength = hasDisplayableCourseLength(cls.length);
+                      const showClimb = hasDisplayableCourseClimb(cls);
+                      const lengthLabel = showLength
+                        ? ` • ${cls.length ?? 0}m`
+                        : '';
+                      const climbLabel = showClimb
+                        ? ` • ${cls.climb ?? 0}m`
+                        : '';
+
+                      return (
+                        <Link
+                          key={cls.id}
+                          to="/events/$eventId"
+                          params={{ eventId: event.id }}
+                          search={{ tab: 'results', class: cls.name }}
+                          className="inline-block"
+                        >
+                          <Badge variant="secondary" className="cursor-pointer">
+                            {cls.name}
+                            {lengthLabel}
+                            {climbLabel}
+                          </Badge>
+                        </Link>
+                      );
+                    })}
                   </div>
                 </div>
-                {externalEventUrl && (
+                {(externalEventUrl ||
+                  event.statusSummary.officialResultsUrl) && (
                   <div className="mt-3">
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="px-3 [&_svg]:h-5 [&_svg]:w-auto"
-                    >
-                      <a
-                        href={externalEventUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={t('Pages.Event.Detail.OpenInExternalSystem', {
-                          provider: externalProviderLabel,
-                        })}
-                        className="inline-flex items-center justify-center"
-                      >
-                        <ExternalProviderLogo />
-                      </a>
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {externalEventUrl && (
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="px-3 [&_svg]:h-5 [&_svg]:w-auto"
+                        >
+                          <a
+                            href={externalEventUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t(
+                              'Pages.Event.Detail.OpenInExternalSystem',
+                              {
+                                provider: externalProviderLabel,
+                              }
+                            )}
+                            className="inline-flex items-center justify-center"
+                          >
+                            <ExternalProviderLogo />
+                          </a>
+                        </Button>
+                      )}
+
+                      {event.statusSummary.officialResultsUrl &&
+                        officialResultsProvider && (
+                          <Button asChild variant="outline">
+                            <a
+                              href={event.statusSummary.officialResultsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <span>
+                                {t(
+                                  'Pages.Event.Detail.OfficialResultsLink',
+                                  'Official results'
+                                )}
+                              </span>
+                            </a>
+                          </Button>
+                        )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -283,14 +350,35 @@ export function EventInfoView({ event }: EventInfoViewProps) {
         <CardContent>
           <div className="flex items-center gap-2">
             <Badge
-              variant={getStatusBadgeVariant(eventStatus)}
+              variant={getPrimaryBadgeVariant(event.statusSummary.primary)}
               className="text-sm"
             >
-              {getStatusLabel(eventStatus)}
+              {getPrimaryStatusLabel(event.statusSummary.primary)}
             </Badge>
-            <span className="text-sm text-muted-foreground">
-              {getStatusText(eventStatus)}
-            </span>
+            {showResultsBadge && (
+              <Badge
+                variant={getResultsBadgeVariant(event.statusSummary.results)}
+                className="text-sm"
+              >
+                {t(
+                  `Pages.Event.Detail.Status.Results.${event.statusSummary.results}`
+                )}
+              </Badge>
+            )}
+            {event.statusSummary.entriesConfigured && (
+              <Badge
+                variant={getEntriesBadgeVariant(event.statusSummary.entries)}
+                className="text-sm"
+              >
+                {t(
+                  `Pages.Event.Detail.Status.Entries.${event.statusSummary.entries}`
+                )}
+              </Badge>
+            )}
+          </div>
+
+          <div className="mt-2 text-sm text-muted-foreground">
+            {getStatusText()}
           </div>
 
           {!event.published && (

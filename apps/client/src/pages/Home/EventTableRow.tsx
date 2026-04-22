@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
 import { Calendar, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
-import type { HomeEventListItem, HomeEventStatus } from './types';
+import type { HomeEventListItem } from './types';
 
 interface EventTableRowProps {
   t: TFunction;
@@ -20,16 +20,11 @@ export function EventTableRow({
   className,
   style,
 }: EventTableRowProps) {
-  const statusColors: Record<HomeEventStatus, string> = {
-    ongoing: 'bg-primary text-primary-foreground',
-    upcoming: 'bg-secondary text-secondary-foreground',
-    past: 'bg-muted text-muted-foreground',
-  };
-
-  const statusLabels: Record<HomeEventStatus, string> = {
-    ongoing: t('Pages.Event.Tabs.Ongoing').toUpperCase(),
-    upcoming: t('Pages.Event.Tabs.Upcoming').toUpperCase(),
-    past: t('Pages.Event.Tabs.Past').toUpperCase(),
+  const statusColors: Record<typeof event.status, string> = {
+    LIVE: 'bg-primary text-primary-foreground',
+    UPCOMING: 'bg-secondary text-secondary-foreground',
+    DONE: 'bg-muted text-muted-foreground',
+    DRAFT: 'bg-muted text-muted-foreground',
   };
   const locationLabel =
     [event.location, event.country?.countryName].filter(Boolean).join(', ') ||
@@ -89,21 +84,21 @@ export function EventTableRow({
 
       <TableCell>
         <Badge className={cn('font-mono text-xs', statusColors[event.status])}>
-          {statusLabels[event.status]}
+          {t(`Pages.Event.Detail.Status.Primary.${event.status}`)}
         </Badge>
       </TableCell>
 
       <TableCell>
-        <Badge
-          variant="outline"
-          className={cn(
-            'font-mono text-xs',
-            event.status === 'past' &&
-              'text-muted-foreground border-muted-foreground'
-          )}
-        >
-          {event.status === 'past' ? 'CLOSED' : 'OPEN'}
-        </Badge>
+        {event.entriesConfigured ? (
+          <Badge
+            variant={event.entriesStatus === 'OPEN' ? 'outline' : 'secondary'}
+            className="font-mono text-xs"
+          >
+            {t(`Pages.Event.Detail.Status.Entries.${event.entriesStatus}`)}
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        )}
       </TableCell>
 
       <TableCell>

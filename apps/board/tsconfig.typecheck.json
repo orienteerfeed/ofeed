@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "./vite.config.ts",
+    "./vitest.config.ts",
+    "./playwright.config.ts"
+  ],
+  "exclude": ["src/**/__tests__/*", "src/**/*.spec.ts", "e2e/**/*"],
+  "compilerOptions": {
+    "composite": true,
+    "types": ["node", "vite/client"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.typecheck.tsbuildinfo"
+  }
+}

@@ -2,6 +2,7 @@ export * from './Badge';
 export * from './Button';
 export * from './Checkbox';
 export * from './CountryFlag';
+export * from './Experimental';
 export * from './ExternalLink';
 export * from './FlagIcon';
 export * from './Input';

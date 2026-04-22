@@ -54,8 +54,8 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
+            src: 'images/logos/2025-04-11_orienteerfeed_logo_48x48px_logo_favicon.png',
+            sizes: '48x48',
             type: 'image/png',
           },
           {

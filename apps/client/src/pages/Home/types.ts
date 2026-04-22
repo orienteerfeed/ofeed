@@ -1,7 +1,10 @@
 import type { Country } from '@/types/country';
-import type { EventDiscipline, EventSport } from '@/types/event';
-
-export type HomeEventStatus = 'upcoming' | 'ongoing' | 'past';
+import type {
+  EventDiscipline,
+  EventEntriesStatus,
+  EventSport,
+  EventStatusPrimary,
+} from '@/types/event';
 
 export interface HomeEventListItem {
   id: string;
@@ -17,5 +20,7 @@ export interface HomeEventListItem {
   sport: EventSport;
   discipline: EventDiscipline;
   relay: boolean;
-  status: HomeEventStatus;
+  status: EventStatusPrimary;
+  entriesStatus: EventEntriesStatus;
+  entriesConfigured: boolean;
 }

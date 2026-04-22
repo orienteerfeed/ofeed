@@ -28,6 +28,9 @@ import {
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CompetitorName } from './CompetitorName';
+import {
+  filterValidSplitResultCompetitors,
+} from './split-results.utils';
 
 // Types
 interface Split {
@@ -154,11 +157,11 @@ const getLegTime = (splits: Split[], index: number): number | null => {
 };
 
 const calculatePositions = (runners: Competitor[]): ProcessedCompetitor[] => {
-  const clonedRunners = runners.map(runner => ({ ...runner }));
+  const clonedRunners: ProcessedCompetitor[] = runners.map(runner => ({
+    ...runner,
+  }));
 
-  const finishedRunners = clonedRunners.filter(
-    runner => runner.status === 'OK' && runner.time
-  ) as ProcessedCompetitor[];
+  const finishedRunners = filterValidSplitResultCompetitors(clonedRunners);
 
   finishedRunners.sort((a, b) => (a.time || 0) - (b.time || 0));
 
@@ -451,6 +454,16 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     return calculatePositions(sortedCompetitors);
   }, [sortedCompetitors]);
 
+  const validResultCompetitors = useMemo(
+    () => filterValidSplitResultCompetitors(sortedCompetitors),
+    [sortedCompetitors],
+  );
+
+  const validProcessedCompetitors = useMemo(
+    () => filterValidSplitResultCompetitors(processedCompetitors),
+    [processedCompetitors],
+  );
+
   // Build the list of all controlCodes from first competitor
   const controlCodes = useMemo(() => {
     return sortedCompetitors[0]?.splits.map(split => split.controlCode) || [];
@@ -472,7 +485,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     controlCodes.forEach((code, idx) => {
       const legResults: Array<{ id: string; time: number }> = [];
 
-      competitors.forEach(c => {
+      validResultCompetitors.forEach(c => {
         const legTime = getLegTime(c.splits, idx);
         if (legTime !== null && !isNaN(legTime)) {
           legResults.push({ id: c.id, time: legTime });
@@ -514,16 +527,20 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     });
 
     return { bestLegTimes, legPositions, legLosses };
-  }, [competitors, controlCodes]);
+  }, [controlCodes, validResultCompetitors]);
 
   // Calculate competitor loss statistics
   const competitorLossStats = useMemo(() => {
-    return calculateCompetitorLossStats(competitors, controlCodes, legLosses);
-  }, [competitors, controlCodes, legLosses]);
+    return calculateCompetitorLossStats(
+      validResultCompetitors,
+      controlCodes,
+      legLosses,
+    );
+  }, [validResultCompetitors, controlCodes, legLosses]);
 
   const splitPositions = useMemo(() => {
-    return calculateSplitPositions(processedCompetitors, controlCodes);
-  }, [processedCompetitors, controlCodes]);
+    return calculateSplitPositions(validProcessedCompetitors, controlCodes);
+  }, [validProcessedCompetitors, controlCodes]);
 
   const visibleCompetitors = sortedAndProcessedCompetitors.filter(
     c => !['Active', 'Inactive', 'Finished'].includes(c.status)
@@ -566,6 +583,38 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     );
   };
 
+  const getSortFieldLabel = (field: SortField) => {
+    if (field === 'position') {
+      return t('Pages.Event.Splits.SortFieldPosition');
+    }
+
+    if (field === 'time') {
+      return t('Pages.Event.Splits.SortFieldFinishTime');
+    }
+
+    if (field === 'loss') {
+      return t('Pages.Event.Splits.SortFieldLossToLeader');
+    }
+
+    if (field === 'final-leg') {
+      return t('Pages.Event.Splits.SortFieldFinalLegTime');
+    }
+
+    if (field.startsWith('leg-')) {
+      return t('Pages.Event.Splits.SortFieldLeg', {
+        number: parseInt(field.split('-')[1] ?? '0') + 1,
+      });
+    }
+
+    if (field.startsWith('split-')) {
+      return t('Pages.Event.Splits.SortFieldSplit', {
+        number: parseInt(field.split('-')[1] ?? '0') + 1,
+      });
+    }
+
+    return field;
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -605,17 +654,18 @@ export const SplitTable: React.FC<SplitTableProps> = ({
         {/* Sorting Controls */}
         <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Sorted by:</span>
+            <span className="text-sm text-muted-foreground">
+              {t('Pages.Event.Splits.SortedBy')}
+            </span>
             <Badge variant="secondary" className="font-medium">
-              {sortConfig.field === 'position' && 'Position'}
-              {sortConfig.field === 'time' && 'Finish Time'}
-              {sortConfig.field === 'loss' && 'Loss to Leader'}
-              {sortConfig.field === 'final-leg' && 'Final Leg Time'}
-              {sortConfig.field.startsWith('leg-') &&
-                `Leg ${parseInt(sortConfig.field.split('-')[1] ?? '0') + 1}`}
-              {sortConfig.field.startsWith('split-') &&
-                `Split ${parseInt(sortConfig.field.split('-')[1] ?? '0') + 1}`}{' '}
-              {sortConfig.direction === 'asc' ? '(Asc)' : '(Desc)'}
+              {t('Pages.Event.Splits.SortSummary', {
+                direction: t(
+                  sortConfig.direction === 'asc'
+                    ? 'Pages.Event.Splits.SortDirectionAsc'
+                    : 'Pages.Event.Splits.SortDirectionDesc',
+                ),
+                field: getSortFieldLabel(sortConfig.field),
+              })}
             </Badge>
           </div>
           <Button
@@ -625,7 +675,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
             className="h-8 gap-1"
           >
             <RotateCcw className="h-3 w-3" />
-            Reset Sort
+            {t('Pages.Event.Splits.ResetSort')}
           </Button>
         </div>
 
@@ -735,23 +785,23 @@ export const SplitTable: React.FC<SplitTableProps> = ({
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-100 border border-green-300 rounded" />
-              <span>Fastest leg time</span>
+              <span>{t('Pages.Event.Splits.LegendFastestLegTime')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded" />
-              <span>Best cumulative time</span>
+              <span>{t('Pages.Event.Splits.LegendBestCumulativeTime')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded" />
-              <span>Significant deviation (&gt;1.5σ)</span>
+              <span>{t('Pages.Event.Splits.LegendSignificantDeviation')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
-              <span>Major deviation (&gt;2.5σ)</span>
+              <span>{t('Pages.Event.Splits.LegendMajorDeviation')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-red-200 border border-red-400 rounded" />
-              <span>Critical deviation (&gt;4.0σ)</span>
+              <span>{t('Pages.Event.Splits.LegendCriticalDeviation')}</span>
             </div>
           </div>
         </div>

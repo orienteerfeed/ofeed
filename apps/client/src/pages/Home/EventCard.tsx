@@ -6,23 +6,18 @@ import { Link } from '@tanstack/react-router';
 import { t } from 'i18next';
 import { Calendar, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
-import type { HomeEventListItem, HomeEventStatus } from './types';
+import type { HomeEventListItem } from './types';
 
 interface EventCardProps {
   event: HomeEventListItem;
 }
 
 export const EventCard = ({ event }: EventCardProps) => {
-  const statusColors: Record<HomeEventStatus, string> = {
-    ongoing: 'bg-primary text-primary-foreground',
-    upcoming: 'bg-secondary text-secondary-foreground',
-    past: 'bg-muted text-muted-foreground',
-  };
-
-  const statusLabels: Record<HomeEventStatus, string> = {
-    ongoing: 'Ongoing',
-    upcoming: 'Upcoming',
-    past: 'Past',
+  const statusColors: Record<typeof event.status, string> = {
+    LIVE: 'bg-primary text-primary-foreground',
+    UPCOMING: 'bg-secondary text-secondary-foreground',
+    DONE: 'bg-muted text-muted-foreground',
+    DRAFT: 'bg-muted text-muted-foreground',
   };
   const locationLabel =
     [event.location, event.country?.countryName].filter(Boolean).join(', ') ||
@@ -61,12 +56,7 @@ export const EventCard = ({ event }: EventCardProps) => {
               statusColors[event.status]
             )}
           >
-            {t(
-              `Pages.Event.Tabs.${statusLabels[event.status]}` as
-                | 'Pages.Event.Tabs.Past'
-                | 'Pages.Event.Tabs.Today'
-                | 'Pages.Event.Tabs.Upcoming'
-            )}
+            {t(`Pages.Event.Detail.Status.Primary.${event.status}`)}
           </Badge>
 
           {/* User Entry & Country Flag */}

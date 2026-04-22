@@ -46,6 +46,10 @@ export const eventImportPreviewBodySchema = z.object({
   apiKey: z.string().trim().min(1).max(255).optional(),
 });
 
+export const eventOfficialResultsSyncBodySchema = z.object({
+  apiKey: z.string().trim().min(1).max(255).optional(),
+});
+
 export const externalCompetitorUpdateBodySchema = updateCompetitorSchema
   .extend({
     useExternalId: z.boolean(),
@@ -94,5 +98,6 @@ export type StateChangeBody = z.infer<typeof stateChangeBodySchema>;
 export type ExternalEventProvider = z.infer<typeof externalEventProviderSchema>;
 export type EventImportSearchBody = z.infer<typeof eventImportSearchBodySchema>;
 export type EventImportPreviewBody = z.infer<typeof eventImportPreviewBodySchema>;
+export type EventOfficialResultsSyncBody = z.infer<typeof eventOfficialResultsSyncBodySchema>;
 export type ExternalCompetitorUpdateBody = z.infer<typeof externalCompetitorUpdateBodySchema>;
 export type EventConnectionCheckBody = z.infer<typeof eventConnectionCheckBodySchema>;

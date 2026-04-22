@@ -7,9 +7,9 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { TFunction } from 'i18next';
-import { Copy, Printer, Send } from 'lucide-react';
+import { Copy, Printer, Send, Share2 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '../../../components/atoms';
 import { config } from '../../../config';
 import { PATHNAMES } from '../../../lib/paths/pathnames';
@@ -32,6 +32,30 @@ export const EventLinkCard: React.FC<EventLinkCardProps> = ({
 }) => {
   const qrRef = useRef<HTMLDivElement>(null);
 
+  // Pre-bake the logo with a white frame into a data URL so qrcode.react renders
+  // the padded version natively via imageSettings.
+  const LOGO_SIZE = 90;
+  const LOGO_PADDING = 20; // white frame on each side → total slot 130×130
+  const LOGO_SLOT = LOGO_SIZE + LOGO_PADDING * 2;
+  const [logoDataUrl, setLogoDataUrl] = useState(
+    '/images/logos/2025-04-24_orienteerfeed_logo_light_192x192.png'
+  );
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = LOGO_SLOT;
+      c.height = LOGO_SLOT;
+      const ctx = c.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, LOGO_SLOT, LOGO_SLOT);
+      ctx.drawImage(img, LOGO_PADDING, LOGO_PADDING, LOGO_SIZE, LOGO_SIZE);
+      setLogoDataUrl(c.toDataURL('image/png'));
+    };
+    img.src = '/images/logos/2025-04-24_orienteerfeed_logo_light_192x192.png';
+  }, []);
+
   const eventUrl = new URL(
     config.PUBLIC_URL + PATHNAMES.eventDetail(eventId).url,
     config.PUBLIC_URL
@@ -46,7 +70,23 @@ export const EventLinkCard: React.FC<EventLinkCardProps> = ({
     });
   };
 
-  const handleShare = async () => {
+  const handleShareLink = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: eventName,
+          text: `${eventName}\n📅 ${eventDateFormatted}\n📍 ${eventLocation}`,
+          url: eventUrl,
+        });
+      } catch (error) {
+        console.error('Error sharing event link:', error);
+      }
+    } else {
+      alert('Web Share API is not supported in your browser.');
+    }
+  };
+
+  const handleShareQR = async () => {
     if (navigator.share) {
       try {
         const canvas = qrRef.current?.querySelector('canvas');
@@ -82,7 +122,6 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
   };
 
   const generateQRAndPrint = () => {
-    // Wait for the QR Code to render, then convert it to an image
     setTimeout(() => {
       const canvas = qrRef.current?.querySelector('canvas');
 
@@ -93,11 +132,9 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
 
       const qrImageUrl = canvas.toDataURL('image/png');
 
-      // Open print window
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
 
-      // Generate printable HTML content - full A4 page
       printWindow.document.write(`
       <html>
         <head>
@@ -145,7 +182,6 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
                 font-weight: 900;
                 color: #000;
                 margin: 0;
-                text-transform: uppercase;
                 letter-spacing: 4px;
                 line-height: 1.1;
               }
@@ -155,7 +191,6 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
                 font-weight: 600;
                 color: #333;
                 margin-top: 10px;
-                text-transform: uppercase;
                 letter-spacing: 2px;
               }
 
@@ -254,7 +289,6 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
                 font-weight: 900;
                 color: #000;
                 margin: 0;
-                text-transform: uppercase;
                 letter-spacing: 4px;
                 line-height: 1.1;
               }
@@ -264,7 +298,6 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
                 font-weight: 600;
                 color: #333;
                 margin-top: 10px;
-                text-transform: uppercase;
                 letter-spacing: 2px;
               }
 
@@ -325,7 +358,7 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
           <div class="print-container">
             <!-- Header Section -->
             <div class="header-section">
-              <h1 class="main-header">OFEED</h1>
+              <h1 class="main-header">${t('Pages.Event.Link.PrintWindow.Header')}</h1>
               <div class="sub-header">${t('Pages.Event.Link.PrintWindow.EventQR')}</div>
             </div>
 
@@ -348,6 +381,7 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
             <div class="url-section">
               ${eventUrl}
             </div>
+          </div>
 
           <script>
             let isPrinting = false;
@@ -423,7 +457,17 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
       <CardContent className="space-y-4">
         {/* Hidden QR Code for sharing/printing */}
         <div ref={qrRef} className="hidden">
-          <QRCodeCanvas value={eventUrl} size={600} level="H" />
+          <QRCodeCanvas
+            value={eventUrl}
+            size={600}
+            level="H"
+            imageSettings={{
+              src: logoDataUrl,
+              height: LOGO_SLOT,
+              width: LOGO_SLOT,
+              excavate: true,
+            }}
+          />
         </div>
 
         {/* Event URL Display */}
@@ -431,32 +475,32 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
           <Label className="text-sm font-medium">
             {t('Pages.Event.Link.Card.Navigator.EventUri')}
           </Label>
-          <div className="p-3 bg-muted rounded-md">
-            <p className="text-sm break-all">{eventUrl}</p>
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+            <p className="text-sm break-all flex-1">{eventUrl}</p>
+            <Button
+              onClick={copyLinkToClipboard}
+              variant="outline"
+              size="sm"
+              className="shrink-0 h-8 w-8 p-0"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={handleShare} variant="outline" className="flex-1">
-            <Send className="h-4 w-4 mr-2" />
-            {t('Share', { ns: 'common' })}
+        <div className="flex gap-2">
+          <Button onClick={handleShareLink} variant="outline" className="flex-1">
+            <Share2 className="h-4 w-4 mr-2" />
+            {t('ShareLink', { ns: 'common' })}
           </Button>
-          <Button
-            onClick={generateQRAndPrint}
-            variant="outline"
-            className="flex-1"
-          >
+          <Button onClick={handleShareQR} variant="outline" className="flex-1">
+            <Send className="h-4 w-4 mr-2" />
+            {t('ShareQR', { ns: 'common' })}
+          </Button>
+          <Button onClick={generateQRAndPrint} variant="outline" className="flex-1">
             <Printer className="h-4 w-4 mr-2" />
             {t('Print', { ns: 'common' })}
-          </Button>
-          <Button
-            onClick={copyLinkToClipboard}
-            variant="outline"
-            className="flex-1"
-          >
-            <Copy className="h-4 w-4 mr-2" />
-            {t('Copy', { ns: 'common' })}
           </Button>
         </div>
 

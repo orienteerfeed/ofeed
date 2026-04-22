@@ -35,6 +35,7 @@ import {
   deletePublicObjectsByPrefix,
   putPublicObject,
 } from '../../lib/storage/s3.js';
+import type { AppPrismaClient } from '../../db/prisma-client.js';
 import {
   changeCompetitorStatus,
   deleteAllEventData,
@@ -49,12 +50,14 @@ import {
   loadExternalEventPreview,
   searchExternalEvents,
 } from './event.import.service.js';
+import { syncOfficialResultsForEvent } from './event.external-results-sync.service.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { AppBindings } from '../../types/index.js';
 import {
   changelogQuerySchema,
   eventImportPreviewBodySchema,
   eventImportSearchBodySchema,
+  eventOfficialResultsSyncBodySchema,
   externalCompetitorUpdateBodySchema,
   eventCompetitorExternalParamsSchema,
   eventCompetitorParamsSchema,
@@ -62,6 +65,8 @@ import {
   generatePasswordBodySchema,
   stateChangeBodySchema,
 } from './event.schema.js';
+
+const appPrisma = prisma as AppPrismaClient;
 
 type BodyMode = 'auto' | 'json' | 'form' | 'none';
 
@@ -262,6 +267,69 @@ function normalizeOptionalDateField(value: unknown, fieldName: string): Date | n
   return dateValue;
 }
 
+function parseOptionalIsoDateTime(value: string | null | undefined): Date | null | undefined {
+  if (typeof value === 'undefined') {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  const parsed = new Date(trimmed);
+  if (!Number.isFinite(parsed.getTime())) {
+    throw new ValidationError('Invalid datetime value.');
+  }
+
+  return parsed;
+}
+
+async function syncExternalResultsStateForEvent(params: {
+  eventId: string;
+  externalSource: 'ORIS' | 'EVENTOR' | null | undefined;
+  externalEventId: string | null | undefined;
+  reset: boolean;
+}) {
+  const normalizedExternalEventId = params.externalEventId?.trim();
+  const hasExternalLink = Boolean(params.externalSource && normalizedExternalEventId);
+
+  if (!hasExternalLink || !params.externalSource) {
+    await appPrisma.eventExternalResultsSyncState.deleteMany({
+      where: {
+        eventId: params.eventId,
+      },
+    });
+    return;
+  }
+
+  await appPrisma.eventExternalResultsSyncState.upsert({
+    where: {
+      eventId: params.eventId,
+    },
+    create: {
+      eventId: params.eventId,
+      provider: params.externalSource,
+    },
+    update: params.reset
+      ? {
+          provider: params.externalSource,
+          lastCheckedAt: null,
+          lastSuccessfulCheckAt: null,
+          lastDetectedOfficialAt: null,
+          lastStatus: 'PENDING',
+          lastError: null,
+        }
+      : {
+          provider: params.externalSource,
+        },
+  });
+}
+
 function logSecureRouteResult(c: Context<AppBindings>, statusCode: number) {
   const details = {
     method: c.req.method,
@@ -442,6 +510,39 @@ export function registerSecureEventRoutes(router) {
         return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
       }
     }),
+  );
+
+  router.post(
+    '/:eventId/import/sync-official-results',
+    routeWithValidation(
+      {
+        paramsSchema: eventIdParamsSchema,
+        bodySchema: eventOfficialResultsSyncBodySchema,
+      },
+      async ({ req, res }) => {
+        const { eventId } = req.params;
+        const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId);
+
+        if (!ownership.ok) {
+          return ownership.response;
+        }
+
+        try {
+          const syncResult = await syncOfficialResultsForEvent(appPrisma, {
+            eventId,
+            apiKey: req.body.apiKey,
+          });
+
+          return res.status(200).json(successResponse('OK', { data: syncResult }, res.statusCode));
+        } catch (error) {
+          if (error instanceof ExternalImportError) {
+            return res.status(error.statusCode).json(errorResponse(error.message, res.statusCode));
+          }
+
+          return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+        }
+      },
+    ),
   );
 
   // Readable password generator for Node.js backend service
@@ -631,6 +732,11 @@ export function registerSecureEventRoutes(router) {
         relay,
         externalSource,
         externalEventId,
+        entriesOpenAt,
+        entriesCloseAt,
+        splitPublicationMode,
+        splitPublicationAt,
+        resultsOfficialManuallySetAt,
       } = req.body;
 
       const userId = getNumericJwtUserId(req);
@@ -644,12 +750,18 @@ export function registerSecureEventRoutes(router) {
       try {
         const dateTime = new Date(date);
         const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
+        const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
+        const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
+        const parsedSplitPublicationAt = parseOptionalIsoDateTime(splitPublicationAt);
+        const parsedResultsOfficialManuallySetAt = parseOptionalIsoDateTime(
+          resultsOfficialManuallySetAt,
+        );
 
         if (!normalizedZeroTime) {
           throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
         }
 
-        const insertedEventId = await prisma.event.create({
+        const createdEvent = await appPrisma.event.create({
           data: {
             name,
             date: dateTime,
@@ -670,16 +782,36 @@ export function registerSecureEventRoutes(router) {
             relay,
             externalSource,
             externalEventId,
+            entriesOpenAt: parsedEntriesOpenAt,
+            entriesCloseAt: parsedEntriesCloseAt,
+            ...(typeof splitPublicationMode !== 'undefined'
+              ? {
+                  splitPublicationMode,
+                  splitPublicationAt:
+                    splitPublicationMode === 'SCHEDULED' ? parsedSplitPublicationAt : null,
+                }
+              : {}),
+            resultsOfficialManuallySetAt: externalSource
+              ? null
+              : parsedResultsOfficialManuallySetAt,
             authorId: userId,
           },
         });
+
+        await syncExternalResultsStateForEvent({
+          eventId: createdEvent.id,
+          externalSource,
+          externalEventId,
+          reset: false,
+        });
+
         return res.status(200).json(
           successResponse(
             'OK',
             {
               data: {
-                ...insertedEventId,
-                zeroTime: normalizeUtcTimeString(insertedEventId.zeroTime),
+                ...createdEvent,
+                zeroTime: normalizeUtcTimeString(createdEvent.zeroTime),
               },
             },
             res.statusCode,
@@ -766,7 +898,7 @@ export function registerSecureEventRoutes(router) {
           const format = getImageFormat(uploadedFile);
           const prefix = `events/${eventId}/featured-`;
 
-          const existingEvent = await prisma.event.findUnique({
+          const existingEvent = await appPrisma.event.findUnique({
             where: { id: eventId },
             select: { featuredImageKey: true },
           });
@@ -956,6 +1088,11 @@ export function registerSecureEventRoutes(router) {
           relay,
           externalSource,
           externalEventId,
+          entriesOpenAt,
+          entriesCloseAt,
+          splitPublicationMode,
+          splitPublicationAt,
+          resultsOfficialManuallySetAt,
         } = req.body;
 
         const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId, {
@@ -967,8 +1104,16 @@ export function registerSecureEventRoutes(router) {
           return ownership.response;
         }
 
+        const { userId } = ownership;
+
         try {
           const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
+          const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
+          const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
+          const parsedSplitPublicationAt = parseOptionalIsoDateTime(splitPublicationAt);
+          const parsedResultsOfficialManuallySetAt = parseOptionalIsoDateTime(
+            resultsOfficialManuallySetAt,
+          );
           if (!normalizedZeroTime) {
             throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
           }
@@ -978,8 +1123,21 @@ export function registerSecureEventRoutes(router) {
           // 🔥 Normalize latitude and longitude
           const dbLatitude = normalizeOptionalCoordinate(latitude, 'latitude');
           const dbLongitude = normalizeOptionalCoordinate(longitude, 'longitude');
+          const existingEvent = await prisma.event.findUnique({
+            where: { id: eventId },
+            select: {
+              externalSource: true,
+              externalEventId: true,
+            },
+          });
+          const existingExternalEventId = existingEvent?.externalEventId?.trim() ?? null;
+          const normalizedExternalEventId = externalEventId?.trim() ?? null;
+          const externalLinkChanged =
+            existingEvent?.externalSource !== (externalSource ?? null) ||
+            existingExternalEventId !== normalizedExternalEventId;
+          const hasExternalLink = Boolean(externalSource && normalizedExternalEventId);
 
-          const updatedEvent = await prisma.event.update({
+          const updatedEvent = await appPrisma.event.update({
             where: { id: eventId },
             data: {
               name,
@@ -1001,7 +1159,32 @@ export function registerSecureEventRoutes(router) {
               relay,
               externalSource,
               externalEventId,
+              entriesOpenAt: parsedEntriesOpenAt,
+              entriesCloseAt: parsedEntriesCloseAt,
+              ...(typeof splitPublicationMode !== 'undefined'
+                ? {
+                    splitPublicationMode,
+                    splitPublicationAt:
+                      splitPublicationMode === 'SCHEDULED' ? parsedSplitPublicationAt : null,
+                  }
+                : {}),
+              resultsOfficialManuallySetAt: hasExternalLink
+                ? null
+                : parsedResultsOfficialManuallySetAt,
+              ...(externalLinkChanged
+                ? {
+                    resultsOfficialAt: null,
+                  }
+                : {}),
+              authorId: userId,
             },
+          });
+
+          await syncExternalResultsStateForEvent({
+            eventId,
+            externalSource,
+            externalEventId,
+            reset: externalLinkChanged,
           });
 
           return res.status(200).json(

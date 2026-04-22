@@ -23,6 +23,10 @@ const GET_EVENT = gql`
       discipline
       externalSource
       externalEventId
+      entriesOpenAt
+      entriesCloseAt
+      resultsOfficialAt
+      resultsOfficialManuallySetAt
       ranking
       coefRanking
       startMode
@@ -39,6 +43,17 @@ const GET_EVENT = gql`
         id
         firstname
         lastname
+      }
+      statusSummary {
+        primary
+        lifecycle
+        results
+        entries
+        entriesConfigured
+        officialResultsUrl
+        officialResultsSource
+        resultsOfficialAt
+        resultsOfficialCheckedAt
       }
     }
   }

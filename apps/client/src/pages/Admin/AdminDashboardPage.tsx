@@ -142,12 +142,16 @@ function DashboardActivityChart({
           />
           <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
           <RechartsTooltip
-            formatter={(value, key) => [
-              typeof value === 'number' ? value : Number(value ?? 0),
-              key === 'usersCreated'
-                ? t('Pages.Admin.Dashboard.ChartUsersSeries')
-                : t('Pages.Admin.Dashboard.ChartEventsSeries'),
-            ]}
+            formatter={(value, _name, item) => {
+              const dataKey = item?.dataKey;
+
+              return [
+                typeof value === 'number' ? value : Number(value ?? 0),
+                dataKey === 'usersCreated'
+                  ? t('Pages.Admin.Dashboard.ChartUsersSeries')
+                  : t('Pages.Admin.Dashboard.ChartEventsSeries'),
+              ];
+            }}
             labelFormatter={label => formatMonth(label as string)}
           />
           <Legend />

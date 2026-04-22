@@ -407,6 +407,45 @@
       }
     },
     "Event": {
+      "EntriesResults": {
+        "Card": {
+          "Title": "Veröffentlichung und Termine",
+          "Description": "Verwalte Anmeldezeiträume, den Veröffentlichungszeitpunkt von Daten und den Ergebnisstatus."
+        },
+        "ResultsOfficial": "Ergebnisse sind offiziell",
+        "ResultsOfficialHelper": "Nutze diesen Schalter bei lokalen Events, sobald die Ergebnisse final sind.",
+        "ResultsOfficialManagedExternally": "Die Bestätigung offizieller Ergebnisse wird vom verknüpften externen System verwaltet.",
+        "SplitPublication": {
+          "Label": "Veröffentlichung der Zwischenzeiten",
+          "Helper": "Event-Owner können Zwischenzeiten immer ohne Einschränkung sehen.",
+          "At": "Zeitpunkt der Veröffentlichung der Zwischenzeiten",
+          "Options": {
+            "UNRESTRICTED": "Ohne Einschränkung veröffentlichen",
+            "LAST_START": "Beim Start des letzten Starters in der Klasse veröffentlichen",
+            "SCHEDULED": "Zu einem anderen Zeitpunkt veröffentlichen",
+            "DISABLED": "Veröffentlichung der Zwischenzeiten deaktivieren"
+          }
+        },
+        "Toast": {
+          "UpdateSuccess": "Die Einstellungen für Anmeldungen und Ergebnisse wurden aktualisiert.",
+          "UpdateFail": "Die Einstellungen für Anmeldungen und Ergebnisse konnten nicht aktualisiert werden."
+        }
+      },
+      "Form": {
+        "Import": {
+          "SyncOfficialResults": "Offizielle Ergebnisse synchronisieren",
+          "SyncOfficialResultsRequiresSavedLink": "Speichere zuerst die Änderungen an der externen Verknüpfung, bevor du die offiziellen Ergebnisse synchronisierst.",
+          "Toast": {
+            "OfficialResultsFound": "Offizielle Ergebnisse wurden gefunden und synchronisiert.",
+            "OfficialResultsNotFound": "Offizielle Ergebnisse sind noch nicht verfügbar.",
+            "OfficialResultsSyncFailedTitle": "Synchronisierung offizieller Ergebnisse fehlgeschlagen",
+            "OfficialResultsSyncFailedDescription": "Die offiziellen Ergebnisse konnten nicht aus dem externen System synchronisiert werden."
+          }
+        },
+        "Validation": {
+          "SplitPublicationAtRequired": "Für die geplante Veröffentlichung der Zwischenzeiten ist ein Veröffentlichungszeitpunkt erforderlich."
+        }
+      },
       "Integration": {
         "Card": {
           "MissingPasswordTitle": "Erstelle zuerst das Event-Passwort",
@@ -418,6 +457,55 @@
               "CopyLink": "Zugangsdaten kopieren"
             }
           }
+        }
+      },
+      "Detail": {
+        "OpenBoard": "Board"
+      },
+      "Splits": {
+        "ChartTitle": "Rennverlauf (Rückstand auf die Spitze)",
+        "ChartTitleFastest": "Rennverlauf (Rückstand auf die schnellste Zeit)",
+        "CompareTo": "Vergleichen mit",
+        "CompareToFastest": "Schnellste Zeit",
+        "CompareToLeader": "Führender",
+        "ErrorLoadingChart": "Fehler beim Laden des Zwischenzeiten-Diagramms",
+        "Finish": "Ziel",
+        "LegLabel": "Abschnitt {{legIndex}} ({{controlCode}})",
+        "LegendBestCumulativeTime": "Beste kumulative Zeit",
+        "LegendCriticalDeviation": "Kritische Abweichung (>4.0σ)",
+        "LegendFastestLegTime": "Schnellste Abschnittszeit",
+        "LegendMajorDeviation": "Große Abweichung (>2.5σ)",
+        "LegendSignificantDeviation": "Erhebliche Abweichung (>1.5σ)",
+        "LoadingChart": "Zwischenzeiten-Diagramm wird geladen",
+        "LoadingTimes": "Zwischenzeiten werden geladen",
+        "ResetSort": "Sortierung zurücksetzen",
+        "Runners": "Läufer",
+        "RunnersCount_one": "{{count}} Läufer",
+        "RunnersCount_other": "{{count}} Läufer",
+        "SelectAll": "Alle",
+        "SelectNone": "Keine",
+        "SortDirectionAsc": "Auf",
+        "SortDirectionDesc": "Ab",
+        "SortFieldFinishTime": "Zielzeit",
+        "SortFieldFinalLegTime": "Zeit des Schlussabschnitts",
+        "SortFieldLeg": "Abschnitt {{number}}",
+        "SortFieldLossToLeader": "Rückstand auf die Spitze",
+        "SortFieldPosition": "Platzierung",
+        "SortFieldSplit": "Zwischenzeit {{number}}",
+        "SortedBy": "Sortiert nach:",
+        "SortSummary": "{{field}} ({{direction}})",
+        "Start": "Start",
+        "SelectClass": "Bitte wähle eine Klasse aus, um Zwischenzeiten anzuzeigen.",
+        "Publication": {
+          "ErrorTitle": "Die Einstellungen für die Veröffentlichung der Zwischenzeiten konnten nicht geladen werden",
+          "DisabledTitle": "Die Veröffentlichung der Zwischenzeiten ist deaktiviert",
+          "ScheduledTitle": "Zwischenzeiten sind noch nicht veröffentlicht",
+          "DisabledDescription": "Zwischenzeiten sind für dieses Event nicht veröffentlicht.",
+          "LastStartWithTime": "Die Zwischenzeiten werden beim Start des letzten Starters in dieser Klasse veröffentlicht: {{datetime}}.",
+          "LastStartPending": "Die Zwischenzeiten werden beim Start des letzten Starters in dieser Klasse veröffentlicht.",
+          "ScheduledPending": "Die Zwischenzeiten werden zum konfigurierten Zeitpunkt veröffentlicht.",
+          "ScheduledDescription": "Die Zwischenzeiten werden um {{datetime}} veröffentlicht.",
+          "CountdownLabel": "Countdown bis zur Veröffentlichung"
         }
       }
     }

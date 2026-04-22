@@ -21,8 +21,10 @@ import {
   publishUpdatedCompetitor,
   publishUpdatedCompetitors,
 } from '../../utils/subscriptionUtils.js';
+import { parseIofDateTime } from '../../utils/time.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
 import { normalizeCzechRankingMonthInput, storeCzechRankingData } from './upload.service.js';
+import { normalizeCourseMetrics } from './upload.course.js';
 
 const parser = new Parser({ attrkey: 'ATTR', trim: true });
 const IOF_XML_SCHEMA =
@@ -187,11 +189,18 @@ function getIofTextValue(value: unknown): string | undefined {
   return undefined;
 }
 
-function getIofDateTime(value: unknown): Date | undefined {
+function getIofDateTime(value: unknown, timeZone: string): Date | undefined {
   const raw = getIofTextValue(value);
   if (!raw) return undefined;
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime()) ? undefined : d;
+  return parseIofDateTime(raw, timeZone);
+}
+
+function getIofIntegerValue(value: unknown): number | null {
+  const raw = getIofTextValue(value);
+  if (!raw) return null;
+
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 function toResultStatus(value: unknown, fallback: ResultStatus): ResultStatus {
@@ -597,6 +606,7 @@ async function upsertCompetitor(
   organisation: IofOrganisation,
   start: IofStart | null = null,
   result: IofResult | null = null,
+  eventTimeZone = 'UTC',
   teamId: number | null = null,
   leg: string | number | null = null,
 ): Promise<{ id: number; updated: boolean }> {
@@ -653,10 +663,12 @@ async function upsertCompetitor(
         ? (parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber)
         : null,
     startTime:
-      getIofDateTime(result?.StartTime) ??
-      getIofDateTime(start?.StartTime) ??
+      getIofDateTime(result?.StartTime, eventTimeZone) ??
+      getIofDateTime(start?.StartTime, eventTimeZone) ??
       (dbCompetitorResponse?.startTime || null),
-    finishTime: getIofDateTime(result?.FinishTime) ?? (dbCompetitorResponse?.finishTime || null),
+    finishTime:
+      getIofDateTime(result?.FinishTime, eventTimeZone) ??
+      (dbCompetitorResponse?.finishTime || null),
     time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitorResponse?.time ?? null),
     card: result?.ControlCard
       ? parseInt(result.ControlCard.shift())
@@ -1123,8 +1135,10 @@ async function processClassStarts(
   eventId: string,
   classStarts: Array<Record<string, any>>,
   dbClassLists: Array<{ id: number; externalId: string | null }>,
-  dbResponseEvent: { relay?: boolean },
+  dbResponseEvent: { relay?: boolean; timezone?: string | null },
 ): Promise<void> {
+  const eventTimeZone = dbResponseEvent.timezone ?? 'UTC';
+
   await forEachWithConcurrency(
     classStarts,
     IOF_WRITE_CONCURRENCY,
@@ -1137,19 +1151,19 @@ async function processClassStarts(
         controlsCount = null;
 
       if (classStart.Course && classStart.Course.length > 0) {
-        length = classStart.Course[0].Length ? parseInt(classStart.Course[0].Length) : null;
-        climb = classStart.Course[0].Climb ? parseInt(classStart.Course[0].Climb) : null;
-        controlsCount = classStart.Course[0].NumberOfControls
-          ? parseInt(classStart.Course[0].NumberOfControls)
-          : null;
+        length = getIofIntegerValue(classStart.Course[0].Length);
+        climb = getIofIntegerValue(classStart.Course[0].Climb);
+        controlsCount = getIofIntegerValue(classStart.Course[0].NumberOfControls);
       }
       if (classStart.StartName) startName = classStart.StartName[0];
 
       const additionalData = {
-        length: length,
-        climb: climb,
         startName: startName,
-        controlsCount: controlsCount,
+        ...normalizeCourseMetrics({
+          length,
+          climb,
+          controlsCount,
+        }),
       };
 
       const classId = await upsertClass(eventId, classDetails, dbClassLists, additionalData);
@@ -1164,7 +1178,15 @@ async function processClassStarts(
             const person = competitorStart.Person.shift();
             const organisation = competitorStart.Organisation.shift();
             const start = competitorStart.Start.shift();
-            await upsertCompetitor(eventId, classId, person, organisation, start, null);
+            await upsertCompetitor(
+              eventId,
+              classId,
+              person,
+              organisation,
+              start,
+              null,
+              eventTimeZone,
+            );
           },
         );
       } else {
@@ -1202,6 +1224,7 @@ async function processClassStarts(
                     organisation,
                     start,
                     null,
+                    eventTimeZone,
                     teamId,
                     leg,
                   );
@@ -1228,9 +1251,10 @@ async function processClassResults(
   eventId: string,
   classResults: Array<Record<string, any>>,
   dbClassLists: Array<{ id: number; externalId: string | null }>,
-  dbResponseEvent: { relay?: boolean; ranking?: boolean },
+  dbResponseEvent: { relay?: boolean; ranking?: boolean; timezone?: string | null },
 ): Promise<number[]> {
   const updatedClasses = new Set<number>(); // Unique class IDs that had changes
+  const eventTimeZone = dbResponseEvent.timezone ?? 'UTC';
   await forEachWithConcurrency(
     classResults,
     IOF_WRITE_CONCURRENCY,
@@ -1265,6 +1289,7 @@ async function processClassResults(
               organisation,
               null,
               result,
+              eventTimeZone,
             );
             const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
             if (updated || updatedSplits) updatedClasses.add(classId);
@@ -1315,6 +1340,7 @@ async function processClassResults(
                       organisation,
                       null,
                       result,
+                      eventTimeZone,
                       teamId,
                       leg,
                     );
@@ -1407,7 +1433,7 @@ async function handleIofXmlUpload(
   let dbResponseEvent;
   try {
     const ownership = await ensureEventOwnerOrAdmin(prisma, c.get('authContext'), eventId, {
-      select: { relay: true, ranking: true },
+      select: { relay: true, ranking: true, timezone: true },
       eventNotFoundStatus: 404,
       eventNotFoundMessage: 'Event not found',
       forbiddenStatus: 403,
@@ -1587,9 +1613,13 @@ async function handleIofXmlUpload(
                 ATTR: {},
               };
               const additionalData = {
-                length: course.Length && parseInt(course.Length[0]),
-                climb: course.Climb && parseInt(course.Climb[0]),
-                controlsCount: course.CourseControl && course.CourseControl.length - 2,
+                ...normalizeCourseMetrics({
+                  length: getIofIntegerValue(course.Length),
+                  climb: getIofIntegerValue(course.Climb),
+                  controlsCount: Array.isArray(course.CourseControl)
+                    ? course.CourseControl.length - 2
+                    : null,
+                }),
               };
 
               await upsertClass(eventId, classDetails, dbClassLists, additionalData);

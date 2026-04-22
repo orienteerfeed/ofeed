@@ -501,17 +501,38 @@
         "EventId": "ID del evento",
         "Author": "Autor",
         "Report": "Reporte",
+        "OpenBoard": "Board",
         "Status": {
-          "Completed": "COMPLETADO",
-          "Live": "EN CURSO",
-          "Upcoming": "PRÓXIMO",
-          "Draft": "BORRADOR"
+          "Primary": {
+            "DONE": "COMPLETADO",
+            "LIVE": "EN CURSO",
+            "UPCOMING": "PRÓXIMO",
+            "DRAFT": "BORRADOR"
+          },
+          "Results": {
+            "NONE": "Sin resultados",
+            "LIVE": "Resultados en vivo",
+            "UNOFFICIAL": "Resultados no oficiales",
+            "OFFICIAL": "Resultados oficiales"
+          },
+          "Entries": {
+            "OPEN": "Inscripciones abiertas",
+            "CLOSED": "Inscripciones cerradas"
+          }
         },
         "StatusText": {
-          "Completed": "Los resultados son definitivos",
-          "Live": "Evento en progreso",
-          "Upcoming": "Registro abierto"
+          "Primary": {
+            "DONE": "El evento ha terminado.",
+            "LIVE": "El evento está en curso.",
+            "UPCOMING": "El evento aún no ha comenzado.",
+            "DRAFT": "El evento aún se está preparando."
+          },
+          "Results": {
+            "UNOFFICIAL": "Resultados no oficiales"
+          }
         },
+        "OfficialResultsLink": "Resultados oficiales",
+        "ResultsCheckedAt": "Última comprobación externa: {{value}}",
         "Alert": {
           "UnpublishedTitle": "El evento aún no está publicado",
           "UnpublishedDescription": "Este evento está en modo borrador y no es visible para el público."
@@ -536,8 +557,50 @@
         }
       },
       "Splits": {
+        "ChartTitle": "Progresión de la carrera (pérdida respecto al líder)",
+        "ChartTitleFastest": "Progresión de la carrera (pérdida respecto al mejor tiempo)",
+        "CompareTo": "Comparar con",
+        "CompareToFastest": "Mejor tiempo",
+        "CompareToLeader": "Líder",
+        "ErrorLoadingChart": "Error al cargar el gráfico de parciales",
+        "Finish": "Meta",
+        "LegLabel": "Tramo {{legIndex}} ({{controlCode}})",
+        "LegendBestCumulativeTime": "Mejor tiempo acumulado",
+        "LegendCriticalDeviation": "Desviación crítica (>4.0σ)",
+        "LegendFastestLegTime": "Mejor tiempo de tramo",
+        "LegendMajorDeviation": "Desviación grave (>2.5σ)",
+        "LegendSignificantDeviation": "Desviación significativa (>1.5σ)",
         "LoadingChart": "Cargando gráfico de parciales",
-        "LoadingTimes": "Cargando parciales"
+        "LoadingTimes": "Cargando parciales",
+        "ResetSort": "Restablecer orden",
+        "Runners": "Corredores",
+        "RunnersCount_one": "{{count}} corredor",
+        "RunnersCount_other": "{{count}} corredores",
+        "SelectAll": "Todos",
+        "SelectNone": "Ninguno",
+        "SortDirectionAsc": "Asc",
+        "SortDirectionDesc": "Desc",
+        "SortFieldFinishTime": "Tiempo final",
+        "SortFieldFinalLegTime": "Tiempo del tramo final",
+        "SortFieldLeg": "Tramo {{number}}",
+        "SortFieldLossToLeader": "Pérdida respecto al líder",
+        "SortFieldPosition": "Posición",
+        "SortFieldSplit": "Parcial {{number}}",
+        "SortedBy": "Ordenado por:",
+        "SortSummary": "{{field}} ({{direction}})",
+        "Start": "Salida",
+        "SelectClass": "Selecciona una categoría para ver los parciales.",
+        "Publication": {
+          "ErrorTitle": "No se pudo cargar la configuración de publicación de parciales",
+          "DisabledTitle": "La publicación de parciales está desactivada",
+          "ScheduledTitle": "Los parciales aún no están publicados",
+          "DisabledDescription": "Los parciales no están publicados para este evento.",
+          "LastStartWithTime": "Los parciales se publicarán en el momento de salida del último corredor de esta categoría: {{datetime}}.",
+          "LastStartPending": "Los parciales se publicarán en el momento de salida del último corredor de esta categoría.",
+          "ScheduledPending": "Los parciales se publicarán en la hora configurada.",
+          "ScheduledDescription": "Los parciales se publicarán a las {{datetime}}.",
+          "CountdownLabel": "Cuenta atrás hasta la publicación"
+        }
       },
       "Form": {
         "EventName": "Nombre del evento",
@@ -560,6 +623,13 @@
         "Relay": "Relevo",
         "HundredthPrecision": "Precisión centésimas",
         "Published": "Publicado",
+        "EntriesOpenAt": "Inscripciones abiertas desde",
+        "EntriesOpenAtHelper": "Déjalo vacío para mantener las inscripciones cerradas por ahora.",
+        "EntriesCloseAt": "Inscripciones cerradas desde",
+        "EntriesCloseAtHelper": "Déjalo vacío si todavía no quieres fijar un cierre definitivo.",
+        "ResultsOfficialManuallySetAt": "Resultados finales confirmados en",
+        "ResultsOfficialManuallySetAtHelper": "Úsalo solo para eventos locales sin integración con ORIS o Eventor.",
+        "ResultsOfficialManagedExternally": "La confirmación de resultados oficiales la gestiona el sistema externo vinculado.",
         "DisciplineOptions": {
           "SPRINT": "Sprint",
           "MIDDLE": "Media",
@@ -600,6 +670,8 @@
           "Open": "Importar desde sistema externo",
           "Hide": "Ocultar importación",
           "SaveLink": "Guardar vínculo",
+          "SyncOfficialResults": "Sincronizar resultados oficiales",
+          "SyncOfficialResultsRequiresSavedLink": "Guarda primero los cambios del vínculo externo antes de sincronizar los resultados oficiales.",
           "LoadPreview": "Cargar y rellenar formulario",
           "Placeholders": {
             "ExternalEventId": "p. ej. 8300",
@@ -620,9 +692,17 @@
             "LinkSaved": "El vínculo externo se guardó correctamente.",
             "LinkRemoved": "El vínculo externo se eliminó correctamente.",
             "LinkRemovedPendingSave": "El vínculo externo se eliminará después de guardar el evento.",
+            "OfficialResultsFound": "Los resultados oficiales se encontraron y sincronizaron.",
+            "OfficialResultsNotFound": "Los resultados oficiales aún no están disponibles.",
+            "OfficialResultsSyncFailedTitle": "Falló la sincronización de resultados oficiales",
+            "OfficialResultsSyncFailedDescription": "No se pudieron sincronizar los resultados oficiales desde el sistema externo.",
             "SearchFailedTitle": "Búsqueda fallida",
             "SearchFailedDescription": "No se pudieron buscar eventos en el proveedor externo."
           }
+        },
+        "Validation": {
+          "EntriesCloseAtAfterOpen": "El cierre de inscripciones debe ser posterior a la apertura.",
+          "SplitPublicationAtRequired": "La hora de publicación es obligatoria para la publicación programada de parciales."
         },
         "Toast": {
           "CreateSuccess": "¡El evento se ha creado correctamente!",
@@ -634,6 +714,30 @@
       "Card": {
         "Title": "Información del evento",
         "Description": "Por favor, complete el formulario a continuación para actualizar los detalles del evento."
+      },
+      "EntriesResults": {
+        "Card": {
+          "Title": "Publicación y plazos",
+          "Description": "Gestiona las ventanas de inscripción, el momento de publicación de los datos y el estado de los resultados."
+        },
+        "ResultsOfficial": "Los resultados son oficiales",
+        "ResultsOfficialHelper": "Usa este interruptor para eventos locales una vez que los resultados sean definitivos.",
+        "ResultsOfficialManagedExternally": "La confirmación de resultados oficiales la gestiona el sistema externo vinculado.",
+        "SplitPublication": {
+          "Label": "Publicación de parciales",
+          "Helper": "El owner del evento siempre puede ver los parciales sin restricciones.",
+          "At": "Hora de publicación de parciales",
+          "Options": {
+            "UNRESTRICTED": "Publicar sin restricciones",
+            "LAST_START": "Publicar en el momento de salida del último corredor de la categoría",
+            "SCHEDULED": "Publicar en otro momento",
+            "DISABLED": "Desactivar publicación de parciales"
+          }
+        },
+        "Toast": {
+          "UpdateSuccess": "Se actualizó la configuración de inscripciones y resultados.",
+          "UpdateFail": "No se pudo actualizar la configuración de inscripciones y resultados."
+        }
       },
       "Password": {
         "GeneratePassword": "Generar contraseña",
@@ -669,7 +773,7 @@
             "Event": "Evento",
             "Location": "Ubicación",
             "Date": "Fecha",
-            "EventUri": "Ver resultados en directo",
+            "EventUri": "Ver detalle del evento",
             "UrlDescription": "¡Escanee el código QR para acceder al momento a los resultados en directo!"
           }
         },
