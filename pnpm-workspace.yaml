@@ -16,3 +16,4 @@ ignoredBuiltDependencies:
 
 onlyBuiltDependencies:
   - sharp
+  - vue-demi
