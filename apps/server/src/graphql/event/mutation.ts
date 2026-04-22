@@ -6,14 +6,14 @@ export const updateEventVisibility = async (_, { eventId, published }, context) 
 
     await requireEventOwnerOrAdmin(prisma, auth, eventId);
 
-    const eventResponse = await prisma.event.update({
+    const event = await prisma.event.update({
       where: { id: eventId },
       data: { published, updatedAt: new Date() },
     });
 
     return {
       message: `Event visibility updated to ${published ? 'Public' : 'Private'}`,
-      eventResponse,
+      event,
     };
   } catch (error) {
     console.error('Error updating event visibility:', error);

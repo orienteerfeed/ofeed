@@ -1,0 +1,193 @@
+{
+  "id": "ofeed-server-prod",
+  "name": "OFeed Server - prod",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "<set-me>",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "defaultTestPassword",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "sportId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventTimezone",
+      "value": "Europe/Prague",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventZeroTime",
+      "value": "10:00:00",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eventCountryCode",
+      "value": "CZ",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "validateXml",
+      "value": "false",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "oauthScope",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "oauthRedirectUris",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureQuickEventXml",
+      "value": "fixtures/quickevent/qe-results-kam-251016.xml",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureMeosXml",
+      "value": "fixtures/meos/meos-startlist-fra-260321.xml",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureSiDroidXml",
+      "value": "fixtures/si-droid/sidroid-results-shk-230122.xml",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "passwordResetBaseUrl",
+      "value": "https://example.test/reset-password",
+      "enabled": true
+    },
+    {
+      "key": "passwordResetToken",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "passwordResetNewPassword",
+      "value": "Postman456!",
+      "enabled": true
+    },
+    {
+      "key": "runPasswordResetConfirm",
+      "value": "false",
+      "enabled": true
+    },
+    {
+      "key": "externalImportProvider",
+      "value": "ORIS",
+      "enabled": true
+    },
+    {
+      "key": "externalImportQuery",
+      "value": "Mistrovstvi",
+      "enabled": true
+    },
+    {
+      "key": "externalImportLimit",
+      "value": "5",
+      "enabled": true
+    },
+    {
+      "key": "externalImportApiKey",
+      "value": "unused-for-oris",
+      "enabled": true
+    },
+    {
+      "key": "fixtureCzechRankingCsv",
+      "value": "fixtures/czech-ranking/export_ranking_2026-03-31_2_20260407_222017.txt",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "czechRankingType",
+      "value": "FOREST",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "czechRankingCategory",
+      "value": "M",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "czechRankingValidForMonth",
+      "value": "2026-03",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fixtureEventImage",
+      "value": "fixtures/images/ofeed-event-image.png",
+      "enabled": true
+    },
+    {
+      "key": "runEventImageScenario",
+      "value": "false",
+      "enabled": true
+    },
+    {
+      "key": "keepEventForInspection",
+      "value": "false",
+      "enabled": true
+    },
+    {
+      "key": "runAdminScenarios",
+      "value": "false",
+      "enabled": true
+    },
+    {
+      "key": "adminBearerToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "runGraphqlResetPasswordConfirm",
+      "value": "false",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "graphqlPasswordResetToken",
+      "value": "",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "graphqlPasswordResetNewPassword",
+      "value": "Graphql789!",
+      "enabled": true,
+      "type": "default"
+    },
+    {
+      "key": "graphqlMinDelayMs",
+      "value": "2200",
+      "enabled": true,
+      "type": "default"
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

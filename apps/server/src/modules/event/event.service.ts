@@ -133,6 +133,7 @@ export const getDecryptedEventPassword = async eventId => {
       where: { eventId: eventId },
       select: {
         id: true,
+        eventId: true,
         password: true,
         expiresAt: true,
         createdAt: true,
@@ -265,10 +266,13 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   // Iterate over keys in updateData
   Object.keys(updateData).forEach(key => {
     if (keyToTypeMap[key]) {
+      const previousValue = dbResponseCompetitor[key];
+      const nextValue = updateData[key];
       changes.push({
         type: keyToTypeMap[key],
-        previousValue: dbResponseCompetitor[key]?.toString() || null,
-        newValue: updateData[key].toString(),
+        previousValue:
+          previousValue === null || previousValue === undefined ? null : previousValue.toString(),
+        newValue: nextValue === null || nextValue === undefined ? 'null' : nextValue.toString(),
       });
     }
   });
@@ -390,6 +394,14 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
         startTime: competitorData.startTime ? new Date(competitorData.startTime) : null,
         finishTime: competitorData.finishTime ? new Date(competitorData.finishTime) : null,
         time: competitorData.time || null,
+        teamId:
+          competitorData.teamId === undefined || competitorData.teamId === null
+            ? null
+            : parseInt(String(competitorData.teamId), 10),
+        leg:
+          competitorData.leg === undefined || competitorData.leg === null
+            ? null
+            : parseInt(String(competitorData.leg), 10),
         status: status || 'Inactive', // Default to Inactive if not provided
         lateStart: competitorData.lateStart || false,
         note: note || null,
@@ -683,6 +695,8 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
           startTime: true,
           finishTime: true,
           time: true,
+          teamId: true,
+          leg: true,
           status: true,
           lateStart: true,
           note: true,

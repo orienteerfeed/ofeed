@@ -215,6 +215,58 @@ function getNumericJwtUserId(req: EventRouteRequest) {
   return null;
 }
 
+function normalizeOptionalCoordinate(
+  value: unknown,
+  fieldName: 'latitude' | 'longitude',
+): number | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === '' || value === null) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    throw new ValidationError(`Invalid ${fieldName}. Expected numeric value.`);
+  }
+
+  return numericValue === 0 ? null : numericValue;
+}
+
+function normalizeOptionalIntegerField(
+  value: unknown,
+  fieldName: string,
+): number | null | undefined {
+  if (value === '' || value === null) {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  if (!Number.isInteger(numericValue)) {
+    throw new ValidationError(`Invalid ${fieldName}. Expected integer value.`);
+  }
+
+  return numericValue;
+}
+
+function normalizeOptionalDateField(value: unknown, fieldName: string): Date | null | undefined {
+  if (value === '' || value === null) {
+    return null;
+  }
+
+  const dateValue = new Date(String(value));
+
+  if (Number.isNaN(dateValue.getTime())) {
+    throw new ValidationError(`Invalid ${fieldName}. Expected ISO datetime value.`);
+  }
+
+  return dateValue;
+}
+
 function parseOptionalIsoDateTime(value: string | null | undefined): Date | null | undefined {
   if (typeof value === 'undefined') {
     return undefined;
@@ -415,6 +467,11 @@ export function registerSecureEventRoutes(router) {
   router.post(
     '/import/search',
     routeWithValidation({ bodySchema: eventImportSearchBodySchema }, async ({ req, res }) => {
+      const errors = getValidationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json(validationResponse(errors.array()));
+      }
+
       try {
         const importedEvents = await searchExternalEvents(req.body);
 
@@ -434,6 +491,11 @@ export function registerSecureEventRoutes(router) {
   router.post(
     '/import/preview',
     routeWithValidation({ bodySchema: eventImportPreviewBodySchema }, async ({ req, res }) => {
+      const errors = getValidationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json(validationResponse(errors.array()));
+      }
+
       try {
         const importedEventPreview = await loadExternalEventPreview(req.body);
 
@@ -813,7 +875,7 @@ export function registerSecureEventRoutes(router) {
     '/:eventId/image',
     routeWithValidation(
       { paramsSchema: eventIdParamsSchema, bodyMode: 'form' },
-      async ({ req, res }) => {
+      async ({ c, req, res }) => {
         try {
           validateImageFile(req.file);
         } catch (error) {
@@ -1003,26 +1065,27 @@ export function registerSecureEventRoutes(router) {
     '/:eventId',
     routeWithValidation(
       { paramsSchema: eventIdParamsSchema, bodySchema: eventBodySchema },
-      async ({ req, res }) => {
+      async ({ c, req, res }) => {
         const { eventId } = req.params;
         const {
           name,
           date,
+          timezone,
           organizer,
           location,
           latitude,
           longitude,
           countryCode,
-          timezone,
+          country,
           zeroTime,
           ranking,
           coefRanking,
           discipline,
           startMode,
+          hundredthPrecision,
           published,
           sportId,
           relay,
-          hundredthPrecision,
           externalSource,
           externalEventId,
           entriesOpenAt,
@@ -1058,14 +1121,8 @@ export function registerSecureEventRoutes(router) {
           // TODO: Add permission checks to ensure the user is allowed to edit the event
 
           // 🔥 Normalize latitude and longitude
-          const dbLatitude =
-            latitude === '' || latitude === null || Number(latitude) === 0
-              ? null
-              : Number(latitude);
-          const dbLongitude =
-            longitude === '' || longitude === null || Number(longitude) === 0
-              ? null
-              : Number(longitude);
+          const dbLatitude = normalizeOptionalCoordinate(latitude, 'latitude');
+          const dbLongitude = normalizeOptionalCoordinate(longitude, 'longitude');
           const existingEvent = await prisma.event.findUnique({
             where: { id: eventId },
             select: {
@@ -1090,16 +1147,16 @@ export function registerSecureEventRoutes(router) {
               location,
               latitude: dbLatitude,
               longitude: dbLongitude,
-              countryId: countryCode,
+              countryId: countryCode ?? country,
               zeroTime: toPrismaTimeDate(normalizedZeroTime),
               ranking,
               coefRanking,
               discipline,
               startMode,
+              hundredthPrecision,
               published,
               sportId,
               relay,
-              hundredthPrecision,
               externalSource,
               externalEventId,
               entriesOpenAt: parsedEntriesOpenAt,
@@ -1148,6 +1205,7 @@ export function registerSecureEventRoutes(router) {
           } else if (error instanceof AuthenticationError) {
             return res.status(401).json(errorResponse(error.message, res.statusCode));
           }
+          logEndpoint(c, 'error', 'Event update failed', getErrorDetails(error));
           return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
         }
       },
@@ -1866,46 +1924,49 @@ export function registerSecureEventRoutes(router) {
     // Everything went fine.
     try {
       // Build update object conditionally
-      const fieldTypes = {
-        classId: 'number',
+      const fieldTypes: Record<string, 'integer' | 'string' | 'boolean' | 'date' | 'array'> = {
+        classId: 'integer',
         firstname: 'string',
         lastname: 'string',
         nationality: 'string',
         registration: 'string',
         license: 'string',
+        rankingPoints: 'integer',
+        rankingReferenceValue: 'integer',
         organisation: 'string',
         shortName: 'string',
-        card: 'number',
-        bibNumber: 'number',
+        card: 'integer',
+        bibNumber: 'integer',
         startTime: 'date',
         finishTime: 'date',
-        time: 'number',
+        time: 'integer',
         status: 'string',
         lateStart: 'boolean',
-        teamId: 'number',
-        leg: 'number',
+        teamId: 'integer',
+        leg: 'integer',
         note: 'string',
         externalId: 'string',
         splits: 'array',
       };
 
-      const updateData = Object.keys(req.body).reduce((acc, field) => {
-        if (req.body[field] !== undefined && fieldTypes[field]) {
+      const updateData = Object.keys(req.body).reduce<Record<string, unknown>>((acc, field) => {
+        const value = req.body[field];
+        if (value !== undefined && fieldTypes[field]) {
           switch (fieldTypes[field]) {
-            case 'number':
-              acc[field] = parseInt(req.body[field], 10);
+            case 'integer':
+              acc[field] = normalizeOptionalIntegerField(value, field);
               break;
             case 'boolean':
-              acc[field] = Boolean(req.body[field]);
+              acc[field] = value;
               break;
             case 'date':
-              acc[field] = new Date(req.body[field]);
+              acc[field] = normalizeOptionalDateField(value, field);
               break;
             case 'array':
-              acc[field] = Array.isArray(req.body[field]) ? req.body[field] : [req.body[field]];
+              acc[field] = Array.isArray(value) ? value : [value];
               break;
             default:
-              acc[field] = req.body[field];
+              acc[field] = value;
           }
         }
         return acc;

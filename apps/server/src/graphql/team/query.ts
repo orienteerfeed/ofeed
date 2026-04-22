@@ -4,8 +4,8 @@ export const teamById = (_, { id }, context) => {
     where: { id: id },
   });
 };
-export const teamsByClass = (_, { classId }, context) => {
+export const teamsByClass = (_, { id, classId }, context) => {
   return prisma.team.findMany({
-    where: { classId: classId },
+    where: { classId: classId ?? id },
   });
 };
