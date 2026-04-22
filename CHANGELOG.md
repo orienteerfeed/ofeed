@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Removed
+
+## [1.2.0] - 2026-04-22
+
+### Added
+
 - GraphQL queries and mutation for O-Checklist app
 - RESTful API endpoints for start changes
 - Event protocol
@@ -21,8 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation now publishes tags and GitHub Releases without pushing
   generated commits directly to protected `main`; the root `package.json`
   version is synced through a follow-up PR.
-
-### Removed
 
 ## [1.0.0] - 2023-11-05
 
