@@ -32,8 +32,11 @@
     "Seconds": "sekunder"
   },
   "Share": "Dela",
+  "ShareLink": "Dela länk",
+  "ShareQR": "Dela QR",
   "Print": "Skriv ut",
   "Copy": "Kopiera",
+  "CopyLink": "Kopiera länk",
   "Public": "Offentligt",
   "Private": "Privat",
   "Search": "Sök",

@@ -15,12 +15,12 @@ const COMPETITION_PROVIDERS: CompetitionProvider[] = [
   { name: 'LiveResultat', value: 'liveResultat' },
 ]
 const allowedProviders = (
-  import.meta.env.VITE_PROVIDERS?.split(',') ?? ['ofeed', 'liveResultat']
+  (import.meta.env.VITE_PROVIDERS as string | undefined)?.split(',') ?? ['ofeed', 'liveResultat']
 ).filter((provider): provider is DataProviders =>
   ['ofeed', 'liveResultat', 'test'].includes(provider)
 )
 const competitionsProviders = computed(() =>
-  allowedProviders.reduce((acc, p) => {
+  allowedProviders.reduce((acc: CompetitionProvider[], p) => {
     const provider = COMPETITION_PROVIDERS.find((cp) => cp.value === p)
     if (provider) acc.push(provider)
     return acc

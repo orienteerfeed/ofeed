@@ -774,7 +774,7 @@
             "Event": "Akce",
             "Location": "Lokalita",
             "Date": "Datum",
-            "EventUri": "Odkaz na akci",
+            "EventUri": "Detail akce",
             "UrlDescription": "Naskenuj QR kód a okamžitě máš online výsledky v telefonu!"
           }
         },

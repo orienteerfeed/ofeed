@@ -32,8 +32,11 @@
     "Seconds": "seconds"
   },
   "Share": "Share",
+  "ShareLink": "Share link",
+  "ShareQR": "Share QR",
   "Print": "Print",
   "Copy": "Copy",
+  "CopyLink": "Copy link",
   "Public": "Public",
   "Private": "Private",
   "Search": "Search",

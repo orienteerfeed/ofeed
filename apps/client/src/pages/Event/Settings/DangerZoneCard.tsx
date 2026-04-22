@@ -245,25 +245,15 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
                 key={index}
                 className={`p-4 border-2 rounded-lg transition-all duration-200 hover:shadow-sm ${getSeverityStyles(action.severity)}`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div
-                      className={`flex-shrink-0 mt-0.5 ${getIconColor(action.severity)}`}
-                    >
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`flex-shrink-0 ${getIconColor(action.severity)}`}>
                       <action.icon className="h-5 w-5" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3
-                        className={`font-semibold text-base ${getTextColor(action.severity)}`}
-                      >
-                        {action.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                        {action.description}
-                      </p>
-                    </div>
+                    <h3 className={`font-semibold text-base truncate ${getTextColor(action.severity)}`}>
+                      {action.title}
+                    </h3>
                   </div>
-
                   <Button
                     variant={action.variant}
                     onClick={action.onClick}
@@ -289,6 +279,9 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
                     )}
                   </Button>
                 </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {action.description}
+                </p>
               </div>
             ))}
           </div>

@@ -773,7 +773,7 @@
             "Event": "Tävling",
             "Location": "Plats",
             "Date": "Datum",
-            "EventUri": "Visa live-resultat",
+            "EventUri": "Visa evenemangsdetaljer",
             "UrlDescription": "Skanna QR-koden och få omedelbart online-resultat i din telefon!"
           }
         },
