@@ -14,7 +14,6 @@ export async function listMyEvents(userId: number | string) {
       relay: true,
       published: true,
       timezone: true,
-      zeroTime: true,
       entriesOpenAt: true,
       entriesCloseAt: true,
       resultsOfficialAt: true,

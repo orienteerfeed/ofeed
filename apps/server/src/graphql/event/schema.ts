@@ -126,14 +126,13 @@ export const typeDef = /* GraphQL */ `
     sportId: Int!
     name: String!
     organizer: String
-    date: Date!
+    date: DateTime!
     timezone: String!
     externalSource: ExternalEventProvider
     externalEventId: String
     location: String
     latitude: Float
     longitude: Float
-    zeroTime: String!
     relay: Boolean!
     discipline: EventDiscipline!
     ranking: Boolean!

@@ -156,11 +156,11 @@ export function EventInfoView({ event }: EventInfoViewProps) {
                 <div className="font-medium">
                   {formatDate(event.date, localeKey)}
                 </div>
-                {event.zeroTime && (
+                {event.date && (
                   <div className="text-sm text-muted-foreground mt-1">
                     {t('Pages.Event.Detail.ZeroTime')}:{' '}
                     {formatStoredUtcTimeForTimezone(
-                      event.zeroTime,
+                      new Date(event.date).toISOString().slice(11, 19),
                       event.date,
                       event.timezone || 'UTC'
                     )}

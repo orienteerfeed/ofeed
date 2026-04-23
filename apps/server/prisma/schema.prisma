@@ -124,7 +124,7 @@ model Event {
   sportId            Int             @db.UnsignedInt
   name               String
   organizer          String?
-  date               DateTime        @db.Date
+  date               DateTime
   timezone           String          @default("Europe/Prague")
   location           String?
   latitude           Float? // GPS Latitude (nullable)
@@ -134,7 +134,6 @@ model Event {
   externalSource     ExternalSource?
   externalEventId    String?         @db.VarChar(128)
   featuredImageKey   String?         @db.VarChar(512)
-  zeroTime           DateTime        @db.Time(0)
   relay              Boolean         @default(false)
   discipline         EventDiscipline @default(OTHER)
   startMode          StartMode       @default(Individual)

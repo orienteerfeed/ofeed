@@ -27,7 +27,7 @@ import {
 } from '../../utils/authz.js';
 import { createCompetitorSchema, updateCompetitorSchema } from '../../utils/validateCompetitor.js';
 import eventWriteSchema from '../../utils/validateEvent.js';
-import { normalizeUtcTimeString, toPrismaTimeDate } from '../../utils/time.js';
+import { normalizeUtcTimeString } from '../../utils/time.js';
 import { encodeBase64, encrypt } from '../../lib/crypto/encryption.js';
 import { formatErrors } from '../../utils/errors.js';
 import {
@@ -748,7 +748,6 @@ export function registerSecureEventRoutes(router) {
 
       // Everything went fine.
       try {
-        const dateTime = new Date(date);
         const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
         const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
         const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
@@ -761,17 +760,19 @@ export function registerSecureEventRoutes(router) {
           throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
         }
 
+        const datePart = new Date(date).toISOString().slice(0, 10);
+        const eventDateTime = new Date(`${datePart}T${normalizedZeroTime}Z`);
+
         const createdEvent = await appPrisma.event.create({
           data: {
             name,
-            date: dateTime,
+            date: eventDateTime,
             timezone,
             organizer,
             location,
             latitude,
             longitude,
             countryId: countryCode,
-            zeroTime: toPrismaTimeDate(normalizedZeroTime),
             ranking,
             coefRanking,
             discipline,
@@ -806,16 +807,7 @@ export function registerSecureEventRoutes(router) {
         });
 
         return res.status(200).json(
-          successResponse(
-            'OK',
-            {
-              data: {
-                ...createdEvent,
-                zeroTime: normalizeUtcTimeString(createdEvent.zeroTime),
-              },
-            },
-            res.statusCode,
-          ),
+          successResponse('OK', { data: createdEvent }, res.statusCode),
         );
       } catch (error) {
         if (error instanceof ValidationError) {
@@ -1118,6 +1110,9 @@ export function registerSecureEventRoutes(router) {
             throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
           }
 
+          const datePart = new Date(date).toISOString().slice(0, 10);
+          const eventDateTime = new Date(`${datePart}T${normalizedZeroTime}Z`);
+
           // TODO: Add permission checks to ensure the user is allowed to edit the event
 
           // 🔥 Normalize latitude and longitude
@@ -1141,14 +1136,13 @@ export function registerSecureEventRoutes(router) {
             where: { id: eventId },
             data: {
               name,
-              date: new Date(date),
+              date: eventDateTime,
               timezone,
               organizer,
               location,
               latitude: dbLatitude,
               longitude: dbLongitude,
               countryId: countryCode ?? country,
-              zeroTime: toPrismaTimeDate(normalizedZeroTime),
               ranking,
               coefRanking,
               discipline,
@@ -1188,16 +1182,7 @@ export function registerSecureEventRoutes(router) {
           });
 
           return res.status(200).json(
-            successResponse(
-              'OK',
-              {
-                data: {
-                  ...updatedEvent,
-                  zeroTime: normalizeUtcTimeString(updatedEvent.zeroTime),
-                },
-              },
-              res.statusCode,
-            ),
+            successResponse('OK', { data: updatedEvent }, res.statusCode),
           );
         } catch (error) {
           if (error instanceof ValidationError) {
