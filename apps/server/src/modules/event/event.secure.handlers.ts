@@ -807,7 +807,7 @@ export function registerSecureEventRoutes(router) {
         });
 
         return res.status(200).json(
-          successResponse('OK', { data: createdEvent }, res.statusCode),
+          successResponse('OK', { data: { ...createdEvent, zeroTime: normalizeUtcTimeString(createdEvent.date) } }, res.statusCode),
         );
       } catch (error) {
         if (error instanceof ValidationError) {
@@ -1182,7 +1182,7 @@ export function registerSecureEventRoutes(router) {
           });
 
           return res.status(200).json(
-            successResponse('OK', { data: updatedEvent }, res.statusCode),
+            successResponse('OK', { data: { ...updatedEvent, zeroTime: normalizeUtcTimeString(updatedEvent.date) } }, res.statusCode),
           );
         } catch (error) {
           if (error instanceof ValidationError) {

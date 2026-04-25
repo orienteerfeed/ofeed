@@ -128,6 +128,7 @@ export const typeDef = /* GraphQL */ `
     organizer: String
     date: DateTime!
     timezone: String!
+    zeroTime: String!
     externalSource: ExternalEventProvider
     externalEventId: String
     location: String

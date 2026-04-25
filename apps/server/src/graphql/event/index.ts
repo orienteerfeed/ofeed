@@ -8,6 +8,8 @@ import { getEventStatusSummary } from '../../modules/event/event.status.service.
 import { getDecryptedEventPassword } from '../../modules/event/event.service.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
+import { normalizeUtcTimeString } from '../../utils/time.js';
+
 export { resolvers, typeDef };
 
 const buildPublicImageUrl = (key, eventId) => {
@@ -56,6 +58,7 @@ const resolvers = {
       }
       return decryptedPassword;
     },
+    zeroTime: (parent) => normalizeUtcTimeString(parent.date) ?? '00:00:00',
     featuredImage: (parent) => buildPublicImageUrl(parent.featuredImageKey, parent.id),
     statusSummary: (parent) => getEventStatusSummary(prisma, parent),
   },

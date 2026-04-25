@@ -1,6 +1,7 @@
 import { z } from '@hono/zod-openapi';
 
 import prisma from '../../utils/context.js';
+import { normalizeUtcTimeString } from '../../utils/time.js';
 import { getPublicObject } from '../../lib/storage/s3.js';
 import { error, success, validation } from '../../utils/responseApi.js';
 import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
@@ -188,7 +189,7 @@ export function registerPublicEventRoutes(router) {
     }
 
     return c.json(
-      success('OK', { data: dbResponse }, 200),
+      success('OK', { data: { ...dbResponse, zeroTime: normalizeUtcTimeString(dbResponse.date) } }, 200),
       200,
     );
   });
