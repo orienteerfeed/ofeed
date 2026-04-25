@@ -188,8 +188,9 @@ export function registerPublicEventRoutes(router) {
       );
     }
 
+    const { id, name, date, timezone, location, ...restData } = dbResponse;
     return c.json(
-      success('OK', { data: { ...dbResponse, zeroTime: normalizeUtcTimeString(dbResponse.date) } }, 200),
+      success('OK', { data: { id, name, date, timezone, zeroTime: normalizeUtcTimeString(date), location, ...restData } }, 200),
       200,
     );
   });
