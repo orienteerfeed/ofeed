@@ -10036,9 +10036,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/rest/v1/admin/users",
+              "raw": "{{baseUrl}}/rest/v1/admin/users?page=1&limit=25",
               "host": ["{{baseUrl}}"],
-              "path": ["rest", "v1", "admin", "users"]
+              "path": ["rest", "v1", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (1-indexed)"
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Items per page (max 200)"
+                }
+              ]
             },
             "auth": {
               "type": "bearer",
@@ -10079,6 +10091,8 @@
                   "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
                   "const body = pm.response.json();",
                   "pm.test('Admin users list exists', function () { pm.expect(body.results && body.results.items).to.be.an('array'); });",
+                  "pm.test('Admin users total is a non-negative integer', function () { pm.expect(body.results.total).to.be.a('number').and.to.be.at.least(0); });",
+                  "pm.test('Admin users items respects page limit', function () { pm.expect(body.results.items.length).to.be.at.most(25); });",
                   "pm.test('Admin users include the target user', function () { pm.expect(body.results.items.some(item => item.email === pm.collectionVariables.get('adminTargetUserEmail'))).to.eql(true); });",
                   ""
                 ]
@@ -10220,9 +10234,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/rest/v1/admin/events",
+              "raw": "{{baseUrl}}/rest/v1/admin/events?page=1&limit=25",
               "host": ["{{baseUrl}}"],
-              "path": ["rest", "v1", "admin", "events"]
+              "path": ["rest", "v1", "admin", "events"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (1-indexed)"
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Items per page (max 200)"
+                }
+              ]
             },
             "auth": {
               "type": "bearer",
@@ -10263,6 +10289,8 @@
                   "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
                   "const body = pm.response.json();",
                   "pm.test('Admin events list exists', function () { pm.expect(body.results && body.results.items).to.be.an('array'); });",
+                  "pm.test('Admin events total is a non-negative integer', function () { pm.expect(body.results.total).to.be.a('number').and.to.be.at.least(0); });",
+                  "pm.test('Admin events items respects page limit', function () { pm.expect(body.results.items.length).to.be.at.most(25); });",
                   ""
                 ]
               }
