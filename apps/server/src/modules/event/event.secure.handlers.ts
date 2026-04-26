@@ -1104,7 +1104,7 @@ export function registerSecureEventRoutes(router) {
           return ownership.response;
         }
 
-        const { userId } = ownership;
+        const { userId, event: existingEventOwnership } = ownership;
 
         try {
           const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
@@ -1176,7 +1176,7 @@ export function registerSecureEventRoutes(router) {
                     resultsOfficialAt: null,
                   }
                 : {}),
-              authorId: userId,
+              authorId: existingEventOwnership.authorId,
             },
           });
 
