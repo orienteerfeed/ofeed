@@ -68,7 +68,12 @@ export async function getAdminUsersHandler(c) {
   const logContext = buildAdminLogContext(c, adminUserId);
 
   try {
-    const users = await getAdminUsers(prisma);
+    const rawPage = c.req.query('page');
+    const rawLimit = c.req.query('limit');
+    const page = rawPage ? Math.max(1, parseInt(rawPage, 10)) : 1;
+    const limit = rawLimit ? Math.min(200, Math.max(1, parseInt(rawLimit, 10))) : 25;
+
+    const users = await getAdminUsers(prisma, { page, limit });
 
     logger.info('Admin users list loaded', {
       ...logContext,
@@ -97,7 +102,12 @@ export async function getAdminEventsHandler(c) {
   const logContext = buildAdminLogContext(c, adminUserId);
 
   try {
-    const events = await getAdminEvents(prisma);
+    const rawPage = c.req.query('page');
+    const rawLimit = c.req.query('limit');
+    const page = rawPage ? Math.max(1, parseInt(rawPage, 10)) : 1;
+    const limit = rawLimit ? Math.min(200, Math.max(1, parseInt(rawLimit, 10))) : 25;
+
+    const events = await getAdminEvents(prisma, { page, limit });
 
     logger.info('Admin events list loaded', {
       ...logContext,

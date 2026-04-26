@@ -94,13 +94,13 @@ export function useAdminDashboardQuery() {
   });
 }
 
-export function useAdminUsersQuery() {
+export function useAdminUsersQuery({ page = 1, limit = 25 }: { page?: number; limit?: number } = {}) {
   const api = useApi();
 
   return useQuery({
-    queryKey: ['admin', 'users'],
+    queryKey: ['admin', 'users', page, limit],
     queryFn: async () =>
-      adminUserListSchema.parse(await api.get(ENDPOINTS.adminUsers())),
+      adminUserListSchema.parse(await api.get(ENDPOINTS.adminUsers({ page, limit }))),
   });
 }
 
@@ -128,13 +128,13 @@ export function useAdminUserDeleteMutation() {
   });
 }
 
-export function useAdminEventsQuery() {
+export function useAdminEventsQuery({ page = 1, limit = 25 }: { page?: number; limit?: number } = {}) {
   const api = useApi();
 
   return useQuery({
-    queryKey: ['admin', 'events'],
+    queryKey: ['admin', 'events', page, limit],
     queryFn: async () =>
-      adminEventListSchema.parse(await api.get(ENDPOINTS.adminEvents())),
+      adminEventListSchema.parse(await api.get(ENDPOINTS.adminEvents({ page, limit }))),
   });
 }
 
