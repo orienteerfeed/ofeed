@@ -2,7 +2,7 @@ import type { AdminUserListItem } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Power, PowerOff, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge, Button } from '@/components/atoms';
@@ -36,6 +36,13 @@ export function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const { data, isLoading, error } = useAdminUsersQuery({ page, limit: pageSize });
+
+  useEffect(() => {
+    if (!data) return;
+    const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [data, page, pageSize]);
+
   const updateUserActiveMutation = useAdminUserActiveMutation();
   const deleteUserMutation = useAdminUserDeleteMutation();
   const [activeToggleTarget, setActiveToggleTarget] = useState<{

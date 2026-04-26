@@ -4,7 +4,7 @@ import { adminUserActiveUpdateInputSchema } from '@repo/shared';
 import { HTTP_STATUS } from '../../constants/index.js';
 import { logger } from '../../lib/logging.js';
 import { getAdminUserId } from '../../middlewares/require-admin.js';
-import { error as errorResponse, success as successResponse } from '../../utils/responseApi.js';
+import { error as errorResponse, success as successResponse, validation as validationResponse } from '../../utils/responseApi.js';
 import prisma from '../../utils/context.js';
 
 import {
@@ -70,8 +70,18 @@ export async function getAdminUsersHandler(c) {
   try {
     const rawPage = c.req.query('page');
     const rawLimit = c.req.query('limit');
-    const page = rawPage ? Math.max(1, parseInt(rawPage, 10)) : 1;
-    const limit = rawLimit ? Math.min(200, Math.max(1, parseInt(rawLimit, 10))) : 25;
+    const parsedPage = rawPage !== undefined ? parseInt(rawPage, 10) : 1;
+    const parsedLimit = rawLimit !== undefined ? parseInt(rawLimit, 10) : 25;
+
+    if (!Number.isFinite(parsedPage) || parsedPage < 1) {
+      return c.json(validationResponse('Invalid page parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    }
+    if (!Number.isFinite(parsedLimit) || parsedLimit < 1) {
+      return c.json(validationResponse('Invalid limit parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    }
+
+    const page = parsedPage;
+    const limit = Math.min(200, parsedLimit);
 
     const users = await getAdminUsers(prisma, { page, limit });
 
@@ -104,8 +114,18 @@ export async function getAdminEventsHandler(c) {
   try {
     const rawPage = c.req.query('page');
     const rawLimit = c.req.query('limit');
-    const page = rawPage ? Math.max(1, parseInt(rawPage, 10)) : 1;
-    const limit = rawLimit ? Math.min(200, Math.max(1, parseInt(rawLimit, 10))) : 25;
+    const parsedPage = rawPage !== undefined ? parseInt(rawPage, 10) : 1;
+    const parsedLimit = rawLimit !== undefined ? parseInt(rawLimit, 10) : 25;
+
+    if (!Number.isFinite(parsedPage) || parsedPage < 1) {
+      return c.json(validationResponse('Invalid page parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    }
+    if (!Number.isFinite(parsedLimit) || parsedLimit < 1) {
+      return c.json(validationResponse('Invalid limit parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    }
+
+    const page = parsedPage;
+    const limit = Math.min(200, parsedLimit);
 
     const events = await getAdminEvents(prisma, { page, limit });
 

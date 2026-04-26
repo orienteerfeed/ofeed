@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/atoms';
@@ -25,6 +25,12 @@ export function AdminEventsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const { data, isLoading, error } = useAdminEventsQuery({ page, limit: pageSize });
+
+  useEffect(() => {
+    if (!data) return;
+    const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [data, page, pageSize]);
 
   return (
     <AdminPageLayout
