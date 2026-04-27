@@ -27,7 +27,11 @@ import {
 } from '../../utils/authz.js';
 import { createCompetitorSchema, updateCompetitorSchema } from '../../utils/validateCompetitor.js';
 import eventWriteSchema from '../../utils/validateEvent.js';
-import { normalizeUtcTimeString } from '../../utils/time.js';
+import {
+  combineEventDateWithZeroTime,
+  formatUtcDateTimeRfc3339,
+  normalizeUtcTimeString,
+} from '../../utils/time.js';
 import { encodeBase64, encrypt } from '../../lib/crypto/encryption.js';
 import { formatErrors } from '../../utils/errors.js';
 import {
@@ -287,6 +291,10 @@ function parseOptionalIsoDateTime(value: string | null | undefined): Date | null
   }
 
   return parsed;
+}
+
+function serializeEventDateForResponse(date: Date) {
+  return formatUtcDateTimeRfc3339(date) ?? date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
 async function syncExternalResultsStateForEvent(params: {
@@ -748,20 +756,16 @@ export function registerSecureEventRoutes(router) {
 
       // Everything went fine.
       try {
-        const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
         const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
         const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
         const parsedSplitPublicationAt = parseOptionalIsoDateTime(splitPublicationAt);
         const parsedResultsOfficialManuallySetAt = parseOptionalIsoDateTime(
           resultsOfficialManuallySetAt,
         );
-
-        if (!normalizedZeroTime) {
-          throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
+        const eventDateTime = combineEventDateWithZeroTime(date, zeroTime);
+        if (!eventDateTime) {
+          throw new ValidationError('Invalid event date or zero time.');
         }
-
-        const datePart = new Date(date).toISOString().slice(0, 10);
-        const eventDateTime = new Date(`${datePart}T${normalizedZeroTime}Z`);
 
         const createdEvent = await appPrisma.event.create({
           data: {
@@ -807,7 +811,17 @@ export function registerSecureEventRoutes(router) {
         });
 
         return res.status(200).json(
-          successResponse('OK', { data: { ...createdEvent, zeroTime: normalizeUtcTimeString(createdEvent.date) } }, res.statusCode),
+          successResponse(
+            'OK',
+            {
+              data: {
+                ...createdEvent,
+                date: serializeEventDateForResponse(createdEvent.date),
+                zeroTime: normalizeUtcTimeString(createdEvent.date),
+              },
+            },
+            res.statusCode,
+          ),
         );
       } catch (error) {
         if (error instanceof ValidationError) {
@@ -1099,19 +1113,16 @@ export function registerSecureEventRoutes(router) {
         const { userId } = ownership;
 
         try {
-          const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
           const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
           const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
           const parsedSplitPublicationAt = parseOptionalIsoDateTime(splitPublicationAt);
           const parsedResultsOfficialManuallySetAt = parseOptionalIsoDateTime(
             resultsOfficialManuallySetAt,
           );
-          if (!normalizedZeroTime) {
-            throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
+          const eventDateTime = combineEventDateWithZeroTime(date, zeroTime);
+          if (!eventDateTime) {
+            throw new ValidationError('Invalid event date or zero time.');
           }
-
-          const datePart = new Date(date).toISOString().slice(0, 10);
-          const eventDateTime = new Date(`${datePart}T${normalizedZeroTime}Z`);
 
           // TODO: Add permission checks to ensure the user is allowed to edit the event
 
@@ -1182,7 +1193,17 @@ export function registerSecureEventRoutes(router) {
           });
 
           return res.status(200).json(
-            successResponse('OK', { data: { ...updatedEvent, zeroTime: normalizeUtcTimeString(updatedEvent.date) } }, res.statusCode),
+            successResponse(
+              'OK',
+              {
+                data: {
+                  ...updatedEvent,
+                  date: serializeEventDateForResponse(updatedEvent.date),
+                  zeroTime: normalizeUtcTimeString(updatedEvent.date),
+                },
+              },
+              res.statusCode,
+            ),
           );
         } catch (error) {
           if (error instanceof ValidationError) {
