@@ -2,8 +2,8 @@ const HH_MM_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const HH_MM_SS_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
 const HAS_TIMEZONE_PATTERN = /(?:[zZ]|[+-]\d{2}:\d{2})$/;
 const DATETIME_TIME_PART_PATTERN = /(?:T|\s)(\d{2}):(\d{2})(?::(\d{2}))?/;
-const LOCAL_DATETIME_PATTERN =
-  /^(\d{4})-(\d{2})-(\d{2})(?:T|\s)(\d{2}):(\d{2})(?::(\d{2}))?$/;
+const DATE_PREFIX_PATTERN = /^(\d{4}-\d{2}-\d{2})/;
+const LOCAL_DATETIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:T|\s)(\d{2}):(\d{2})(?::(\d{2}))?$/;
 
 type LocalDateTimeParts = {
   year: number;
@@ -39,10 +39,7 @@ function getDateTimeFormatter(timeZone: string): Intl.DateTimeFormat | null {
   }
 }
 
-function getLocalDateTimeParts(
-  date: Date,
-  timeZone: string,
-): LocalDateTimeParts | null {
+function getLocalDateTimeParts(date: Date, timeZone: string): LocalDateTimeParts | null {
   const formatter = getDateTimeFormatter(timeZone);
   if (!formatter) {
     return null;
@@ -103,10 +100,7 @@ function getTimeZoneOffsetMs(date: Date, timeZone: string): number | null {
   return utcTimestamp - date.getTime();
 }
 
-function sameLocalDateTime(
-  a: LocalDateTimeParts,
-  b: LocalDateTimeParts | null,
-): boolean {
+function sameLocalDateTime(a: LocalDateTimeParts, b: LocalDateTimeParts | null): boolean {
   return (
     b !== null &&
     a.year === b.year &&
@@ -135,10 +129,7 @@ function parseLocalDateTime(value: string): LocalDateTimeParts | null {
   };
 }
 
-function parseLocalDateTimeInTimeZone(
-  value: string,
-  timeZone: string,
-): Date | undefined {
+function parseLocalDateTimeInTimeZone(value: string, timeZone: string): Date | undefined {
   const requested = parseLocalDateTime(value);
   if (!requested) {
     return undefined;
@@ -242,6 +233,36 @@ export function normalizeUtcTimeString(value: string | Date | null | undefined):
   }
 
   return parsed.toISOString().slice(11, 19);
+}
+
+export function formatUtcDateTimeRfc3339(
+  value: string | Date | number | null | undefined,
+): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (!isValidDate(parsed)) {
+    return null;
+  }
+
+  return parsed.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+export function combineEventDateWithZeroTime(date: string, zeroTime: string): Date | undefined {
+  const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
+  if (!normalizedZeroTime) {
+    return undefined;
+  }
+
+  const dateMatch = date.trim().match(DATE_PREFIX_PATTERN);
+  if (!dateMatch) {
+    return undefined;
+  }
+
+  const combined = new Date(`${dateMatch[1]}T${normalizedZeroTime}Z`);
+  return isValidDate(combined) ? combined : undefined;
 }
 
 export function toPrismaTimeDate(utcTime: string): Date {

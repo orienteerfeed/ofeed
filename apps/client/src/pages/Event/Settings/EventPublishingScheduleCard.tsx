@@ -130,8 +130,7 @@ export const EventPublishingScheduleCard: React.FC<
       !eventData.date ||
       !eventData.timezone ||
       !eventData.organizer ||
-      !eventData.location ||
-      !eventData.zeroTime
+      !eventData.location
     ) {
       toast({
         title: t('Operations.Error', { ns: 'common' }),
@@ -157,7 +156,7 @@ export const EventPublishingScheduleCard: React.FC<
           latitude: eventData.latitude,
           longitude: eventData.longitude,
           countryCode: eventData.country?.countryCode || undefined,
-          zeroTime: eventData.zeroTime,
+          zeroTime: new Date(eventData.date).toISOString().slice(11, 19),
           discipline: eventData.discipline,
           ranking: eventData.ranking,
           coefRanking: eventData.coefRanking,

@@ -6,18 +6,16 @@ describe('event.status.service', () => {
   it('keeps same-day events upcoming until zero time in the event timezone', () => {
     const beforeStart = computeEventStatusSummary({
       published: true,
-      date: new Date('2026-04-12T00:00:00.000Z'),
+      date: new Date('2026-04-12T08:00:00.000Z'),
       timezone: 'Europe/Prague',
-      zeroTime: '08:00:00',
       hasResultData: false,
       now: new Date('2026-04-12T07:59:00.000Z'),
     });
 
     const atStart = computeEventStatusSummary({
       published: true,
-      date: new Date('2026-04-12T00:00:00.000Z'),
+      date: new Date('2026-04-12T08:00:00.000Z'),
       timezone: 'Europe/Prague',
-      zeroTime: '08:00:00',
       hasResultData: false,
       now: new Date('2026-04-12T08:00:00.000Z'),
     });
@@ -63,9 +61,8 @@ describe('event.status.service', () => {
   it('shows the primary status as done when final results are available', () => {
     const summary = computeEventStatusSummary({
       published: true,
-      date: new Date('2026-04-12T00:00:00.000Z'),
+      date: new Date('2026-04-12T10:00:00.000Z'),
       timezone: 'Europe/Prague',
-      zeroTime: '10:00:00',
       hasResultData: true,
       resultsOfficialAt: new Date('2026-04-12T08:30:00.000Z'),
       now: new Date('2026-04-12T08:35:00.000Z'),
