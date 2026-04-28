@@ -4,7 +4,11 @@ import { adminUserActiveUpdateInputSchema } from '@repo/shared';
 import { HTTP_STATUS } from '../../constants/index.js';
 import { logger } from '../../lib/logging.js';
 import { getAdminUserId } from '../../middlewares/require-admin.js';
-import { error as errorResponse, success as successResponse, validation as validationResponse } from '../../utils/responseApi.js';
+import {
+  error as errorResponse,
+  success as successResponse,
+  validation as validationResponse,
+} from '../../utils/responseApi.js';
 import prisma from '../../utils/context.js';
 
 import {
@@ -29,6 +33,21 @@ function buildAdminLogContext(c, adminUserId: number | null) {
       userId: adminUserId,
     },
   };
+}
+
+function parsePositiveIntegerQueryParam(value: string | undefined, defaultValue: number) {
+  if (value === undefined) {
+    return defaultValue;
+  }
+
+  const normalized = value.trim();
+
+  if (!/^\d+$/.test(normalized)) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isSafeInteger(parsed) && parsed >= 1 ? parsed : null;
 }
 
 export async function getAdminDashboardHandler(c) {
@@ -70,14 +89,20 @@ export async function getAdminUsersHandler(c) {
   try {
     const rawPage = c.req.query('page');
     const rawLimit = c.req.query('limit');
-    const parsedPage = rawPage !== undefined ? parseInt(rawPage, 10) : 1;
-    const parsedLimit = rawLimit !== undefined ? parseInt(rawLimit, 10) : 25;
+    const parsedPage = parsePositiveIntegerQueryParam(rawPage, 1);
+    const parsedLimit = parsePositiveIntegerQueryParam(rawLimit, 25);
 
-    if (!Number.isFinite(parsedPage) || parsedPage < 1) {
-      return c.json(validationResponse('Invalid page parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    if (parsedPage === null) {
+      return c.json(
+        validationResponse('Invalid page parameter'),
+        HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      );
     }
-    if (!Number.isFinite(parsedLimit) || parsedLimit < 1) {
-      return c.json(validationResponse('Invalid limit parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    if (parsedLimit === null) {
+      return c.json(
+        validationResponse('Invalid limit parameter'),
+        HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      );
     }
 
     const page = parsedPage;
@@ -114,14 +139,20 @@ export async function getAdminEventsHandler(c) {
   try {
     const rawPage = c.req.query('page');
     const rawLimit = c.req.query('limit');
-    const parsedPage = rawPage !== undefined ? parseInt(rawPage, 10) : 1;
-    const parsedLimit = rawLimit !== undefined ? parseInt(rawLimit, 10) : 25;
+    const parsedPage = parsePositiveIntegerQueryParam(rawPage, 1);
+    const parsedLimit = parsePositiveIntegerQueryParam(rawLimit, 25);
 
-    if (!Number.isFinite(parsedPage) || parsedPage < 1) {
-      return c.json(validationResponse('Invalid page parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    if (parsedPage === null) {
+      return c.json(
+        validationResponse('Invalid page parameter'),
+        HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      );
     }
-    if (!Number.isFinite(parsedLimit) || parsedLimit < 1) {
-      return c.json(validationResponse('Invalid limit parameter'), HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    if (parsedLimit === null) {
+      return c.json(
+        validationResponse('Invalid limit parameter'),
+        HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      );
     }
 
     const page = parsedPage;

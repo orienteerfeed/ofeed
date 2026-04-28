@@ -294,7 +294,10 @@ export async function getAdminDashboard(prisma, referenceDate = new Date()) {
   });
 }
 
-export async function getAdminUsers(prisma, { page = 1, limit = 25 }: { page?: number; limit?: number } = {}) {
+export async function getAdminUsers(
+  prisma,
+  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
+) {
   const skip = (page - 1) * limit;
 
   const [total, users] = await Promise.all([
@@ -465,7 +468,10 @@ export async function deleteAdminUser(
   });
 }
 
-export async function getAdminEvents(prisma, { page = 1, limit = 25 }: { page?: number; limit?: number } = {}) {
+export async function getAdminEvents(
+  prisma,
+  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
+) {
   const skip = (page - 1) * limit;
 
   const [total, events] = await Promise.all([

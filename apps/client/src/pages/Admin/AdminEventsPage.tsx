@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/atoms';
-import { AppDataTable, AppPagination, AppRowsPerPage } from '@/components/organisms';
+import {
+  AppDataTable,
+  AppPagination,
+  AppRowsPerPage,
+} from '@/components/organisms';
 import {
   TableCell,
   TableHead,
@@ -24,7 +28,10 @@ export function AdminEventsPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const { data, isLoading, error } = useAdminEventsQuery({ page, limit: pageSize });
+  const { data, isLoading, error } = useAdminEventsQuery({
+    page,
+    limit: pageSize,
+  });
 
   useEffect(() => {
     if (!data) return;

@@ -1110,8 +1110,6 @@ export function registerSecureEventRoutes(router) {
           return ownership.response;
         }
 
-        const { userId, event: existingEventOwnership } = ownership;
-
         try {
           const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
           const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
@@ -1181,7 +1179,6 @@ export function registerSecureEventRoutes(router) {
                     resultsOfficialAt: null,
                   }
                 : {}),
-              authorId: existingEventOwnership.authorId,
             },
           });
 

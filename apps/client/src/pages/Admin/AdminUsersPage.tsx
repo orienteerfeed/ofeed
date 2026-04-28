@@ -8,7 +8,11 @@ import { useTranslation } from 'react-i18next';
 import { Badge, Button } from '@/components/atoms';
 import { ConfirmDialog } from '@/components/molecules';
 import { useAuth } from '@/hooks/useAuth';
-import { AppDataTable, AppPagination, AppRowsPerPage } from '@/components/organisms';
+import {
+  AppDataTable,
+  AppPagination,
+  AppRowsPerPage,
+} from '@/components/organisms';
 import {
   TableCell,
   TableHead,
@@ -35,7 +39,10 @@ export function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const { data, isLoading, error } = useAdminUsersQuery({ page, limit: pageSize });
+  const { data, isLoading, error } = useAdminUsersQuery({
+    page,
+    limit: pageSize,
+  });
 
   useEffect(() => {
     if (!data) return;
