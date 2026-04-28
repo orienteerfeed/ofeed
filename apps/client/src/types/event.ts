@@ -80,7 +80,6 @@ export interface Event {
   sportId: number;
   sport: EventSport;
   discipline: EventDiscipline;
-  zeroTime?: string; // UTC time-of-day (HH:mm:ss)
   timezone?: string; // IANA timezone (e.g., 'Europe/Prague', 'America/New_York')
   externalSource?: 'ORIS' | 'EVENTOR';
   externalEventId?: string;
