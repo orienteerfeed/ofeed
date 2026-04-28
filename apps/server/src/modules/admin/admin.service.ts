@@ -8,6 +8,8 @@ import {
   type AdminUserListItem,
 } from '@repo/shared';
 
+import { formatUtcDateTimeRfc3339 } from '../../utils/time.js';
+
 const DASHBOARD_ACTIVITY_MONTHS = 6;
 const DASHBOARD_RECENT_LIMIT = 8;
 const LIST_LIMIT = 50;
@@ -132,7 +134,7 @@ function mapEventListItem(event: {
     id: event.id,
     name: event.name,
     organizer: event.organizer,
-    date: event.date,
+    date: formatUtcDateTimeRfc3339(event.date) ?? event.date,
     discipline: event.discipline,
     published: event.published,
     ranking: event.ranking,
