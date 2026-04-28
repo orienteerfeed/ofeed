@@ -1,9 +1,14 @@
 import { Link } from '@tanstack/react-router';
 import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/atoms';
-import { AppDataTable } from '@/components/organisms';
+import {
+  AppDataTable,
+  AppPagination,
+  AppRowsPerPage,
+} from '@/components/organisms';
 import {
   TableCell,
   TableHead,
@@ -21,7 +26,18 @@ function formatDate(value: string | Date) {
 
 export function AdminEventsPage() {
   const { t } = useTranslation();
-  const { data, isLoading, error } = useAdminEventsQuery();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const { data, isLoading, error } = useAdminEventsQuery({
+    page,
+    limit: pageSize,
+  });
+
+  useEffect(() => {
+    if (!data) return;
+    const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [data, page, pageSize]);
 
   return (
     <AdminPageLayout
@@ -51,6 +67,23 @@ export function AdminEventsPage() {
             error={error}
             columnCount={7}
             emptyStateText={t('Pages.Admin.Table.Empty')}
+            renderToolbar={
+              <AppRowsPerPage
+                pageSize={pageSize}
+                onPageSizeChange={size => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+              />
+            }
+            renderPagination={
+              <AppPagination
+                page={page}
+                pageSize={pageSize}
+                totalItems={data?.total ?? 0}
+                onPageChange={setPage}
+              />
+            }
             renderHeader={
               <TableHeader>
                 <TableRow>

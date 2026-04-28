@@ -44,10 +44,12 @@ export const ENDPOINTS = {
 
   // Admin endpoints
   adminDashboard: (): string => `${apiPrefix}/admin/dashboard`,
-  adminUsers: (): string => `${apiPrefix}/admin/users`,
+  adminUsers: (params?: PaginationParams): string =>
+    `${apiPrefix}/admin/users${qs(params)}`,
   adminUser: (userId: string | number): string =>
     `${apiPrefix}/admin/users/${userId}`,
-  adminEvents: (): string => `${apiPrefix}/admin/events`,
+  adminEvents: (params?: PaginationParams): string =>
+    `${apiPrefix}/admin/events${qs(params)}`,
   adminSystemMessages: (): string => `${apiPrefix}/admin/system-messages`,
   adminSystemMessage: (messageId: string | number): string =>
     `${apiPrefix}/admin/system-messages/${messageId}`,

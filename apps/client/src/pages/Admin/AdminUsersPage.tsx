@@ -2,13 +2,17 @@ import type { AdminUserListItem } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Power, PowerOff, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge, Button } from '@/components/atoms';
 import { ConfirmDialog } from '@/components/molecules';
 import { useAuth } from '@/hooks/useAuth';
-import { AppDataTable } from '@/components/organisms';
+import {
+  AppDataTable,
+  AppPagination,
+  AppRowsPerPage,
+} from '@/components/organisms';
 import {
   TableCell,
   TableHead,
@@ -33,7 +37,19 @@ export function AdminUsersPage() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useAdminUsersQuery();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const { data, isLoading, error } = useAdminUsersQuery({
+    page,
+    limit: pageSize,
+  });
+
+  useEffect(() => {
+    if (!data) return;
+    const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [data, page, pageSize]);
+
   const updateUserActiveMutation = useAdminUserActiveMutation();
   const deleteUserMutation = useAdminUserDeleteMutation();
   const [activeToggleTarget, setActiveToggleTarget] = useState<{
@@ -145,6 +161,23 @@ export function AdminUsersPage() {
             error={error}
             columnCount={7}
             emptyStateText={t('Pages.Admin.Table.Empty')}
+            renderToolbar={
+              <AppRowsPerPage
+                pageSize={pageSize}
+                onPageSizeChange={size => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+              />
+            }
+            renderPagination={
+              <AppPagination
+                page={page}
+                pageSize={pageSize}
+                totalItems={data?.total ?? 0}
+                onPageChange={setPage}
+              />
+            }
             renderHeader={
               <TableHeader>
                 <TableRow>

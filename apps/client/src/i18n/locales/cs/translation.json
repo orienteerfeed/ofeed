@@ -18,20 +18,20 @@
         "Description": "Centrální pracovní prostor pro administrátory s rychlým přehledem o uživatelích, závodech a publikační aktivitě.",
         "ErrorTitle": "Nepodařilo se načíst admin data",
         "ChartTitle": "Měsíční aktivita",
-        "ChartDescription": "Noví uživatelé a nově vytvořené závody za posledních šest měsíců.",
+        "ChartDescription": "Noví uživatelé a nově vytvořené akce za posledních šest měsíců.",
         "ChartUsersSeries": "Vytvoření uživatelé",
-        "ChartEventsSeries": "Vytvořené závody",
+        "ChartEventsSeries": "Vytvořené akce",
         "RecentUsersTitle": "Poslední uživatelé",
         "RecentUsersDescription": "Naposledy registrované účty v aplikaci.",
-        "RecentEventsTitle": "Poslední závody",
-        "RecentEventsDescription": "Nejnovější záznamy závodů aktuálně uložené v OFeed.",
+        "RecentEventsTitle": "Poslední akce",
+        "RecentEventsDescription": "Nejnovější záznamy akcí aktuálně uložené v OFeed.",
         "Cards": {
           "TotalUsers": "Uživatelé celkem",
           "ActiveUsersDetail": "{{count}} účtů je aktivních",
-          "TotalEvents": "Závody celkem",
-          "PublishedEventsDetail": "{{count}} závodů je publikovaných",
-          "RankingEvents": "Rankingové závody",
-          "UpcomingEventsDetail": "{{count}} nadcházejících závodů je naplánováno",
+          "TotalEvents": "Akce celkem",
+          "PublishedEventsDetail": "{{count}} akcí je publikovaných",
+          "RankingEvents": "Rankingové akce",
+          "UpcomingEventsDetail": "{{count}} nadcházejících akcí je naplánováno",
           "AdminUsers": "Admin uživatelé",
           "AdminUsersHint": "Uživatelé s přístupem do admin zóny"
         }
@@ -65,8 +65,8 @@
         }
       },
       "Events": {
-        "Title": "Závody",
-        "Description": "Posledních {{count}} závodů včetně vlastníka, disciplíny a stavu publikace."
+        "Title": "Akce",
+        "Description": "Posledních {{count}} akcí včetně vlastníka, disciplíny a stavu publikace."
       },
       "SystemMessages": {
         "Title": "Systémové zprávy",
@@ -141,7 +141,7 @@
           "SnapshotDatasetsHint": "Nahrané měsíční CSV snapshoty seskupené podle typu rankingu a kategorie.",
           "SnapshotEntries": "Řádky snapshotů",
           "SnapshotEntriesHint": "Celkový počet rankingových řádků aktuálně uložených z CSV uploadů.",
-          "EventDatasets": "Synchronizované sady závodů",
+          "EventDatasets": "Synchronizované sady akcí",
           "EventDatasetsHint": "ORIS rankingové výsledky seskupené podle závodu, typu rankingu a kategorie.",
           "EventResults": "Synchronizované řádky výsledků",
           "EventResultsHint": "Celkový počet individuálních rankingových výsledků synchronizovaných z ORIS."
@@ -230,7 +230,7 @@
           "UploadSuccessDescription": "Úspěšně bylo importováno {{count}} řádků.",
           "UploadErrorTitle": "Upload snapshotu selhal",
           "SyncSuccessTitle": "Synchronizace s ORIS dokončena",
-          "SyncSuccessDescription": "Synchronizovalo se {{count}} sad závodů.",
+          "SyncSuccessDescription": "Synchronizovalo se {{count}} sad akcí.",
           "SyncErrorTitle": "Synchronizace s ORIS selhala",
           "ClearSnapshotsSuccessTitle": "Snapshoty vyčištěny",
           "ClearSnapshotsErrorTitle": "Čištění snapshotů selhalo",

@@ -19,9 +19,11 @@ function createPrismaMock() {
       },
       findMany: async ({
         where,
+        skip,
         take,
       }: {
         where?: { createdAt?: { gte: Date } };
+        skip?: number;
         take?: number;
       }) => {
         const users = [
@@ -63,7 +65,8 @@ function createPrismaMock() {
             .map((user) => ({ createdAt: user.createdAt }));
         }
 
-        return users.slice(0, take ?? users.length);
+        const offset = skip ?? 0;
+        return users.slice(offset, take !== undefined ? offset + take : undefined);
       },
     },
     event: {
@@ -77,9 +80,11 @@ function createPrismaMock() {
       },
       findMany: async ({
         where,
+        skip,
         take,
       }: {
         where?: { createdAt?: { gte: Date } };
+        skip?: number;
         take?: number;
       }) => {
         const events = [
@@ -124,7 +129,8 @@ function createPrismaMock() {
             .map((event) => ({ createdAt: event.createdAt }));
         }
 
-        return events.slice(0, take ?? events.length);
+        const offset = skip ?? 0;
+        return events.slice(offset, take !== undefined ? offset + take : undefined);
       },
     },
   };
@@ -320,6 +326,61 @@ describe('admin service', () => {
     expect(users.items[0]?.email).toBe('admin@example.com');
     expect(events.total).toBe(4);
     expect(events.items[0]?.authorName).toBe('Ada Admin');
+  });
+
+  it('paginates users: page 1 returns first items', async () => {
+    const prisma = createPrismaMock();
+    const result = await getAdminUsers(prisma, { page: 1, limit: 2 });
+
+    expect(result.total).toBe(3);
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]?.email).toBe('admin@example.com');
+    expect(result.items[1]?.email).toBe('user@example.com');
+  });
+
+  it('paginates users: page 2 returns remaining items', async () => {
+    const prisma = createPrismaMock();
+    const result = await getAdminUsers(prisma, { page: 2, limit: 2 });
+
+    expect(result.total).toBe(3);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.email).toBe('inactive@example.com');
+  });
+
+  it('paginates users: page beyond total returns empty items', async () => {
+    const prisma = createPrismaMock();
+    const result = await getAdminUsers(prisma, { page: 99, limit: 25 });
+
+    expect(result.total).toBe(3);
+    expect(result.items).toHaveLength(0);
+  });
+
+  it('paginates events: page 1 returns first items', async () => {
+    const prisma = createPrismaMock();
+    const result = await getAdminEvents(prisma, { page: 1, limit: 2 });
+
+    expect(result.total).toBe(4);
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]?.id).toBe('evt-1');
+    expect(result.items[1]?.id).toBe('evt-2');
+  });
+
+  it('paginates events: page 2 returns remaining items', async () => {
+    const prisma = createPrismaMock();
+    const result = await getAdminEvents(prisma, { page: 2, limit: 2 });
+
+    expect(result.total).toBe(4);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.id).toBe('evt-3');
+  });
+
+  it('uses default page=1 and limit=25 when no params provided', async () => {
+    const prisma = createPrismaMock();
+    const users = await getAdminUsers(prisma);
+    const events = await getAdminEvents(prisma);
+
+    expect(users.items).toHaveLength(3);
+    expect(events.items).toHaveLength(3);
   });
 
   it('updates admin user active state', async () => {

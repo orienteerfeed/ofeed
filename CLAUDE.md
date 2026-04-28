@@ -160,6 +160,56 @@ See `src/graphql/__tests__/ws-security.test.ts` for reference.
 merge, rebase, reset, checkout, etc.) and GitHub API access. Only read-only
 operations (status, log, diff, show, blame, grep) are allowed.
 
+## Conventions
+
+### REST API changes
+
+When adding or modifying a REST endpoint (query params, request body, response
+shape, new status codes), **always update the OpenAPI spec in the same PR**.
+Each module keeps its spec in `src/modules/<module>/<module>.openapi.ts`. The
+spec drives generated docs (`/reference`) and is the contract for API consumers.
+
+Checklist for every endpoint change:
+
+- New query param → add to `parameters[]` with type, `minimum`/`maximum`,
+  `default`, and description.
+- New error response (e.g. 422 for invalid input) → add to `responses`.
+- Changed response shape → update the envelope/results schema reference.
+
+### Postman collection
+
+The Postman collection lives in `apps/server/postman/collection.json` and is the
+scenario-driven integration test suite run via Newman in CI. **Keep it in sync
+with every API change** — out-of-sync collections silently pass stale scenarios.
+
+Checklist for every endpoint change:
+
+- New query param → add an entry to `url.query[]` with `key`, `value` (the
+  default), and `description`. Update `url.raw` to include the param.
+- New required field in response → add a `pm.test` assertion in the request's
+  `test` script that validates the field exists and has the expected type.
+- New error response (e.g. 422) → add a separate request that sends invalid
+  input and asserts the expected status code.
+- Renamed or removed field → update all `pm.test` assertions that reference it.
+
+Structure reference: each item has `request.url.query[]` for query params and
+`event[listen=test].script.exec[]` for test assertions (array of strings, one
+per line).
+
+### Tests
+
+When changing server-side logic, update or add tests in the same commit:
+
+- **Unit tests** live next to source in `__tests__/` (e.g.
+  `src/modules/admin/__tests__/admin.service.test.ts`). Update Prisma mocks to
+  cover new parameters (`skip`, `take`, filters) and add cases for: happy path,
+  boundary values, and invalid input that should produce an error.
+- **Do not leave existing tests calling the old signature without params** when
+  the behaviour under default params has changed — verify the defaults are still
+  correct or add a dedicated default-params test.
+- Run `pnpm --filter server test` after every server change and fix failures
+  before considering the task done.
+
 ## Docs
 
 Deep technical docs in `docs/`. `docs/WIKI.md` is a ~58KB technical reference —
