@@ -132,6 +132,30 @@ describe('authz helpers', () => {
     });
   });
 
+  it('preserves original event authorId when admin accesses an event they do not own', async () => {
+    const prisma = createPrismaMock({
+      users: {
+        4: { role: 'ADMIN' },
+      },
+      events: {
+        'evt-2': { authorId: 99 },
+      },
+    });
+
+    const result = await ensureEventOwnerOrAdmin(
+      prisma,
+      {
+        isAuthenticated: true,
+        type: 'jwt',
+        userId: 4,
+      },
+      'evt-2',
+    );
+
+    expect(result.event.authorId).toBe(99);
+    expect(result.userId).toBe(4);
+  });
+
   it('rejects regular users on events they do not own', async () => {
     const prisma = createPrismaMock({
       users: {

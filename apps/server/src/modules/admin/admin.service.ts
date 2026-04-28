@@ -294,12 +294,18 @@ export async function getAdminDashboard(prisma, referenceDate = new Date()) {
   });
 }
 
-export async function getAdminUsers(prisma) {
+export async function getAdminUsers(
+  prisma,
+  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
+) {
+  const skip = (page - 1) * limit;
+
   const [total, users] = await Promise.all([
     prisma.user.count(),
     prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
-      take: LIST_LIMIT,
+      skip,
+      take: limit,
       select: {
         id: true,
         email: true,
@@ -462,12 +468,18 @@ export async function deleteAdminUser(
   });
 }
 
-export async function getAdminEvents(prisma) {
+export async function getAdminEvents(
+  prisma,
+  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
+) {
+  const skip = (page - 1) * limit;
+
   const [total, events] = await Promise.all([
     prisma.event.count(),
     prisma.event.findMany({
       orderBy: [{ createdAt: 'desc' }, { date: 'desc' }],
-      take: LIST_LIMIT,
+      skip,
+      take: limit,
       select: {
         id: true,
         name: true,
