@@ -814,9 +814,72 @@
               "Description": "Kopiera och klistra in dessa uppgifter i OFeed-tjänstens inställningar.",
               "ExportInterval": "Intervall för export",
               "CopyLink": "Kopiera inloggningsuppgifter"
+            },
+            "SIDroidConenctor": {
+              "Description": "Skanna QR-koden för att ange webbadress, tävlings-id och lösenord i inställningarna för OFeed-anslutningen. Klicka på QR-kodsikonen i appens inställningar för att starta kameran. Du kan använda knappen med appikonen för att få en länk som gör att du kan dela inloggningsuppgifterna på en enskild enhet."
             }
           }
+        },
+        "PrintWindow": {
+          "Header": "OFeed",
+          "Subheader": "Skanna den här QR-koden för att koppla ihop din mobilapp {{appName}} med tävlingen.",
+          "Footer": "Förvara denna information på ett säkert sätt. Om du stöter på några problem, kontakta supporten."
+        },
+        "Toast": {
+          "CopyBaseUrl": "Bas-URL:en finns nu i urklipp – dela den gärna!",
+          "CopyEventId": "Tävlings-id finns nu i urklipp – dela det gärna!"
         }
+      },
+      "Visibility": {
+        "Card": {
+          "Title": "Synlighet",
+          "Description": "Anger om evenemanget är offentligt eller privat. Offentliga evenemang visas i tävlingslistan på OFeeds startsida, medan privata evenemang endast är synliga för arrangören."
+        },
+        "Toast": {
+          "UpdateSuccess": "Tävlingen är nu {{status}}!",
+          "UpdateFail": "Det gick inte att uppdatera tävlingens synlighet."
+        }
+      },
+      "DangerZone": {
+        "Title": "Riskzon",
+        "Description": "Åtgärder som inte går att ångra och som raderar data permanent. Var ytterst försiktig.",
+        "Footer": "Dessa åtgärder går inte att ångra. Se till att du har lämpliga säkerhetskopior.",
+        "DeleteCompetitors": {
+          "Title": "Radera deltagare",
+          "Description": "Om du har laddat upp en startlista eller resultat för fel tävling kan du ta bort alla deltagare och börja om. Den här knappen tar bort alla löpare (startlista och resultat).",
+          "Button": "Radera deltagare",
+          "ConfirmTitle": "Radera alla deltagare",
+          "ConfirmDescription": "Är du säker på att du vill ta bort alla deltagare? Den här åtgärden går inte att ångra!",
+          "ConfirmButton": "Radera deltagare"
+        },
+        "DeleteAllEventData": {
+          "Title": "Radera all tävlingsdata",
+          "Description": "Om du vill radera all tävlingsdata, inklusive deltagare, klasser, stafetter och resultat, använder du den här knappen. Var försiktig, eftersom denna åtgärd inte går att ångra!",
+          "Button": "Radera all tävlingsdata",
+          "ConfirmTitle": "Radera all tävlingsdata",
+          "ConfirmDescription": "Är du säker på att du vill radera all tävlingsdata? Detta kommer att ta bort alla resultat och kan inte ångras!",
+          "ConfirmButton": "Radera all data"
+        },
+        "DeleteEvent": {
+          "Title": "Radera tävling",
+          "Description": "Tävlingen kommer att raderas. Du måste först radera all tävlingsdata. Denna åtgärd går inte att ångra!",
+          "Button": "Radera tävling",
+          "ConfirmTitle": "Radera tävling",
+          "ConfirmDescription": "Är du säker på att du vill ta bort hela tävlingen? Den här åtgärden går inte att ångra!",
+          "ConfirmButton": "Radera tävling"
+        },
+        "Toast": {
+          "DeleteFailTitle": "Fel vid radering av data",
+          "DeleteSuccessDescription": "Data har raderats"
+        }
+      },
+      "TroublesShooting": {
+        "Title": "Behöver du hjälp eller har du frågor?",
+        "Description": "Om du stöter på ett fel eller behöver hjälp är du välkommen att kontakta oss.",
+        "Description1": "Vårt supportteam står redo att hjälpa dig med eventuella problem eller frågor. Kontakta oss på",
+        "Description2": "Bifoga alla relevanta filer.",
+        "Discord": "Gå med i Discord",
+        "GitHubIssues": "Öppna GitHub-ärenden"
       }
     },
     "Profile": {
@@ -927,13 +990,59 @@
         "MapTileUnavailable": "Kartbakgrunden är tillfälligt otillgänglig. Ladda om sidan och försök igen.",
         "MapZoomIn": "Zooma in",
         "MapZoomOut": "Zooma ut",
-        "MapAttributionOthers": "och andra"
+        "MapAttributionOthers": "och andra",
+        "LoadingInitial": "Hämtar tävlingar...",
+        "LoadingMore": "Hämtar fler tävlingar...",
+        "LoadingMoreInline": "Hämtar fler...",
+        "ScrollMore": "Rulla nedåt för fler tävlingar",
+        "AllLoaded": "Alla tävlingar har hämtats",
+        "EventsCount": "{{count}} tävlingar",
+        "FoundCount": "Du hittade {{count}} tävlingar",
+        "LoadError": "Fel vid inläsning av tävlingar: {{message}}",
+        "NoEvents": "Inga tävlingar hittades",
+        "NoEventsHint": "Prova att byta filter eller kom tillbaka senare."
       }
     }
   },
   "Organisms": {
     "Navbar": {
-      "AdminZone": "Adminzon"
+      "AdminZone": "Adminzon",
+      "Placeholder": "Skriv vad du vill söka...",
+      "SignIn": "Logga in",
+      "SignUp": "Registrera dig",
+      "LogOut": "Logga ut",
+      "MyProfile": "Min profil",
+      "Pages": "Sidor"
+    },
+    "DragDrop": {
+      "UploadIofXml": {
+        "Title": "Ladda upp IOF XML",
+        "Description": "Ladda upp IOF XML-filer med start- och resultatlistor."
+      },
+      "Toast": {
+        "UploadSuccess": "Filerna har laddats upp!",
+        "UploadFail": "Det uppstod ett fel vid filöverföringen. Försök igen.",
+        "UploadInProgress": "Filöverföring pågår",
+        "InvalidFormat": "Formatet stöds inte",
+        "AllowedFormats": "Tillåtna format är: {{formats}}",
+        "FileTooLarge": "Filen är för stor",
+        "MaxSize": "Max storlek är {{size}} MB",
+        "ProcessingError": "Fel vid bearbetning av fil",
+        "TryAgain": "Försök igen"
+      }
+    },
+    "Footer": {
+      "Collaborate": "Samarbeta",
+      "Docs": "Dok",
+      "Donate": "Donera",
+      "Blog": "Blog",
+      "MadeWith": "Skapad med",
+      "ForOrienteering": "för orientering"
+    },
+    "AppDataTable": {
+      "Empty": "Inga data tillgängliga.",
+      "Loading": "Hämtar data...",
+      "Error": "Det gick inte att hämta data."
     }
   },
   "Errors": {
@@ -946,5 +1055,86 @@
     "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
     "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
     "passwordsDoNotMatch": "Lösenorden matchar inte"
+  },
+  "Molecules": {
+    "DragDrop": {
+      "ClickToUpload": "Klicka för att ladda upp",
+      "Delete": "Radera",
+      "OrdDragAndDrop": "eller dra och släpp",
+      "SupportedFormats": "Format som stöds:",
+      "Done": "Klart",
+      "OrDragAndDrop": "eller drag och släpp",
+      "Toast": {
+        "MaximumFiles": {
+          "Title": "Maximalt antal filer",
+          "Description": "Endast {{count}} filer kan laddas upp"
+        },
+        "InvalidFileFormat": {
+          "Title": "Ogiltigt filformat",
+          "Description": "Ladda endast upp"
+        },
+        "Error": {
+          "DescriptionSingle": "Det går bara att ladda upp {{count}} filer åt gången",
+          "DescriptionPlural": "Det går bara att ladda upp {{count}} filer åt gången"
+        },
+        "ProcessingError": "Fel vid bearbetning av fil"
+      }
+    },
+    "LanguageSelector": {
+      "Title": "Språk",
+      "SelectLanguage": "Välj språk"
+    },
+    "EventSearchDialog": {
+      "Title": "Sök tävling",
+      "Placeholder": "Sök efter namn, plats, land eller arrangör...",
+      "Hint": "Prova att söka på: tävlingens namn, ort, land eller arrangör",
+      "Searching": "Söker tävlingar...",
+      "Organizer": "Arrangör",
+      "Draft": "Utkast",
+      "NoEventsFound": "Inga tävlingar hittades för ”{{query}}”",
+      "NoEventsHint": "Prova att söka efter tävlingens namn, plats, land eller arrangör",
+      "RecentEvents": "Senaste tävlingarna:",
+      "StartTyping": "Skriv för att söka efter tävlingar",
+      "StartTypingHint": "Sök efter tävlingsnamn, plats, land eller arrangör"
+    },
+    "SearchBox": {
+      "SearchResults": "Sök resultat"
+    }
+  },
+  "Route": {
+    "Dashboard": "Kontrollpanel",
+    "Events": "Tävlingar",
+    "Finances": "Ekonomi",
+    "Settings": "Inställningar",
+    "Transactions": "Transaktioner"
+  },
+  "Templates": {
+    "Routes": {
+      "Home": "Hem",
+      "Events": "Tävlingar",
+      "About": "Om",
+      "Docs": "Dok",
+      "Contact": "Kontakt",
+      "MRB": "Mina resultat",
+      "GitHub": "GitHub"
+    }
+  },
+  "Validations": {
+    "Required": "Obligatoriskt fält",
+    "Email": "Ogiltig e-postadress",
+    "PasswordsDontMatch": "Lösenorden stämmer inte överens",
+    "EmailsContainNotEmail": "En av de angivna e-postadresserna är ogiltig",
+    "EmailsUnique": "De e-postadresser som anges måste vara unika",
+    "EmailsMinMax": "Antalet e-postmeddelanden måste vara minst {{min}} och högst {{max}}",
+    "SelectRequired": "Välj ett värde",
+    "FileRequired": "Ladda upp en fil",
+    "NumberMin": "Ange ett tal som är större än {{min}}",
+    "Date": "Ogiltigt datum",
+    "RegistrationNumber": "Registreringsnumret måste följa det giltiga CSOS-formatet (t.ex. XXX0101)",
+    "Number": "Det angivna värdet måste vara ett tal",
+    "Time": "Tiden måste anges i formatet TT:MM:SS (t.ex. 01:18:06)",
+    "TimeInZones": "Tiden i zonerna får inte överstiga den totala aktivitetstiden",
+    "Latitude": "Latituden måste ligga mellan -90 och 90",
+    "Longitude": "Longituden måste ligga mellan -180 och 180"
   }
 }
