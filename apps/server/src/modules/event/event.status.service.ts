@@ -1,6 +1,5 @@
 import type { ExternalSource } from '../../generated/prisma/client.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
-import { normalizeUtcTimeString } from '../../utils/time.js';
 
 export type EventLifecycleStatus = 'DRAFT' | 'UPCOMING' | 'LIVE' | 'DONE';
 export type EventPrimaryStatus = EventLifecycleStatus;
@@ -24,7 +23,6 @@ type EventStatusComputationInput = {
   published: boolean;
   date: Date;
   timezone: string;
-  zeroTime?: string | Date | null;
   entriesOpenAt?: Date | null;
   entriesCloseAt?: Date | null;
   resultsOfficialAt?: Date | null;
@@ -41,7 +39,6 @@ type StatusSummaryEvent = {
   published: boolean;
   date: Date;
   timezone: string;
-  zeroTime: Date | null;
   entriesOpenAt: Date | null;
   entriesCloseAt: Date | null;
   resultsOfficialAt: Date | null;
@@ -91,36 +88,6 @@ function getStoredEventDateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function resolveEventStartAt(
-  eventDate: Date,
-  zeroTime: string | Date | null | undefined,
-  timeZone: string,
-): Date | null {
-  const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
-  if (!normalizedZeroTime) {
-    return null;
-  }
-
-  const eventDateKey = getStoredEventDateKey(eventDate);
-  const candidate = new Date(`${eventDateKey}T${normalizedZeroTime}Z`);
-
-  if (!Number.isFinite(candidate.getTime())) {
-    return null;
-  }
-
-  const candidateDateKeyInTimeZone =
-    getDateKeyInTimeZone(candidate, timeZone) ?? getStoredEventDateKey(candidate);
-
-  if (candidateDateKeyInTimeZone < eventDateKey) {
-    return new Date(candidate.getTime() + 24 * 60 * 60 * 1000);
-  }
-
-  if (candidateDateKeyInTimeZone > eventDateKey) {
-    return new Date(candidate.getTime() - 24 * 60 * 60 * 1000);
-  }
-
-  return candidate;
-}
 
 export function buildOfficialResultsUrl(
   externalSource: ExternalSource | null | undefined,
@@ -141,7 +108,8 @@ export function buildOfficialResultsUrl(
 
 export function computeEventStatusSummary(input: EventStatusComputationInput): EventStatusSummary {
   const now = input.now ?? new Date();
-  const eventDateKey = getStoredEventDateKey(input.date);
+  const eventDateKey =
+    getDateKeyInTimeZone(input.date, input.timezone) ?? getStoredEventDateKey(input.date);
   const nowDateKey = getDateKeyInTimeZone(now, input.timezone) ?? getStoredEventDateKey(now);
 
   let lifecycle: EventLifecycleStatus;
@@ -150,8 +118,7 @@ export function computeEventStatusSummary(input: EventStatusComputationInput): E
   } else if (nowDateKey < eventDateKey) {
     lifecycle = 'UPCOMING';
   } else if (nowDateKey === eventDateKey) {
-    const eventStartAt = resolveEventStartAt(input.date, input.zeroTime, input.timezone);
-    lifecycle = eventStartAt && now < eventStartAt ? 'UPCOMING' : 'LIVE';
+    lifecycle = now < input.date ? 'UPCOMING' : 'LIVE';
   } else {
     lifecycle = 'DONE';
   }
