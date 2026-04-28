@@ -27,7 +27,11 @@ import {
 } from '../../utils/authz.js';
 import { createCompetitorSchema, updateCompetitorSchema } from '../../utils/validateCompetitor.js';
 import eventWriteSchema from '../../utils/validateEvent.js';
-import { normalizeUtcTimeString, toPrismaTimeDate } from '../../utils/time.js';
+import {
+  combineEventDateWithZeroTime,
+  formatUtcDateTimeRfc3339,
+  normalizeUtcTimeString,
+} from '../../utils/time.js';
 import { encodeBase64, encrypt } from '../../lib/crypto/encryption.js';
 import { formatErrors } from '../../utils/errors.js';
 import {
@@ -287,6 +291,10 @@ function parseOptionalIsoDateTime(value: string | null | undefined): Date | null
   }
 
   return parsed;
+}
+
+function serializeEventDateForResponse(date: Date) {
+  return formatUtcDateTimeRfc3339(date) ?? date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
 async function syncExternalResultsStateForEvent(params: {
@@ -748,30 +756,27 @@ export function registerSecureEventRoutes(router) {
 
       // Everything went fine.
       try {
-        const dateTime = new Date(date);
-        const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
         const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
         const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
         const parsedSplitPublicationAt = parseOptionalIsoDateTime(splitPublicationAt);
         const parsedResultsOfficialManuallySetAt = parseOptionalIsoDateTime(
           resultsOfficialManuallySetAt,
         );
-
-        if (!normalizedZeroTime) {
-          throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
+        const eventDateTime = combineEventDateWithZeroTime(date, zeroTime);
+        if (!eventDateTime) {
+          throw new ValidationError('Invalid event date or zero time.');
         }
 
         const createdEvent = await appPrisma.event.create({
           data: {
             name,
-            date: dateTime,
+            date: eventDateTime,
             timezone,
             organizer,
             location,
             latitude,
             longitude,
             countryId: countryCode,
-            zeroTime: toPrismaTimeDate(normalizedZeroTime),
             ranking,
             coefRanking,
             discipline,
@@ -811,7 +816,8 @@ export function registerSecureEventRoutes(router) {
             {
               data: {
                 ...createdEvent,
-                zeroTime: normalizeUtcTimeString(createdEvent.zeroTime),
+                date: serializeEventDateForResponse(createdEvent.date),
+                zeroTime: normalizeUtcTimeString(createdEvent.date),
               },
             },
             res.statusCode,
@@ -1107,15 +1113,15 @@ export function registerSecureEventRoutes(router) {
         const { userId } = ownership;
 
         try {
-          const normalizedZeroTime = normalizeUtcTimeString(zeroTime);
           const parsedEntriesOpenAt = parseOptionalIsoDateTime(entriesOpenAt);
           const parsedEntriesCloseAt = parseOptionalIsoDateTime(entriesCloseAt);
           const parsedSplitPublicationAt = parseOptionalIsoDateTime(splitPublicationAt);
           const parsedResultsOfficialManuallySetAt = parseOptionalIsoDateTime(
             resultsOfficialManuallySetAt,
           );
-          if (!normalizedZeroTime) {
-            throw new ValidationError('Invalid zero time. Expected HH:mm or HH:mm:ss.');
+          const eventDateTime = combineEventDateWithZeroTime(date, zeroTime);
+          if (!eventDateTime) {
+            throw new ValidationError('Invalid event date or zero time.');
           }
 
           // TODO: Add permission checks to ensure the user is allowed to edit the event
@@ -1141,14 +1147,13 @@ export function registerSecureEventRoutes(router) {
             where: { id: eventId },
             data: {
               name,
-              date: new Date(date),
+              date: eventDateTime,
               timezone,
               organizer,
               location,
               latitude: dbLatitude,
               longitude: dbLongitude,
               countryId: countryCode ?? country,
-              zeroTime: toPrismaTimeDate(normalizedZeroTime),
               ranking,
               coefRanking,
               discipline,
@@ -1193,7 +1198,8 @@ export function registerSecureEventRoutes(router) {
               {
                 data: {
                   ...updatedEvent,
-                  zeroTime: normalizeUtcTimeString(updatedEvent.zeroTime),
+                  date: serializeEventDateForResponse(updatedEvent.date),
+                  zeroTime: normalizeUtcTimeString(updatedEvent.date),
                 },
               },
               res.statusCode,

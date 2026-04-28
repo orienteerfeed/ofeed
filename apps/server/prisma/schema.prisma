@@ -22,18 +22,18 @@ model Country {
 }
 
 model RankingCzech {
-  id              Int                   @id @default(autoincrement()) @db.UnsignedInt
+  id              Int                  @id @default(autoincrement()) @db.UnsignedInt
   rankingType     CzechRankingType
   rankingCategory CzechRankingCategory
-  validForMonth   DateTime              @db.Date
+  validForMonth   DateTime             @db.Date
   place           Int
   firstName       String
   lastName        String
-  registration    String                @db.VarChar(10)
+  registration    String               @db.VarChar(10)
   points          Int
   rankIndex       Int
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   @@unique([registration, rankingType, rankingCategory, validForMonth], map: "ranking_czech_reg_type_cat_month_uq")
   @@index([rankingType, rankingCategory, validForMonth], map: "ranking_czech_type_cat_month_idx")
@@ -65,9 +65,9 @@ model CzechRankingEventResult {
 }
 
 model Sport {
-  id     Int     @id @default(autoincrement()) @db.UnsignedInt
-  name   String  @unique
-  events Event[]
+  id        Int        @id @default(autoincrement()) @db.UnsignedInt
+  name      String     @unique
+  events    Event[]
   userCards UserCard[]
 }
 
@@ -104,9 +104,9 @@ model UserCard {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
 
+  @@unique([userId, sportId, type, cardNumber])
   @@index([userId, sportId])
   @@index([userId, sportId, isDefault])
-  @@unique([userId, sportId, type, cardNumber])
 }
 
 enum UserCardType {
@@ -119,47 +119,46 @@ enum UserRole {
 }
 
 model Event {
-  id                 String          @id @default(cuid())
-  sport              Sport           @relation(fields: [sportId], references: [id])
-  sportId            Int             @db.UnsignedInt
-  name               String
-  organizer          String?
-  date               DateTime        @db.Date
-  timezone           String          @default("Europe/Prague")
-  location           String?
-  latitude           Float? // GPS Latitude (nullable)
-  longitude          Float? // GPS Longitude (nullable)
-  countryId          String?         @db.Char(2)
-  country            Country?        @relation(fields: [countryId], references: [countryCode])
-  externalSource     ExternalSource?
-  externalEventId    String?         @db.VarChar(128)
-  featuredImageKey   String?         @db.VarChar(512)
-  zeroTime           DateTime        @db.Time(0)
-  relay              Boolean         @default(false)
-  discipline         EventDiscipline @default(OTHER)
-  startMode          StartMode       @default(Individual)
-  ranking            Boolean         @default(false)
-  coefRanking        Float?
-  hundredthPrecision Boolean         @default(false) // Measure finish time in hundredths of a second
-  published          Boolean         @default(false)
-  demo               Boolean         @default(false)
-  entriesOpenAt      DateTime?
-  entriesCloseAt     DateTime?
-  splitPublicationMode SplitPublicationMode @default(UNRESTRICTED)
-  splitPublicationAt DateTime?
-  resultsOfficialAt  DateTime?
+  id                           String                         @id @default(cuid())
+  sport                        Sport                          @relation(fields: [sportId], references: [id])
+  sportId                      Int                            @db.UnsignedInt
+  name                         String
+  organizer                    String?
+  date                         DateTime                       @db.DateTime(0)
+  timezone                     String                         @default("Europe/Prague")
+  location                     String?
+  latitude                     Float? // GPS Latitude (nullable)
+  longitude                    Float? // GPS Longitude (nullable)
+  countryId                    String?                        @db.Char(2)
+  country                      Country?                       @relation(fields: [countryId], references: [countryCode])
+  externalSource               ExternalSource?
+  externalEventId              String?                        @db.VarChar(128)
+  featuredImageKey             String?                        @db.VarChar(512)
+  relay                        Boolean                        @default(false)
+  discipline                   EventDiscipline                @default(OTHER)
+  startMode                    StartMode                      @default(Individual)
+  ranking                      Boolean                        @default(false)
+  coefRanking                  Float?
+  hundredthPrecision           Boolean                        @default(false) // Measure finish time in hundredths of a second
+  published                    Boolean                        @default(false)
+  demo                         Boolean                        @default(false)
+  entriesOpenAt                DateTime?
+  entriesCloseAt               DateTime?
+  splitPublicationMode         SplitPublicationMode           @default(UNRESTRICTED)
+  splitPublicationAt           DateTime?
+  resultsOfficialAt            DateTime?
   resultsOfficialManuallySetAt DateTime?
-  author             User?           @relation(fields: [authorId], references: [id])
-  authorId           Int?            @db.UnsignedInt
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  classes            Class[]
-  protocols          Protocol[]
-  eventPasswords     EventPassword[]
-  externalResultsSync EventExternalResultsSyncState?
+  author                       User?                          @relation(fields: [authorId], references: [id])
+  authorId                     Int?                           @db.UnsignedInt
+  createdAt                    DateTime                       @default(now())
+  updatedAt                    DateTime                       @updatedAt
+  classes                      Class[]
+  protocols                    Protocol[]
+  eventPasswords               EventPassword[]
+  externalResultsSync          EventExternalResultsSyncState?
 
-  @@fulltext([name, organizer, location])
   @@index([externalSource, externalEventId])
+  @@fulltext([name, organizer, location])
 }
 
 model Class {
@@ -185,33 +184,33 @@ model Class {
 }
 
 model Competitor {
-  id            Int          @id @default(autoincrement()) @db.UnsignedInt
-  class         Class        @relation(fields: [classId], references: [id])
-  classId       Int          @db.UnsignedInt
-  firstname     String
-  lastname      String
-  bibNumber     Int?
-  nationality   String?      @db.Char(3)
-  registration  String       @db.VarChar(10)
-  license       String?      @db.Char(1)
-  rankingPoints Int?         @db.UnsignedInt
-  rankingReferenceValue Int? @db.UnsignedInt
-  organisation  String?
-  shortName     String?      @db.VarChar(10)
-  card          Int?         @db.UnsignedInt
-  startTime     DateTime?
-  finishTime    DateTime?
-  time          Int?
-  team          Team?        @relation(fields: [teamId], references: [id])
-  teamId        Int?         @db.UnsignedInt
-  leg           Int?         @db.UnsignedInt
-  status        ResultStatus @default(Inactive)
-  lateStart     Boolean      @default(false)
-  note          String?
-  updatedAt     DateTime     @default(now()) @updatedAt
-  externalId    String?
-  protocols     Protocol[]
-  splits        Split[]
+  id                    Int          @id @default(autoincrement()) @db.UnsignedInt
+  class                 Class        @relation(fields: [classId], references: [id])
+  classId               Int          @db.UnsignedInt
+  firstname             String
+  lastname              String
+  bibNumber             Int?
+  nationality           String?      @db.Char(3)
+  registration          String       @db.VarChar(10)
+  license               String?      @db.Char(1)
+  rankingPoints         Int?         @db.UnsignedInt
+  rankingReferenceValue Int?         @db.UnsignedInt
+  organisation          String?
+  shortName             String?      @db.VarChar(10)
+  card                  Int?         @db.UnsignedInt
+  startTime             DateTime?
+  finishTime            DateTime?
+  time                  Int?
+  team                  Team?        @relation(fields: [teamId], references: [id])
+  teamId                Int?         @db.UnsignedInt
+  leg                   Int?         @db.UnsignedInt
+  status                ResultStatus @default(Inactive)
+  lateStart             Boolean      @default(false)
+  note                  String?
+  updatedAt             DateTime     @default(now()) @updatedAt
+  externalId            String?
+  protocols             Protocol[]
+  splits                Split[]
 }
 
 model Split {
@@ -259,17 +258,17 @@ model EventPassword {
 }
 
 model EventExternalResultsSyncState {
-  id                   Int                       @id @default(autoincrement()) @db.UnsignedInt
-  event                Event                      @relation(fields: [eventId], references: [id])
-  eventId              String                     @unique
-  provider             ExternalSource
-  lastCheckedAt        DateTime?
-  lastSuccessfulCheckAt DateTime?
+  id                     Int                       @id @default(autoincrement()) @db.UnsignedInt
+  event                  Event                     @relation(fields: [eventId], references: [id])
+  eventId                String                    @unique
+  provider               ExternalSource
+  lastCheckedAt          DateTime?
+  lastSuccessfulCheckAt  DateTime?
   lastDetectedOfficialAt DateTime?
-  lastStatus           ExternalResultsSyncStatus  @default(PENDING)
-  lastError            String?                    @db.Text
-  createdAt            DateTime                   @default(now())
-  updatedAt            DateTime                   @updatedAt
+  lastStatus             ExternalResultsSyncStatus @default(PENDING)
+  lastError              String?                   @db.Text
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
 
   @@index([provider, lastStatus])
 }
