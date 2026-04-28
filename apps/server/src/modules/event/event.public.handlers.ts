@@ -1,7 +1,7 @@
 import { z } from '@hono/zod-openapi';
 
 import prisma from '../../utils/context.js';
-import { normalizeUtcTimeString } from '../../utils/time.js';
+import { formatUtcDateTimeRfc3339, normalizeUtcTimeString } from '../../utils/time.js';
 import { getPublicObject } from '../../lib/storage/s3.js';
 import { error, success, validation } from '../../utils/responseApi.js';
 import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
@@ -27,6 +27,10 @@ function responseValidationIssues(issues: z.ZodIssue[]) {
 
 function responseValidationString(issues: z.ZodIssue[]) {
   return validation(toValidationMessage(issues));
+}
+
+function serializeEventDateForResponse(date: Date) {
+  return formatUtcDateTimeRfc3339(date) ?? date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
 export function registerPublicEventRoutes(router) {
@@ -102,7 +106,20 @@ export function registerPublicEventRoutes(router) {
       logEndpoint(c, 'error', 'Public event list query failed', getErrorDetails(err));
       return c.json(error(`Database error${err.message}`, 500), 500);
     } finally {
-      return c.json(success('OK', { data: dbResponse }, 200), 200);
+      return c.json(
+        success(
+          'OK',
+          {
+            data:
+              dbResponse?.map((event) => ({
+                ...event,
+                date: serializeEventDateForResponse(event.date),
+              })) ?? [],
+          },
+          200,
+        ),
+        200,
+      );
     }
   });
 
@@ -166,7 +183,6 @@ export function registerPublicEventRoutes(router) {
           ranking: true,
           coefRanking: true,
           sport: true,
-          zeroTime: true,
           hundredthPrecision: true,
           classes: true,
         },
@@ -189,15 +205,19 @@ export function registerPublicEventRoutes(router) {
       );
     }
 
-    const zeroTime = normalizeUtcTimeString(dbResponse.zeroTime);
-
+    const { id, name, date, timezone, location, ...restData } = dbResponse;
     return c.json(
       success(
         'OK',
         {
           data: {
-            ...dbResponse,
-            zeroTime,
+            id,
+            name,
+            date: serializeEventDateForResponse(date),
+            timezone,
+            zeroTime: normalizeUtcTimeString(date),
+            location,
+            ...restData,
           },
         },
         200,
