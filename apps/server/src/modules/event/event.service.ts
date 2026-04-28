@@ -17,6 +17,7 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
         id: true,
         classId: true,
         status: true,
+        lateStart: true,
         card: true,
       },
     });
@@ -55,19 +56,37 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
     throw new DatabaseError('Error updating competitor');
   }
 
-  // Add record to protocol only when status actually changed
+  const changes = [];
+
   if (dbResponseCompetitor.status !== competitorStatus) {
+    changes.push({
+      type: 'status_change',
+      previousValue: dbResponseCompetitor.status,
+      newValue: competitorStatus,
+    });
+  }
+
+  if (dbResponseCompetitor.lateStart !== lateStart) {
+    changes.push({
+      type: 'late_start_change',
+      previousValue: String(dbResponseCompetitor.lateStart),
+      newValue: String(lateStart),
+    });
+  }
+
+  // Add records to protocol only when the persisted values actually changed.
+  if (changes.length > 0) {
     try {
-      await prisma.protocol.create({
-        data: {
+      await prisma.protocol.createMany({
+        data: changes.map(change => ({
           eventId: eventId,
           competitorId: competitorId,
           origin: origin,
-          type: 'status_change',
-          previousValue: dbResponseCompetitor.status,
-          newValue: competitorStatus,
+          type: change.type,
+          previousValue: change.previousValue,
+          newValue: change.newValue,
           authorId: userId,
-        },
+        })),
       });
     } catch (err) {
       console.error('Failed to update competitor:', err);
