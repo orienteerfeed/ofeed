@@ -17,6 +17,7 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
         id: true,
         classId: true,
         status: true,
+        lateStart: true,
         card: true,
       },
     });
@@ -55,22 +56,42 @@ export const changeCompetitorStatus = async (eventId, competitorId, origin, stat
     throw new DatabaseError('Error updating competitor');
   }
 
-  // Add record to protocol
-  try {
-    await prisma.protocol.create({
-      data: {
-        eventId: eventId,
-        competitorId: competitorId,
-        origin: origin,
-        type: 'status_change',
-        previousValue: dbResponseCompetitor.status,
-        newValue: competitorStatus,
-        authorId: userId,
-      },
+  const changes = [];
+
+  if (dbResponseCompetitor.status !== competitorStatus) {
+    changes.push({
+      type: 'status_change',
+      previousValue: dbResponseCompetitor.status,
+      newValue: competitorStatus,
     });
-  } catch (err) {
-    console.error('Failed to update competitor:', err);
-    throw new DatabaseError('Error creating protocol record');
+  }
+
+  if (dbResponseCompetitor.lateStart !== lateStart) {
+    changes.push({
+      type: 'late_start_change',
+      previousValue: String(dbResponseCompetitor.lateStart),
+      newValue: String(lateStart),
+    });
+  }
+
+  // Add records to protocol only when the persisted values actually changed.
+  if (changes.length > 0) {
+    try {
+      await prisma.protocol.createMany({
+        data: changes.map(change => ({
+          eventId: eventId,
+          competitorId: competitorId,
+          origin: origin,
+          type: change.type,
+          previousValue: change.previousValue,
+          newValue: change.newValue,
+          authorId: userId,
+        })),
+      });
+    } catch (err) {
+      console.error('Failed to update competitor:', err);
+      throw new DatabaseError('Error creating protocol record');
+    }
   }
 
   // Select the current competitor from the database
@@ -263,17 +284,22 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
     externalId: 'external_id_change',
   };
 
-  // Iterate over keys in updateData
+  // Iterate over keys in updateData, log only actual changes
   Object.keys(updateData).forEach(key => {
     if (keyToTypeMap[key]) {
       const previousValue = dbResponseCompetitor[key];
       const nextValue = updateData[key];
-      changes.push({
-        type: keyToTypeMap[key],
-        previousValue:
-          previousValue === null || previousValue === undefined ? null : previousValue.toString(),
-        newValue: nextValue === null || nextValue === undefined ? 'null' : nextValue.toString(),
-      });
+      const prevStr =
+        previousValue === null || previousValue === undefined ? null : previousValue.toString();
+      const nextStr =
+        nextValue === null || nextValue === undefined ? null : nextValue.toString();
+      if (prevStr !== nextStr) {
+        changes.push({
+          type: keyToTypeMap[key],
+          previousValue: prevStr,
+          newValue: nextStr ?? 'null',
+        });
+      }
     }
   });
 
@@ -303,11 +329,11 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
     throw new DatabaseError('Error updating competitor');
   }
 
-  // Add record to protocol
-  try {
-    for (const change of changes) {
-      await prisma.protocol.create({
-        data: {
+  // Add records to protocol in a single batch insert
+  if (changes.length > 0) {
+    try {
+      await prisma.protocol.createMany({
+        data: changes.map(change => ({
           eventId: eventId,
           competitorId: parseInt(competitorId),
           origin: origin,
@@ -315,12 +341,12 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
           previousValue: change.previousValue,
           newValue: change.newValue,
           authorId: userId,
-        },
+        })),
       });
+    } catch (err) {
+      console.error('Failed to update competitor:', err);
+      throw new DatabaseError('Error creating protocol record');
     }
-  } catch (err) {
-    console.error('Failed to update competitor:', err);
-    throw new DatabaseError('Error creating protocol record');
   }
 
   // Select the current competitor from the database
