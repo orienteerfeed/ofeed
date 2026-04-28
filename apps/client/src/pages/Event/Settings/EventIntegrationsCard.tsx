@@ -175,8 +175,8 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   const ochecklistDeepLink = `https://stigning.se/ofeed?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
   const connectorDeepLink = `https://stigning.se/connector?url=${encodeURIComponent(apiEventsEndpoint)}&auth=basic&id=${encodeURIComponent(eventId)}&pwd=${encodeURIComponent(eventPassword)}`;
   const quickEventCredentialsLink = quickEventLinkUrl.toString();
-  const codeSize = 200;
-  const errorCorrectionLevel = 'L' as const;
+  const codeSize = 256;
+  const errorCorrectionLevel = 'Q' as const;
   const qrBackgroundColor = '#ffffff';
 
   const handleShare = async (
