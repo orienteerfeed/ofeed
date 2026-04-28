@@ -25,8 +25,12 @@ import { motion } from 'motion/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Badge, Button, CountryFlag, Tooltip } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
-import { CompetitorName } from './CompetitorName';
+import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
+import { MobileClubName } from './MobileClubName';
+
+const mobileResultsTableClassName =
+  'overflow-x-auto [&_table]:text-sm [&_th]:h-7 sm:[&_th]:h-8 [&_th]:px-1.5 sm:[&_th]:px-2 [&_th]:text-xs [&_td]:px-1.5 sm:[&_td]:px-2 [&_td]:py-0.5 sm:[&_td]:py-1 [&_td]:text-sm';
 
 // GraphQL queries and subscriptions
 const COMPETITORS_BY_CLASS_UPDATED = gql`
@@ -591,27 +595,71 @@ const CategoryResultsView = ({
     onCompetitorsCountChange?.(competitors.length);
   }, [competitors.length, onCompetitorsCountChange]);
 
-  // Calculate running time for active competitors
-  const getRunningTime = (startTime?: string): string => {
-    if (!startTime) return '-';
+  const getActiveTimeState = (
+    startTime?: string
+  ): { value: string; className: string } => {
+    if (!startTime) {
+      return { value: '-', className: 'text-muted-foreground' };
+    }
 
     try {
-      // Parse ISO 8601 string to timestamp
       const start = new Date(startTime).getTime();
 
-      // Handle invalid date
-      if (isNaN(start)) return '-';
+      if (isNaN(start)) {
+        return { value: '-', className: 'text-muted-foreground' };
+      }
 
-      // Use currentTime from state instead of Date.now()
-      const runningTime = Math.floor((currentTime - start) / 1000);
+      const elapsedSeconds = Math.floor((currentTime - start) / 1000);
 
-      // Ensure runningTime is not negative
-      if (runningTime < 0) return '-';
+      if (elapsedSeconds < 0) {
+        const secondsUntilStart = Math.abs(elapsedSeconds);
+        const className =
+          secondsUntilStart <= 5
+            ? 'animate-pulse text-orange-600 dark:text-orange-400'
+            : 'text-muted-foreground';
 
-      return formatSecondsToTime(runningTime);
+        return {
+          value: `- ${formatSecondsToTime(secondsUntilStart)}`,
+          className,
+        };
+      }
+
+      const className =
+        elapsedSeconds <= 5
+          ? 'animate-pulse text-green-600 dark:text-green-400'
+          : 'text-muted-foreground';
+
+      return {
+        value: formatSecondsToTime(elapsedSeconds),
+        className,
+      };
     } catch {
-      return '-';
+      return { value: '-', className: 'text-muted-foreground' };
     }
+  };
+
+  const getCategoryTimeState = (
+    competitor: ProcessedCompetitor
+  ): { value: string; className: string; hideOnDesktop?: boolean } => {
+    if (competitor.status === 'Active') {
+      return getActiveTimeState(competitor.startTime);
+    }
+
+    if (competitor.status === 'Inactive') {
+      return {
+        value: competitor.startTime
+          ? formatTimeToHms(competitor.startTime)
+          : '-',
+        className: 'text-muted-foreground',
+        hideOnDesktop: Boolean(competitor.startTime),
+      };
+    }
+
+    if (competitor.time !== undefined && competitor.time !== null) {
+      return { value: formatSecondsToTime(competitor.time), className: '' };
+    }
+
+    return { value: '-', className: 'text-muted-foreground' };
   };
 
   const getRankingTypeLabel = (): string => {
@@ -662,6 +710,11 @@ const CategoryResultsView = ({
     );
   };
 
+  const mobileClubWidthReference = competitors.reduce((longest, competitor) => {
+    const name = getMobileCompetitorName(competitor);
+    return name.length > longest.length ? name : longest;
+  }, '');
+
   if (loading && competitors.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -695,7 +748,7 @@ const CategoryResultsView = ({
 
   return (
     <div className="border border-border rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className={mobileResultsTableClassName}>
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
@@ -713,12 +766,15 @@ const CategoryResultsView = ({
               <TableHead className="h-8 px-2 text-xs hidden md:table-cell">
                 Start
               </TableHead>
-              <TableHead className="h-8 px-2 text-xs">Finish</TableHead>
+              <TableHead className="h-8 px-2 text-right text-xs">
+                <span className="sm:hidden">Time</span>
+                <span className="hidden sm:inline">Finish</span>
+              </TableHead>
               <TableHead className="h-8 px-2 text-xs text-right">
                 Diff
               </TableHead>
               {showRanking && (
-                <TableHead className="h-8 px-2 text-xs hidden lg:table-cell">
+                <TableHead className="h-8 w-px whitespace-nowrap px-1 text-right text-xs sm:px-2 lg:table-cell">
                   Points
                 </TableHead>
               )}
@@ -726,10 +782,7 @@ const CategoryResultsView = ({
           </TableHeader>
           <TableBody>
             {competitors.map((competitor, index) => {
-              const isActive = competitor.status === 'Active';
-              const textClass = isActive
-                ? 'text-muted-foreground text-xs'
-                : 'text-sm';
+              const timeState = getCategoryTimeState(competitor);
               return (
                 <motion.tr
                   key={competitor.id}
@@ -755,10 +808,12 @@ const CategoryResultsView = ({
                   <TableCell className="px-2 py-1 text-sm font-medium">
                     <div className="flex flex-col">
                       <CompetitorName competitor={competitor} />
-                      {renderClubButton(
-                        competitor.organisation,
-                        'text-xs text-muted-foreground lg:hidden mt-0.5 text-left hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm'
-                      )}
+                      <MobileClubName
+                        clubName={competitor.organisation}
+                        referenceText={mobileClubWidthReference}
+                        onSelectClub={onSelectClub}
+                        className="mt-0.5 block truncate rounded-sm text-left text-xs text-muted-foreground hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:hidden"
+                      />
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden lg:table-cell">
@@ -779,14 +834,15 @@ const CategoryResultsView = ({
                     {competitor.lateStart && <span title="Late start">⚠️</span>}
                   </TableCell>
                   <TableCell
-                    className={`px-2 py-1 text-xs font-mono ${textClass}`}
+                    className={`px-2 py-1 text-right font-mono text-sm ${timeState.className}`}
                   >
-                    {isActive ? (
-                      <span className="text-muted-foreground">
-                        {getRunningTime(competitor.startTime)}
-                      </span>
+                    {timeState.hideOnDesktop ? (
+                      <>
+                        <span className="md:hidden">{timeState.value}</span>
+                        <span className="hidden md:inline">&nbsp;</span>
+                      </>
                     ) : (
-                      competitor.time && formatSecondsToTime(competitor.time)
+                      timeState.value
                     )}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
@@ -795,7 +851,7 @@ const CategoryResultsView = ({
                       : '-'}
                   </TableCell>
                   {showRanking && (
-                    <TableCell className="px-2 py-1 hidden lg:table-cell">
+                    <TableCell className="w-px whitespace-nowrap px-1 py-1 text-right text-xs sm:px-2 lg:table-cell">
                       {competitor.rankingPoints !== undefined &&
                         competitor.rankingPoints !== null && (
                           <Tooltip
@@ -805,12 +861,12 @@ const CategoryResultsView = ({
                           >
                             <span className="inline-flex">
                               <Badge
-                                variant={
+                                variant="outline"
+                                className={`cursor-help px-1 py-0 text-xs font-normal leading-tight ${
                                   competitor.countsTowardsRanking
-                                    ? 'default'
-                                    : 'secondary'
-                                }
-                                className="text-xs cursor-help"
+                                    ? 'border-green-200 bg-green-100 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-300'
+                                    : 'border-red-200 bg-red-100 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300'
+                                }`}
                                 title={
                                   competitor.countsTowardsRanking
                                     ? t('Pages.Event.Results.Ranking.Counts')
@@ -1298,103 +1354,107 @@ const ClubResultsView = ({
           </div>
 
           <div className="border border-border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="h-8 px-2 text-xs w-12">#</TableHead>
-                  <TableHead className="h-8 px-2 text-xs">Name</TableHead>
-                  <TableHead className="h-8 px-2 text-xs w-20">Class</TableHead>
-                  <TableHead className="h-8 px-2 text-xs w-20 hidden md:table-cell">
-                    Start
-                  </TableHead>
-                  <TableHead className="h-8 px-2 text-xs text-right w-24">
-                    Time
-                  </TableHead>
-                  <TableHead className="h-8 px-2 text-xs text-right w-20">
-                    Diff
-                  </TableHead>
-                  <TableHead className="h-8 px-2 text-xs w-20">
-                    Status
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {groupRunnersByClass(clubResult.runners).map(
-                  (classGroup, groupIndex) => (
-                    <React.Fragment key={classGroup.className}>
-                      {groupIndex > 0 && (
-                        <TableRow className="bg-muted/30">
-                          <TableCell colSpan={7} className="p-0">
-                            <div className="h-px bg-border" />
-                          </TableCell>
-                        </TableRow>
-                      )}
+            <div className={mobileResultsTableClassName}>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="h-8 px-2 text-xs w-12">#</TableHead>
+                    <TableHead className="h-8 px-2 text-xs">Name</TableHead>
+                    <TableHead className="h-8 px-2 text-xs w-20">
+                      Class
+                    </TableHead>
+                    <TableHead className="h-8 px-2 text-xs w-20 hidden md:table-cell">
+                      Start
+                    </TableHead>
+                    <TableHead className="h-8 px-2 text-xs text-right w-24">
+                      Time
+                    </TableHead>
+                    <TableHead className="h-8 px-2 text-xs text-right w-20">
+                      Diff
+                    </TableHead>
+                    <TableHead className="h-8 px-2 text-xs w-20">
+                      Status
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {groupRunnersByClass(clubResult.runners).map(
+                    (classGroup, groupIndex) => (
+                      <React.Fragment key={classGroup.className}>
+                        {groupIndex > 0 && (
+                          <TableRow className="bg-muted/30">
+                            <TableCell colSpan={7} className="p-0">
+                              <div className="h-px bg-border" />
+                            </TableCell>
+                          </TableRow>
+                        )}
 
-                      {classGroup.runners.map((runner, index) => (
-                        <TableRow
-                          key={runner.id}
-                          className={`h-9 ${
-                            index % 2 === 0
-                              ? 'bg-background hover:bg-muted/30'
-                              : 'bg-muted/20 hover:bg-muted/40'
-                          } ${runner.status !== 'OK' ? 'opacity-70' : ''}`}
-                        >
-                          <TableCell className="px-2 py-1 text-sm font-bold">
-                            {typeof runner.position === 'number'
-                              ? runner.position
-                              : runner.position}
-                            {typeof runner.position === 'number' && '.'}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-sm font-medium">
-                            <CompetitorName
-                              competitor={{
-                                firstname: runner.firstname,
-                                lastname: runner.lastname,
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell className="px-2 py-1">
-                            <button
-                              type="button"
-                              onClick={() => onSelectClass(runner.class)}
-                              className="inline-flex cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                              title={runner.class}
-                            >
-                              <Badge
-                                variant="secondary"
-                                className="text-xs hover:bg-secondary/80"
+                        {classGroup.runners.map((runner, index) => (
+                          <TableRow
+                            key={runner.id}
+                            className={`h-9 ${
+                              index % 2 === 0
+                                ? 'bg-background hover:bg-muted/30'
+                                : 'bg-muted/20 hover:bg-muted/40'
+                            } ${runner.status !== 'OK' ? 'opacity-70' : ''}`}
+                          >
+                            <TableCell className="px-2 py-1 text-sm font-bold">
+                              {typeof runner.position === 'number'
+                                ? runner.position
+                                : runner.position}
+                              {typeof runner.position === 'number' && '.'}
+                            </TableCell>
+                            <TableCell className="px-2 py-1 text-sm font-medium">
+                              <CompetitorName
+                                competitor={{
+                                  firstname: runner.firstname,
+                                  lastname: runner.lastname,
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell className="px-2 py-1">
+                              <button
+                                type="button"
+                                onClick={() => onSelectClass(runner.class)}
+                                className="inline-flex cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                title={runner.class}
                               >
-                                {runner.class}
-                              </Badge>
-                            </button>
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-xs font-mono hidden md:table-cell">
-                            {formatStartTime(runner.startTime)}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
-                            {runner.time}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-sm text-right font-mono">
-                            {runner.loss && runner.loss > 0
-                              ? `+${formatSecondsToTime(runner.loss)}`
-                              : runner.loss === 0
-                                ? '-'
-                                : ''}
-                          </TableCell>
-                          <TableCell className="px-2 py-1">
-                            <span
-                              className={`text-xs font-medium ${getStatusColor(runner.status)}`}
-                            >
-                              {getStatusDisplay(runner.status)}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </React.Fragment>
-                  )
-                )}
-              </TableBody>
-            </Table>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs hover:bg-secondary/80"
+                                >
+                                  {runner.class}
+                                </Badge>
+                              </button>
+                            </TableCell>
+                            <TableCell className="px-2 py-1 text-xs font-mono hidden md:table-cell">
+                              {formatStartTime(runner.startTime)}
+                            </TableCell>
+                            <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
+                              {runner.time}
+                            </TableCell>
+                            <TableCell className="px-2 py-1 text-sm text-right font-mono">
+                              {runner.loss && runner.loss > 0
+                                ? `+${formatSecondsToTime(runner.loss)}`
+                                : runner.loss === 0
+                                  ? '-'
+                                  : ''}
+                            </TableCell>
+                            <TableCell className="px-2 py-1">
+                              <span
+                                className={`text-xs font-medium ${getStatusColor(runner.status)}`}
+                              >
+                                {getStatusDisplay(runner.status)}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </React.Fragment>
+                    )
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       ))}

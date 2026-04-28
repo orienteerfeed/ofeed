@@ -5,10 +5,18 @@ import {
   Loader2,
   MapPin,
   MonitorUp,
+  MoreHorizontal,
   Settings,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button, CountryFlag } from '../../components/atoms';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
 import { useAuth } from '../../hooks/useAuth';
 import { useEvent } from '../../hooks/useEvent';
 import { formatDateWithDay, getLocaleKey } from '../../lib/date';
@@ -93,31 +101,31 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
   return (
     <MainPageLayout t={t} pageName={event.name}>
       {/* Event Header - Clean design without hero image */}
-      <section className="container mx-auto px-4 pt-8 pb-6">
+      <section className="container mx-auto px-4 pt-5 pb-4 sm:pt-8 sm:pb-6">
         {/* Header row with metadata and settings button */}
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start gap-3 mb-4">
           {/* Event metadata */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2 sm:items-start">
             <CountryFlag
               countryCode={event.country.countryCode}
-              className="w-8 h-6 shadow-md"
+              className="h-5 w-7 shrink-0 shadow-md sm:h-6 sm:w-8"
             />
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span className="font-mono">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-tight text-muted-foreground sm:text-sm">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                <span className="font-mono whitespace-nowrap">
                   {formatDateWithDay(event.date, getLocaleKey(i18n.language))}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>
+              <div className="flex min-w-0 items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                <span className="min-w-0 truncate">
                   {event.location}, {event.country.countryName}
                 </span>
               </div>
             </div>
           </div>
-          <div className="inline-flex items-center gap-3">
+          <div className="hidden shrink-0 items-center gap-2 sm:inline-flex sm:gap-3">
             <NotificationControlPanel />
             {boardEventUrl && (
               <Button
@@ -160,13 +168,57 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
               </>
             )}
           </div>
+          <div className="inline-flex shrink-0 sm:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  aria-label={t('Common.OpenMenu', {
+                    defaultValue: 'Open menu',
+                  })}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <div className="flex px-2 py-1.5">
+                  <NotificationControlPanel />
+                </div>
+                {(boardEventUrl || hasEventOwnerAccess) && (
+                  <DropdownMenuSeparator />
+                )}
+                {boardEventUrl && (
+                  <DropdownMenuItem onSelect={handleBoardClick}>
+                    <MonitorUp className="h-4 w-4" />
+                    {t('Pages.Event.Detail.OpenBoard')}
+                  </DropdownMenuItem>
+                )}
+                {hasEventOwnerAccess && (
+                  <>
+                    <DropdownMenuItem onSelect={handleReportClick}>
+                      <FileText className="h-4 w-4" />
+                      {t('Pages.Event.Detail.Report')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleSettingsClick}>
+                      <Settings className="h-4 w-4" />
+                      {t('Settings', { ns: 'common' })}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Event title and organizer */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{event.name}</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="mb-2 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
+            {event.name}
+          </h1>
           {event.organizer && (
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base text-muted-foreground sm:text-lg">
               {t('Pages.Event.OrganizedBy')}: {event.organizer}
             </p>
           )}

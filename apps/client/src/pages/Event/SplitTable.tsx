@@ -27,10 +27,12 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CompetitorName } from './CompetitorName';
-import {
-  filterValidSplitResultCompetitors,
-} from './split-results.utils';
+import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
+import { MobileClubName } from './MobileClubName';
+import { filterValidSplitResultCompetitors } from './split-results.utils';
+
+const mobileResultsTableClassName =
+  'overflow-x-auto [&_table]:text-sm [&_th]:h-7 sm:[&_th]:h-8 [&_th]:px-1.5 sm:[&_th]:px-2 [&_th]:text-xs [&_td]:px-1.5 sm:[&_td]:px-2 [&_td]:py-0.5 sm:[&_td]:py-1 [&_td]:text-sm';
 
 // Types
 interface Split {
@@ -378,15 +380,14 @@ const getCompetitorSortValue = (
     case 'loss':
       return competitor.loss ?? Infinity;
 
-    case 'final-leg':
-      {
-        const lastSplitTime = competitor.splits.at(-1)?.time;
-        const finishTime = competitor.time;
-        if (lastSplitTime && finishTime) {
-          return finishTime - lastSplitTime;
-        }
-        return Infinity;
+    case 'final-leg': {
+      const lastSplitTime = competitor.splits.at(-1)?.time;
+      const finishTime = competitor.time;
+      if (lastSplitTime && finishTime) {
+        return finishTime - lastSplitTime;
       }
+      return Infinity;
+    }
 
     default:
       if (field.startsWith('leg-')) {
@@ -456,12 +457,12 @@ export const SplitTable: React.FC<SplitTableProps> = ({
 
   const validResultCompetitors = useMemo(
     () => filterValidSplitResultCompetitors(sortedCompetitors),
-    [sortedCompetitors],
+    [sortedCompetitors]
   );
 
   const validProcessedCompetitors = useMemo(
     () => filterValidSplitResultCompetitors(processedCompetitors),
-    [processedCompetitors],
+    [processedCompetitors]
   );
 
   // Build the list of all controlCodes from first competitor
@@ -534,7 +535,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     return calculateCompetitorLossStats(
       validResultCompetitors,
       controlCodes,
-      legLosses,
+      legLosses
     );
   }, [validResultCompetitors, controlCodes, legLosses]);
 
@@ -544,6 +545,13 @@ export const SplitTable: React.FC<SplitTableProps> = ({
 
   const visibleCompetitors = sortedAndProcessedCompetitors.filter(
     c => !['Active', 'Inactive', 'Finished'].includes(c.status)
+  );
+  const mobileClubWidthReference = visibleCompetitors.reduce(
+    (longest, competitor) => {
+      const name = getMobileCompetitorName(competitor);
+      return name.length > longest.length ? name : longest;
+    },
+    ''
   );
 
   // Sort handler
@@ -662,7 +670,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                 direction: t(
                   sortConfig.direction === 'asc'
                     ? 'Pages.Event.Splits.SortDirectionAsc'
-                    : 'Pages.Event.Splits.SortDirectionDesc',
+                    : 'Pages.Event.Splits.SortDirectionDesc'
                 ),
                 field: getSortFieldLabel(sortConfig.field),
               })}
@@ -679,7 +687,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
           </Button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className={mobileResultsTableClassName}>
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
@@ -734,7 +742,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                         onClick={() => handleSort(`leg-${i}`)}
                         className="h-8 font-medium hover:bg-muted p-1"
                       >
-                        <span className="text-xs mr-1">Leg {i + 1}</span>
+                        <span className="mr-1 text-xs">Leg {i + 1}</span>
                         {getSortIcon(`leg-${i}`)}
                       </Button>
                       <span className="text-muted-foreground font-normal">
@@ -753,7 +761,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                       onClick={() => handleSort('final-leg')}
                       className="h-8 font-medium hover:bg-muted p-1"
                     >
-                      <span className="text-xs mr-1">Final</span>
+                      <span className="mr-1 text-xs">Final</span>
                       {getSortIcon('final-leg')}
                     </Button>
                     <span className="text-muted-foreground font-normal">
@@ -774,6 +782,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                   legLosses={legLosses}
                   competitorLossStats={competitorLossStats}
                   splitPositions={splitPositions}
+                  mobileClubWidthReference={mobileClubWidthReference}
                 />
               ))}
             </TableBody>
@@ -825,6 +834,7 @@ interface CompetitorRowProps {
     };
   };
   splitPositions: SplitPositionData;
+  mobileClubWidthReference: string;
 }
 
 const CompetitorRow: React.FC<CompetitorRowProps> = ({
@@ -835,6 +845,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
   legLosses,
   competitorLossStats,
   splitPositions,
+  mobileClubWidthReference,
 }) => {
   const competitorStats = competitorLossStats[competitor.id];
 
@@ -864,9 +875,11 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
               <CompetitorName competitor={competitor} />
             </span>
           </div>
-          <span className="text-xs text-muted-foreground truncate mt-0.5">
-            {competitor.organisation}
-          </span>
+          <MobileClubName
+            clubName={competitor.organisation}
+            referenceText={mobileClubWidthReference}
+            className="mt-0.5 block truncate text-xs text-muted-foreground"
+          />
         </div>
       </TableCell>
 
@@ -919,7 +932,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                 <TooltipTrigger asChild>
                   <div
                     className={`
-                      font-mono text-xs px-2 py-1.5 rounded border font-medium
+                      font-mono text-sm px-1.5 py-1 rounded border font-medium sm:px-2 sm:py-1.5
                       transition-colors
                       ${
                         isBestLeg
@@ -932,7 +945,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                   >
                     {legTime ? formatSecondsToTime(legTime) : '-'}
                     {legPosition && (
-                      <span className="text-[10px] opacity-70 ml-1">
+                      <span className="text-xs opacity-70 ml-1">
                         ({legPosition})
                       </span>
                     )}
@@ -971,7 +984,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                 <TooltipTrigger asChild>
                   <div
                     className={`
-                      font-mono text-xs px-2 py-1.5 rounded border
+                      font-mono text-sm px-1.5 py-1 rounded border sm:px-2 sm:py-1.5
                       transition-colors
                       ${
                         isBestSplit
@@ -984,7 +997,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                       ? formatSecondsToTime(competitor.splits[index].time)
                       : '-'}
                     {splitPosition && (
-                      <span className="text-[10px] opacity-70 ml-1">
+                      <span className="text-xs opacity-70 ml-1">
                         ({splitPosition})
                       </span>
                     )}
@@ -1006,7 +1019,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
 
       {/* Final Leg */}
       <TableCell className="text-center p-2">
-        <div className="font-mono text-xs bg-muted/40 px-2 py-1.5 rounded border border-muted font-medium">
+        <div className="rounded border border-muted bg-muted/40 px-1.5 py-1 font-mono text-sm font-medium sm:px-2 sm:py-1.5">
           {(() => {
             const lastSplitTime = competitor.splits.at(-1)?.time;
             const finishTime = competitor.time;

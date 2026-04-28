@@ -7,6 +7,15 @@ interface CompetitorNameProps {
   competitor: Competitor;
 }
 
+export const getMobileCompetitorName = (competitor: Competitor): string => {
+  const firstname = competitor.firstname?.trim() ?? '';
+  const lastname = competitor.lastname?.trim() ?? '';
+
+  return lastname.length > 0
+    ? `${lastname} ${firstname.charAt(0)}.`
+    : firstname;
+};
+
 export const CompetitorName = ({ competitor }: CompetitorNameProps) => {
   const firstname = competitor.firstname?.trim() ?? '';
   const lastname = competitor.lastname?.trim() ?? '';
@@ -15,7 +24,7 @@ export const CompetitorName = ({ competitor }: CompetitorNameProps) => {
   return (
     <>
       <span className="block sm:hidden">
-        {hasLastname ? `${lastname} ${firstname.charAt(0)}.` : firstname}
+        {getMobileCompetitorName(competitor)}
       </span>
       <span className="hidden sm:block">
         {hasLastname ? `${lastname} ${firstname}` : firstname}

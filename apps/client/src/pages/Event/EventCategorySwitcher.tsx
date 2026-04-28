@@ -33,9 +33,7 @@ export const EventCategorySwitcher: React.FC<EventCategorySwitcherProps> = ({
     <div className="flex items-center gap-4">
       {typeof competitorsCount === 'number' && (
         <div
-          className={`items-center gap-2 text-sm text-muted-foreground ${
-            competitorsCount === 0 ? 'hidden sm:flex' : 'flex'
-          }`}
+          className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex"
         >
           <Loader2
             className={`w-4 h-4 ${loading ? 'animate-spin' : 'opacity-0'}`}

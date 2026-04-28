@@ -205,8 +205,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
 
           {/* Rest of the content remains in single column */}
           <div className="grid gap-4 mt-6">
-            <div className="flex items-start gap-3">
-              <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
+            <div>
               <div>
                 <div className="text-sm text-muted-foreground">
                   {t('Pages.Event.Detail.Classes')}
