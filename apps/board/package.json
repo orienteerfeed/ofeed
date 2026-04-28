@@ -21,14 +21,14 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@tanstack/vue-query": "^5.0.0",
+    "@tanstack/vue-query": "^5.100.5",
     "@unocss/reset": "^66.0.0",
     "@vueuse/core": "^13.0.0",
-    "axios": "^1.15.0",
+    "axios": "^1.15.2",
     "date-fns": "^2.29.3",
     "pinia": "^3.0.0",
     "pinia-plugin-persistedstate": "^4.0.0",
-    "vue": "3.5.32",
+    "vue": "3.5.33",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {

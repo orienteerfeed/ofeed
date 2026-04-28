@@ -366,8 +366,7 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
       !date ||
       !timezone ||
       !organizer ||
-      !location ||
-      !zeroTime
+      !location
     ) {
       toast({
         title: t('Operations.Error', { ns: 'common' }),
