@@ -45,7 +45,7 @@ export function buildLocalizedDocsUrl(
     baseUrl?: string;
     defaultLanguage?: string;
     localizedLanguages?: Iterable<string>;
-  } = {},
+  } = {}
 ): string {
   const baseUrl = options.baseUrl ?? config.DOCS_URL;
   const normalizedLanguage = normalizeLanguageCode(language);
@@ -54,8 +54,8 @@ export function buildLocalizedDocsUrl(
     'en';
   const localizedLanguages = new Set(
     Array.from(options.localizedLanguages ?? LOCALIZED_DOCS_LANGUAGES).flatMap(
-      languageCode => normalizeLanguageCode(languageCode) ?? [],
-    ),
+      languageCode => normalizeLanguageCode(languageCode) ?? []
+    )
   );
 
   let url: URL;
@@ -102,7 +102,6 @@ export function buildBoardEventUrl(
 }
 
 export const externalLinks = {
-  mrb: (baseApi: string) => `${baseApi}/mrb`,
   docs: config.DOCS_URL,
   buyMeCoffee: 'https://buymeacoffee.com/ofeed',
   discord: 'https://discord.gg/YWURC23tHZ',

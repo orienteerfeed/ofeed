@@ -58,7 +58,7 @@ const resolvers = {
       }
       return decryptedPassword;
     },
-    zeroTime: (parent) => normalizeUtcTimeString(parent.zeroTime) ?? '00:00:00',
+    zeroTime: (parent) => normalizeUtcTimeString(parent.date) ?? '00:00:00',
     featuredImage: (parent) => buildPublicImageUrl(parent.featuredImageKey, parent.id),
     statusSummary: (parent) => getEventStatusSummary(prisma, parent),
   },

@@ -1,5 +1,5 @@
 import { config } from '@/config';
-import { formatDate, formatDateForInput } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useParams } from '@tanstack/react-router';
@@ -42,7 +42,6 @@ export const GET_EVENT = gql`
       sportId
       date
       timezone
-      zeroTime
       discipline
       externalSource
       externalEventId
@@ -110,14 +109,16 @@ export const EventSettingsPage = () => {
         id: data.event.id,
         name: data.event.name,
         sportId: data.event.sportId,
-        date: formatDateForInput(data.event.date),
+        date: data.event.date ? data.event.date.slice(0, 10) : '',
         timezone: data.event.timezone || 'Europe/Prague',
         organizer: data.event.organizer,
         location: data.event.location,
         latitude: data.event.latitude,
         longitude: data.event.longitude,
         countryCode: data.event.country?.countryCode || '',
-        zeroTime: data.event.zeroTime ?? '',
+        zeroTime: data.event.date
+          ? new Date(data.event.date).toISOString().slice(11, 19)
+          : '',
         discipline: data.event.discipline,
         ranking: data.event.ranking || false,
         coefRanking: data.event.coefRanking,

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseIofDateTime } from '../time.js';
+import {
+  combineEventDateWithZeroTime,
+  formatUtcDateTimeRfc3339,
+  parseIofDateTime,
+} from '../time.js';
 
 describe('parseIofDateTime', () => {
   it('parses local IOF datetime in the event timezone and converts it to UTC', () => {
@@ -27,5 +31,26 @@ describe('parseIofDateTime', () => {
   it('returns undefined for invalid datetime values', () => {
     expect(parseIofDateTime('not-a-date', 'Europe/Prague')).toBeUndefined();
     expect(parseIofDateTime('', 'Europe/Prague')).toBeUndefined();
+  });
+});
+
+describe('combineEventDateWithZeroTime', () => {
+  it('preserves the provided calendar day even when the input datetime carries an offset', () => {
+    expect(combineEventDateWithZeroTime('2026-04-26T00:00:00+02:00', '10:15')?.toISOString()).toBe(
+      '2026-04-26T10:15:00.000Z',
+    );
+  });
+
+  it('returns undefined for invalid inputs', () => {
+    expect(combineEventDateWithZeroTime('not-a-date', '10:15')).toBeUndefined();
+    expect(combineEventDateWithZeroTime('2026-04-26T00:00:00Z', '25:15')).toBeUndefined();
+  });
+});
+
+describe('formatUtcDateTimeRfc3339', () => {
+  it('serializes UTC datetimes without milliseconds', () => {
+    expect(formatUtcDateTimeRfc3339(new Date('2026-04-26T10:15:00.000Z'))).toBe(
+      '2026-04-26T10:15:00Z',
+    );
   });
 });
