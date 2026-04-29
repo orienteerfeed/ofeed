@@ -156,6 +156,7 @@ model Event {
   protocols                    Protocol[]
   eventPasswords               EventPassword[]
   externalResultsSync          EventExternalResultsSyncState?
+  organisations                Organisation[]
 
   @@index([externalSource, externalEventId])
   @@fulltext([name, organizer, location])
@@ -184,33 +185,35 @@ model Class {
 }
 
 model Competitor {
-  id                    Int          @id @default(autoincrement()) @db.UnsignedInt
-  class                 Class        @relation(fields: [classId], references: [id])
-  classId               Int          @db.UnsignedInt
+  id                    Int           @id @default(autoincrement()) @db.UnsignedInt
+  class                 Class         @relation(fields: [classId], references: [id])
+  classId               Int           @db.UnsignedInt
   firstname             String
   lastname              String
   bibNumber             Int?
-  nationality           String?      @db.Char(3)
-  registration          String       @db.VarChar(10)
-  license               String?      @db.Char(1)
-  rankingPoints         Int?         @db.UnsignedInt
-  rankingReferenceValue Int?         @db.UnsignedInt
-  organisation          String?
-  shortName             String?      @db.VarChar(10)
-  card                  Int?         @db.UnsignedInt
+  nationality           String?       @db.Char(3)
+  registration          String        @db.VarChar(10)
+  license               String?       @db.Char(1)
+  rankingPoints         Int?          @db.UnsignedInt
+  rankingReferenceValue Int?          @db.UnsignedInt
+  organisationId        Int?          @db.UnsignedInt
+  organisation          Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  card                  Int?          @db.UnsignedInt
   startTime             DateTime?
   finishTime            DateTime?
   time                  Int?
-  team                  Team?        @relation(fields: [teamId], references: [id])
-  teamId                Int?         @db.UnsignedInt
-  leg                   Int?         @db.UnsignedInt
-  status                ResultStatus @default(Inactive)
-  lateStart             Boolean      @default(false)
+  team                  Team?         @relation(fields: [teamId], references: [id])
+  teamId                Int?          @db.UnsignedInt
+  leg                   Int?          @db.UnsignedInt
+  status                ResultStatus  @default(Inactive)
+  lateStart             Boolean       @default(false)
   note                  String?
-  updatedAt             DateTime     @default(now()) @updatedAt
+  updatedAt             DateTime      @default(now()) @updatedAt
   externalId            String?
   protocols             Protocol[]
   splits                Split[]
+
+  @@index([organisationId])
 }
 
 model Split {
@@ -222,14 +225,35 @@ model Split {
 }
 
 model Team {
-  id           Int          @id @default(autoincrement()) @db.UnsignedInt
-  class        Class        @relation(fields: [classId], references: [id])
-  classId      Int          @db.UnsignedInt
-  name         String
-  organisation String?
-  shortName    String?      @db.VarChar(10)
-  bibNumber    Int
-  competitors  Competitor[]
+  id             Int           @id @default(autoincrement()) @db.UnsignedInt
+  class          Class         @relation(fields: [classId], references: [id])
+  classId        Int           @db.UnsignedInt
+  name           String
+  organisationId Int?          @db.UnsignedInt
+  organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  bibNumber      Int
+  competitors    Competitor[]
+
+  @@index([organisationId])
+}
+
+model Organisation {
+  id          Int          @id @default(autoincrement()) @db.UnsignedInt
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  externalId  String?      @db.VarChar(64)
+  name        String       @db.VarChar(191)
+  nationality String?      @db.Char(3)
+  shortName   String?      @db.VarChar(10)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  competitors Competitor[]
+  teams       Team[]
+
+  @@unique([eventId, externalId], map: "Organisation_event_external_id_uq")
+  @@unique([eventId, name], map: "Organisation_event_name_uq")
+  @@index([eventId])
+  @@index([eventId, shortName])
 }
 
 model Protocol {

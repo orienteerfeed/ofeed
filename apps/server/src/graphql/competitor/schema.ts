@@ -3,9 +3,14 @@ export const typeDef = /* GraphQL */ `
     competitorById(id: Int!): Competitor!
     competitorsByClass(id: Int!): [Competitor!]
     competitorsByTeam(id: Int!): [Competitor!]
-    competitorsByOrganisation(eventId: String!, organisation: String!): [Competitor!]
+    competitorsByOrganisation(
+      eventId: String!
+      organisation: String
+      organisationId: Int
+    ): [Competitor!]
+    organisationNames(eventId: String!): [OrganisationName!]!
+    searchOrganisationNames(eventId: String!, q: String!): [OrganisationName!]!
     organisations(eventId: String!): [Organisation!]!
-    searchOrganisations(eventId: String!, q: String!): [Organisation!]!
   }
   extend type Mutation {
     competitorStatusChange(input: StatusChange!): ResponseMessage!
@@ -40,6 +45,7 @@ export const typeDef = /* GraphQL */ `
     rankingReferenceValue: Int
     countsTowardsRanking: Boolean
     countsTowardsRankingReason: String
+    organisationId: Int
     organisation: String
     shortName: String
     card: Int
@@ -53,9 +59,20 @@ export const typeDef = /* GraphQL */ `
     updatedAt: DateTime!
     splits: [Split!]
   }
-  type Organisation {
+  type OrganisationName {
+    id: Int!
     name: String!
     competitors: Int!
+  }
+  type Organisation {
+    id: Int!
+    eventId: String!
+    externalId: String
+    name: String!
+    nationality: String
+    shortName: String
+    createdAt: DateTime
+    updatedAt: DateTime
   }
   input StatusChange {
     eventId: ID!

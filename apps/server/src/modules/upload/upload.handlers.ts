@@ -22,6 +22,7 @@ import {
   publishUpdatedCompetitors,
 } from '../../utils/subscriptionUtils.js';
 import { parseIofDateTime } from '../../utils/time.js';
+import { organisationSelect, upsertOrganisation } from '../event/organisation.helpers.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
 import { normalizeCzechRankingMonthInput, storeCzechRankingData } from './upload.service.js';
 import { normalizeCourseMetrics } from './upload.course.js';
@@ -75,8 +76,11 @@ type IofPerson = {
 };
 
 type IofOrganisation = {
+  ATTR?: { id?: string };
+  Id?: IofSourceId[];
   Name?: string[];
   ShortName?: string[];
+  Country?: Array<{ ATTR?: { code?: string } }>;
 } | null;
 
 type IofStart = {
@@ -229,6 +233,18 @@ function toSex(value: string | undefined, fallback: Sex): Sex {
   }
 
   return fallback;
+}
+
+async function deleteOrganisationIfUnused(organisationId: number | null | undefined) {
+  if (!organisationId) return;
+
+  await prisma.organisation.deleteMany({
+    where: {
+      id: organisationId,
+      competitors: { none: {} },
+      teams: { none: {} },
+    },
+  });
 }
 
 function getUploadFileMeta(file?: UploadedFile) {
@@ -623,8 +639,8 @@ async function upsertCompetitor(
       nationality: true,
       registration: true,
       license: true,
-      organisation: true,
-      shortName: true,
+      organisationId: true,
+      organisation: { select: organisationSelect },
       card: true,
       bibNumber: true,
       startTime: true,
@@ -639,6 +655,9 @@ async function upsertCompetitor(
     },
   });
 
+  const previousOrganisationName = dbCompetitorResponse?.organisation?.name ?? null;
+  const previousOrganisationShortName = dbCompetitorResponse?.organisation?.shortName ?? null;
+
   const firstname = person.Name?.[0]?.Given?.[0] ?? dbCompetitorResponse?.firstname ?? '';
   const lastname = person.Name?.[0]?.Family?.[0] ?? dbCompetitorResponse?.lastname ?? '';
   const hasFinishTime = Boolean(result?.FinishTime?.[0]);
@@ -646,6 +665,26 @@ async function upsertCompetitor(
     ? 'OK'
     : (dbCompetitorResponse?.status ?? 'Inactive');
   const normalizedStatus = toResultStatus(result?.Status, fallbackStatus);
+
+  // Resolve / upsert the Organisation row scoped to this event. A missing
+  // Organisation node explicitly means the competitor has no club.
+  const organisationExternalId =
+    organisation?.Id?.[0]?._ ??
+    organisation?.ATTR?.id ??
+    (typeof organisation?.Id?.[0] === 'string'
+      ? (organisation?.Id?.[0] as unknown as string)
+      : undefined) ??
+    null;
+  const organisationName = organisation?.Name?.[0] ?? null;
+  const organisationShortName = organisation?.ShortName?.[0] ?? null;
+  const organisationNationality = organisation?.Country?.[0]?.ATTR?.code ?? null;
+  const resolvedOrganisationId = await upsertOrganisation({
+    eventId,
+    externalId: organisationExternalId,
+    name: organisationName,
+    shortName: organisationShortName,
+    nationality: organisationNationality,
+  });
 
   // Prepare new data, giving preference to already stored values for certain fields
   const competitorData = {
@@ -655,8 +694,8 @@ async function upsertCompetitor(
     nationality: person.Nationality?.[0].ATTR.code,
     registration: registration,
     license: dbCompetitorResponse?.license || null,
-    organisation: organisation?.Name?.[0],
-    shortName: organisation?.ShortName?.[0],
+    organisation: organisationName,
+    shortName: organisationShortName,
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber.shift())
       : start?.BibNumber
@@ -684,12 +723,35 @@ async function upsertCompetitor(
     updatedAt: new Date(),
   };
 
+  // The Prisma write uses the relational organisation connect, not the flat strings.
+  const {
+    organisation: _orgWriteName,
+    shortName: _orgWriteShortName,
+    ...competitorWriteBase
+  } = competitorData as Record<string, unknown>;
+  const organisationCreateWrite = resolvedOrganisationId
+    ? { organisation: { connect: { id: resolvedOrganisationId } } }
+    : {};
+  const organisationUpdateWrite = {
+    organisation: resolvedOrganisationId
+      ? { connect: { id: resolvedOrganisationId } }
+      : { disconnect: true },
+  };
+  const competitorCreateData = {
+    ...competitorWriteBase,
+    ...organisationCreateWrite,
+  } as Prisma.CompetitorCreateInput;
+  const competitorUpdateData = {
+    ...competitorWriteBase,
+    ...organisationUpdateWrite,
+  } as Prisma.CompetitorUpdateInput;
+
   if (!dbCompetitorResponse) {
     const dbCompetitorInsert = await prisma.competitor.create({
-      data: competitorData,
+      data: competitorCreateData,
     });
     try {
-      await prisma.protocol.create({
+      await prisma.protocol.createMany({
         data: {
           eventId: eventId,
           competitorId: dbCompetitorInsert.id,
@@ -753,14 +815,20 @@ async function upsertCompetitor(
 
     // Check for differences and collect changes
     const isDifferent = keysToCompare.some(({ key, type }) => {
+      const previousFlat =
+        key === 'organisation'
+          ? previousOrganisationName
+          : key === 'shortName'
+            ? previousOrganisationShortName
+            : (dbCompetitorResponse as Record<string, unknown>)[key];
       const currentValue = normalizeValue(type, competitorData[key]);
-      const previousValue = normalizeValue(type, dbCompetitorResponse[key]);
+      const previousValue = normalizeValue(type, previousFlat);
       const hasChanged = competitorData[key] !== undefined && currentValue !== previousValue;
 
       if (hasChanged && keyToTypeMap[key]) {
         changes.push({
           type: keyToTypeMap[key],
-          previousValue: dbCompetitorResponse[key]?.toString() || null,
+          previousValue: previousFlat?.toString() || null,
           newValue: competitorData[key]?.toString() || null,
         });
       }
@@ -772,20 +840,23 @@ async function upsertCompetitor(
       // Update only if there is a difference
       await prisma.competitor.update({
         where: { id: dbCompetitorResponse.id },
-        data: competitorData,
+        data: competitorUpdateData,
       });
+      if (dbCompetitorResponse.organisationId !== resolvedOrganisationId) {
+        await deleteOrganisationIfUnused(dbCompetitorResponse.organisationId);
+      }
 
       // Add records to protocol
       try {
         for (const change of changes) {
-          await prisma.protocol.create({
+          await prisma.protocol.createMany({
             data: {
               eventId: eventId,
               competitorId: dbCompetitorResponse.id,
               origin: 'IT',
               type: change.type,
               previousValue: change.previousValue,
-              newValue: change.newValue,
+              newValue: change.newValue ?? '',
               authorId: 1,
             },
           });
@@ -1091,14 +1162,43 @@ async function upsertTeam(
     select: { id: true }, // Select only the team ID to optimize query performance
   });
 
+  // Resolve the Organisation row scoped to this event for the team.
+  const hasTeamOrganisationPayload = organisation !== null && organisation !== undefined;
+  const teamOrganisationExternalId =
+    organisation?.Id?.[0]?._ ??
+    organisation?.ATTR?.id ??
+    (typeof organisation?.Id?.[0] === 'string'
+      ? (organisation?.Id?.[0] as unknown as string)
+      : undefined) ??
+    null;
+  const teamOrganisationId = hasTeamOrganisationPayload
+    ? await upsertOrganisation({
+        eventId,
+        externalId: teamOrganisationExternalId,
+        name: organisation?.Name?.[0] ?? null,
+        shortName: organisation?.ShortName?.[0] ?? null,
+        nationality: organisation?.Country?.[0]?.ATTR?.code ?? null,
+      })
+    : undefined;
+  const teamOrganisationCreateWrite =
+    hasTeamOrganisationPayload && teamOrganisationId
+      ? { organisation: { connect: { id: teamOrganisationId } } }
+      : {};
+  const teamOrganisationUpdateWrite = hasTeamOrganisationPayload
+    ? {
+        organisation: teamOrganisationId
+          ? { connect: { id: teamOrganisationId } }
+          : { disconnect: true },
+      }
+    : {};
+
   if (!dbRelayResponse) {
     // If team does not exist, insert a new team entry
     const dbRelayInsert = await prisma.team.create({
       data: {
         class: { connect: { id: classId } }, // Link team to the correct class
         name: teamName, // Set team name
-        organisation: organisation?.Name?.[0] || null, // Set organisation name if available
-        shortName: organisation?.ShortName?.[0] || null, // Set short name if available
+        ...teamOrganisationCreateWrite,
         bibNumber: bibNumber, // Set bib number
       },
     });
@@ -1112,8 +1212,7 @@ async function upsertTeam(
       data: {
         class: { connect: { id: classId } }, // Ensure it stays connected to the correct class
         name: teamName, // Update team name if changed
-        organisation: organisation?.Name?.[0] || null, // Update organisation name if changed
-        shortName: organisation?.ShortName?.[0] || null, // Update short name if changed
+        ...teamOrganisationUpdateWrite,
         bibNumber: bibNumber, // Update bib number if changed
       },
     });
@@ -1176,7 +1275,10 @@ async function processClassStarts(
           IOF_WRITE_CONCURRENCY,
           async (competitorStart: Record<string, any>) => {
             const person = competitorStart.Person.shift();
-            const organisation = competitorStart.Organisation.shift();
+            const organisation =
+              Array.isArray(competitorStart.Organisation) && competitorStart.Organisation.length > 0
+                ? competitorStart.Organisation.shift()
+                : null;
             const start = competitorStart.Start.shift();
             await upsertCompetitor(
               eventId,
