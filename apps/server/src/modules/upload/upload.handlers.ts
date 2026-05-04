@@ -40,6 +40,14 @@ import {
   upsertSplits,
 } from './upload.split.js';
 import { getXsdSchema } from './upload.xsd-cache.js';
+import {
+  ImportSourceType,
+  computeRawHash,
+  detectXmlRootElement,
+  findImportStateByHash,
+  recordSkippedImport,
+  upsertImportState,
+} from './upload.import-state.js';
 
 const parser = new Parser({ attrkey: 'ATTR', trim: true });
 
@@ -906,6 +914,33 @@ async function handleIofXmlUpload(
     return c.json(error(message, 500), 500);
   }
 
+  // Early return: skip identical re-uploads before expensive XML parsing
+  const rawHash = computeRawHash(xmlBuffer);
+  const detectedPayloadType = detectXmlRootElement(xmlBuffer);
+
+  if (detectedPayloadType !== null && isIofPayloadType(detectedPayloadType)) {
+    const isIdentical = await findImportStateByHash(
+      eventId,
+      ImportSourceType.IOF_XML,
+      detectedPayloadType,
+      rawHash,
+    );
+    if (isIdentical) {
+      await recordSkippedImport(eventId, ImportSourceType.IOF_XML, detectedPayloadType, rawHash);
+      logUploadEvent(c, 'info', 'IOF upload skipped: identical content already imported', {
+        ...uploadDetails,
+        success: true,
+        stage: 'skipped-identical',
+        rawHash,
+        detectedPayloadType,
+      });
+      return c.json(
+        success('OK', { data: 'Skipped: identical upload already processed', skipped: true }, 200),
+        200,
+      );
+    }
+  }
+
   let iofXml3: Record<string, any>;
   try {
     iofXml3 = (await parseXml(xmlBuffer)) as Record<string, any>;
@@ -920,6 +955,16 @@ async function handleIofXmlUpload(
   }
 
   const iofXmlType = checkXmlType(iofXml3);
+
+  const iofRootKey = Object.keys(iofXml3)[0] ?? '';
+  const iofRootAttr = (iofXml3[iofRootKey]?.ATTR ?? {}) as Record<string, string | undefined>;
+  const iofRootMeta = {
+    creator: iofRootAttr.creator ?? null,
+    externalCreateTime: iofRootAttr.createTime ? new Date(iofRootAttr.createTime) : null,
+    formatVersion: iofRootAttr.iofVersion ?? null,
+    externalStatus: iofRootAttr.status ?? null,
+  };
+
   logUploadEvent(c, 'info', 'IOF upload XML parsed', {
     ...uploadDetails,
     success: false,
@@ -1114,6 +1159,26 @@ async function handleIofXmlUpload(
     });
     return c.json(error(message, 500), 500);
   }
+
+  // Persist or update import state for each processed payload type
+  await Promise.all(
+    iofXmlType.map((type) =>
+      upsertImportState(eventId, ImportSourceType.IOF_XML, {
+        payloadType: type.jsonKey,
+        rawHash,
+        rootElement: type.jsonKey,
+        ...iofRootMeta,
+      }).catch((err) => {
+        logUploadEvent(c, 'error', 'IOF upload failed to persist import state', {
+          ...uploadDetails,
+          success: true,
+          stage: 'persist-import-state',
+          payloadType: type.jsonKey,
+          reason: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }),
+    ),
+  );
 
   logUploadEvent(c, 'info', 'IOF upload completed', {
     ...uploadDetails,
