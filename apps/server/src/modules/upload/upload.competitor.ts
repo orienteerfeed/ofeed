@@ -13,6 +13,10 @@ import prisma from '../../utils/context.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import { normalizeValue } from '../../utils/normalize.js';
 import { organisationSelect, upsertOrganisation } from '../event/organisation.helpers.js';
+import {
+  SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
+  SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
+} from './upload.constants.js';
 import { getIofDateTime, toResultStatus } from './upload.iof.helpers.js';
 import type { IofOrganisation, IofPerson, IofResult, IofStart } from './upload.iof.types.js';
 
@@ -399,31 +403,38 @@ async function insertNewCompetitor(
   authorId: number,
 ): Promise<{ id: number; updated: boolean }> {
   const resolvedOrganisationId = await upsertOrganisation({ eventId, ...snapshot.orgInput });
-  const created = await prisma.$transaction(async (tx) => {
-    const c = await tx.competitor.create({
-      data: {
-        ...snapshot.competitorWriteBase,
-        ...(resolvedOrganisationId
-          ? { organisation: { connect: { id: resolvedOrganisationId } } }
-          : {}),
-      } as Prisma.CompetitorCreateInput,
-      select: { id: true },
-    });
-    await tx.protocol.createMany({
-      data: [
-        {
-          eventId,
-          competitorId: c.id,
-          origin: 'IT',
-          type: 'competitor_create',
-          previousValue: null,
-          newValue: `${snapshot.lastname} ${snapshot.firstname}`,
-          authorId,
-        },
-      ],
-    });
-    return c;
-  });
+  const created = await prisma.$transaction(
+    async (tx) => {
+      const c = await tx.competitor.create({
+        data: {
+          ...snapshot.competitorWriteBase,
+          ...(resolvedOrganisationId
+            ? { organisation: { connect: { id: resolvedOrganisationId } } }
+            : {}),
+        } as Prisma.CompetitorCreateInput,
+        select: { id: true },
+      });
+      await tx.protocol.createMany({
+        data: [
+          {
+            eventId,
+            competitorId: c.id,
+            origin: 'IT',
+            type: 'competitor_create',
+            previousValue: null,
+            newValue: `${snapshot.lastname} ${snapshot.firstname}`,
+            authorId,
+          },
+        ],
+      });
+      return c;
+    },
+    {
+      maxWait: SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
+      timeout: SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
+      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+    },
+  );
   return { id: created.id, updated: true };
 }
 
@@ -457,33 +468,40 @@ async function updateExistingCompetitor(
     ? await upsertOrganisation({ eventId, ...snapshot.orgInput })
     : (dbCompetitor.organisationId ?? null);
 
-  await prisma.$transaction(async (tx) => {
-    await tx.competitor.update({
-      where: { id: dbCompetitor.id },
-      data: {
-        ...snapshot.competitorWriteBase,
-        ...(orgChanged
-          ? {
-              organisation: resolvedOrganisationId
-                ? { connect: { id: resolvedOrganisationId } }
-                : { disconnect: true },
-            }
-          : {}),
-        updatedAt: new Date(),
-      } as Prisma.CompetitorUpdateInput,
-    });
-    await tx.protocol.createMany({
-      data: fieldChanges.map((change) => ({
-        eventId,
-        competitorId: dbCompetitor.id,
-        origin: 'IT',
-        type: change.type,
-        previousValue: change.previousValue,
-        newValue: change.newValue ?? '',
-        authorId,
-      })),
-    });
-  });
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.competitor.update({
+        where: { id: dbCompetitor.id },
+        data: {
+          ...snapshot.competitorWriteBase,
+          ...(orgChanged
+            ? {
+                organisation: resolvedOrganisationId
+                  ? { connect: { id: resolvedOrganisationId } }
+                  : { disconnect: true },
+              }
+            : {}),
+          updatedAt: new Date(),
+        } as Prisma.CompetitorUpdateInput,
+      });
+      await tx.protocol.createMany({
+        data: fieldChanges.map((change) => ({
+          eventId,
+          competitorId: dbCompetitor.id,
+          origin: 'IT',
+          type: change.type,
+          previousValue: change.previousValue,
+          newValue: change.newValue ?? '',
+          authorId,
+        })),
+      });
+    },
+    {
+      maxWait: SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
+      timeout: SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
+      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+    },
+  );
 
   if (orgChanged && dbCompetitor.organisationId !== resolvedOrganisationId) {
     await deleteOrganisationIfUnused(dbCompetitor.organisationId);

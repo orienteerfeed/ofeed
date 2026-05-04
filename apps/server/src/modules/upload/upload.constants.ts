@@ -3,7 +3,7 @@
  * to keep the handlers file focused on flow rather than configuration.
  */
 
-export const IOF_WRITE_CONCURRENCY = 8;
+export const IOF_WRITE_CONCURRENCY = 4;
 
 export const SPLIT_WRITE_CONFLICT_MAX_RETRIES = 6;
 export const SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS = 75;
