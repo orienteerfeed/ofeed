@@ -18,7 +18,7 @@ async function getCompetitorsByClassBase(classId, includeSplits = false) {
                   controlCode: true,
                   time: true,
                 },
-                orderBy: { time: 'asc' },
+                orderBy: { id: 'asc' },
               },
             }
           : {}),

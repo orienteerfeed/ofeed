@@ -15,12 +15,7 @@ import { normalizeValue } from '../../utils/normalize.js';
 import { publishUpdatedCompetitor } from '../../utils/subscriptionUtils.js';
 import { organisationSelect, upsertOrganisation } from '../event/organisation.helpers.js';
 import { getIofDateTime, toResultStatus } from './upload.iof.helpers.js';
-import type {
-  IofOrganisation,
-  IofPerson,
-  IofResult,
-  IofStart,
-} from './upload.iof.types.js';
+import type { IofOrganisation, IofPerson, IofResult, IofStart } from './upload.iof.types.js';
 
 export type CompetitorKeys = { registration: string; system: string };
 
@@ -209,7 +204,8 @@ export function normalizeOrganisationInput(orgInput: {
   shortName: string | null | undefined;
 }): { effectiveName: string | null; effectiveShortName: string | null } {
   const name = typeof orgInput.name === 'string' ? orgInput.name.trim() || null : null;
-  const shortName = typeof orgInput.shortName === 'string' ? orgInput.shortName.trim() || null : null;
+  const shortName =
+    typeof orgInput.shortName === 'string' ? orgInput.shortName.trim() || null : null;
   return {
     effectiveName: name,
     effectiveShortName: name ? shortName : null,
@@ -253,6 +249,27 @@ export async function loadCompetitorCache(classId: number): Promise<CompetitorCa
     select: COMPETITOR_DIFF_SELECT,
   });
   return new Map(rows.map((c) => [c.externalId!, c]));
+}
+
+async function findCompetitorForImport(
+  eventId: string,
+  classId: number,
+  externalId: string,
+  cache?: CompetitorCache,
+): Promise<DbCompetitor | null> {
+  const cached = cache?.get(externalId);
+  if (cached) return cached;
+
+  const sameClass = await prisma.competitor.findUnique({
+    where: { classId_externalId: { classId, externalId } },
+    select: COMPETITOR_DIFF_SELECT,
+  });
+  if (sameClass) return sameClass;
+
+  return prisma.competitor.findFirst({
+    where: { class: { eventId }, externalId },
+    select: COMPETITOR_DIFF_SELECT,
+  });
 }
 
 type CompetitorSnapshot = {
@@ -307,9 +324,7 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
   const firstname = person.Name?.[0]?.Given?.[0] ?? dbCompetitor?.firstname ?? '';
   const lastname = person.Name?.[0]?.Family?.[0] ?? dbCompetitor?.lastname ?? '';
   const hasFinishTime = Boolean(result?.FinishTime?.[0]);
-  const fallbackStatus: ResultStatus = hasFinishTime
-    ? 'OK'
-    : (dbCompetitor?.status ?? 'Inactive');
+  const fallbackStatus: ResultStatus = hasFinishTime ? 'OK' : (dbCompetitor?.status ?? 'Inactive');
   const normalizedStatus = toResultStatus(result?.Status, fallbackStatus);
 
   const orgInput = buildOrganisationInput(organisation);
@@ -325,6 +340,7 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
     incomingExternalId !== null && dbCompetitor?.organisation?.externalId === incomingExternalId;
 
   const competitorData = {
+    classId,
     class: { connect: { id: classId } },
     firstname,
     lastname,
@@ -360,8 +376,12 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
     note: dbCompetitor?.note || null,
   };
 
-  const { organisation: _flatName, shortName: _flatShort, ...competitorWriteBase } =
-    competitorData as Record<string, unknown>;
+  const {
+    classId: _flatClassId,
+    organisation: _flatName,
+    shortName: _flatShort,
+    ...competitorWriteBase
+  } = competitorData as Record<string, unknown>;
 
   return {
     competitorData,
@@ -483,16 +503,17 @@ const MAX_UPSERT_ATTEMPTS = 3;
  * preserved-fields baseline.
  */
 function isCompetitorUniqueViolation(error: unknown): boolean {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === 'P2002' &&
-    Array.isArray((error.meta as { target?: unknown })?.target) === false
-      ? // MariaDB constraint name surfaced via meta.target as string
-        ((error.meta as { target?: unknown })?.target ?? '').toString().includes(
-          'Competitor_class_external_uq',
-        )
-      : true
-  );
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
+    return false;
+  }
+
+  const target = (error.meta as { target?: unknown })?.target;
+  if (Array.isArray(target)) {
+    return target.includes('classId') && target.includes('externalId');
+  }
+
+  // MariaDB surfaces the constraint name via meta.target as a string.
+  return (target ?? '').toString().includes('Competitor_class_external_uq');
 }
 
 export async function upsertCompetitor(
@@ -512,10 +533,12 @@ export async function upsertCompetitor(
 
   for (let attempt = 1; attempt <= MAX_UPSERT_ATTEMPTS; attempt++) {
     // First attempt: prefer cache to skip one DB round-trip per competitor.
+    // On cache miss, fall back to event-scoped lookup so category changes are
+    // represented as class_change updates instead of duplicate competitors.
     // Retry attempts always query the DB to pick up the racer's row.
     const dbCompetitor: DbCompetitor | null =
-      attempt === 1 && cache
-        ? (cache.get(externalId) ?? null)
+      attempt === 1
+        ? await findCompetitorForImport(eventId, classId, externalId, cache)
         : await prisma.competitor.findUnique({
             where: { classId_externalId: { classId, externalId } },
             select: COMPETITOR_DIFF_SELECT,

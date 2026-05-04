@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { detectCompetitorChanges, normalizeOrganisationInput, upsertCompetitor } from '../upload.competitor.js';
+import {
+  detectCompetitorChanges,
+  normalizeOrganisationInput,
+  upsertCompetitor,
+} from '../upload.competitor.js';
 
 // ---------------------------------------------------------------------------
 // Prisma mock shared by upsertCompetitor tests
@@ -10,6 +14,7 @@ const mockTransaction = vi.fn();
 const mockPrisma = vi.hoisted(() => ({
   competitor: {
     findUnique: vi.fn(),
+    findFirst: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
   },
@@ -383,6 +388,84 @@ describe('upsertCompetitor — authorId written to protocol', () => {
     for (const row of capturedProtocolData) {
       expect(row.authorId).toBe(JWT_USER_ID);
     }
+  });
+
+  it('updates the existing event competitor when an import moves them to another class', async () => {
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+    mockPrisma.competitor.findUnique.mockResolvedValue(null);
+
+    const dbCompetitor = {
+      id: 10,
+      classId: 1,
+      firstname: 'Jan',
+      lastname: 'Novák',
+      nationality: 'CZE',
+      registration: 'REG001',
+      license: null,
+      organisationId: null,
+      organisation: null,
+      card: null,
+      bibNumber: null,
+      startTime: null,
+      finishTime: null,
+      time: null,
+      status: 'Inactive',
+      lateStart: false,
+      leg: null,
+      note: null,
+      externalId: 'REG001',
+    };
+    mockPrisma.competitor.findFirst.mockResolvedValue(dbCompetitor);
+
+    let capturedUpdateData: any;
+    let capturedProtocolData: any[] = [];
+    mockPrisma.$transaction.mockImplementation(async (cb) => {
+      const txProxy = {
+        competitor: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            capturedUpdateData = data;
+            return Promise.resolve({});
+          }),
+        },
+        protocol: {
+          createMany: vi.fn().mockImplementation(({ data }) => {
+            capturedProtocolData = data;
+            return Promise.resolve({ count: data.length });
+          }),
+        },
+      };
+      return cb(txProxy);
+    });
+
+    const result = await upsertCompetitor(
+      'event-abc',
+      2,
+      minimalPerson as never,
+      null,
+      null,
+      null,
+      'UTC',
+      null,
+      null,
+      5,
+    );
+
+    expect(result).toEqual({ id: 10, updated: true });
+    expect(mockPrisma.competitor.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { class: { eventId: 'event-abc' }, externalId: 'REG001' },
+      }),
+    );
+    expect(capturedUpdateData.class).toEqual({ connect: { id: 2 } });
+    expect(capturedProtocolData).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'class_change',
+          previousValue: '1',
+          newValue: '2',
+        }),
+      ]),
+    );
   });
 
   it('does not reference IOF_IMPORT_AUTHOR_ID — constant is absent from the module', async () => {
