@@ -568,7 +568,8 @@ async function processClassStarts(
   dbClassLists: ClassListEntry[],
   dbResponseEvent: { relay?: boolean; timezone?: string | null },
   authorId: number,
-): Promise<void> {
+): Promise<number[]> {
+  const updatedClasses = new Set<number>();
   const eventTimeZone = dbResponseEvent.timezone ?? 'UTC';
 
   await forEachWithConcurrency(
@@ -614,7 +615,7 @@ async function processClassStarts(
                 ? competitorStart.Organisation.shift()
                 : null;
             const start = competitorStart.Start.shift();
-            await upsertCompetitor(
+            const { updated } = await upsertCompetitor(
               eventId,
               classId,
               person,
@@ -627,6 +628,7 @@ async function processClassStarts(
               authorId,
               competitorCache,
             );
+            if (updated) updatedClasses.add(classId);
           },
         );
       } else {
@@ -639,7 +641,7 @@ async function processClassStarts(
           async (teamStart: Record<string, any>) => {
             const organisation = teamStart.Organisation
               ? [...teamStart.Organisation].shift()
-              : null; // Organisation details
+              : null;
 
             const teamId = await upsertTeam(
               eventId,
@@ -657,7 +659,7 @@ async function processClassStarts(
                   const start = [...teamMemberStart.Start].shift();
                   const leg = [...start.Leg].shift();
 
-                  await upsertCompetitor(
+                  const { updated } = await upsertCompetitor(
                     eventId,
                     classId,
                     person,
@@ -670,6 +672,7 @@ async function processClassStarts(
                     authorId,
                     competitorCache,
                   );
+                  if (updated) updatedClasses.add(classId);
                 },
               );
             }
@@ -678,6 +681,7 @@ async function processClassStarts(
       }
     },
   );
+  return [...updatedClasses];
 }
 
 /**
@@ -1034,13 +1038,38 @@ async function handleIofXmlUpload(
             classStartCount: Array.isArray(classStarts) ? classStarts.length : 0,
           });
           if (classStarts && classStarts.length > 0) {
-            await processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent, authorId);
+            const updatedClasses = await processClassStarts(
+              eventId,
+              classStarts,
+              dbClassLists,
+              dbResponseEvent,
+              authorId,
+            );
             logUploadEvent(c, 'info', 'IOF upload StartList processed', {
               ...uploadDetails,
               success: false,
               stage: 'processed-start-list',
               classStartCount: classStarts.length,
+              updatedClassCount: updatedClasses.length,
             });
+            for (const classId of updatedClasses) {
+              try {
+                await publishUpdatedCompetitors(classId);
+              } catch (err) {
+                logUploadEvent(
+                  c,
+                  'error',
+                  'IOF upload failed while publishing updated competitors',
+                  {
+                    ...uploadDetails,
+                    success: false,
+                    stage: 'publish-updated-competitors',
+                    classId,
+                    reason: err instanceof Error ? err.message : 'Publish failed',
+                  },
+                );
+              }
+            }
           }
         } else if (type.jsonKey === 'CourseData') {
           // Process CourseData
@@ -1418,4 +1447,6 @@ export const parseXmlForTesting = {
   normalizeIncomingSplits,
   isSplitWriteConflict,
   loadSplitCache,
+  processClassResults,
+  processClassStarts,
 };

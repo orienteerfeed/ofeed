@@ -14,6 +14,8 @@ const {
   normalizeIncomingSplits,
   isSplitWriteConflict,
   loadSplitCache,
+  processClassResults,
+  processClassStarts,
 } = parseXmlForTesting;
 
 afterEach(() => {
@@ -244,9 +246,35 @@ const mockPrisma = vi.hoisted(() => ({
   split: {
     findMany: vi.fn(),
   },
+  class: {
+    update: vi.fn().mockResolvedValue({}),
+    create: vi.fn().mockResolvedValue({ id: 99 }),
+  },
+  // Required by the real loadCompetitorCache used in publish-aggregation tests.
+  competitor: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
 }));
 
 vi.mock('../../../utils/context.js', () => ({ default: mockPrisma }));
+
+// ── publish-aggregation test helpers ──────────────────────────────────────────
+const mockUpsertCompetitor = vi.hoisted(() => vi.fn());
+const mockPublishUpdatedCompetitors = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+
+// Preserve all real exports; replace only the two we need to control in the new tests.
+vi.mock('../upload.competitor.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../upload.competitor.js')>();
+  return {
+    ...actual,
+    upsertCompetitor: mockUpsertCompetitor,
+    loadCompetitorCache: vi.fn().mockResolvedValue(new Map()),
+  };
+});
+
+vi.mock('../../../utils/subscriptionUtils.js', () => ({
+  publishUpdatedCompetitors: mockPublishUpdatedCompetitors,
+}));
 
 describe('resolveExistingTeam', () => {
   afterEach(() => {
@@ -464,5 +492,63 @@ describe('loadSplitCache', () => {
         where: { competitorId: { in: [5, 6, 7] } },
       }),
     );
+  });
+});
+
+// ── publish-aggregation tests ─────────────────────────────────────────────────
+// processClassResults already returned a deduplicated number[] via Set before
+// this PR. The key NEW behaviour is processClassStarts now doing the same so
+// the StartList handler can publish once per affected class.
+
+describe('processClassStarts — updated class deduplication', () => {
+  const dbClassLists: { id: number; externalId: string | null; name: string; sex: Sex | null }[] = [
+    { id: 10, externalId: 'C10', name: 'H21E', sex: 'M' },
+  ];
+
+  const makePersonStart = (registration: string) => ({
+    Person: [{ Id: [{ _: registration, ATTR: { type: 'CZE' } }], Name: [{ Family: ['X'], Given: ['X'] }], Nationality: [{ ATTR: { code: 'CZE' } }] }],
+    Organisation: [],
+    Start: [{}],
+  });
+
+  const makeClassStart = (externalId: string, name: string, personStarts: object[]) => ({
+    Class: [{ Id: [externalId], Name: [name], ATTR: {} }],
+    PersonStart: personStarts,
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns classId when at least one competitor in the class changed', async () => {
+    mockUpsertCompetitor
+      .mockResolvedValueOnce({ id: 3, updated: true })
+      .mockResolvedValueOnce({ id: 4, updated: false });
+
+    const updated = await processClassStarts(
+      'event-1',
+      [makeClassStart('C10', 'H21E', [makePersonStart('REG001'), makePersonStart('REG002')])],
+      dbClassLists,
+      { relay: false },
+      1,
+    );
+
+    expect(updated).toEqual([10]);
+  });
+
+  it('returns empty array when no competitors in the start list changed', async () => {
+    mockUpsertCompetitor
+      .mockResolvedValueOnce({ id: 3, updated: false })
+      .mockResolvedValueOnce({ id: 4, updated: false });
+
+    const updated = await processClassStarts(
+      'event-1',
+      [makeClassStart('C10', 'H21E', [makePersonStart('REG001'), makePersonStart('REG002')])],
+      dbClassLists,
+      { relay: false },
+      1,
+    );
+
+    expect(updated).toEqual([]);
   });
 });

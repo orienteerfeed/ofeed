@@ -5,6 +5,7 @@ import {
   normalizeOrganisationInput,
   upsertCompetitor,
 } from '../upload.competitor.js';
+import * as subscriptionUtils from '../../../utils/subscriptionUtils.js';
 
 // ---------------------------------------------------------------------------
 // Prisma mock shared by upsertCompetitor tests
@@ -473,5 +474,54 @@ describe('upsertCompetitor — authorId written to protocol', () => {
     // providing a compile-time + runtime safety net.
     const mod = await import('../upload.constants.js');
     expect((mod as any).IOF_IMPORT_AUTHOR_ID).toBeUndefined();
+  });
+
+  it('does NOT call publishUpdatedCompetitor during the update path (publish is class-level only)', async () => {
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+
+    const dbCompetitor = {
+      id: 20,
+      classId: 1,
+      firstname: 'Jan',
+      lastname: 'Novák',
+      nationality: 'SVK', // different from incoming CZE → triggers update
+      registration: 'REG001',
+      license: null,
+      organisationId: null,
+      organisation: null,
+      card: null,
+      bibNumber: null,
+      startTime: null,
+      finishTime: null,
+      time: null,
+      status: 'Inactive',
+      lateStart: false,
+      leg: null,
+      note: null,
+      externalId: 'REG001',
+    };
+    mockPrisma.competitor.findUnique.mockResolvedValue(dbCompetitor);
+    mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
+      const txProxy = {
+        competitor: { update: vi.fn().mockResolvedValue({}) },
+        protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      };
+      return cb(txProxy);
+    });
+
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      null,
+      null,
+      'UTC',
+      null,
+      null,
+      5,
+    );
+
+    expect(subscriptionUtils.publishUpdatedCompetitor).not.toHaveBeenCalled();
   });
 });

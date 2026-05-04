@@ -12,7 +12,6 @@ import type { ProtocolType, ResultStatus } from '../../generated/prisma/enums.js
 import prisma from '../../utils/context.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import { normalizeValue } from '../../utils/normalize.js';
-import { publishUpdatedCompetitor } from '../../utils/subscriptionUtils.js';
 import { organisationSelect, upsertOrganisation } from '../event/organisation.helpers.js';
 import { getIofDateTime, toResultStatus } from './upload.iof.helpers.js';
 import type { IofOrganisation, IofPerson, IofResult, IofStart } from './upload.iof.types.js';
@@ -490,7 +489,6 @@ async function updateExistingCompetitor(
     await deleteOrganisationIfUnused(dbCompetitor.organisationId);
   }
 
-  await publishUpdatedCompetitor(eventId, { ...snapshot.competitorData, id: dbCompetitor.id });
   return { id: dbCompetitor.id, updated: true };
 }
 
