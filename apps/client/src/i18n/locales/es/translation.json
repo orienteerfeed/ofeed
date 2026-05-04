@@ -668,6 +668,12 @@
         "LoadingClubs": "Cargando clubes",
         "LoadingClubResults": "Cargando resultados por club",
         "ErrorLoadingClubResults": "Error al cargar resultados por club: {{message}}",
+        "Relay": {
+          "Overall": "General",
+          "Leg": "Tramo {{number}}",
+          "Start": "Salida",
+          "Time": "Tiempo"
+        },
         "Ranking": {
           "Counts": "Cuenta para el ranking",
           "DoesNotCount": "No cuenta para el ranking",

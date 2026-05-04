@@ -23,7 +23,13 @@ import { useNavigate } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
 import { ChevronDown, Loader2, Radio, Trophy, Users } from 'lucide-react';
 import { motion } from 'motion/react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, CountryFlag, Tooltip } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
@@ -58,6 +64,50 @@ const getClubSheetMaxHeight = () =>
 const mobileResultsTableClassName =
   'overflow-x-auto [&_table]:text-sm [&_th]:h-7 sm:[&_th]:h-8 [&_th]:px-1.5 sm:[&_th]:px-2 [&_th]:text-xs [&_td]:px-1.5 sm:[&_td]:px-2 [&_td]:py-0.5 sm:[&_td]:py-1 [&_td]:text-sm';
 
+const getActiveTimeState = (
+  startTime: string | undefined,
+  currentTime: number
+): { value: string; className: string } => {
+  if (!startTime) {
+    return { value: '-', className: 'text-muted-foreground' };
+  }
+
+  try {
+    const start = new Date(startTime).getTime();
+
+    if (Number.isNaN(start)) {
+      return { value: '-', className: 'text-muted-foreground' };
+    }
+
+    const elapsedSeconds = Math.floor((currentTime - start) / 1000);
+
+    if (elapsedSeconds < 0) {
+      const secondsUntilStart = Math.abs(elapsedSeconds);
+      const className =
+        secondsUntilStart <= 5
+          ? 'animate-pulse text-orange-600 dark:text-orange-400'
+          : 'text-muted-foreground';
+
+      return {
+        value: `- ${formatSecondsToTime(secondsUntilStart)}`,
+        className,
+      };
+    }
+
+    const className =
+      elapsedSeconds <= 5
+        ? 'animate-pulse text-green-600 dark:text-green-400'
+        : 'text-muted-foreground';
+
+    return {
+      value: formatSecondsToTime(elapsedSeconds),
+      className,
+    };
+  } catch {
+    return { value: '-', className: 'text-muted-foreground' };
+  }
+};
+
 // GraphQL queries and subscriptions
 const COMPETITORS_BY_CLASS_UPDATED = gql`
   subscription CompetitorsByClassUpdated($classId: Int!) {
@@ -80,6 +130,12 @@ const COMPETITORS_BY_CLASS_UPDATED = gql`
       status
       lateStart
       note
+      leg
+      teamId
+      team {
+        id
+        name
+      }
     }
   }
 `;
@@ -134,34 +190,9 @@ const COMPETITORS_BY_ORGANISATION = gql`
   }
 `;
 
-const RELAY_RESULTS_UPDATED = gql`
-  subscription RelayResultsUpdated($eventId: String!, $classId: Int!) {
-    relayResultsUpdated(eventId: $eventId, classId: $classId) {
-      id
-      rank
-      teamName
-      club
-      countryCode
-      totalTime
-      behind
-      legs {
-        legNumber
-        runnerName
-        time
-        rank
-        status
-      }
-    }
-  }
-`;
-
 // Type definitions
 interface CompetitorsByClassUpdatedResponse {
   competitorsByClassUpdated: Competitor[];
-}
-
-interface RelayResultsUpdatedResponse {
-  relayResultsUpdated: RelayResult[];
 }
 
 interface EventResultsViewProps {
@@ -191,6 +222,9 @@ interface Competitor {
   status: string;
   lateStart?: boolean;
   note?: string;
+  leg?: number;
+  teamId?: number;
+  team?: { id: number; name: string } | null;
 }
 
 interface ProcessedCompetitor extends Competitor {
@@ -236,23 +270,6 @@ interface ProcessedClubResult {
   runners: ClubRunner[];
 }
 
-interface RelayResult {
-  id: string;
-  rank: number;
-  teamName: string;
-  club: string;
-  countryCode: string;
-  totalTime: string;
-  behind?: string;
-  legs: {
-    legNumber: number;
-    runnerName: string;
-    time: string;
-    rank: number;
-    status: 'finished' | 'running' | 'not_started';
-  }[];
-}
-
 export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
   const isRelay = event.relay;
   const navigate = useNavigate();
@@ -278,9 +295,13 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
   const { t: tLocal } = useTranslation();
   const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
   const [isClubSheetOpen, setIsClubSheetOpen] = useState(false);
-  const [clubSheetHeight, setClubSheetHeight] = useState(getClubSheetDefaultHeight);
+  const [clubSheetHeight, setClubSheetHeight] = useState(
+    getClubSheetDefaultHeight
+  );
   const [isClubSheetDragging, setIsClubSheetDragging] = useState(false);
-  const clubDragState = useRef<{ startY: number; startHeight: number } | null>(null);
+  const clubDragState = useRef<{ startY: number; startHeight: number } | null>(
+    null
+  );
 
   useEffect(() => {
     if (isClubSheetOpen) setClubSheetHeight(getClubSheetDefaultHeight());
@@ -290,37 +311,46 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
     (e: React.PointerEvent<HTMLElement>) => {
       e.preventDefault();
       e.currentTarget.setPointerCapture(e.pointerId);
-      clubDragState.current = { startY: e.clientY, startHeight: clubSheetHeight };
+      clubDragState.current = {
+        startY: e.clientY,
+        startHeight: clubSheetHeight,
+      };
       setIsClubSheetDragging(true);
     },
-    [clubSheetHeight],
+    [clubSheetHeight]
   );
 
-  const handleClubDragMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
-    if (!clubDragState.current) return;
-    const delta = clubDragState.current.startY - e.clientY;
-    const next = clubDragState.current.startHeight + delta;
-    if (next < CLUB_SHEET_MIN_HEIGHT - CLUB_SHEET_DISMISS_THRESHOLD) {
-      clubDragState.current = null;
+  const handleClubDragMove = useCallback(
+    (e: React.PointerEvent<HTMLElement>) => {
+      if (!clubDragState.current) return;
+      const delta = clubDragState.current.startY - e.clientY;
+      const next = clubDragState.current.startHeight + delta;
+      if (next < CLUB_SHEET_MIN_HEIGHT - CLUB_SHEET_DISMISS_THRESHOLD) {
+        clubDragState.current = null;
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+        setIsClubSheetDragging(false);
+        setIsClubSheetOpen(false);
+        return;
+      }
+      setClubSheetHeight(
+        Math.min(getClubSheetMaxHeight(), Math.max(CLUB_SHEET_MIN_HEIGHT, next))
+      );
+    },
+    []
+  );
+
+  const handleClubDragEnd = useCallback(
+    (e: React.PointerEvent<HTMLElement>) => {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
         e.currentTarget.releasePointerCapture(e.pointerId);
       }
+      clubDragState.current = null;
       setIsClubSheetDragging(false);
-      setIsClubSheetOpen(false);
-      return;
-    }
-    setClubSheetHeight(
-      Math.min(getClubSheetMaxHeight(), Math.max(CLUB_SHEET_MIN_HEIGHT, next)),
-    );
-  }, []);
-
-  const handleClubDragEnd = useCallback((e: React.PointerEvent<HTMLElement>) => {
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-    clubDragState.current = null;
-    setIsClubSheetDragging(false);
-  }, []);
+    },
+    []
+  );
   const [categoryCompetitorsCount, setCategoryCompetitorsCount] =
     useState<number>(0);
   const [isCategoryLoading, setIsCategoryLoading] = useState(false);
@@ -372,10 +402,10 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
       <>
         <WinnerNotification eventId={event.id} />
         <RelayResultsView
+          t={t}
           event={event}
           selectedClass={selectedClass}
           setSelectedClass={setSelectedClass}
-          availableClasses={event.classes?.map(cls => cls.name) || []}
         />
       </>
     );
@@ -467,7 +497,9 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
                 style={{
                   height: clubSheetHeight,
                   maxHeight: '90vh',
-                  transition: isClubSheetDragging ? 'none' : 'height 200ms ease',
+                  transition: isClubSheetDragging
+                    ? 'none'
+                    : 'height 200ms ease',
                 }}
               >
                 <SheetHeader className="text-left shrink-0 px-6 pt-2">
@@ -481,7 +513,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
                     onPointerCancel={handleClubDragEnd}
                     className={cn(
                       'group flex w-full touch-none cursor-row-resize select-none flex-col items-center pb-1 pt-1',
-                      isClubSheetDragging && 'cursor-grabbing',
+                      isClubSheetDragging && 'cursor-grabbing'
                     )}
                   >
                     <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-colors group-hover:bg-muted-foreground/50" />
@@ -708,54 +740,11 @@ const CategoryResultsView = ({
     onCompetitorsCountChange?.(competitors.length);
   }, [competitors.length, onCompetitorsCountChange]);
 
-  const getActiveTimeState = (
-    startTime?: string
-  ): { value: string; className: string } => {
-    if (!startTime) {
-      return { value: '-', className: 'text-muted-foreground' };
-    }
-
-    try {
-      const start = new Date(startTime).getTime();
-
-      if (isNaN(start)) {
-        return { value: '-', className: 'text-muted-foreground' };
-      }
-
-      const elapsedSeconds = Math.floor((currentTime - start) / 1000);
-
-      if (elapsedSeconds < 0) {
-        const secondsUntilStart = Math.abs(elapsedSeconds);
-        const className =
-          secondsUntilStart <= 5
-            ? 'animate-pulse text-orange-600 dark:text-orange-400'
-            : 'text-muted-foreground';
-
-        return {
-          value: `- ${formatSecondsToTime(secondsUntilStart)}`,
-          className,
-        };
-      }
-
-      const className =
-        elapsedSeconds <= 5
-          ? 'animate-pulse text-green-600 dark:text-green-400'
-          : 'text-muted-foreground';
-
-      return {
-        value: formatSecondsToTime(elapsedSeconds),
-        className,
-      };
-    } catch {
-      return { value: '-', className: 'text-muted-foreground' };
-    }
-  };
-
   const getCategoryTimeState = (
     competitor: ProcessedCompetitor
   ): { value: string; className: string; hideOnDesktop?: boolean } => {
     if (competitor.status === 'Active') {
-      return getActiveTimeState(competitor.startTime);
+      return getActiveTimeState(competitor.startTime, currentTime);
     }
 
     if (competitor.status === 'Inactive') {
@@ -1255,9 +1244,7 @@ const ClubResultsView = ({
             // alphabetically within each status group instead of by time.
             if (
               isUnorderedResultListMode(
-                getCompetitorResultListMode(
-                  a.competitor as CompetitorWithClass
-                )
+                getCompetitorResultListMode(a.competitor as CompetitorWithClass)
               )
             ) {
               return compareByStatusPriorityThenName(
@@ -1616,191 +1603,841 @@ const ClubResultsView = ({
   );
 };
 
+// ─── Relay overview ──────────────────────────────────────────────────────────
+
+interface TeamLegResult {
+  legNumber: number;
+  runner: Competitor;
+  legTime?: number;
+  legRank?: number;
+  legLoss?: number;
+  cumulativeTime?: number;
+  cumulativeRank?: number;
+  cumulativeLoss?: number;
+  positionChange?: number;
+}
+
+interface TeamResult {
+  teamId: number;
+  teamName: string;
+  club: string;
+  finalRank?: number;
+  totalTime?: number;
+  timeDiff?: number;
+  legs: TeamLegResult[];
+}
+
+const computeRelayOverall = (
+  allCompetitors: Competitor[],
+  maxLeg: number
+): TeamResult[] => {
+  if (maxLeg === 0 || allCompetitors.length === 0) return [];
+
+  const teamMap = new Map<number, Competitor[]>();
+  for (const c of allCompetitors) {
+    if (c.teamId == null) continue;
+    if (!teamMap.has(c.teamId)) teamMap.set(c.teamId, []);
+    teamMap.get(c.teamId)!.push(c);
+  }
+  if (teamMap.size === 0) return [];
+
+  const legBestTimes = new Map<number, number>();
+  const legRankById = new Map<string, number>();
+  for (let leg = 1; leg <= maxLeg; leg++) {
+    const legRunners = allCompetitors
+      .filter(c => c.leg === leg && c.status === 'OK' && c.time != null)
+      .sort((a, b) => (a.time ?? 0) - (b.time ?? 0));
+    const firstTime = legRunners[0]?.time;
+    if (firstTime != null) legBestTimes.set(leg, firstTime);
+    let pos = 1;
+    for (let i = 0; i < legRunners.length; i++) {
+      const cur = legRunners[i]!;
+      const prev = i > 0 ? legRunners[i - 1] : undefined;
+      const prevRank = prev ? (legRankById.get(prev.id) ?? pos) : undefined;
+      const rank =
+        prev && cur.time === prev.time && prevRank != null ? prevRank : pos;
+      legRankById.set(cur.id, rank);
+      pos++;
+    }
+  }
+
+  const teamCumulByLeg = new Map<number, Map<number, number>>();
+  for (const [teamId, runners] of teamMap) {
+    const byLeg = new Map<number, Competitor>();
+    for (const r of runners) {
+      if (r.leg != null) byLeg.set(r.leg, r);
+    }
+    const cumul = new Map<number, number>();
+    let total = 0;
+    let broken = false;
+    for (let leg = 1; leg <= maxLeg; leg++) {
+      if (broken) continue;
+      const runner = byLeg.get(leg);
+      if (!runner || runner.status !== 'OK' || runner.time == null) {
+        broken = true;
+        continue;
+      }
+      total += runner.time;
+      cumul.set(leg, total);
+    }
+    teamCumulByLeg.set(teamId, cumul);
+  }
+
+  const cumulRankKey = (tid: number, leg: number) => `${tid}_${leg}`;
+  const cumulRankMap = new Map<string, number>();
+  const legLeaderCumulTime = new Map<number, number>();
+  for (let leg = 1; leg <= maxLeg; leg++) {
+    const entries: { teamId: number; time: number }[] = [];
+    for (const [teamId, cumul] of teamCumulByLeg) {
+      const t = cumul.get(leg);
+      if (t != null) entries.push({ teamId, time: t });
+    }
+    entries.sort((a, b) => a.time - b.time);
+    const firstEntry = entries[0];
+    if (firstEntry != null) legLeaderCumulTime.set(leg, firstEntry.time);
+    let pos = 1;
+    for (let i = 0; i < entries.length; i++) {
+      const cur = entries[i]!;
+      const prev = i > 0 ? entries[i - 1] : undefined;
+      const prevRank = prev
+        ? (cumulRankMap.get(cumulRankKey(prev.teamId, leg)) ?? pos)
+        : undefined;
+      const rank =
+        prev && cur.time === prev.time && prevRank != null ? prevRank : pos;
+      cumulRankMap.set(cumulRankKey(cur.teamId, leg), rank);
+      pos++;
+    }
+  }
+
+  const results: TeamResult[] = [];
+  for (const [teamId, runners] of teamMap) {
+    const byLeg = new Map<number, Competitor>();
+    for (const r of runners) {
+      if (r.leg != null) byLeg.set(r.leg, r);
+    }
+    const cumul = teamCumulByLeg.get(teamId) ?? new Map<number, number>();
+    const totalTime = cumul.get(maxLeg);
+    const finalRank = cumulRankMap.get(cumulRankKey(teamId, maxLeg));
+    const leaderFinalTime = legLeaderCumulTime.get(maxLeg);
+    const timeDiff =
+      totalTime != null &&
+      leaderFinalTime != null &&
+      totalTime > leaderFinalTime
+        ? totalTime - leaderFinalTime
+        : undefined;
+
+    const sortedRunners = [...byLeg.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([, r]) => r);
+    const firstRunner = sortedRunners[0] ?? runners[0]!;
+    const teamName = firstRunner.team?.name ?? String(teamId);
+    const club = firstRunner.organisation ?? '';
+
+    const legs: TeamLegResult[] = [];
+    for (let leg = 1; leg <= maxLeg; leg++) {
+      const runner = byLeg.get(leg);
+      if (!runner) continue;
+      const legTime =
+        runner.status === 'OK' ? (runner.time ?? undefined) : undefined;
+      const legBest = legBestTimes.get(leg);
+      const legRank = legRankById.get(runner.id);
+      const legLoss =
+        legTime != null && legBest != null && legTime > legBest
+          ? legTime - legBest
+          : undefined;
+      const cumulTime = cumul.get(leg);
+      const cumulRank = cumulRankMap.get(cumulRankKey(teamId, leg));
+      const prevCumulRank =
+        leg > 1 ? cumulRankMap.get(cumulRankKey(teamId, leg - 1)) : undefined;
+      const positionChange =
+        cumulRank != null && prevCumulRank != null
+          ? cumulRank - prevCumulRank
+          : undefined;
+      const leaderCumul = legLeaderCumulTime.get(leg);
+      const cumulativeLoss =
+        cumulTime != null && leaderCumul != null && cumulTime > leaderCumul
+          ? cumulTime - leaderCumul
+          : undefined;
+
+      const legResult: TeamLegResult = { legNumber: leg, runner };
+      if (legTime !== undefined) legResult.legTime = legTime;
+      if (legRank !== undefined) legResult.legRank = legRank;
+      if (legLoss !== undefined) legResult.legLoss = legLoss;
+      if (cumulTime !== undefined) legResult.cumulativeTime = cumulTime;
+      if (cumulRank !== undefined) legResult.cumulativeRank = cumulRank;
+      if (positionChange !== undefined)
+        legResult.positionChange = positionChange;
+      if (cumulativeLoss !== undefined)
+        legResult.cumulativeLoss = cumulativeLoss;
+      legs.push(legResult);
+    }
+
+    const teamResult: TeamResult = { teamId, teamName, club, legs };
+    if (finalRank !== undefined) teamResult.finalRank = finalRank;
+    if (totalTime !== undefined) teamResult.totalTime = totalTime;
+    if (timeDiff !== undefined) teamResult.timeDiff = timeDiff;
+    results.push(teamResult);
+  }
+
+  results.sort((a, b) => {
+    if (a.finalRank != null && b.finalRank != null)
+      return a.finalRank - b.finalRank;
+    if (a.finalRank != null) return -1;
+    if (b.finalRank != null) return 1;
+    return (
+      b.legs.filter(l => l.cumulativeTime != null).length -
+      a.legs.filter(l => l.cumulativeTime != null).length
+    );
+  });
+
+  return results;
+};
+
+const relayStatusEmoji: Record<string, string> = {
+  Active: '🏃',
+  DidNotFinish: '🏳️',
+  DidNotStart: '🚷',
+  Disqualified: '🟥',
+  Finished: '🏁',
+  Inactive: '🛏️',
+  MissingPunch: '🙈',
+  NotCompeting: '🦄',
+  OverTime: '⌛',
+};
+
+const relayStatusTooltip: Record<string, string> = {
+  Active: 'Giving it their all right now',
+  DidNotFinish: 'Did Not Finish',
+  DidNotStart: 'Did Not Start',
+  Disqualified: 'Disqualified',
+  Finished: 'Waiting for readout',
+  Inactive: 'Waiting for start time',
+  MissingPunch: 'Missing Punch',
+  NotCompeting: 'Not competing',
+  OverTime: 'Over Time',
+};
+
+const PositionChange: React.FC<{ change: number }> = ({ change }) => {
+  if (change === 0) {
+    return (
+      <span className="text-muted-foreground text-[10px] font-bold leading-none">
+        —
+      </span>
+    );
+  }
+  if (change < 0) {
+    return (
+      <span className="text-green-500 text-[10px] font-bold leading-none">
+        ▲{Math.abs(change)}
+      </span>
+    );
+  }
+  return (
+    <span className="text-red-500 text-[10px] font-bold leading-none">
+      ▼{change}
+    </span>
+  );
+};
+
+const RelayOverallView: React.FC<{ teams: TeamResult[] }> = ({ teams }) => {
+  if (teams.length === 0) return null;
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <div className={mobileResultsTableClassName}>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="h-8 px-2 text-xs">#</TableHead>
+              <TableHead className="h-8 px-2 text-xs">Name</TableHead>
+              <TableHead className="h-8 px-2 text-xs hidden lg:table-cell">
+                Club
+              </TableHead>
+              <TableHead className="h-8 px-2 text-right text-xs">Leg</TableHead>
+              <TableHead className="h-8 px-2 text-right text-xs hidden sm:table-cell">
+                +Leg
+              </TableHead>
+              <TableHead className="h-8 px-2 text-right text-xs">
+                Time
+              </TableHead>
+              <TableHead className="h-8 px-2 text-right text-xs">
+                +Time
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {teams.map((team, teamIndex) => (
+              <React.Fragment key={team.teamId}>
+                <TableRow
+                  className={`border-t-2 border-border ${
+                    teamIndex % 2 === 0 ? 'bg-muted/30' : 'bg-muted/15'
+                  }`}
+                >
+                  <TableCell className="px-2 py-1.5 text-sm font-bold">
+                    {team.finalRank != null ? `${team.finalRank}.` : '–'}
+                  </TableCell>
+                  <TableCell className="px-2 py-1.5 text-sm font-bold">
+                    <div className="flex flex-col">
+                      <span>{team.teamName}</span>
+                      <span className="text-xs font-normal text-muted-foreground lg:hidden">
+                        {team.club}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-2 py-1.5 text-xs text-muted-foreground hidden lg:table-cell">
+                    {team.club}
+                  </TableCell>
+                  <TableCell />
+                  <TableCell className="hidden sm:table-cell" />
+                  <TableCell className="px-2 py-1.5 text-right font-mono text-sm font-bold">
+                    {team.totalTime != null
+                      ? formatSecondsToTime(team.totalTime)
+                      : '–'}
+                  </TableCell>
+                  <TableCell className="px-2 py-1.5 text-right font-mono text-sm text-muted-foreground">
+                    {team.timeDiff != null && team.timeDiff > 0
+                      ? `+${formatSecondsToTime(team.timeDiff)}`
+                      : ''}
+                  </TableCell>
+                </TableRow>
+                {team.legs.map(leg => (
+                  <TableRow
+                    key={leg.legNumber}
+                    className={
+                      teamIndex % 2 === 0 ? 'bg-background' : 'bg-muted/5'
+                    }
+                  >
+                    <TableCell />
+                    <TableCell className="px-2 py-0.5 text-xs">
+                      <span className="text-muted-foreground mr-1">
+                        {leg.runner.registration}
+                      </span>
+                      {leg.runner.firstname} {leg.runner.lastname}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell" />
+                    <TableCell className="px-2 py-0.5 text-right font-mono text-xs">
+                      {leg.legTime != null ? (
+                        <>
+                          {formatSecondsToTime(leg.legTime)}
+                          {leg.legRank != null && (
+                            <span className="text-muted-foreground ml-1">
+                              ({leg.legRank}.)
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span
+                          className="text-muted-foreground cursor-help"
+                          title={
+                            relayStatusTooltip[leg.runner.status] ??
+                            leg.runner.status
+                          }
+                        >
+                          {relayStatusEmoji[leg.runner.status] ?? '–'}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-2 py-0.5 text-right font-mono text-xs text-muted-foreground hidden sm:table-cell">
+                      {leg.legLoss != null
+                        ? `+${formatSecondsToTime(leg.legLoss)}`
+                        : ''}
+                    </TableCell>
+                    <TableCell className="px-2 py-0.5 text-right font-mono text-xs">
+                      {leg.cumulativeTime != null ? (
+                        <span className="inline-flex items-center justify-end gap-1">
+                          {leg.positionChange != null &&
+                            leg.positionChange !== 0 && (
+                              <PositionChange change={leg.positionChange} />
+                            )}
+                          {formatSecondsToTime(leg.cumulativeTime)}
+                          {leg.cumulativeRank != null && (
+                            <span className="text-muted-foreground">
+                              ({leg.cumulativeRank}.)
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        '–'
+                      )}
+                    </TableCell>
+                    <TableCell className="px-2 py-0.5 text-right font-mono text-xs text-muted-foreground">
+                      {leg.cumulativeLoss != null
+                        ? `+${formatSecondsToTime(leg.cumulativeLoss)}`
+                        : ''}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
 // Relay Results Component
+interface RelayLegCompetitor extends Competitor {
+  cumulativeTime?: number;
+  position?: number | string;
+  positionTooltip?: string;
+  loss?: number;
+}
+
+const processRelayLegCompetitors = (
+  legCompetitors: Competitor[],
+  selectedLeg: number,
+  teamTimeMap: Map<number, Map<number, number>>
+): RelayLegCompetitor[] => {
+  const getCumulativeTime = (c: Competitor): number | undefined => {
+    if (selectedLeg === 1) return c.time ?? undefined;
+    if (c.teamId == null || c.leg == null) return c.time ?? undefined;
+    const legMap = teamTimeMap.get(c.teamId);
+    if (!legMap) return undefined;
+    let total = 0;
+    for (let l = 1; l <= c.leg; l++) {
+      const t = legMap.get(l);
+      if (t == null) return undefined;
+      total += t;
+    }
+    return total;
+  };
+
+  const statusPriority: Record<string, number> = {
+    OK: 0,
+    Active: 1,
+    Finished: 2,
+    Inactive: 3,
+    NotCompeting: 4,
+    OverTime: 5,
+    Disqualified: 6,
+    MissingPunch: 7,
+    DidNotFinish: 8,
+    DidNotStart: 9,
+  };
+
+  type WithCumulative = Competitor & { cumulativeTime?: number };
+
+  const withCumulative: WithCumulative[] = legCompetitors.map(c => {
+    const entry: WithCumulative = { ...c };
+    const ct = getCumulativeTime(c);
+    if (ct !== undefined) entry.cumulativeTime = ct;
+    return entry;
+  });
+
+  withCumulative.sort((a, b) => {
+    if (a.status === 'OK' && b.status === 'OK') {
+      return (a.cumulativeTime ?? Infinity) - (b.cumulativeTime ?? Infinity);
+    }
+    if (a.status === 'OK') return -1;
+    if (b.status === 'OK') return 1;
+    const pa = statusPriority[a.status] ?? 10;
+    const pb = statusPriority[b.status] ?? 10;
+    if (pa !== pb) return pa - pb;
+    const sa = a.startTime ? new Date(a.startTime).getTime() : Infinity;
+    const sb = b.startTime ? new Date(b.startTime).getTime() : Infinity;
+    return sa - sb;
+  });
+
+  const okCompetitors = withCumulative.filter(c => c.status === 'OK');
+  const leaderTime = okCompetitors[0]?.cumulativeTime ?? null;
+
+  let position = 1;
+  const posMap = new Map<string, number>();
+  for (let i = 0; i < okCompetitors.length; i++) {
+    const cur = okCompetitors[i]!;
+    const prev = i > 0 ? okCompetitors[i - 1] : undefined;
+    const curT = cur.cumulativeTime ?? -1;
+    const prevT = prev?.cumulativeTime ?? -1;
+    const assignedPos =
+      prev && curT === prevT ? (posMap.get(prev.id) ?? position) : position;
+    posMap.set(cur.id, assignedPos);
+    position++;
+  }
+
+  const statusEmojis: Record<string, [string, string]> = {
+    Active: ['🏃', 'Giving it their all right now'],
+    DidNotFinish: ['🏳️', 'Did Not Finish'],
+    DidNotStart: ['🚷', 'Did not start'],
+    Disqualified: ['🟥', 'Disqualified'],
+    Finished: ['🏁', 'Waiting for readout'],
+    Inactive: ['🛏️', 'Waiting for start time'],
+    MissingPunch: ['🙈', 'Missing Punch'],
+    NotCompeting: ['🦄', 'Not competing'],
+    OverTime: ['⌛', 'Over Time'],
+  };
+
+  return withCumulative.map(c => {
+    const pos = posMap.get(c.id);
+    if (pos !== undefined) {
+      const loss =
+        leaderTime != null && c.cumulativeTime != null
+          ? c.cumulativeTime - leaderTime
+          : undefined;
+      const result: RelayLegCompetitor = { ...c, position: pos };
+      if (loss !== undefined && loss > 0) result.loss = loss;
+      return result;
+    }
+    const [emoji, tooltip] = statusEmojis[c.status] ?? ['❓', 'Unknown status'];
+    return {
+      ...c,
+      position: emoji,
+      positionTooltip: tooltip,
+    } as RelayLegCompetitor;
+  });
+};
+
 interface RelayResultsViewProps {
+  t: TFunction;
   event: Event;
   selectedClass: string;
   setSelectedClass: (cls: string) => void;
-  availableClasses: string[];
 }
 
 const RelayResultsView = ({
+  t,
   event,
   selectedClass,
   setSelectedClass,
-  availableClasses,
 }: RelayResultsViewProps) => {
-  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [relayResults, setRelayResults] = useState<RelayResult[]>([]);
+  const [selectedTab, setSelectedTab] = useState<'overall' | number>('overall');
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
   const navigate = useNavigate();
 
-  const selectedClassId = event.classes?.find(
-    cls => cls.name === selectedClass
-  )?.id;
+  const currentClass = event.classes?.find(cls => cls.name === selectedClass);
+  const selectedClassId = currentClass?.id;
 
-  const { loading, data } = useSubscription<RelayResultsUpdatedResponse>(
-    RELAY_RESULTS_UPDATED,
-    {
-      variables: {
-        eventId: event.id,
-        classId: selectedClassId,
-      },
-      skip: !selectedClassId,
-    }
+  const { loading, error, data } =
+    useSubscription<CompetitorsByClassUpdatedResponse>(
+      COMPETITORS_BY_CLASS_UPDATED,
+      { variables: { classId: selectedClassId }, skip: !selectedClassId }
+    );
+
+  useEffect(() => {
+    setSelectedTab('overall');
+  }, [selectedClassId]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const allCompetitors = data?.competitorsByClassUpdated ?? [];
+
+  const maxLeg = useMemo(
+    () => allCompetitors.reduce((max, c) => Math.max(max, c.leg ?? 1), 0),
+    [allCompetitors]
   );
 
-  // Handler pro změnu třídy
-  const handleClassChange = (cls: string) => {
-    setSelectedClass(cls);
-    const newSearchParams = new URLSearchParams(window.location.search);
-    newSearchParams.set('class', cls);
+  const legs = useMemo(
+    () => (maxLeg > 0 ? Array.from({ length: maxLeg }, (_, i) => i + 1) : []),
+    [maxLeg]
+  );
 
+  const teamResults = useMemo(
+    () => computeRelayOverall(allCompetitors, maxLeg),
+    [allCompetitors, maxLeg]
+  );
+
+  const teamTimeMap = useMemo(() => {
+    const map = new Map<number, Map<number, number>>();
+    for (const c of allCompetitors) {
+      if (c.teamId != null && c.leg != null && c.time != null) {
+        if (!map.has(c.teamId)) map.set(c.teamId, new Map());
+        map.get(c.teamId)!.set(c.leg, c.time);
+      }
+    }
+    return map;
+  }, [allCompetitors]);
+
+  const selectedLeg = typeof selectedTab === 'number' ? selectedTab : null;
+
+  const processedLegCompetitors = useMemo(() => {
+    if (selectedLeg == null) return [];
+    const legComps = allCompetitors.filter(c => (c.leg ?? 1) === selectedLeg);
+    return processRelayLegCompetitors(legComps, selectedLeg, teamTimeMap);
+  }, [allCompetitors, selectedLeg, teamTimeMap]);
+
+  const legPositionChangeMap = useMemo(() => {
+    if (selectedLeg == null || selectedLeg <= 1)
+      return new Map<string, number>();
+    const map = new Map<string, number>();
+    for (const team of teamResults) {
+      const legResult = team.legs.find(l => l.legNumber === selectedLeg);
+      if (legResult?.positionChange != null) {
+        map.set(legResult.runner.id, legResult.positionChange);
+      }
+    }
+    return map;
+  }, [teamResults, selectedLeg]);
+
+  const hasContent =
+    selectedTab === 'overall'
+      ? teamResults.length > 0
+      : processedLegCompetitors.length > 0;
+
+  const showFirstLegStartTimes = selectedLeg === 1;
+
+  const getRelayLegTimeState = (
+    competitor: RelayLegCompetitor
+  ): { value: string; className: string; hideOnDesktop?: boolean } => {
+    if (competitor.status === 'Active') {
+      return getActiveTimeState(competitor.startTime, currentTime);
+    }
+
+    if (
+      showFirstLegStartTimes &&
+      competitor.status === 'Inactive' &&
+      competitor.startTime
+    ) {
+      return {
+        value: formatTimeToHms(competitor.startTime),
+        className: 'text-muted-foreground',
+        hideOnDesktop: true,
+      };
+    }
+
+    if (competitor.time !== undefined && competitor.time !== null) {
+      return { value: formatSecondsToTime(competitor.time), className: '' };
+    }
+
+    return { value: '-', className: 'text-muted-foreground' };
+  };
+
+  const handleClassChange = (classId: number) => {
+    const cls = event.classes?.find(c => c.id === classId);
+    if (!cls) return;
+    const newSearchParams = new URLSearchParams(window.location.search);
+    newSearchParams.set('class', cls.name);
     navigate({
       to: window.location.pathname,
       search: Object.fromEntries(newSearchParams),
       replace: true,
     });
-    setIsSheetOpen(false);
+    setSelectedClass(cls.name);
   };
 
-  useEffect(() => {
-    if (data?.relayResultsUpdated) {
-      setRelayResults(data.relayResultsUpdated);
-    }
-  }, [data]);
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-bold">Relay Results</h2>
-
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 gap-1 min-w-[80px] bg-transparent"
-            >
-              <span className="text-xs font-bold">{selectedClass}</span>
-              <ChevronDown className="h-3 w-3" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-[60vh]">
-            <SheetHeader>
-              <SheetTitle>Select Class</SheetTitle>
-              <SheetDescription className="sr-only">
-                Choose a competition class from the available options
-              </SheetDescription>
-            </SheetHeader>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-6 overflow-y-auto max-h-[calc(60vh-100px)]">
-              {availableClasses.map(cls => (
+    <div className="flex flex-col h-full">
+      <div className="sticky top-0 z-10 bg-background border-b border-border pb-2 mb-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 p-0.5 bg-muted rounded-md">
+            {(() => {
+              const courseLength =
+                currentClass?.course?.length ?? currentClass?.length ?? 0;
+              return (
                 <Button
-                  key={cls}
-                  variant={selectedClass === cls ? 'default' : 'outline'}
-                  className="h-14 text-lg font-bold"
-                  onClick={() => handleClassChange(cls)}
+                  variant={selectedTab === 'overall' ? 'default' : 'ghost'}
+                  size="sm"
+                  className={
+                    courseLength > 0 ? 'h-auto py-0.5 px-2' : 'h-7 px-2'
+                  }
+                  onClick={() => setSelectedTab('overall')}
                 >
-                  {cls}
+                  <span className="flex flex-col items-center leading-none gap-0.5">
+                    <span className="text-xs font-medium">
+                      {t('Pages.Event.Results.Relay.Overall')}
+                    </span>
+                    {courseLength > 0 && (
+                      <span className="text-[9px] opacity-70 font-normal">
+                        {(courseLength / 1000).toFixed(1)} km
+                      </span>
+                    )}
+                  </span>
                 </Button>
-              ))}
-            </div>
-          </SheetContent>
-        </Sheet>
+              );
+            })()}
+            {legs.map(leg => {
+              const course = currentClass?.course;
+              const courseLength = course?.length ?? null;
+              const courseClimb = course?.climb ?? null;
+              return (
+                <Button
+                  key={leg}
+                  variant={selectedTab === leg ? 'default' : 'ghost'}
+                  size="sm"
+                  className={courseLength ? 'h-auto py-0.5 px-2' : 'h-7 px-2'}
+                  onClick={() => setSelectedTab(leg)}
+                >
+                  <span className="flex flex-col items-center leading-none gap-0.5">
+                    <span className="text-xs font-medium">
+                      {t('Pages.Event.Results.Relay.Leg', { number: leg })}
+                    </span>
+                    {courseLength != null && (
+                      <span className="text-[9px] opacity-70 font-normal">
+                        {(courseLength / 1000).toFixed(1)} km
+                        {courseClimb ? ` · ${courseClimb} m` : ''}
+                      </span>
+                    )}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+          {event.classes && currentClass && (
+            <EventCategorySwitcher
+              classes={event.classes}
+              selectedClass={selectedClassId ?? 0}
+              onClassChange={handleClassChange}
+              currentClass={currentClass}
+            />
+          )}
+        </div>
       </div>
 
-      {loading && relayResults.length === 0 && (
+      {loading && !hasContent && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>Loading relay results...</span>
+          <span>{t('Pages.Event.Results.Loading')}</span>
         </div>
       )}
 
-      <div className="space-y-4">
-        {relayResults.map(result => (
-          <div
-            key={result.id}
-            className="border border-border rounded-lg overflow-hidden"
-          >
-            <div
-              className="p-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() =>
-                setExpandedTeam(expandedTeam === result.id ? null : result.id)
-              }
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl font-bold">
-                    {result.rank === 1 && '🥇'}
-                    {result.rank === 2 && '🥈'}
-                    {result.rank === 3 && '🥉'}
-                    {result.rank > 3 && result.rank}
-                  </span>
-                  <div>
-                    <div className="font-bold text-lg">{result.teamName}</div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CountryFlag
-                        countryCode={result.countryCode}
-                        className="w-5 h-3"
-                      />
-                      <span>{result.club}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-mono font-bold text-lg">
-                    {result.totalTime}
-                  </div>
-                  {result.behind && (
-                    <div className="text-sm text-muted-foreground font-mono">
-                      {result.behind}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+      {error && (
+        <Alert
+          severity="error"
+          variant="outlined"
+          title="Error loading results"
+        >
+          {error.message}
+        </Alert>
+      )}
 
-            {expandedTeam === result.id && (
-              <div className="border-t border-border">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/20">
-                      <TableHead className="w-16">Leg</TableHead>
-                      <TableHead>Runner</TableHead>
-                      <TableHead className="text-right">Time</TableHead>
-                      <TableHead className="text-right">Rank</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {result.legs.map(leg => (
-                      <TableRow key={leg.legNumber}>
-                        <TableCell className="font-bold">
-                          {leg.legNumber}
-                        </TableCell>
-                        <TableCell>{leg.runnerName}</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {leg.time}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {leg.rank === 1 ? (
-                            <Badge variant="default" className="bg-primary">
-                              {leg.rank}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">
-                              {leg.rank}
+      {!loading && !error && !hasContent && (
+        <Alert
+          severity="info"
+          variant="outlined"
+          title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
+        >
+          {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+            view: t('Pages.Event.Alert.ViewResults'),
+          })}
+        </Alert>
+      )}
+
+      {selectedTab === 'overall' && <RelayOverallView teams={teamResults} />}
+
+      {typeof selectedTab === 'number' &&
+        processedLegCompetitors.length > 0 && (
+          <div className="border border-border rounded-lg overflow-hidden">
+            <div className={mobileResultsTableClassName}>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="h-8 px-2 text-xs">#</TableHead>
+                    <TableHead className="h-8 px-2 text-xs">Name</TableHead>
+                    <TableHead className="h-8 px-2 text-xs hidden lg:table-cell">
+                      Club
+                    </TableHead>
+                    {showFirstLegStartTimes && (
+                      <TableHead className="h-8 px-2 text-xs text-right hidden md:table-cell">
+                        {t('Pages.Event.Results.Relay.Start')}
+                      </TableHead>
+                    )}
+                    <TableHead className="h-8 px-2 text-right text-xs">
+                      {t('Pages.Event.Results.Relay.Time')}
+                    </TableHead>
+                    {selectedLeg != null && selectedLeg > 1 && (
+                      <TableHead className="h-8 px-2 text-right text-xs hidden sm:table-cell">
+                        Cumul.
+                      </TableHead>
+                    )}
+                    <TableHead className="h-8 px-2 text-right text-xs">
+                      Diff
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {processedLegCompetitors.map((competitor, index) => {
+                    const timeState = getRelayLegTimeState(competitor);
+                    return (
+                      <motion.tr
+                        key={competitor.id}
+                        layout
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 100,
+                          damping: 15,
+                        }}
+                        className={`h-9 ${
+                          index % 2 === 0
+                            ? 'bg-background hover:bg-muted/30'
+                            : 'bg-muted/20 hover:bg-muted/40'
+                        }`}
+                      >
+                        <TableCell
+                          className="px-2 py-1 text-sm font-bold"
+                          title={competitor.positionTooltip || ''}
+                        >
+                          <span className="inline-flex items-center gap-1">
+                            <span>
+                              {competitor.position}
+                              {typeof competitor.position === 'number' && '.'}
                             </span>
+                            {(() => {
+                              const change = legPositionChangeMap.get(
+                                competitor.id
+                              );
+                              if (change == null || change === 0) return null;
+                              return <PositionChange change={change} />;
+                            })()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-2 py-1 text-sm font-medium">
+                          <div className="flex flex-col">
+                            <CompetitorName competitor={competitor} />
+                            <span className="mt-0.5 block truncate text-left text-xs text-muted-foreground lg:hidden">
+                              {competitor.organisation}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden lg:table-cell">
+                          {competitor.organisation}
+                        </TableCell>
+                        {showFirstLegStartTimes && (
+                          <TableCell className="px-2 py-1 text-right font-mono text-xs hidden md:table-cell">
+                            {competitor.startTime
+                              ? formatTimeToHms(competitor.startTime)
+                              : '-'}
+                          </TableCell>
+                        )}
+                        <TableCell
+                          className={`px-2 py-1 text-right font-mono text-sm ${timeState.className}`}
+                        >
+                          {timeState.hideOnDesktop ? (
+                            <>
+                              <span className="md:hidden">
+                                {timeState.value}
+                              </span>
+                              <span className="hidden md:inline">&nbsp;</span>
+                            </>
+                          ) : (
+                            timeState.value
                           )}
                         </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                        {selectedLeg != null && selectedLeg > 1 && (
+                          <TableCell className="px-2 py-1 text-right font-mono text-sm hidden sm:table-cell">
+                            {competitor.cumulativeTime != null
+                              ? formatSecondsToTime(competitor.cumulativeTime)
+                              : '-'}
+                          </TableCell>
+                        )}
+                        <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
+                          {competitor.loss && competitor.loss > 0
+                            ? `+${formatSecondsToTime(competitor.loss)}`
+                            : '-'}
+                        </TableCell>
+                      </motion.tr>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-        ))}
-      </div>
+        )}
     </div>
   );
 };

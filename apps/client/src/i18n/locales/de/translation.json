@@ -709,6 +709,14 @@
         "NoClubs": "Keine Klubs gefunden",
         "Cancel": "Abbrechen"
       },
+      "Results": {
+        "Relay": {
+          "Overall": "Gesamt",
+          "Leg": "Abschnitt {{number}}",
+          "Start": "Start",
+          "Time": "Zeit"
+        }
+      },
       "Settings": {
         "Loading": "Loading event settings",
         "Tabs": {

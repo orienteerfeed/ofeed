@@ -55,6 +55,14 @@
         "NoClubs": "Aucun club trouvé",
         "Cancel": "Annuler"
       },
+      "Results": {
+        "Relay": {
+          "Overall": "Général",
+          "Leg": "Relais {{number}}",
+          "Start": "Départ",
+          "Time": "Temps"
+        }
+      },
       "Settings": {
         "Loading": "Loading event settings",
         "Tabs": {

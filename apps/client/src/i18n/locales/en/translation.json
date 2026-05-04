@@ -668,6 +668,12 @@
         "LoadingClubs": "Loading clubs",
         "LoadingClubResults": "Loading club results",
         "ErrorLoadingClubResults": "Error loading club results: {{message}}",
+        "Relay": {
+          "Overall": "Overall",
+          "Leg": "Leg {{number}}",
+          "Start": "Start",
+          "Time": "Time"
+        },
         "Ranking": {
           "Counts": "Counts towards ranking",
           "DoesNotCount": "Does not count towards ranking",
