@@ -519,17 +519,18 @@ const MAX_UPSERT_ATTEMPTS = 3;
  * preserved-fields baseline.
  */
 function isCompetitorUniqueViolation(error: unknown): boolean {
-  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
-    return false;
-  }
+  if (typeof error !== 'object' || error === null || !('code' in error)) return false;
+  if ((error as { code: unknown }).code !== 'P2002') return false;
 
-  const target = (error.meta as { target?: unknown })?.target;
+  const target = (error as { meta?: { target?: unknown } }).meta?.target;
+  // Competitor has only one unique constraint (classId + externalId), so any
+  // P2002 from competitor.create must be a classId+externalId race. Treat a
+  // missing target (MariaDB adapter sometimes omits it) as matching.
+  if (target === undefined || target === null) return true;
   if (Array.isArray(target)) {
     return target.includes('classId') && target.includes('externalId');
   }
-
-  // MariaDB surfaces the constraint name via meta.target as a string.
-  return (target ?? '').toString().includes('Competitor_class_external_uq');
+  return target.toString().includes('Competitor_class_external_uq');
 }
 
 export async function upsertCompetitor(

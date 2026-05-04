@@ -249,7 +249,7 @@ model Organisation {
   externalId  String?      @db.VarChar(64)
   name        String       @db.VarChar(191)
   nationality String?      @db.Char(3)
-  shortName   String?      @db.VarChar(10)
+  shortName   String?      @db.VarChar(20)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   competitors Competitor[]
