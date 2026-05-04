@@ -214,6 +214,7 @@ model Competitor {
   splits                Split[]
 
   @@index([organisationId])
+  @@unique([classId, externalId], map: "Competitor_class_external_uq")
 }
 
 model Split {
@@ -222,6 +223,8 @@ model Split {
   competitor   Competitor @relation(fields: [competitorId], references: [id])
   controlCode  Int
   time         Int?
+
+  @@index([competitorId], map: "Split_competitor_idx")
 }
 
 model Team {
@@ -232,9 +235,11 @@ model Team {
   organisationId Int?          @db.UnsignedInt
   organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
   bibNumber      Int
+  externalId     String?
   competitors    Competitor[]
 
   @@index([organisationId])
+  @@unique([classId, externalId], map: "Team_class_external_uq")
 }
 
 model Organisation {
@@ -269,6 +274,8 @@ model Protocol {
   author        User         @relation(fields: [authorId], references: [id])
   authorId      Int          @db.UnsignedInt
   createdAt     DateTime     @default(now())
+
+  @@index([competitorId, createdAt], map: "Protocol_competitor_created_idx")
 }
 
 model EventPassword {

@@ -9,7 +9,7 @@ export const competitorSplits = async (_, { competitorId }, context) => {
 
   return prisma.split.findMany({
     where: { competitorId: competitorId },
-    orderBy: { time: 'asc' },
+    orderBy: { id: 'asc' },
   });
 };
 

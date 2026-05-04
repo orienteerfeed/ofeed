@@ -57,13 +57,21 @@ export type OrganisationUpsertInput = {
 };
 
 /**
- * Find or create an Organisation for the given event. The canonical identity is
- * `(eventId, name)`; shortName and externalId are descriptive attributes.
- * Empty strings are normalised to `null`. Returns the organisation id, or
- * `null` if there is nothing to link.
+ * Find or create an Organisation for the given event. Lookup priority:
  *
- * If a row exists, missing fields (externalId, nationality, shortName) are
- * filled in non-destructively – existing non-null values are not overwritten.
+ *  1. **Organisation.Id / externalId** — if the IOF XML carries an `<Id>`,
+ *     that is the canonical identity. If a row with that externalId already
+ *     exists for the event, it is returned immediately (descriptive fields are
+ *     filled in non-destructively). This prevents duplicate org rows when the
+ *     same club appears with slightly different display names across uploads.
+ *
+ *  2. **Name** — when no externalId is present (or no row matches it),
+ *     we find-or-create by name. If name is absent or empty, `null` is
+ *     returned — a shortName alone is not enough to create an org record.
+ *     Callers that want shortName-only orgs must supply an externalId.
+ *
+ * Empty strings are normalised to `null`. Returns the organisation id, or
+ * `null` when there is nothing to link.
  */
 export const upsertOrganisation = async (
   input: OrganisationUpsertInput,
@@ -74,44 +82,47 @@ export const upsertOrganisation = async (
   const externalId = normaliseString(input.externalId);
   const nationality = normaliseString(input.nationality);
 
-  if (!name && !externalId) {
-    return null;
-  }
+  if (!name && !externalId) return null;
 
-  if (!name && externalId) {
-    const existing = await prisma.organisation.findFirst({
+  // Priority 1 — externalId match (Organisation.Id in IOF XML).
+  if (externalId) {
+    const byExternalId = await prisma.organisation.findFirst({
       where: { eventId, externalId },
-      select: { id: true },
+      select: organisationSelect,
     });
-    return existing?.id ?? null;
+    if (byExternalId) {
+      const patch: Record<string, string | null> = {};
+      if (name && !byExternalId.name) patch.name = name;
+      if (name && shortName && !byExternalId.shortName) patch.shortName = shortName;
+      if (nationality && !byExternalId.nationality) patch.nationality = nationality;
+      if (Object.keys(patch).length > 0) {
+        await prisma.organisation.update({ where: { id: byExternalId.id }, data: patch });
+      }
+      return byExternalId.id;
+    }
   }
 
+  // Priority 2 — name-based find-or-create.
   if (!name) return null;
-
-  const externalIdOwner = externalId
-    ? await prisma.organisation.findFirst({
-        where: { eventId, externalId },
-        select: { id: true, name: true },
-      })
-    : null;
-  const externalIdForCreate = externalIdOwner && externalIdOwner.name !== name ? null : externalId;
 
   const existing = await findOrCreateOrganisation({
     eventId,
-    externalId: externalIdForCreate,
+    externalId,
     name,
     nationality,
     shortName,
   });
 
-  const data: Record<string, string | null> = {};
-  if (externalId && !existing.externalId) {
-    if (!externalIdOwner) data.externalId = externalId;
-  }
-  if (nationality && !existing.nationality) data.nationality = nationality;
-  if (shortName && !existing.shortName) data.shortName = shortName;
-  if (Object.keys(data).length > 0) {
-    await prisma.organisation.update({ where: { id: existing.id }, data });
+  const patch: Record<string, string | null> = {};
+  if (externalId && !existing.externalId) patch.externalId = externalId;
+  if (nationality && !existing.nationality) patch.nationality = nationality;
+  // Guard: only fill shortName when there is a distinct full name providing
+  // the primary label. Without this guard, the patch would redundantly copy
+  // shortName into the shortName column of an org whose name IS the shortName,
+  // causing a permanent false-positive short_name_change on every re-import.
+  if (name && shortName && !existing.shortName) patch.shortName = shortName;
+  if (Object.keys(patch).length > 0) {
+    await prisma.organisation.update({ where: { id: existing.id }, data: patch });
   }
   return existing.id;
 };

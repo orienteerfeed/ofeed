@@ -8,6 +8,7 @@ export const teamSchema = z.object({
   organisation: z.string().nullable().optional(),
   shortName: z.string().nullable().optional(),
   bibNumber: z.number().int(),
+  externalId: z.string().nullable().optional(),
 });
 
 export type Team = z.infer<typeof teamSchema>;
