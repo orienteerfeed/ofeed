@@ -39,10 +39,9 @@ import {
   normalizeIncomingSplits,
   upsertSplits,
 } from './upload.split.js';
+import { getXsdSchema } from './upload.xsd-cache.js';
 
 const parser = new Parser({ attrkey: 'ATTR', trim: true });
-const IOF_XML_SCHEMA =
-  'https://raw.githubusercontent.com/international-orienteering-federation/datastandard-v3/master/IOF.xsd';
 
 const uploadIofBodySchema = z
   .object({
@@ -129,31 +128,6 @@ function logUploadEvent(
   }
 
   console.info(message, context);
-}
-
-// Utility functions
-/**
- * Fetches the IOF XML schema.
- *
- * This function makes a GET request to the IOF_XML_SCHEMA URL using the Fetch API,
- * with a header of "Content-Type: application/xml". If the request is successful,
- * it returns the body of the response as text. If an error occurs, it logs an error
- * message to the console.
- *
- * Returns IOF XML schema content.
- */
-async function fetchIOFXmlSchema(): Promise<string> {
-  try {
-    const response = await fetch(IOF_XML_SCHEMA, {
-      method: 'get',
-      headers: { 'Content-Type': 'application/xml' },
-    });
-    return await response.text();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Problem to load IOF XML schema: ', message);
-    return '';
-  }
 }
 
 /**
@@ -883,7 +857,7 @@ async function handleIofXmlUpload(
   const xmlBuffer = unzipResult.buffer;
 
   if (iofValidationEnabled) {
-    const xsd = await fetchIOFXmlSchema();
+    const xsd = await getXsdSchema();
     const iofXmlValidation = await validateIofXml(xmlBuffer.toString(), xsd);
     if (!iofXmlValidation.state) {
       logUploadEvent(c, 'warn', 'IOF upload failed XML validation', {
@@ -1437,7 +1411,6 @@ export function registerUploadRoutes(router: AppOpenAPI) {
 export const parseXmlForTesting = {
   parseXml,
   checkXmlType,
-  fetchIOFXmlSchema,
   upsertCompetitor,
   findExistingClass,
   getCompetitorKeys,
