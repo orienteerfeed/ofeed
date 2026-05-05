@@ -81,7 +81,8 @@ export const winnerNotificationSchema = z.object({
   name: z.string(),
 });
 
-export const organisationSchema = z.object({
+export const organisationNameSchema = z.object({
+  id: z.number().int(),
   name: z.string(),
   competitors: z.number().int(),
 });
@@ -94,4 +95,4 @@ export type EventConnection = z.infer<typeof eventConnectionSchema>;
 export type EventsInput = z.infer<typeof eventsInputSchema>;
 export type EventResponse = z.infer<typeof eventResponseSchema>;
 export type WinnerNotification = z.infer<typeof winnerNotificationSchema>;
-export type Organisation = z.infer<typeof organisationSchema>;
+export type OrganisationName = z.infer<typeof organisationNameSchema>;

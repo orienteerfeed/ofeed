@@ -245,6 +245,9 @@ storybook-static/
 
 # Misc
 .codegpt
+.claude/settings.local.json
+.claude/agents/local-*
+.claude/.cache
 
 # =============================================================================
 # DOCKER

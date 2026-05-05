@@ -14,6 +14,7 @@ import {
 
 import { validateEventConnection } from './event.connection.service.js';
 import { getEventCompetitorDetail } from './event.service.js';
+import { flattenOrganisation, organisationSelect } from './organisation.helpers.js';
 import {
   eventConnectionCheckBodySchema,
   eventCompetitorExternalParamsSchema,
@@ -298,8 +299,8 @@ export function registerPublicEventRoutes(router) {
                     id: true,
                     lastname: true,
                     firstname: true,
-                    organisation: true,
-                    shortName: true,
+                    organisationId: true,
+                    organisation: { select: organisationSelect },
                     registration: true,
                     bibNumber: true,
                     license: true,
@@ -327,6 +328,12 @@ export function registerPublicEventRoutes(router) {
         });
         return c.json(error(`An error occurred: ${err.message}`, 500), 500);
       }
+      if (dbIndividualResponse) {
+        dbIndividualResponse.classes = dbIndividualResponse.classes.map((cls) => ({
+          ...cls,
+          competitors: cls.competitors.map((comp) => flattenOrganisation(comp) as typeof comp),
+        }));
+      }
       eventData = dbIndividualResponse;
     } else {
       let dbRelayResponse;
@@ -348,8 +355,8 @@ export function registerPublicEventRoutes(router) {
                   select: {
                     id: true,
                     name: true,
-                    organisation: true,
-                    shortName: true,
+                    organisationId: true,
+                    organisation: { select: organisationSelect },
                     bibNumber: true,
                     competitors: {
                       where: lastUpdate
@@ -423,8 +430,12 @@ export function registerPublicEventRoutes(router) {
               bibNumber: `${team.bibNumber}.${competitor.leg}`,
             }));
 
+          const flatTeam = flattenOrganisation(team) as typeof team & {
+            organisation: string | null;
+            shortName: string | null;
+          };
           return {
-            ...team,
+            ...flatTeam,
             competitors,
             time: status === 'DidNotFinish' || status === 'OK' ? totalTime : 0,
             status,
