@@ -82,6 +82,8 @@ interface MarkerClusterFactoryOptions {
   }) => Leaflet.DivIcon;
   maxClusterRadius?: number | ((zoom: number) => number);
   showCoverageOnHover?: boolean;
+  spiderfyOnMaxZoom?: boolean;
+  zoomToBoundsOnClick?: boolean;
 }
 
 type LeafletMarkerClusterNamespace = typeof Leaflet & {
@@ -93,6 +95,10 @@ type LeafletMarkerClusterNamespace = typeof Leaflet & {
 type LeafletMarkerClusterRuntime = typeof globalThis & {
   L?: LeafletMarkerClusterNamespace;
 };
+
+const getMarkerClusterFactory = () =>
+  (globalThis as LeafletMarkerClusterRuntime).L?.markerClusterGroup ??
+  (Leaflet as LeafletMarkerClusterNamespace).markerClusterGroup;
 
 const escapeHtml = (value: string): string =>
   value
@@ -373,8 +379,7 @@ function EventMarkersLayer({
     const shouldCluster = clusteringEnabled && events.length > 1;
 
     if (shouldCluster) {
-      const markerClusterFactory = (globalThis as LeafletMarkerClusterRuntime).L
-        ?.markerClusterGroup;
+      const markerClusterFactory = getMarkerClusterFactory();
 
       if (!markerClusterFactory) {
         markerLayers.forEach(layer => {
@@ -395,6 +400,8 @@ function EventMarkersLayer({
           buildClusterIcon(cluster.getChildCount(), zoom, markerColorScheme),
         maxClusterRadius: currentZoom => (currentZoom >= 12 ? 36 : 52),
         showCoverageOnHover: false,
+        spiderfyOnMaxZoom: true,
+        zoomToBoundsOnClick: true,
       });
 
       markerLayers.forEach(layer => {
@@ -526,7 +533,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
     void loadLeafletMarkerCluster()
       .then(() => {
         if (isActive) {
-          setClusterPluginReady(true);
+          setClusterPluginReady(Boolean(getMarkerClusterFactory()));
         }
       })
       .catch(() => {
