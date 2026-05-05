@@ -157,6 +157,7 @@ model Event {
   eventPasswords               EventPassword[]
   externalResultsSync          EventExternalResultsSyncState?
   organisations                Organisation[]
+  importStates                 EventImportState[]
 
   @@index([externalSource, externalEventId])
   @@fulltext([name, organizer, location])
@@ -302,6 +303,29 @@ model EventExternalResultsSyncState {
   updatedAt              DateTime                  @updatedAt
 
   @@index([provider, lastStatus])
+}
+
+model EventImportState {
+  id                     Int              @id @default(autoincrement()) @db.UnsignedInt
+  event                  Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId                String
+  sourceType             ImportSourceType
+  payloadType            String           @db.VarChar(32)
+  rawHash                String           @db.Char(64)
+  creator                String?          @db.VarChar(128)
+  externalCreateTime     DateTime?
+  formatVersion          String?          @db.VarChar(16)
+  externalStatus         String?          @db.VarChar(32)
+  rootElement            String?          @db.VarChar(64)
+  lastSuccessfulImportAt DateTime?
+  lastSkippedAt          DateTime?
+  successCount           Int              @default(0) @db.UnsignedInt
+  skippedCount           Int              @default(0) @db.UnsignedInt
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  @@unique([eventId, sourceType, payloadType], map: "event_import_state_event_source_payload_uq")
+  @@index([eventId], map: "event_import_state_event_idx")
 }
 
 model OAuthClient {
@@ -513,4 +537,8 @@ enum ExternalResultsSyncStatus {
   OFFICIAL
   NOT_FOUND
   ERROR
+}
+
+enum ImportSourceType {
+  IOF_XML
 }

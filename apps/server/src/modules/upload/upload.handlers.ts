@@ -39,10 +39,17 @@ import {
   normalizeIncomingSplits,
   upsertSplits,
 } from './upload.split.js';
+import { getXsdSchema } from './upload.xsd-cache.js';
+import {
+  ImportSourceType,
+  computeRawHash,
+  detectXmlRootElement,
+  findImportStateByHash,
+  recordSkippedImport,
+  upsertImportState,
+} from './upload.import-state.js';
 
 const parser = new Parser({ attrkey: 'ATTR', trim: true });
-const IOF_XML_SCHEMA =
-  'https://raw.githubusercontent.com/international-orienteering-federation/datastandard-v3/master/IOF.xsd';
 
 const uploadIofBodySchema = z
   .object({
@@ -129,31 +136,6 @@ function logUploadEvent(
   }
 
   console.info(message, context);
-}
-
-// Utility functions
-/**
- * Fetches the IOF XML schema.
- *
- * This function makes a GET request to the IOF_XML_SCHEMA URL using the Fetch API,
- * with a header of "Content-Type: application/xml". If the request is successful,
- * it returns the body of the response as text. If an error occurs, it logs an error
- * message to the console.
- *
- * Returns IOF XML schema content.
- */
-async function fetchIOFXmlSchema(): Promise<string> {
-  try {
-    const response = await fetch(IOF_XML_SCHEMA, {
-      method: 'get',
-      headers: { 'Content-Type': 'application/xml' },
-    });
-    return await response.text();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Problem to load IOF XML schema: ', message);
-    return '';
-  }
 }
 
 /**
@@ -883,7 +865,7 @@ async function handleIofXmlUpload(
   const xmlBuffer = unzipResult.buffer;
 
   if (iofValidationEnabled) {
-    const xsd = await fetchIOFXmlSchema();
+    const xsd = await getXsdSchema();
     const iofXmlValidation = await validateIofXml(xmlBuffer.toString('utf-8').replace(/^﻿/, ''), xsd);
     if (!iofXmlValidation.state) {
       logUploadEvent(c, 'warn', 'IOF upload failed XML validation', {
@@ -932,6 +914,33 @@ async function handleIofXmlUpload(
     return c.json(error(message, 500), 500);
   }
 
+  // Early return: skip identical re-uploads before expensive XML parsing
+  const rawHash = computeRawHash(xmlBuffer);
+  const detectedPayloadType = detectXmlRootElement(xmlBuffer);
+
+  if (detectedPayloadType !== null && isIofPayloadType(detectedPayloadType)) {
+    const isIdentical = await findImportStateByHash(
+      eventId,
+      ImportSourceType.IOF_XML,
+      detectedPayloadType,
+      rawHash,
+    );
+    if (isIdentical) {
+      await recordSkippedImport(eventId, ImportSourceType.IOF_XML, detectedPayloadType, rawHash);
+      logUploadEvent(c, 'info', 'IOF upload skipped: identical content already imported', {
+        ...uploadDetails,
+        success: true,
+        stage: 'skipped-identical',
+        rawHash,
+        detectedPayloadType,
+      });
+      return c.json(
+        success('OK', { data: 'Skipped: identical upload already processed', skipped: true }, 200),
+        200,
+      );
+    }
+  }
+
   let iofXml3: Record<string, any>;
   try {
     iofXml3 = (await parseXml(xmlBuffer)) as Record<string, any>;
@@ -946,6 +955,16 @@ async function handleIofXmlUpload(
   }
 
   const iofXmlType = checkXmlType(iofXml3);
+
+  const iofRootKey = Object.keys(iofXml3)[0] ?? '';
+  const iofRootAttr = (iofXml3[iofRootKey]?.ATTR ?? {}) as Record<string, string | undefined>;
+  const iofRootMeta = {
+    creator: iofRootAttr.creator ?? null,
+    externalCreateTime: iofRootAttr.createTime ? new Date(iofRootAttr.createTime) : null,
+    formatVersion: iofRootAttr.iofVersion ?? null,
+    externalStatus: iofRootAttr.status ?? null,
+  };
+
   logUploadEvent(c, 'info', 'IOF upload XML parsed', {
     ...uploadDetails,
     success: false,
@@ -1140,6 +1159,26 @@ async function handleIofXmlUpload(
     });
     return c.json(error(message, 500), 500);
   }
+
+  // Persist or update import state for each processed payload type
+  await Promise.all(
+    iofXmlType.map((type) =>
+      upsertImportState(eventId, ImportSourceType.IOF_XML, {
+        payloadType: type.jsonKey,
+        rawHash,
+        rootElement: type.jsonKey,
+        ...iofRootMeta,
+      }).catch((err) => {
+        logUploadEvent(c, 'error', 'IOF upload failed to persist import state', {
+          ...uploadDetails,
+          success: true,
+          stage: 'persist-import-state',
+          payloadType: type.jsonKey,
+          reason: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }),
+    ),
+  );
 
   logUploadEvent(c, 'info', 'IOF upload completed', {
     ...uploadDetails,
@@ -1437,7 +1476,6 @@ export function registerUploadRoutes(router: AppOpenAPI) {
 export const parseXmlForTesting = {
   parseXml,
   checkXmlType,
-  fetchIOFXmlSchema,
   upsertCompetitor,
   findExistingClass,
   getCompetitorKeys,
