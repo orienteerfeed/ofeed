@@ -3,7 +3,7 @@ const HH_MM_SS_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
 const HAS_TIMEZONE_PATTERN = /(?:[zZ]|[+-]\d{2}:\d{2})$/;
 const DATETIME_TIME_PART_PATTERN = /(?:T|\s)(\d{2}):(\d{2})(?::(\d{2}))?/;
 const DATE_PREFIX_PATTERN = /^(\d{4}-\d{2}-\d{2})/;
-const LOCAL_DATETIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:T|\s)(\d{2}):(\d{2})(?::(\d{2}))?$/;
+const LOCAL_DATETIME_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:T|\s)(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/;
 
 type LocalDateTimeParts = {
   year: number;

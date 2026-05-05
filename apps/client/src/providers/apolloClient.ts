@@ -118,6 +118,9 @@ export function createApolloClient(
 
   const cache = new InMemoryCache({
     typePolicies: {
+      Country: {
+        keyFields: ['countryCode'],
+      },
       Query: {
         fields: {
           // Add your type policies here

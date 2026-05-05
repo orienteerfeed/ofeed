@@ -15,6 +15,7 @@ export const competitorSchema = z.object({
   rankingReferenceValue: z.number().int().nullable().optional(),
   countsTowardsRanking: z.boolean().nullable().optional(),
   countsTowardsRankingReason: czechRankingCountReasonSchema.nullable().optional(),
+  organisationId: z.number().int().nullable().optional(),
   organisation: z.string().nullable().optional(),
   shortName: z.string().nullable().optional(),
   card: z.number().int().nullable().optional(),

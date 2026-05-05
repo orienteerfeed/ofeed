@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
@@ -116,6 +117,9 @@ export function Navbar({ navLinks, t }: NavbarProps) {
             </SheetTrigger>
             <SheetContent side="right" className="w-64">
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <SheetDescription className="sr-only">
+                Main navigation and account actions.
+              </SheetDescription>
               <div className="flex flex-col gap-6">
                 {/* Mobile Actions */}
                 <div className="flex items-center justify-between">
