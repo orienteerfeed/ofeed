@@ -702,6 +702,9 @@ export const deleteEventCompetitorAndProtocols = async (eventId, competitorId) =
 export const deleteEventCompetitors = async eventId => {
   try {
     await deleteEventCompetitorsAndProtocols(eventId);
+    await prisma.eventImportState.deleteMany({
+      where: { eventId: eventId },
+    });
   } catch (err) {
     throw err; // already handled inside
   }
@@ -745,6 +748,11 @@ export const deleteAllEventData = async eventId => {
 
     // Step 3: Delete Event Passwords
     await prisma.eventPassword.deleteMany({
+      where: { eventId: eventId },
+    });
+
+    // Step 4: Delete IOF import state so the same XML can be processed again
+    await prisma.eventImportState.deleteMany({
       where: { eventId: eventId },
     });
   } catch (err) {
