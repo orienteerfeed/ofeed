@@ -1,0 +1,12 @@
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/*.sqlite
+**/*.db
+**/data/raw/
+**/logs/
+**/tmp/
+**/coverage/
+**/*.log
+.DS_Store

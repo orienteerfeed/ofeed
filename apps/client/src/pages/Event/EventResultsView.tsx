@@ -41,6 +41,7 @@ const COMPETITORS_BY_CLASS_UPDATED = gql`
       lastname
       registration
       bibNumber
+      organisationId
       organisation
       card
       startTime
@@ -58,8 +59,9 @@ const COMPETITORS_BY_CLASS_UPDATED = gql`
 `;
 
 const ORGANISATIONS = gql`
-  query Organisations($eventId: String!) {
-    organisations(eventId: $eventId) {
+  query OrganisationNames($eventId: String!) {
+    organisationNames(eventId: $eventId) {
+      id
       name
       competitors
     }
@@ -67,13 +69,17 @@ const ORGANISATIONS = gql`
 `;
 
 const COMPETITORS_BY_ORGANISATION = gql`
-  query CompetitorsByOrganisation($eventId: String!, $organisation: String!) {
-    competitorsByOrganisation(eventId: $eventId, organisation: $organisation) {
+  query CompetitorsByOrganisation($eventId: String!, $organisationId: Int!) {
+    competitorsByOrganisation(
+      eventId: $eventId
+      organisationId: $organisationId
+    ) {
       id
       firstname
       lastname
       registration
       bibNumber
+      organisationId
       organisation
       card
       startTime
@@ -143,6 +149,7 @@ interface Competitor {
   lastname: string;
   registration: string;
   bibNumber?: string;
+  organisationId?: number | null;
   organisation: string;
   card?: string;
   startTime?: string;
@@ -164,7 +171,7 @@ interface ProcessedCompetitor extends Competitor {
 }
 
 interface OrganisationsResponse {
-  organisations: Organisation[];
+  organisationNames: Organisation[];
 }
 
 interface CompetitorsByOrganisationResponse {
@@ -172,6 +179,7 @@ interface CompetitorsByOrganisationResponse {
 }
 
 interface Organisation {
+  id: number;
   name: string;
   competitors: number;
 }
@@ -235,7 +243,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
 
   const [selectedClass, setSelectedClass] = useState(initialClass);
   const [viewMode, setViewMode] = useState<ViewMode>('category');
-  const [selectedClub, setSelectedClub] = useState<string | null>(null);
+  const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
   const [isClubSheetOpen, setIsClubSheetOpen] = useState(false);
   const [categoryCompetitorsCount, setCategoryCompetitorsCount] =
     useState<number>(0);
@@ -361,12 +369,14 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
                   className="h-7 px-2 gap-1 min-w-[120px] bg-transparent"
                   disabled={
                     organisationsLoading ||
-                    !organisationsData?.organisations?.length
+                    !organisationsData?.organisationNames?.length
                   }
                 >
                   <Users className="w-3 h-3 shrink-0" />
                   <span className="text-xs font-bold truncate max-w-[120px]">
-                    {selectedClub || 'Select Club'}
+                    {organisationsData?.organisationNames?.find(
+                      org => org.id === selectedClubId
+                    )?.name || 'Select Club'}
                   </span>
                   <ChevronDown className="h-3 w-3 shrink-0" />
                 </Button>
@@ -391,19 +401,19 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
                     )}
 
                     {!organisationsLoading &&
-                      organisationsData?.organisations?.length && (
+                      organisationsData?.organisationNames?.length && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-4">
-                          {organisationsData.organisations.map(org => (
+                          {organisationsData.organisationNames.map(org => (
                             <Button
-                              key={org.name}
+                              key={org.id}
                               variant={
-                                selectedClub === org.name
+                                selectedClubId === org.id
                                   ? 'default'
                                   : 'outline'
                               }
                               className="h-auto min-h-[80px] flex flex-col items-center justify-center p-3 text-center"
                               onClick={() => {
-                                setSelectedClub(org.name);
+                                setSelectedClubId(org.id);
                                 setIsClubSheetOpen(false);
                               }}
                             >
@@ -424,7 +434,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
                       )}
 
                     {!organisationsLoading &&
-                      !organisationsData?.organisations?.length && (
+                      !organisationsData?.organisationNames?.length && (
                         <div className="text-center py-12 text-muted-foreground">
                           No clubs found
                         </div>
@@ -455,8 +465,9 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           classId={selectedClassId}
           className={selectedClass}
           rankingType={czechRankingType}
-          onSelectClub={clubName => {
-            setSelectedClub(clubName);
+          onSelectClub={clubId => {
+            if (clubId === null) return;
+            setSelectedClubId(clubId);
             setViewMode('club');
           }}
           showRanking={
@@ -489,8 +500,8 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
         <ClubResultsView
           t={t}
           eventId={event.id}
-          selectedClub={selectedClub}
-          setSelectedClub={setSelectedClub}
+          selectedClubId={selectedClubId}
+          setSelectedClubId={setSelectedClubId}
           organisationsData={organisationsData}
           organisationsLoading={organisationsLoading}
           onSelectClass={className => {
@@ -522,7 +533,7 @@ interface CategoryResultsViewProps {
   classId: number;
   className: string;
   rankingType?: CzechRankingType;
-  onSelectClub: (clubName: string) => void;
+  onSelectClub: (clubId: number | null) => void;
   showRanking?: boolean;
   onCompetitorsCountChange?: (count: number) => void;
   onLoadingChange?: (loading: boolean) => void;
@@ -692,16 +703,17 @@ const CategoryResultsView = ({
 
   const renderClubButton = (
     clubName: string,
+    clubId: number | null | undefined,
     className: string
   ): React.ReactNode => {
-    if (!clubName) {
+    if (!clubName || !clubId) {
       return null;
     }
 
     return (
       <button
         type="button"
-        onClick={() => onSelectClub(clubName)}
+        onClick={() => onSelectClub(clubId)}
         className={className}
         title={clubName}
       >
@@ -811,7 +823,9 @@ const CategoryResultsView = ({
                       <MobileClubName
                         clubName={competitor.organisation}
                         referenceText={mobileClubWidthReference}
-                        onSelectClub={onSelectClub}
+                        onSelectClub={() =>
+                          onSelectClub(competitor.organisationId ?? null)
+                        }
                         className="mt-0.5 block truncate rounded-sm text-left text-xs text-muted-foreground hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:hidden"
                       />
                     </div>
@@ -819,6 +833,7 @@ const CategoryResultsView = ({
                   <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden lg:table-cell">
                     {renderClubButton(
                       competitor.organisation,
+                      competitor.organisationId,
                       'hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm'
                     )}
                   </TableCell>
@@ -896,8 +911,8 @@ const CategoryResultsView = ({
 interface ClubResultsViewProps {
   t: TFunction;
   eventId: string;
-  selectedClub: string | null;
-  setSelectedClub: (club: string | null) => void;
+  selectedClubId: number | null;
+  setSelectedClubId: (clubId: number | null) => void;
   organisationsData: OrganisationsResponse | undefined;
   organisationsLoading: boolean;
   onSelectClass: (className: string) => void;
@@ -906,8 +921,8 @@ interface ClubResultsViewProps {
 const ClubResultsView = ({
   t,
   eventId,
-  selectedClub,
-  setSelectedClub,
+  selectedClubId,
+  setSelectedClubId,
   organisationsData,
   organisationsLoading,
   onSelectClass,
@@ -923,10 +938,10 @@ const ClubResultsView = ({
   } = useQuery<CompetitorsByOrganisationResponse>(COMPETITORS_BY_ORGANISATION, {
     variables: {
       eventId,
-      organisation: selectedClub || '',
+      organisationId: selectedClubId ?? 0,
     },
     pollInterval: 15000,
-    skip: !selectedClub,
+    skip: !selectedClubId,
   });
 
   // Save scroll position before re-render
@@ -947,11 +962,11 @@ const ClubResultsView = ({
 
   // Auto-select first organization if none selected
   useEffect(() => {
-    const firstOrg = organisationsData?.organisations?.[0];
-    if (firstOrg && !selectedClub) {
-      setSelectedClub(firstOrg.name);
+    const firstOrg = organisationsData?.organisationNames?.[0];
+    if (firstOrg && !selectedClubId) {
+      setSelectedClubId(firstOrg.id);
     }
-  }, [organisationsData, selectedClub, setSelectedClub]);
+  }, [organisationsData, selectedClubId, setSelectedClubId]);
 
   type CompetitorClassInfo = {
     id?: string | number | null;
@@ -968,6 +983,7 @@ const ClubResultsView = ({
     firstname?: string;
     lastname?: string;
     organisation?: string;
+    organisationId?: number | null;
     competitorId?: number;
     status?: string | null;
     time?: number | null;
@@ -1088,17 +1104,17 @@ const ClubResultsView = ({
   // Process and group competitors by club and class
   const processClubResults = (): ProcessedClubResult[] => {
     if (
-      !organisationsData?.organisations ||
-      organisationsData.organisations.length === 0
+      !organisationsData?.organisationNames ||
+      organisationsData.organisationNames.length === 0
     )
       return [];
 
-    return organisationsData.organisations
+    return organisationsData.organisationNames
       .map(org => {
         // Get all competitors for this organization
         const orgCompetitors =
           competitorsData?.competitorsByOrganisation?.filter(
-            comp => comp.organisation === org.name
+            comp => comp.organisationId === org.id
           ) || [];
 
         // Process each competitor with position and loss calculation
@@ -1301,7 +1317,7 @@ const ClubResultsView = ({
     );
   }
 
-  if (!organisationsData?.organisations) {
+  if (!organisationsData?.organisationNames) {
     return (
       <Alert
         severity="info"

@@ -38,6 +38,7 @@ export const GET_EVENT = gql`
       longitude
       country {
         countryCode
+        countryName
       }
       sportId
       date

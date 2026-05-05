@@ -1,16 +1,61 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "defaultMode": "acceptEdits",
   "permissions": {
     "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm format:*)",
+      "Bash(pnpm --filter:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm prisma generate)",
+      "Bash(pnpm prisma format)",
+      "Bash(pnpm prisma validate)",
+      "Bash(pnpm prisma studio)",
+      "Bash(pnpm prisma db pull)",
+      "Bash(pnpm prisma db seed)",
+      "Bash(npx shadcn:*)",
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git diff:*)",
       "Bash(git show:*)",
+      "Bash(git branch:*)",
       "Bash(git rev-parse:*)",
       "Bash(git ls-files:*)",
       "Bash(git cat-file:*)",
       "Bash(git describe:*)",
       "Bash(git grep:*)",
-      "Bash(git blame:*)"
+      "Bash(git blame:*)",
+      "Bash(rg:*)",
+      "Bash(fd:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(jq:*)",
+      "Write(./apps/**)",
+      "Write(./packages/**)",
+      "Edit(./apps/**)",
+      "Edit(./packages/**)"
+    ],
+    "ask": [
+      "Bash(pnpm prisma migrate dev:*)",
+      "Bash(pnpm prisma migrate deploy)",
+      "Bash(pnpm prisma migrate reset:*)",
+      "Bash(pnpm publish:*)",
+      "Bash(npm publish:*)",
+      "Write(./.github/**)",
+      "Edit(./.github/**)",
+      "Edit(./pnpm-workspace.yaml)",
+      "Edit(./package.json)"
     ],
     "deny": [
       "Bash(git add:*)",
@@ -24,13 +69,85 @@
       "Bash(git switch:*)",
       "Bash(git stash:*)",
       "Bash(git tag:*)",
-      "Bash(git branch:*)",
       "Bash(git remote:*)",
       "Bash(git clean:*)",
       "Bash(git cherry-pick:*)",
       "Bash(git revert:*)",
       "Bash(git submodule:*)",
+      "Bash(kubectl delete *)",
+      "Bash(DROP DATABASE:*)",
+      "Bash(DROP TABLE:*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(./secrets/**)",
       "mcp__github"
+    ],
+    "additionalDirectories": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.command' | grep -qE '\\b(npm install|yarn add|yarn install|bun install)\\b' && { echo 'Use pnpm, not npm/yarn/bun'; exit 2; } || exit 0"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_FILE_PATHS\" | tr ' ' '\\n' | grep -E '\\.(ts|tsx|js|jsx|mjs|cjs|json|md|css)$' | xargs -r pnpm exec prettier --write --ignore-unknown 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_FILE_PATHS\" | tr ' ' '\\n' | grep -E '\\.(ts|tsx)$' | xargs -r pnpm exec eslint --fix --no-warn-ignored 2>&1 | tail -20 || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_FILE_PATHS\" | grep -q 'schema\\.prisma$' && pnpm --filter @repo/db prisma format && pnpm --filter @repo/db prisma validate || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"{\\\"additionalContext\\\": \\\"Branch: $(git branch --show-current 2>/dev/null). Status: $(git status --porcelain | wc -l | tr -d ' ') changed files.\\\"}\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm typecheck 2>&1 | tail -5 || true"
+          }
+        ]
+      }
     ]
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "DISABLE_TELEMETRY": "1"
   }
 }

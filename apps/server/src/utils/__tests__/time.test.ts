@@ -28,6 +28,15 @@ describe('parseIofDateTime', () => {
     );
   });
 
+  it('parses local IOF datetime with fractional seconds (xsd:dateTime)', () => {
+    expect(parseIofDateTime('2026-05-03T10:04:00.000', 'Europe/Prague')?.toISOString()).toBe(
+      '2026-05-03T08:04:00.000Z',
+    );
+    expect(parseIofDateTime('2026-05-03T10:04:00.5', 'Europe/Prague')?.toISOString()).toBe(
+      '2026-05-03T08:04:00.000Z',
+    );
+  });
+
   it('returns undefined for invalid datetime values', () => {
     expect(parseIofDateTime('not-a-date', 'Europe/Prague')).toBeUndefined();
     expect(parseIofDateTime('', 'Europe/Prague')).toBeUndefined();

@@ -6,6 +6,7 @@ export * from './competitor.js';
 export * from './country.js';
 export * from './event.js';
 export * from './oauth.js';
+export * from './organisation.js';
 export * from './protocol.js';
 export * from './ranking-czech.js';
 export * from './split.js';

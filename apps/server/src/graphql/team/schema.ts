@@ -11,6 +11,7 @@ export const typeDef = /* GraphQL */ `
     organisation: String
     shortName: String
     bibNumber: Int
+    externalId: String
     competitors: [Competitor!]
   }
 `;

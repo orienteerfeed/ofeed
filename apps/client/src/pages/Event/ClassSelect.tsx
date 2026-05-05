@@ -1,6 +1,7 @@
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -60,6 +61,9 @@ export const ClassSelect: React.FC<ClassSelectProps> = ({
         >
           <SheetHeader className="text-left pb-4 shrink-0">
             <SheetTitle>Select Class</SheetTitle>
+            <SheetDescription className="sr-only">
+              Choose a class to view event results.
+            </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto pb-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">

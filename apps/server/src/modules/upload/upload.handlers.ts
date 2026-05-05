@@ -4,8 +4,7 @@ import { Parser } from 'xml2js';
 import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
 import { Prisma } from '../../generated/prisma/client.js';
-import type { ProtocolType, ResultStatus, Sex } from '../../generated/prisma/enums.js';
-import { ResultStatus as ResultStatusEnum } from '../../generated/prisma/enums.js';
+import type { Sex } from '../../generated/prisma/enums.js';
 import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
 import { toValidationIssues } from '../../lib/validation/zod.js';
 import { requireAuth } from '../../middlewares/require-jwt.js';
@@ -14,21 +13,43 @@ import { ensureEventOwnerOrAdmin, isAuthzError } from '../../utils/authz.js';
 
 import prisma from '../../utils/context.js';
 import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
-import { createShortCompetitorHash } from '../../utils/hashUtils.js';
-import { normalizeValue } from '../../utils/normalize.js';
 import { error, success, validation } from '../../utils/responseApi.js';
-import {
-  publishUpdatedCompetitor,
-  publishUpdatedCompetitors,
-} from '../../utils/subscriptionUtils.js';
-import { parseIofDateTime } from '../../utils/time.js';
+import { publishUpdatedCompetitors } from '../../utils/subscriptionUtils.js';
+import { upsertOrganisation } from '../event/organisation.helpers.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
-import { normalizeCzechRankingMonthInput, storeCzechRankingData } from './upload.service.js';
+import {
+  detectCompetitorChanges,
+  getCompetitorKeys,
+  loadCompetitorCache,
+  upsertCompetitor,
+} from './upload.competitor.js';
+import { IOF_WRITE_CONCURRENCY } from './upload.constants.js';
 import { normalizeCourseMetrics } from './upload.course.js';
+import { getIofIntegerValue, toSex } from './upload.iof.helpers.js';
+import {
+  isIofPayloadType,
+  type IofOrganisation,
+  type IofTypeMatch,
+  type TeamWithBib,
+} from './upload.iof.types.js';
+import { normalizeCzechRankingMonthInput, storeCzechRankingData } from './upload.service.js';
+import {
+  isSplitWriteConflict,
+  loadSplitCache,
+  normalizeIncomingSplits,
+  upsertSplits,
+} from './upload.split.js';
+import { getXsdSchema } from './upload.xsd-cache.js';
+import {
+  ImportSourceType,
+  computeRawHash,
+  detectXmlRootElement,
+  findImportStateByHash,
+  recordSkippedImport,
+  upsertImportState,
+} from './upload.import-state.js';
 
 const parser = new Parser({ attrkey: 'ATTR', trim: true });
-const IOF_XML_SCHEMA =
-  'https://raw.githubusercontent.com/international-orienteering-federation/datastandard-v3/master/IOF.xsd';
 
 const uploadIofBodySchema = z
   .object({
@@ -58,178 +79,7 @@ type MaybeUnzipResult = {
   decompressionFailed: boolean;
 };
 
-type IofSourceId = {
-  ATTR?: { type?: string };
-  _?: string;
-};
-
-type IofPersonName = {
-  Family?: string[];
-  Given?: string[];
-};
-
-type IofPerson = {
-  Id?: IofSourceId[];
-  Name?: IofPersonName[];
-  Nationality?: Array<{ ATTR?: { code?: string } }>;
-};
-
-type IofOrganisation = {
-  Name?: string[];
-  ShortName?: string[];
-} | null;
-
-type IofStart = {
-  BibNumber?: string[];
-  StartTime?: string[];
-  ControlCard?: string[];
-  Leg?: Array<string | number>;
-};
-
-type IofSplitTime = {
-  ControlCode?: string[];
-  Time?: string[];
-};
-
-type IofResult = {
-  BibNumber?: string[];
-  StartTime?: string[];
-  FinishTime?: string[];
-  Time?: string[];
-  ControlCard?: string[];
-  Status?: unknown;
-  SplitTime?: IofSplitTime[];
-  Leg?: Array<string | number>;
-};
-
-type TeamWithBib = {
-  Name: string[];
-  BibNumber?: string[];
-};
-
-type IofPayloadType = 'ResultList' | 'StartList' | 'CourseData';
-type IofTypeMatch = { isArray: true; jsonKey: IofPayloadType; jsonValue: unknown };
-const IOF_PAYLOAD_TYPES: readonly IofPayloadType[] = ['ResultList', 'StartList', 'CourseData'];
 type UploadScopedLogger = Pick<AppBindings['Variables']['logger'], 'info' | 'warn' | 'error'>;
-
-function isIofPayloadType(value: string): value is IofPayloadType {
-  return (IOF_PAYLOAD_TYPES as readonly string[]).includes(value);
-}
-
-const RESULT_STATUSES = new Set<ResultStatus>(Object.values(ResultStatusEnum));
-
-const RESULT_STATUS_ALIASES: Record<string, ResultStatus> = {
-  DNS: 'DidNotStart',
-  DNF: 'DidNotFinish',
-  DSQ: 'Disqualified',
-  MP: 'MissingPunch',
-  OT: 'OverTime',
-  NC: 'NotCompeting',
-  NENT: 'DidNotEnter',
-};
-
-function normalizeStatusToken(value: string): string {
-  return value
-    .trim()
-    .replace(/[\s_-]+/g, '')
-    .toUpperCase();
-}
-
-function getIofTextValue(value: unknown): string | undefined {
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : undefined;
-  }
-
-  if (typeof value === 'number') {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const nested = getIofTextValue(item);
-      if (nested) {
-        return nested;
-      }
-    }
-    return undefined;
-  }
-
-  if (!value || typeof value !== 'object') {
-    return undefined;
-  }
-
-  const record = value as Record<string, unknown>;
-  const direct =
-    getIofTextValue(record._) ??
-    getIofTextValue(record.value) ??
-    getIofTextValue(record['#text']) ??
-    getIofTextValue(record.text);
-  if (direct) {
-    return direct;
-  }
-
-  const attrCandidate = record.ATTR;
-  if (attrCandidate && typeof attrCandidate === 'object') {
-    const attrs = attrCandidate as Record<string, unknown>;
-    const fromAttrs =
-      getIofTextValue(attrs.value) ?? getIofTextValue(attrs.status) ?? getIofTextValue(attrs.code);
-    if (fromAttrs) {
-      return fromAttrs;
-    }
-  }
-
-  for (const entry of Object.values(record)) {
-    const nested = getIofTextValue(entry);
-    if (nested) {
-      return nested;
-    }
-  }
-
-  return undefined;
-}
-
-function getIofDateTime(value: unknown, timeZone: string): Date | undefined {
-  const raw = getIofTextValue(value);
-  if (!raw) return undefined;
-  return parseIofDateTime(raw, timeZone);
-}
-
-function getIofIntegerValue(value: unknown): number | null {
-  const raw = getIofTextValue(value);
-  if (!raw) return null;
-
-  const parsed = Number.parseInt(raw, 10);
-  return Number.isNaN(parsed) ? null : parsed;
-}
-
-function toResultStatus(value: unknown, fallback: ResultStatus): ResultStatus {
-  const rawStatus = getIofTextValue(value);
-  if (!rawStatus) {
-    return fallback;
-  }
-
-  if (RESULT_STATUSES.has(rawStatus as ResultStatus)) {
-    return rawStatus as ResultStatus;
-  }
-
-  const normalized = normalizeStatusToken(rawStatus);
-  for (const candidate of RESULT_STATUSES) {
-    if (normalizeStatusToken(candidate) === normalized) {
-      return candidate;
-    }
-  }
-
-  return RESULT_STATUS_ALIASES[normalized] ?? fallback;
-}
-
-function toSex(value: string | undefined, fallback: Sex): Sex {
-  if (value === 'M' || value === 'F' || value === 'B') {
-    return value;
-  }
-
-  return fallback;
-}
 
 function getUploadFileMeta(file?: UploadedFile) {
   return {
@@ -288,105 +138,6 @@ function logUploadEvent(
   console.info(message, context);
 }
 
-// Utility functions
-/**
- * Fetches the IOF XML schema.
- *
- * This function makes a GET request to the IOF_XML_SCHEMA URL using the Fetch API,
- * with a header of "Content-Type: application/xml". If the request is successful,
- * it returns the body of the response as text. If an error occurs, it logs an error
- * message to the console.
- *
- * Returns IOF XML schema content.
- */
-async function fetchIOFXmlSchema(): Promise<string> {
-  try {
-    const response = await fetch(IOF_XML_SCHEMA, {
-      method: 'get',
-      headers: { 'Content-Type': 'application/xml' },
-    });
-    return await response.text();
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Problem to load IOF XML schema: ', message);
-    return '';
-  }
-}
-
-/**
- * Retrieves the competitor key based on the provided class ID and person object.
- *
- * @param classId - The class ID associated with the competitor.
- * @param person - The person object containing identification and name details.
- * @param keyType - Key source priority (`registration` or `system`).
- * @returns Competitor key, either source ID or fallback hash.
- */
-function getCompetitorKey(
-  classId: number,
-  person: IofPerson,
-  keyType: 'registration' | 'system' = 'registration',
-): string {
-  try {
-    // Ensure `person` and `person.Id` are valid
-    if (!person || !Array.isArray(person.Id) || person.Id.length === 0) {
-      console.warn('Invalid person data or missing IDs:', JSON.stringify(person, null, 2));
-      return fallbackToNameHash(classId, person);
-    }
-
-    // Handle "registration" key type
-    if (keyType === 'registration') {
-      // Use the first valid ID with type "CZE" or any other ID if "CZE" is not available
-      const id =
-        person.Id.find(
-          (sourceId: IofSourceId) =>
-            sourceId.ATTR?.type === 'CZE' && sourceId._ && sourceId._.trim() !== '',
-        )?._ || person.Id.find((sourceId) => sourceId._ && sourceId._.trim() !== '')?._;
-
-      if (id) return id; // Return ID if available
-      console.warn('No valid registration ID found for person:', person);
-      return fallbackToNameHash(classId, person);
-    }
-
-    // Handle "system" key type
-    else if (keyType === 'system') {
-      // Prioritize the ID with type "QuickEvent", fallback to other IDs
-      const quickEventId = person.Id.find((sourceId) => sourceId.ATTR?.type === 'QuickEvent');
-      const orisId = person.Id.find((sourceId) => sourceId.ATTR?.type === 'ORIS');
-      const id = quickEventId?._ || orisId?._ || person.Id[0]?._; // Prioritize QuickEvent, then ORIS, then fallback to the first ID
-
-      if (id) return id; // Return ID if available
-      console.warn('No valid system ID found for person:', person);
-      return fallbackToNameHash(classId, person);
-    }
-
-    // Handle unknown key types
-    else {
-      console.error(`Unknown keyType "${keyType}" provided.`);
-      return fallbackToNameHash(classId, person);
-    }
-  } catch (error) {
-    // Catch unexpected errors and log them
-    console.error('Error in getCompetitorKey:', error);
-    return fallbackToNameHash(classId, person);
-  }
-}
-
-// Fallback function to generate a competitor hash using names
-/**
- *
- * @param classId - The class ID associated with the competitor.
- * @param person - The person object containing identification and name details.
- * @returns Unique competitor ID.
- */
-function fallbackToNameHash(classId: number, person: IofPerson): string {
-  const familyName = person?.Name?.[0]?.Family?.[0] || '';
-  const givenName = person?.Name?.[0]?.Given?.[0] || '';
-  if (!familyName || !givenName) {
-    console.warn('Missing family or given name for fallback hash generation:', person);
-  }
-  return createShortCompetitorHash(classId, familyName, givenName);
-}
-
 /**
  * Parses the XML content from the request file buffer.
  *
@@ -400,7 +151,7 @@ async function parseXml(buffer: Buffer): Promise<Record<string, unknown>> {
    * If successful, it calls the callback function with null as the first parameter and iofXml3 as the second parameter.
    * If an error occurs, it logs it to the console and calls the callback function with err as its only parameter.  */
   try {
-    return await parser.parseStringPromise(buffer.toString());
+    return await parser.parseStringPromise(buffer.toString('utf-8').replace(/^﻿/, ''));
   } catch (err: unknown) {
     console.error(err);
     const message = err instanceof Error ? err.message : 'Unknown parse error';
@@ -488,8 +239,8 @@ const validateIofXml = async (
               typeof error === 'string'
                 ? error
                 : error && typeof error === 'object' && 'message' in error
-                  ? String(error.message)
-                  : 'Validation error',
+                ? String(error.message)
+                : 'Validation error',
             type: 'schema',
           }))
         : [
@@ -517,19 +268,38 @@ const validateIofXml = async (
  * @returns Class list with external identifiers.
  * @throws Error if database query fails.
  */
-async function getClassLists(
-  eventId: string,
-): Promise<Array<{ id: number; externalId: string | null }>> {
+type ClassListEntry = { id: number; externalId: string | null; name: string; sex: Sex | null };
+
+async function getClassLists(eventId: string): Promise<ClassListEntry[]> {
   try {
     return await prisma.class.findMany({
       where: { eventId: eventId },
-      select: { id: true, externalId: true },
+      select: { id: true, externalId: true, name: true, sex: true },
     });
   } catch (err: unknown) {
     console.error(err);
     const message = err instanceof Error ? err.message : 'Unknown database error';
     throw new Error(`Database error: ${message}`);
   }
+}
+
+/**
+ * Resolves an existing class for the current event.
+ *
+ * Why: producers without an explicit Class.Id (legacy XSDs, hand-crafted
+ * exports) still need to be matched to existing rows by name, but two
+ * producers that emit different stable Ids for the same display name must be
+ * allowed to coexist as separate classes.
+ */
+function findExistingClass(
+  sourceClassId: string | null,
+  className: string,
+  dbClassLists: ClassListEntry[],
+): ClassListEntry | undefined {
+  if (sourceClassId) {
+    return dbClassLists.find((cls) => cls.externalId === sourceClassId);
+  }
+  return dbClassLists.find((cls) => cls.name === className);
 }
 
 /**
@@ -544,13 +314,12 @@ async function getClassLists(
 async function upsertClass(
   eventId: string,
   classDetails: { Id?: string[]; Name: string[]; ATTR?: { sex?: string } },
-  dbClassLists: Array<{ id: number; externalId: string | null }>,
+  dbClassLists: ClassListEntry[],
   additionalData: Record<string, unknown> = {},
 ): Promise<number> {
-  const sourceClassId = classDetails.Id?.shift();
+  const sourceClassId = classDetails.Id?.shift() ?? null;
   const className = classDetails.Name.shift() ?? sourceClassId ?? '';
-  const classIdentifier = sourceClassId || className;
-  const existingClass = dbClassLists.find((cls) => cls.externalId === classIdentifier);
+  const existingClass = findExistingClass(sourceClassId, className, dbClassLists);
 
   // Determine sex based on the first letter of the class name
   const inferredSex: Sex =
@@ -561,260 +330,33 @@ async function upsertClass(
     const dbClassInsert = await prisma.class.create({
       data: {
         eventId: eventId,
-        externalId: classIdentifier,
+        externalId: sourceClassId,
         name: className,
         sex: classSex,
-        ...additionalData, // Spread additional properties like length, climb, etc.
+        ...additionalData,
       },
     });
     return dbClassInsert.id;
-  } else {
-    await prisma.class.update({
-      where: { id: existingClass.id },
-      data: {
-        name: className,
-        sex: classSex,
-        ...additionalData, // Update additional fields if present
-      },
-    });
+  }
+
+  // Skip the DB write when nothing has changed. additionalData (course metrics
+  // from StartList) is always empty for ResultList processing, covering the
+  // common re-upload scenario where dozens of classes remain unchanged.
+  const hasAdditionalData = Object.keys(additionalData).length > 0;
+  if (!hasAdditionalData && existingClass.name === className && existingClass.sex === classSex) {
     return existingClass.id;
   }
-}
 
-/**
- * Upserts a competitor in the database.
- *
- * This function checks if a competitor already exists in the database based on the provided
- * event ID, class ID, and person information. If the competitor exists, it updates the competitor's
- * information if there are any changes. If the competitor does not exist, it creates a new competitor
- * record in the database.
- *
- * @param eventId - Event identifier.
- * @param classId - Class database ID.
- * @param person - Competitor person details.
- * @param organisation - Competitor organisation details.
- * @param start - Optional start payload.
- * @param result - Optional result payload.
- * @param teamId - Optional team database ID.
- * @param leg - Optional relay leg.
- * @returns Competitor ID and whether record was changed.
- */
-async function upsertCompetitor(
-  eventId: string,
-  classId: number,
-  person: IofPerson,
-  organisation: IofOrganisation,
-  start: IofStart | null = null,
-  result: IofResult | null = null,
-  eventTimeZone = 'UTC',
-  teamId: number | null = null,
-  leg: string | number | null = null,
-): Promise<{ id: number; updated: boolean }> {
-  const registration = getCompetitorKey(classId, person, 'registration');
-  const externalId = getCompetitorKey(classId, person, 'system');
-  const dbCompetitorResponse = await prisma.competitor.findFirst({
-    where: { class: { eventId: eventId }, externalId: externalId },
-    select: {
-      id: true,
-      class: true,
-      classId: true,
-      firstname: true,
-      lastname: true,
-      nationality: true,
-      registration: true,
-      license: true,
-      organisation: true,
-      shortName: true,
-      card: true,
-      bibNumber: true,
-      startTime: true,
-      finishTime: true,
-      time: true,
-      status: true,
-      lateStart: true,
-      team: true,
-      leg: true,
-      note: true,
-      externalId: true,
+  await prisma.class.update({
+    where: { id: existingClass.id },
+    data: {
+      name: className,
+      sex: classSex,
+      ...additionalData,
     },
   });
-
-  const firstname = person.Name?.[0]?.Given?.[0] ?? dbCompetitorResponse?.firstname ?? '';
-  const lastname = person.Name?.[0]?.Family?.[0] ?? dbCompetitorResponse?.lastname ?? '';
-  const hasFinishTime = Boolean(result?.FinishTime?.[0]);
-  const fallbackStatus: ResultStatus = hasFinishTime
-    ? 'OK'
-    : (dbCompetitorResponse?.status ?? 'Inactive');
-  const normalizedStatus = toResultStatus(result?.Status, fallbackStatus);
-
-  // Prepare new data, giving preference to already stored values for certain fields
-  const competitorData = {
-    class: { connect: { id: classId } },
-    firstname,
-    lastname,
-    nationality: person.Nationality?.[0].ATTR.code,
-    registration: registration,
-    license: dbCompetitorResponse?.license || null,
-    organisation: organisation?.Name?.[0],
-    shortName: organisation?.ShortName?.[0],
-    bibNumber: result?.BibNumber
-      ? parseInt(result.BibNumber.shift())
-      : start?.BibNumber
-        ? (parseInt(start.BibNumber.shift()) ?? dbCompetitorResponse?.bibNumber)
-        : null,
-    startTime:
-      getIofDateTime(result?.StartTime, eventTimeZone) ??
-      getIofDateTime(start?.StartTime, eventTimeZone) ??
-      (dbCompetitorResponse?.startTime || null),
-    finishTime:
-      getIofDateTime(result?.FinishTime, eventTimeZone) ??
-      (dbCompetitorResponse?.finishTime || null),
-    time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitorResponse?.time ?? null),
-    card: result?.ControlCard
-      ? parseInt(result.ControlCard.shift())
-      : start?.ControlCard
-        ? parseInt(start.ControlCard.shift())
-        : (dbCompetitorResponse?.card ?? null),
-    status: normalizedStatus,
-    lateStart: dbCompetitorResponse?.lateStart || false,
-    team: teamId ? { connect: { id: teamId } } : undefined,
-    leg: leg ? Number.parseInt(String(leg), 10) : undefined,
-    externalId: externalId,
-    note: dbCompetitorResponse?.note || null,
-    updatedAt: new Date(),
-  };
-
-  if (!dbCompetitorResponse) {
-    const dbCompetitorInsert = await prisma.competitor.create({
-      data: competitorData,
-    });
-    try {
-      await prisma.protocol.create({
-        data: {
-          eventId: eventId,
-          competitorId: dbCompetitorInsert.id,
-          origin: 'IT',
-          type: 'competitor_create',
-          previousValue: null,
-          newValue: competitorData.lastname + ' ' + competitorData.firstname,
-          authorId: 1,
-        },
-      });
-    } catch (err) {
-      console.error('Error creating protocol record:', err);
-    }
-
-    return { id: dbCompetitorInsert.id, updated: true };
-  } else {
-    // Compare existing data with new data (excluding preserved fields)
-    const keysToCompare = [
-      { key: 'classId', type: 'number' },
-      { key: 'firstname', type: 'string' },
-      { key: 'lastname', type: 'string' },
-      { key: 'nationality', type: 'string' },
-      { key: 'registration', type: 'string' },
-      { key: 'organisation', type: 'string' },
-      { key: 'shortName', type: 'string' },
-      { key: 'bibNumber', type: 'number' },
-      { key: 'startTime', type: 'date' },
-      { key: 'finishTime', type: 'date' },
-      { key: 'time', type: 'number' },
-      { key: 'card', type: 'number' },
-      { key: 'status', type: 'string' },
-      { key: 'teamId', type: 'number' },
-      { key: 'leg', type: 'number' },
-    ];
-
-    // Collect changes to be added to the protocol
-    const changes: Array<{
-      type: ProtocolType;
-      previousValue: string | null;
-      newValue: string | null;
-    }> = [];
-
-    // Define a mapping of competitorData keys to their corresponding protocol types
-    const keyToTypeMap: Record<string, ProtocolType> = {
-      classId: 'class_change',
-      firstname: 'firstname_change',
-      lastname: 'lastname_change',
-      nationality: 'nationality_change',
-      registration: 'registration_change',
-      organisation: 'organisation_change',
-      shortName: 'short_name_change',
-      bibNumber: 'bibNumber_change',
-      startTime: 'start_time_change',
-      finishTime: 'finish_time_change',
-      time: 'time_change',
-      card: 'si_card_change',
-      status: 'status_change',
-      teamId: 'team_change',
-      leg: 'leg_change',
-    };
-
-    // Check for differences and collect changes
-    const isDifferent = keysToCompare.some(({ key, type }) => {
-      const currentValue = normalizeValue(type, competitorData[key]);
-      const previousValue = normalizeValue(type, dbCompetitorResponse[key]);
-      const hasChanged = competitorData[key] !== undefined && currentValue !== previousValue;
-
-      if (hasChanged && keyToTypeMap[key]) {
-        changes.push({
-          type: keyToTypeMap[key],
-          previousValue: dbCompetitorResponse[key]?.toString() || null,
-          newValue: competitorData[key]?.toString() || null,
-        });
-      }
-
-      return hasChanged;
-    });
-
-    if (isDifferent) {
-      // Update only if there is a difference
-      await prisma.competitor.update({
-        where: { id: dbCompetitorResponse.id },
-        data: competitorData,
-      });
-
-      // Add records to protocol
-      try {
-        for (const change of changes) {
-          await prisma.protocol.create({
-            data: {
-              eventId: eventId,
-              competitorId: dbCompetitorResponse.id,
-              origin: 'IT',
-              type: change.type,
-              previousValue: change.previousValue,
-              newValue: change.newValue,
-              authorId: 1,
-            },
-          });
-        }
-      } catch (err) {
-        console.error('Failed to create protocol records:', err);
-      }
-
-      const updatedCompetitorData = {
-        ...competitorData,
-        id: dbCompetitorResponse.id,
-      };
-      await publishUpdatedCompetitor(eventId, updatedCompetitorData);
-      return { id: dbCompetitorResponse.id, updated: true };
-    }
-
-    return { id: dbCompetitorResponse.id, updated: false };
-  }
+  return existingClass.id;
 }
-
-const splitWriteLocks = new Map<number, Promise<void>>();
-const SPLIT_WRITE_CONFLICT_MAX_RETRIES = 6;
-const SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS = 75;
-const SPLIT_WRITE_CONFLICT_RETRY_JITTER_MS = 50;
-const SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS = 10_000;
-const SPLIT_WRITE_TRANSACTION_TIMEOUT_MS = 20_000;
-const IOF_WRITE_CONCURRENCY = 8;
-
-const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function forEachWithConcurrency<T>(
   items: readonly T[],
@@ -845,229 +387,63 @@ async function forEachWithConcurrency<T>(
   );
 }
 
-function isSplitWriteConflict(error: unknown): error is Error {
-  if (!(error instanceof Error)) return false;
-
-  const message = error.message.toLowerCase();
-  return (
-    message.includes("record has changed since last read in table 'split'") ||
-    message.includes('record has changed since last read in table "split"') ||
-    message.includes('write conflict') ||
-    message.includes('deadlock') ||
-    message.includes('unable to start a transaction in the given time') ||
-    message.includes('transaction api error') ||
-    message.includes('p2034')
-  );
-}
-
-async function withSplitWriteLock<T>(
-  competitorId: number,
-  operation: () => Promise<T>,
-): Promise<T> {
-  const previous = splitWriteLocks.get(competitorId) || Promise.resolve();
-  let release: (() => void) | undefined;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  const tail = previous.then(() => gate);
-  splitWriteLocks.set(competitorId, tail);
-
-  await previous;
-  try {
-    return await operation();
-  } finally {
-    release?.();
-    if (splitWriteLocks.get(competitorId) === tail) {
-      splitWriteLocks.delete(competitorId);
-    }
-  }
-}
-
-async function withSplitWriteConflictRetry<T>(
-  competitorId: number,
-  operation: () => Promise<T>,
-): Promise<T> {
-  for (let attempt = 1; attempt <= SPLIT_WRITE_CONFLICT_MAX_RETRIES; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      if (!isSplitWriteConflict(error)) {
-        throw error;
-      }
-
-      if (attempt === SPLIT_WRITE_CONFLICT_MAX_RETRIES) {
-        console.error('Split write conflict retries exhausted', {
-          competitorId,
-          attempts: attempt,
-          maxAttempts: SPLIT_WRITE_CONFLICT_MAX_RETRIES,
-          reason: error.message,
-        });
-        throw error;
-      }
-
-      console.warn('Retrying split write after conflict', {
-        competitorId,
-        attempt,
-        maxAttempts: SPLIT_WRITE_CONFLICT_MAX_RETRIES,
-        reason: error.message,
-      });
-      const jitter = Math.floor(Math.random() * SPLIT_WRITE_CONFLICT_RETRY_JITTER_MS);
-      await wait(SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS * attempt + jitter);
-    }
-  }
-
-  return operation();
-}
-
-type NormalizedSplit = {
-  controlCode: number;
-  time: number | null;
-};
-
-function normalizeIncomingSplits(result: IofResult): NormalizedSplit[] {
-  const splitTimes = result?.SplitTime ?? [];
-  const byControlCode = new Map<number, number | null>();
-
-  for (const split of splitTimes) {
-    const rawControlCode = split.ControlCode?.[0];
-    const controlCode = rawControlCode ? Number.parseInt(rawControlCode, 10) : Number.NaN;
-    if (!Number.isInteger(controlCode)) {
-      continue;
-    }
-
-    const rawTime = split.Time?.[0];
-    const time = rawTime ? Number.parseInt(rawTime, 10) : null;
-    byControlCode.set(controlCode, Number.isInteger(time) ? time : null);
-  }
-
-  return [...byControlCode.entries()]
-    .map(([controlCode, time]) => ({ controlCode, time }))
-    .sort((a, b) => a.controlCode - b.controlCode);
-}
-
-async function upsertSplitsUnsafe(competitorId: number, result: IofResult) {
-  const dbSplitResponse = await prisma.split.findMany({
-    where: { competitorId: competitorId },
-    select: {
-      id: true,
-      controlCode: true,
-      time: true,
-    },
-    orderBy: { id: 'asc' },
-  });
-
-  const incomingSplits = normalizeIncomingSplits(result);
-  const incomingByControlCode = new Map<number, number | null>(
-    incomingSplits.map((split) => [split.controlCode, split.time]),
-  );
-
-  const existingByControlCode = new Map<number, { id: number; time: number | null }>();
-  let duplicateExistingRows = 0;
-  for (const split of dbSplitResponse) {
-    if (existingByControlCode.has(split.controlCode)) {
-      duplicateExistingRows += 1;
-      continue;
-    }
-
-    existingByControlCode.set(split.controlCode, {
-      id: split.id,
-      time: split.time,
-    });
-  }
-
-  let created = 0;
-  let updated = 0;
-  let deleted = duplicateExistingRows;
-
-  for (const [controlCode, incomingTime] of incomingByControlCode) {
-    const existing = existingByControlCode.get(controlCode);
-    if (!existing) {
-      created += 1;
-      continue;
-    }
-
-    if (existing.time !== incomingTime) {
-      updated += 1;
-    }
-  }
-
-  for (const controlCode of existingByControlCode.keys()) {
-    if (!incomingByControlCode.has(controlCode)) {
-      deleted += 1;
-    }
-  }
-
-  const changeMade = created > 0 || updated > 0 || deleted > 0;
-  if (!changeMade) {
-    return { created, updated, deleted, changeMade };
-  }
-
-  // Replace all competitor splits atomically to avoid interleaving create/update/delete conflicts.
-  await prisma.$transaction(
-    async (tx) => {
-      await tx.split.deleteMany({
-        where: { competitorId: competitorId },
-      });
-
-      if (incomingSplits.length > 0) {
-        await tx.split.createMany({
-          data: incomingSplits.map((split) => ({
-            competitorId: competitorId,
-            controlCode: split.controlCode,
-            time: split.time,
-          })),
-        });
-      }
-    },
-    {
-      maxWait: SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
-      timeout: SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
-      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-    },
-  );
-
-  return {
-    created,
-    updated,
-    deleted,
-    changeMade,
-  };
+/**
+ * Extracts IOF EntryId from a team payload. Returns null when the element is
+ * absent, empty, or contains only whitespace.
+ */
+export function extractTeamExternalId(teamPayload: TeamWithBib): string | null {
+  const raw = teamPayload.EntryId?.[0];
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  return trimmed || null;
 }
 
 /**
- * Updates or inserts split times for a given competitor based on the provided result data.
+ * Resolves an existing Team row for the given event scope.
  *
- * This function performs the following operations:
- * - Finds existing splits for the competitor in the database.
- * - Compares the incoming split times with the existing ones.
- * - Creates new splits for any incoming splits that do not exist in the database.
- * - Updates existing splits if their times differ from the incoming data.
- * - Deletes splits from the database that are not present in the incoming data.
- * - Retries on split write conflicts and serializes split writes per competitor.
+ * Lookup order:
+ *  1. If externalId (IOF EntryId) is present → precise lookup by (classId, externalId).
+ *     This is O(1) via the unique index and handles the case where the same team
+ *     appears in both StartList and ResultList imports.
+ *  2. Fall back to (eventId + bibNumber) — preserves existing behaviour for
+ *     imports that pre-date EntryId support, or files that omit it.
  *
- * @async
- * @function upsertSplits
- * @param competitorId - Competitor database ID.
- * @param result - Result payload with split times.
- * @returns Summary of split mutations.
+ * Returns null when no matching team is found.
  */
-async function upsertSplits(competitorId: number, result: IofResult) {
-  return withSplitWriteLock(competitorId, () =>
-    withSplitWriteConflictRetry(competitorId, () => upsertSplitsUnsafe(competitorId, result)),
-  );
+export async function resolveExistingTeam(
+  eventId: string,
+  classId: number,
+  externalId: string | null,
+  bibNumber: number | null,
+): Promise<{ id: number } | null> {
+  if (externalId) {
+    const byExternalId = await prisma.team.findUnique({
+      where: { classId_externalId: { classId, externalId } },
+      select: { id: true },
+    });
+    if (byExternalId) return byExternalId;
+  }
+  // Legacy / first-adoption path: locate an existing team that has no externalId
+  // yet but matches the bib number within the event.
+  if (bibNumber === null) return null;
+  return prisma.team.findFirst({
+    where: { class: { eventId }, bibNumber },
+    select: { id: true },
+  });
 }
 
 /**
  * Upserts (inserts or updates) a team entry in the database.
  *
- * This function ensures that a team is either created or updated based on its
- * event class and bib number. It prevents duplicate entries while keeping team
- * details up to date. The organisation information is also included in the update.
+ * Lookup priority:
+ *  1. IOF EntryId (Team.externalId) — precise, idempotent across StartList /
+ *     ResultList uploads of the same event.
+ *  2. bibNumber within event scope — legacy fallback for files without EntryId.
  *
  * @param eventId - Event identifier.
  * @param classId - Class database ID.
- * @param teamResult - Team payload with name and bib number.
- * @param organisation - Organisation details.
+ * @param teamResult - Team payload with name, EntryId, and bib number.
+ * @param organisation - Organisation details (may be null).
  * @returns Team database ID.
  */
 async function upsertTeam(
@@ -1076,50 +452,87 @@ async function upsertTeam(
   teamResult: TeamWithBib,
   organisation: IofOrganisation,
 ): Promise<number> {
-  // Extract team details from the input object
   const teamName = teamResult.Name.shift() ?? '';
   const bibNumber = teamResult.BibNumber
     ? Number.parseInt(teamResult.BibNumber.shift() ?? '', 10) || null
     : null;
+  const externalId = extractTeamExternalId(teamResult);
 
-  // Check if the team already exists in the database based on event class and bib number
-  const dbRelayResponse = await prisma.team.findFirst({
-    where: {
-      class: { eventId: eventId }, // Match the team within the correct event class
-      bibNumber: bibNumber, // Ensure bib number is the same
-    },
-    select: { id: true }, // Select only the team ID to optimize query performance
-  });
+  const existingTeam = await resolveExistingTeam(eventId, classId, externalId, bibNumber);
 
-  if (!dbRelayResponse) {
-    // If team does not exist, insert a new team entry
-    const dbRelayInsert = await prisma.team.create({
-      data: {
-        class: { connect: { id: classId } }, // Link team to the correct class
-        name: teamName, // Set team name
-        organisation: organisation?.Name?.[0] || null, // Set organisation name if available
-        shortName: organisation?.ShortName?.[0] || null, // Set short name if available
-        bibNumber: bibNumber, // Set bib number
-      },
-    });
+  // Resolve the Organisation row scoped to this event for the team.
+  const hasTeamOrganisationPayload = organisation !== null && organisation !== undefined;
+  const teamOrganisationExternalId =
+    organisation?.Id?.[0]?._ ??
+    organisation?.ATTR?.id ??
+    (typeof organisation?.Id?.[0] === 'string'
+      ? (organisation?.Id?.[0] as unknown as string)
+      : undefined) ??
+    null;
+  const teamOrganisationId = hasTeamOrganisationPayload
+    ? await upsertOrganisation({
+        eventId,
+        externalId: teamOrganisationExternalId,
+        name: organisation?.Name?.[0] ?? null,
+        shortName: organisation?.ShortName?.[0] ?? null,
+        nationality: organisation?.Country?.[0]?.ATTR?.code ?? null,
+      })
+    : undefined;
+  const teamOrganisationCreateWrite =
+    hasTeamOrganisationPayload && teamOrganisationId
+      ? { organisation: { connect: { id: teamOrganisationId } } }
+      : {};
+  const teamOrganisationUpdateWrite = hasTeamOrganisationPayload
+    ? {
+        organisation: teamOrganisationId
+          ? { connect: { id: teamOrganisationId } }
+          : { disconnect: true },
+      }
+    : {};
 
-    return dbRelayInsert.id; // Return the newly created team ID
-  } else {
-    // If team exists, update its details to keep them up to date
-    const teamId = dbRelayResponse.id;
-    await prisma.team.update({
-      where: { id: teamId }, // Update the existing team entry
-      data: {
-        class: { connect: { id: classId } }, // Ensure it stays connected to the correct class
-        name: teamName, // Update team name if changed
-        organisation: organisation?.Name?.[0] || null, // Update organisation name if changed
-        shortName: organisation?.ShortName?.[0] || null, // Update short name if changed
-        bibNumber: bibNumber, // Update bib number if changed
-      },
-    });
-
-    return teamId; // Return the existing team ID
+  if (!existingTeam) {
+    try {
+      const created = await prisma.team.create({
+        data: {
+          class: { connect: { id: classId } },
+          name: teamName,
+          externalId,
+          ...teamOrganisationCreateWrite,
+          bibNumber: bibNumber,
+        },
+        select: { id: true },
+      });
+      return created.id;
+    } catch (err) {
+      // P2002 on (classId, externalId): another concurrent worker created the
+      // team first. Re-read and return the racer's row — subsequent member
+      // writes will link to the correct team ID.
+      if (
+        externalId &&
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        const raced = await prisma.team.findUnique({
+          where: { classId_externalId: { classId, externalId } },
+          select: { id: true },
+        });
+        if (raced) return raced.id;
+      }
+      throw err;
+    }
   }
+
+  await prisma.team.update({
+    where: { id: existingTeam.id },
+    data: {
+      class: { connect: { id: classId } },
+      name: teamName,
+      externalId,
+      ...teamOrganisationUpdateWrite,
+      bibNumber: bibNumber,
+    },
+  });
+  return existingTeam.id;
 }
 
 /**
@@ -1134,9 +547,11 @@ async function upsertTeam(
 async function processClassStarts(
   eventId: string,
   classStarts: Array<Record<string, any>>,
-  dbClassLists: Array<{ id: number; externalId: string | null }>,
+  dbClassLists: ClassListEntry[],
   dbResponseEvent: { relay?: boolean; timezone?: string | null },
-): Promise<void> {
+  authorId: number,
+): Promise<number[]> {
+  const updatedClasses = new Set<number>();
   const eventTimeZone = dbResponseEvent.timezone ?? 'UTC';
 
   await forEachWithConcurrency(
@@ -1167,6 +582,7 @@ async function processClassStarts(
       };
 
       const classId = await upsertClass(eventId, classDetails, dbClassLists, additionalData);
+      const competitorCache = await loadCompetitorCache(classId);
 
       if (!dbResponseEvent.relay) {
         // Process Individual Starts
@@ -1176,9 +592,12 @@ async function processClassStarts(
           IOF_WRITE_CONCURRENCY,
           async (competitorStart: Record<string, any>) => {
             const person = competitorStart.Person.shift();
-            const organisation = competitorStart.Organisation.shift();
+            const organisation =
+              Array.isArray(competitorStart.Organisation) && competitorStart.Organisation.length > 0
+                ? competitorStart.Organisation.shift()
+                : null;
             const start = competitorStart.Start.shift();
-            await upsertCompetitor(
+            const { updated } = await upsertCompetitor(
               eventId,
               classId,
               person,
@@ -1186,7 +605,12 @@ async function processClassStarts(
               start,
               null,
               eventTimeZone,
+              null,
+              null,
+              authorId,
+              competitorCache,
             );
+            if (updated) updatedClasses.add(classId);
           },
         );
       } else {
@@ -1199,7 +623,7 @@ async function processClassStarts(
           async (teamStart: Record<string, any>) => {
             const organisation = teamStart.Organisation
               ? [...teamStart.Organisation].shift()
-              : null; // Organisation details
+              : null;
 
             const teamId = await upsertTeam(
               eventId,
@@ -1217,7 +641,7 @@ async function processClassStarts(
                   const start = [...teamMemberStart.Start].shift();
                   const leg = [...start.Leg].shift();
 
-                  await upsertCompetitor(
+                  const { updated } = await upsertCompetitor(
                     eventId,
                     classId,
                     person,
@@ -1227,7 +651,10 @@ async function processClassStarts(
                     eventTimeZone,
                     teamId,
                     leg,
+                    authorId,
+                    competitorCache,
                   );
+                  if (updated) updatedClasses.add(classId);
                 },
               );
             }
@@ -1236,6 +663,7 @@ async function processClassStarts(
       }
     },
   );
+  return [...updatedClasses];
 }
 
 /**
@@ -1250,8 +678,9 @@ async function processClassStarts(
 async function processClassResults(
   eventId: string,
   classResults: Array<Record<string, any>>,
-  dbClassLists: Array<{ id: number; externalId: string | null }>,
+  dbClassLists: ClassListEntry[],
   dbResponseEvent: { relay?: boolean; ranking?: boolean; timezone?: string | null },
+  authorId: number,
 ): Promise<number[]> {
   const updatedClasses = new Set<number>(); // Unique class IDs that had changes
   const eventTimeZone = dbResponseEvent.timezone ?? 'UTC';
@@ -1261,6 +690,11 @@ async function processClassResults(
     async (classResult: Record<string, any>) => {
       const classDetails = classResult.Class.shift();
       const classId = await upsertClass(eventId, classDetails, dbClassLists);
+      const competitorCache = await loadCompetitorCache(classId);
+      // Pre-load splits for all competitors already in the DB for this class.
+      // One round-trip replaces N per-competitor findMany calls on re-uploads.
+      const existingCompetitorIds = [...competitorCache.values()].map((c) => c.id);
+      const splitCache = await loadSplitCache(existingCompetitorIds);
 
       if (!dbResponseEvent.relay) {
         // Process Individual Results
@@ -1290,8 +724,16 @@ async function processClassResults(
               null,
               result,
               eventTimeZone,
+              null,
+              null,
+              authorId,
+              competitorCache,
             );
-            const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
+            const { changeMade: updatedSplits } = await upsertSplits(
+              competitorId,
+              result,
+              splitCache,
+            );
             if (updated || updatedSplits) updatedClasses.add(classId);
           },
         );
@@ -1343,8 +785,14 @@ async function processClassResults(
                       eventTimeZone,
                       teamId,
                       leg,
+                      authorId,
+                      competitorCache,
                     );
-                    const { changeMade: updatedSplits } = await upsertSplits(competitorId, result);
+                    const { changeMade: updatedSplits } = await upsertSplits(
+                      competitorId,
+                      result,
+                      splitCache,
+                    );
                     if (updated || updatedSplits) updatedClasses.add(classId);
                   },
                 );
@@ -1417,8 +865,8 @@ async function handleIofXmlUpload(
   const xmlBuffer = unzipResult.buffer;
 
   if (iofValidationEnabled) {
-    const xsd = await fetchIOFXmlSchema();
-    const iofXmlValidation = await validateIofXml(xmlBuffer.toString(), xsd);
+    const xsd = await getXsdSchema();
+    const iofXmlValidation = await validateIofXml(xmlBuffer.toString('utf-8').replace(/^﻿/, ''), xsd);
     if (!iofXmlValidation.state) {
       logUploadEvent(c, 'warn', 'IOF upload failed XML validation', {
         ...uploadDetails,
@@ -1431,6 +879,7 @@ async function handleIofXmlUpload(
   }
 
   let dbResponseEvent;
+  let authorId: number;
   try {
     const ownership = await ensureEventOwnerOrAdmin(prisma, c.get('authContext'), eventId, {
       select: { relay: true, ranking: true, timezone: true },
@@ -1441,6 +890,7 @@ async function handleIofXmlUpload(
     });
 
     dbResponseEvent = ownership.event;
+    authorId = ownership.userId;
   } catch (err) {
     if (isAuthzError(err)) {
       const statusCode = err.statusCode === 404 ? 404 : err.statusCode === 403 ? 403 : 401;
@@ -1464,6 +914,33 @@ async function handleIofXmlUpload(
     return c.json(error(message, 500), 500);
   }
 
+  // Early return: skip identical re-uploads before expensive XML parsing
+  const rawHash = computeRawHash(xmlBuffer);
+  const detectedPayloadType = detectXmlRootElement(xmlBuffer);
+
+  if (detectedPayloadType !== null && isIofPayloadType(detectedPayloadType)) {
+    const isIdentical = await findImportStateByHash(
+      eventId,
+      ImportSourceType.IOF_XML,
+      detectedPayloadType,
+      rawHash,
+    );
+    if (isIdentical) {
+      await recordSkippedImport(eventId, ImportSourceType.IOF_XML, detectedPayloadType, rawHash);
+      logUploadEvent(c, 'info', 'IOF upload skipped: identical content already imported', {
+        ...uploadDetails,
+        success: true,
+        stage: 'skipped-identical',
+        rawHash,
+        detectedPayloadType,
+      });
+      return c.json(
+        success('OK', { data: 'Skipped: identical upload already processed', skipped: true }, 200),
+        200,
+      );
+    }
+  }
+
   let iofXml3: Record<string, any>;
   try {
     iofXml3 = (await parseXml(xmlBuffer)) as Record<string, any>;
@@ -1478,6 +955,16 @@ async function handleIofXmlUpload(
   }
 
   const iofXmlType = checkXmlType(iofXml3);
+
+  const iofRootKey = Object.keys(iofXml3)[0] ?? '';
+  const iofRootAttr = (iofXml3[iofRootKey]?.ATTR ?? {}) as Record<string, string | undefined>;
+  const iofRootMeta = {
+    creator: iofRootAttr.creator ?? null,
+    externalCreateTime: iofRootAttr.createTime ? new Date(iofRootAttr.createTime) : null,
+    formatVersion: iofRootAttr.iofVersion ?? null,
+    externalStatus: iofRootAttr.status ?? null,
+  };
+
   logUploadEvent(c, 'info', 'IOF upload XML parsed', {
     ...uploadDetails,
     success: false,
@@ -1526,6 +1013,7 @@ async function handleIofXmlUpload(
               classResults,
               dbClassLists,
               dbResponseEvent,
+              authorId,
             );
             if (dbResponseEvent.ranking) {
               const rankingCalculation = await calculateCzechRankingPointsForEvent(eventId);
@@ -1569,23 +1057,50 @@ async function handleIofXmlUpload(
             classStartCount: Array.isArray(classStarts) ? classStarts.length : 0,
           });
           if (classStarts && classStarts.length > 0) {
-            await processClassStarts(eventId, classStarts, dbClassLists, dbResponseEvent);
+            const updatedClasses = await processClassStarts(
+              eventId,
+              classStarts,
+              dbClassLists,
+              dbResponseEvent,
+              authorId,
+            );
             logUploadEvent(c, 'info', 'IOF upload StartList processed', {
               ...uploadDetails,
               success: false,
               stage: 'processed-start-list',
               classStartCount: classStarts.length,
+              updatedClassCount: updatedClasses.length,
             });
+            for (const classId of updatedClasses) {
+              try {
+                await publishUpdatedCompetitors(classId);
+              } catch (err) {
+                logUploadEvent(
+                  c,
+                  'error',
+                  'IOF upload failed while publishing updated competitors',
+                  {
+                    ...uploadDetails,
+                    success: false,
+                    stage: 'publish-updated-competitors',
+                    classId,
+                    reason: err instanceof Error ? err.message : 'Publish failed',
+                  },
+                );
+              }
+            }
           }
         } else if (type.jsonKey === 'CourseData') {
           // Process CourseData
-          let dbClassLists;
+          let dbClassLists: ClassListEntry[];
           try {
             dbClassLists = await prisma.class.findMany({
               where: { eventId: eventId },
               select: {
                 id: true,
+                externalId: true,
                 name: true,
+                sex: true,
               },
             });
           } catch (err) {
@@ -1644,6 +1159,26 @@ async function handleIofXmlUpload(
     });
     return c.json(error(message, 500), 500);
   }
+
+  // Persist or update import state for each processed payload type
+  await Promise.all(
+    iofXmlType.map((type) =>
+      upsertImportState(eventId, ImportSourceType.IOF_XML, {
+        payloadType: type.jsonKey,
+        rawHash,
+        rootElement: type.jsonKey,
+        ...iofRootMeta,
+      }).catch((err) => {
+        logUploadEvent(c, 'error', 'IOF upload failed to persist import state', {
+          ...uploadDetails,
+          success: true,
+          stage: 'persist-import-state',
+          payloadType: type.jsonKey,
+          reason: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }),
+    ),
+  );
 
   logUploadEvent(c, 'info', 'IOF upload completed', {
     ...uploadDetails,
@@ -1913,8 +1448,8 @@ export function registerUploadRoutes(router: AppOpenAPI) {
           typeof processedRankingData === 'string'
             ? processedRankingData
             : Array.isArray(processedRankingData)
-              ? { processedItems: processedRankingData.length }
-              : processedRankingData,
+            ? { processedItems: processedRankingData.length }
+            : processedRankingData,
       });
       return c.json(
         success(
@@ -1941,6 +1476,15 @@ export function registerUploadRoutes(router: AppOpenAPI) {
 export const parseXmlForTesting = {
   parseXml,
   checkXmlType,
-  fetchIOFXmlSchema,
   upsertCompetitor,
+  findExistingClass,
+  getCompetitorKeys,
+  detectCompetitorChanges,
+  extractTeamExternalId,
+  resolveExistingTeam,
+  normalizeIncomingSplits,
+  isSplitWriteConflict,
+  loadSplitCache,
+  processClassResults,
+  processClassStarts,
 };

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 interface MobileClubNameProps {
-  clubName: string;
+  clubName?: string | null;
   referenceText: string;
   onSelectClub?: (clubName: string) => void;
   className?: string;
@@ -34,8 +34,8 @@ const measureTextWidth = (text: string, font: string): number => {
   return context.measureText(text).width;
 };
 
-const normalizeText = (text: string): string =>
-  text.replace(/\s+/g, ' ').trim();
+const normalizeText = (text?: string | null): string =>
+  (text ?? '').replace(/\s+/g, ' ').trim();
 
 const trimToWordBoundary = (
   text: string,
@@ -126,12 +126,14 @@ export const MobileClubName = ({
   const referenceElementRef = useRef<HTMLSpanElement | null>(null);
   const [displayName, setDisplayName] = useState(() => normalizeText(clubName));
   const [maxWidth, setMaxWidth] = useState<number | null>(null);
+  const normalizedClubName = normalizeText(clubName);
 
   useEffect(() => {
     const element = elementRef.current;
     const referenceElement = referenceElementRef.current;
-    if (!element || !referenceElement || !clubName || !referenceText) {
-      setDisplayName(normalizeText(clubName));
+    const normalizedClubName = normalizeText(clubName);
+    if (!element || !referenceElement || !normalizedClubName || !referenceText) {
+      setDisplayName(normalizedClubName);
       setMaxWidth(null);
       return;
     }
@@ -144,7 +146,7 @@ export const MobileClubName = ({
       );
 
       setMaxWidth(referenceWidth);
-      setDisplayName(truncateMiddleToWidth(clubName, referenceWidth, font));
+      setDisplayName(truncateMiddleToWidth(normalizedClubName, referenceWidth, font));
     };
 
     updateDisplayName();
@@ -159,7 +161,7 @@ export const MobileClubName = ({
     return () => resizeObserver.disconnect();
   }, [clubName, referenceText]);
 
-  if (!clubName) {
+  if (!normalizedClubName) {
     return null;
   }
 
@@ -169,7 +171,7 @@ export const MobileClubName = ({
       elementRef.current = node;
     },
     style: maxWidth ? { maxWidth } : undefined,
-    title: clubName,
+    title: normalizedClubName,
   };
 
   const referenceMeasure = (
@@ -189,7 +191,7 @@ export const MobileClubName = ({
         <button
           {...commonProps}
           type="button"
-          onClick={() => onSelectClub(clubName)}
+          onClick={() => onSelectClub(normalizedClubName)}
         >
           {displayName}
         </button>

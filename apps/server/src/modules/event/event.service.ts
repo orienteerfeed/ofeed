@@ -7,6 +7,11 @@ import {
   publishUpdatedCompetitor,
   publishUpdatedCompetitors,
 } from '../../utils/subscriptionUtils.js';
+import {
+  flattenOrganisation,
+  organisationSelect,
+  upsertOrganisation,
+} from './organisation.helpers.js';
 
 export const changeCompetitorStatus = async (eventId, competitorId, origin, status, userId) => {
   let dbResponseCompetitor;
@@ -212,13 +217,14 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
       select: {
         id: true,
         classId: true,
+        class: { select: { eventId: true } },
         firstname: true,
         lastname: true,
         nationality: true,
         registration: true,
         license: true,
-        organisation: true,
-        shortName: true,
+        organisationId: true,
+        organisation: { select: organisationSelect },
         card: true,
         bibNumber: true,
         startTime: true,
@@ -285,9 +291,17 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   };
 
   // Iterate over keys in updateData, log only actual changes
+  const previousOrganisation = dbResponseCompetitor.organisation;
   Object.keys(updateData).forEach(key => {
     if (keyToTypeMap[key]) {
-      const previousValue = dbResponseCompetitor[key];
+      let previousValue;
+      if (key === 'organisation') {
+        previousValue = previousOrganisation?.name ?? null;
+      } else if (key === 'shortName') {
+        previousValue = previousOrganisation?.shortName ?? null;
+      } else {
+        previousValue = dbResponseCompetitor[key];
+      }
       const nextValue = updateData[key];
       const prevStr =
         previousValue === null || previousValue === undefined ? null : previousValue.toString();
@@ -303,12 +317,35 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
     }
   });
 
-  const { splits, ...baseData } = updateData;
+  const { splits, organisation: nextOrganisation, shortName: nextShortName, ...baseData } =
+    updateData;
+
+  // Resolve organisationId from new organisation/shortName values, scoped to event.
+  let organisationIdUpdate: { organisationId: number | null } | undefined;
+  if (
+    Object.prototype.hasOwnProperty.call(updateData, 'organisation') ||
+    Object.prototype.hasOwnProperty.call(updateData, 'shortName')
+  ) {
+    const targetName =
+      Object.prototype.hasOwnProperty.call(updateData, 'organisation')
+        ? nextOrganisation
+        : previousOrganisation?.name;
+    const targetShortName =
+      Object.prototype.hasOwnProperty.call(updateData, 'shortName')
+        ? nextShortName
+        : previousOrganisation?.shortName;
+    const newOrganisationId = await upsertOrganisation({
+      eventId: dbResponseCompetitor.class?.eventId ?? eventId,
+      name: targetName,
+      shortName: targetShortName,
+    });
+    organisationIdUpdate = { organisationId: newOrganisationId };
+  }
 
   try {
     await prisma.competitor.update({
       where: { id: parseInt(competitorId) },
-      data: { ...baseData },
+      data: { ...baseData, ...(organisationIdUpdate ?? {}) },
     });
 
     if (splits && Array.isArray(splits)) {
@@ -350,15 +387,21 @@ export const updateCompetitor = async (eventId, competitorId, origin, updateData
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
+  let updatedCompetitor;
   try {
-    updatedCompetitor = await prisma.competitor.findUnique({
+    const raw = await prisma.competitor.findUnique({
       where: { id: parseInt(competitorId) },
       include: {
         class: true,
-        team: true,
+        team: { include: { organisation: { select: organisationSelect } } },
+        organisation: { select: organisationSelect },
       },
     });
+    if (raw) {
+      const flat = flattenOrganisation(raw) as Record<string, unknown> | null;
+      if (flat && raw.team) flat.team = flattenOrganisation(raw.team);
+      updatedCompetitor = flat;
+    }
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
@@ -390,7 +433,7 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
   try {
     existingClass = await prisma.class.findUnique({
       where: { id: parseInt(classId) },
-      select: { id: true },
+      select: { id: true, eventId: true },
     });
   } catch (err) {
     console.error('Database error:', err);
@@ -400,6 +443,14 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
   if (!existingClass) {
     throw new ValidationError(`Class with ID ${classId} does not exist.`);
   }
+
+  // Resolve organisation relation (event-scoped) for the new competitor
+  const organisationId = await upsertOrganisation({
+    eventId: existingClass.eventId,
+    name: competitorData.organisation,
+    shortName: competitorData.shortName,
+    nationality: competitorData.nationality,
+  });
 
   let newCompetitor;
   try {
@@ -413,8 +464,7 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
         license: competitorData.license || null,
         rankingPoints: competitorData.rankingPoints ?? null,
         rankingReferenceValue: competitorData.rankingReferenceValue ?? null,
-        organisation: competitorData.organisation || null,
-        shortName: competitorData.shortName || null,
+        organisationId: organisationId,
         card: card ? parseInt(card) : null,
         bibNumber: competitorData.bibNumber ? parseInt(competitorData.bibNumber) : null,
         startTime: competitorData.startTime ? new Date(competitorData.startTime) : null,
@@ -464,7 +514,7 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
 
   // Add a protocol record for each changed field
   try {
-    await prisma.protocol.create({
+    await prisma.protocol.createMany({
       data: {
         eventId: eventId,
         competitorId: newCompetitor.id,
@@ -481,15 +531,21 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
   }
 
   // Select the current competitor from the database
-  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
+  let updatedCompetitor;
   try {
-    updatedCompetitor = await prisma.competitor.findUnique({
+    const raw = await prisma.competitor.findUnique({
       where: { id: parseInt(newCompetitor.id) },
       include: {
         class: true,
-        team: true,
+        team: { include: { organisation: { select: organisationSelect } } },
+        organisation: { select: organisationSelect },
       },
     });
+    if (raw) {
+      const flat = flattenOrganisation(raw) as Record<string, unknown> | null;
+      if (flat && raw.team) flat.team = flattenOrganisation(raw.team);
+      updatedCompetitor = flat;
+    }
   } catch (err) {
     console.error('Failed to fetch updated competitor:', err);
     throw new DatabaseError('Error fetching updated competitor');
@@ -514,7 +570,7 @@ export const storeCompetitor = async (eventId, competitorData, userId, origin) =
 };
 
 /**
- * Deletes all protocols, splits, and competitors related to event classes.
+ * Deletes all protocols, splits, competitors, teams, and organisations related to event classes.
  *
  * @param {string} eventId - The event ID.
  * @throws {DatabaseError} If any deletion fails.
@@ -531,6 +587,9 @@ export const deleteEventCompetitorsAndProtocols = async eventId => {
 
     if (classIdList.length === 0) {
       console.warn(`No classes found for event ${eventId}.`);
+      await prisma.organisation.deleteMany({
+        where: { eventId: eventId },
+      });
       return;
     }
 
@@ -562,6 +621,10 @@ export const deleteEventCompetitorsAndProtocols = async eventId => {
     // Teams reference classId, so remove them here
     await prisma.team.deleteMany({
       where: { classId: { in: classIdList } },
+    });
+
+    await prisma.organisation.deleteMany({
+      where: { eventId: eventId },
     });
   } catch (err) {
     console.error('Failed to delete competitors or protocols:', err);
@@ -715,8 +778,8 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
           license: true,
           rankingPoints: true,
           rankingReferenceValue: true,
-          organisation: true,
-          shortName: true,
+          organisationId: true,
+          organisation: { select: organisationSelect },
           card: true,
           startTime: true,
           finishTime: true,
@@ -772,8 +835,8 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
           license: true,
           rankingPoints: true,
           rankingReferenceValue: true,
-          organisation: true,
-          shortName: true,
+          organisationId: true,
+          organisation: { select: organisationSelect },
           card: true,
           startTime: true,
           finishTime: true,
@@ -800,8 +863,8 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
           team: {
             select: {
               name: true,
-              organisation: true,
-              shortName: true,
+              organisationId: true,
+              organisation: { select: organisationSelect },
               bibNumber: true,
             },
           },
@@ -815,5 +878,10 @@ export const getEventCompetitorDetail = async (eventId, competitorId, dbResponse
     }
     competitorData = dbRelayResponse;
   }
-  return competitorData;
+  if (!competitorData) return competitorData;
+  const flat = flattenOrganisation(competitorData) as Record<string, unknown> | null;
+  if (flat && (competitorData as { team?: unknown }).team) {
+    flat.team = flattenOrganisation((competitorData as { team: unknown }).team as never);
+  }
+  return flat;
 }
