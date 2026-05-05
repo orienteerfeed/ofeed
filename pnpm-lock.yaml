@@ -66,8 +66,8 @@ importers:
   apps/board:
     dependencies:
       '@tanstack/vue-query':
-        specifier: ^5.100.8
-        version: 5.100.8(vue@3.5.33(typescript@5.9.3))
+        specifier: ^5.100.9
+        version: 5.100.9(vue@3.5.33(typescript@5.9.3))
       '@unocss/reset':
         specifier: ^66.0.0
         version: 66.6.8
@@ -235,8 +235,8 @@ importers:
         specifier: ^1.29.1
         version: 1.29.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@tanstack/react-query':
-        specifier: ^5.100.8
-        version: 5.100.8(react@19.2.5)
+        specifier: ^5.100.9
+        version: 5.100.9(react@19.2.5)
       '@tanstack/react-router':
         specifier: ^1.169.1
         version: 1.169.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -331,11 +331,11 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
       zod:
-        specifier: ^4.4.2
-        version: 4.4.2
+        specifier: ^4.4.3
+        version: 4.4.3
       zustand:
-        specifier: ^5.0.12
-        version: 5.0.12(@types/react@19.2.14)(immer@11.1.4)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))
+        specifier: ^5.0.13
+        version: 5.0.13(@types/react@19.2.14)(immer@11.1.4)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.4
@@ -348,7 +348,7 @@ importers:
         version: 4.2.4
       '@tanstack/react-query-devtools':
         specifier: ^5.100.8
-        version: 5.100.9(@tanstack/react-query@5.100.8(react@19.2.5))(react@19.2.5)
+        version: 5.100.9(@tanstack/react-query@5.100.9(react@19.2.5))(react@19.2.5)
       '@tanstack/router-plugin':
         specifier: ^1.167.32
         version: 1.167.33(@tanstack/react-router@1.169.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(vite@7.3.2(@types/node@24.12.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.4))(webpack@5.102.1)
@@ -437,8 +437,8 @@ importers:
   apps/server:
     dependencies:
       '@aws-sdk/client-s3':
-        specifier: ^3.1041.0
-        version: 3.1041.0
+        specifier: ^3.1042.0
+        version: 3.1042.0
       '@graphql-tools/schema':
         specifier: ^9.0.19
         version: 9.0.19(graphql@16.13.2)
@@ -447,7 +447,7 @@ importers:
         version: 2.0.1(hono@4.12.16)
       '@hono/zod-openapi':
         specifier: ^1.3.0
-        version: 1.3.0(hono@4.12.16)(zod@4.4.2)
+        version: 1.3.0(hono@4.12.16)(zod@4.4.3)
       '@node-oauth/oauth2-server':
         specifier: ^5.3.0
         version: 5.3.0
@@ -461,8 +461,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared
       '@scalar/hono-api-reference':
-        specifier: ^0.10.13
-        version: 0.10.13(hono@4.12.16)
+        specifier: ^0.10.14
+        version: 0.10.14(hono@4.12.16)
       '@sendgrid/mail':
         specifier: ^8.1.6
         version: 8.1.6
@@ -561,8 +561,8 @@ importers:
   packages/shared:
     dependencies:
       zod:
-        specifier: ^4.4.2
-        version: 4.4.2
+        specifier: ^4.4.3
+        version: 4.4.3
 
 packages:
 
@@ -660,8 +660,8 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-s3@3.1041.0':
-    resolution: {integrity: sha512-sQV14bIqslnBHuSlLMD+fc3pH+ajop6vnrFlJ4wM4JDqcYwVik4O+9srnZUrkesFw5y+CN0GfOQ06CAgtC4mjQ==}
+  '@aws-sdk/client-s3@3.1042.0':
+    resolution: {integrity: sha512-z3Ibstr7ckDT10dz/nkk4+93LitrrO49Oq563/JoFHt30ZNodPBCfSxysKcelLyi/lNVF1MZrhZZfikUAG3iNQ==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.974.8':
@@ -3271,22 +3271,22 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
-  '@scalar/client-side-rendering@0.1.6':
-    resolution: {integrity: sha512-ooc5RKyi83EvBuxB2N8H00ZE2CF4oKynuUToSCaoqxkjv+oJ6B3+OYsb0HVixznsyWhUDdtQZm4/xOb0kxBaaA==}
+  '@scalar/client-side-rendering@0.1.7':
+    resolution: {integrity: sha512-IDzjKF93jrOljlvKBsLHXT1FPWgz56jFrMPC+iLihREp1qH8wF92mG8Zpakw8cURkEuw5WijRk0xNBP2moGyuw==}
     engines: {node: '>=22'}
 
-  '@scalar/helpers@0.5.5':
-    resolution: {integrity: sha512-TqbErkqGijJJW6Ad8lpswHFTmlJaYFt9oolaWF1/Nn9171xdkK9ZDAk3pCaOCWs8WpwvcbUSxIVD8JxdBg0MFg==}
+  '@scalar/helpers@0.6.0':
+    resolution: {integrity: sha512-pfSamAgBxqFeE8IpEG6uGkHlnPhY1CLeOTttV9+vKQbrBk5b7vvyTsUXv0Hz4kNU1TFrxcTTPE+Akn5S+jlTtQ==}
     engines: {node: '>=22'}
 
-  '@scalar/hono-api-reference@0.10.13':
-    resolution: {integrity: sha512-xYSN6GVdzsgt5i3OTt4wDpIcD/KpKTwb6Wiy65NucGIFW0WidM6ilb9Lf8EG9xescut5djLtGOOxO4Ze0w8qgQ==}
+  '@scalar/hono-api-reference@0.10.14':
+    resolution: {integrity: sha512-LCIT4ul3c4MyD7shhxsWcvvOABt0fEHNQID2n+2TPeItc/MR2qCjjp/QfqD+JoQ7zbc0nnzh1kwRR06MVBmnUA==}
     engines: {node: '>=22'}
     peerDependencies:
       hono: ^4.12.5
 
-  '@scalar/types@0.9.5':
-    resolution: {integrity: sha512-joen5nuqgmGzgXK5XIqkGs0JmCZ16djaw+pgC24sfb+p3sSPVfKQTNTil/RuvHMNsmA/dFcQ6GI0Y3HhTlUQrg==}
+  '@scalar/types@0.9.6':
+    resolution: {integrity: sha512-UaCQQcscFTJdxZREE8KhUdSJgaDlc44TZbmWcZffs4m1hzqOvEI7lEBS13iBpLq7/cxUXFgyJdecywvNqJ0PkA==}
     engines: {node: '>=22'}
 
   '@sec-ant/readable-stream@0.4.1':
@@ -3867,8 +3867,8 @@ packages:
     resolution: {integrity: sha512-y/xtNPNt/YeyoVxE/JCx+T7yjEzpezmbb+toK8DDD1P4m7Kzs5YR956+7OKexG3f8aXgC3rLZl7b1V+yNUSy5w==}
     engines: {node: '>=18'}
 
-  '@tanstack/query-core@5.100.8':
-    resolution: {integrity: sha512-ceYwSFOqjPwET5TA6IOYxzxlGc0ekyH/gfOtWkP0PX43rzX9bxW48Iuw8KAduKCToi4rJAQ6nRy2kAe8gszdmg==}
+  '@tanstack/query-core@5.100.9':
+    resolution: {integrity: sha512-SJSFw1S8+kQ0+knv/XGfrbocWoAlT7vDKsSImtLx3ZPQmEcR46hkDjLSvynSy25N8Ms4tIEini1FuBd5k7IscQ==}
 
   '@tanstack/query-devtools@5.100.9':
     resolution: {integrity: sha512-gqiptrTIhbK2PuCaPRHmWXfJG1NGYVFpAr0HqogEqiSBNB5xDz6fmesQt7w4WgMOqOQPnPHJ3ZDMuhDaXvNO8g==}
@@ -3888,8 +3888,8 @@ packages:
       '@tanstack/react-query': ^5.100.9
       react: ^18 || ^19
 
-  '@tanstack/react-query@5.100.8':
-    resolution: {integrity: sha512-iNNEekixXU5vtAGKKZX2lx3jTooG5yNY+kv0wSgEdEYG0Mj0JM5bcuQtC35ZAP3nDopT6jciUK3xeX65U7AnfA==}
+  '@tanstack/react-query@5.100.9':
+    resolution: {integrity: sha512-Oa44XkaI3kCNN6ME0KByU3xT3SEUNOMfZpHxL6+wFoTm+OeUFYHKdeYVe0aOXlRDm/f15sgLwEt2HDorIdW8+A==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -3993,8 +3993,8 @@ packages:
     engines: {node: '>=20.19'}
     hasBin: true
 
-  '@tanstack/vue-query@5.100.8':
-    resolution: {integrity: sha512-6Yzdj50TbWH2U9sj3g6R4SP+fCPB+gFqjoFD2p60nJGV9OEb6sKAUfjrrpYHdorDaOGjlxK3DXofojzViiwsuA==}
+  '@tanstack/vue-query@5.100.9':
+    resolution: {integrity: sha512-wGiv/AirRuITlTDl87zdBRaZIZTejMItUswKgMzzcX/1gfn95iKw2EaCuz7qlX9ceB0DwBj9FqaroLnDoJCecg==}
     peerDependencies:
       '@vue/composition-api': ^1.1.2
       vue: ^2.6.0 || ^3.3.0
@@ -5608,8 +5608,8 @@ packages:
   fast-xml-builder@1.1.4:
     resolution: {integrity: sha512-f2jhpN4Eccy0/Uz9csxh3Nu6q4ErKxf0XIsasomfOihuSUa3/xw6w8dnOtCDgEItQFJG8KyXPzQXzcODDrrbOg==}
 
-  fast-xml-builder@1.1.5:
-    resolution: {integrity: sha512-4TJn/8FKLeslLAH3dnohXqE3QSoxkhvaMzepOIZytwJXZO69Bfz0HBdDHzOTOon6G59Zrk6VQ2bEiv1t61rfkA==}
+  fast-xml-builder@1.1.8:
+    resolution: {integrity: sha512-sDVBc2gg8pSKvcbE8rBmOyjSGQf0AdsbqvHeIOv3D/uYNoV4eCReQXyDF8Pdv8+m1FHazACypSz2hR7O2S1LLw==}
 
   fast-xml-parser@5.5.11:
     resolution: {integrity: sha512-QL0eb0YbSTVWF6tTf1+LEMSgtCEjBYPpnAjoLC8SscESlAjXEIRJ7cHtLG0pLeDFaZLa4VKZLArtA/60ZS7vyA==}
@@ -8868,11 +8868,11 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.4.2:
-    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
-  zustand@5.0.12:
-    resolution: {integrity: sha512-i77ae3aZq4dhMlRhJVCYgMLKuSiZAaUPAct2AksxQ+gOtimhGMdXljRT21P5BNpeT4kXlLIckvkPM029OljD7g==}
+  zustand@5.0.13:
+    resolution: {integrity: sha512-efI2tVaVQPqtOh114loML/Z80Y4NP3yc+Ff0fYiZJPauNeWZeIp/bRFD7I9bfmCOYBh/PHxlglQ9+wvlwnPikQ==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
       '@types/react': '>=18.0.0'
@@ -8971,10 +8971,10 @@ snapshots:
 
   '@asamuzakjp/nwsapi@2.3.9': {}
 
-  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.4.2)':
+  '@asteasolutions/zod-to-openapi@8.5.0(zod@4.4.3)':
     dependencies:
       openapi3-ts: 4.5.0
-      zod: 4.4.2
+      zod: 4.4.3
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -9023,7 +9023,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-s3@3.1041.0':
+  '@aws-sdk/client-s3@3.1042.0':
     dependencies:
       '@aws-crypto/sha1-browser': 5.2.0
       '@aws-crypto/sha256-browser': 5.2.0
@@ -10506,18 +10506,18 @@ snapshots:
     dependencies:
       hono: 4.12.16
 
-  '@hono/zod-openapi@1.3.0(hono@4.12.16)(zod@4.4.2)':
+  '@hono/zod-openapi@1.3.0(hono@4.12.16)(zod@4.4.3)':
     dependencies:
-      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.4.2)
-      '@hono/zod-validator': 0.7.6(hono@4.12.16)(zod@4.4.2)
+      '@asteasolutions/zod-to-openapi': 8.5.0(zod@4.4.3)
+      '@hono/zod-validator': 0.7.6(hono@4.12.16)(zod@4.4.3)
       hono: 4.12.16
       openapi3-ts: 4.5.0
-      zod: 4.4.2
+      zod: 4.4.3
 
-  '@hono/zod-validator@0.7.6(hono@4.12.16)(zod@4.4.2)':
+  '@hono/zod-validator@0.7.6(hono@4.12.16)(zod@4.4.3)':
     dependencies:
       hono: 4.12.16
-      zod: 4.4.2
+      zod: 4.4.3
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.75.0(react@19.2.5))':
     dependencies:
@@ -11682,23 +11682,23 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
-  '@scalar/client-side-rendering@0.1.6':
+  '@scalar/client-side-rendering@0.1.7':
     dependencies:
-      '@scalar/types': 0.9.5
+      '@scalar/types': 0.9.6
 
-  '@scalar/helpers@0.5.5': {}
+  '@scalar/helpers@0.6.0': {}
 
-  '@scalar/hono-api-reference@0.10.13(hono@4.12.16)':
+  '@scalar/hono-api-reference@0.10.14(hono@4.12.16)':
     dependencies:
-      '@scalar/client-side-rendering': 0.1.6
+      '@scalar/client-side-rendering': 0.1.7
       hono: 4.12.16
 
-  '@scalar/types@0.9.5':
+  '@scalar/types@0.9.6':
     dependencies:
-      '@scalar/helpers': 0.5.5
+      '@scalar/helpers': 0.6.0
       nanoid: 5.1.11
       type-fest: 5.6.0
-      zod: 4.4.2
+      zod: 4.4.3
 
   '@sec-ant/readable-stream@0.4.1': {}
 
@@ -12412,7 +12412,7 @@ snapshots:
 
   '@tanstack/pacer-lite@0.1.1': {}
 
-  '@tanstack/query-core@5.100.8': {}
+  '@tanstack/query-core@5.100.9': {}
 
   '@tanstack/query-devtools@5.100.9': {}
 
@@ -12424,15 +12424,15 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@tanstack/react-query-devtools@5.100.9(@tanstack/react-query@5.100.8(react@19.2.5))(react@19.2.5)':
+  '@tanstack/react-query-devtools@5.100.9(@tanstack/react-query@5.100.9(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@tanstack/query-devtools': 5.100.9
-      '@tanstack/react-query': 5.100.8(react@19.2.5)
+      '@tanstack/react-query': 5.100.9(react@19.2.5)
       react: 19.2.5
 
-  '@tanstack/react-query@5.100.8(react@19.2.5)':
+  '@tanstack/react-query@5.100.9(react@19.2.5)':
     dependencies:
-      '@tanstack/query-core': 5.100.8
+      '@tanstack/query-core': 5.100.9
       react: 19.2.5
 
   '@tanstack/react-router-devtools@1.166.13(@tanstack/react-router@1.169.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@tanstack/router-core@1.169.1)(csstype@3.2.3)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
@@ -12551,10 +12551,10 @@ snapshots:
 
   '@tanstack/virtual-file-routes@1.161.7': {}
 
-  '@tanstack/vue-query@5.100.8(vue@3.5.33(typescript@5.9.3))':
+  '@tanstack/vue-query@5.100.9(vue@3.5.33(typescript@5.9.3))':
     dependencies:
       '@tanstack/match-sorter-utils': 8.19.4
-      '@tanstack/query-core': 5.100.8
+      '@tanstack/query-core': 5.100.9
       '@vue/devtools-api': 6.6.4
       vue: 3.5.33(typescript@5.9.3)
       vue-demi: 0.14.10(vue@3.5.33(typescript@5.9.3))
@@ -14592,7 +14592,7 @@ snapshots:
     dependencies:
       path-expression-matcher: 1.5.0
 
-  fast-xml-builder@1.1.5:
+  fast-xml-builder@1.1.8:
     dependencies:
       path-expression-matcher: 1.5.0
 
@@ -14605,7 +14605,7 @@ snapshots:
   fast-xml-parser@5.7.2:
     dependencies:
       '@nodable/entities': 2.1.0
-      fast-xml-builder: 1.1.5
+      fast-xml-builder: 1.1.8
       path-expression-matcher: 1.5.0
       strnum: 2.2.3
 
@@ -17934,9 +17934,9 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.4.2: {}
+  zod@4.4.3: {}
 
-  zustand@5.0.12(@types/react@19.2.14)(immer@11.1.4)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5)):
+  zustand@5.0.13(@types/react@19.2.14)(immer@11.1.4)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5)):
     optionalDependencies:
       '@types/react': 19.2.14
       immer: 11.1.4

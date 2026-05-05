@@ -22,7 +22,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@tanstack/vue-query": "^5.100.8",
+    "@tanstack/vue-query": "^5.100.9",
     "@unocss/reset": "^66.0.0",
     "@vueuse/core": "^13.0.0",
     "axios": "^1.16.0",
