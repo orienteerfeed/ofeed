@@ -1,7 +1,8 @@
 import { TFunction } from 'i18next';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Tabs } from '../../components/molecules';
 import { EventList } from './EventList';
+import { EventsOverview } from './EventsOverview';
 
 interface EventTabsProps {
   t: TFunction;
@@ -9,21 +10,14 @@ interface EventTabsProps {
 
 export const EventsTabs: React.FC<EventTabsProps> = ({ t }) => {
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const tabs = [
     {
-      value: 'all',
+      value: 'overview',
       label: (
         <span className="font-mono">
-          {t('Pages.Event.Tabs.All').toUpperCase()}
-        </span>
-      ),
-    },
-    {
-      value: 'ongoing',
-      label: (
-        <span className="font-mono">
-          {t('Pages.Event.Tabs.Today').toUpperCase()}
+          {t('Pages.Event.Tabs.Overview').toUpperCase()}
         </span>
       ),
     },
@@ -43,45 +37,53 @@ export const EventsTabs: React.FC<EventTabsProps> = ({ t }) => {
         </span>
       ),
     },
+    {
+      value: 'all',
+      label: (
+        <span className="font-mono">
+          {t('Pages.Event.Tabs.All').toUpperCase()}
+        </span>
+      ),
+    },
   ];
 
-  const handleValueChange = useCallback(() => {
+  const scrollToTabs = useCallback(() => {
     setTimeout(() => {
       if (tabsContainerRef.current) {
         const navbar = document.querySelector('header');
         const navbarHeight = navbar?.getBoundingClientRect().height || 64;
         const tabsOffset = 8;
 
-        // Calculate target position
         const tabsRect = tabsContainerRef.current.getBoundingClientRect();
         const currentScroll =
           window.pageYOffset || document.documentElement.scrollTop;
         const targetPosition =
           currentScroll + tabsRect.top - navbarHeight - tabsOffset;
 
-        // Get current position
-        const currentPosition =
-          window.pageYOffset || document.documentElement.scrollTop;
+        const positionDiff = Math.abs(currentScroll - targetPosition);
 
-        // Calculate difference between current and target position
-        const positionDiff = Math.abs(currentPosition - targetPosition);
-
-        // Only scroll if we're NOT at the correct position (difference greater than 20px)
         if (positionDiff > 20) {
           window.scrollTo({
             top: Math.max(0, targetPosition),
             behavior: 'smooth',
           });
         }
-        // If we're already at the correct position, do nothing
       }
     }, 50);
   }, []);
 
+  const handleValueChange = useCallback(
+    (newValue: string) => {
+      setActiveTab(newValue);
+      scrollToTabs();
+    },
+    [scrollToTabs]
+  );
+
   return (
     <div ref={tabsContainerRef}>
       <Tabs
-        defaultValue="all"
+        value={activeTab}
         onValueChange={handleValueChange}
         tabs={tabs}
         className="space-y-6"
@@ -89,10 +91,10 @@ export const EventsTabs: React.FC<EventTabsProps> = ({ t }) => {
         triggerClassName="font-mono"
         contentClassName="space-y-4"
       >
-        <EventList t={t} filter="all" />
-        <EventList t={t} filter="ongoing" />
+        <EventsOverview t={t} onTabChange={handleValueChange} />
         <EventList t={t} filter="upcoming" />
         <EventList t={t} filter="recent" />
+        <EventList t={t} filter="all" />
       </Tabs>
     </div>
   );

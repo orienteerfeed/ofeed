@@ -356,6 +356,7 @@
       },
       "Tabs": {
         "All": "Všechny",
+        "Overview": "Přehled",
         "Today": "Dnes",
         "Ongoing": "Probíhající",
         "Recent": "Nedávné",
@@ -371,6 +372,12 @@
         "Cat": "Kat",
         "Club": "Klub",
         "Live": "Živě"
+      },
+      "Overview": {
+        "NoEventsToday": "Dnes žádné akce",
+        "NoUpcoming": "Žádné plánované akce v příštích 14 dnech",
+        "NoRecent": "Žádné nedávné akce",
+        "SeeAll": "Zobrazit vše"
       },
       "Live": {
         "Title": "Živé přenosy",
@@ -897,7 +904,9 @@
         "ScrollMore": "Posuňte dolů pro více akcí",
         "AllLoaded": "Všechny akce načteny",
         "EventsCount": "{{count}} akcí",
+        "EventsCount_one": "{{count}} akce",
         "FoundCount": "Zobrazeno {{count}} akcí",
+        "FoundCount_one": "Zobrazena {{count}} akce",
         "LoadError": "Chyba při načítání akcí: {{message}}",
         "NoEvents": "Žádné akce nenalezeny",
         "NoEventsHint": "Zkuste změnit filtr nebo se podívejte později.",

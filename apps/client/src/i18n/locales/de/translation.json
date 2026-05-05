@@ -407,6 +407,21 @@
       }
     },
     "Event": {
+      "Tabs": {
+        "All": "Alle",
+        "Overview": "Übersicht",
+        "Today": "Heute",
+        "Ongoing": "Laufend",
+        "Recent": "Kürzlich",
+        "Past": "Vergangen",
+        "Upcoming": "Bevorstehend"
+      },
+      "Overview": {
+        "NoEventsToday": "Heute keine Veranstaltungen",
+        "NoUpcoming": "Keine kommenden Veranstaltungen in den nächsten 14 Tagen",
+        "NoRecent": "Keine aktuellen Veranstaltungen",
+        "SeeAll": "Alle anzeigen"
+      },
       "EntriesResults": {
         "Card": {
           "Title": "Veröffentlichung und Termine",

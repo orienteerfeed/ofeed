@@ -1,4 +1,3 @@
-import { config } from '@/config';
 import {
   Table,
   TableBody,
@@ -6,79 +5,36 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { cn, formatDate } from '@/lib/utils';
-import type { Country } from '@/types/country';
-import type {
-  EventDiscipline,
-  EventEntriesStatus,
-  EventFilter,
-  EventSport,
-  EventStatusPrimary,
-} from '@/types/event';
-import { gql } from '@apollo/client';
+import { config } from '@/config';
+import { cn } from '@/lib/utils';
+import type { EventFilter } from '@/types/event';
 import { useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import { LayoutGrid, List, Loader2, Map } from 'lucide-react';
 import {
-  type FC,
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  type FC,
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { Button } from '../../components/atoms';
 import { EventCard } from './EventCard';
 import { EventMapView } from './EventMapView';
 import { EventTableRow } from './EventTableRow';
+import {
+  EVENTS_QUERY,
+  convertGraphQLEventToHomeEvent,
+  type EventsData,
+  type EventsVariables,
+} from './eventsGql';
 import type { HomeEventListItem } from './types';
 
 interface EventListProps {
   t: TFunction;
   filter: EventFilter;
-}
-
-interface GraphQLEvent {
-  id: string;
-  name: string;
-  organizer?: string | null;
-  date: string; // timestamp as a string
-  location?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  featuredImage?: string | null;
-  country?: {
-    countryCode: string;
-    countryName: string;
-  } | null;
-  sport: EventSport;
-  discipline: EventDiscipline;
-  relay: boolean;
-  statusSummary: {
-    primary: EventStatusPrimary;
-    entries: EventEntriesStatus;
-    entriesConfigured: boolean;
-  };
-}
-
-interface EventsData {
-  events: {
-    edges: {
-      node: GraphQLEvent;
-      cursor: string;
-    }[];
-    pageInfo: {
-      hasNextPage: boolean;
-      endCursor: string | null;
-    };
-  };
-}
-
-interface EventsVariables {
-  filter: string | null;
-  first: number;
-  after?: string | null;
 }
 
 type ViewMode = 'card' | 'list' | 'map';
@@ -107,95 +63,6 @@ function resolveInitialViewMode(mapViewEnabled: boolean): ViewMode {
 
   return DEFAULT_VIEW_MODE;
 }
-
-const EVENTS_QUERY = gql`
-  query Events($filter: EventFilter, $first: Int!, $after: String) {
-    events(input: { filter: $filter, first: $first, after: $after }) {
-      edges {
-        node {
-          id
-          name
-          organizer
-          date
-          location
-          latitude
-          longitude
-          featuredImage
-          country {
-            countryCode
-            countryName
-          }
-          sport {
-            id
-            name
-          }
-          relay
-          discipline
-          statusSummary {
-            primary
-            entries
-            entriesConfigured
-          }
-        }
-        cursor
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-`;
-
-const toOptionalCountry = (
-  country: GraphQLEvent['country']
-): Country | undefined => {
-  if (!country?.countryCode || !country.countryName) {
-    return undefined;
-  }
-
-  return {
-    countryCode: country.countryCode,
-    countryName: country.countryName,
-  };
-};
-
-const convertGraphQLEventToHomeEvent = (
-  graphqlEvent: GraphQLEvent
-): HomeEventListItem => {
-  const slug = graphqlEvent.name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
-
-  const formattedDate = formatDate(graphqlEvent.date);
-  const country = toOptionalCountry(graphqlEvent.country);
-
-  return {
-    id: graphqlEvent.id,
-    slug,
-    name: graphqlEvent.name,
-    date: formattedDate,
-    ...(graphqlEvent.organizer ? { organizer: graphqlEvent.organizer } : {}),
-    ...(graphqlEvent.location ? { location: graphqlEvent.location } : {}),
-    ...(graphqlEvent.featuredImage
-      ? { featuredImage: graphqlEvent.featuredImage }
-      : {}),
-    ...(country ? { country } : {}),
-    ...(typeof graphqlEvent.latitude === 'number'
-      ? { latitude: graphqlEvent.latitude }
-      : {}),
-    ...(typeof graphqlEvent.longitude === 'number'
-      ? { longitude: graphqlEvent.longitude }
-      : {}),
-    sport: graphqlEvent.sport,
-    discipline: graphqlEvent.discipline,
-    status: graphqlEvent.statusSummary.primary,
-    entriesStatus: graphqlEvent.statusSummary.entries,
-    entriesConfigured: graphqlEvent.statusSummary.entriesConfigured,
-    relay: graphqlEvent.relay,
-  };
-};
 
 function mapFilterToGraphQL(filter: EventFilter): string | null {
   switch (filter) {
@@ -551,7 +418,7 @@ export const EventList: FC<EventListProps> = ({ t, filter }) => {
     <div ref={scrollContainerRef} className="space-y-6">
       {/* Display switch */}
       <div className="flex justify-between items-center">
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs font-mono text-muted-foreground">
           {t('Pages.Home.Infinite.EventsCount', {
             count: loadedEvents.length,
           })}
@@ -685,11 +552,11 @@ export const EventList: FC<EventListProps> = ({ t, filter }) => {
 
       {/* End of list */}
       {!hasMore && loadedEvents.length > 0 && (
-        <div className="flex flex-col items-center justify-center gap-1 py-10 text-muted-foreground">
-          <p className="text-sm font-medium">
+        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+          <p className="text-sm font-mono font-medium">
             {t('Pages.Home.Infinite.AllLoaded')}
           </p>
-          <p className="text-xs">
+          <p className="text-xs font-mono">
             {t('Pages.Home.Infinite.FoundCount', {
               count: loadedEvents.length,
             })}
@@ -699,11 +566,13 @@ export const EventList: FC<EventListProps> = ({ t, filter }) => {
 
       {/* Empty state */}
       {loadedEvents.length === 0 && !loading && (
-        <div className="text-center py-12 space-y-2 text-muted-foreground">
-          <p className="text-sm font-medium">
+        <div className="text-center py-12 space-y-1 text-muted-foreground">
+          <p className="text-sm font-mono font-medium">
             {t('Pages.Home.Infinite.NoEvents')}
           </p>
-          <p className="text-xs">{t('Pages.Home.Infinite.NoEventsHint')}</p>
+          <p className="text-xs font-mono">
+            {t('Pages.Home.Infinite.NoEventsHint')}
+          </p>
         </div>
       )}
     </div>

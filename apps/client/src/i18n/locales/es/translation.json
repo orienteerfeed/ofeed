@@ -356,6 +356,7 @@
       },
       "Tabs": {
         "All": "Todo",
+        "Overview": "Resumen",
         "Today": "Hoy",
         "Ongoing": "En curso",
         "Recent": "Recientes",
@@ -371,6 +372,12 @@
         "Cat": "Cat",
         "Club": "Club",
         "Live": "En vivo"
+      },
+      "Overview": {
+        "NoEventsToday": "No hay eventos hoy",
+        "NoUpcoming": "No hay eventos próximos en los próximos 14 días",
+        "NoRecent": "No hay eventos recientes",
+        "SeeAll": "Ver todos"
       },
       "Live": {
         "Title": "Feed en vivo",
@@ -896,7 +903,9 @@
         "ScrollMore": "Desplázate hacia abajo para más eventos",
         "AllLoaded": "Todos los eventos cargados",
         "EventsCount": "{{count}} eventos",
+        "EventsCount_one": "{{count}} evento",
         "FoundCount": "Encontraste {{count}} eventos",
+        "FoundCount_one": "Encontraste {{count}} evento",
         "LoadError": "Error al cargar eventos: {{message}}",
         "NoEvents": "No se encontraron eventos",
         "NoEventsHint": "Prueba a cambiar el filtro o vuelve más tarde.",

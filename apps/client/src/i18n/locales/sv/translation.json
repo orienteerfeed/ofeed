@@ -356,6 +356,7 @@
       },
       "Tabs": {
         "All": "Allt",
+        "Overview": "Översikt",
         "Today": "Idag",
         "Ongoing": "Pågående",
         "Recent": "Senaste",
@@ -371,6 +372,12 @@
         "Cat": "Kat",
         "Club": "Klubb",
         "Live": "Live"
+      },
+      "Overview": {
+        "NoEventsToday": "Inga evenemang idag",
+        "NoUpcoming": "Inga kommande evenemang inom 14 dagar",
+        "NoRecent": "Inga senaste evenemang",
+        "SeeAll": "Visa alla"
       },
       "Live": {
         "Title": "Direktsändning",
@@ -997,7 +1004,9 @@
         "ScrollMore": "Rulla nedåt för fler tävlingar",
         "AllLoaded": "Alla tävlingar har hämtats",
         "EventsCount": "{{count}} tävlingar",
+        "EventsCount_one": "{{count}} tävling",
         "FoundCount": "Du hittade {{count}} tävlingar",
+        "FoundCount_one": "Du hittade {{count}} tävling",
         "LoadError": "Fel vid inläsning av tävlingar: {{message}}",
         "NoEvents": "Inga tävlingar hittades",
         "NoEventsHint": "Prova att byta filter eller kom tillbaka senare."

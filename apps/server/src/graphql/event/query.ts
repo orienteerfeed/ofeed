@@ -101,11 +101,16 @@ export const events = async (_: unknown, { input = {} }: { input?: EventsInput }
 
   try {
     // Get events with pagination
+    const orderBy: Prisma.EventOrderByWithRelationInput[] =
+      filter === 'UPCOMING' || filter === 'TODAY'
+        ? [{ date: 'asc' }, { id: 'asc' }]
+        : [{ date: 'desc' }, { id: 'desc' }];
+
     const events = await prisma.event.findMany({
       where,
       take: first + 1, // Get one extra to check if there's more
       ...cursorClause,
-      orderBy: [{ date: 'asc' }, { id: 'asc' }],
+      orderBy,
       include: {
         sport: true,
         country: true,

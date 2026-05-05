@@ -356,6 +356,7 @@
       },
       "Tabs": {
         "All": "All",
+        "Overview": "Overview",
         "Today": "Today",
         "Ongoing": "Ongoing",
         "Recent": "Recent",
@@ -371,6 +372,12 @@
         "Cat": "Cat",
         "Club": "Club",
         "Live": "Live"
+      },
+      "Overview": {
+        "NoEventsToday": "No events today",
+        "NoUpcoming": "No upcoming events in the next 14 days",
+        "NoRecent": "No recent events",
+        "SeeAll": "See all"
       },
       "Live": {
         "Title": "Live Feed",
@@ -896,7 +903,9 @@
         "ScrollMore": "Scroll down for more events",
         "AllLoaded": "All events loaded",
         "EventsCount": "{{count}} events",
+        "EventsCount_one": "{{count}} event",
         "FoundCount": "You found {{count}} events",
+        "FoundCount_one": "You found {{count}} event",
         "LoadError": "Error loading events: {{message}}",
         "NoEvents": "No events found",
         "NoEventsHint": "Try changing the filter or check back later.",
