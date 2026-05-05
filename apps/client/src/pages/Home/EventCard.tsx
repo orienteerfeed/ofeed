@@ -1,11 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { config } from '@/config';
+import { cn } from '@/lib/utils';
 import { Link } from '@tanstack/react-router';
 import { t } from 'i18next';
 import { Calendar, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
+import {
+  getEventLocationLabel,
+  getEventStatusClassName,
+} from './eventListUtils';
 import type { HomeEventListItem } from './types';
 
 interface EventCardProps {
@@ -13,15 +17,7 @@ interface EventCardProps {
 }
 
 export const EventCard = ({ event }: EventCardProps) => {
-  const statusColors: Record<typeof event.status, string> = {
-    LIVE: 'bg-primary text-primary-foreground',
-    UPCOMING: 'bg-secondary text-secondary-foreground',
-    DONE: 'bg-muted text-muted-foreground',
-    DRAFT: 'bg-muted text-muted-foreground',
-  };
-  const locationLabel =
-    [event.location, event.country?.countryName].filter(Boolean).join(', ') ||
-    '—';
+  const locationLabel = getEventLocationLabel(event);
 
   const getRandomEventPlaceholder = () => {
     const randomNum = Math.floor(Math.random() * 5) + 1; // 1-5
@@ -53,7 +49,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           <Badge
             className={cn(
               'absolute top-4 left-4 font-mono text-xs',
-              statusColors[event.status]
+              getEventStatusClassName(event.status)
             )}
           >
             {t(`Pages.Event.Detail.Status.Primary.${event.status}`)}

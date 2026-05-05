@@ -1,50 +1,28 @@
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { config } from '@/config';
-import { cn } from '@/lib/utils';
 import { useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
-import { LayoutGrid, List, Loader2, Map } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, type FC } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { Button } from '../../components/atoms';
-import { EventCard } from './EventCard';
-import { EventMapView } from './EventMapView';
-import { EventTableRow } from './EventTableRow';
+import {
+  EventCollection,
+  EventListEmptyState,
+  EventListEndState,
+  EventListInitialLoadingState,
+  EventListPaginationState,
+  EventViewModeSwitcher,
+} from './EventListDisplay';
+import {
+  appendUniqueEvents,
+  mapGraphQLEventsToHomeEvents,
+  mergeUniqueEvents,
+} from './eventListUtils';
 import {
   EVENTS_QUERY,
-  convertGraphQLEventToHomeEvent,
   type EventsData,
   type EventsVariables,
 } from './eventsGql';
 import type { HomeEventListItem } from './types';
-
-const VIEW_MODE_KEY = 'homeEventsViewMode';
-const DEFAULT_VIEW_MODE: Exclude<ViewMode, 'map'> = 'card';
-
-type ViewMode = 'card' | 'list' | 'map';
-
-function isViewMode(value: string | null): value is ViewMode {
-  return value === 'card' || value === 'list' || value === 'map';
-}
-
-function resolveInitialViewMode(mapViewEnabled: boolean): ViewMode {
-  try {
-    const stored = localStorage.getItem(VIEW_MODE_KEY);
-    if (isViewMode(stored)) {
-      if (!mapViewEnabled && stored === 'map') return DEFAULT_VIEW_MODE;
-      return stored;
-    }
-  } catch {
-    // ignore storage errors
-  }
-  return DEFAULT_VIEW_MODE;
-}
+import { useEventListViewMode } from './useEventListViewMode';
 
 interface EventsOverviewProps {
   t: TFunction;
@@ -60,9 +38,7 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
     rootMargin: '50px',
   });
 
-  const [viewMode, setViewMode] = useState<ViewMode>(() =>
-    resolveInitialViewMode(mapViewEnabled)
-  );
+  const [viewMode, setViewMode] = useEventListViewMode(mapViewEnabled);
 
   // Persisted recent events for infinite scroll
   const [recentEvents, setRecentEvents] = useState<HomeEventListItem[]>([]);
@@ -107,15 +83,11 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
   useEffect(() => {
     if (!recentData?.events) return;
 
-    const newEvents = recentData.events.edges.map(e =>
-      convertGraphQLEventToHomeEvent(e.node)
-    );
+    const newEvents = mapGraphQLEventsToHomeEvents(recentData.events);
 
     setRecentEvents(prev => {
       if (!recentEndCursor) return newEvents;
-      const existingIds = new Set(prev.map(e => e.id));
-      const unique = newEvents.filter(e => !existingIds.has(e.id));
-      return unique.length === 0 ? prev : [...prev, ...unique];
+      return appendUniqueEvents(prev, newEvents);
     });
 
     setRecentEndCursor(recentData.events.pageInfo.endCursor);
@@ -123,18 +95,6 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
     recentEndCursorRef.current = recentData.events.pageInfo.endCursor;
     recentHasMoreRef.current = recentData.events.pageInfo.hasNextPage;
   }, [recentData, recentEndCursor]);
-
-  useEffect(() => {
-    if (!mapViewEnabled && viewMode === 'map') setViewMode(DEFAULT_VIEW_MODE);
-  }, [mapViewEnabled, viewMode]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(VIEW_MODE_KEY, viewMode);
-    } catch {
-      // ignore storage errors
-    }
-  }, [viewMode]);
 
   const fetchMoreRecent = useCallback(async () => {
     const cursor = recentEndCursorRef.current;
@@ -205,18 +165,15 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
     void fetchMoreRecent();
   }, [viewMode, recentLoading, fetchMoreRecent]);
 
-  const todayEvents =
-    todayData?.events.edges.map(e => convertGraphQLEventToHomeEvent(e.node)) ??
-    [];
-  const upcomingEvents =
-    upcomingData?.events.edges.map(e =>
-      convertGraphQLEventToHomeEvent(e.node)
-    ) ?? [];
+  const todayEvents = mapGraphQLEventsToHomeEvents(todayData?.events);
+  const upcomingEvents = mapGraphQLEventsToHomeEvents(upcomingData?.events);
 
   // Flat merged list: today → upcoming → recent (deduplicated)
-  const allEvents = [...todayEvents, ...upcomingEvents, ...recentEvents].filter(
-    (event, idx, self) => self.findIndex(e => e.id === event.id) === idx
-  );
+  const allEvents = mergeUniqueEvents([
+    ...todayEvents,
+    ...upcomingEvents,
+    ...recentEvents,
+  ]);
 
   const isInitialLoading =
     (todayLoading && todayEvents.length === 0) ||
@@ -251,161 +208,44 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
           )}
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'card' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('card')}
-            className="gap-2"
-          >
-            <LayoutGrid className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {t('Pages.Event.Tabs.Cards')}
-            </span>
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('list')}
-            className="gap-2"
-          >
-            <List className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {t('Pages.Event.Tabs.List')}
-            </span>
-          </Button>
-          {mapViewEnabled && (
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('map')}
-              className="gap-2"
-            >
-              <Map className="w-4 h-4" />
-              <span className="hidden sm:inline">
-                {t('Pages.Event.Tabs.Map', { defaultValue: 'Map' })}
-              </span>
-            </Button>
-          )}
-        </div>
+        <EventViewModeSwitcher
+          mapViewEnabled={mapViewEnabled}
+          onViewModeChange={setViewMode}
+          t={t}
+          viewMode={viewMode}
+        />
       </div>
 
       {/* Initial loading spinner */}
       {isInitialLoading && allEvents.length === 0 && (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <EventListInitialLoadingState t={t} />
       )}
 
       {/* Events: card / list / map */}
-      {viewMode === 'card' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allEvents.map((event, index) => (
-            <div
-              key={event.id}
-              data-event-id={event.id}
-              className={cn(
-                'animate-in fade-in-0',
-                index >= allEvents.length - 12 && 'duration-500'
-              )}
-              style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
-            >
-              <EventCard event={event} />
-            </div>
-          ))}
-        </div>
-      ) : viewMode === 'list' ? (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[300px]">
-                  {t('Pages.Event.Tables.Name')}
-                </TableHead>
-                <TableHead className="w-[120px]">
-                  {t('Pages.Event.Tables.Date')}
-                </TableHead>
-                <TableHead className="w-[150px]">
-                  {t('Pages.Event.Tables.Location')}
-                </TableHead>
-                <TableHead className="w-[100px]">
-                  {t('Pages.Event.Tables.Country')}
-                </TableHead>
-                <TableHead className="w-[100px]">
-                  {t('Pages.Event.Tables.Sport')}
-                </TableHead>
-                <TableHead className="w-[100px]">
-                  {t('Pages.Event.Tables.Status')}
-                </TableHead>
-                <TableHead className="w-[100px]">
-                  {t('Pages.Event.Tables.Entries')}
-                </TableHead>
-                <TableHead className="w-[120px] text-right">
-                  {t('Pages.Event.Tables.Actions')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allEvents.map((event, index) => (
-                <EventTableRow
-                  key={event.id}
-                  t={t}
-                  event={event}
-                  className={cn(
-                    'animate-in fade-in-0',
-                    index >= allEvents.length - 12 && 'duration-300'
-                  )}
-                  style={{ animationDelay: `${Math.min(index * 20, 200)}ms` }}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : mapViewEnabled ? (
-        <EventMapView events={allEvents} t={t} />
-      ) : null}
+      <EventCollection
+        events={allEvents}
+        mapViewEnabled={mapViewEnabled}
+        t={t}
+        viewMode={viewMode}
+      />
 
       {/* Infinite scroll sentinel */}
       {recentHasMore && viewMode !== 'map' && (
-        <div
-          ref={sentinelRef}
-          className="flex flex-col items-center justify-center py-10 text-muted-foreground"
-        >
-          {isLoadingMore ? (
-            <div className="flex items-center gap-2 text-sm">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>{t('Pages.Home.Infinite.LoadingMore')}</span>
-            </div>
-          ) : (
-            <div className="text-center text-sm">
-              <span>{t('Pages.Home.Infinite.ScrollMore')}</span>
-            </div>
-          )}
-        </div>
+        <EventListPaginationState
+          isLoadingMore={isLoadingMore}
+          sentinelRef={sentinelRef}
+          t={t}
+        />
       )}
 
       {/* End of list */}
       {!recentHasMore && allEvents.length > 0 && viewMode !== 'map' && (
-        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-          <p className="text-sm font-mono font-medium">
-            {t('Pages.Home.Infinite.AllLoaded')}
-          </p>
-          <p className="text-xs font-mono">
-            {t('Pages.Home.Infinite.FoundCount', { count: allEvents.length })}
-          </p>
-        </div>
+        <EventListEndState count={allEvents.length} t={t} />
       )}
 
       {/* Empty state */}
       {allEvents.length === 0 && !isInitialLoading && (
-        <div className="text-center py-12 space-y-1 text-muted-foreground">
-          <p className="text-sm font-mono font-medium">
-            {t('Pages.Home.Infinite.NoEvents')}
-          </p>
-          <p className="text-xs font-mono">
-            {t('Pages.Home.Infinite.NoEventsHint')}
-          </p>
-        </div>
+        <EventListEmptyState t={t} />
       )}
     </div>
   );

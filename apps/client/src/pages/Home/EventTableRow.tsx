@@ -1,10 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { cn } from '@/lib/utils'; // Import formatDate
+import { cn } from '@/lib/utils';
 import { Link } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
 import { Calendar, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
+import {
+  getEventLocationLabel,
+  getEventStatusClassName,
+} from './eventListUtils';
 import type { HomeEventListItem } from './types';
 
 interface EventTableRowProps {
@@ -20,15 +24,7 @@ export function EventTableRow({
   className,
   style,
 }: EventTableRowProps) {
-  const statusColors: Record<typeof event.status, string> = {
-    LIVE: 'bg-primary text-primary-foreground',
-    UPCOMING: 'bg-secondary text-secondary-foreground',
-    DONE: 'bg-muted text-muted-foreground',
-    DRAFT: 'bg-muted text-muted-foreground',
-  };
-  const locationLabel =
-    [event.location, event.country?.countryName].filter(Boolean).join(', ') ||
-    '—';
+  const locationLabel = getEventLocationLabel(event);
 
   return (
     <TableRow
@@ -83,7 +79,12 @@ export function EventTableRow({
       </TableCell>
 
       <TableCell>
-        <Badge className={cn('font-mono text-xs', statusColors[event.status])}>
+        <Badge
+          className={cn(
+            'font-mono text-xs',
+            getEventStatusClassName(event.status)
+          )}
+        >
           {t(`Pages.Event.Detail.Status.Primary.${event.status}`)}
         </Badge>
       </TableCell>
