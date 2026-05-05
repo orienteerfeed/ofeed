@@ -8983,7 +8983,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"operationName\": \"GraphqlOrganisations\",\n  \"query\": \"query GraphqlOrganisations($eventId: String!) { organisations(eventId: $eventId) { name competitors } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\"\n  }\n}",
+                  "raw": "{\n  \"operationName\": \"GraphqlOrganisationNames\",\n  \"query\": \"query GraphqlOrganisationNames($eventId: String!) { organisationNames(eventId: $eventId) { name competitors } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\"\n  }\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -9004,7 +9004,7 @@
                       "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
                       "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
                       "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
-                      "const organisations = body.data.organisations;",
+                      "const organisations = body.data.organisationNames;",
                       "pm.expect(organisations).to.be.an('array').and.not.empty;",
                       "pm.expect(organisations.some(org => org.name === requireCollectionVar('graphqlOrganisation'))).to.eql(true);",
                       ""
@@ -9031,7 +9031,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"operationName\": \"GraphqlSearchOrganisations\",\n  \"query\": \"query GraphqlSearchOrganisations($eventId: String!, $q: String!) { searchOrganisations(eventId: $eventId, q: $q) { name competitors } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"q\": \"{{graphqlSearchOrganisationQuery}}\"\n  }\n}",
+                  "raw": "{\n  \"operationName\": \"GraphqlSearchOrganisationNames\",\n  \"query\": \"query GraphqlSearchOrganisationNames($eventId: String!, $q: String!) { searchOrganisationNames(eventId: $eventId, q: $q) { name competitors } }\",\n  \"variables\": {\n    \"eventId\": \"{{eventId}}\",\n    \"q\": \"{{graphqlSearchOrganisationQuery}}\"\n  }\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -9052,7 +9052,7 @@
                       "pm.test('GraphQL response has no errors', function () { pm.expect(body.errors, JSON.stringify(body.errors || null)).to.eql(undefined); });",
                       "pm.expect(body.data, 'body.data should exist').to.be.an('object');",
                       "function requireCollectionVar(name) { const value = pm.collectionVariables.get(name); pm.expect(value, `${name} should be set`).to.be.a('string').and.not.eql(''); return value; }",
-                      "const organisations = body.data.searchOrganisations;",
+                      "const organisations = body.data.searchOrganisationNames;",
                       "pm.expect(organisations).to.be.an('array');",
                       "pm.expect(organisations.some(org => org.name === requireCollectionVar('graphqlOrganisation'))).to.eql(true);",
                       ""

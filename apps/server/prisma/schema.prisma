@@ -156,6 +156,8 @@ model Event {
   protocols                    Protocol[]
   eventPasswords               EventPassword[]
   externalResultsSync          EventExternalResultsSyncState?
+  organisations                Organisation[]
+  importStates                 EventImportState[]
 
   @@index([externalSource, externalEventId])
   @@fulltext([name, organizer, location])
@@ -184,33 +186,36 @@ model Class {
 }
 
 model Competitor {
-  id                    Int          @id @default(autoincrement()) @db.UnsignedInt
-  class                 Class        @relation(fields: [classId], references: [id])
-  classId               Int          @db.UnsignedInt
+  id                    Int           @id @default(autoincrement()) @db.UnsignedInt
+  class                 Class         @relation(fields: [classId], references: [id])
+  classId               Int           @db.UnsignedInt
   firstname             String
   lastname              String
   bibNumber             Int?
-  nationality           String?      @db.Char(3)
-  registration          String       @db.VarChar(10)
-  license               String?      @db.Char(1)
-  rankingPoints         Int?         @db.UnsignedInt
-  rankingReferenceValue Int?         @db.UnsignedInt
-  organisation          String?
-  shortName             String?      @db.VarChar(10)
-  card                  Int?         @db.UnsignedInt
+  nationality           String?       @db.Char(3)
+  registration          String        @db.VarChar(10)
+  license               String?       @db.Char(1)
+  rankingPoints         Int?          @db.UnsignedInt
+  rankingReferenceValue Int?          @db.UnsignedInt
+  organisationId        Int?          @db.UnsignedInt
+  organisation          Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  card                  Int?          @db.UnsignedInt
   startTime             DateTime?
   finishTime            DateTime?
   time                  Int?
-  team                  Team?        @relation(fields: [teamId], references: [id])
-  teamId                Int?         @db.UnsignedInt
-  leg                   Int?         @db.UnsignedInt
-  status                ResultStatus @default(Inactive)
-  lateStart             Boolean      @default(false)
+  team                  Team?         @relation(fields: [teamId], references: [id])
+  teamId                Int?          @db.UnsignedInt
+  leg                   Int?          @db.UnsignedInt
+  status                ResultStatus  @default(Inactive)
+  lateStart             Boolean       @default(false)
   note                  String?
-  updatedAt             DateTime     @default(now()) @updatedAt
+  updatedAt             DateTime      @default(now()) @updatedAt
   externalId            String?
   protocols             Protocol[]
   splits                Split[]
+
+  @@index([organisationId])
+  @@unique([classId, externalId], map: "Competitor_class_external_uq")
 }
 
 model Split {
@@ -219,17 +224,42 @@ model Split {
   competitor   Competitor @relation(fields: [competitorId], references: [id])
   controlCode  Int
   time         Int?
+
+  @@index([competitorId], map: "Split_competitor_idx")
 }
 
 model Team {
-  id           Int          @id @default(autoincrement()) @db.UnsignedInt
-  class        Class        @relation(fields: [classId], references: [id])
-  classId      Int          @db.UnsignedInt
-  name         String
-  organisation String?
-  shortName    String?      @db.VarChar(10)
-  bibNumber    Int
-  competitors  Competitor[]
+  id             Int           @id @default(autoincrement()) @db.UnsignedInt
+  class          Class         @relation(fields: [classId], references: [id])
+  classId        Int           @db.UnsignedInt
+  name           String
+  organisationId Int?          @db.UnsignedInt
+  organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  bibNumber      Int
+  externalId     String?
+  competitors    Competitor[]
+
+  @@index([organisationId])
+  @@unique([classId, externalId], map: "Team_class_external_uq")
+}
+
+model Organisation {
+  id          Int          @id @default(autoincrement()) @db.UnsignedInt
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  externalId  String?      @db.VarChar(64)
+  name        String       @db.VarChar(191)
+  nationality String?      @db.Char(3)
+  shortName   String?      @db.VarChar(20)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  competitors Competitor[]
+  teams       Team[]
+
+  @@unique([eventId, externalId], map: "Organisation_event_external_id_uq")
+  @@unique([eventId, name], map: "Organisation_event_name_uq")
+  @@index([eventId])
+  @@index([eventId, shortName])
 }
 
 model Protocol {
@@ -245,6 +275,8 @@ model Protocol {
   author        User         @relation(fields: [authorId], references: [id])
   authorId      Int          @db.UnsignedInt
   createdAt     DateTime     @default(now())
+
+  @@index([competitorId, createdAt], map: "Protocol_competitor_created_idx")
 }
 
 model EventPassword {
@@ -271,6 +303,29 @@ model EventExternalResultsSyncState {
   updatedAt              DateTime                  @updatedAt
 
   @@index([provider, lastStatus])
+}
+
+model EventImportState {
+  id                     Int              @id @default(autoincrement()) @db.UnsignedInt
+  event                  Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId                String
+  sourceType             ImportSourceType
+  payloadType            String           @db.VarChar(32)
+  rawHash                String           @db.Char(64)
+  creator                String?          @db.VarChar(128)
+  externalCreateTime     DateTime?
+  formatVersion          String?          @db.VarChar(16)
+  externalStatus         String?          @db.VarChar(32)
+  rootElement            String?          @db.VarChar(64)
+  lastSuccessfulImportAt DateTime?
+  lastSkippedAt          DateTime?
+  successCount           Int              @default(0) @db.UnsignedInt
+  skippedCount           Int              @default(0) @db.UnsignedInt
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  @@unique([eventId, sourceType, payloadType], map: "event_import_state_event_source_payload_uq")
+  @@index([eventId], map: "event_import_state_event_idx")
 }
 
 model OAuthClient {
@@ -482,4 +537,8 @@ enum ExternalResultsSyncStatus {
   OFFICIAL
   NOT_FOUND
   ERROR
+}
+
+enum ImportSourceType {
+  IOF_XML
 }
