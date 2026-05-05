@@ -1,5 +1,19 @@
 # React + TypeScript + Vite
 
+## Development
+
+Run from `apps/client`:
+
+```bash
+pnpm dev
+```
+
+On Windows shells that do not support POSIX-style environment assignments, use:
+
+```powershell
+pnpm dev:win
+```
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

@@ -84,10 +84,23 @@ pnpm db:migrate
 pnpm dev
 ```
 
+On Windows shells that do not support POSIX-style environment assignments, use
+the Windows aliases:
+
+```powershell
+pnpm dev:win
+```
+
 Run the board only when needed:
 
 ```bash
 pnpm dev:board
+```
+
+On Windows:
+
+```powershell
+pnpm dev:board:win
 ```
 
 Default local URLs:
@@ -105,7 +118,9 @@ Default local URLs:
 
 - `pnpm setup:dev` - bootstrap local dev environment
 - `pnpm dev` - run client + server in parallel via Turborepo
+- `pnpm dev:win` - Windows-friendly client + server dev command
 - `pnpm dev:board` - run only the board app; it is intentionally excluded from `pnpm dev`
+- `pnpm dev:board:win` - Windows-friendly board dev command
 - `pnpm build` - build all workspace packages/apps
 - `pnpm lint` - lint all workspace packages/apps
 - `pnpm format` - format repo files with Prettier
@@ -124,6 +139,7 @@ Default local URLs:
 ### Server (`apps/server`)
 
 - `pnpm dev` / `pnpm start:dev` - run API in watch mode
+- `pnpm dev:win` / `pnpm start:dev:win` - Windows-friendly API watch mode
 - `pnpm build` - build `@repo/shared` for Node and compile the server to `dist/index.js`
 - `pnpm start:dist` - run the built server from `dist/index.js`
 - `pnpm test` / `pnpm test:watch`
@@ -141,6 +157,7 @@ Default local URLs:
 ### Client (`apps/client`)
 
 - `pnpm dev`
+- `pnpm dev:win`
 - `pnpm build`
 - `pnpm test` / `pnpm test:watch`
 - `pnpm lint` / `pnpm lint:fix`
@@ -149,6 +166,7 @@ Default local URLs:
 ### Board (`apps/board`)
 
 - `pnpm dev`
+- `pnpm dev:win`
 - `pnpm build`
 - `pnpm test:unit`
 - `pnpm lint` / `pnpm lint:fix`

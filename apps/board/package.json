@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:win": "vite",
     "build": "pnpm run type-check && pnpm run build-only",
     "preview": "vite preview",
     "test:unit": "vitest run",

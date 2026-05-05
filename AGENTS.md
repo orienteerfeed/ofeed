@@ -59,6 +59,7 @@ Run from the repository root unless noted otherwise.
 - `pnpm install`: install all workspace dependencies.
 - `pnpm setup:dev`: bootstrap local development.
 - `pnpm dev`: run workspace dev tasks in parallel.
+- `pnpm dev:win`: Windows-friendly variant of `pnpm dev`.
 - `pnpm build`: build all workspaces.
 - `pnpm lint`: lint all workspaces.
 - `pnpm format`: format the repo with Prettier.
@@ -76,7 +77,9 @@ Run from the repository root unless noted otherwise.
   MariaDB/MySQL for backend work.
 
 Prefer `pnpm --filter ./apps/client ...` or `pnpm --filter ./apps/server ...`
-when validating a single workspace.
+when validating a single workspace. Use the `:win` script variants on Windows
+shells that do not support POSIX-style environment assignments such as
+`NODE_ENV=development`.
 
 ## Style and Naming
 

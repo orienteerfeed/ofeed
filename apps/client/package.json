@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "CI=1 vite",
+    "dev:win": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

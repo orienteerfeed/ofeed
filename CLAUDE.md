@@ -21,6 +21,7 @@ pnpm setup:dev        # install deps + copy .env templates
 pnpm db:generate      # generate Prisma client
 pnpm db:migrate       # run migrations
 pnpm dev              # client :3000 + server :3001
+pnpm dev:win          # Windows-friendly client + server dev command
 ```
 
 ## Key Commands
@@ -33,6 +34,9 @@ pnpm format           # Prettier
 pnpm test             # all tests (Turbo)
 pnpm clean            # remove dist/build artifacts
 ```
+
+Use `dev:win` variants on Windows shells that do not support POSIX-style
+environment assignments such as `NODE_ENV=development PORT=3001`.
 
 Workspace filters: `pnpm --filter client <cmd>` / `pnpm --filter server <cmd>`
 

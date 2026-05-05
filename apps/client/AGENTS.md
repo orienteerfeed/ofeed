@@ -84,6 +84,7 @@ render page components from `src/pages`.
 Run from `apps/client` or from the repo root with `pnpm --filter ./apps/client`.
 
 - `pnpm dev`
+- `pnpm dev:win` for Windows shells that do not support `CI=1 pnpm dev`
 - `pnpm build`
 - `pnpm lint`
 - `pnpm lint:fix`

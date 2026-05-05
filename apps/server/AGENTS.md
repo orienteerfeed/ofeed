@@ -64,7 +64,9 @@ This file applies to `apps/server`.
 Run from `apps/server` or from the repo root with `pnpm --filter ./apps/server`.
 
 - `pnpm dev`
+- `pnpm dev:win` for Windows shells that do not support `NODE_ENV=... PORT=...`
 - `pnpm start:dev`
+- `pnpm start:dev:win`
 - `pnpm build`
 - `pnpm type-check`
 - `pnpm lint`

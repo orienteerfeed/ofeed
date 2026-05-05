@@ -7,7 +7,9 @@
   "scripts": {
     "setup:dev": "node scripts/setup-dev.mjs",
     "dev": "turbo run dev --filter=ofeed-client --filter=ofeed-server",
+    "dev:win": "turbo run dev:win --filter=ofeed-client --filter=ofeed-server",
     "dev:board": "pnpm --filter ./apps/board dev",
+    "dev:board:win": "pnpm --filter ./apps/board dev:win",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "format": "prettier --write .",

@@ -26,6 +26,10 @@
       "cache": false,
       "persistent": true
     },
+    "dev:win": {
+      "cache": false,
+      "persistent": true
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**"]

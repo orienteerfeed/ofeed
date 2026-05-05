@@ -33,10 +33,22 @@ pnpm dev
 pnpm dev:board
 ```
 
+On Windows shells, use:
+
+```powershell
+pnpm dev:board:win
+```
+
 - Or run the package directly:
 
 ```bash
 pnpm --filter ./apps/board dev
+```
+
+On Windows:
+
+```powershell
+pnpm --filter ./apps/board dev:win
 ```
 
 - Open `http://localhost:5173`

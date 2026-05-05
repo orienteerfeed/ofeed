@@ -24,7 +24,9 @@ TypeScript config notes:
 Run all commands from `apps/board` unless you are using the root workspace command.
 
 - `pnpm dev`: start the Vite development server
+- `pnpm dev:win`: Windows-friendly alias for the Vite development server
 - `pnpm dev:board` from the repository root starts only this app
+- `pnpm dev:board:win` from the repository root starts this app on Windows
 - `pnpm build`: run strict type-checking, then build production assets
 - `pnpm test:unit`: run Vitest unit tests once
 - `pnpm test:e2e`: run Playwright tests
