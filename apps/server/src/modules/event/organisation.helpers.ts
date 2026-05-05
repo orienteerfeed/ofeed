@@ -78,7 +78,7 @@ export const upsertOrganisation = async (
 ): Promise<number | null> => {
   const eventId = input.eventId;
   const name = normaliseString(input.name);
-  const shortName = normaliseString(input.shortName);
+  const shortName = normaliseString(input.shortName)?.slice(0, 20) ?? null;
   const externalId = normaliseString(input.externalId);
   const nationality = normaliseString(input.nationality);
 

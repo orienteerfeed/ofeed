@@ -151,7 +151,7 @@ async function parseXml(buffer: Buffer): Promise<Record<string, unknown>> {
    * If successful, it calls the callback function with null as the first parameter and iofXml3 as the second parameter.
    * If an error occurs, it logs it to the console and calls the callback function with err as its only parameter.  */
   try {
-    return await parser.parseStringPromise(buffer.toString());
+    return await parser.parseStringPromise(buffer.toString('utf-8').replace(/^﻿/, ''));
   } catch (err: unknown) {
     console.error(err);
     const message = err instanceof Error ? err.message : 'Unknown parse error';
@@ -866,7 +866,7 @@ async function handleIofXmlUpload(
 
   if (iofValidationEnabled) {
     const xsd = await getXsdSchema();
-    const iofXmlValidation = await validateIofXml(xmlBuffer.toString(), xsd);
+    const iofXmlValidation = await validateIofXml(xmlBuffer.toString('utf-8').replace(/^﻿/, ''), xsd);
     if (!iofXmlValidation.state) {
       logUploadEvent(c, 'warn', 'IOF upload failed XML validation', {
         ...uploadDetails,
