@@ -97,8 +97,23 @@ type LeafletMarkerClusterRuntime = typeof globalThis & {
 };
 
 const getMarkerClusterFactory = () =>
-  (globalThis as LeafletMarkerClusterRuntime).L?.markerClusterGroup ??
-  (Leaflet as LeafletMarkerClusterNamespace).markerClusterGroup;
+  (Leaflet as LeafletMarkerClusterNamespace).markerClusterGroup ??
+  (globalThis as LeafletMarkerClusterRuntime).L?.markerClusterGroup;
+
+const addMarkerLayersToMap = (
+  map: Leaflet.Map,
+  markerLayers: readonly Leaflet.Marker[]
+) => {
+  markerLayers.forEach(layer => {
+    layer.addTo(map);
+  });
+
+  return () => {
+    markerLayers.forEach(layer => {
+      layer.remove();
+    });
+  };
+};
 
 const escapeHtml = (value: string): string =>
   value
@@ -382,27 +397,25 @@ function EventMarkersLayer({
       const markerClusterFactory = getMarkerClusterFactory();
 
       if (!markerClusterFactory) {
-        markerLayers.forEach(layer => {
-          layer.addTo(map);
-        });
-
-        return () => {
-          markerLayers.forEach(layer => {
-            layer.remove();
-          });
-        };
+        return addMarkerLayersToMap(map, markerLayers);
       }
 
-      const clusterGroup = markerClusterFactory({
-        chunkedLoading: true,
-        disableClusteringAtZoom: CLUSTER_DISABLE_AT_ZOOM,
-        iconCreateFunction: cluster =>
-          buildClusterIcon(cluster.getChildCount(), zoom, markerColorScheme),
-        maxClusterRadius: currentZoom => (currentZoom >= 12 ? 36 : 52),
-        showCoverageOnHover: false,
-        spiderfyOnMaxZoom: true,
-        zoomToBoundsOnClick: true,
-      });
+      let clusterGroup: MarkerClusterGroupInstance;
+
+      try {
+        clusterGroup = markerClusterFactory({
+          chunkedLoading: true,
+          disableClusteringAtZoom: CLUSTER_DISABLE_AT_ZOOM,
+          iconCreateFunction: cluster =>
+            buildClusterIcon(cluster.getChildCount(), zoom, markerColorScheme),
+          maxClusterRadius: currentZoom => (currentZoom >= 12 ? 36 : 52),
+          showCoverageOnHover: false,
+          spiderfyOnMaxZoom: true,
+          zoomToBoundsOnClick: true,
+        });
+      } catch {
+        return addMarkerLayersToMap(map, markerLayers);
+      }
 
       markerLayers.forEach(layer => {
         clusterGroup.addLayer(layer);
@@ -416,15 +429,7 @@ function EventMarkersLayer({
       };
     }
 
-    markerLayers.forEach(layer => {
-      layer.addTo(map);
-    });
-
-    return () => {
-      markerLayers.forEach(layer => {
-        layer.remove();
-      });
-    };
+    return addMarkerLayersToMap(map, markerLayers);
   }, [clusteringEnabled, events, map, markerColorScheme, navigate, zoom]);
 
   return null;

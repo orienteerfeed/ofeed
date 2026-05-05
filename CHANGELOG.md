@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [1.3.1] - 2026-05-05
+
+### Fixed
+
+- Prevented the home page map from crashing when Leaflet marker clustering is
+  unavailable or initialized through an incompatible runtime namespace.
+
 ## [1.3.0] - 2026-05-05
 
 ### Added
