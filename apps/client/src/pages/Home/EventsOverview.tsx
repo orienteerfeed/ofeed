@@ -7,6 +7,7 @@ import {
   EventCollection,
   EventListEmptyState,
   EventListEndState,
+  EventListErrorState,
   EventListInitialLoadingState,
   EventListPaginationState,
   EventViewModeSwitcher,
@@ -51,7 +52,11 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
   const recentHasMoreRef = useRef(true);
 
   // Today: up to 50 (today events are typically few)
-  const { data: todayData, loading: todayLoading } = useQuery<
+  const {
+    data: todayData,
+    loading: todayLoading,
+    error: todayError,
+  } = useQuery<
     EventsData,
     EventsVariables
   >(EVENTS_QUERY, {
@@ -60,7 +65,11 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
   });
 
   // Upcoming: first 8 as preview
-  const { data: upcomingData, loading: upcomingLoading } = useQuery<
+  const {
+    data: upcomingData,
+    loading: upcomingLoading,
+    error: upcomingError,
+  } = useQuery<
     EventsData,
     EventsVariables
   >(EVENTS_QUERY, {
@@ -72,6 +81,7 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
   const {
     data: recentData,
     loading: recentLoading,
+    error: recentError,
     fetchMore,
   } = useQuery<EventsData, EventsVariables>(EVENTS_QUERY, {
     variables: { filter: 'RECENT', first: 8, after: null },
@@ -180,30 +190,24 @@ export const EventsOverview: FC<EventsOverviewProps> = ({ t, onTabChange }) => {
     (upcomingLoading && upcomingEvents.length === 0) ||
     (recentLoading && recentEvents.length === 0);
 
-  const showUpcomingLink = upcomingEvents.length > 0;
-  const showRecentLink = recentEvents.length > 0;
+  const error = todayError ?? upcomingError ?? recentError;
+  const showAllLink = allEvents.length > 0;
+
+  if (error) {
+    return <EventListErrorState message={error.message} t={t} />;
+  }
 
   return (
     <div className="space-y-4">
       {/* Toolbar: "see all" links left, view mode switcher right — matches EventList layout */}
       <div className="flex justify-between items-center">
         <div className="flex gap-4">
-          {showUpcomingLink && (
+          {showAllLink && (
             <button
-              onClick={() => onTabChange('upcoming')}
-              className="text-xs font-mono text-muted-foreground hover:underline cursror-pointer"
-            >
-              {t('Pages.Event.Overview.SeeAll')}{' '}
-              {t('Pages.Event.Tabs.Upcoming').toLowerCase()} →
-            </button>
-          )}
-          {showRecentLink && (
-            <button
-              onClick={() => onTabChange('recent')}
+              onClick={() => onTabChange('all')}
               className="text-xs font-mono text-muted-foreground hover:underline cursor-pointer"
             >
-              {t('Pages.Event.Overview.SeeAll')}{' '}
-              {t('Pages.Event.Tabs.Recent').toLowerCase()} →
+              {t('Pages.Event.Overview.SeeAll')} →
             </button>
           )}
         </div>

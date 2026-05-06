@@ -28,6 +28,7 @@ import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
 import { MobileClubName } from './MobileClubName';
+import { WinnerNotification } from './WinnerNotifications';
 
 const mobileResultsTableClassName =
   'overflow-x-auto [&_table]:text-sm [&_th]:h-7 sm:[&_th]:h-8 [&_th]:px-1.5 sm:[&_th]:px-2 [&_th]:text-xs [&_td]:px-1.5 sm:[&_td]:px-2 [&_td]:py-0.5 sm:[&_td]:py-1 [&_td]:text-sm';
@@ -293,17 +294,21 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
 
   if (isRelay) {
     return (
-      <RelayResultsView
-        event={event}
-        selectedClass={selectedClass}
-        setSelectedClass={setSelectedClass}
-        availableClasses={event.classes?.map(cls => cls.name) || []}
-      />
+      <>
+        <WinnerNotification eventId={event.id} />
+        <RelayResultsView
+          event={event}
+          selectedClass={selectedClass}
+          setSelectedClass={setSelectedClass}
+          availableClasses={event.classes?.map(cls => cls.name) || []}
+        />
+      </>
     );
   }
 
   return (
     <div className="flex flex-col h-full">
+      <WinnerNotification eventId={event.id} />
       <div className="sticky top-0 z-10 bg-background border-b border-border pb-2 mb-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 p-0.5 bg-muted rounded-md">

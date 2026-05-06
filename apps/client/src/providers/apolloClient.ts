@@ -121,6 +121,15 @@ export function createApolloClient(
       Country: {
         keyFields: ['countryCode'],
       },
+      Event: {
+        fields: {
+          statusSummary: {
+            merge(existing, incoming, { mergeObjects }) {
+              return mergeObjects(existing, incoming);
+            },
+          },
+        },
+      },
       Query: {
         fields: {
           // Add your type policies here

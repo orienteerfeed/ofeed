@@ -6,7 +6,7 @@ import { getNotificationSettings } from '../../lib/notificationSettings';
 // Types
 interface Winner {
   eventId: string;
-  classId: string;
+  classId: number;
   className: string;
   name: string;
 }
@@ -106,16 +106,17 @@ const sendNotification = (winner: Winner): void => {
     return;
   }
 
+  const options: NotificationOptions = {
+    body: `${winner.name} is now leading ${winner.className}.`,
+  };
+  const title = '🏆 New Leader!';
+
   if (Notification.permission === 'granted') {
-    console.log(winner.name);
-    console.log(Notification.permission);
-    new Notification('🏆 New Winner!');
+    new Notification(title, options);
   } else if (Notification.permission !== 'denied') {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
-        new Notification('🏆 New Winner!', {
-          body: `🎉 ${winner.name} just won ${winner.className}!`,
-        });
+        new Notification(title, options);
       }
     });
   }
