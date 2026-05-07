@@ -323,7 +323,12 @@ export async function syncCzechRankingEventResultsFromOris(params: {
   const syncedEventIds: string[] = [];
 
   for (const candidate of rankingEventCandidates) {
-    const eventDate = new Date(candidate.date);
+    const candidateDate = candidate.date;
+    if (!candidateDate) {
+      continue;
+    }
+
+    const eventDate = new Date(candidateDate);
     if (Number.isNaN(eventDate.getTime())) {
       continue;
     }
@@ -453,7 +458,7 @@ export async function ensureCzechRankingEventResultsSynchronized(params: {
   czechRankingOrisSyncInFlight.set(params.rankingType, syncPromise);
 
   if (!blocking) {
-    syncPromise.catch(() => undefined);
+    syncPromise.catch((): void => undefined);
     return false;
   }
 

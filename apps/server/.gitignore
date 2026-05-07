@@ -102,3 +102,4 @@ volumes/
 /generated/prisma
 # New location (Prisma 7.x - in src)
 /src/generated/prisma
+/src/generated/pothos-prisma-types.ts

@@ -1,4 +1,4 @@
-import type { Context, Next } from "hono";
+import type { Context, Next } from 'hono';
 
 import { verifyToken } from './jwtToken.js';
 import { error as errorResponse } from './responseApi.js';
@@ -11,7 +11,7 @@ import { error as errorResponse } from './responseApi.js';
  * @throws {UnauthorizedError} If no token is provided or the token is invalid.
  * @throws {ForbiddenError} If the token does not include the required scope.
  */
-export const checkRequiredScope = requiredScope => {
+export const checkRequiredScope = (requiredScope) => {
   return async (c: Context, next: Next) => {
     const tokenWithBearer = c.req.header('authorization');
 
@@ -23,8 +23,9 @@ export const checkRequiredScope = requiredScope => {
 
     try {
       const jwtDecoded = verifyToken(token);
+      const scope = jwtDecoded.scope;
 
-      if (!jwtDecoded.scope || !jwtDecoded.scope.includes(requiredScope)) {
+      if (typeof scope !== 'string' || !scope.includes(requiredScope)) {
         return c.json(errorResponse('Forbidden: Insufficient scope', 403), 403);
       }
 

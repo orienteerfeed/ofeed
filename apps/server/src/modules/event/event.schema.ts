@@ -32,6 +32,15 @@ export const stateChangeBodySchema = z.object({
 });
 
 export const externalEventProviderSchema = z.enum(['ORIS', 'EVENTOR']);
+export const eventFilterSchema = z.enum(['ALL', 'TODAY', 'UPCOMING', 'RECENT']);
+
+export const eventsInputSchema = z.object({
+  filter: eventFilterSchema.nullable().optional(),
+  sportId: z.number().int().nullable().optional(),
+  search: z.string().nullable().optional(),
+  first: z.number().int().nullable().optional(),
+  after: z.string().nullable().optional(),
+});
 
 export const eventImportSearchBodySchema = z.object({
   provider: externalEventProviderSchema,
@@ -96,6 +105,8 @@ export type ChangelogQuery = z.infer<typeof changelogQuerySchema>;
 export type GeneratePasswordBody = z.infer<typeof generatePasswordBodySchema>;
 export type StateChangeBody = z.infer<typeof stateChangeBodySchema>;
 export type ExternalEventProvider = z.infer<typeof externalEventProviderSchema>;
+export type EventFilter = z.infer<typeof eventFilterSchema>;
+export type EventsInput = z.infer<typeof eventsInputSchema>;
 export type EventImportSearchBody = z.infer<typeof eventImportSearchBodySchema>;
 export type EventImportPreviewBody = z.infer<typeof eventImportPreviewBodySchema>;
 export type EventOfficialResultsSyncBody = z.infer<typeof eventOfficialResultsSyncBodySchema>;

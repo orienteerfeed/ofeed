@@ -1,5 +1,5 @@
-import type { Context, Next } from "hono";
-import jwt from 'jsonwebtoken';
+import type { Context, Next } from 'hono';
+import jwt, { type JwtPayload } from 'jsonwebtoken';
 import env from '../config/env.js';
 import { decodeBase64, decrypt } from '../lib/crypto/encryption.js';
 import { oauth2Model } from '../modules/auth/oauth2.model.js';
@@ -63,7 +63,33 @@ function unauthenticated(failureReason: AuthFailureReason): UnauthenticatedConte
  * @param {string|null} [expiresIn=null] - The expiration time for the token (e.g., '1h', '2d'). If null, the token will not expire.
  * @returns {string} The generated JWT token.
  */
-export const getJwtToken = (payload, expiresIn = null) => {
+type JwtTokenPayload = Record<string, unknown>;
+
+type AuthRequestLike = {
+  headers: Record<string, string | undefined>;
+};
+
+type AuthenticatedJwtContext = {
+  isAuthenticated: true;
+  type: 'jwt';
+  userId?: number | string;
+  rawToken: string;
+  tokenPayload: JwtPayload;
+};
+
+type AuthenticatedBasicContext = {
+  isAuthenticated: true;
+  type: 'eventBasic';
+  userId: number | null;
+  eventId: string;
+};
+
+export type BuiltAuthContext =
+  | UnauthenticatedContext
+  | AuthenticatedJwtContext
+  | AuthenticatedBasicContext;
+
+export const getJwtToken = (payload: JwtTokenPayload, expiresIn: string | number | null = null) => {
   const options = expiresIn ? { expiresIn } : {};
   return jwt.sign(payload, JWT_TOKEN_SECRET_KEY, options);
 };
@@ -73,7 +99,7 @@ export const getJwtToken = (payload, expiresIn = null) => {
  * @param {string} userId - The user ID to include in the token payload.
  * @returns {string} The generated JWT token.
  */
-export const generateJwtTokenForLink = (userId) => {
+export const generateJwtTokenForLink = (userId: string | number) => {
   const token = jwt.sign({ id: userId }, JWT_TOKEN_SECRET_KEY, {
     expiresIn: '48h',
   });
@@ -95,7 +121,7 @@ export const verifyJwtToken = async (c: Context, next: Next) => {
       return c.json(error('Unauthorized: Invalid or missing credentials.', 401), 401);
     }
 
-    c.set("authContext" as never, auth as never);
+    c.set('authContext' as never, auth as never);
     await next();
   } catch (err) {
     logger.error('JWT middleware verification failed', {
@@ -117,14 +143,20 @@ export const verifyJwtToken = async (c: Context, next: Next) => {
  * @returns {Object} The decoded token payload.
  * @throws {Error} If token is invalid, expired, or not provided.
  */
-export const verifyToken = (token) => {
+export const verifyToken = (token: string): JwtPayload => {
   if (!token) {
     throw new Error('No token provided');
   }
   try {
-    return jwt.verify(token, JWT_TOKEN_SECRET_KEY);
+    const decoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY);
+    if (typeof decoded === 'string') {
+      return { token: decoded };
+    }
+    return decoded;
   } catch (err) {
-    throw new Error('Invalid or expired token: ' + err.message);
+    throw new Error(
+      'Invalid or expired token: ' + (err instanceof Error ? err.message : 'Unknown error'),
+    );
   }
 };
 
@@ -135,13 +167,20 @@ export const verifyToken = (token) => {
  * @returns {Object} Object containing userId if authentication succeeds.
  * @throws {Error} If authentication fails or credentials are invalid.
  */
-export const verifyBasicAuth = async (eventId, password) => {
+export const verifyBasicAuth = async (eventId: string, password: string) => {
   if (!eventId) {
-    throw new BasicAuthVerificationError('basic_missing_event_id', 'Unauthorized: Event not provided');
+    throw new BasicAuthVerificationError(
+      'basic_missing_event_id',
+      'Unauthorized: Event not provided',
+    );
   }
 
   if (!password) {
-    throw new BasicAuthVerificationError('basic_missing_password', 'Unauthorized: No credentials provided', eventId);
+    throw new BasicAuthVerificationError(
+      'basic_missing_password',
+      'Unauthorized: No credentials provided',
+      eventId,
+    );
   }
 
   const eventUser = await prisma.event.findUnique({
@@ -153,7 +192,11 @@ export const verifyBasicAuth = async (eventId, password) => {
   });
 
   if (!eventUser) {
-    throw new BasicAuthVerificationError('basic_event_not_found', 'Unauthorized: Event not found', eventId);
+    throw new BasicAuthVerificationError(
+      'basic_event_not_found',
+      'Unauthorized: Event not found',
+      eventId,
+    );
   }
 
   const eventPassword = await prisma.eventPassword.findUnique({
@@ -173,7 +216,11 @@ export const verifyBasicAuth = async (eventId, password) => {
   }
 
   if (new Date(eventPassword.expiresAt) <= new Date()) {
-    throw new BasicAuthVerificationError('basic_password_expired', 'Unauthorized: Event password expired', eventId);
+    throw new BasicAuthVerificationError(
+      'basic_password_expired',
+      'Unauthorized: Event password expired',
+      eventId,
+    );
   }
 
   let decryptedPassword: string;
@@ -196,7 +243,11 @@ export const verifyBasicAuth = async (eventId, password) => {
   }
 
   if (password !== decryptedPassword) {
-    throw new BasicAuthVerificationError('basic_password_mismatch', 'Unauthorized: Invalid username or password', eventId);
+    throw new BasicAuthVerificationError(
+      'basic_password_mismatch',
+      'Unauthorized: Invalid username or password',
+      eventId,
+    );
   }
 
   return { userId: eventUser.authorId };
@@ -218,7 +269,9 @@ export const verifyBasicAuth = async (eventId, password) => {
  * @param {Object} req - Request-like object with `headers.authorization`.
  * @returns {Promise<Object>} Authentication context object.
  */
-export const buildAuthContextFromRequest = async (req) => {
+export const buildAuthContextFromRequest = async (
+  req: AuthRequestLike,
+): Promise<BuiltAuthContext> => {
   const authHeader = req.headers['authorization'] || req.headers['Authorization'] || '';
 
   if (!authHeader) {
@@ -237,7 +290,10 @@ export const buildAuthContextFromRequest = async (req) => {
     }
 
     try {
-      const decoded = verifyToken(rawToken) as { clientId?: string; userId?: number | string } & Record<string, unknown>;
+      const decoded = verifyToken(rawToken) as JwtPayload & {
+        clientId?: string;
+        userId?: number | string;
+      };
 
       // Optional OAuth clientId check – same logic as before
       if (decoded.clientId) {
@@ -316,7 +372,9 @@ export const buildAuthContextFromRequest = async (req) => {
       };
     } catch (err) {
       const reason =
-        err instanceof BasicAuthVerificationError ? err.reason : ('basic_unexpected_error' as const);
+        err instanceof BasicAuthVerificationError
+          ? err.reason
+          : ('basic_unexpected_error' as const);
       logger.warn('Basic auth verification failed', {
         authType: 'basic',
         eventId,
@@ -338,10 +396,10 @@ export const buildAuthContextFromRequest = async (req) => {
  * @returns {string} The extracted user ID from the token payload.
  * @throws {Error} If the token is invalid or expired.
  */
-export const getUserIdFromActivationToken = (token) => {
+export const getUserIdFromActivationToken = (token: string): string | number | undefined => {
   try {
     const decoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY);
-    return decoded.id;
+    return typeof decoded === 'string' ? undefined : (decoded.id as string | number | undefined);
   } catch (error) {
     logger.warn('Activation token verification failed', {
       authType: 'activation-token',

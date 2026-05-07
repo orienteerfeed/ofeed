@@ -444,7 +444,7 @@ async function calculateCzechRankingPointsForEventOnce(eventId: string): Promise
         const normalizedRegistration = normalizeRegistration(competitor.registration);
         const rankingReferenceValue =
           normalizedRegistration && rankingMap.has(normalizedRegistration)
-            ? (rankingMap.get(normalizedRegistration) ?? null)
+            ? rankingMap.get(normalizedRegistration) ?? null
             : null;
 
         let rankingPoints: number | null = null;
@@ -703,7 +703,11 @@ async function buildCurrentCzechRankingDecorationsForClass(
     );
     const officialCurrentEventResult = officialCurrentEventResultsByRegistration.get(registration);
 
-    if (!officialCurrentEventResult && currentCompetitor?.rankingPoints !== null) {
+    if (
+      !officialCurrentEventResult &&
+      currentCompetitor &&
+      currentCompetitor.rankingPoints !== null
+    ) {
       resultCandidates.push({
         key: `live:${currentCompetitor.id}`,
         registration,

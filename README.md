@@ -22,7 +22,7 @@ We are using [Weblate](https://hosted.weblate.org/projects/ofeed/) free localiza
 
 - Client: Vite + React + TypeScript
 - Board: Vue 3 + Vite + TypeScript
-- Server: Hono + TypeScript + Prisma (MariaDB adapter)
+- Server: Hono + TypeScript + GraphQL Yoga + Pothos + Prisma (MariaDB adapter)
 - UI: shadcn/ui + Tailwind CSS
 - Data and Routing: TanStack Query + TanStack Router
 - i18n: i18next + react-i18next
@@ -126,6 +126,7 @@ Default local URLs:
 - `pnpm format` - format repo files with Prettier
 - `pnpm format:check` - check formatting
 - `pnpm type-check` - type-check all packages/apps
+- `pnpm type-check:graphql` - run the server GraphQL/Pothos type-check profile
 - `pnpm test` - run tests across workspace
 - `pnpm test:watch` - run tests in watch mode (parallel)
 - `pnpm test:client` - run only client tests
@@ -143,6 +144,7 @@ Default local URLs:
 - `pnpm build` - build `@repo/shared` for Node and compile the server to `dist/index.js`
 - `pnpm start:dist` - run the built server from `dist/index.js`
 - `pnpm test` / `pnpm test:watch`
+- `pnpm type-check` / `pnpm type-check:graphql`
 - `pnpm lint` / `pnpm lint:fix`
 - `pnpm db:generate`
 - `pnpm db:migrate`
@@ -176,7 +178,32 @@ Default local URLs:
 
 - Prisma schema: `apps/server/prisma/schema.prisma`
 - Prisma Client output is generated into: `apps/server/src/generated/prisma`
+- Pothos Prisma types are generated into:
+  `apps/server/src/generated/pothos-prisma-types.ts`
 - ORM: Prisma v7 with MariaDB adapter (`@prisma/adapter-mariadb`)
+- `pnpm db:generate` runs Prisma generate for both the Prisma Client and the
+  generated Pothos Prisma type map.
+- Server `type-check` and `type-check:graphql` run `db:generate` first, so
+  local clean checkouts regenerate ignored Prisma/Pothos generated files before
+  TypeScript resolves them.
+
+## Server GraphQL Architecture
+
+The server GraphQL API is built with GraphQL Yoga, Pothos, and
+`@pothos/plugin-prisma`.
+
+- `apps/server/src/graphql/*` contains only global GraphQL infrastructure:
+  Pothos builder setup, Yoga context helpers, root schema composition, scalar
+  registrations, and HTTP/WebSocket integration.
+- `apps/server/src/modules/*/*.graphql.ts` owns feature-level GraphQL type and
+  field registration.
+- Reusable GraphQL object/input/enum refs live in
+  `apps/server/src/modules/*/*.graphql-types.ts`; root registration files should
+  not be imported by another module just to reuse a type.
+- `apps/server/src/modules/*/*.service.ts` owns business and data-access logic.
+- `apps/server/src/modules/*/*.schema.ts` owns Zod input/output contracts when a
+  module needs shared validation. Services should import `z.infer` types from
+  these schemas instead of keeping parallel hand-written TypeScript input types.
 
 ## Docker Compose
 

@@ -1,5 +1,8 @@
 import sgMail from '@sendgrid/mail';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+if (sendgridApiKey) {
+  sgMail.setApiKey(sendgridApiKey);
+}
 
 type SendEmailOptions = {
   html: string;
@@ -27,7 +30,14 @@ export const sendEmail = async ({
     } catch (error) {
       console.error(error);
 
-      if (error.response) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'body' in error.response
+      ) {
         console.error(error.response.body);
       }
       onError(error);
@@ -35,7 +45,7 @@ export const sendEmail = async ({
   })();
 };
 
-const getMailOptions = ({ html, text, subject, emailTo }) => ({
+const getMailOptions = ({ html, text, subject, emailTo }: SendEmailOptions) => ({
   to: emailTo,
   from: { email: 'hello@martinkrivda.cz', name: 'Orienteerfeed' },
   subject,

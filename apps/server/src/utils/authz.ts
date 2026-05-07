@@ -1,5 +1,31 @@
+import type { Prisma } from '../generated/prisma/client.js';
+
+export type AuthzAuthContext = {
+  isAuthenticated: boolean;
+  type?: 'jwt' | 'eventBasic' | null;
+  userId?: number | string;
+  eventId?: string;
+};
+
+type AuthzPrismaClient = {
+  user: {
+    findUnique: (args: {
+      where: { id: number };
+      select: { role: true };
+    }) => Promise<{ role: string } | null> | { role: string } | null;
+  };
+  event: {
+    findUnique: (args: {
+      where: { id: string };
+      select: Prisma.EventSelect;
+    }) =>
+      | Promise<({ authorId: number | null } & Record<string, unknown>) | null>
+      | (({ authorId: number | null } & Record<string, unknown>) | null);
+  };
+};
+
 export type EventOwnerOptions = {
-  select?: Record<string, boolean>;
+  select?: Prisma.EventSelect;
   unauthenticatedStatus?: number;
   unauthenticatedMessage?: string;
   invalidBasicStatus?: number;
@@ -51,8 +77,12 @@ export function isAuthzError(error: unknown): error is AuthzError {
   return error instanceof AuthzError;
 }
 
-function normalizeAuthUserId(auth: { userId?: number | string } | null | undefined) {
-  if (typeof auth?.userId === 'number') {
+function normalizeAuthUserId(auth: AuthzAuthContext | null | undefined) {
+  if (!auth || !('userId' in auth)) {
+    return null;
+  }
+
+  if (typeof auth.userId === 'number') {
     return Number.isFinite(auth.userId) ? auth.userId : null;
   }
 
@@ -64,7 +94,10 @@ function normalizeAuthUserId(auth: { userId?: number | string } | null | undefin
   return null;
 }
 
-async function resolveAuthenticatedUserRole(prisma, auth) {
+async function resolveAuthenticatedUserRole(
+  prisma: AuthzPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+) {
   const userId = normalizeAuthUserId(auth);
 
   if (userId === null) {
@@ -83,9 +116,9 @@ async function resolveAuthenticatedUserRole(prisma, auth) {
 }
 
 async function ensureEventOwnerAccess(
-  prisma,
-  auth,
-  eventId,
+  prisma: AuthzPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+  eventId: string | number,
   options: EventOwnerOptions = {},
   allowAdmin = false,
 ) {
@@ -100,9 +133,13 @@ async function ensureEventOwnerAccess(
     throw new AuthzError(settings.invalidBasicMessage, settings.invalidBasicStatus);
   }
 
+  const select: Prisma.EventSelect = options.select
+    ? { ...options.select, authorId: true }
+    : { authorId: true };
+
   const event = await prisma.event.findUnique({
     where: { id: normalizedEventId },
-    select: options.select ? { ...options.select, authorId: true } : { authorId: true },
+    select,
   });
 
   if (!event) {
@@ -125,28 +162,45 @@ async function ensureEventOwnerAccess(
   return { event, userId, role, isAdmin, isEventOwner };
 }
 
-export const ensureEventOwner = async (prisma, auth, eventId, options: EventOwnerOptions = {}) => {
+export const ensureEventOwner = async (
+  prisma: AuthzPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+  eventId: string | number,
+  options: EventOwnerOptions = {},
+) => {
   return ensureEventOwnerAccess(prisma, auth, eventId, options, false);
 };
 
 export const ensureEventOwnerOrAdmin = async (
-  prisma,
-  auth,
-  eventId,
+  prisma: AuthzPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+  eventId: string | number,
   options: EventOwnerOptions = {},
 ) => {
   return ensureEventOwnerAccess(prisma, auth, eventId, options, true);
 };
 
-export const requireEventOwner = async (prisma, auth, eventId) => {
+export const requireEventOwner = async (
+  prisma: AuthzPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+  eventId: string | number,
+) => {
   return ensureEventOwner(prisma, auth, eventId);
 };
 
-export const requireEventOwnerOrAdmin = async (prisma, auth, eventId) => {
+export const requireEventOwnerOrAdmin = async (
+  prisma: AuthzPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+  eventId: string | number,
+) => {
   return ensureEventOwnerOrAdmin(prisma, auth, eventId);
 };
 
-export const requireAdmin = async (prisma, auth, options: AdminOptions = {}) => {
+export const requireAdmin = async (
+  prisma: AuthzPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+  options: AdminOptions = {},
+) => {
   const settings = { ...DEFAULT_ADMIN_OPTIONS, ...options };
 
   if (!auth || !auth.isAuthenticated) {

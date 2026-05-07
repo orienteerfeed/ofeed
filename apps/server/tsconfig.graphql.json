@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "useUnknownInCatchVariables": true
+  },
+  "include": [
+    "src/**/*.d.ts",
+    "src/graphql/**/*.ts",
+    "src/modules/**/*.graphql.ts",
+    "src/modules/**/*graphql-types.ts"
+  ],
+  "exclude": ["node_modules", "dist", "src/**/__tests__/**"]
+}

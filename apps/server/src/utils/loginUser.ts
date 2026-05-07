@@ -1,6 +1,13 @@
 import { getJwtToken } from './jwtToken.js';
+import type { AppPrismaClient } from '../db/prisma-client.js';
 
-export const getLoginSuccessPayload = async ({ userId, prisma }) => {
+export const getLoginSuccessPayload = async ({
+  userId,
+  prisma,
+}: {
+  userId: number;
+  prisma: AppPrismaClient;
+}) => {
   const token = getJwtToken({ userId });
 
   const dbResponse = await prisma.user.findFirst({

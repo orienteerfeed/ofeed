@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { Prisma } from '../../generated/prisma/client.js';
 import { ensureEventOwner, ensureEventOwnerOrAdmin, requireAdmin } from '../authz.js';
 
 function createPrismaMock({
@@ -15,7 +16,7 @@ function createPrismaMock({
     },
     event: {
       findUnique: vi.fn(
-        ({ where, select }: { where: { id: string }; select?: Record<string, boolean> }) => {
+        ({ where, select }: { where: { id: string }; select?: Prisma.EventSelect }) => {
           const event = events[where.id] ?? null;
 
           if (!event) {
@@ -26,12 +27,15 @@ function createPrismaMock({
             return event;
           }
 
-          return Object.keys(select).reduce<Record<string, unknown>>((acc, key) => {
-            if (select[key]) {
-              acc[key] = event[key as keyof typeof event] ?? null;
-            }
-            return acc;
-          }, {});
+          return Object.keys(select).reduce<{ authorId: number | null } & Record<string, unknown>>(
+            (acc, key) => {
+              if (select[key as keyof Prisma.EventSelect]) {
+                acc[key] = event[key as keyof typeof event] ?? null;
+              }
+              return acc;
+            },
+            { authorId: event.authorId },
+          );
         },
       ),
     },

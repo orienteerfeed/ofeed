@@ -17,7 +17,12 @@ This file applies to `apps/server`.
 ## Architecture
 
 - `src/modules/*`: feature-oriented server modules.
-- `src/graphql/*`: GraphQL schema, resolvers, and domain-specific logic.
+- `src/graphql/*`: global GraphQL infrastructure only: Pothos builder, Yoga
+  context helpers, root schema composition, scalars, and HTTP/WebSocket
+  integration.
+- `src/modules/*/*.graphql.ts`: feature-level Pothos GraphQL registration.
+- `src/modules/*/*.service.ts`: feature business and data-access logic used by
+  GraphQL and REST handlers.
 - `src/routes/*`: route composition and REST entry points.
 - `src/db/*`: Prisma client bootstrap and database wiring.
 - `src/config/*`: runtime, logging, and OpenAPI configuration.
@@ -32,7 +37,17 @@ This file applies to `apps/server`.
 
 - Prefer `@hono/zod-openapi` route definitions and Zod schemas for REST
   endpoints.
-- Keep GraphQL types and resolvers colocated by domain under `src/graphql`.
+- Keep GraphQL feature registration colocated with its owning module in
+  `src/modules/*/*.graphql.ts`.
+- Put reusable GraphQL object/input/enum refs in `*.graphql-types.ts` files.
+  Avoid importing another feature's `*.graphql.ts` root registration file only
+  to reuse a type.
+- Keep GraphQL resolvers as adapter code only: read arguments/context, call the
+  owning service, and return the result.
+- Put shared input contracts in the owning module's `*.schema.ts` Zod schemas.
+  Service input types should come from `z.infer<typeof schema>` rather than a
+  second hand-maintained TypeScript type.
+- Do not put feature-specific GraphQL SDL or resolvers under `src/graphql`.
 - Reuse `@repo/shared` contracts for client-visible payloads when both sides
   depend on the same shape.
 - Keep frontend form validation, REST validation, and GraphQL input constraints
@@ -44,7 +59,13 @@ This file applies to `apps/server`.
 
 - Use the app Prisma client from `src/db/prisma.ts` or the existing context
   helpers.
-- Do not hand-edit `src/generated/prisma/**`.
+- Do not hand-edit `src/generated/prisma/**` or
+  `src/generated/pothos-prisma-types.ts`.
+- `pnpm db:generate` regenerates both the Prisma Client and Pothos Prisma type
+  map.
+- `pnpm type-check` and `pnpm type-check:graphql` run `db:generate` first.
+- Prefer generated Prisma enum exports from `src/generated/prisma/enums.js` when
+  a public GraphQL enum exactly mirrors the database enum.
 - Make schema changes through `prisma/schema.prisma` and Prisma migrations.
 - If a Prisma schema change affects shared payloads or docs, update the
   corresponding contracts and documentation in the same change.
@@ -56,8 +77,7 @@ This file applies to `apps/server`.
   `printWidth: 100`.
 - Prefer lower-case or kebab-case file names for new server files; preserve the
   existing naming of touched legacy files instead of renaming broadly.
-- Even though the current TypeScript config is not fully strict, write
-  strict-friendly code and avoid new `any` usage where possible.
+- Write strict-friendly TypeScript and avoid new `any` usage where possible.
 
 ## Commands
 
@@ -69,6 +89,7 @@ Run from `apps/server` or from the repo root with `pnpm --filter ./apps/server`.
 - `pnpm start:dev:win`
 - `pnpm build`
 - `pnpm type-check`
+- `pnpm type-check:graphql`
 - `pnpm lint`
 - `pnpm lint:fix`
 - `pnpm test`
@@ -83,6 +104,9 @@ Run from `apps/server` or from the repo root with `pnpm --filter ./apps/server`.
 - Use Vitest for server tests.
 - `pnpm test` automatically generates Prisma client first; keep that in mind
   when changing schema-related code.
+- `pnpm type-check:graphql` uses `tsconfig.graphql.json` for the full
+  GraphQL/Pothos source profile with strict implicit-any and catch-variable
+  checks enabled across that profile.
 - For route, auth, upload, or GraphQL changes, run the closest relevant server
   tests before finishing.
 - For Prisma changes, run at least `pnpm db:generate` and the relevant test or

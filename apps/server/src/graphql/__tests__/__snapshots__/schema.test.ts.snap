@@ -1,0 +1,570 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Pothos GraphQL schema > matches the public schema snapshot 1`] = `
+"type AuthPayload {
+  token: String
+  user: User
+}
+
+input ChangeCurrentUserPasswordInput {
+  currentPassword: currentPassword_String_NotNull_minLength_1_maxLength_255!
+  newPassword: newPassword_String_NotNull_minLength_8_maxLength_255!
+}
+
+type Changelog {
+  author: User!
+  authorId: Int!
+  competitor: Competitor!
+  competitorId: Int!
+  createdAt: DateTime!
+  event: Event!
+  eventId: String!
+  id: Int!
+  newValue: String
+  origin: String!
+  previousValue: String
+  type: String!
+}
+
+type Class {
+  climb: Int
+  competitors: [Competitor!]
+  competitorsCount: Int
+  controlsCount: Int
+  eventId: String!
+  externalId: String
+  id: Int!
+  length: Int
+  maxAge: Int
+  minAge: Int
+  name: String!
+  printedMaps: Int
+  sex: String
+  startName: String
+  status: String
+  teams: [Team!]
+}
+
+type Competitor {
+  bibNumber: Int
+  card: Int
+  class: Class!
+  classId: Int!
+  countsTowardsRanking: Boolean
+  countsTowardsRankingReason: String
+  externalId: String
+  finishTime: DateTime
+  firstname: String!
+  id: Int!
+  lastname: String!
+  lateStart: Boolean!
+  leg: Int
+  license: String
+  nationality: String
+  note: String
+  organisation: String
+  organisationId: Int
+  rankingPoints: Int
+  rankingReferenceValue: Int
+  registration: String!
+  shortName: String
+  splits: [Split!]
+  startTime: DateTime
+  status: String
+  team: Team
+  teamId: Int
+  time: Int
+  updatedAt: DateTime!
+}
+
+type Country {
+  countryCode: String!
+  countryName: String!
+  events: [Event!]
+}
+
+input CreateUserCardInput {
+  cardNumber: cardNumber_String_NotNull_minLength_1_maxLength_64!
+  isDefault: Boolean
+  sportId: Int!
+  type: UserCardType!
+}
+
+"""
+Date scalar type representing a date in format YYYY-MM-DD (no time part).
+"""
+scalar Date
+
+"""
+Custom DateTime scalar (backed by JS Date, serialized as ISO8601 string)
+"""
+scalar DateTime
+
+type Event {
+  authorId: Int
+  classes: [Class!]
+  coefRanking: Float
+  country: Country
+  countryId: String
+  createdAt: DateTime!
+  date: DateTime!
+  demo: Boolean!
+  discipline: EventDiscipline!
+  entriesCloseAt: DateTime
+  entriesOpenAt: DateTime
+  eventPassword: EventPassword
+  externalEventId: String
+  externalSource: ExternalEventProvider
+  featuredImage: String
+  featuredImageKey: String
+  hundredthPrecision: Boolean!
+  id: String!
+  latitude: Float
+  location: String
+  longitude: Float
+  name: String!
+  organizer: String
+  published: Boolean!
+  ranking: Boolean!
+  relay: Boolean!
+  resultsOfficialAt: DateTime
+  resultsOfficialManuallySetAt: DateTime
+  splitPublicationAt: DateTime
+  splitPublicationMode: SplitPublicationMode!
+  sport: Sport!
+  sportId: Int!
+  startMode: String!
+  statusSummary: EventStatusSummary!
+  timezone: String!
+  updatedAt: DateTime!
+  user: User
+  zeroTime: String!
+}
+
+type EventConnection {
+  edges: [EventEdge!]!
+  pageInfo: PageInfo!
+}
+
+enum EventDiscipline {
+  KNOCKOUT_SPRINT
+  LONG
+  MIDDLE
+  NIGHT
+  OTHER
+  RELAY
+  SPRINT
+  SPRINT_RELAY
+  TEAMS
+  ULTRALONG
+}
+
+type EventEdge {
+  cursor: String!
+  node: Event!
+}
+
+enum EventEntriesStatus {
+  CLOSED
+  OPEN
+}
+
+enum EventFilter {
+  ALL
+  RECENT
+  TODAY
+  UPCOMING
+}
+
+enum EventLifecycleStatus {
+  DONE
+  DRAFT
+  LIVE
+  UPCOMING
+}
+
+enum EventOfficialResultsSource {
+  EVENTOR
+  LOCAL
+  ORIS
+}
+
+type EventPassword {
+  createdAt: DateTime!
+  event: Event!
+  eventId: String!
+  expiresAt: DateTime!
+  id: String!
+  password: String!
+  updatedAt: DateTime!
+}
+
+enum EventPrimaryStatus {
+  DONE
+  DRAFT
+  LIVE
+  UPCOMING
+}
+
+type EventResponse {
+  event: Event
+  message: String!
+}
+
+enum EventResultsStatus {
+  LIVE
+  NONE
+  OFFICIAL
+  UNOFFICIAL
+}
+
+type EventStatusSummary {
+  entries: EventEntriesStatus!
+  entriesConfigured: Boolean!
+  lifecycle: EventLifecycleStatus!
+  officialResultsSource: EventOfficialResultsSource
+  officialResultsUrl: String
+  primary: EventPrimaryStatus!
+  results: EventResultsStatus!
+  resultsOfficialAt: DateTime
+  resultsOfficialCheckedAt: DateTime
+}
+
+input EventsInput {
+  after: String
+  filter: EventFilter
+  first: Int
+  search: String
+  sportId: Int
+}
+
+enum ExternalEventProvider {
+  EVENTOR
+  ORIS
+}
+
+input LoginInput {
+  password: password_String_NotNull_maxLength_255!
+  username: username_String_NotNull_maxLength_255!
+}
+
+type Mutation {
+  _empty(nothing: String): String
+  changeCurrentUserPassword(input: ChangeCurrentUserPasswordInput!): ResetResponse!
+  competitorCreate(input: StoreCompetitorInput!): StoreCompetitorResponse!
+  competitorStatusChange(input: StatusChange!): ResponseMessage!
+  competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
+  createUserCard(input: CreateUserCardInput!): UserCard!
+  deleteUserCard(id: Int!): Boolean!
+  requestPasswordReset(email: String!): ResetResponse!
+  resetPassword(newPassword: String!, token: String!): AuthPayload!
+  setDefaultUserCard(id: Int!): UserCard!
+  signin(input: LoginInput): AuthPayload
+  signup(input: UserInput): ResponseMessage
+  updateCurrentUser(input: UpdateCurrentUserInput!): User!
+  updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
+  updateUserCard(input: UpdateUserCardInput!): UserCard!
+}
+
+type Organisation {
+  createdAt: DateTime
+  eventId: String!
+  externalId: String
+  id: Int!
+  name: String!
+  nationality: String
+  shortName: String
+  updatedAt: DateTime
+}
+
+type OrganisationName {
+  competitors: Int!
+  id: Int!
+  name: String!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type Query {
+  _empty: String
+  activeSystemMessages: [SystemMessage!]!
+  changelogByEvent(classId: Int, eventId: String!, origin: String, since: DateTime): [Changelog!]
+  classById(id: Int!): Class!
+  competitorById(id: Int!): Competitor!
+  competitorSplits(competitorId: Int!): [Split!]
+  competitorsByClass(id: Int!): [Competitor!]
+  competitorsByOrganisation(eventId: String!, organisation: String, organisationId: Int): [Competitor!]
+  competitorsByTeam(id: Int!): [Competitor!]
+  countries: [Country!]!
+  currentUser: User!
+  currentUserCards: [UserCard!]!
+  event(id: String!): Event
+  eventClasses(eventId: String!): [Class!]
+  eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
+  events(input: EventsInput): EventConnection!
+  eventsBySport(sportId: Int!): [Event!]
+  eventsByUser(userId: Int!): [Event!]
+  myEvents: [Event!]
+  organisationNames(eventId: String!): [OrganisationName!]!
+  organisations(eventId: String!): [Organisation!]!
+  searchEvents(query: String!): [Event]!
+  searchOrganisationNames(eventId: String!, q: String!): [OrganisationName!]!
+  splitPublicationStatus(classId: Int!): SplitPublicationStatus!
+  sport(id: Int!): Sport
+  sports: [Sport!]!
+  teamById(id: Int!): Team!
+  teamsByClass(id: Int!): [Team!]
+}
+
+type ResetResponse {
+  message: String
+  success: Boolean!
+}
+
+type ResponseMessage {
+  message: String!
+  token: String!
+  user: User!
+}
+
+type Split {
+  competitorId: Int!
+  controlCode: Int!
+  id: Int!
+  time: Int
+}
+
+enum SplitPublicationMode {
+  DISABLED
+  LAST_START
+  SCHEDULED
+  UNRESTRICTED
+}
+
+enum SplitPublicationReason {
+  DISABLED
+  PUBLISHED
+  WAITING_FOR_LAST_START
+  WAITING_FOR_SCHEDULED
+}
+
+type SplitPublicationStatus {
+  classId: Int!
+  eventId: String!
+  isAccessible: Boolean!
+  isPublished: Boolean!
+  mode: SplitPublicationMode!
+  publishAt: DateTime
+  reason: SplitPublicationReason!
+}
+
+type Sport {
+  id: Int!
+  name: String!
+}
+
+input StatusChange {
+  competitorId: Int!
+  eventId: ID!
+  origin: origin_String_NotNull_maxLength_32_pattern_START!
+  status: status_String_NotNull_maxLength_32_pattern_ActiveInactiveDidNotStartLateStart!
+}
+
+input StoreCompetitorInput {
+  bibNumber: Int
+  card: Int
+  classId: Int!
+  eventId: String!
+  externalId: String
+  finishTime: DateTime
+  firstname: String!
+  lastname: String!
+  lateStart: Boolean
+  leg: Int
+  license: String
+  nationality: String
+  note: String
+  organisation: String
+  origin: String!
+  rankingPoints: Int
+  rankingReferenceValue: Int
+  registration: String
+  shortName: String
+  startTime: DateTime
+  status: String
+  teamId: Int
+  time: Int
+}
+
+type StoreCompetitorResponse {
+  competitor: Competitor!
+  message: String!
+}
+
+type Subscription {
+  _empty(nothing: String): String
+  competitorUpdated(eventId: String!): Competitor!
+  competitorsByClassUpdated(classId: Int!): [Competitor!]
+  splitCompetitorsByClassUpdated(classId: Int!): [Competitor!]
+  winnerUpdated(eventId: String!): WinnerNotification
+}
+
+type SystemMessage {
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: Int!
+  message: String!
+  publishedAt: DateTime!
+  severity: SystemMessageSeverity!
+  title: String
+  updatedAt: DateTime!
+}
+
+enum SystemMessageSeverity {
+  ERROR
+  INFO
+  SUCCESS
+  WARNING
+}
+
+type Team {
+  bibNumber: Int
+  class: Class!
+  classId: Int!
+  competitors: [Competitor!]
+  externalId: String
+  id: Int!
+  name: String!
+  organisation: String
+  shortName: String
+}
+
+input UpdateCompetitorInput {
+  bibNumber: Int
+  card: Int
+  classId: Int
+  competitorId: Int!
+  eventId: ID!
+  externalId: String
+  finishTime: DateTime
+  firstname: String
+  lastname: String
+  lateStart: Boolean
+  leg: Int
+  license: String
+  nationality: String
+  note: String
+  organisation: String
+  origin: origin_String_NotNull_maxLength_32_pattern_STARTFINISHITOFFICE!
+  rankingPoints: Int
+  rankingReferenceValue: Int
+  registration: String
+  shortName: String
+  startTime: DateTime
+  status: String
+  teamId: Int
+  time: Int
+}
+
+input UpdateCurrentUserInput {
+  email: email_String_maxLength_255_format_email
+  emergencyContact: emergencyContact_String_maxLength_255
+  firstname: firstname_String_minLength_1_maxLength_255
+  lastname: lastname_String_minLength_1_maxLength_255
+  organisation: organisation_String_maxLength_191
+}
+
+input UpdateUserCardInput {
+  cardNumber: cardNumber_String_NotNull_minLength_1_maxLength_64!
+  id: Int!
+  sportId: Int!
+  type: UserCardType!
+}
+
+type User {
+  active: Boolean
+  createdAt: DateTime!
+  email: email_String_NotNull_maxLength_255_format_email!
+  emergencyContact: emergencyContact_String_maxLength_255
+  firstname: firstname_String_NotNull_maxLength_255!
+  id: Int!
+  lastname: lastname_String_NotNull_maxLength_255!
+  organisation: organisation_String_maxLength_191
+  password: password_String_NotNull_maxLength_255!
+  role: UserRole!
+  updatedAt: DateTime!
+}
+
+type UserCard {
+  cardNumber: String!
+  createdAt: DateTime!
+  id: Int!
+  isDefault: Boolean!
+  sport: Sport!
+  sportId: Int!
+  type: UserCardType!
+  updatedAt: DateTime!
+  userId: Int!
+}
+
+enum UserCardType {
+  SPORTIDENT
+}
+
+input UserInput {
+  email: email_String_NotNull_maxLength_255_format_email!
+  firstname: firstname_String_NotNull_maxLength_255!
+  lastname: lastname_String_NotNull_maxLength_255!
+  organisation: organisation_String_maxLength_191
+  password: password_String_NotNull_maxLength_255!
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+type WinnerNotification {
+  classId: Int!
+  className: String!
+  eventId: String!
+  name: String!
+}
+
+scalar cardNumber_String_NotNull_minLength_1_maxLength_64
+
+scalar currentPassword_String_NotNull_minLength_1_maxLength_255
+
+scalar email_String_NotNull_maxLength_255_format_email
+
+scalar email_String_maxLength_255_format_email
+
+scalar emergencyContact_String_maxLength_255
+
+scalar firstname_String_NotNull_maxLength_255
+
+scalar firstname_String_minLength_1_maxLength_255
+
+scalar lastname_String_NotNull_maxLength_255
+
+scalar lastname_String_minLength_1_maxLength_255
+
+scalar newPassword_String_NotNull_minLength_8_maxLength_255
+
+scalar organisation_String_maxLength_191
+
+scalar origin_String_NotNull_maxLength_32_pattern_START
+
+scalar origin_String_NotNull_maxLength_32_pattern_STARTFINISHITOFFICE
+
+scalar password_String_NotNull_maxLength_255
+
+scalar status_String_NotNull_maxLength_32_pattern_ActiveInactiveDidNotStartLateStart
+
+scalar username_String_NotNull_maxLength_255"
+`;

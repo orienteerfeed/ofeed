@@ -1,5 +1,6 @@
 import { pubsub, COMPETITORS_BY_CLASS_UPDATED, COMPETITOR_UPDATED } from '../lib/pubsub.js';
-import { getCompetitorsByClass } from '../graphql/competitor/shared.js';
+import { findCompetitorsByClassWithLegacyShape } from '../modules/competitor/competitor.service.js';
+import prisma from './context.js';
 
 /**
  * Publish updated competitors by class to subscribers
@@ -14,7 +15,11 @@ export const publishUpdatedCompetitors = async (classId: unknown): Promise<void>
       throw new Error('Invalid classId for subscription publishing');
     }
 
-    const updatedCompetitors = await getCompetitorsByClass(normalizedClassId);
+    const updatedCompetitors = await findCompetitorsByClassWithLegacyShape(
+      prisma,
+      normalizedClassId,
+      false,
+    );
 
     const topic = `${COMPETITORS_BY_CLASS_UPDATED}_${normalizedClassId}`;
     console.log('Publishing to topic:', topic);

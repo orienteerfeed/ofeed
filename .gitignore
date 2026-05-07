@@ -218,6 +218,7 @@ node_modules/.cache/
 
 # Allow app-specific declaration files
 !apps/client/src/types/svg.d.ts
+!apps/server/src/types/vendor.d.ts
 
 # Svelte
 .svelte-kit/

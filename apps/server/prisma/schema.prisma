@@ -6,6 +6,12 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+generator pothos {
+  provider     = "prisma-pothos-types"
+  output       = "../src/generated/pothos-prisma-types.ts"
+  clientOutput = "./prisma"
+}
+
 datasource db {
   provider = "mysql"
 }

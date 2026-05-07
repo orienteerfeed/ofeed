@@ -10,12 +10,25 @@ import { getLoginSuccessPayload } from '../../utils/loginUser.js';
 import { sendEmail } from '../../utils/email.js';
 import { generateResetPasswordToken } from '../../utils/hashUtils.js';
 
+type SignupUserPayload = {
+  email: string;
+  password: string;
+  firstname: string;
+  lastname: string;
+  appBaseUrl: string;
+  organisation?: string | null;
+};
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 // Correctly calculate the directory of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // An asynchronous function to handle user authentication
-export const authenticateUser = async (username, password) => {
+export const authenticateUser = async (username: string, password: string) => {
   // Attempt to find the first user in the database with the provided email (username).
   let user;
   try {
@@ -27,7 +40,7 @@ export const authenticateUser = async (username, password) => {
     });
   } catch (err) {
     console.error(err);
-    throw new DatabaseError(`An error occurred: ` + err.message);
+    throw new DatabaseError(`An error occurred: ` + getErrorMessage(err));
   }
 
   // If no user is found, throw an authentication error.
@@ -65,12 +78,12 @@ export const authenticateUser = async (username, password) => {
 
 // Function to sign up a user and send a registration confirmation email
 export const signupUser = async (
-  email,
-  password,
-  firstname,
-  lastname,
-  app_base_url,
-  organisation = null,
+  email: SignupUserPayload['email'],
+  password: SignupUserPayload['password'],
+  firstname: SignupUserPayload['firstname'],
+  lastname: SignupUserPayload['lastname'],
+  app_base_url: SignupUserPayload['appBaseUrl'],
+  organisation: SignupUserPayload['organisation'] = null,
 ) => {
   try {
     // Check if user already exists
@@ -105,11 +118,10 @@ export const signupUser = async (
     const registrationConfirmFeAppLink = `${app_base_url}/${token}`;
 
     // Prepare and send the email
-    let emailTemplate;
     // Calculate the path to the ejs file
     const templatePath = path.join(__dirname, '../../views/emails/welcome.ejs');
 
-    await ejs
+    const emailTemplate = await ejs
       .renderFile(templatePath, {
         user_firstname: firstname,
         user_lastname: lastname,
@@ -117,10 +129,7 @@ export const signupUser = async (
         confirm_link: registrationConfirmFeAppLink,
         year: new Date().getFullYear(),
       })
-      .then(result => {
-        emailTemplate = result;
-      })
-      .catch(err => {
+      .catch((err: unknown) => {
         throw new ValidationError('Error Rendering email template: ' + err);
       });
 
@@ -146,7 +155,7 @@ export const signupUser = async (
 };
 
 // Function to sign up a user and send a registration confirmation email
-export const passwordResetRequest = async (email, app_base_url) => {
+export const passwordResetRequest = async (email: string, app_base_url: string) => {
   const successResponse = {
     success: true,
     message: 'Please check your inbox and follow the instructions to reset your password.',
@@ -175,20 +184,16 @@ export const passwordResetRequest = async (email, app_base_url) => {
     const resetPasswordAppLink = `${app_base_url}/${token}`;
 
     // Prepare and send the email
-    let emailTemplate;
     // Calculate the path to the ejs file
     const templatePath = path.join(__dirname, '../../views/emails/password-reset.ejs');
 
-    await ejs
+    const emailTemplate = await ejs
       .renderFile(templatePath, {
         user_firstname: existingUser.firstname,
         password_reset_link: resetPasswordAppLink,
         year: new Date().getFullYear(),
       })
-      .then(result => {
-        emailTemplate = result;
-      })
-      .catch(err => {
+      .catch((err: unknown) => {
         throw new ValidationError('Error Rendering email template: ' + err);
       });
 
@@ -213,7 +218,7 @@ export const passwordResetRequest = async (email, app_base_url) => {
   }
 };
 
-export const passwordResetConfirm = async (token, newPassword) => {
+export const passwordResetConfirm = async (token: string, newPassword: string) => {
   try {
     // Find the password reset request
     const passwordRequest = await prisma.passwordReset.findFirst({
@@ -240,7 +245,7 @@ export const passwordResetConfirm = async (token, newPassword) => {
       where: { email: passwordRequest.email },
     });
 
-    if (!passwordRequest) {
+    if (!user) {
       throw new ValidationError('Password reset token invalid.');
     }
 
@@ -274,9 +279,9 @@ export const passwordResetConfirm = async (token, newPassword) => {
 };
 
 export const changeAuthenticatedUserPassword = async (
-  userId,
-  currentPassword,
-  newPassword,
+  userId: number,
+  currentPassword: string,
+  newPassword: string,
 ) => {
   if (!currentPassword || !newPassword) {
     throw new ValidationError('Current password and new password are required.');
