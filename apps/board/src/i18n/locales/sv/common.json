@@ -1,0 +1,43 @@
+{
+  "language": {
+    "label": "Språk"
+  },
+  "settings": {
+    "title": "Inställningar för resultattabell",
+    "close": "Stäng inställningar",
+    "columnNumber": "Antal kolumner",
+    "scrolling": {
+      "label": "(Auto) Rullning",
+      "byPage": "Rulla per sida",
+      "byRow": "Rulla per rad",
+      "continuous": "Kontinuerlig rullning",
+      "manual": "Manuell rullning",
+      "speed": "Rullningshastighet (tid per rad)"
+    },
+    "tableContent": {
+      "label": "Tabellinnehåll",
+      "pinnedLeaders": "Antal fästa ledare",
+      "showUnfinished": "Visa oavslutade (startlista, springer)",
+      "compactMode": "Kompakt läge (utan klubb, bricka)",
+      "showEmojis": "Visa emojis i tabell"
+    },
+    "classes": {
+      "label": "Visade klasser",
+      "colorHint": "Kategorirubrikkens färg bestäms av det kön som är inställt för kategorin i datakällan (M = blå, F = rosa, andra = grå).",
+      "filterPlaceholder": "Filtrera efter namn…",
+      "selectAll": "Alla",
+      "colHeaders": {
+        "name": "Namn",
+        "col": "Kol.",
+        "color": "Färg",
+        "order": "Ordning"
+      }
+    },
+    "colorOverride": {
+      "auto": "Auto (från datakälla)",
+      "male": "M – blå (herrar)",
+      "female": "F – rosa (damer)",
+      "neutral": "X – grå (neutral)"
+    }
+  }
+}

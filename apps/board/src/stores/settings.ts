@@ -110,11 +110,9 @@ export const useSettingStore = defineStore(
       color: CategoryGender | null
     ) {
       const idx = categoriesDisplayRaw.value.findIndex((c) => c.name === category.name)
-      if (idx !== -1) {
-        categoriesDisplayRaw.value[idx] = {
-          ...categoriesDisplayRaw.value[idx],
-          colorOverride: color,
-        }
+      const existing = categoriesDisplayRaw.value[idx]
+      if (idx !== -1 && existing) {
+        categoriesDisplayRaw.value[idx] = { ...existing, colorOverride: color }
       }
     }
 
@@ -154,7 +152,8 @@ export const useSettingStore = defineStore(
       const fromIdx = sorted.findIndex((c) => c.name === fromName)
       const toIdx = sorted.findIndex((c) => c.name === toName)
       if (fromIdx === -1 || toIdx === -1) return
-      const [moved] = sorted.splice(fromIdx, 1)
+      const moved = sorted.splice(fromIdx, 1)[0]
+      if (!moved) return
       sorted.splice(toIdx, 0, moved)
       categoriesDisplayRaw.value = sorted.map((c, i) => ({ ...c, order: i }))
     }

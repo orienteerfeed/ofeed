@@ -1,0 +1,43 @@
+{
+  "language": {
+    "label": "Language"
+  },
+  "settings": {
+    "title": "Result table settings",
+    "close": "Close settings",
+    "columnNumber": "Column number",
+    "scrolling": {
+      "label": "(Auto) Scrolling",
+      "byPage": "Scroll by page",
+      "byRow": "Scroll by row",
+      "continuous": "Continuous scroll",
+      "manual": "Manual scroll",
+      "speed": "Scroll speed (time per result line)"
+    },
+    "tableContent": {
+      "label": "Table content",
+      "pinnedLeaders": "Number of pinned leaders",
+      "showUnfinished": "Show unfinished (startlist, running)",
+      "compactMode": "Compact mode (no club, card)",
+      "showEmojis": "Show Emojis in table"
+    },
+    "classes": {
+      "label": "Displayed classes",
+      "colorHint": "Category header color is determined by the gender set for the category in the data source (M = blue, F = pink, other = grey).",
+      "filterPlaceholder": "Filter by name…",
+      "selectAll": "All",
+      "colHeaders": {
+        "name": "Name",
+        "col": "Col",
+        "color": "Color",
+        "order": "Order"
+      }
+    },
+    "colorOverride": {
+      "auto": "Auto (from data source)",
+      "male": "M – blue (male)",
+      "female": "F – pink (female)",
+      "neutral": "X – grey (neutral)"
+    }
+  }
+}

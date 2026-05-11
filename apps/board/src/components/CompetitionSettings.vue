@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSettingStore } from '@/stores/settings'
 import type { CategoryGender } from '@/types/category'
+import LanguageSelector from './LanguageSelector.vue'
 
+const { t } = useI18n()
 const settingsStore = useSettingStore()
+
 function close() {
   settingsStore.setSettingsDisplayed(false)
 }
@@ -37,12 +41,12 @@ function toggleSelectAll() {
   )
 }
 
-const colorOptions: { value: CategoryGender | ''; label: string; bg: string; text: string }[] = [
-  { value: '',  label: 'Auto (from data source)', bg: 'bg-gray-200', text: 'text-gray-600' },
-  { value: 'M', label: 'M – blue (male)',          bg: 'bg-male',    text: 'text-white'   },
-  { value: 'F', label: 'F – pink (female)',         bg: 'bg-female',  text: 'text-white'   },
-  { value: 'X', label: 'X – grey (neutral)',        bg: 'bg-neutral', text: 'text-white'   },
-]
+const colorOptions = computed<{ value: CategoryGender | ''; label: string; bg: string; text: string }[]>(() => [
+  { value: '',  label: t('settings.colorOverride.auto'),    bg: 'bg-gray-200', text: 'text-gray-600' },
+  { value: 'M', label: t('settings.colorOverride.male'),    bg: 'bg-male',     text: 'text-white'   },
+  { value: 'F', label: t('settings.colorOverride.female'),  bg: 'bg-female',   text: 'text-white'   },
+  { value: 'X', label: t('settings.colorOverride.neutral'), bg: 'bg-neutral',  text: 'text-white'   },
+])
 
 const draggedName = ref<string | null>(null)
 const dragOverName = ref<string | null>(null)
@@ -78,23 +82,28 @@ function onDragEnd() {
   >
     <div class="px-6 py-4 mt-4 mb-8">
       <div class="flex justify-between items-center mb-2">
-        <h3 class="m-0">Result table settings</h3>
+        <h3 class="m-0">{{ t('settings.title') }}</h3>
         <button
           @click="close"
           class="text-gray-400 hover:text-gray-700 text-xl leading-none"
-          aria-label="Close settings"
+          :aria-label="t('settings.close')"
         >
           ✕
         </button>
       </div>
+      <div class="mb-4">
+        <h4 class="mb-2">{{ t('language.label') }}</h4>
+        <LanguageSelector />
+      </div>
+
       <form>
         <div class="mb-6">
-          <h4>Column number</h4>
+          <h4>{{ t('settings.columnNumber') }}</h4>
           <div class="flex flex-col items-start mb-2">
             <label
               for="scroll-columns-count"
               class="hidden block mb-1 mr-2 text-sm font-medium text-gray-900 dark:text-white"
-              >Column number</label
+              >{{ t('settings.columnNumber') }}</label
             >
             <input
               :value="settingsStore.scrollColumnsCount"
@@ -113,7 +122,7 @@ function onDragEnd() {
             />
           </div>
 
-          <h4>(Auto) Scrolling</h4>
+          <h4>{{ t('settings.scrolling.label') }}</h4>
           <div class="flex items-center mb-2">
             <input
               v-model="settingsStore.scrollType"
@@ -126,7 +135,7 @@ function onDragEnd() {
             <label
               for="scroll-page"
               class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >Scroll by page</label
+              >{{ t('settings.scrolling.byPage') }}</label
             >
           </div>
           <div class="flex items-center mb-2">
@@ -141,7 +150,7 @@ function onDragEnd() {
             <label
               for="scroll-row"
               class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >Scroll by row</label
+              >{{ t('settings.scrolling.byRow') }}</label
             >
           </div>
           <div class="flex items-center mb-2">
@@ -156,7 +165,7 @@ function onDragEnd() {
             <label
               for="scroll-continues"
               class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >Continues scroll</label
+              >{{ t('settings.scrolling.continuous') }}</label
             >
           </div>
           <div class="flex items-center mb-2">
@@ -171,11 +180,11 @@ function onDragEnd() {
             <label
               for="scroll-none"
               class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >Manual scroll</label
+              >{{ t('settings.scrolling.manual') }}</label
             >
           </div>
 
-          <h4>Scroll speed (time per result line)</h4>
+          <h4>{{ t('settings.scrolling.speed') }}</h4>
           <div class="flex items-center mb-2">
             <label
               for="scroll-speed"
@@ -193,13 +202,13 @@ function onDragEnd() {
             />
           </div>
 
-          <h4>Table content</h4>
+          <h4>{{ t('settings.tableContent.label') }}</h4>
 
           <div class="flex flex-col items-start mb-4">
             <label
               for="pin-count"
               class="block mb-1 text-sm font-medium text-gray-900"
-              >Number of pinned leaders</label
+              >{{ t('settings.tableContent.pinnedLeaders') }}</label
             >
             <input
               v-model.number="settingsStore.pinnedCount"
@@ -222,7 +231,7 @@ function onDragEnd() {
             <label
               for="unfinished-checkbox"
               class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >Show unfinished (startlist, running)</label
+              >{{ t('settings.tableContent.showUnfinished') }}</label
             >
           </div>
 
@@ -236,7 +245,7 @@ function onDragEnd() {
             <label
               for="compact-checkbox"
               class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >Compact mode (no club, card)</label
+              >{{ t('settings.tableContent.compactMode') }}</label
             >
           </div>
 
@@ -250,22 +259,20 @@ function onDragEnd() {
             <label
               for="compact-checkbox"
               class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-              >Show Emojis in table</label
+              >{{ t('settings.tableContent.showEmojis') }}</label
             >
           </div>
 
-          <h5>Displayed classes</h5>
+          <h5>{{ t('settings.classes.label') }}</h5>
           <p class="text-xs text-gray-500 mb-2">
-            Category header color is determined by the gender set for the
-            category in the data source (M&nbsp;=&nbsp;blue,
-            F&nbsp;=&nbsp;pink, other&nbsp;=&nbsp;grey).
+            {{ t('settings.classes.colorHint') }}
           </p>
           <div class="flex items-center gap-2 mb-2">
             <input
               id="class-filter"
               v-model="classFilter"
               type="text"
-              placeholder="Filter by name…"
+              :placeholder="t('settings.classes.filterPlaceholder')"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block flex-1 p-1.5"
             />
             <input
@@ -280,17 +287,17 @@ function onDragEnd() {
               for="select-all-classes"
               class="text-sm font-medium text-gray-900 whitespace-nowrap"
             >
-              All
+              {{ t('settings.classes.selectAll') }}
             </label>
           </div>
           <!-- header row -->
           <div class="flex items-center gap-1 mb-1 text-xs text-gray-400 font-medium select-none">
             <span class="shrink-0 w-4"></span>
             <span class="shrink-0 w-4"></span>
-            <span class="flex-1 min-w-0">Name</span>
-            <span class="shrink-0 w-9 text-center">Col</span>
-            <span class="shrink-0 w-22 text-center">Color</span>
-            <span class="shrink-0 w-10 text-center">Order</span>
+            <span class="flex-1 min-w-0">{{ t('settings.classes.colHeaders.name') }}</span>
+            <span class="shrink-0 w-9 text-center">{{ t('settings.classes.colHeaders.col') }}</span>
+            <span class="shrink-0 w-22 text-center">{{ t('settings.classes.colHeaders.color') }}</span>
+            <span class="shrink-0 w-10 text-center">{{ t('settings.classes.colHeaders.order') }}</span>
           </div>
 
           <div class="flex flex-col gap-y-0.5">

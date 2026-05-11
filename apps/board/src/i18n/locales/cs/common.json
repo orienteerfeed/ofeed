@@ -1,0 +1,43 @@
+{
+  "language": {
+    "label": "Jazyk"
+  },
+  "settings": {
+    "title": "Nastavení výsledkové tabulky",
+    "close": "Zavřít nastavení",
+    "columnNumber": "Počet sloupců",
+    "scrolling": {
+      "label": "(Auto) Posun",
+      "byPage": "Posun po stránce",
+      "byRow": "Posun po řádku",
+      "continuous": "Plynulý posun",
+      "manual": "Ruční posun",
+      "speed": "Rychlost posunu (čas na řádek)"
+    },
+    "tableContent": {
+      "label": "Obsah tabulky",
+      "pinnedLeaders": "Počet připnutých vedoucích",
+      "showUnfinished": "Zobrazit nedokončené (startovka, běžící)",
+      "compactMode": "Kompaktní mód (bez oddílu, čipu)",
+      "showEmojis": "Zobrazit emoji v tabulce"
+    },
+    "classes": {
+      "label": "Zobrazené kategorie",
+      "colorHint": "Barva záhlaví kategorie je určena pohlavím nastaveným u kategorie v datovém zdroji (M = modrá, F = růžová, ostatní = šedá).",
+      "filterPlaceholder": "Filtrovat podle názvu…",
+      "selectAll": "Vše",
+      "colHeaders": {
+        "name": "Název",
+        "col": "Sl.",
+        "color": "Barva",
+        "order": "Pořadí"
+      }
+    },
+    "colorOverride": {
+      "auto": "Auto (z datového zdroje)",
+      "male": "M – modrá (muži)",
+      "female": "F – růžová (ženy)",
+      "neutral": "X – šedá (neutrální)"
+    }
+  }
+}
