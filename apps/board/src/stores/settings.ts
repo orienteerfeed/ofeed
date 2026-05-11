@@ -26,6 +26,7 @@ export const useSettingStore = defineStore(
 
     const compactMode = ref(true)
     const showEmojis = ref(true)
+    const pinnedCount = ref(3)
 
     const scrollType = ref<ScrollType>('page')
 
@@ -156,6 +157,7 @@ export const useSettingStore = defineStore(
 
       compactMode,
       showEmojis,
+      pinnedCount,
 
       scrollType,
       setScrollType,

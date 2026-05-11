@@ -46,7 +46,7 @@ const athletesCount = computed(() => {
     full: athletes.value.finished.length + athletes.value.unfinished.length,
   }
 })
-const finishedAthletes = useFinishedAthletes(athletes)
+const finishedAthletes = useFinishedAthletes(athletes, computed(() => settingsStore.pinnedCount))
 const unfinishedAthletes = useUnfinishedAthletes(athletes)
 </script>
 
@@ -60,18 +60,17 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
       />
       <!-- TODO Add 2rem text class -->
       <div
-        v-if="status === 'success' && areAvailable"
-        class="w-full text-3xl font-bold bg-white"
+        v-if="finishedAthletes.pinnedRows.length"
+        class="w-full text-3xl font-bold bg-white border-b-2 border-gray-600 border-dashed"
       >
         <TableFinishedRow
-          v-if="finishedAthletes.firstRow"
-          :data="finishedAthletes.firstRow"
-          :is-even="false"
+          v-for="(row, index) in finishedAthletes.pinnedRows"
+          :key="row.id"
+          :data="row"
+          :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
           :show-emojis="settingsStore.showEmojis"
-          class="border-b-2 border-gray-600 border-dashed"
-        >
-        </TableFinishedRow>
+        />
       </div>
     </div>
     <div ref="contentRef">

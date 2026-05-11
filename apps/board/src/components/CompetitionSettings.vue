@@ -17,17 +17,23 @@ const filteredCategories = computed(() => {
   )
 })
 
-const allFilteredSelected = computed(() =>
-  filteredCategories.value.length > 0 &&
-  filteredCategories.value.every((c) => c.selected)
+const allFilteredSelected = computed(
+  () =>
+    filteredCategories.value.length > 0 &&
+    filteredCategories.value.every((c) => c.selected)
 )
 
-const someFilteredSelected = computed(() =>
-  filteredCategories.value.some((c) => c.selected) && !allFilteredSelected.value
+const someFilteredSelected = computed(
+  () =>
+    filteredCategories.value.some((c) => c.selected) &&
+    !allFilteredSelected.value
 )
 
 function toggleSelectAll() {
-  settingsStore.selectCategories(filteredCategories.value, !allFilteredSelected.value)
+  settingsStore.selectCategories(
+    filteredCategories.value,
+    !allFilteredSelected.value
+  )
 }
 </script>
 
@@ -42,7 +48,9 @@ function toggleSelectAll() {
           @click="close"
           class="text-gray-400 hover:text-gray-700 text-xl leading-none"
           aria-label="Close settings"
-        >✕</button>
+        >
+          ✕
+        </button>
       </div>
       <form>
         <div class="mb-6">
@@ -55,7 +63,11 @@ function toggleSelectAll() {
             >
             <input
               :value="settingsStore.scrollColumnsCount"
-              @input="(e) => settingsStore.setScrollColumnsCount(parseInt((e.target as HTMLInputElement).value))
+              @input="
+                (e) =>
+                  settingsStore.setScrollColumnsCount(
+                    parseInt((e.target as HTMLInputElement).value)
+                  )
               "
               id="scroll-columns-count"
               type="number"
@@ -148,6 +160,23 @@ function toggleSelectAll() {
 
           <h4>Table content</h4>
 
+          <div class="flex flex-col items-start mb-4">
+            <label
+              for="pin-count"
+              class="block mb-1 text-sm font-medium text-gray-900"
+              >Number of pinned leaders</label
+            >
+            <input
+              v-model.number="settingsStore.pinnedCount"
+              id="pin-count"
+              type="number"
+              min="0"
+              max="10"
+              step="1"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            />
+          </div>
+
           <div class="flex items-center mb-2">
             <input
               id="unfinished-checkbox"
@@ -207,7 +236,10 @@ function toggleSelectAll() {
               @change="toggleSelectAll"
               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
             />
-            <label for="select-all-classes" class="text-sm font-medium text-gray-900 whitespace-nowrap">
+            <label
+              for="select-all-classes"
+              class="text-sm font-medium text-gray-900 whitespace-nowrap"
+            >
               All
             </label>
           </div>
@@ -231,7 +263,12 @@ function toggleSelectAll() {
               />
               <input
                 :value="category.column"
-                @input="(e) => settingsStore.setCategoryDisplayColumn(category, parseInt((e.target as HTMLInputElement).value))
+                @input="
+                  (e) =>
+                    settingsStore.setCategoryDisplayColumn(
+                      category,
+                      parseInt((e.target as HTMLInputElement).value)
+                    )
                 "
                 type="number"
                 min="1"
