@@ -7,6 +7,25 @@ import { testBasicCompetition, testCompetition } from '@/utils/testData'
 import type { Competition, CompetitionList } from '@/types/competition'
 import { AthleteStatus } from '@/types/category'
 
+type WsSink = {
+  next: (value: { data: Record<string, unknown> }) => void
+  error: (err: unknown) => void
+  complete: () => void
+}
+
+let capturedSink: WsSink | null = null
+
+vi.mock('graphql-ws', () => ({
+  createClient: () => ({
+    subscribe(_query: unknown, sink: WsSink) {
+      capturedSink = sink
+      return () => {
+        capturedSink = null
+      }
+    },
+  }),
+}))
+
 const TEST_RESP_COMPETITIONS = {
   results: {
     data: [
@@ -161,6 +180,10 @@ const getTestAthletesComponent = ({
   })
 
 describe('useOfeed', () => {
+  afterEach(() => {
+    capturedSink = null
+  })
+
   it('uses the default oFeed base URL when env is not defined', async () => {
     vi.stubEnv('VITE_OFEED_API_URL', '')
     mockFetchOnce(TEST_RESP_COMPETITIONS)
@@ -202,8 +225,6 @@ describe('useOfeed', () => {
   })
 
   it('returns athletes in the shared format', async () => {
-    mockFetchOnce(TEST_RESP_ATHLETES)
-
     render(
       getTestAthletesComponent({
         competition: TEST_COMPETITION,
@@ -217,6 +238,28 @@ describe('useOfeed', () => {
         },
       }
     )
+
+    await waitFor(() => expect(capturedSink).not.toBeNull())
+
+    capturedSink!.next({
+      data: {
+        competitorsByClassUpdated: [
+          {
+            id: 1,
+            lastname: 'Doe',
+            firstname: 'Jane',
+            organisation: 'OK Club',
+            shortName: 'OKC',
+            card: 81234567,
+            startTime: '2023-01-01T10:00:00.000Z',
+            finishTime: '2023-01-01T10:42:00.000Z',
+            time: 2520,
+            status: 'Finished',
+            class: null,
+          },
+        ],
+      },
+    })
 
     await waitFor(() => expect(athletesComposable.status.value).toEqual('success'))
 

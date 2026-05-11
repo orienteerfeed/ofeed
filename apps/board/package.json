@@ -27,6 +27,7 @@
     "@vueuse/core": "^13.0.0",
     "axios": "^1.16.0",
     "date-fns": "^2.29.3",
+    "graphql-ws": "^6.0.8",
     "pinia": "^3.0.0",
     "pinia-plugin-persistedstate": "^4.0.0",
     "vue": "3.5.33",
