@@ -2,12 +2,14 @@ import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { ScrollType } from '@/types/layout'
+import type { CategoryGender } from '@/types/category'
 
 type CategoryDisplay = {
   name: string
   selected: boolean
   column: null | number
   order: number
+  colorOverride?: CategoryGender | null
 }
 
 type CategoryDisplaySelected = Omit<CategoryDisplay, 'column'> & {
@@ -99,6 +101,20 @@ export const useSettingStore = defineStore(
         selected: true,
         column: 1,
         order: index,
+        colorOverride: null,
+      }
+    }
+
+    function setCategoryColorOverride(
+      category: CategoryDisplay,
+      color: CategoryGender | null
+    ) {
+      const idx = categoriesDisplayRaw.value.findIndex((c) => c.name === category.name)
+      if (idx !== -1) {
+        categoriesDisplayRaw.value[idx] = {
+          ...categoriesDisplayRaw.value[idx],
+          colorOverride: color,
+        }
       }
     }
 
@@ -130,6 +146,17 @@ export const useSettingStore = defineStore(
       if (!formerCategoryAtOrder) return
       formerCategoryAtOrder.order = currentOrder
       category.order = newOrder
+    }
+
+    function moveCategoryToIndex(fromName: string, toName: string) {
+      if (fromName === toName) return
+      const sorted = [...categoriesDisplay.value]
+      const fromIdx = sorted.findIndex((c) => c.name === fromName)
+      const toIdx = sorted.findIndex((c) => c.name === toName)
+      if (fromIdx === -1 || toIdx === -1) return
+      const [moved] = sorted.splice(fromIdx, 1)
+      sorted.splice(toIdx, 0, moved)
+      categoriesDisplayRaw.value = sorted.map((c, i) => ({ ...c, order: i }))
     }
 
     function selectCategories(categories: CategoryDisplay[], selected: boolean) {
@@ -181,6 +208,8 @@ export const useSettingStore = defineStore(
       setCategoryDisplayOrder,
       setCategorySelected,
       selectCategories,
+      setCategoryColorOverride,
+      moveCategoryToIndex,
     }
   },
   {

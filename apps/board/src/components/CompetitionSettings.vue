@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useSettingStore } from '@/stores/settings'
+import type { CategoryGender } from '@/types/category'
 
 const settingsStore = useSettingStore()
 function close() {
@@ -34,6 +35,40 @@ function toggleSelectAll() {
     filteredCategories.value,
     !allFilteredSelected.value
   )
+}
+
+const colorOptions: { value: CategoryGender | ''; label: string; bg: string; text: string }[] = [
+  { value: '',  label: 'Auto (from data source)', bg: 'bg-gray-200', text: 'text-gray-600' },
+  { value: 'M', label: 'M – blue (male)',          bg: 'bg-male',    text: 'text-white'   },
+  { value: 'F', label: 'F – pink (female)',         bg: 'bg-female',  text: 'text-white'   },
+  { value: 'X', label: 'X – grey (neutral)',        bg: 'bg-neutral', text: 'text-white'   },
+]
+
+const draggedName = ref<string | null>(null)
+const dragOverName = ref<string | null>(null)
+
+function onDragStart(e: DragEvent, name: string) {
+  draggedName.value = name
+  e.dataTransfer!.effectAllowed = 'move'
+}
+
+function onDragOver(e: DragEvent, name: string) {
+  e.preventDefault()
+  dragOverName.value = name
+}
+
+function onDrop(e: DragEvent, toName: string) {
+  e.preventDefault()
+  if (draggedName.value !== null && draggedName.value !== toName) {
+    settingsStore.moveCategoryToIndex(draggedName.value, toName)
+  }
+  draggedName.value = null
+  dragOverName.value = null
+}
+
+function onDragEnd() {
+  draggedName.value = null
+  dragOverName.value = null
 }
 </script>
 
@@ -248,24 +283,47 @@ function toggleSelectAll() {
               All
             </label>
           </div>
-          <div class="flex flex-col flex-wrap gap-y-2">
+          <!-- header row -->
+          <div class="flex items-center gap-1 mb-1 text-xs text-gray-400 font-medium select-none">
+            <span class="shrink-0 w-4"></span>
+            <span class="shrink-0 w-4"></span>
+            <span class="flex-1 min-w-0">Name</span>
+            <span class="shrink-0 w-9 text-center">Col</span>
+            <span class="shrink-0 w-22 text-center">Color</span>
+            <span class="shrink-0 w-10 text-center">Order</span>
+          </div>
+
+          <div class="flex flex-col gap-y-0.5">
             <div
               v-for="category in filteredCategories"
               :key="category.name"
-              class="grid grid-cols-5 gap-2"
+              draggable="true"
+              class="flex items-center gap-1 rounded transition-colors"
+              :class="{
+                'opacity-40': draggedName === category.name,
+                'bg-blue-50 border-t-2 border-blue-400': dragOverName === category.name && draggedName !== category.name,
+                '[&_*]:pointer-events-none': draggedName !== null,
+              }"
+              @dragstart="onDragStart($event, category.name)"
+              @dragover="onDragOver($event, category.name)"
+              @drop="onDrop($event, category.name)"
+              @dragend="onDragEnd"
             >
-              <label
-                :for="`show-category-${category.name}`"
-                class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                >{{ category.name }}</label
-              >
+              <span
+                class="i-mdi-drag-vertical shrink-0 w-4 h-4 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing"
+              />
               <input
                 :id="`show-category-${category.name}`"
                 type="checkbox"
                 :checked="category.selected"
                 @change="() => settingsStore.setCategorySelected(category)"
-                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                class="shrink-0 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
               />
+              <label
+                :for="`show-category-${category.name}`"
+                class="flex-1 min-w-0 text-sm font-medium text-gray-900 truncate"
+                >{{ category.name }}</label
+              >
               <input
                 :value="category.column"
                 @input="
@@ -279,25 +337,40 @@ function toggleSelectAll() {
                 min="1"
                 :max="settingsStore.scrollColumnsCount"
                 step="1"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1"
+                class="shrink-0 w-9 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 p-1 text-center"
               />
+              <div class="shrink-0 flex gap-0.5">
+                <button
+                  v-for="opt in colorOptions"
+                  :key="opt.value"
+                  type="button"
+                  :title="opt.label"
+                  :class="[
+                    opt.bg,
+                    opt.text,
+                    (category.colorOverride ?? '') === opt.value
+                      ? 'ring-2 ring-gray-700'
+                      : 'opacity-50 hover:opacity-100',
+                  ]"
+                  class="w-5 h-5 rounded text-xs font-bold leading-none flex items-center justify-center"
+                  @click="settingsStore.setCategoryColorOverride(category, opt.value || null)"
+                >{{ opt.value || 'A' }}</button>
+              </div>
               <button
-                :disabled="category.order === 0"
-                @click.prevent="
-                  () => settingsStore.setCategoryDisplayOrder(category, true)
-                "
+                type="button"
+                :class="{ invisible: category.order === 0 }"
+                @click="settingsStore.setCategoryDisplayOrder(category, true)"
+                class="shrink-0 w-5 h-5 flex items-center justify-center text-gray-600 hover:text-gray-900"
               >
-                Up
+                <span class="i-mdi-chevron-up w-4 h-4" />
               </button>
               <button
-                :disabled="
-                  category.order === settingsStore.categoriesDisplay.length - 1
-                "
-                @click.prevent="
-                  () => settingsStore.setCategoryDisplayOrder(category, false)
-                "
+                type="button"
+                :class="{ invisible: category.order === settingsStore.categoriesDisplay.length - 1 }"
+                @click="settingsStore.setCategoryDisplayOrder(category, false)"
+                class="shrink-0 w-5 h-5 flex items-center justify-center text-gray-600 hover:text-gray-900"
               >
-                Down
+                <span class="i-mdi-chevron-down w-4 h-4" />
               </button>
             </div>
           </div>

@@ -41,7 +41,12 @@ const categoriesHashByName = computed(() => {
 const categoryColumns = computed(() =>
   settingStore.categoriesDisplayByColumn.map((columnCategories) =>
     columnCategories
-      .map((category) => categoriesHashByName.value[category.name])
+      .map((displayCategory) => {
+        const category = categoriesHashByName.value[displayCategory.name]
+        if (!category) return null
+        const override = displayCategory.colorOverride ?? undefined
+        return override ? { ...category, colorOverride: override } : category
+      })
       .filter((category): category is NonNullable<typeof category> => Boolean(category))
   )
 )
