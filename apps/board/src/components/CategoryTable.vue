@@ -60,7 +60,7 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
       />
       <!-- TODO Add 2rem text class -->
       <div
-        v-if="finishedAthletes.pinnedRows.length"
+        v-if="finishedAthletes.pinnedRows.length && finishedAthletes.restRows.length"
         class="w-full text-3xl font-bold bg-white border-b-2 border-gray-600 border-dashed"
       >
         <TableFinishedRow
