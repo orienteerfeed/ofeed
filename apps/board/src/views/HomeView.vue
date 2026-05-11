@@ -12,10 +12,13 @@ type CompetitionProvider = {
 
 const COMPETITION_PROVIDERS: CompetitionProvider[] = [
   { name: 'OFeed', value: 'ofeed' },
-  { name: 'LiveResultat', value: 'liveResultat' },
+  { name: 'LiveResults', value: 'liveResultat' },
 ]
 const allowedProviders = (
-  (import.meta.env.VITE_PROVIDERS as string | undefined)?.split(',') ?? ['ofeed', 'liveResultat']
+  (import.meta.env.VITE_PROVIDERS as string | undefined)?.split(',') ?? [
+    'ofeed',
+    'liveResultat',
+  ]
 ).filter((provider): provider is DataProviders =>
   ['ofeed', 'liveResultat', 'test'].includes(provider)
 )
