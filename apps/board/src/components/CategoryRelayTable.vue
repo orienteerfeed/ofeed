@@ -5,6 +5,7 @@ import CategoryRelayTableRow from './CategoryRelayTableRow.vue'
 
 import { useRelayTeams } from '@/composables/useRelayTeams'
 import { useScrollColumnItem } from '@/composables/scrollColumn/useScrollColumn'
+import { useSettingStore } from '@/stores/settings'
 
 import type { Category } from '@/types/category'
 import type { Competition } from '@/types/competition'
@@ -14,6 +15,8 @@ const props = defineProps<{
   competition: Competition
   category: Category
 }>()
+
+const settingsStore = useSettingStore()
 
 const { scrollItemRef, stickyRef, contentRef, isActive } = useScrollColumnItem(
   props.category.name
@@ -45,6 +48,7 @@ provide(isTableActiveKey, isActive)
           :is-even="index % 2 === 0"
           :data="item"
           :leg-count="legCount"
+          :show-emojis="settingsStore.showEmojis"
           :timezone="props.competition.timezone"
         ></CategoryRelayTableRow>
       </div>
