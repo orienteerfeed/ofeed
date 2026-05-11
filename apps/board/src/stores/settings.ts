@@ -54,6 +54,9 @@ export const useSettingStore = defineStore(
         return // Bugfix skip rewrite update
       availableCategories.value = categories
       categoriesDisplayRaw.value = categories.map(createSelectedCategoryItem)
+      if (scrollColumnsCount.value > 1) {
+        autoUpdateCategoryDisplayColumns()
+      }
     }
 
     const categoriesDisplay = computed(() => {
