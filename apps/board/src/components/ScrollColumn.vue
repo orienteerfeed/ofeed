@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, toRef, watch, computed, onMounted } from 'vue'
+import type { Ref } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 
 import { useScrollColumn } from '@/composables/scrollColumn/useScrollColumn'
@@ -43,6 +44,20 @@ onMounted(() => {
     activeScroll = scrollTypesSetups[type]()
   }
 })
+
+// For continuous scroll, restart immediately from current position on speed change.
+// Page/row use a reactive useIntervalFn interval so they update automatically.
+watch(
+  () => settingsStore.readLineTimeMS,
+  () => {
+    if (settingsStore.scrollType !== 'continues' || !activeScroll) return
+    activeScroll()
+    activeScroll = null
+    const isCancelled = ref(false)
+    activeScroll = () => { isCancelled.value = true }
+    scrollContinuously(isCancelled)
+  }
+)
 
 watch(
   () => settingsStore.scrollType,

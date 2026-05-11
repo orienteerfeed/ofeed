@@ -34,7 +34,7 @@
       "selectAll": "Vše",
       "colHeaders": {
         "name": "Název",
-        "col": "Sl.",
+        "col": "Sloupec",
         "color": "Barva",
         "order": "Pořadí"
       }

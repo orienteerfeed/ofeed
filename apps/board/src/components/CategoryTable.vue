@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watchEffect } from 'vue'
 
 import TableHeader from './CategoryTableHeader.vue'
 import TableFinishedRow from './CategoryTableFinishedRow.vue'
@@ -26,10 +26,11 @@ const { scrollItemRef, stickyRef, contentRef, isActive } = useScrollColumnItem(
   props.category.name
 )
 
+const fetchEnabled = computed(() => isActive.value || settingsStore.areSettingsDisplayed)
 const { status, athletes, areAvailable, courseInfo } = useAthletes({
   competition: props.competition,
   category: props.category,
-  fetchEnabled: isActive,
+  fetchEnabled,
 })
 
 const effectiveCategory = computed(() => ({
@@ -48,6 +49,10 @@ const athletesCount = computed(() => {
 })
 const finishedAthletes = useFinishedAthletes(athletes, computed(() => settingsStore.pinnedCount))
 const unfinishedAthletes = useUnfinishedAthletes(athletes)
+
+watchEffect(() => {
+  settingsStore.updateCategoryCount(props.category.name, athletesCount.value.full)
+})
 </script>
 
 <template>

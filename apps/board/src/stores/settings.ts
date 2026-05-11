@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { ScrollType } from '@/types/layout'
@@ -47,6 +47,10 @@ export const useSettingStore = defineStore(
     const showUnfinishedAthletes = ref(true)
 
     const availableCategories = ref<string[]>([])
+    const categoryCounts = reactive<Record<string, number>>({})
+    function updateCategoryCount(name: string, count: number) {
+      categoryCounts[name] = count
+    }
     const categoriesDisplayRaw = ref<CategoryDisplay[]>([])
     const setAvailableCategories = (categories: string[]) => {
       if (
@@ -199,6 +203,8 @@ export const useSettingStore = defineStore(
 
       showUnfinishedAthletes,
       availableCategories,
+      categoryCounts,
+      updateCategoryCount,
       categoriesDisplayRaw, // Export for persist to work
       categoriesDisplay,
       categoriesDisplayByColumn,
@@ -212,7 +218,13 @@ export const useSettingStore = defineStore(
     }
   },
   {
-    persist: true,
+    persist: {
+      pick: [
+        'compactMode', 'showEmojis', 'pinnedCount',
+        'scrollType', 'scrollColumnsCount', 'readLineTimeSeconds',
+        'showUnfinishedAthletes', 'categoriesDisplayRaw',
+      ],
+    },
   }
 )
 

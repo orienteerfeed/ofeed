@@ -329,8 +329,13 @@ function onDragEnd() {
               <label
                 :for="`show-category-${category.name}`"
                 class="flex-1 min-w-0 text-sm font-medium text-gray-900 truncate"
-                >{{ category.name }}</label
               >
+                {{ category.name }}
+                <span
+                  v-if="settingsStore.categoryCounts[category.name] !== undefined"
+                  class="text-gray-400 font-normal"
+                >({{ settingsStore.categoryCounts[category.name] }})</span>
+              </label>
               <input
                 :value="category.column"
                 @input="

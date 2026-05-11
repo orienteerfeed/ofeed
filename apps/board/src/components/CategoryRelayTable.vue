@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide } from 'vue'
+import { computed, provide, watchEffect } from 'vue'
 import TableHeader from './CategoryTableHeader.vue'
 import CategoryRelayTableRow from './CategoryRelayTableRow.vue'
 
@@ -22,16 +22,21 @@ const { scrollItemRef, stickyRef, contentRef, isActive } = useScrollColumnItem(
   props.category.name
 )
 
+const fetchEnabled = computed(() => isActive.value || settingsStore.areSettingsDisplayed)
 const { relayTeams, teamCounts, status, legCount } = useRelayTeams({
   competition: props.competition,
   category: props.category,
-  fetchEnabled: isActive,
+  fetchEnabled,
 })
 
 const pinnedTeams = computed(() => relayTeams.value.slice(0, settingsStore.pinnedCount))
 const restTeams = computed(() => relayTeams.value.slice(settingsStore.pinnedCount))
 
 provide(isTableActiveKey, isActive)
+
+watchEffect(() => {
+  settingsStore.updateCategoryCount(props.category.name, teamCounts.value.full)
+})
 </script>
 
 <template>
