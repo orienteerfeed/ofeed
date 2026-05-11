@@ -2,6 +2,12 @@
   "language": {
     "label": "Språk"
   },
+  "noData": {
+    "title": "Tävlingsdata är inte tillgängliga",
+    "description": "Det finns för närvarande inga uppgifter tillgängliga för resultat. Kom tillbaka senare eller kontakta arrangören för mer info."
+  },
+  "loading": "Laddar data",
+  "error": "Fel vid laddning av data, försök igen senare",
   "settings": {
     "title": "Inställningar för resultattabell",
     "close": "Stäng inställningar",

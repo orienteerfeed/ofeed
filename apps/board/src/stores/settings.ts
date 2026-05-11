@@ -38,7 +38,7 @@ export const useSettingStore = defineStore(
       autoUpdateCategoryDisplayColumns()
     }
 
-    const readLineTimeSeconds = ref(import.meta.env.PROD ? 0.5 : 0.1)
+    const readLineTimeSeconds = ref(import.meta.env.PROD ? 0.3 : 0.1)
     const readLineTimeMS = computed(() => readLineTimeSeconds.value * 1000)
     function setScrollType(type: ScrollType) {
       scrollType.value = type

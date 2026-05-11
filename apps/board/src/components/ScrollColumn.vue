@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { ref, unref, toRef, watch, computed } from 'vue'
-import type { Ref } from 'vue'
+import { ref, toRef, watch, computed, onMounted } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 
 import { useScrollColumn } from '@/composables/scrollColumn/useScrollColumn'
@@ -24,7 +23,7 @@ const linesNumber = computed(() => {
   return Math.floor(columnWrapperRect.value.height / tableSizing.lineHeight)
 })
 const visiblePageReadInMS = computed(
-  () => linesNumber.value * settingsStore.readLineTimeMS || 1000
+  () => Math.min(linesNumber.value * settingsStore.readLineTimeMS || 1000, 5000)
 )
 
 let activeScroll: null | Function = null
@@ -34,6 +33,17 @@ const scrollTypesSetups = {
   row: setupRowScroll,
   continues: setupContinuesScroll,
 }
+
+// Set up initial scroll after mount so columnWrapperRect has real dimensions,
+// avoiding a useIntervalFn restart that would delay the first scroll by up to 15 s.
+onMounted(() => {
+  checkItemsVisibility()
+  const type = settingsStore.scrollType
+  if (type !== 'none') {
+    activeScroll = scrollTypesSetups[type]()
+  }
+})
+
 watch(
   () => settingsStore.scrollType,
   (type) => {
@@ -44,30 +54,23 @@ watch(
     if (type !== 'none') {
       activeScroll = scrollTypesSetups[type]()
     }
-  },
-  { immediate: true }
+  }
 )
 
 function isColumnBottom() {
-  if (!columnContent.value) return true
-  return isFullyDisplayed(columnContent.value)
+  if (!columnContent.value || !columnWrapper.value) return true
+  const contentRect = columnContent.value.getBoundingClientRect()
+  const wrapperRect = columnWrapper.value.getBoundingClientRect()
+  return Math.floor(contentRect.bottom - wrapperRect.bottom) <= 16
 }
 
 function isColumnTop() {
-  if (!columnContent.value) return true
-  return columnWrapperRect.value.top >= 0
+  if (!columnWrapper.value) return true
+  return columnWrapper.value.scrollTop <= 0
 }
 
 function scrollColumnToTop() {
   columnWrapper.value?.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function isFullyDisplayed(table: Ref<HTMLElement> | HTMLElement) {
-  const tableElement = unref(table)
-  const rect = tableElement.getBoundingClientRect()
-  const bottomMargin = 16
-  const tablePxRemaining = rect.bottom - columnWrapperRect.value.bottom
-  return Math.floor(tablePxRemaining) <= bottomMargin
 }
 
 function scrollDownBy(

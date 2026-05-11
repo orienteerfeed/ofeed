@@ -2,6 +2,12 @@
   "language": {
     "label": "Language"
   },
+  "noData": {
+    "title": "Event Data Not Available",
+    "description": "No data is currently available for results. Please check back later or contact the event organizer for more information."
+  },
+  "loading": "Loading data",
+  "error": "Error occurred while loading data, try again later",
   "settings": {
     "title": "Result table settings",
     "close": "Close settings",

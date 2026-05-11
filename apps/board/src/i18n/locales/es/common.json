@@ -2,6 +2,12 @@
   "language": {
     "label": "Idioma"
   },
+  "noData": {
+    "title": "Datos del evento no disponibles",
+    "description": "Actualmente no hay datos disponibles para los resultados. Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento."
+  },
+  "loading": "Cargando datos",
+  "error": "Error al cargar los datos, inténtalo de nuevo más tarde",
   "settings": {
     "title": "Configuración de la tabla de resultados",
     "close": "Cerrar ajustes",

@@ -2,6 +2,12 @@
   "language": {
     "label": "Jazyk"
   },
+  "noData": {
+    "title": "Akce nemá k dispozici žádná data",
+    "description": "Pro zobrazení výsledků zatím nejsou dostupná žádná data. Zkus to prosím později nebo se informuj u pořadatele."
+  },
+  "loading": "Načítání dat",
+  "error": "Při načítání dat došlo k chybě, zkuste to znovu",
   "settings": {
     "title": "Nastavení výsledkové tabulky",
     "close": "Zavřít nastavení",

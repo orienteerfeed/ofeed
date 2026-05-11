@@ -2,6 +2,12 @@
   "language": {
     "label": "Sprache"
   },
+  "noData": {
+    "title": "Veranstaltungsdaten nicht verfügbar",
+    "description": "Für die Ergebnisse sind derzeit keine Daten verfügbar. Bitte versuche es später erneut oder wende dich an den Veranstalter."
+  },
+  "loading": "Daten werden geladen",
+  "error": "Fehler beim Laden der Daten, bitte versuche es erneut",
   "settings": {
     "title": "Ergebnistabelleneinstellungen",
     "close": "Einstellungen schließen",
