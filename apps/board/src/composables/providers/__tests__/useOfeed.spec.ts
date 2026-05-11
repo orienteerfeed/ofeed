@@ -236,6 +236,45 @@ describe('useOfeed', () => {
     ])
   })
 
+  it.each([
+    { name: 'M 16 A', sex: 'B' as const, expected: 'M' },
+    { name: 'M  16 A', sex: 'B' as const, expected: 'M' },
+    { name: 'M16A', sex: 'B' as const, expected: 'M' },
+    { name: 'W 12 A', sex: 'B' as const, expected: 'F' },
+    { name: 'W  12 A', sex: 'B' as const, expected: 'F' },
+    { name: 'W12A', sex: 'B' as const, expected: 'F' },
+    { name: 'H21', sex: 'B' as const, expected: 'M' },
+    { name: 'D21', sex: 'B' as const, expected: 'F' },
+    { name: 'Open', sex: 'B' as const, expected: 'X' },
+    { name: 'Men', sex: 'B' as const, expected: 'X' },
+    { name: 'Women', sex: 'B' as const, expected: 'X' },
+  ])(
+    'guesses gender $expected for sex=B class "$name"',
+    async ({ name, sex, expected }) => {
+      mockFetchOnce({
+        results: {
+          data: {
+            ...testBasicCompetition,
+            location: 'TEST LOCATION',
+            relay: false,
+            published: true,
+            zeroTime: new Date('2023-01-01T10:00:00.000Z').toISOString(),
+            classes: [{ id: '1', name, length: 0, climb: 0, controlsCount: 0, sex }],
+          },
+        },
+      })
+      render(getTestCompetitionComponent('1'), {
+        global: { provide: { [VUE_QUERY_CLIENT]: createQueryClient() } },
+      })
+      await waitFor(() =>
+        expect(competitionComposable.status.value).toEqual('success')
+      )
+      expect(competitionComposable.competition.value?.categories[0].gender).toEqual(
+        expected
+      )
+    }
+  )
+
   it('returns competition detail in the shared format', async () => {
     vi.stubEnv('VITE_OFEED_API_URL', '')
     mockFetchOnce(TEST_RESP_COMPETITION)

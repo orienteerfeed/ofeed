@@ -298,13 +298,19 @@ function formatOfeedCompetition(response: OfeedCompetitionResponse): Competition
     categories: (response.classes ?? []).map((category) => ({
       ...category,
       controls: category.controlsCount,
-      gender: transformGender(category.sex),
+      gender: transformGender(category.sex, category.name),
     })),
   }
 }
 
-function transformGender(sex: OfeedCategory['sex']): Category['gender'] {
-  if (sex === 'B') return 'X'
+function guessGender(className: string): Category['gender'] {
+  if (/^[HM]\s*\d/.test(className)) return 'M'
+  if (/^[DWF]\s*\d/.test(className)) return 'F'
+  return 'X'
+}
+
+function transformGender(sex: OfeedCategory['sex'], name: string): Category['gender'] {
+  if (sex === 'B') return guessGender(name)
   return sex
 }
 
