@@ -81,7 +81,7 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
         <TableFinishedRow
           v-for="(row, index) in finishedAthletes.restRows"
           :data="row"
-          :key="row.rank"
+          :key="row.id"
           :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
           :show-emojis="settingsStore.showEmojis"
