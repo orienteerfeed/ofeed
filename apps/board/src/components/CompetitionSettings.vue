@@ -220,6 +220,11 @@ function toggleSelectAll() {
           </div>
 
           <h5>Displayed classes</h5>
+          <p class="text-xs text-gray-500 mb-2">
+            Category header color is determined by the gender set for the
+            category in the data source (M&nbsp;=&nbsp;blue,
+            F&nbsp;=&nbsp;pink, other&nbsp;=&nbsp;grey).
+          </p>
           <div class="flex items-center gap-2 mb-2">
             <input
               id="class-filter"
