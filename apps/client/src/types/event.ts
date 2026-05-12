@@ -102,6 +102,7 @@ export interface Event {
 
   // Settings
   eventPassword?: EventPassword;
+  meosEventBindings?: MeosEventBinding[];
 
   // Metadata
   createdAt: string;
@@ -138,6 +139,10 @@ export interface EventQueryVariables {
 export type EventPassword = Pick<SharedEventPassword, 'password'> & {
   expiresAt: string;
 };
+
+export interface MeosEventBinding {
+  id: number;
+}
 
 export interface EventFormData {
   id?: string;
