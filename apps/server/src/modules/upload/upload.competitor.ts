@@ -8,17 +8,23 @@
  */
 
 import { Prisma } from '../../generated/prisma/client.js';
-import type { ProtocolType, ResultStatus } from '../../generated/prisma/enums.js';
+import type { ResultStatus } from '../../generated/prisma/enums.js';
 import prisma from '../../utils/context.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
-import { normalizeValue } from '../../utils/normalize.js';
-import { organisationSelect, upsertOrganisation } from '../event/organisation.helpers.js';
+import { upsertOrganisation } from '../event/organisation.helpers.js';
+import {
+  COMPETITOR_DIFF_SELECT,
+  detectCompetitorChanges,
+} from '../competitor/competitor-change.helpers.js';
+import { createCompetitorProtocolEntries } from '../competitor/competitor-change.service.js';
 import {
   SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
   SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
 } from './upload.constants.js';
 import { getIofDateTime, toResultStatus } from './upload.iof.helpers.js';
 import type { IofOrganisation, IofPerson, IofResult, IofStart } from './upload.iof.types.js';
+
+export { detectCompetitorChanges } from '../competitor/competitor-change.helpers.js';
 
 export type CompetitorKeys = { registration: string; system: string };
 
@@ -75,99 +81,6 @@ export function fallbackToNameHash(classId: number, person: IofPerson): string {
   }
   return createShortCompetitorHash(classId, familyName, givenName);
 }
-
-type CompetitorDiffField = {
-  key: string;
-  type: 'string' | 'number' | 'date';
-  protocol: ProtocolType;
-};
-
-/**
- * Field comparison plan for change detection. Order is preserved in protocol
- * output. `key` references both the new snapshot and the DB row (or, for
- * organisation/shortName, the `previousFlat` mapping inside detectCompetitorChanges).
- */
-const COMPETITOR_DIFF_FIELDS: readonly CompetitorDiffField[] = [
-  { key: 'classId', type: 'number', protocol: 'class_change' },
-  { key: 'firstname', type: 'string', protocol: 'firstname_change' },
-  { key: 'lastname', type: 'string', protocol: 'lastname_change' },
-  { key: 'nationality', type: 'string', protocol: 'nationality_change' },
-  { key: 'registration', type: 'string', protocol: 'registration_change' },
-  { key: 'organisation', type: 'string', protocol: 'organisation_change' },
-  { key: 'shortName', type: 'string', protocol: 'short_name_change' },
-  { key: 'bibNumber', type: 'number', protocol: 'bibNumber_change' },
-  { key: 'startTime', type: 'date', protocol: 'start_time_change' },
-  { key: 'finishTime', type: 'date', protocol: 'finish_time_change' },
-  { key: 'time', type: 'number', protocol: 'time_change' },
-  { key: 'card', type: 'number', protocol: 'si_card_change' },
-  { key: 'status', type: 'string', protocol: 'status_change' },
-  { key: 'teamId', type: 'number', protocol: 'team_change' },
-  { key: 'leg', type: 'number', protocol: 'leg_change' },
-];
-
-export type CompetitorChange = {
-  type: ProtocolType;
-  previousValue: string | null;
-  newValue: string | null;
-};
-
-/**
- * Pure diff between an incoming competitor snapshot and the DB row. Skips a
- * field when the incoming value is `undefined` (i.e. payload didn't carry it).
- *
- * Note: behaviour mirrors the previous inline logic exactly, including the
- * legacy quirk that `teamId` is read off the incoming snapshot — so callers
- * must place `teamId` on the snapshot if they want team_change protocols.
- */
-export function detectCompetitorChanges(
-  previous: Record<string, unknown>,
-  incoming: Record<string, unknown>,
-  previousOverrides: { organisation?: string | null; shortName?: string | null } = {},
-): CompetitorChange[] {
-  const out: CompetitorChange[] = [];
-  for (const { key, type, protocol } of COMPETITOR_DIFF_FIELDS) {
-    const incomingValue = incoming[key];
-    if (incomingValue === undefined) continue;
-
-    const previousFlat =
-      key === 'organisation'
-        ? (previousOverrides.organisation ?? null)
-        : key === 'shortName'
-          ? (previousOverrides.shortName ?? null)
-          : previous[key];
-
-    if (normalizeValue(type, incomingValue) === normalizeValue(type, previousFlat)) continue;
-
-    out.push({
-      type: protocol,
-      previousValue: previousFlat?.toString() ?? null,
-      newValue: incomingValue?.toString() ?? null,
-    });
-  }
-  return out;
-}
-
-const COMPETITOR_DIFF_SELECT = {
-  id: true,
-  classId: true,
-  firstname: true,
-  lastname: true,
-  nationality: true,
-  registration: true,
-  license: true,
-  organisationId: true,
-  organisation: { select: organisationSelect },
-  card: true,
-  bibNumber: true,
-  startTime: true,
-  finishTime: true,
-  time: true,
-  status: true,
-  lateStart: true,
-  leg: true,
-  note: true,
-  externalId: true,
-} as const;
 
 function buildOrganisationInput(organisation: IofOrganisation) {
   const externalId =
@@ -414,16 +327,16 @@ async function insertNewCompetitor(
         } as Prisma.CompetitorCreateInput,
         select: { id: true },
       });
-      await tx.protocol.createMany({
-        data: [
+      await createCompetitorProtocolEntries(tx, {
+        eventId,
+        competitorId: c.id,
+        origin: 'IT',
+        authorId,
+        changes: [
           {
-            eventId,
-            competitorId: c.id,
-            origin: 'IT',
             type: 'competitor_create',
             previousValue: null,
             newValue: `${snapshot.lastname} ${snapshot.firstname}`,
-            authorId,
           },
         ],
       });
@@ -484,16 +397,12 @@ async function updateExistingCompetitor(
           updatedAt: new Date(),
         } as Prisma.CompetitorUpdateInput,
       });
-      await tx.protocol.createMany({
-        data: fieldChanges.map((change) => ({
-          eventId,
-          competitorId: dbCompetitor.id,
-          origin: 'IT',
-          type: change.type,
-          previousValue: change.previousValue,
-          newValue: change.newValue ?? '',
-          authorId,
-        })),
+      await createCompetitorProtocolEntries(tx, {
+        eventId,
+        competitorId: dbCompetitor.id,
+        origin: 'IT',
+        authorId,
+        changes: fieldChanges,
       });
     },
     {
