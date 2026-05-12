@@ -825,6 +825,17 @@
             },
             "SIDroidConenctor": {
               "Description": "Naskenuj QR kód pro automatické načtení url, id akce a hesla do nastavení připojení k OFeedu. Kliknutím na ikonu QR kódu v nastavení v aplikace se spustí skenování. Můžeš také využít tlačítko s ikonou aplikace pro sdílení odkazu s přihlašovacími údaji na zařízení co právě používáš."
+            },
+            "MeOS": {
+              "Description": "Propoj tuto akci s MeOS. Kliknutím na tlačítko vygeneruj vazbu — OFeed automaticky přidělí ID soutěže. Nakonfiguruj MeOS, aby odesílal výsledky na níže uvedenou URL s daným ID.",
+              "UploadUrl": "Upload URL",
+              "ActiveBindings": "Aktivní vazby",
+              "NoBinding": "Zatím není nakonfigurována žádná MeOS vazba.",
+              "CompetitionId": "ID soutěže",
+              "CreateBindingButton": "Generovat vazbu",
+              "DeleteBinding": "Odstranit vazbu",
+              "CreateSuccess": "MeOS vazba byla úspěšně vytvořena.",
+              "DeleteSuccess": "MeOS vazba byla odstraněna."
             }
           }
         },

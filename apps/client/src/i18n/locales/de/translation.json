@@ -470,6 +470,17 @@
           "Tabs": {
             "QuickEvent": {
               "CopyLink": "Zugangsdaten kopieren"
+            },
+            "MeOS": {
+              "Description": "Verknüpfe dieses Event mit MeOS. Klicke auf den Button, um eine Verknüpfung zu erstellen — OFeed weist automatisch eine Wettkampf-ID zu. Konfiguriere MeOS, Ergebnisse über die unten stehende URL mit dieser ID an OFeed zu senden.",
+              "UploadUrl": "Upload-URL",
+              "ActiveBindings": "Aktive Verknüpfungen",
+              "NoBinding": "Noch keine MeOS-Verknüpfung konfiguriert.",
+              "CompetitionId": "Wettkampf-ID",
+              "CreateBindingButton": "Verknüpfung generieren",
+              "DeleteBinding": "Verknüpfung entfernen",
+              "CreateSuccess": "MeOS-Verknüpfung erfolgreich erstellt.",
+              "DeleteSuccess": "MeOS-Verknüpfung entfernt."
             }
           }
         }
