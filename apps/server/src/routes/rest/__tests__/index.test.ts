@@ -2,7 +2,10 @@ import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import env from '../../../config/env.js';
+import meosRouter from '../../../modules/meos/index.js';
+import uploadRouter from '../../../modules/upload/index.js';
 import restRouter from '../index.js';
+import { REST_ROUTE_REGISTRY } from '../registry.js';
 
 describe('rest router registry', () => {
   const originalMapEnv = {
@@ -53,5 +56,14 @@ describe('rest router registry', () => {
     const response = await app.request('http://localhost/rest/v1/admin/dashboard');
 
     expect(response.status).toBe(401);
+  });
+
+  it('mounts the MeOS upload router before the authenticated upload router', () => {
+    const meosIndex = REST_ROUTE_REGISTRY.findIndex((entry) => entry.router === meosRouter);
+    const uploadIndex = REST_ROUTE_REGISTRY.findIndex((entry) => entry.router === uploadRouter);
+
+    expect(meosIndex).toBeGreaterThanOrEqual(0);
+    expect(uploadIndex).toBeGreaterThanOrEqual(0);
+    expect(meosIndex).toBeLessThan(uploadIndex);
   });
 });

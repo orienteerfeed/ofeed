@@ -12,14 +12,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { config } from '@/config';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { TFunction } from 'i18next';
-import { Copy, Eye, EyeOff, Printer, Send } from 'lucide-react';
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  Loader2,
+  Printer,
+  Send,
+  Trash2,
+} from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import type { ComponentType, RefObject } from 'react';
 import { useRef, useState } from 'react';
 import { Button } from '../../../components/atoms';
 import { Alert } from '../../../components/organisms';
+import type { MeosEventBinding } from '../../../types/event';
 import { toast } from '../../../utils';
+
+const CREATE_MEOS_BINDING = gql`
+  mutation CreateMeosEventBinding($eventId: String!) {
+    createMeosEventBinding(eventId: $eventId) {
+      id
+    }
+  }
+`;
+
+const DELETE_MEOS_BINDING = gql`
+  mutation DeleteMeosEventBinding($id: Int!) {
+    deleteMeosEventBinding(id: $id)
+  }
+`;
 
 interface EventIntegrationsCardProps {
   t: TFunction;
@@ -29,6 +54,8 @@ interface EventIntegrationsCardProps {
   eventDate: string;
   apiEventsEndpoint: string;
   apiBaseUrl: string;
+  meosEventBindings: MeosEventBinding[];
+  onMeosBindingChanged: () => Promise<unknown>;
 }
 
 interface QrTabPanelProps {
@@ -156,10 +183,68 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   eventDate,
   apiEventsEndpoint,
   apiBaseUrl,
+  meosEventBindings,
+  onMeosBindingChanged,
 }) => {
   const qrCodeOChecklistRef = useRef<HTMLCanvasElement>(null);
   const qrCodeConnectorRef = useRef<HTMLCanvasElement>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
+
+  const [createMeosBinding, { loading: creatingBinding }] = useMutation(
+    CREATE_MEOS_BINDING,
+    {
+      onCompleted: () => {
+        toast({
+          title: t('Operations.Success', { ns: 'common' }),
+          description: t(
+            'Pages.Event.Integration.Card.Tabs.MeOS.CreateSuccess'
+          ),
+          variant: 'default',
+        });
+        onMeosBindingChanged();
+      },
+      onError: err => {
+        toast({
+          title: t('Operations.Error', { ns: 'common' }),
+          description: err.message,
+          variant: 'error',
+        });
+      },
+    }
+  );
+
+  const [deleteMeosBinding, { loading: deletingBinding }] = useMutation(
+    DELETE_MEOS_BINDING,
+    {
+      onCompleted: () => {
+        toast({
+          title: t('Operations.Success', { ns: 'common' }),
+          description: t(
+            'Pages.Event.Integration.Card.Tabs.MeOS.DeleteSuccess'
+          ),
+          variant: 'default',
+        });
+        onMeosBindingChanged();
+      },
+      onError: err => {
+        toast({
+          title: t('Operations.Error', { ns: 'common' }),
+          description: err.message,
+          variant: 'error',
+        });
+      },
+    }
+  );
+
+  const handleCreateMeosBinding = () => {
+    createMeosBinding({ variables: { eventId } });
+  };
+
+  const handleDeleteMeosBinding = (bindingId: number) => {
+    deleteMeosBinding({ variables: { id: bindingId } });
+  };
+
+  const meosUploadEndpoint = `${config.BASE_API_URL.replace(/\/+$/, '')}/rest/v1/upload/meos`;
 
   // Format the QuickEvent credentials link
   const quickEventLinkUrl = new URL(config.PUBLIC_URL, window.location.origin);
@@ -259,7 +344,10 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
   const handleCopyDeepLink = (deepLink: string) => {
     if (!deepLink) return;
 
-    copyWithToast(deepLink, t('Operations.CopiedToClipboard', { ns: 'common' }));
+    copyWithToast(
+      deepLink,
+      t('Operations.CopiedToClipboard', { ns: 'common' })
+    );
   };
 
   const handlePrint = (
@@ -437,11 +525,22 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
           </Alert>
         ) : (
           <Tabs defaultValue="ochecklist" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="ochecklist">O Checklist</TabsTrigger>
-              <TabsTrigger value="quickevent">QuickEvent</TabsTrigger>
-              <TabsTrigger value="connector">SI Droid Connector</TabsTrigger>
-            </TabsList>
+            <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+              <TabsList className="flex w-max min-w-full justify-start gap-1">
+                <TabsTrigger value="ochecklist" className="shrink-0">
+                  O Checklist
+                </TabsTrigger>
+                <TabsTrigger value="quickevent" className="shrink-0">
+                  QuickEvent
+                </TabsTrigger>
+                <TabsTrigger value="connector" className="shrink-0">
+                  SI Droid Connector
+                </TabsTrigger>
+                <TabsTrigger value="meos" className="shrink-0">
+                  MeOS
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="ochecklist" className="space-y-4">
               <QrTabPanel
@@ -637,6 +736,191 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                 errorCorrectionLevel={errorCorrectionLevel}
                 qrBackgroundColor={qrBackgroundColor}
               />
+            </TabsContent>
+
+            <TabsContent value="meos" className="space-y-4">
+              <div className={panelClassName}>
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('Pages.Event.Integration.Card.Tabs.MeOS.Description')}
+                  </p>
+
+                  {meosEventBindings.length > 0 && (
+                    <>
+                      <div className="flex justify-between items-center gap-2">
+                        <Label className="text-sm font-medium shrink-0">
+                          {t(
+                            'Pages.Event.Integration.Card.Tabs.MeOS.UploadUrl'
+                          )}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                            {meosUploadEndpoint}
+                          </p>
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              copyWithToast(
+                                meosUploadEndpoint,
+                                t('Pages.Event.Integration.Toast.CopyBaseUrl')
+                              )
+                            }
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 shrink-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                            <span className="sr-only">
+                              {t(
+                                'Pages.Event.Integration.Card.Tabs.MeOS.UploadUrl'
+                              )}
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center gap-2">
+                        <Label className="text-sm font-medium shrink-0">
+                          {t('Pages.Event.Integration.Card.EventPassword')}
+                        </Label>
+                        <div className="flex items-center gap-2 flex-1 max-w-[250px]">
+                          <div className="relative flex-1">
+                            <Input
+                              type={passwordVisible ? 'text' : 'password'}
+                              value={eventPassword}
+                              autoCapitalize="off"
+                              autoComplete="off"
+                              autoCorrect="off"
+                              readOnly
+                              className="pr-10 h-8 text-sm"
+                            />
+                            <Button
+                              type="button"
+                              onClick={togglePasswordVisibility}
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                            >
+                              {passwordVisible ? (
+                                <EyeOff className="h-3 w-3" />
+                              ) : (
+                                <Eye className="h-3 w-3" />
+                              )}
+                              <span className="sr-only">
+                                {passwordVisible
+                                  ? 'Hide password'
+                                  : 'Show password'}
+                              </span>
+                            </Button>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={copyPasswordToClipboard}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 shrink-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                            <span className="sr-only">
+                              {t('Pages.Event.Password.Copy')}
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {meosEventBindings.length > 0 ? (
+                    <>
+                      <p className="text-sm font-medium">
+                        {t(
+                          'Pages.Event.Integration.Card.Tabs.MeOS.ActiveBindings'
+                        )}
+                      </p>
+                      {meosEventBindings.map(binding => (
+                        <div
+                          key={binding.id}
+                          className="flex items-center justify-between gap-2 rounded-md border px-3 py-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm font-medium">
+                              {t(
+                                'Pages.Event.Integration.Card.Tabs.MeOS.CompetitionId'
+                              )}
+                            </Label>
+                            <span className="text-sm text-muted-foreground font-mono">
+                              {binding.id}
+                            </span>
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                copyWithToast(
+                                  String(binding.id),
+                                  t(
+                                    'Pages.Event.Integration.Card.Tabs.MeOS.CompetitionId'
+                                  )
+                                )
+                              }
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                            >
+                              <Copy className="h-3 w-3" />
+                              <span className="sr-only">
+                                {t(
+                                  'Pages.Event.Integration.Card.Tabs.MeOS.CompetitionId'
+                                )}
+                              </span>
+                            </Button>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            disabled={deletingBinding}
+                            onClick={() => handleDeleteMeosBinding(binding.id)}
+                            title={t(
+                              'Pages.Event.Integration.Card.Tabs.MeOS.DeleteBinding'
+                            )}
+                          >
+                            {deletingBinding ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">
+                      {t('Pages.Event.Integration.Card.Tabs.MeOS.NoBinding')}
+                    </p>
+                  )}
+                </div>
+
+                {meosEventBindings.length === 0 && (
+                  <div className="pt-3 border-t mt-3">
+                    <Button
+                      type="button"
+                      onClick={handleCreateMeosBinding}
+                      disabled={creatingBinding}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {creatingBinding ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : null}
+                      {t(
+                        'Pages.Event.Integration.Card.Tabs.MeOS.CreateBindingButton'
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         )}

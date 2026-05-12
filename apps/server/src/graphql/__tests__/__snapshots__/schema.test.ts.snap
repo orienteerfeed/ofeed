@@ -122,6 +122,7 @@ type Event {
   latitude: Float
   location: String
   longitude: Float
+  meosEventBindings: [EventMeosBinding!]
   name: String!
   organizer: String
   published: Boolean!
@@ -181,6 +182,13 @@ enum EventLifecycleStatus {
   DRAFT
   LIVE
   UPCOMING
+}
+
+type EventMeosBinding {
+  createdAt: DateTime!
+  eventId: String!
+  id: Int!
+  updatedAt: DateTime!
 }
 
 enum EventOfficialResultsSource {
@@ -254,7 +262,9 @@ type Mutation {
   competitorCreate(input: StoreCompetitorInput!): StoreCompetitorResponse!
   competitorStatusChange(input: StatusChange!): ResponseMessage!
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
+  createMeosEventBinding(eventId: String!): EventMeosBinding!
   createUserCard(input: CreateUserCardInput!): UserCard!
+  deleteMeosEventBinding(id: Int!): Boolean!
   deleteUserCard(id: Int!): Boolean!
   requestPasswordReset(email: String!): ResetResponse!
   resetPassword(newPassword: String!, token: String!): AuthPayload!
