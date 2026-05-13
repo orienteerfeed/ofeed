@@ -12,7 +12,7 @@ type CompetitionProvider = {
 
 const COMPETITION_PROVIDERS: CompetitionProvider[] = [
   { name: 'OFeed', value: 'ofeed' },
-  { name: 'LiveResults', value: 'liveResultat' },
+  { name: 'LiveResultat', value: 'liveResultat' },
 ]
 const allowedProviders = (
   (import.meta.env.VITE_PROVIDERS as string | undefined)?.split(',') ?? [
