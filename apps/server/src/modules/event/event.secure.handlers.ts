@@ -1271,7 +1271,35 @@ export function registerSecureEventRoutes(router) {
           return ownership.response;
         }
 
-        await deleteAllEventData(eventId);
+        // Pre-checks: refuse deletion if blocking relations still exist.
+        // The user must run DELETE /:eventId/delete-data first.
+        const [externalSync, classCount] = await Promise.all([
+          prisma.eventExternalResultsSyncState.findUnique({
+            where: { eventId },
+            select: { id: true },
+          }),
+          prisma.class.count({ where: { eventId } }),
+        ]);
+
+        if (externalSync) {
+          return res
+            .status(422)
+            .json(errorResponse('EVENT_DELETE_BLOCKED_EXTERNAL_IS', res.statusCode));
+        }
+
+        if (classCount > 0) {
+          const competitorCount = await prisma.competitor.count({
+            where: { class: { eventId } },
+          });
+          logEndpoint(req.c, 'warn', 'Event delete blocked by existing data', {
+            eventId,
+            classCount,
+            competitorCount,
+          });
+          return res
+            .status(422)
+            .json(errorResponse('EVENT_DELETE_BLOCKED_DATA', res.statusCode));
+        }
 
         try {
           await deletePublicObjectsByPrefix(`events/${eventId}/`);
@@ -1287,43 +1315,9 @@ export function registerSecureEventRoutes(router) {
           );
         }
 
-        try {
-          await prisma.event.delete({
-            where: { id: eventId },
-          });
-        } catch (deleteError) {
-          if (
-            deleteError instanceof Prisma.PrismaClientKnownRequestError &&
-            deleteError.code === 'P2003'
-          ) {
-            const [externalSync, classCount] = await Promise.all([
-              prisma.eventExternalResultsSyncState.findUnique({
-                where: { eventId },
-                select: { id: true },
-              }),
-              prisma.class.count({ where: { eventId } }),
-            ]);
-            if (externalSync) {
-              return res
-                .status(422)
-                .json(errorResponse('EVENT_DELETE_BLOCKED_EXTERNAL_IS', res.statusCode));
-            }
-            if (classCount > 0) {
-              const competitorCount = await prisma.competitor.count({
-                where: { class: { eventId } },
-              });
-              logEndpoint(req.c, 'warn', 'Event delete blocked by existing data', {
-                eventId,
-                classCount,
-                competitorCount,
-              });
-              return res
-                .status(422)
-                .json(errorResponse('EVENT_DELETE_BLOCKED_DATA', res.statusCode));
-            }
-          }
-          throw deleteError;
-        }
+        await prisma.event.delete({
+          where: { id: eventId },
+        });
 
         return res
           .status(200)
