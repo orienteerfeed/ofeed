@@ -23,6 +23,8 @@ type ChangelogShape = {
   newValue?: string | null;
   authorId: number;
   createdAt: Date;
+  processed: boolean;
+  processedAt?: Date | null;
   competitor: unknown;
   event: unknown;
   author: unknown;
@@ -39,6 +41,8 @@ const ChangelogRef = builder.objectRef<ChangelogShape>('Changelog').implement({
     newValue: t.exposeString('newValue', { nullable: true }),
     authorId: t.exposeInt('authorId'),
     createdAt: t.expose('createdAt', { type: 'DateTime' }),
+    processed: t.exposeBoolean('processed'),
+    processedAt: t.expose('processedAt', { type: 'DateTime', nullable: true }),
     competitor: t.field({
       type: CompetitorRef,
       resolve: (changelog) => changelog.competitor as CompetitorGraphQLShape,

@@ -50,6 +50,8 @@ import {
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast as sonnerToast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 type ChangelogResponse = {
   data: ChangelogEntry[];
@@ -139,9 +141,10 @@ export const EventReportPage = () => {
   const inFlightRef = useRef<Promise<ChangelogResponse> | null>(null);
   const lastResponseRef = useRef<ChangelogResponse | null>(null);
   const previousEventIdRef = useRef<string | null>(null);
+  const pendingProcessRef = useRef<
+    Map<number, { timeoutId: ReturnType<typeof setTimeout>; toastId: string | number }>
+  >(new Map());
 
-  const [processedItems, setProcessedItems] = useState<Set<string>>(new Set());
-  const [processedLoaded, setProcessedLoaded] = useState(false);
   const [hideProcessed, setHideProcessed] = useState(false);
   const [activePresetFilters, setActivePresetFilters] = useState<
     Set<PresetFilter>
@@ -191,8 +194,6 @@ export const EventReportPage = () => {
     column: 'createdAt',
     direction: 'asc',
   });
-
-  const storageKey = `processedChangelogItems:${eventId}`;
 
   const [changelogData, setChangelogData] = useState<ChangelogEntry[]>([]);
 
@@ -251,25 +252,6 @@ export const EventReportPage = () => {
   }, [data, eventId]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const parsed: string[] = JSON.parse(stored);
-        setProcessedItems(new Set(parsed));
-      } catch {
-        setProcessedItems(new Set());
-      }
-    }
-
-    setProcessedLoaded(true);
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!processedLoaded) return;
-    localStorage.setItem(storageKey, JSON.stringify([...processedItems]));
-  }, [processedItems, processedLoaded, storageKey]);
-
-  useEffect(() => {
     const interval = setInterval(() => {
       setRefreshCounter(prev => {
         if (prev <= 1) {
@@ -295,6 +277,13 @@ export const EventReportPage = () => {
     }
     previousEventIdRef.current = eventId;
   }, [eventId]);
+
+  useEffect(() => {
+    const pending = pendingProcessRef.current;
+    return () => {
+      pending.forEach(({ timeoutId }) => clearTimeout(timeoutId));
+    };
+  }, []);
 
   const latestStatusChangeByCompetitor = useMemo(() => {
     const map = new Map<number, number>();
@@ -407,24 +396,58 @@ export const EventReportPage = () => {
     setRefreshCounter(REFRESH_INTERVAL_SECONDS);
   };
 
-  const toggleProcessedItem = (id: number, checked: boolean) => {
-    setProcessedItems(prev => {
-      const next = new Set(prev);
-      const key = id.toString();
+  const toggleProcessedItem = (id: number) => {
+    const now = new Date().toISOString();
 
-      if (checked) {
-        next.add(key);
-      } else {
-        next.delete(key);
-      }
+    setChangelogData(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, processed: true, processedAt: now } : item
+      )
+    );
 
-      return next;
+    const revert = () => {
+      setChangelogData(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, processed: false, processedAt: null } : item
+        )
+      );
+    };
+
+    const toastId = toast({
+      title: t('Pages.Event.Report.ProcessedToast.Title'),
+      description: `#${id}`,
+      duration: 5000,
+      action: {
+        label: t('Pages.Event.Report.ProcessedToast.Undo'),
+        onClick: () => {
+          const pending = pendingProcessRef.current.get(id);
+          if (pending) {
+            clearTimeout(pending.timeoutId);
+            pendingProcessRef.current.delete(id);
+            sonnerToast.dismiss(pending.toastId);
+          }
+          revert();
+        },
+      },
     });
+
+    const timeoutId = setTimeout(() => {
+      pendingProcessRef.current.delete(id);
+      api.patch(ENDPOINTS.markChangelogProcessed(eventId, id)).catch(() => {
+        revert();
+        toast({
+          title: t('Pages.Event.Report.ProcessedToast.Error'),
+          variant: 'error',
+        });
+      });
+    }, 5000);
+
+    pendingProcessRef.current.set(id, { timeoutId, toastId });
   };
 
   const visibleData = useMemo(() => {
     const filtered = changelogData.filter(item => {
-      if (hideProcessed && processedItems.has(item.id.toString())) {
+      if (hideProcessed && item.processed) {
         return false;
       }
 
@@ -546,7 +569,6 @@ export const EventReportPage = () => {
     columnFilters,
     hideProcessed,
     latestStatusChangeByCompetitor,
-    processedItems,
     sortConfig,
     typeFilters,
     originFilters,
@@ -917,19 +939,16 @@ export const EventReportPage = () => {
               originOptions={originOptions}
             />
           }
-          renderRow={item => {
-            const isProcessed = processedItems.has(item.id.toString());
-            return (
-              <ReportTableRow
-                key={item.id}
-                item={item}
-                isProcessed={isProcessed}
-                onToggleProcessed={toggleProcessedItem}
-                columnOrder={columnOrder}
-                onRowClick={() => setSelectedCompetitorId(item.competitorId)}
-              />
-            );
-          }}
+          renderRow={item => (
+            <ReportTableRow
+              key={item.id}
+              item={item}
+              isProcessed={item.processed}
+              onToggleProcessed={toggleProcessedItem}
+              columnOrder={columnOrder}
+              onRowClick={() => setSelectedCompetitorId(item.competitorId)}
+            />
+          )}
           emptyState={
             <AppTableEmptyState isLoading={isLoading} error={error} />
           }

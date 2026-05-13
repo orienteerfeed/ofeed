@@ -284,6 +284,8 @@ model Protocol {
   author        User         @relation(fields: [authorId], references: [id])
   authorId      Int          @db.UnsignedInt
   createdAt     DateTime     @default(now())
+  processed     Boolean      @default(false)
+  processedAt   DateTime?
 
   @@index([competitorId, createdAt], map: "Protocol_competitor_created_idx")
 }

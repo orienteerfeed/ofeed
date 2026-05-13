@@ -66,6 +66,7 @@ import {
   eventCompetitorExternalParamsSchema,
   eventCompetitorParamsSchema,
   eventIdParamsSchema,
+  eventProtocolParamsSchema,
   generatePasswordBodySchema,
   stateChangeBodySchema,
 } from './event.schema.js';
@@ -2579,6 +2580,8 @@ export function registerSecureEventRoutes(router) {
                 },
               },
               createdAt: true,
+              processed: true,
+              processedAt: true,
             },
           });
         } catch (err) {
@@ -2611,6 +2614,8 @@ export function registerSecureEventRoutes(router) {
               newValue: entry.newValue,
               author: entry.author,
               createdAt: entry.createdAt,
+              processed: entry.processed,
+              processedAt: entry.processedAt,
             });
           }
 
@@ -2622,6 +2627,105 @@ export function registerSecureEventRoutes(router) {
         return res
           .status(200)
           .json(successResponse('OK', { data: dbProtocolResponse }, res.statusCode));
+      },
+    ),
+  );
+
+  /**
+   * @swagger
+   * /rest/v1/events/{eventId}/changelog/{protocolId}/processed:
+   *  patch:
+   *    summary: Mark a protocol entry as processed
+   *    description: Marks a single protocol (changelog) record as processed. Idempotent — calling it on an already-processed record returns 200 without modifying processedAt.
+   *    tags:
+   *       - Events
+   *    security:
+   *       - bearerAuth: []
+   *    parameters:
+   *       - in: path
+   *         name: eventId
+   *         required: true
+   *         description: ID of the event
+   *         schema:
+   *           type: string
+   *       - in: path
+   *         name: protocolId
+   *         required: true
+   *         description: ID of the protocol entry to mark as processed
+   *         schema:
+   *           type: integer
+   *    responses:
+   *      200:
+   *        description: Protocol entry processed state
+   *      403:
+   *        description: Forbidden
+   *      404:
+   *        description: Protocol entry not found
+   *      422:
+   *        description: Validation Error
+   *      500:
+   *        description: Internal Server Error
+   */
+  router.patch(
+    '/:eventId/changelog/:protocolId/processed',
+    routeWithValidation(
+      { paramsSchema: eventProtocolParamsSchema },
+      async ({ req, res }) => {
+        const errors = getValidationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(422).json(validationResponse(formatErrors(errors)));
+        }
+
+        const { eventId, protocolId } = req.params;
+
+        const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId, {
+          forbiddenMessage: 'Not authorized',
+        });
+
+        if (!ownership.ok) {
+          return ownership.response;
+        }
+
+        let protocol;
+        try {
+          protocol = await appPrisma.protocol.findFirst({
+            where: { id: Number(protocolId), eventId },
+            select: { id: true, processed: true, processedAt: true },
+          });
+        } catch (err) {
+          logEndpoint(req.c, 'error', 'Failed to fetch protocol entry', {
+            eventId,
+            protocolId,
+            ...getErrorDetails(err),
+          });
+          return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
+        }
+
+        if (!protocol) {
+          return res.status(404).json(errorResponse('Protocol entry not found'));
+        }
+
+        if (protocol.processed) {
+          return res.status(200).json(successResponse('OK', { data: protocol }, res.statusCode));
+        }
+
+        let updated;
+        try {
+          updated = await appPrisma.protocol.update({
+            where: { id: Number(protocolId) },
+            data: { processed: true, processedAt: new Date() },
+            select: { id: true, processed: true, processedAt: true },
+          });
+        } catch (err) {
+          logEndpoint(req.c, 'error', 'Failed to mark protocol entry as processed', {
+            eventId,
+            protocolId,
+            ...getErrorDetails(err),
+          });
+          return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
+        }
+
+        return res.status(200).json(successResponse('OK', { data: updated }, res.statusCode));
       },
     ),
   );

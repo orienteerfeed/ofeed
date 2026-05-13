@@ -483,6 +483,11 @@
           "PreviousValue": "Valor anterior",
           "NewValue": "Valor nuevo",
           "Origin": "Origen"
+        },
+        "ProcessedToast": {
+          "Title": "Marcado como procesado",
+          "Undo": "Deshacer",
+          "Error": "Error al guardar el estado"
         }
       },
       "Settings": {

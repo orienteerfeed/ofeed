@@ -15,6 +15,8 @@ export type ChangelogEntry = {
     lastname: string;
   } | null;
   createdAt: string;
+  processed: boolean;
+  processedAt: string | null;
 };
 
 export type SortColumn =

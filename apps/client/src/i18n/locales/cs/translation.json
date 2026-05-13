@@ -483,6 +483,11 @@
           "PreviousValue": "Původní hodnota",
           "NewValue": "Nová hodnota",
           "Origin": "Původ"
+        },
+        "ProcessedToast": {
+          "Title": "Označeno jako zpracované",
+          "Undo": "Zpět",
+          "Error": "Nepodařilo se uložit stav zpracování"
         }
       },
       "Settings": {

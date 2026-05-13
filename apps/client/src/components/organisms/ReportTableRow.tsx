@@ -15,7 +15,7 @@ const typeBadgeClassName: Record<string, string> = {
 type ReportTableRowProps = {
   item: ChangelogEntry;
   isProcessed: boolean;
-  onToggleProcessed: (id: number, checked: boolean) => void;
+  onToggleProcessed: (id: number) => void;
   columnOrder: SortColumn[];
   onRowClick?: (item: ChangelogEntry) => void;
 };
@@ -78,9 +78,8 @@ export const ReportTableRow = ({
         <div onClick={event => event.stopPropagation()}>
           <Checkbox
             checked={isProcessed}
-            onCheckedChange={value =>
-              onToggleProcessed(item.id, value === true)
-            }
+            disabled={isProcessed}
+            onCheckedChange={() => onToggleProcessed(item.id)}
           />
         </div>
       }

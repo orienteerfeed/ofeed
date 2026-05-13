@@ -10,6 +10,11 @@ export const eventCompetitorParamsSchema = z.object({
   competitorId: z.string().regex(/^\d+$/),
 });
 
+export const eventProtocolParamsSchema = z.object({
+  eventId: z.string().min(1),
+  protocolId: z.string().regex(/^\d+$/),
+});
+
 export const eventCompetitorExternalParamsSchema = z.object({
   eventId: z.string().min(1),
   competitorExternalId: z.string().min(1),

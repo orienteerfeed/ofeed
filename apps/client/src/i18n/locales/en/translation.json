@@ -483,6 +483,11 @@
           "PreviousValue": "Previous value",
           "NewValue": "New value",
           "Origin": "Origin"
+        },
+        "ProcessedToast": {
+          "Title": "Marked as processed",
+          "Undo": "Undo",
+          "Error": "Failed to save processing state"
         }
       },
       "Settings": {

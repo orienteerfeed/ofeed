@@ -483,6 +483,11 @@
           "PreviousValue": "Föregående värde",
           "NewValue": "Nytt värde",
           "Origin": "Ursprung"
+        },
+        "ProcessedToast": {
+          "Title": "Markerat som behandlat",
+          "Undo": "Ångra",
+          "Error": "Det gick inte att spara behandlingsstatus"
         }
       },
       "Settings": {

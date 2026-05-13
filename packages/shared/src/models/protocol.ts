@@ -13,6 +13,8 @@ export const protocolSchema = z.object({
   newValue: z.string(),
   authorId: z.number().int(),
   createdAt: dateLikeSchema,
+  processed: z.boolean(),
+  processedAt: dateLikeSchema.nullable().optional(),
 });
 
 export const changelogSchema = z.object({
@@ -25,6 +27,8 @@ export const changelogSchema = z.object({
   newValue: z.string().nullable().optional(),
   authorId: z.number().int(),
   createdAt: dateLikeSchema,
+  processed: z.boolean(),
+  processedAt: dateLikeSchema.nullable().optional(),
 });
 
 export const competitorStatusChangeSchema = z.enum([
