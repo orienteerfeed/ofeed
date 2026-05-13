@@ -164,6 +164,7 @@ model Event {
   externalResultsSync          EventExternalResultsSyncState?
   organisations                Organisation[]
   importStates                 EventImportState[]
+  meosEventBindings            EventMeosBinding[]
 
   @@index([externalSource, externalEventId])
   @@fulltext([name, organizer, location])
@@ -173,7 +174,7 @@ model Class {
   id               Int          @id @default(autoincrement()) @db.UnsignedInt
   event            Event        @relation(fields: [eventId], references: [id])
   eventId          String
-  externalId       String?
+  externalId       String?      @db.VarChar(64)
   name             String
   startName        String?
   length           Int?
@@ -189,6 +190,8 @@ model Class {
   status           ClassStatus  @default(NORMAL)
   competitors      Competitor[]
   teams            Team[]
+
+  @@unique([eventId, externalId], map: "Class_event_external_uq")
 }
 
 model Competitor {
@@ -220,8 +223,8 @@ model Competitor {
   protocols             Protocol[]
   splits                Split[]
 
-  @@index([organisationId])
   @@unique([classId, externalId], map: "Competitor_class_external_uq")
+  @@index([organisationId])
 }
 
 model Split {
@@ -245,8 +248,8 @@ model Team {
   externalId     String?
   competitors    Competitor[]
 
-  @@index([organisationId])
   @@unique([classId, externalId], map: "Team_class_external_uq")
+  @@index([organisationId])
 }
 
 model Organisation {
@@ -332,6 +335,16 @@ model EventImportState {
 
   @@unique([eventId, sourceType, payloadType], map: "event_import_state_event_source_payload_uq")
   @@index([eventId], map: "event_import_state_event_idx")
+}
+
+model EventMeosBinding {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId])
 }
 
 model OAuthClient {
@@ -547,4 +560,5 @@ enum ExternalResultsSyncStatus {
 
 enum ImportSourceType {
   IOF_XML
+  MEOS
 }

@@ -824,6 +824,17 @@
             },
             "SIDroidConenctor": {
               "Description": "Escanee el código QR para configurar la URL, el ID del evento y la contraseña en los ajustes de la conexión OFeed. Haga clic en el icono del código QR en los ajustes de la aplicación para activar la cámara. Puede utilizar el botón con el icono de la aplicación para obtener el enlace para compartir las credenciales en un solo dispositivo."
+            },
+            "MeOS": {
+              "Description": "Conecte este evento a MeOS. Haga clic en el botón para generar una vinculación — OFeed asigna automáticamente un ID de competición. Configure MeOS para enviar resultados a la URL indicada con ese ID.",
+              "UploadUrl": "URL de carga",
+              "ActiveBindings": "Vinculaciones activas",
+              "NoBinding": "Aún no hay ninguna vinculación MeOS configurada.",
+              "CompetitionId": "ID de competición",
+              "CreateBindingButton": "Generar vinculación",
+              "DeleteBinding": "Eliminar vinculación",
+              "CreateSuccess": "Vinculación MeOS creada correctamente.",
+              "DeleteSuccess": "Vinculación MeOS eliminada."
             }
           }
         },

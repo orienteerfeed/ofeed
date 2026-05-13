@@ -14,15 +14,11 @@ import { ensureEventOwnerOrAdmin, isAuthzError } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
 import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
 import { error, success, validation } from '../../utils/responseApi.js';
-import { publishUpdatedCompetitors } from '../../utils/subscriptionUtils.js';
+import { publishUpdatedClasses } from '../competitor/competitor-change.service.js';
+import { detectCompetitorChanges } from '../competitor/competitor-change.helpers.js';
 import { upsertOrganisation } from '../event/organisation.helpers.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
-import {
-  detectCompetitorChanges,
-  getCompetitorKeys,
-  loadCompetitorCache,
-  upsertCompetitor,
-} from './upload.competitor.js';
+import { getCompetitorKeys, loadCompetitorCache, upsertCompetitor } from './upload.competitor.js';
 import { IOF_WRITE_CONCURRENCY } from './upload.constants.js';
 import { normalizeCourseMetrics } from './upload.course.js';
 import { getIofIntegerValue, toSex } from './upload.iof.helpers.js';
@@ -239,8 +235,8 @@ const validateIofXml = async (
               typeof error === 'string'
                 ? error
                 : error && typeof error === 'object' && 'message' in error
-                ? String(error.message)
-                : 'Validation error',
+                  ? String(error.message)
+                  : 'Validation error',
             type: 'schema',
           }))
         : [
@@ -866,7 +862,10 @@ async function handleIofXmlUpload(
 
   if (iofValidationEnabled) {
     const xsd = await getXsdSchema();
-    const iofXmlValidation = await validateIofXml(xmlBuffer.toString('utf-8').replace(/^﻿/, ''), xsd);
+    const iofXmlValidation = await validateIofXml(
+      xmlBuffer.toString('utf-8').replace(/^﻿/, ''),
+      xsd,
+    );
     if (!iofXmlValidation.state) {
       logUploadEvent(c, 'warn', 'IOF upload failed XML validation', {
         ...uploadDetails,
@@ -1029,24 +1028,15 @@ async function handleIofXmlUpload(
               classResultCount: classResults.length,
               updatedClassCount: updatedClasses.length,
             });
-            for (const classId of updatedClasses) {
-              try {
-                await publishUpdatedCompetitors(classId); // Process sequentially
-              } catch (err) {
-                logUploadEvent(
-                  c,
-                  'error',
-                  'IOF upload failed while publishing updated competitors',
-                  {
-                    ...uploadDetails,
-                    success: false,
-                    stage: 'publish-updated-competitors',
-                    classId,
-                    reason: err instanceof Error ? err.message : 'Publish failed',
-                  },
-                );
-              }
-            }
+            await publishUpdatedClasses(updatedClasses, (classId, err) => {
+              logUploadEvent(c, 'error', 'IOF upload failed while publishing updated competitors', {
+                ...uploadDetails,
+                success: false,
+                stage: 'publish-updated-competitors',
+                classId,
+                reason: err instanceof Error ? err.message : 'Publish failed',
+              });
+            });
           }
         } else if (type.jsonKey === 'StartList') {
           const classStarts = iofXml3.StartList.ClassStart;
@@ -1071,24 +1061,15 @@ async function handleIofXmlUpload(
               classStartCount: classStarts.length,
               updatedClassCount: updatedClasses.length,
             });
-            for (const classId of updatedClasses) {
-              try {
-                await publishUpdatedCompetitors(classId);
-              } catch (err) {
-                logUploadEvent(
-                  c,
-                  'error',
-                  'IOF upload failed while publishing updated competitors',
-                  {
-                    ...uploadDetails,
-                    success: false,
-                    stage: 'publish-updated-competitors',
-                    classId,
-                    reason: err instanceof Error ? err.message : 'Publish failed',
-                  },
-                );
-              }
-            }
+            await publishUpdatedClasses(updatedClasses, (classId, err) => {
+              logUploadEvent(c, 'error', 'IOF upload failed while publishing updated competitors', {
+                ...uploadDetails,
+                success: false,
+                stage: 'publish-updated-competitors',
+                classId,
+                reason: err instanceof Error ? err.message : 'Publish failed',
+              });
+            });
           }
         } else if (type.jsonKey === 'CourseData') {
           // Process CourseData
@@ -1448,8 +1429,8 @@ export function registerUploadRoutes(router: AppOpenAPI) {
           typeof processedRankingData === 'string'
             ? processedRankingData
             : Array.isArray(processedRankingData)
-            ? { processedItems: processedRankingData.length }
-            : processedRankingData,
+              ? { processedItems: processedRankingData.length }
+              : processedRankingData,
       });
       return c.json(
         success(

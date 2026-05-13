@@ -824,6 +824,17 @@
             },
             "SIDroidConenctor": {
               "Description": "Skanna QR-koden för att ange webbadress, tävlings-id och lösenord i inställningarna för OFeed-anslutningen. Klicka på QR-kodsikonen i appens inställningar för att starta kameran. Du kan använda knappen med appikonen för att få en länk som gör att du kan dela inloggningsuppgifterna på en enskild enhet."
+            },
+            "MeOS": {
+              "Description": "Koppla den här tävlingen till MeOS. Klicka på knappen för att skapa en koppling — OFeed tilldelar automatiskt ett tävlings-ID. Konfigurera MeOS att skicka resultat till OFeed via URL:en nedan med det angivna ID:t.",
+              "UploadUrl": "Uppladdnings-URL",
+              "ActiveBindings": "Aktiva kopplingar",
+              "NoBinding": "Ingen MeOS-koppling konfigurerad ännu.",
+              "CompetitionId": "Tävlings-ID",
+              "CreateBindingButton": "Generera koppling",
+              "DeleteBinding": "Ta bort koppling",
+              "CreateSuccess": "MeOS-koppling skapad.",
+              "DeleteSuccess": "MeOS-koppling borttagen."
             }
           }
         },
