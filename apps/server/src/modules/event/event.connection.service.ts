@@ -392,6 +392,9 @@ export async function validateEventConnection(
     select: {
       id: true,
       name: true,
+      organizer: true,
+      date: true,
+      timezone: true,
     },
   });
 
@@ -525,6 +528,9 @@ export async function validateEventConnection(
       ? {
           id: event.id,
           name: event.name,
+          organizer: event.organizer,
+          date: event.date,
+          timezone: event.timezone,
         }
       : null,
     credentials: {
