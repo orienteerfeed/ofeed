@@ -4,6 +4,7 @@ import TableHeader from './CategoryTableHeader.vue'
 import CategoryRelayTableRow from './CategoryRelayTableRow.vue'
 
 import { useRelayTeams } from '@/composables/useRelayTeams'
+import { AthleteStatus } from '@/types/category'
 import { useScrollColumnItem } from '@/composables/scrollColumn/useScrollColumn'
 import { useSettingStore } from '@/stores/settings'
 
@@ -29,8 +30,13 @@ const { relayTeams, teamCounts, status, legCount } = useRelayTeams({
   fetchEnabled,
 })
 
-const pinnedTeams = computed(() => relayTeams.value.slice(0, settingsStore.pinnedCount))
-const restTeams = computed(() => relayTeams.value.slice(settingsStore.pinnedCount))
+const pinnedTeams = computed(() =>
+  relayTeams.value
+    .filter(t => t.status === AthleteStatus.Ok)
+    .slice(0, settingsStore.pinnedCount)
+)
+const pinnedIds = computed(() => new Set(pinnedTeams.value.map(t => t.id)))
+const restTeams = computed(() => relayTeams.value.filter(t => !pinnedIds.value.has(t.id)))
 
 provide(isTableActiveKey, isActive)
 

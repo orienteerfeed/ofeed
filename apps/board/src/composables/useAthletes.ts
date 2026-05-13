@@ -123,9 +123,11 @@ function formatFinishedAthletes(
     }),
   ]
 
+  const okCount = allRows.filter(a => a.status === AthleteStatus.Ok).length
+  const effectivePinned = Math.min(pinnedCount, okCount)
   return {
-    pinnedRows: allRows.slice(0, pinnedCount),
-    restRows: allRows.slice(pinnedCount),
+    pinnedRows: allRows.slice(0, effectivePinned),
+    restRows: allRows.slice(effectivePinned),
   }
 }
 
