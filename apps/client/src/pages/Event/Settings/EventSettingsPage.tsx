@@ -67,6 +67,9 @@ export const GET_EVENT = gql`
         password
         expiresAt
       }
+      meosEventBindings {
+        id
+      }
     }
   }
 `;
@@ -223,6 +226,8 @@ export const EventSettingsPage = () => {
                 eventDate={formatDate(data.event.date)}
                 apiEventsEndpoint={apiEventsEndpoint}
                 apiBaseUrl={config.BASE_API_URL}
+                meosEventBindings={data.event.meosEventBindings ?? []}
+                onMeosBindingChanged={refetch}
               />
             </div>
 

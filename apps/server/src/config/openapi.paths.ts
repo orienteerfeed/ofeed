@@ -4,6 +4,7 @@ import { EVENT_OPENAPI, EVENT_OPENAPI_PATHS } from '../modules/event/event.opena
 import { MAP_OPENAPI, MAP_OPENAPI_PATHS } from '../modules/map/map.openapi.js';
 import { GRAPHQL_OPENAPI, GRAPHQL_OPENAPI_PATHS } from '../modules/graphql/graphql.openapi.js';
 import { UPLOAD_OPENAPI, UPLOAD_OPENAPI_PATHS } from '../modules/upload/upload.openapi.js';
+import { MEOS_OPENAPI_PATHS } from '../modules/meos/meos.openapi.js';
 import { USER_OPENAPI, USER_OPENAPI_PATHS } from '../modules/user/user.openapi.js';
 import { okJson, okText } from './openapi.helpers.js';
 import type { OpenApiPathItem } from './openapi.types.js';
@@ -53,5 +54,6 @@ export const OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   ...EVENT_OPENAPI_PATHS,
   ...MAP_OPENAPI_PATHS,
   ...UPLOAD_OPENAPI_PATHS,
+  ...MEOS_OPENAPI_PATHS,
   ...USER_OPENAPI_PATHS,
 };
