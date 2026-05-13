@@ -2,6 +2,7 @@ import './scalars/date.scalar.js';
 import './scalars/date-time.scalar.js';
 import './scalars/constraint-scalars.js';
 
+import '../modules/meos/meos.graphql.js';
 import '../modules/country/country.graphql.js';
 import '../modules/class/class.graphql.js';
 import '../modules/sport/sport.graphql.js';
