@@ -1170,6 +1170,17 @@ export const deleteAllEventData = async (eventId: string) => {
     await prisma.eventImportState.deleteMany({
       where: { eventId: eventId },
     });
+
+    // Step 5: Delete external results sync state (no DB-level cascade)
+    await prisma.eventExternalResultsSyncState.deleteMany({
+      where: { eventId: eventId },
+    });
+
+    // Step 6: Clear external IS binding from the event record
+    await prisma.event.update({
+      where: { id: eventId },
+      data: { externalSource: null, externalEventId: null },
+    });
   } catch (err) {
     console.error('Failed to delete all event data:', err);
     throw new DatabaseError('Error deleting all event data');
