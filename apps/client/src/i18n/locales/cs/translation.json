@@ -656,7 +656,7 @@
           "MIDDLE": "Střední trať",
           "LONG": "Dlouhá trať",
           "ULTRALONG": "Ultradlouhá trať",
-          "NIGHT": "Noční OB",
+          "NIGHT": "Nočák",
           "KNOCKOUT_SPRINT": "Knock-out sprint",
           "RELAY": "Štafety",
           "SPRINT_RELAY": "Sprintové štafety",
@@ -788,7 +788,7 @@
       "Link": {
         "Card": {
           "Title": "Odkaz na akci",
-          "Description": "Rychlé sdílení odkazu na akci – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k aktuálním výsledkům.",
+          "Description": "Rychlé sdílení odkazu na akci s diváky – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k aktuálním výsledkům.",
           "Navigator": {
             "Title": "OFeed",
             "Event": "Akce",
@@ -878,7 +878,7 @@
         "Footer": "Tyto operace nelze vrátit zpět. Ujisti se, že máš k dispozici příslušné zálohy.",
         "DeleteCompetitors": {
           "Title": "Smazat závodníky",
-          "Description": "Pokud nahraješ startovku nebo výsledky do špatné akce, tak můžeš všechny závodníky smazat a začít znovu. Toto tlačítko odstraní úplně všechny závodníky (startovku \u0026 výsledky).",
+          "Description": "Pokud nahraješ startovku nebo výsledky do špatné akce, tak můžeš všechny závodníky smazat a začít znovu. Toto tlačítko odstraní úplně všechny závodníky (startovku & výsledky).",
           "Button": "Smazat",
           "ConfirmTitle": "Smazat všechny závodníky",
           "ConfirmDescription": "Opravdu chceš smazat všechny závodníky? Operace je nevratná!",
@@ -1083,10 +1083,10 @@
     "DragDrop": {
       "ClickToUpload": "Pro nahrání klikni",
       "Delete": "Smazat",
-      "OrdDragAndDrop": "nebo drag \u0026 drop",
+      "OrdDragAndDrop": "nebo drag & drop",
       "SupportedFormats": "Podporovaný formát:",
       "Done": "Hotovo",
-      "OrDragAndDrop": "nebo drag \u0026 drop",
+      "OrDragAndDrop": "nebo drag & drop",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximální počet souborů",
