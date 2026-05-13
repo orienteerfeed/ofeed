@@ -6,6 +6,8 @@ export interface Category {
   length?: number
   climb?: number
   controls?: number
+  competitorsCount?: number
+  teamsCount?: number
   gender: CategoryGender
   colorOverride?: CategoryGender
   athletes?: RawAthlete[]

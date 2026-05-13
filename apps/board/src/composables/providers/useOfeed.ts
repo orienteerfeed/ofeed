@@ -14,14 +14,28 @@ const DEFAULT_OFEED_API_URL = '/api/ofeed'
 const DEFAULT_OFEED_DEV_PROXY_PATH = '/api/ofeed'
 const OFEED_REST_PREFIX = '/rest/v1'
 
+function toWebSocketGraphQLUrl(originUrl: URL): string {
+  const protocol = originUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${originUrl.host}/graphql`
+}
+
+function normalizeGraphQLWsUrl(url: string): string {
+  if (/^wss?:\/\//.test(url)) return url
+  const base =
+    typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001'
+  const parsed = new URL(url, base)
+  const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${parsed.host}${parsed.pathname}${parsed.search}`
+}
+
 function getGraphQLWsUrl(): string {
   const configured = import.meta.env.VITE_OFEED_GQL_WS_URL?.trim()
-  if (configured) return configured
+  if (configured) return normalizeGraphQLWsUrl(configured)
   if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    return `${protocol}//${window.location.host}/graphql`
+    const apiUrl = new URL(getOfeedApiUrl(), window.location.origin)
+    return toWebSocketGraphQLUrl(apiUrl)
   }
-  return 'ws://localhost:3001/graphql'
+  return toWebSocketGraphQLUrl(new URL(getOfeedApiUrl(), 'http://localhost:3001'))
 }
 
 let _wsClient: Client | null = null
@@ -62,6 +76,8 @@ type OfeedCompetition = Pick<Competition, 'id' | 'name' | 'organizer'> & {
 
 type OfeedCategory = Pick<Category, 'id' | 'name' | 'length' | 'climb'> & {
   controlsCount: number
+  competitorsCount?: number | null
+  teamsCount?: number | null
   sex: 'M' | 'F' | 'B'
 }
 
@@ -349,6 +365,8 @@ function formatOfeedCompetition(response: OfeedCompetitionResponse): Competition
     categories: (response.classes ?? []).map((category) => ({
       ...category,
       controls: category.controlsCount,
+      competitorsCount: category.competitorsCount ?? undefined,
+      teamsCount: category.teamsCount ?? undefined,
       gender: transformGender(category.sex, category.name),
     })),
   }
@@ -417,4 +435,4 @@ function formatOfeedRelayTeams(teams: OfeedRelayTeam[]): RelayTeam[] {
   }))
 }
 
-export { DEFAULT_OFEED_API_URL, getOfeedApiUrl }
+export { DEFAULT_OFEED_API_URL, getGraphQLWsUrl, getOfeedApiUrl }

@@ -2,7 +2,7 @@ import { defineComponent, ref } from 'vue'
 import { render, waitFor } from '@testing-library/vue'
 import { QueryClient, VUE_QUERY_CLIENT } from '@tanstack/vue-query'
 
-import { useOfeed } from '../useOfeed'
+import { getGraphQLWsUrl, useOfeed } from '../useOfeed'
 import { testBasicCompetition, testCompetition } from '@/utils/testData'
 import type { Competition, CompetitionList } from '@/types/competition'
 import { AthleteStatus } from '@/types/category'
@@ -63,6 +63,7 @@ const TEST_RESP_COMPETITION = {
           length: 12.3,
           climb: 320,
           controlsCount: 25,
+          competitorsCount: 42,
           sex: 'M',
         },
       ],
@@ -182,6 +183,7 @@ const getTestAthletesComponent = ({
 describe('useOfeed', () => {
   afterEach(() => {
     capturedSink = null
+    vi.unstubAllEnvs()
   })
 
   it('uses the default oFeed base URL when env is not defined', async () => {
@@ -201,6 +203,24 @@ describe('useOfeed', () => {
     )
 
     expect(fetch).toHaveBeenCalledWith('/api/ofeed/rest/v1/events')
+  })
+
+  it('uses the configured GraphQL WebSocket URL when defined', () => {
+    vi.stubEnv('VITE_OFEED_GQL_WS_URL', 'wss://subscriptions.example.com/graphql')
+
+    expect(getGraphQLWsUrl()).toEqual('wss://subscriptions.example.com/graphql')
+  })
+
+  it('normalizes a relative configured GraphQL WebSocket URL', () => {
+    vi.stubEnv('VITE_OFEED_GQL_WS_URL', '/graphql')
+
+    expect(getGraphQLWsUrl()).toEqual(`ws://${window.location.host}/graphql`)
+  })
+
+  it('derives the GraphQL WebSocket URL from an absolute OFeed API URL', () => {
+    vi.stubEnv('VITE_OFEED_API_URL', 'https://api.example.com/api/ofeed')
+
+    expect(getGraphQLWsUrl()).toEqual('wss://api.example.com/graphql')
   })
 
   it('returns competitions in the shared format', async () => {
@@ -337,6 +357,9 @@ describe('useOfeed', () => {
     expect(competitionComposable.competition.value).toMatchObject({
       ...TEST_COMPETITION,
       zeroTime: new Date('2023-01-01T10:00:00.000Z'),
+    })
+    expect(competitionComposable.competition.value?.categories[0]).toMatchObject({
+      competitorsCount: 42,
     })
     expect(fetch).toHaveBeenCalledWith('/api/ofeed/rest/v1/events/1')
   })

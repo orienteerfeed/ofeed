@@ -60,6 +60,18 @@ watchEffect(() =>
   settingStore.setAvailableCategories(availableCategories.value)
 )
 
+watchEffect(() => {
+  if (!competition.value) return
+  for (const category of competition.value.categories) {
+    const count = competition.value.isRelay
+      ? category.teamsCount
+      : category.competitorsCount
+    if (count !== undefined) {
+      settingStore.updateCategoryCount(category.name, count)
+    }
+  }
+})
+
 const isEmpty = computed(
   () => status.value === 'success' && competition.value && availableCategories.value.length === 0
 )

@@ -62,7 +62,7 @@ const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
       <template v-if="showEmojis && data.rank !== undefined && medalEmojis[data.rank]">{{
         medalEmojis[data.rank]
       }}</template>
-      <template v-else class="tabular-nums">{{ data.rank }}.</template>
+      <span v-else class="tabular-nums">{{ data.rank }}.</span>
     </span>
     <span v-else-if="data.status === AthleteStatus.NotCompeting">MS</span>
     <span v-else-if="showEmojis && emojisMapping[data.status]">{{

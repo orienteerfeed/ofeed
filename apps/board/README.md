@@ -57,6 +57,7 @@ pnpm --filter ./apps/board dev:win
 
 - `VITE_PROVIDERS` controls enabled providers, for example `ofeed,liveResultat`
 - `VITE_OFEED_API_URL` defaults to `/api/ofeed`, so the board uses the same origin in both local Docker and Traefik deployments
+- `VITE_OFEED_GQL_WS_URL` optionally overrides the OFeed GraphQL WebSocket endpoint; when unset, the board derives `/graphql` from `VITE_OFEED_API_URL` or the current origin
 - `VITE_OFEED_PROXY_TARGET` defaults to `http://localhost:3001` for local development against the monorepo server
 - `BOARD_API_UPSTREAM` controls the Nginx upstream inside the board container and defaults to `http://api:3001`
 - In development, OFeed requests are proxied through `/api/ofeed`

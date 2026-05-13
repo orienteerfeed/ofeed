@@ -39,7 +39,7 @@ const clubNameFormatted = computed(() =>
       <template v-if="showEmojis && data.latestTotalResult.rank !== undefined && medalEmojis[data.latestTotalResult.rank]">{{
         medalEmojis[data.latestTotalResult.rank]
       }}</template>
-      <template v-else class="tabular-nums">{{ data.latestTotalResult.rank }}.</template>
+      <span v-else class="tabular-nums">{{ data.latestTotalResult.rank }}.</span>
     </span>
     <span
       class="tabular-nums"
