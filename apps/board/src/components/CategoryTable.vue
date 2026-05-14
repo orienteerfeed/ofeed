@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watchEffect } from 'vue'
 
 import TableHeader from './CategoryTableHeader.vue'
 import TableFinishedRow from './CategoryTableFinishedRow.vue'
@@ -26,10 +26,11 @@ const { scrollItemRef, stickyRef, contentRef, isActive } = useScrollColumnItem(
   props.category.name
 )
 
+const fetchEnabled = computed(() => isActive.value || settingsStore.areSettingsDisplayed)
 const { status, athletes, areAvailable, courseInfo } = useAthletes({
   competition: props.competition,
   category: props.category,
-  fetchEnabled: isActive,
+  fetchEnabled,
 })
 
 const effectiveCategory = computed(() => ({
@@ -46,8 +47,12 @@ const athletesCount = computed(() => {
     full: athletes.value.finished.length + athletes.value.unfinished.length,
   }
 })
-const finishedAthletes = useFinishedAthletes(athletes)
+const finishedAthletes = useFinishedAthletes(athletes, computed(() => settingsStore.pinnedCount))
 const unfinishedAthletes = useUnfinishedAthletes(athletes)
+
+watchEffect(() => {
+  settingsStore.updateCategoryCount(props.category.name, athletesCount.value.full)
+})
 </script>
 
 <template>
@@ -60,18 +65,17 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
       />
       <!-- TODO Add 2rem text class -->
       <div
-        v-if="status === 'success' && areAvailable"
-        class="w-full text-3xl font-bold bg-white"
+        v-if="finishedAthletes.pinnedRows.length && finishedAthletes.restRows.length"
+        class="w-full text-3xl font-bold bg-white border-b-2 border-gray-600 border-dashed"
       >
         <TableFinishedRow
-          v-if="finishedAthletes.firstRow"
-          :data="finishedAthletes.firstRow"
-          :is-even="false"
+          v-for="(row, index) in finishedAthletes.pinnedRows"
+          :key="row.id"
+          :data="row"
+          :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
           :show-emojis="settingsStore.showEmojis"
-          class="border-b-2 border-gray-600 border-dashed"
-        >
-        </TableFinishedRow>
+        />
       </div>
     </div>
     <div ref="contentRef">
@@ -82,7 +86,7 @@ const unfinishedAthletes = useUnfinishedAthletes(athletes)
         <TableFinishedRow
           v-for="(row, index) in finishedAthletes.restRows"
           :data="row"
-          :key="row.rank"
+          :key="row.id"
           :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
           :show-emojis="settingsStore.showEmojis"

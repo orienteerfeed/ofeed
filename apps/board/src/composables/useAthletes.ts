@@ -1,4 +1,4 @@
-import { computed, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 
 import { useDataProvider } from './providers/useDataProvider'
 import { AthleteStatus } from '@/types/category'
@@ -12,7 +12,7 @@ export type ClassifyAthletes = {
 }
 
 type ClassifiedFinishedAthletes = {
-  firstRow: AthleteWithStats | null
+  pinnedRows: AthleteWithStats[]
   restRows: AthleteWithStats[]
 }
 
@@ -62,13 +62,15 @@ export function useAthletes({
   return { status, athletes, areAvailable, courseInfo }
 }
 
-export function useFinishedAthletes(athletes: Ref<ClassifyAthletes>) {
+export function useFinishedAthletes(
+  athletes: Ref<ClassifyAthletes>,
+  pinnedCount: Ref<number> = ref(1)
+) {
   const finishedAthletes = computed(() => {
-    if (!athletes.value.finished.length) return { firstRow: null, restRows: [] }
+    if (!athletes.value.finished.length) return { pinnedRows: [], restRows: [] }
     const athletesCopy = [...athletes.value.finished]
     athletesCopy.sort(finishedAthleteSortFunction)
-    const formatted = formatFinishedAthletes(athletesCopy)
-    return formatted
+    return formatFinishedAthletes(athletesCopy, pinnedCount.value)
   })
 
   return finishedAthletes
@@ -81,48 +83,52 @@ function finishedAthleteSortFunction(a: RawAthlete, b: RawAthlete) {
 }
 
 function formatFinishedAthletes(
-  data: RawAthlete[]
+  data: RawAthlete[],
+  pinnedCount: number
 ): ClassifiedFinishedAthletes {
   const firstAthlete = data[0]
-  if (!firstAthlete) {
-    return { firstRow: null, restRows: [] }
-  }
+  if (!firstAthlete) return { pinnedRows: [], restRows: [] }
   if (firstAthlete.status !== AthleteStatus.Ok)
-    return { firstRow: null, restRows: data } // First athlete after sort is not finished, nothing to format
-  const firstRow = {
+    return { pinnedRows: [], restRows: data }
+
+  const leaderRow = {
     ...firstAthlete,
     rank: 1,
     time: formatTimeOrienteering(firstAthlete.timeSeconds),
     loss: '',
   }
-  let compareTime = firstRow.time
-  let currentRank = firstRow.rank
-  const restRows = data.slice(1).map((athlete, index) => {
-    if (athlete.status === AthleteStatus.Ok) {
-      const itemTime = formatTimeOrienteering(athlete.timeSeconds)
-      const isDraw = compareTime === itemTime
-      if (!isDraw) {
-        currentRank = index + 2
-        compareTime = itemTime
+  let compareTime = leaderRow.time
+  let currentRank = leaderRow.rank
+  const allRows: AthleteWithStats[] = [
+    leaderRow,
+    ...data.slice(1).map((athlete, index) => {
+      if (athlete.status === AthleteStatus.Ok) {
+        const itemTime = formatTimeOrienteering(athlete.timeSeconds)
+        const isDraw = compareTime === itemTime
+        if (!isDraw) {
+          currentRank = index + 2
+          compareTime = itemTime
+        }
+        return {
+          ...athlete,
+          rank: currentRank,
+          time: itemTime,
+          loss: calculateLoss(leaderRow, athlete),
+        }
       }
-      return {
-        ...athlete,
-        rank: currentRank,
-        time: itemTime,
-        loss: calculateLoss(firstRow, athlete),
+      if (athlete.status === AthleteStatus.NotCompeting) {
+        return { ...athlete, time: formatTimeOrienteering(athlete.timeSeconds) }
       }
-    }
-    if (athlete.status === AthleteStatus.NotCompeting) {
-      const itemTime = formatTimeOrienteering(athlete.timeSeconds)
-      return {
-        ...athlete,
-        time: itemTime,
-      }
-    }
-    return athlete // Athlete is not finished, nothing to format
-  })
-  // TODO Move first place draw athletes to firstRow []
-  return { firstRow, restRows }
+      return athlete
+    }),
+  ]
+
+  const okCount = allRows.filter(a => a.status === AthleteStatus.Ok).length
+  const effectivePinned = Math.min(pinnedCount, okCount)
+  return {
+    pinnedRows: allRows.slice(0, effectivePinned),
+    restRows: allRows.slice(effectivePinned),
+  }
 }
 
 function calculateLoss(leadItem: RawAthlete, compareItem: RawAthlete) {

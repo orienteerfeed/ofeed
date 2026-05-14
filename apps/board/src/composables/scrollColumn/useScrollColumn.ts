@@ -1,10 +1,10 @@
-import { ref, computed, provide, inject, onMounted, shallowRef } from 'vue'
+import { ref, computed, provide, inject, onMounted, onUnmounted, shallowRef } from 'vue'
 import type { Ref, InjectionKey } from 'vue'
 import { useEventListener, useDebounceFn } from '@vueuse/core'
 
 import type { ScrollType } from '@/types/layout'
 
-export type RegisterScrollColumnItem = (item: ScrollColumnItem) => void
+export type RegisterScrollColumnItem = (item: ScrollColumnItem) => () => void
 export const registerScrollColumnItemKey =
   Symbol() as InjectionKey<RegisterScrollColumnItem>
 
@@ -52,6 +52,10 @@ export function useScrollColumn(scrollType: Ref<ScrollType>) {
   const registerScrollColumnItem: RegisterScrollColumnItem = (item) => {
     columnItems.push(item)
     onScrollDebounced()
+    return () => {
+      const index = columnItems.indexOf(item)
+      if (index !== -1) columnItems.splice(index, 1)
+    }
   }
   provide(registerScrollColumnItemKey, registerScrollColumnItem)
 
@@ -233,13 +237,14 @@ export function useScrollColumnItem(category: string) {
 
   onMounted(() => {
     if (scrollItemRef.value) {
-      registerScrollColumnItem({
+      const unregister = registerScrollColumnItem({
         id: category,
         elementRef: ref(scrollItemRef.value),
         stickyRef,
         contentRef,
         isActive,
       })
+      onUnmounted(unregister)
     }
   })
 

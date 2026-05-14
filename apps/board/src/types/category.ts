@@ -1,10 +1,15 @@
+export type CategoryGender = 'M' | 'F' | 'X'
+
 export interface Category {
   id: string
   name: string
   length?: number
   climb?: number
   controls?: number
-  gender: 'M' | 'F' | 'X'
+  competitorsCount?: number
+  teamsCount?: number
+  gender: CategoryGender
+  colorOverride?: CategoryGender
   athletes?: RawAthlete[]
 }
 
