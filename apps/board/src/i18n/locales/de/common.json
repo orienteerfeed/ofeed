@@ -1,0 +1,49 @@
+{
+  "language": {
+    "label": "Sprache"
+  },
+  "noData": {
+    "title": "Veranstaltungsdaten nicht verfügbar",
+    "description": "Für die Ergebnisse sind derzeit keine Daten verfügbar. Bitte versuche es später erneut oder wende dich an den Veranstalter."
+  },
+  "loading": "Daten werden geladen",
+  "error": "Fehler beim Laden der Daten, bitte versuche es erneut",
+  "settings": {
+    "title": "Ergebnistabelleneinstellungen",
+    "close": "Einstellungen schließen",
+    "columnNumber": "Spaltenanzahl",
+    "scrolling": {
+      "label": "(Auto) Scrollen",
+      "byPage": "Seitenweise scrollen",
+      "byRow": "Zeilenweise scrollen",
+      "continuous": "Kontinuierliches Scrollen",
+      "manual": "Manuelles Scrollen",
+      "speed": "Scroll-Geschwindigkeit (Zeit pro Zeile)"
+    },
+    "tableContent": {
+      "label": "Tabelleninhalt",
+      "pinnedLeaders": "Anzahl fixierter Führender",
+      "showUnfinished": "Unfertige anzeigen (Startliste, laufend)",
+      "compactMode": "Kompaktmodus (ohne Verein, Chip)",
+      "showEmojis": "Emojis in Tabelle anzeigen"
+    },
+    "classes": {
+      "label": "Angezeigte Klassen",
+      "colorHint": "Die Kopfzeilenfarbe der Kategorie wird durch das im Datensystem eingestellte Geschlecht bestimmt (M = blau, F = pink, andere = grau).",
+      "filterPlaceholder": "Nach Name filtern…",
+      "selectAll": "Alle",
+      "colHeaders": {
+        "name": "Name",
+        "col": "Sp.",
+        "color": "Farbe",
+        "order": "Reihenfolge"
+      }
+    },
+    "colorOverride": {
+      "auto": "Auto (aus Datenquelle)",
+      "male": "M – blau (männlich)",
+      "female": "F – pink (weiblich)",
+      "neutral": "X – grau (neutral)"
+    }
+  }
+}

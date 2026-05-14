@@ -23,6 +23,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/ofeed/, ''),
         },
+        '/graphql': {
+          target: ofeedProxyTarget,
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
     plugins: [

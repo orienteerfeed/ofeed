@@ -49,6 +49,8 @@ const emojisMapping: Record<AthleteStatus, string> = {
   [AthleteStatus.DidNotStart]: '🚷',
   [AthleteStatus.NotStarted]: '🚪',
 }
+
+const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 </script>
 
 <template>
@@ -56,9 +58,12 @@ const emojisMapping: Record<AthleteStatus, string> = {
     :class="[bgColor, textColor, gridClass]"
     class="grid gap-2 px-3 py-1.5 rounded-lg"
   >
-    <span v-if="data.status === AthleteStatus.Ok" class="tabular-nums"
-      >{{ data.rank }}.</span
-    >
+    <span v-if="data.status === AthleteStatus.Ok">
+      <template v-if="showEmojis && data.rank !== undefined && medalEmojis[data.rank]">{{
+        medalEmojis[data.rank]
+      }}</template>
+      <span v-else class="tabular-nums">{{ data.rank }}.</span>
+    </span>
     <span v-else-if="data.status === AthleteStatus.NotCompeting">MS</span>
     <span v-else-if="showEmojis && emojisMapping[data.status]">{{
       emojisMapping[data.status]

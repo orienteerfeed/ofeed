@@ -22,6 +22,18 @@ declare module 'i18next' {
   }
 }
 
+// Derives ".orienteerfeed.com" from any subdomain; empty on localhost
+function sharedDomain(): string {
+  const parts = window.location.hostname.split('.')
+  return parts.length > 1 ? '.' + parts.slice(-2).join('.') : ''
+}
+
+function writeSharedCookie(lng: string) {
+  const domain = sharedDomain()
+  const domainPart = domain ? `; domain=${domain}` : ''
+  document.cookie = `i18nextLng=${lng}; path=/${domainPart}; max-age=${60 * 60 * 24 * 365}; SameSite=lax`
+}
+
 // ---- i18n init -------------------------------------------------------------
 i18n
   .use(LanguageDetector)
@@ -55,5 +67,9 @@ i18n
     // Optional: load language-only (e.g., 'en' from 'en-US')
     // load: 'languageOnly',
   });
+
+// Write shared subdomain cookie whenever language is resolved or changed,
+// so board.orienteerfeed.com can read it on load.
+i18n.on('languageChanged', writeSharedCookie);
 
 export default i18n;
