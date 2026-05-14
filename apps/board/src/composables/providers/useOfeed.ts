@@ -1,5 +1,6 @@
-import { computed, type Ref } from 'vue'
+import { computed, ref, watchEffect, type Ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
+import { createClient, type Client } from 'graphql-ws'
 
 import type { Competition, CompetitionList } from '@/types/competition'
 import {
@@ -13,6 +14,58 @@ const DEFAULT_OFEED_API_URL = '/api/ofeed'
 const DEFAULT_OFEED_DEV_PROXY_PATH = '/api/ofeed'
 const OFEED_REST_PREFIX = '/rest/v1'
 
+function toWebSocketGraphQLUrl(originUrl: URL): string {
+  const protocol = originUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${originUrl.host}/graphql`
+}
+
+function normalizeGraphQLWsUrl(url: string): string {
+  if (/^wss?:\/\//.test(url)) return url
+  const base =
+    typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001'
+  const parsed = new URL(url, base)
+  const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${parsed.host}${parsed.pathname}${parsed.search}`
+}
+
+function getGraphQLWsUrl(): string {
+  const configured = import.meta.env.VITE_OFEED_GQL_WS_URL?.trim()
+  if (configured) return normalizeGraphQLWsUrl(configured)
+  if (typeof window !== 'undefined') {
+    const apiUrl = new URL(getOfeedApiUrl(), window.location.origin)
+    return toWebSocketGraphQLUrl(apiUrl)
+  }
+  return toWebSocketGraphQLUrl(new URL(getOfeedApiUrl(), 'http://localhost:3001'))
+}
+
+let _wsClient: Client | null = null
+function getWsClient(): Client {
+  if (!_wsClient) _wsClient = createClient({ url: getGraphQLWsUrl() })
+  return _wsClient
+}
+
+const COMPETITORS_BY_CLASS_SUBSCRIPTION = `
+  subscription CompetitorsByClassUpdated($classId: Int!) {
+    competitorsByClassUpdated(classId: $classId) {
+      id
+      firstname
+      lastname
+      organisation
+      shortName
+      card
+      startTime
+      finishTime
+      time
+      status
+      class {
+        length
+        climb
+        controlsCount
+      }
+    }
+  }
+`
+
 type OfeedCompetition = Pick<Competition, 'id' | 'name' | 'organizer'> & {
   date: string
   timezone?: string
@@ -23,6 +76,8 @@ type OfeedCompetition = Pick<Competition, 'id' | 'name' | 'organizer'> & {
 
 type OfeedCategory = Pick<Category, 'id' | 'name' | 'length' | 'climb'> & {
   controlsCount: number
+  competitorsCount?: number | null
+  teamsCount?: number | null
   sex: 'M' | 'F' | 'B'
 }
 
@@ -80,14 +135,6 @@ interface OfeedRelayTeam {
   status: OfeedAthleteStatus
 }
 
-type OfeedCompetitionResultsResponse = OfeedEnvelope<{
-  classes: Array<{
-    length?: number
-    climb?: number
-    controlsCount?: number
-    competitors: OfeedAthlete[]
-  }>
-}>
 
 type OfeedRelayResultsResponse = OfeedEnvelope<{
   classes: Array<{ teams: OfeedRelayTeam[] }>
@@ -209,7 +256,6 @@ export function useOfeed() {
   }
 
   const getAthletesLoader = ({
-    competition,
     category,
     fetchEnabled,
   }: {
@@ -217,29 +263,50 @@ export function useOfeed() {
     category: Category
     fetchEnabled: Ref<boolean>
   }) => {
-    const { status, data } = useQuery({
-      queryKey: ['athletes', key, competition.id, category.id],
-      queryFn: async () => {
-        const result = await fetchJson<OfeedCompetitionResultsResponse>(
-          `${OFEED_REST_PREFIX}/events/${competition.id}/competitors?class=${category.id}`
-        )
-        const classData = extractClasses(result)[0]
-        return {
-          athletes: formatOfeedAthletesToRaw(classData?.competitors ?? []),
-          courseInfo: {
-            length: classData?.length || undefined,
-            climb: classData?.climb || undefined,
-            controls: classData?.controlsCount || undefined,
-          },
-        }
-      },
-      enabled: computed(() => fetchEnabled.value),
-      retry: true,
-      refetchInterval: 15 * 1000,
-    })
+    const status = ref<'loading' | 'success' | 'error'>('loading')
+    const rawAthletes = ref<RawAthlete[] | undefined>(undefined)
+    const courseInfo = ref<{ length?: number; climb?: number; controls?: number } | undefined>(
+      undefined
+    )
 
-    const rawAthletes = computed(() => data.value?.athletes)
-    const courseInfo = computed(() => data.value?.courseInfo)
+    watchEffect((onCleanup) => {
+      if (!fetchEnabled.value) return
+
+      status.value = 'loading'
+      const classId = parseInt(category.id, 10)
+      if (!Number.isFinite(classId)) return
+
+      const unsubscribe = getWsClient().subscribe<{
+        competitorsByClassUpdated: Array<
+          OfeedAthlete & {
+            class?: { length?: number | null; climb?: number | null; controlsCount?: number | null }
+          }
+        >
+      }>(
+        { query: COMPETITORS_BY_CLASS_SUBSCRIPTION, variables: { classId } },
+        {
+          next({ data }) {
+            const competitors = data?.competitorsByClassUpdated ?? []
+            rawAthletes.value = formatOfeedAthletesToRaw(competitors)
+            const cls = competitors[0]?.class
+            if (cls) {
+              courseInfo.value = {
+                length: cls.length ?? undefined,
+                climb: cls.climb ?? undefined,
+                controls: cls.controlsCount ?? undefined,
+              }
+            }
+            status.value = 'success'
+          },
+          error() {
+            status.value = 'error'
+          },
+          complete() {},
+        }
+      )
+
+      onCleanup(unsubscribe)
+    })
 
     return { status, rawAthletes, courseInfo }
   }
@@ -298,13 +365,21 @@ function formatOfeedCompetition(response: OfeedCompetitionResponse): Competition
     categories: (response.classes ?? []).map((category) => ({
       ...category,
       controls: category.controlsCount,
-      gender: transformGender(category.sex),
+      competitorsCount: category.competitorsCount ?? undefined,
+      teamsCount: category.teamsCount ?? undefined,
+      gender: transformGender(category.sex, category.name),
     })),
   }
 }
 
-function transformGender(sex: OfeedCategory['sex']): Category['gender'] {
-  if (sex === 'B') return 'X'
+function guessGender(className: string): Category['gender'] {
+  if (/^[HM]\s*\d/.test(className)) return 'M'
+  if (/^[DWF]\s*\d/.test(className)) return 'F'
+  return 'X'
+}
+
+function transformGender(sex: OfeedCategory['sex'], name: string): Category['gender'] {
+  if (sex === 'B') return guessGender(name)
   return sex
 }
 
@@ -360,4 +435,4 @@ function formatOfeedRelayTeams(teams: OfeedRelayTeam[]): RelayTeam[] {
   }))
 }
 
-export { DEFAULT_OFEED_API_URL, getOfeedApiUrl }
+export { DEFAULT_OFEED_API_URL, getGraphQLWsUrl, getOfeedApiUrl }
