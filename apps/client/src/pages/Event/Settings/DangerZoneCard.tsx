@@ -140,21 +140,10 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
             navigate({ to: '/my-events' });
           },
           onError: (error: string | ApiError) => {
-            const errorCode = error.toString();
-            let description: string;
-            if (errorCode === 'EVENT_DELETE_BLOCKED_EXTERNAL_IS') {
-              description = t(
-                'Pages.Event.DangerZone.Toast.DeleteBlockedExternalIS'
-              );
-            } else if (errorCode === 'EVENT_DELETE_BLOCKED_DATA') {
-              description = t('Pages.Event.DangerZone.Toast.DeleteBlockedData');
-            } else {
-              description = errorCode;
-            }
             console.error('Failed to delete event:', error);
             toast({
               title: t('Pages.Event.DangerZone.Toast.DeleteFailTitle'),
-              description,
+              description: error.toString(),
               variant: 'error',
             });
           },

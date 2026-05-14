@@ -888,9 +888,7 @@
         },
         "Toast": {
           "DeleteFailTitle": "Error al eliminar datos",
-          "DeleteSuccessDescription": "Datos eliminados correctamente",
-          "DeleteBlockedExternalIS": "No se pudo eliminar el evento debido a una vinculación con el SI externo",
-          "DeleteBlockedData": "El evento no se puede eliminar – elimine primero los corredores, categorías y equipos"
+          "DeleteSuccessDescription": "Datos eliminados correctamente"
         }
       },
       "TroublesShooting": {

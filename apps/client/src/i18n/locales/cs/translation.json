@@ -889,9 +889,7 @@
         },
         "Toast": {
           "DeleteFailTitle": "Chyba při mazání dat",
-          "DeleteSuccessDescription": "Data úspěšně smazána",
-          "DeleteBlockedExternalIS": "Smazat akci se nepodařilo kvůli existující vazbě na externí IS",
-          "DeleteBlockedData": "Akci nelze smazat – nejdříve odstraň závodníky, kategorie a týmy"
+          "DeleteSuccessDescription": "Data úspěšně smazána"
         }
       },
       "TroublesShooting": {

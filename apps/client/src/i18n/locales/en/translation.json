@@ -888,9 +888,7 @@
         },
         "Toast": {
           "DeleteFailTitle": "Error deleting data",
-          "DeleteSuccessDescription": "Data successfully deleted",
-          "DeleteBlockedExternalIS": "Event deletion failed due to an existing external IS binding",
-          "DeleteBlockedData": "Event cannot be deleted – remove competitors, classes, and teams first"
+          "DeleteSuccessDescription": "Data successfully deleted"
         }
       },
       "TroublesShooting": {

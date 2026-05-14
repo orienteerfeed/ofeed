@@ -888,9 +888,7 @@
         },
         "Toast": {
           "DeleteFailTitle": "Fel vid radering av data",
-          "DeleteSuccessDescription": "Data har raderats",
-          "DeleteBlockedExternalIS": "Det gick inte att ta bort tävlingen på grund av en befintlig koppling till externt IS",
-          "DeleteBlockedData": "Tävlingen kan inte tas bort – ta bort löpare, klasser och lag först"
+          "DeleteSuccessDescription": "Data har raderats"
         }
       },
       "TroublesShooting": {

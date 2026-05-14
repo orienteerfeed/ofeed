@@ -55,7 +55,7 @@ import {
   searchExternalEvents,
 } from './event.import.service.js';
 import { syncOfficialResultsForEvent } from './event.external-results-sync.service.js';
-import { Prisma } from '../../generated/prisma/client.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import type { AppBindings } from '../../types/index.js';
 import {
   changelogQuerySchema,
@@ -1271,35 +1271,7 @@ export function registerSecureEventRoutes(router) {
           return ownership.response;
         }
 
-        // Pre-checks: refuse deletion if blocking relations still exist.
-        // The user must run DELETE /:eventId/delete-data first.
-        const [externalSync, classCount] = await Promise.all([
-          prisma.eventExternalResultsSyncState.findUnique({
-            where: { eventId },
-            select: { id: true },
-          }),
-          prisma.class.count({ where: { eventId } }),
-        ]);
-
-        if (externalSync) {
-          return res
-            .status(422)
-            .json(errorResponse('EVENT_DELETE_BLOCKED_EXTERNAL_IS', res.statusCode));
-        }
-
-        if (classCount > 0) {
-          const competitorCount = await prisma.competitor.count({
-            where: { class: { eventId } },
-          });
-          logEndpoint(req.c, 'warn', 'Event delete blocked by existing data', {
-            eventId,
-            classCount,
-            competitorCount,
-          });
-          return res
-            .status(422)
-            .json(errorResponse('EVENT_DELETE_BLOCKED_DATA', res.statusCode));
-        }
+        await deleteAllEventData(eventId);
 
         try {
           await deletePublicObjectsByPrefix(`events/${eventId}/`);
@@ -1314,6 +1286,9 @@ export function registerSecureEventRoutes(router) {
             },
           );
         }
+
+        // EventExternalResultsSyncState has no DB-level cascade; delete it before the event row.
+        await prisma.eventExternalResultsSyncState.deleteMany({ where: { eventId } });
 
         await prisma.event.delete({
           where: { id: eventId },

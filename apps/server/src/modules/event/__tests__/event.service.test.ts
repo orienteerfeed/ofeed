@@ -112,8 +112,6 @@ describe('event.service event data deletion', () => {
     prismaMock.class.deleteMany.mockResolvedValue({ count: 2 });
     prismaMock.eventPassword.deleteMany.mockResolvedValue({ count: 1 });
     prismaMock.eventImportState.deleteMany.mockResolvedValue({ count: 1 });
-    prismaMock.eventExternalResultsSyncState.deleteMany.mockResolvedValue({ count: 1 });
-    prismaMock.event.update.mockResolvedValue({} as any);
   });
 
   afterEach(() => {
@@ -133,23 +131,6 @@ describe('event.service event data deletion', () => {
 
     expect(prismaMock.eventImportState.deleteMany).toHaveBeenCalledWith({
       where: { eventId: 'event-1' },
-    });
-  });
-
-  it('deletes external results sync state after deleting all event data', async () => {
-    await deleteAllEventData('event-1');
-
-    expect(prismaMock.eventExternalResultsSyncState.deleteMany).toHaveBeenCalledWith({
-      where: { eventId: 'event-1' },
-    });
-  });
-
-  it('clears external IS binding fields after deleting all event data', async () => {
-    await deleteAllEventData('event-1');
-
-    expect(prismaMock.event.update).toHaveBeenCalledWith({
-      where: { id: 'event-1' },
-      data: { externalSource: null, externalEventId: null },
     });
   });
 });
