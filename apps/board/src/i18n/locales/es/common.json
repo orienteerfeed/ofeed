@@ -1,0 +1,49 @@
+{
+  "language": {
+    "label": "Idioma"
+  },
+  "noData": {
+    "title": "Datos del evento no disponibles",
+    "description": "Actualmente no hay datos disponibles para los resultados. Por favor, vuelva a comprobar más tarde o contacte con el organizador del evento."
+  },
+  "loading": "Cargando datos",
+  "error": "Error al cargar los datos, inténtalo de nuevo más tarde",
+  "settings": {
+    "title": "Configuración de la tabla de resultados",
+    "close": "Cerrar ajustes",
+    "columnNumber": "Número de columnas",
+    "scrolling": {
+      "label": "Desplazamiento (automático)",
+      "byPage": "Desplazar por página",
+      "byRow": "Desplazar por fila",
+      "continuous": "Desplazamiento continuo",
+      "manual": "Desplazamiento manual",
+      "speed": "Velocidad de desplazamiento (tiempo por fila)"
+    },
+    "tableContent": {
+      "label": "Contenido de la tabla",
+      "pinnedLeaders": "Número de líderes fijados",
+      "showUnfinished": "Mostrar incompletos (lista de salida, en curso)",
+      "compactMode": "Modo compacto (sin club, chip)",
+      "showEmojis": "Mostrar emojis en la tabla"
+    },
+    "classes": {
+      "label": "Clases mostradas",
+      "colorHint": "El color del encabezado de categoría está determinado por el género configurado en el origen de datos (M = azul, F = rosa, otro = gris).",
+      "filterPlaceholder": "Filtrar por nombre…",
+      "selectAll": "Todo",
+      "colHeaders": {
+        "name": "Nombre",
+        "col": "Col.",
+        "color": "Color",
+        "order": "Orden"
+      }
+    },
+    "colorOverride": {
+      "auto": "Auto (del origen de datos)",
+      "male": "M – azul (masculino)",
+      "female": "F – rosa (femenino)",
+      "neutral": "X – gris (neutral)"
+    }
+  }
+}

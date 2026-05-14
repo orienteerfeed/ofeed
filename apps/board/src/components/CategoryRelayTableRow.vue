@@ -11,6 +11,7 @@ const props = defineProps<{
   data: RelayTeamWithStats
   isEven: boolean
   legCount: number
+  showEmojis?: boolean
   timezone?: string
 }>()
 const { now5s } = useTimeHelpers()
@@ -45,6 +46,7 @@ const additionalLegSpaces = computed(() => {
     <CategoryRelayTableRowTeam
       class="table-row-grid text-table-large"
       :data="props.data"
+      :show-emojis="props.showEmojis"
     />
     <CategoryRelayTableRowAthlete
       class="table-row-grid text-table-small"

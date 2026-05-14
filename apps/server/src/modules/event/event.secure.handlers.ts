@@ -1288,6 +1288,9 @@ export function registerSecureEventRoutes(router) {
           );
         }
 
+        // EventExternalResultsSyncState has no DB-level cascade; delete it before the event row.
+        await prisma.eventExternalResultsSyncState.deleteMany({ where: { eventId } });
+
         await prisma.event.delete({
           where: { id: eventId },
         });
