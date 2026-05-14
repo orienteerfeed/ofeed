@@ -15,6 +15,9 @@ type PrismaLike = {
     findUnique: (args: Record<string, unknown>) => Promise<{
       id: string;
       name: string | null;
+      organizer: string | null;
+      date: Date | string;
+      timezone: string;
     } | null>;
   };
   eventPassword: {
