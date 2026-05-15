@@ -5,6 +5,8 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
+    "outDir": "dist/tsconfig-node",
+    "tsBuildInfoFile": "dist/tsconfig-node/tsconfig.node.tsbuildinfo",
     "strict": true,
     "types": ["node", "@playwright/test"]
   },

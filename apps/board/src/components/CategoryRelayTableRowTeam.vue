@@ -5,7 +5,9 @@ import { formatTimeOrienteering } from '@/utils/dateTime'
 import { AthleteStatus } from '@/types/category'
 import type { RelayTeamWithStats } from '@/types/category'
 
-const props = defineProps<{ data: RelayTeamWithStats }>()
+const props = defineProps<{ data: RelayTeamWithStats; showEmojis?: boolean }>()
+
+const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 const timeFormatted = computed(() =>
   props.data.latestTotalResult.status === AthleteStatus.Ok
@@ -29,13 +31,16 @@ const clubNameFormatted = computed(() =>
 <template>
   <div class="grid gap-2 px-3 py-1.5">
     <span
-      class="tabular-nums"
       v-if="
         data.status === AthleteStatus.Ok &&
         data.latestTotalResult.status === AthleteStatus.Ok
       "
-      >{{ data.latestTotalResult.rank }}.</span
     >
+      <template v-if="showEmojis && data.latestTotalResult.rank !== undefined && medalEmojis[data.latestTotalResult.rank]">{{
+        medalEmojis[data.latestTotalResult.rank]
+      }}</template>
+      <span v-else class="tabular-nums">{{ data.latestTotalResult.rank }}.</span>
+    </span>
     <span
       class="tabular-nums"
       v-else-if="data.latestTotalResult.status === AthleteStatus.Ok"

@@ -1,13 +1,15 @@
-import { ref, computed, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { ScrollType } from '@/types/layout'
+import type { CategoryGender } from '@/types/category'
 
 type CategoryDisplay = {
   name: string
   selected: boolean
   column: null | number
   order: number
+  colorOverride?: CategoryGender | null
 }
 
 type CategoryDisplaySelected = Omit<CategoryDisplay, 'column'> & {
@@ -26,6 +28,7 @@ export const useSettingStore = defineStore(
 
     const compactMode = ref(true)
     const showEmojis = ref(true)
+    const pinnedCount = ref(3)
 
     const scrollType = ref<ScrollType>('page')
 
@@ -35,7 +38,7 @@ export const useSettingStore = defineStore(
       autoUpdateCategoryDisplayColumns()
     }
 
-    const readLineTimeSeconds = ref(import.meta.env.PROD ? 0.5 : 0.1)
+    const readLineTimeSeconds = ref(import.meta.env.PROD ? 0.3 : 0.1)
     const readLineTimeMS = computed(() => readLineTimeSeconds.value * 1000)
     function setScrollType(type: ScrollType) {
       scrollType.value = type
@@ -44,6 +47,10 @@ export const useSettingStore = defineStore(
     const showUnfinishedAthletes = ref(true)
 
     const availableCategories = ref<string[]>([])
+    const categoryCounts = reactive<Record<string, number>>({})
+    function updateCategoryCount(name: string, count: number) {
+      categoryCounts[name] = count
+    }
     const categoriesDisplayRaw = ref<CategoryDisplay[]>([])
     const setAvailableCategories = (categories: string[]) => {
       if (
@@ -53,6 +60,9 @@ export const useSettingStore = defineStore(
         return // Bugfix skip rewrite update
       availableCategories.value = categories
       categoriesDisplayRaw.value = categories.map(createSelectedCategoryItem)
+      if (scrollColumnsCount.value > 1) {
+        autoUpdateCategoryDisplayColumns()
+      }
     }
 
     const categoriesDisplay = computed(() => {
@@ -95,6 +105,18 @@ export const useSettingStore = defineStore(
         selected: true,
         column: 1,
         order: index,
+        colorOverride: null,
+      }
+    }
+
+    function setCategoryColorOverride(
+      category: CategoryDisplay,
+      color: CategoryGender | null
+    ) {
+      const idx = categoriesDisplayRaw.value.findIndex((c) => c.name === category.name)
+      const existing = categoriesDisplayRaw.value[idx]
+      if (idx !== -1 && existing) {
+        categoriesDisplayRaw.value[idx] = { ...existing, colorOverride: color }
       }
     }
 
@@ -128,6 +150,18 @@ export const useSettingStore = defineStore(
       category.order = newOrder
     }
 
+    function moveCategoryToIndex(fromName: string, toName: string) {
+      if (fromName === toName) return
+      const sorted = [...categoriesDisplay.value]
+      const fromIdx = sorted.findIndex((c) => c.name === fromName)
+      const toIdx = sorted.findIndex((c) => c.name === toName)
+      if (fromIdx === -1 || toIdx === -1) return
+      const moved = sorted.splice(fromIdx, 1)[0]
+      if (!moved) return
+      sorted.splice(toIdx, 0, moved)
+      categoriesDisplayRaw.value = sorted.map((c, i) => ({ ...c, order: i }))
+    }
+
     function selectCategories(categories: CategoryDisplay[], selected: boolean) {
       for (const category of categories) {
         category.selected = selected
@@ -156,6 +190,7 @@ export const useSettingStore = defineStore(
 
       compactMode,
       showEmojis,
+      pinnedCount,
 
       scrollType,
       setScrollType,
@@ -168,6 +203,8 @@ export const useSettingStore = defineStore(
 
       showUnfinishedAthletes,
       availableCategories,
+      categoryCounts,
+      updateCategoryCount,
       categoriesDisplayRaw, // Export for persist to work
       categoriesDisplay,
       categoriesDisplayByColumn,
@@ -176,10 +213,18 @@ export const useSettingStore = defineStore(
       setCategoryDisplayOrder,
       setCategorySelected,
       selectCategories,
+      setCategoryColorOverride,
+      moveCategoryToIndex,
     }
   },
   {
-    persist: true,
+    persist: {
+      pick: [
+        'compactMode', 'showEmojis', 'pinnedCount',
+        'scrollType', 'scrollColumnsCount', 'readLineTimeSeconds',
+        'showUnfinishedAthletes', 'categoriesDisplayRaw',
+      ],
+    },
   }
 )
 
