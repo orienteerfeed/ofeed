@@ -240,7 +240,7 @@ export function registerMeosHandler(router: AppOpenAPI): void {
 
     // Binding lookup — the competition header value is the binding's PK
     const binding = await prisma.eventMeosBinding.findFirst({
-      where: { id: meosCompetitionId, event: { published: true } },
+      where: { id: meosCompetitionId },
       select: {
         id: true,
         eventId: true,

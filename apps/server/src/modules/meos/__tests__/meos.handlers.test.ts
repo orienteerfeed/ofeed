@@ -201,6 +201,23 @@ describe('POST /rest/v1/upload/meos', () => {
     expect(await res.text()).toContain('status="BADCMP"');
   });
 
+  it('looks up MeOS binding without requiring the event to be published', async () => {
+    mockPrisma.eventMeosBinding.findFirst.mockResolvedValue(BINDING);
+    const app = buildApp();
+    const res = await post(app, COMPLETE_XML, { competition: '42', pwd: 'secret' });
+
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain('status="OK"');
+    expect(mockPrisma.eventMeosBinding.findFirst).toHaveBeenCalledWith({
+      where: { id: 42 },
+      select: {
+        id: true,
+        eventId: true,
+        event: { select: { id: true, date: true, timezone: true, authorId: true } },
+      },
+    });
+  });
+
   it('returns OK for ZIP-compressed MOPComplete', async () => {
     mockPrisma.eventMeosBinding.findFirst.mockResolvedValue(BINDING);
     const app = buildApp();
