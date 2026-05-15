@@ -6,6 +6,7 @@ const GET_EVENT = gql`
   query Event($eventId: String!) {
     event(id: $eventId) {
       id
+      slug
       name
       organizer
       location

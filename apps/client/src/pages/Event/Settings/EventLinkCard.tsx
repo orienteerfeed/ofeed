@@ -5,32 +5,96 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import { TFunction } from 'i18next';
-import { Copy, Printer, Send, Share2 } from 'lucide-react';
+import {
+  CheckCircle2,
+  Copy,
+  Loader2,
+  Printer,
+  Send,
+  Share2,
+  XCircle,
+} from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '../../../components/atoms';
 import { config } from '../../../config';
+import { useApi } from '../../../hooks';
+import { ENDPOINTS } from '../../../lib/api/endpoints';
 import { PATHNAMES } from '../../../lib/paths/pathnames';
 import { toast } from '../../../utils';
 
 interface EventLinkCardProps {
   t: TFunction;
   eventId: string;
+  eventSlug?: string | null;
   eventName: string;
   eventLocation: string;
   eventDateFormatted: string;
+  onSlugUpdated?: () => void | Promise<void>;
+}
+
+type SlugStatus =
+  | 'idle'
+  | 'checking'
+  | 'saving'
+  | 'saved'
+  | 'invalid'
+  | 'unavailable'
+  | 'error';
+
+type SlugAvailabilityResponse = {
+  data?: {
+    slug: string;
+    available: boolean;
+    reason: string | null;
+  };
+};
+
+type SlugUpdateResponse = {
+  data?: {
+    id: string;
+    slug: string | null;
+  };
+};
+
+const slugMinLength = 6;
+const slugMaxLength = 64;
+const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function normalizeSlugInput(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 export const EventLinkCard: React.FC<EventLinkCardProps> = ({
   t,
   eventId,
+  eventSlug,
   eventName,
   eventLocation,
   eventDateFormatted,
+  onSlugUpdated,
 }) => {
   const qrRef = useRef<HTMLDivElement>(null);
+  const api = useApi();
+  const [slugInput, setSlugInput] = useState(eventSlug ?? '');
+  const [savedSlug, setSavedSlug] = useState(eventSlug ?? null);
+  const [slugStatus, setSlugStatus] = useState<SlugStatus>(
+    eventSlug ? 'saved' : 'idle'
+  );
+  const slugInputRef = useRef(slugInput);
+  const latestSlugRequestRef = useRef(0);
 
   // Pre-bake the logo with a white frame into a data URL so qrcode.react renders
   // the padded version natively via imageSettings.
@@ -56,10 +120,167 @@ export const EventLinkCard: React.FC<EventLinkCardProps> = ({
     img.src = '/images/logos/2025-04-24_orienteerfeed_logo_light_192x192.png';
   }, []);
 
+  useEffect(() => {
+    slugInputRef.current = slugInput;
+  }, [slugInput]);
+
+  useEffect(() => {
+    setSavedSlug(eventSlug ?? null);
+    setSlugInput(eventSlug ?? '');
+    setSlugStatus(eventSlug ? 'saved' : 'idle');
+  }, [eventSlug]);
+
+  const handleSlugChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value;
+    slugInputRef.current = nextValue;
+    setSlugInput(nextValue);
+    setSlugStatus(
+      savedSlug && normalizeSlugInput(nextValue) === savedSlug
+        ? 'saved'
+        : 'idle'
+    );
+  };
+
+  const handleSlugBlur = async () => {
+    const normalizedSlug = normalizeSlugInput(slugInputRef.current);
+    slugInputRef.current = normalizedSlug;
+    setSlugInput(normalizedSlug);
+
+    const requestId = latestSlugRequestRef.current + 1;
+    latestSlugRequestRef.current = requestId;
+
+    const isLatestRequest = () => latestSlugRequestRef.current === requestId;
+
+    if (!normalizedSlug) {
+      if (!savedSlug) {
+        setSlugStatus('idle');
+        return;
+      }
+
+      setSlugStatus('saving');
+
+      try {
+        await api.patch<SlugUpdateResponse>(
+          ENDPOINTS.updateEventSlug(eventId),
+          {
+            slug: null,
+          }
+        );
+
+        if (
+          !isLatestRequest() ||
+          normalizeSlugInput(slugInputRef.current) !== ''
+        ) {
+          return;
+        }
+
+        setSavedSlug(null);
+        setSlugStatus('idle');
+        await onSlugUpdated?.();
+      } catch {
+        if (isLatestRequest()) {
+          setSlugStatus('error');
+        }
+      }
+
+      return;
+    }
+
+    if (
+      normalizedSlug.length < slugMinLength ||
+      normalizedSlug.length > slugMaxLength ||
+      !slugPattern.test(normalizedSlug)
+    ) {
+      setSlugStatus('invalid');
+      return;
+    }
+
+    if (normalizedSlug === savedSlug) {
+      setSlugStatus('saved');
+      return;
+    }
+
+    setSlugStatus('checking');
+
+    try {
+      const response = await api.get<SlugAvailabilityResponse>(
+        ENDPOINTS.eventSlugAvailability({
+          slug: normalizedSlug,
+          eventId,
+        }),
+        { skipAuth: true }
+      );
+
+      if (
+        !isLatestRequest() ||
+        normalizeSlugInput(slugInputRef.current) !== normalizedSlug
+      ) {
+        return;
+      }
+
+      const availability = response.data;
+      if (!availability?.available) {
+        setSlugStatus('unavailable');
+        return;
+      }
+
+      setSlugStatus('saving');
+
+      const updateResponse = await api.patch<SlugUpdateResponse>(
+        ENDPOINTS.updateEventSlug(eventId),
+        {
+          slug: availability.slug,
+        }
+      );
+
+      if (
+        !isLatestRequest() ||
+        normalizeSlugInput(slugInputRef.current) !== normalizedSlug
+      ) {
+        return;
+      }
+
+      const nextSlug = updateResponse.data?.slug ?? availability.slug;
+      slugInputRef.current = nextSlug;
+      setSlugInput(nextSlug);
+      setSavedSlug(nextSlug);
+      setSlugStatus('saved');
+      await onSlugUpdated?.();
+    } catch {
+      if (isLatestRequest()) {
+        setSlugStatus('error');
+      }
+    }
+  };
+
+  const shareIdentifier = savedSlug || eventId;
+
   const eventUrl = new URL(
-    config.PUBLIC_URL + PATHNAMES.eventDetail(eventId).url,
+    config.PUBLIC_URL + PATHNAMES.eventDetail(shareIdentifier).url,
     config.PUBLIC_URL
   ).toString();
+
+  const slugHelpText =
+    slugStatus === 'saved'
+      ? t('Pages.Event.Link.Card.Slug.Available')
+      : slugStatus === 'checking'
+        ? t('Pages.Event.Link.Card.Slug.Checking')
+        : slugStatus === 'saving'
+          ? t('Pages.Event.Link.Card.Slug.Saving')
+          : slugStatus === 'invalid'
+            ? t('Pages.Event.Link.Card.Slug.Invalid')
+            : slugStatus === 'unavailable'
+              ? t('Pages.Event.Link.Card.Slug.Unavailable')
+              : slugStatus === 'error'
+                ? t('Pages.Event.Link.Card.Slug.Error')
+                : t('Pages.Event.Link.Card.Slug.Help');
+
+  const isSlugPositive = slugStatus === 'saved';
+  const isSlugNegative =
+    slugStatus === 'invalid' ||
+    slugStatus === 'unavailable' ||
+    slugStatus === 'error';
+  const isSlugPending = slugStatus === 'checking' || slugStatus === 'saving';
 
   const copyLinkToClipboard = () => {
     navigator.clipboard.writeText(eventUrl);
@@ -472,6 +693,60 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
 
         {/* Event URL Display */}
         <div className="space-y-2">
+          <Label htmlFor="event-slug" className="text-sm font-medium">
+            {t('Pages.Event.Link.Card.Slug.Label')}
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="event-slug"
+              value={slugInput}
+              onBlur={handleSlugBlur}
+              onChange={handleSlugChange}
+              maxLength={slugMaxLength}
+              placeholder={t('Pages.Event.Link.Card.Slug.Placeholder', {
+                year: new Date().getFullYear(),
+              })}
+              aria-invalid={isSlugNegative}
+              className={cn(
+                isSlugPositive &&
+                  'border-green-600 focus-visible:ring-green-600',
+                isSlugNegative &&
+                  'border-destructive focus-visible:ring-destructive'
+              )}
+            />
+            <div className="flex h-10 w-6 shrink-0 items-center justify-center">
+              {isSlugPositive && (
+                <CheckCircle2
+                  className="h-5 w-5 text-green-600"
+                  aria-label={t('Pages.Event.Link.Card.Slug.Available')}
+                />
+              )}
+              {isSlugNegative && (
+                <XCircle
+                  className="h-5 w-5 text-destructive"
+                  aria-label={slugHelpText}
+                />
+              )}
+              {isSlugPending && (
+                <Loader2
+                  className="h-5 w-5 animate-spin text-muted-foreground"
+                  aria-label={slugHelpText}
+                />
+              )}
+            </div>
+          </div>
+          <p
+            className={cn(
+              'text-sm text-muted-foreground',
+              isSlugPositive && 'text-green-700',
+              isSlugNegative && 'text-destructive'
+            )}
+          >
+            {slugHelpText}
+          </p>
+        </div>
+
+        <div className="space-y-2">
           <Label className="text-sm font-medium">
             {t('Pages.Event.Link.Card.Navigator.EventUri')}
           </Label>
@@ -490,7 +765,11 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <Button onClick={handleShareLink} variant="outline" className="flex-1">
+          <Button
+            onClick={handleShareLink}
+            variant="outline"
+            className="flex-1"
+          >
             <Share2 className="h-4 w-4 mr-2" />
             {t('ShareLink', { ns: 'common' })}
           </Button>
@@ -498,7 +777,11 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
             <Send className="h-4 w-4 mr-2" />
             {t('ShareQR', { ns: 'common' })}
           </Button>
-          <Button onClick={generateQRAndPrint} variant="outline" className="flex-1">
+          <Button
+            onClick={generateQRAndPrint}
+            variant="outline"
+            className="flex-1"
+          >
             <Printer className="h-4 w-4 mr-2" />
             {t('Print', { ns: 'common' })}
           </Button>

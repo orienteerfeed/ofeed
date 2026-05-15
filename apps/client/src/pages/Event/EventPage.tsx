@@ -1,4 +1,5 @@
 import { notFound, useNavigate } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import {
   Calendar,
   FileText,
@@ -46,10 +47,14 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
     (user.id === event.authorId || isAdmin());
 
   const handleSettingsClick = () => {
-    navigate(PATHNAMES.eventSettings(eventId));
+    if (event) {
+      navigate(PATHNAMES.eventSettings(event.id));
+    }
   };
   const handleReportClick = () => {
-    navigate(PATHNAMES.eventReport(eventId));
+    if (event) {
+      navigate(PATHNAMES.eventReport(event.id));
+    }
   };
   const boardEventUrl = event ? buildBoardEventUrl(event.id) : null;
   const handleBoardClick = () => {
@@ -59,6 +64,16 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
 
     window.open(boardEventUrl, '_blank', 'noopener,noreferrer');
   };
+
+  useEffect(() => {
+    if (event && event.id !== eventId) {
+      navigate({
+        to: '/events/$eventId',
+        params: { eventId: event.id },
+        replace: true,
+      });
+    }
+  }, [event, eventId, navigate]);
 
   if (loading) {
     return (

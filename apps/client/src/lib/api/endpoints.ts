@@ -66,6 +66,10 @@ export const ENDPOINTS = {
     `${apiPrefix}/events${qs(params)}`,
   eventDetail: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}`,
+  eventSlugAvailability: (params?: QueryParams): string =>
+    `${apiPrefix}/events/slug-availability${qs(params)}`,
+  updateEventSlug: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/slug`,
   generateEventPassword: (): string => `${apiPrefix}/events/generate-password`,
   revokeEventPassword: (): string => `${apiPrefix}/events/revoke-password`,
   searchExternalEvents: (): string => `${apiPrefix}/events/import/search`,
@@ -82,7 +86,10 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}/image`,
   eventChangelog: (eventId: string | number, params?: QueryParams): string =>
     `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
-  markChangelogProcessed: (eventId: string | number, protocolId: number): string =>
+  markChangelogProcessed: (
+    eventId: string | number,
+    protocolId: number
+  ): string =>
     `${apiPrefix}/events/${eventId}/changelog/${protocolId}/processed`,
   mapTile: (
     mapset: string,

@@ -2,12 +2,11 @@ import { DatabaseError, ValidationError } from '../../exceptions/index.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma, type Event as PrismaEvent } from '../../generated/prisma/client.js';
 import type { Origin, ProtocolType, ResultStatus } from '../../generated/prisma/enums.js';
-import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import { WINNER_UPDATED, pubsub as defaultPubsub } from '../../lib/pubsub.js';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
-import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
+import { requireEventOwnerOrAdmin, type AuthzAuthContext } from '../../utils/authz.js';
 import {
   publishUpdatedCompetitor,
   publishUpdatedCompetitors,
@@ -17,7 +16,14 @@ import {
   organisationSelect,
   upsertOrganisation,
 } from './organisation.helpers.js';
-import type { EventFilter, EventsInput } from './event.schema.js';
+import {
+  eventSlugMaxLength,
+  eventSlugMinLength,
+  eventSlugPattern,
+  reservedEventSlugs,
+  type EventFilter,
+  type EventsInput,
+} from './event.schema.js';
 import type {
   StatusChangeInput,
   StoreCompetitorInput,
@@ -60,6 +66,19 @@ export type WinnerNotification = {
 export type EventVisibilityUpdateResult = {
   message: string;
   event: PrismaEvent | null;
+};
+
+export type EventSlugAvailabilityReason =
+  | 'TOO_SHORT'
+  | 'TOO_LONG'
+  | 'INVALID_FORMAT'
+  | 'RESERVED'
+  | 'TAKEN';
+
+export type EventSlugAvailability = {
+  slug: string;
+  available: boolean;
+  reason: EventSlugAvailabilityReason | null;
 };
 
 export type WinnerUpdatedPayload = {
@@ -108,9 +127,101 @@ export function findEventById(
   id: string,
   query: EventFindUniqueSelection = {},
 ) {
-  return prisma.event.findUnique({
+  return prisma.event.findFirst({
     ...query,
-    where: { id },
+    where: {
+      OR: [{ id }, { slug: id }],
+    },
+  });
+}
+
+export function normalizeEventSlug(slug: string): string {
+  return slug
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function getEventSlugValidationReason(slug: string): EventSlugAvailabilityReason | null {
+  if (slug.length < eventSlugMinLength) {
+    return 'TOO_SHORT';
+  }
+
+  if (slug.length > eventSlugMaxLength) {
+    return 'TOO_LONG';
+  }
+
+  if (!eventSlugPattern.test(slug)) {
+    return 'INVALID_FORMAT';
+  }
+
+  if (reservedEventSlugs.has(slug)) {
+    return 'RESERVED';
+  }
+
+  return null;
+}
+
+export async function getEventSlugAvailability(
+  prisma: AppPrismaClient,
+  rawSlug: string,
+  currentEventId?: string,
+): Promise<EventSlugAvailability> {
+  const slug = normalizeEventSlug(rawSlug);
+  const validationReason = getEventSlugValidationReason(slug);
+
+  if (validationReason) {
+    return {
+      slug,
+      available: false,
+      reason: validationReason,
+    };
+  }
+
+  const existingEvent = await prisma.event.findFirst({
+    where: {
+      slug,
+      ...(currentEventId ? { id: { not: currentEventId } } : {}),
+    },
+    select: { id: true },
+  });
+
+  return {
+    slug,
+    available: !existingEvent,
+    reason: existingEvent ? 'TAKEN' : null,
+  };
+}
+
+export async function updateEventSlug(
+  prisma: AppPrismaClient,
+  auth: AuthzAuthContext | null | undefined,
+  eventId: string,
+  rawSlug: string | null | undefined,
+) {
+  await requireEventOwnerOrAdmin(prisma, auth, eventId);
+
+  if (!rawSlug) {
+    return prisma.event.update({
+      where: { id: eventId },
+      data: { slug: null, updatedAt: new Date() },
+    });
+  }
+
+  const availability = await getEventSlugAvailability(prisma, rawSlug, eventId);
+
+  if (!availability.available) {
+    throw new ValidationError(`Event slug is not available: ${availability.reason}`);
+  }
+
+  return prisma.event.update({
+    where: { id: eventId },
+    data: { slug: availability.slug, updatedAt: new Date() },
   });
 }
 
@@ -163,7 +274,7 @@ function getErrorMessage(error: unknown) {
 
 export async function updateEventVisibility(
   prisma: AppPrismaClient,
-  auth: GraphQLAuthContext,
+  auth: AuthzAuthContext | null | undefined,
   eventId: string,
   published: boolean,
 ): Promise<EventVisibilityUpdateResult> {

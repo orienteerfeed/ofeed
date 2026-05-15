@@ -13,9 +13,10 @@ import {
 } from '../../lib/validation/zod.js';
 
 import { validateEventConnection } from './event.connection.service.js';
-import { getEventCompetitorDetail } from './event.service.js';
+import { getEventCompetitorDetail, getEventSlugAvailability } from './event.service.js';
 import { flattenOrganisation, organisationSelect } from './organisation.helpers.js';
 import {
+  eventSlugAvailabilityQuerySchema,
   eventConnectionCheckBodySchema,
   eventCompetitorExternalParamsSchema,
   eventCompetitorParamsSchema,
@@ -38,6 +39,27 @@ export function registerPublicEventRoutes(router) {
   const eventCompetitorsQuerySchema = z.object({
     class: z.string().regex(/^\d+$/).optional(),
     lastUpdate: z.string().datetime({ offset: true }).optional(),
+  });
+
+  router.get('/slug-availability', async (c) => {
+    const parsedQuery = eventSlugAvailabilityQuerySchema.safeParse(c.req.query());
+
+    if (!parsedQuery.success) {
+      return c.json(responseValidationIssues(parsedQuery.error.issues), 422);
+    }
+
+    try {
+      const availability = await getEventSlugAvailability(
+        prisma as never,
+        parsedQuery.data.slug,
+        parsedQuery.data.eventId,
+      );
+
+      return c.json(success('OK', { data: availability }, 200), 200);
+    } catch (err) {
+      logEndpoint(c, 'error', 'Event slug availability query failed', getErrorDetails(err));
+      return c.json(error('Failed to validate event slug', 500), 500);
+    }
   });
 
   router.get('/:eventId/image', async (c) => {
@@ -94,6 +116,7 @@ export function registerPublicEventRoutes(router) {
         where: { published: true },
         select: {
           id: true,
+          slug: true,
           name: true,
           organizer: true,
           date: true,
@@ -171,6 +194,7 @@ export function registerPublicEventRoutes(router) {
         where: { id: eventId },
         select: {
           id: true,
+          slug: true,
           name: true,
           date: true,
           timezone: true,

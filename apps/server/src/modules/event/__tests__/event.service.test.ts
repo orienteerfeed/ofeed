@@ -18,6 +18,11 @@ const prismaMock = vi.hoisted(() => ({
   eventPassword: {
     deleteMany: vi.fn(),
   },
+  event: {
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+  },
   organisation: {
     deleteMany: vi.fn(),
   },
@@ -48,6 +53,8 @@ import {
   changeCompetitorStatus,
   deleteAllEventData,
   deleteEventCompetitors,
+  getEventSlugAvailability,
+  normalizeEventSlug,
 } from '../event.service.js';
 
 describe('event.service changeCompetitorStatus', () => {
@@ -131,6 +138,56 @@ describe('event.service event data deletion', () => {
 
     expect(prismaMock.eventImportState.deleteMany).toHaveBeenCalledWith({
       where: { eventId: 'event-1' },
+    });
+  });
+});
+
+describe('event.service event slug', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('normalizes user input into a URL-safe slug', () => {
+    expect(normalizeEventSlug(' Sprint Zákupy 2026! ')).toBe('sprint-zakupy-2026');
+  });
+
+  it('rejects slugs shorter than six characters before querying the database', async () => {
+    const availability = await getEventSlugAvailability(prismaMock as never, 'abc');
+
+    expect(availability).toEqual({
+      slug: 'abc',
+      available: false,
+      reason: 'TOO_SHORT',
+    });
+    expect(prismaMock.event.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('marks a valid unused slug as available', async () => {
+    prismaMock.event.findFirst.mockResolvedValue(null);
+
+    await expect(getEventSlugAvailability(prismaMock as never, 'sprint-zakupy')).resolves.toEqual({
+      slug: 'sprint-zakupy',
+      available: true,
+      reason: null,
+    });
+  });
+
+  it('checks uniqueness while ignoring the current event', async () => {
+    prismaMock.event.findFirst.mockResolvedValue({ id: 'other-event' });
+
+    await expect(
+      getEventSlugAvailability(prismaMock as never, 'sprint-zakupy', 'current-event'),
+    ).resolves.toEqual({
+      slug: 'sprint-zakupy',
+      available: false,
+      reason: 'TAKEN',
+    });
+    expect(prismaMock.event.findFirst).toHaveBeenCalledWith({
+      where: {
+        slug: 'sprint-zakupy',
+        id: { not: 'current-event' },
+      },
+      select: { id: true },
     });
   });
 });

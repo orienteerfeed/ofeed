@@ -788,6 +788,17 @@
         "Card": {
           "Title": "Event Link",
           "Description": "Quickly share the event link with your spectators - you can copy, share or print the QR code for easy access to live results.",
+          "Slug": {
+            "Label": "Link slug",
+            "Placeholder": "woc-middle-{{year}}",
+            "Help": "Optional. Leave empty to keep the original event ID link.",
+            "Checking": "Checking slug availability...",
+            "Saving": "Saving link slug...",
+            "Available": "Slug is available and saved.",
+            "Invalid": "Slug must be 6 to 64 characters and may contain only lowercase letters, numbers, and hyphens.",
+            "Unavailable": "This slug is already taken. Try another one.",
+            "Error": "Unable to check or save the slug."
+          },
           "Navigator": {
             "Title": "OFeed",
             "Event": "Event",

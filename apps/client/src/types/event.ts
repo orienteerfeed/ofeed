@@ -65,7 +65,7 @@ export interface SplitPublicationStatus {
 
 export interface Event {
   id: string;
-  slug: string;
+  slug?: string | null;
   name: string;
   date: string;
   description?: string;

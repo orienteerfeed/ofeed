@@ -31,6 +31,7 @@ export const GET_EVENT = gql`
   query Event($eventId: String!) {
     event(id: $eventId) {
       id
+      slug
       name
       organizer
       location
@@ -243,9 +244,13 @@ export const EventSettingsPage = () => {
               <EventLinkCard
                 t={t}
                 eventId={initialData?.id || ''}
+                eventSlug={data.event.slug ?? null}
                 eventName={data.event.name}
                 eventLocation={data.event.location}
                 eventDateFormatted={formatDate(data.event.date)}
+                onSlugUpdated={async () => {
+                  await refetch();
+                }}
               />
             </div>
             <div className="break-inside-avoid">

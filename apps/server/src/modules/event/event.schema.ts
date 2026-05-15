@@ -5,6 +5,45 @@ export const eventIdParamsSchema = z.object({
   eventId: z.string().min(1),
 });
 
+export const eventSlugMinLength = 6;
+export const eventSlugMaxLength = 64;
+export const eventSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const reservedEventSlugs = new Set([
+  'admin',
+  'api',
+  'auth',
+  'generate-password',
+  'import',
+  'new',
+  'ofeed',
+  'report',
+  'settings',
+  'slug-availability',
+]);
+
+export const eventSlugSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(eventSlugMinLength)
+  .max(eventSlugMaxLength)
+  .regex(eventSlugPattern)
+  .refine((slug) => !reservedEventSlugs.has(slug), {
+    message: 'Slug is reserved.',
+  });
+
+export const eventSlugAvailabilityQuerySchema = z.object({
+  slug: z.string().trim().min(1),
+  eventId: z.string().trim().min(1).optional(),
+});
+
+export const updateEventSlugBodySchema = z.object({
+  slug: z
+    .union([eventSlugSchema, z.literal(''), z.null()])
+    .optional()
+    .transform((value) => (value === '' ? null : value)),
+});
+
 export const eventCompetitorParamsSchema = z.object({
   eventId: z.string().min(1),
   competitorId: z.string().regex(/^\d+$/),
@@ -127,6 +166,8 @@ export const eventConnectionCheckBodySchema = z.object({
 });
 
 export type EventIdParams = z.infer<typeof eventIdParamsSchema>;
+export type EventSlugAvailabilityQuery = z.infer<typeof eventSlugAvailabilityQuerySchema>;
+export type UpdateEventSlugBody = z.infer<typeof updateEventSlugBodySchema>;
 export type EventCompetitorParams = z.infer<typeof eventCompetitorParamsSchema>;
 export type EventCompetitorExternalParams = z.infer<typeof eventCompetitorExternalParamsSchema>;
 export type ProtocolProcessedByType = z.infer<typeof protocolProcessedByTypeSchema>;

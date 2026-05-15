@@ -788,6 +788,17 @@
         "Card": {
           "Title": "Enlace del evento",
           "Description": "Compartir rápidamente un enlace a un evento: puede copiarlo, compartirlo o imprimir el código QR para un acceso sencillo a los resultados en vivo.",
+          "Slug": {
+            "Label": "Slug del enlace",
+            "Placeholder": "sl-mitten-{{year}}",
+            "Help": "Opcional. Déjelo vacío para conservar el enlace original con el ID del evento.",
+            "Checking": "Comprobando disponibilidad del slug...",
+            "Saving": "Guardando slug del enlace...",
+            "Available": "El slug está disponible y guardado.",
+            "Invalid": "El slug debe tener entre 6 y 64 caracteres y solo puede contener minúsculas, números y guiones.",
+            "Unavailable": "Este slug ya está en uso. Pruebe otro.",
+            "Error": "No se pudo comprobar o guardar el slug."
+          },
           "Navigator": {
             "Title": "OFeed",
             "Event": "Evento",

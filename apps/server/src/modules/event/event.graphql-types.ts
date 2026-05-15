@@ -102,6 +102,7 @@ export const EventRef = builder.prismaObject('Event', {
   findUnique: (event) => ({ id: event.id }),
   fields: (t) => ({
     id: t.exposeString('id'),
+    slug: t.exposeString('slug', { nullable: true }),
     sportId: t.exposeInt('sportId'),
     name: t.exposeString('name'),
     organizer: t.exposeString('organizer', { nullable: true }),

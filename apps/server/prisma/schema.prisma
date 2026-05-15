@@ -127,6 +127,7 @@ enum UserRole {
 
 model Event {
   id                           String                         @id @default(cuid())
+  slug                         String?                        @unique @db.VarChar(64)
   sport                        Sport                          @relation(fields: [sportId], references: [id])
   sportId                      Int                            @db.UnsignedInt
   name                         String

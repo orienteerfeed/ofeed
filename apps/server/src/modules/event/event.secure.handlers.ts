@@ -47,6 +47,7 @@ import {
   deleteEventCompetitors,
   getDecryptedEventPassword,
   storeCompetitor,
+  updateEventSlug,
   updateCompetitor,
 } from './event.service.js';
 import {
@@ -70,6 +71,7 @@ import {
   generatePasswordBodySchema,
   markProtocolProcessedBodySchema,
   stateChangeBodySchema,
+  updateEventSlugBodySchema,
 } from './event.schema.js';
 
 const appPrisma = prisma as AppPrismaClient;
@@ -952,6 +954,52 @@ export function registerSecureEventRoutes(router) {
             return res.status(403).json(errorResponse(message, res.statusCode));
           }
           return res.status(500).json(errorResponse(message, res.statusCode));
+        }
+      },
+    ),
+  );
+
+  router.patch(
+    '/:eventId/slug',
+    routeWithValidation(
+      {
+        paramsSchema: eventIdParamsSchema,
+        bodySchema: updateEventSlugBodySchema,
+      },
+      async ({ c, req, res }) => {
+        const errors = getValidationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(422).json(validationResponse(errors.array(), res.statusCode));
+        }
+
+        const { eventId } = req.params;
+
+        try {
+          const updatedEvent = await updateEventSlug(appPrisma, req.auth, eventId, req.body.slug);
+
+          return res.status(200).json(
+            successResponse(
+              'OK',
+              {
+                data: {
+                  id: updatedEvent.id,
+                  slug: updatedEvent.slug,
+                },
+              },
+              res.statusCode,
+            ),
+          );
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            return res.status(422).json(validationResponse(error.message, res.statusCode));
+          }
+
+          if (error instanceof AuthenticationError) {
+            return res.status(401).json(errorResponse(error.message, res.statusCode));
+          }
+
+          logEndpoint(c, 'error', 'Event slug update failed', getErrorDetails(error));
+          return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
         }
       },
     ),

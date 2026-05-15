@@ -143,6 +143,7 @@ type Event {
   relay: Boolean!
   resultsOfficialAt: DateTime
   resultsOfficialManuallySetAt: DateTime
+  slug: String
   splitPublicationAt: DateTime
   splitPublicationMode: SplitPublicationMode!
   sport: Sport!

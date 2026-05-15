@@ -789,6 +789,17 @@
         "Card": {
           "Title": "Odkaz na akci",
           "Description": "Rychlé sdílení odkazu na akci s diváky – můžeš jej kopírovat, sdílet nebo QR kód vytisknout pro snadný přístup k aktuálním výsledkům.",
+          "Slug": {
+            "Label": "Slug odkazu",
+            "Placeholder": "mcr-kratka-{{year}}",
+            "Help": "Volitelné. Nech prázdné pro původní odkaz s ID akce.",
+            "Checking": "Ověřuji dostupnost slug odkazu…",
+            "Saving": "Ukládám slug odkazu…",
+            "Available": "Slug je dostupný a uložený.",
+            "Invalid": "Slug musí mít 6 až 64 znaků a může obsahovat jen malá písmena, čísla a pomlčky.",
+            "Unavailable": "Tento slug už je obsazený. Zkus jiný.",
+            "Error": "Slug se nepodařilo ověřit nebo uložit."
+          },
           "Navigator": {
             "Title": "OFeed",
             "Event": "Akce",

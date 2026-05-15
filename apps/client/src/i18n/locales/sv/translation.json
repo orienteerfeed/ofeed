@@ -788,6 +788,17 @@
         "Card": {
           "Title": "Länk till tävlingen",
           "Description": "Dela en länk till ett evenemang – du kan kopiera, dela eller skriva ut QR-koden för enkel åtkomst till live-resultat.",
+          "Slug": {
+            "Label": "Länkslug",
+            "Placeholder": "sm-sprint-{{year}}",
+            "Help": "Valfritt. Lämna tomt för att behålla den ursprungliga länken med event-ID.",
+            "Checking": "Kontrollerar om sluggen är ledig...",
+            "Saving": "Sparar länkslug...",
+            "Available": "Sluggen är ledig och sparad.",
+            "Invalid": "Sluggen måste ha 6 till 64 tecken och får bara innehålla gemener, siffror och bindestreck.",
+            "Unavailable": "Den här sluggen är redan upptagen. Prova en annan.",
+            "Error": "Det gick inte att kontrollera eller spara sluggen."
+          },
           "Navigator": {
             "Title": "OFeed",
             "Event": "Tävling",
