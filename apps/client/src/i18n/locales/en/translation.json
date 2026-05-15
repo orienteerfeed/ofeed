@@ -787,7 +787,7 @@
       "Link": {
         "Card": {
           "Title": "Event Link",
-          "Description": "Quickly share a link to an event - you can copy, share or print the QR code for easy access to live results.",
+          "Description": "Quickly share the event link with your spectators - you can copy, share or print the QR code for easy access to live results.",
           "Navigator": {
             "Title": "OFeed",
             "Event": "Event",
