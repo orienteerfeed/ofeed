@@ -15,6 +15,15 @@ export type ChangelogEntry = {
     lastname: string;
   } | null;
   createdAt: string;
+  processed: boolean;
+  processedAt: string | null;
+  processedByType?: 'USER' | 'INTEGRATION' | 'SYSTEM' | null;
+  processedBySource?: string | null;
+  processedByUser?: {
+    id: number;
+    firstname: string;
+    lastname: string;
+  } | null;
 };
 
 export type SortColumn =

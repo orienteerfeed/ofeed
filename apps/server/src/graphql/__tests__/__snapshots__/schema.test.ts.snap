@@ -23,7 +23,20 @@ type Changelog {
   newValue: String
   origin: String!
   previousValue: String
+  processed: Boolean!
+  processedAt: DateTime
+  processedBySource: String
+  processedByType: String
+  processedByUser: User
   type: String!
+}
+
+type ChangelogProcessing {
+  id: Int!
+  processed: Boolean!
+  processedAt: DateTime
+  processedBySource: String
+  processedByType: String
 }
 
 type Class {
@@ -266,6 +279,7 @@ type Mutation {
   createUserCard(input: CreateUserCardInput!): UserCard!
   deleteMeosEventBinding(id: Int!): Boolean!
   deleteUserCard(id: Int!): Boolean!
+  markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
   requestPasswordReset(email: String!): ResetResponse!
   resetPassword(newPassword: String!, token: String!): AuthPayload!
   setDefaultUserCard(id: Int!): UserCard!
@@ -298,6 +312,11 @@ type PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+enum ProtocolProcessedByType {
+  INTEGRATION
+  SYSTEM
 }
 
 type Query {

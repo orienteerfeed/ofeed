@@ -488,6 +488,112 @@
       "Detail": {
         "OpenBoard": "Board"
       },
+      "Report": {
+        "Title": "Änderungsprotokoll",
+        "Description": "Übersicht der Status- und Chipänderungen der Teilnehmer",
+        "CompetitorChangesTitle": "Änderungen für {{name}} (ID {{id}})",
+        "CompetitorChangesDescription": "Alle Änderungen für den ausgewählten Teilnehmer in diesem Wettkampf.",
+        "CompetitorChangesEmpty": "Für diesen Teilnehmer wurden keine Änderungen gefunden.",
+        "AutoRefresh": "Automatische Aktualisierung: {{seconds}} s",
+        "LastUpdated": "Zuletzt aktualisiert: {{time}}",
+        "NoTimestamp": "-",
+        "ActiveFilters": "Aktive Filter:",
+        "PresetsTitle": "Vordefinierte Filter",
+        "Buttons": {
+          "RefreshData": "Daten laden",
+          "ExportCsv": "CSV exportieren",
+          "ExportPdf": "PDF exportieren",
+          "ClearFilters": "Filter zurücksetzen",
+          "ShowProcessed": "Bearbeitete anzeigen",
+          "HideProcessed": "Bearbeitete ausblenden"
+        },
+        "Presets": {
+          "CardChanges": "Chipänderungen",
+          "NoteChanges": "Notizänderungen",
+          "LateStarts": "Verspätete Starts",
+          "DidNotStart": "Nicht gestartet",
+          "All": "Alle Einträge"
+        },
+        "Filters": {
+          "IdPlaceholder": "ID filtern",
+          "DateRange": "Zeitraum wählen",
+          "DateFrom": "Von",
+          "DateTo": "Bis",
+          "TimeFrom": "Uhrzeit von",
+          "TimeTo": "Uhrzeit bis",
+          "TypePlaceholder": "Typ wählen",
+          "CompetitorIdPlaceholder": "Teilnehmer-ID filtern",
+          "LastnamePlaceholder": "Nachname filtern",
+          "FirstnamePlaceholder": "Vorname filtern",
+          "PreviousValuePlaceholder": "Vorherigen Wert filtern",
+          "NewValuePlaceholder": "Neuen Wert filtern",
+          "OriginPlaceholder": "Herkunft wählen",
+          "SelectedCount": "{{count}} ausgewählt",
+          "ClearSelection": "Auswahl zurücksetzen"
+        },
+        "TypeLabels": {
+          "class_change": "Klassenänderung",
+          "firstname_change": "Vornamensänderung",
+          "lastname_change": "Nachnamensänderung",
+          "bibNumber_change": "Startnummernänderung",
+          "nationality_change": "Nationalitätsänderung",
+          "registration_change": "Registrierungsänderung",
+          "license_change": "Lizenzänderung",
+          "ranking_change": "Rankingänderung",
+          "rank_points_avg_change": "Änderung des Ranking-Punktedurchschnitts",
+          "ranking_points_change": "Ranking-Punkteänderung",
+          "ranking_reference_value_change": "Änderung des Ranking-Referenzwerts",
+          "organisation_change": "Vereinsänderung",
+          "short_name_change": "Kurznamensänderung",
+          "si_card_change": "SI-Chipänderung",
+          "start_time_change": "Startzeitänderung",
+          "finish_time_change": "Zielzeitänderung",
+          "time_change": "Zeitänderung",
+          "team_change": "Teamänderung",
+          "leg_change": "Streckenabschnittsänderung",
+          "status_change": "Statusänderung",
+          "late_start_change": "Verspäteter Start",
+          "note_change": "Notizänderung",
+          "external_id_change": "Externe ID-Änderung"
+        },
+        "OriginLabels": {
+          "START": "Start",
+          "OFFICE": "Büro",
+          "FINISH": "Ziel",
+          "IT": "IT"
+        },
+        "Pagination": {
+          "RowsPerPage": "Zeilen pro Seite",
+          "RowsOption": "{{count}}",
+          "PageOf": "Seite {{page}} von {{total}}",
+          "Previous": "Vorherige Seite",
+          "Next": "Nächste Seite"
+        },
+        "Table": {
+          "Id": "ID",
+          "DateTime": "Datum und Uhrzeit",
+          "Type": "Typ",
+          "CompetitorId": "Teilnehmer-ID",
+          "Lastname": "Nachname",
+          "Firstname": "Vorname",
+          "PreviousValue": "Vorheriger Wert",
+          "NewValue": "Neuer Wert",
+          "Origin": "Herkunft"
+        },
+        "ProcessedToast": {
+          "Title": "Als bearbeitet markiert",
+          "Undo": "Rückgängig",
+          "Error": "Bearbeitungsstatus konnte nicht gespeichert werden",
+          "UndoError": "Bearbeitungsstatus konnte nicht rückgängig gemacht werden"
+        },
+        "ProcessedBy": {
+          "Unprocessed": "Nicht bearbeitet",
+          "User": "Bearbeitet von {{name}}",
+          "Integration": "Bearbeitet von {{source}}",
+          "System": "Vom System bearbeitet: {{source}}",
+          "Unknown": "Bearbeitet"
+        }
+      },
       "Splits": {
         "ChartTitle": "Rennverlauf (Rückstand auf die Spitze)",
         "ChartTitleFastest": "Rennverlauf (Rückstand auf die schnellste Zeit)",

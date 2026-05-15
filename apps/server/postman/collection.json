@@ -5692,10 +5692,90 @@
                   "  entry.changes.forEach(change => {",
                   "    pm.expect(change.origin).to.eql('START');",
                   "    pm.expect(new Date(change.createdAt).getTime()).to.be.at.least(changelogSince);",
+                  "    assertBoolean(change.processed, 'change.processed');",
+                  "    pm.expect(change.processedAt === null || typeof change.processedAt === 'string', 'change.processedAt should be null or string').to.eql(true);",
                   "  });",
+                  "});",
+                  "const firstChange = body.results.data[0] && body.results.data[0].changes && body.results.data[0].changes[0];",
+                  "if (firstChange) { pm.collectionVariables.set('changelogEntryId', String(firstChange.id)); }",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[PATCH] /rest/v1/events/{{eventId}}/changelog/{{changelogEntryId}}/processed - Mark changelog entry as processed",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/changelog/{{changelogEntryId}}/processed",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "changelog", "{{changelogEntryId}}", "processed"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('body.error is false', function () { pm.expect(body.error).to.eql(false); });",
+                  "pm.test('data.id is number', function () { pm.expect(body.results.data.id).to.be.a('number'); });",
+                  "pm.test('data.processed is true', function () { pm.expect(body.results.data.processed).to.eql(true); });",
+                  "pm.test('data.processedAt is ISO date string', function () {",
+                  "  pm.expect(body.results.data.processedAt).to.be.a('string');",
+                  "  pm.expect(Number.isNaN(Date.parse(body.results.data.processedAt))).to.eql(false);",
                   "});",
                   ""
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[PATCH] /rest/v1/events/{{eventId}}/changelog/999999999/processed - Non-existent entry returns 404",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/changelog/999999999/processed",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "changelog", "999999999", "processed"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status is 404', function () { pm.response.to.have.status(404); });", ""]
               }
             }
           ]

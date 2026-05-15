@@ -483,6 +483,19 @@
           "PreviousValue": "Původní hodnota",
           "NewValue": "Nová hodnota",
           "Origin": "Původ"
+        },
+        "ProcessedToast": {
+          "Title": "Označeno jako zpracované",
+          "Undo": "Zpět",
+          "Error": "Nepodařilo se uložit stav zpracování",
+          "UndoError": "Nepodařilo se vrátit stav zpracování"
+        },
+        "ProcessedBy": {
+          "Unprocessed": "Nezpracováno",
+          "User": "Zpracoval {{name}}",
+          "Integration": "Zpracovala integrace {{source}}",
+          "System": "Zpracoval systém: {{source}}",
+          "Unknown": "Zpracováno"
         }
       },
       "Settings": {

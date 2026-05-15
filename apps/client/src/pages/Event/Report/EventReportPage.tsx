@@ -50,6 +50,8 @@ import {
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast as sonnerToast } from 'sonner';
+import { toast } from '@/utils/toast';
 
 type ChangelogResponse = {
   data: ChangelogEntry[];
@@ -139,9 +141,8 @@ export const EventReportPage = () => {
   const inFlightRef = useRef<Promise<ChangelogResponse> | null>(null);
   const lastResponseRef = useRef<ChangelogResponse | null>(null);
   const previousEventIdRef = useRef<string | null>(null);
+  const processingRequestRef = useRef<Map<number, Promise<unknown>>>(new Map());
 
-  const [processedItems, setProcessedItems] = useState<Set<string>>(new Set());
-  const [processedLoaded, setProcessedLoaded] = useState(false);
   const [hideProcessed, setHideProcessed] = useState(false);
   const [activePresetFilters, setActivePresetFilters] = useState<
     Set<PresetFilter>
@@ -191,8 +192,6 @@ export const EventReportPage = () => {
     column: 'createdAt',
     direction: 'asc',
   });
-
-  const storageKey = `processedChangelogItems:${eventId}`;
 
   const [changelogData, setChangelogData] = useState<ChangelogEntry[]>([]);
 
@@ -249,25 +248,6 @@ export const EventReportPage = () => {
     setLastUpdated(new Date());
     setRefreshCounter(REFRESH_INTERVAL_SECONDS);
   }, [data, eventId]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const parsed: string[] = JSON.parse(stored);
-        setProcessedItems(new Set(parsed));
-      } catch {
-        setProcessedItems(new Set());
-      }
-    }
-
-    setProcessedLoaded(true);
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!processedLoaded) return;
-    localStorage.setItem(storageKey, JSON.stringify([...processedItems]));
-  }, [processedItems, processedLoaded, storageKey]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -408,23 +388,102 @@ export const EventReportPage = () => {
   };
 
   const toggleProcessedItem = (id: number, checked: boolean) => {
-    setProcessedItems(prev => {
-      const next = new Set(prev);
-      const key = id.toString();
+    const now = new Date().toISOString();
 
-      if (checked) {
-        next.add(key);
-      } else {
-        next.delete(key);
+    const applyProcessed = () => {
+      setChangelogData(prev =>
+        prev.map(item =>
+          item.id === id
+            ? {
+                ...item,
+                processed: true,
+                processedAt: now,
+                processedByType: 'USER',
+                processedBySource: 'ofeed-ui',
+              }
+            : item
+        )
+      );
+    };
+
+    const revert = () => {
+      setChangelogData(prev =>
+        prev.map(item =>
+          item.id === id
+            ? {
+                ...item,
+                processed: false,
+                processedAt: null,
+                processedByType: null,
+                processedBySource: null,
+                processedByUser: null,
+              }
+            : item
+        )
+      );
+    };
+
+    const clearProcessingRequest = (request: Promise<unknown>) => {
+      if (processingRequestRef.current.get(id) === request) {
+        processingRequestRef.current.delete(id);
       }
+    };
 
-      return next;
+    if (!checked) {
+      revert();
+      const previousRequest = processingRequestRef.current.get(id);
+      const revertRequest = (previousRequest ?? Promise.resolve())
+        .catch(() => undefined)
+        .then(() =>
+          api.patch(ENDPOINTS.markChangelogProcessed(eventId, id), {
+            processed: false,
+          })
+        )
+        .catch(() => {
+          applyProcessed();
+          toast({
+            title: t('Pages.Event.Report.ProcessedToast.UndoError'),
+            variant: 'error',
+          });
+        });
+      processingRequestRef.current.set(id, revertRequest);
+      revertRequest.finally(() => clearProcessingRequest(revertRequest));
+      return;
+    }
+
+    applyProcessed();
+
+    const markRequest = api
+      .patch(ENDPOINTS.markChangelogProcessed(eventId, id), {
+        processed: true,
+      })
+      .catch(() => {
+        revert();
+        toast({
+          title: t('Pages.Event.Report.ProcessedToast.Error'),
+          variant: 'error',
+        });
+      });
+    processingRequestRef.current.set(id, markRequest);
+    markRequest.finally(() => clearProcessingRequest(markRequest));
+
+    const toastId = toast({
+      title: t('Pages.Event.Report.ProcessedToast.Title'),
+      description: `#${id}`,
+      duration: 5000,
+      action: {
+        label: t('Pages.Event.Report.ProcessedToast.Undo'),
+        onClick: () => {
+          sonnerToast.dismiss(toastId);
+          toggleProcessedItem(id, false);
+        },
+      },
     });
   };
 
   const visibleData = useMemo(() => {
     const filtered = changelogData.filter(item => {
-      if (hideProcessed && processedItems.has(item.id.toString())) {
+      if (hideProcessed && item.processed) {
         return false;
       }
 
@@ -546,7 +605,6 @@ export const EventReportPage = () => {
     columnFilters,
     hideProcessed,
     latestStatusChangeByCompetitor,
-    processedItems,
     sortConfig,
     typeFilters,
     originFilters,
@@ -917,19 +975,16 @@ export const EventReportPage = () => {
               originOptions={originOptions}
             />
           }
-          renderRow={item => {
-            const isProcessed = processedItems.has(item.id.toString());
-            return (
-              <ReportTableRow
-                key={item.id}
-                item={item}
-                isProcessed={isProcessed}
-                onToggleProcessed={toggleProcessedItem}
-                columnOrder={columnOrder}
-                onRowClick={() => setSelectedCompetitorId(item.competitorId)}
-              />
-            );
-          }}
+          renderRow={item => (
+            <ReportTableRow
+              key={item.id}
+              item={item}
+              isProcessed={item.processed}
+              onToggleProcessed={toggleProcessedItem}
+              columnOrder={columnOrder}
+              onRowClick={() => setSelectedCompetitorId(item.competitorId)}
+            />
+          )}
           emptyState={
             <AppTableEmptyState isLoading={isLoading} error={error} />
           }

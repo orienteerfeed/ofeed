@@ -82,6 +82,8 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}/image`,
   eventChangelog: (eventId: string | number, params?: QueryParams): string =>
     `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
+  markChangelogProcessed: (eventId: string | number, protocolId: number): string =>
+    `${apiPrefix}/events/${eventId}/changelog/${protocolId}/processed`,
   mapTile: (
     mapset: string,
     tileSize: string,

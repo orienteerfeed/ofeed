@@ -1,7 +1,22 @@
 import { z } from 'zod';
 
 import { competitorSchema } from './competitor.js';
-import { dateLikeSchema, originSchema, protocolTypeSchema, resultStatusSchema } from './common.js';
+import {
+  dateLikeSchema,
+  originSchema,
+  protocolProcessedByTypeSchema,
+  protocolTypeSchema,
+  resultStatusSchema,
+} from './common.js';
+
+const processedByUserSchema = z
+  .object({
+    id: z.number().int(),
+    firstname: z.string(),
+    lastname: z.string(),
+  })
+  .nullable()
+  .optional();
 
 export const protocolSchema = z.object({
   id: z.number().int(),
@@ -13,6 +28,11 @@ export const protocolSchema = z.object({
   newValue: z.string(),
   authorId: z.number().int(),
   createdAt: dateLikeSchema,
+  processed: z.boolean(),
+  processedAt: dateLikeSchema.nullable().optional(),
+  processedByType: protocolProcessedByTypeSchema.nullable().optional(),
+  processedBySource: z.string().nullable().optional(),
+  processedByUser: processedByUserSchema,
 });
 
 export const changelogSchema = z.object({
@@ -25,6 +45,11 @@ export const changelogSchema = z.object({
   newValue: z.string().nullable().optional(),
   authorId: z.number().int(),
   createdAt: dateLikeSchema,
+  processed: z.boolean(),
+  processedAt: dateLikeSchema.nullable().optional(),
+  processedByType: protocolProcessedByTypeSchema.nullable().optional(),
+  processedBySource: z.string().nullable().optional(),
+  processedByUser: processedByUserSchema,
 });
 
 export const competitorStatusChangeSchema = z.enum([
