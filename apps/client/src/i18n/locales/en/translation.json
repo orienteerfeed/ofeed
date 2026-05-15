@@ -795,7 +795,7 @@
             "Checking": "Checking slug availability...",
             "Saving": "Saving link slug...",
             "Available": "Slug is available and saved.",
-            "Invalid": "Slug must be 6 to 64 characters and may contain only lowercase letters, numbers, and hyphens.",
+            "Invalid": "Slug must be 6 to 64 characters, may contain only lowercase letters, numbers, and hyphens, and must not look like an event ID.",
             "Unavailable": "This slug is already taken. Try another one.",
             "Error": "Unable to check or save the slug."
           },

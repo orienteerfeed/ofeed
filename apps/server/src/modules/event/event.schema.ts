@@ -8,6 +8,7 @@ export const eventIdParamsSchema = z.object({
 export const eventSlugMinLength = 6;
 export const eventSlugMaxLength = 64;
 export const eventSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const eventGeneratedIdSlugPattern = /^c[a-z0-9]{24}$/;
 export const reservedEventSlugs = new Set([
   'admin',
   'api',
@@ -28,6 +29,9 @@ export const eventSlugSchema = z
   .min(eventSlugMinLength)
   .max(eventSlugMaxLength)
   .regex(eventSlugPattern)
+  .refine((slug) => !eventGeneratedIdSlugPattern.test(slug), {
+    message: 'Slug cannot use the generated event ID format.',
+  })
   .refine((slug) => !reservedEventSlugs.has(slug), {
     message: 'Slug is reserved.',
   });

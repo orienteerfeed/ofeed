@@ -795,7 +795,7 @@
             "Checking": "Comprobando disponibilidad del slug...",
             "Saving": "Guardando slug del enlace...",
             "Available": "El slug está disponible y guardado.",
-            "Invalid": "El slug debe tener entre 6 y 64 caracteres y solo puede contener minúsculas, números y guiones.",
+            "Invalid": "El slug debe tener entre 6 y 64 caracteres, solo puede contener minúsculas, números y guiones, y no debe parecer un ID de evento.",
             "Unavailable": "Este slug ya está en uso. Pruebe otro.",
             "Error": "No se pudo comprobar o guardar el slug."
           },

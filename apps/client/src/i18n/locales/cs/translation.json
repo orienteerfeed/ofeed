@@ -796,7 +796,7 @@
             "Checking": "Ověřuji dostupnost slug odkazu…",
             "Saving": "Ukládám slug odkazu…",
             "Available": "Slug je dostupný a uložený.",
-            "Invalid": "Slug musí mít 6 až 64 znaků a může obsahovat jen malá písmena, čísla a pomlčky.",
+            "Invalid": "Slug musí mít 6 až 64 znaků, může obsahovat jen malá písmena, čísla a pomlčky a nesmí vypadat jako ID akce.",
             "Unavailable": "Tento slug už je obsazený. Zkus jiný.",
             "Error": "Slug se nepodařilo ověřit nebo uložit."
           },

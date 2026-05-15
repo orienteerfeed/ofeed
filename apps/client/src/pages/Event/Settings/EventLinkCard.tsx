@@ -64,6 +64,7 @@ type SlugUpdateResponse = {
 const slugMinLength = 6;
 const slugMaxLength = 64;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const generatedEventIdPattern = /^c[a-z0-9]{24}$/;
 
 function normalizeSlugInput(value: string): string {
   return value
@@ -189,7 +190,8 @@ export const EventLinkCard: React.FC<EventLinkCardProps> = ({
     if (
       normalizedSlug.length < slugMinLength ||
       normalizedSlug.length > slugMaxLength ||
-      !slugPattern.test(normalizedSlug)
+      !slugPattern.test(normalizedSlug) ||
+      generatedEventIdPattern.test(normalizedSlug)
     ) {
       setSlugStatus('invalid');
       return;

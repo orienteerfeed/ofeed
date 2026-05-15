@@ -20,6 +20,7 @@ import {
   eventSlugMaxLength,
   eventSlugMinLength,
   eventSlugPattern,
+  eventGeneratedIdSlugPattern,
   reservedEventSlugs,
   type EventFilter,
   type EventsInput,
@@ -127,12 +128,21 @@ export function findEventById(
   id: string,
   query: EventFindUniqueSelection = {},
 ) {
-  return prisma.event.findFirst({
-    ...query,
-    where: {
-      OR: [{ id }, { slug: id }],
-    },
-  });
+  return prisma.event
+    .findUnique({
+      ...query,
+      where: { id },
+    })
+    .then((event) => {
+      if (event) {
+        return event;
+      }
+
+      return prisma.event.findUnique({
+        ...query,
+        where: { slug: id },
+      });
+    });
 }
 
 export function normalizeEventSlug(slug: string): string {
@@ -160,6 +170,10 @@ function getEventSlugValidationReason(slug: string): EventSlugAvailabilityReason
     return 'INVALID_FORMAT';
   }
 
+  if (eventGeneratedIdSlugPattern.test(slug)) {
+    return 'RESERVED';
+  }
+
   if (reservedEventSlugs.has(slug)) {
     return 'RESERVED';
   }
@@ -185,8 +199,7 @@ export async function getEventSlugAvailability(
 
   const existingEvent = await prisma.event.findFirst({
     where: {
-      slug,
-      ...(currentEventId ? { id: { not: currentEventId } } : {}),
+      OR: [{ slug, ...(currentEventId ? { id: { not: currentEventId } } : {}) }, { id: slug }],
     },
     select: { id: true },
   });

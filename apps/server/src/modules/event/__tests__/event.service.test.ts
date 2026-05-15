@@ -162,6 +162,20 @@ describe('event.service event slug', () => {
     expect(prismaMock.event.findFirst).not.toHaveBeenCalled();
   });
 
+  it('rejects slugs that look like generated event ids before querying the database', async () => {
+    const availability = await getEventSlugAvailability(
+      prismaMock as never,
+      'cmnfo6rgk00008m2cd39gm0xk',
+    );
+
+    expect(availability).toEqual({
+      slug: 'cmnfo6rgk00008m2cd39gm0xk',
+      available: false,
+      reason: 'RESERVED',
+    });
+    expect(prismaMock.event.findFirst).not.toHaveBeenCalled();
+  });
+
   it('marks a valid unused slug as available', async () => {
     prismaMock.event.findFirst.mockResolvedValue(null);
 
@@ -184,10 +198,27 @@ describe('event.service event slug', () => {
     });
     expect(prismaMock.event.findFirst).toHaveBeenCalledWith({
       where: {
-        slug: 'sprint-zakupy',
-        id: { not: 'current-event' },
+        OR: [
+          {
+            slug: 'sprint-zakupy',
+            id: { not: 'current-event' },
+          },
+          { id: 'sprint-zakupy' },
+        ],
       },
       select: { id: true },
+    });
+  });
+
+  it('marks a slug as unavailable when it matches any existing event id', async () => {
+    prismaMock.event.findFirst.mockResolvedValue({ id: 'sprint-zakupy' });
+
+    await expect(
+      getEventSlugAvailability(prismaMock as never, 'sprint-zakupy', 'current-event'),
+    ).resolves.toEqual({
+      slug: 'sprint-zakupy',
+      available: false,
+      reason: 'TAKEN',
     });
   });
 });

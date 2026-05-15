@@ -795,7 +795,7 @@
             "Checking": "Kontrollerar om sluggen är ledig...",
             "Saving": "Sparar länkslug...",
             "Available": "Sluggen är ledig och sparad.",
-            "Invalid": "Sluggen måste ha 6 till 64 tecken och får bara innehålla gemener, siffror och bindestreck.",
+            "Invalid": "Sluggen måste ha 6 till 64 tecken, får bara innehålla gemener, siffror och bindestreck och får inte se ut som ett event-ID.",
             "Unavailable": "Den här sluggen är redan upptagen. Prova en annan.",
             "Error": "Det gick inte att kontrollera eller spara sluggen."
           },
