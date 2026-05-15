@@ -19,11 +19,11 @@ export default defineConfig({
       target: 'react',
       autoCodeSplitting: true,
     }),
-    react() as any,
+    react(),
     svgr(),
     checker({
       typescript: true,
-    }) as any,
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {

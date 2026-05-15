@@ -34,6 +34,9 @@ describe('event connection check route', () => {
     prismaMock.event.findUnique.mockResolvedValue({
       id: 'evt-1',
       name: 'Night Sprint',
+      organizer: 'OK Kamenice',
+      date: new Date('2026-04-18T10:00:00.000Z'),
+      timezone: 'Europe/Prague',
     });
     prismaMock.eventPassword.findUnique.mockResolvedValue({
       expiresAt: new Date('2026-06-01T08:00:00.000Z'),
@@ -69,6 +72,9 @@ describe('event connection check route', () => {
           event: {
             id: 'evt-1',
             name: 'Night Sprint',
+            organizer: 'OK Kamenice',
+            date: new Date('2026-04-18T10:00:00.000Z').toISOString(),
+            timezone: 'Europe/Prague',
           },
           credentials: {
             valid: true,
@@ -93,6 +99,9 @@ describe('event connection check route', () => {
     prismaMock.event.findUnique.mockResolvedValue({
       id: 'evt-1',
       name: 'Night Sprint',
+      organizer: 'OK Kamenice',
+      date: new Date('2026-04-18T10:00:00.000Z'),
+      timezone: 'Europe/Prague',
     });
     prismaMock.eventPassword.findUnique.mockResolvedValue({
       expiresAt: new Date('2026-06-01T08:00:00.000Z'),
@@ -206,6 +215,9 @@ describe('event connection check route', () => {
     prismaMock.event.findUnique.mockResolvedValue({
       id: 'evt-1',
       name: 'Night Sprint',
+      organizer: 'OK Kamenice',
+      date: new Date('2026-04-18T10:00:00.000Z'),
+      timezone: 'Europe/Prague',
     });
     prismaMock.eventPassword.findUnique.mockResolvedValue(null);
     prismaMock.class.findMany.mockResolvedValue([]);
@@ -234,6 +246,9 @@ describe('event connection check route', () => {
       event: {
         id: 'evt-1',
         name: 'Night Sprint',
+        organizer: 'OK Kamenice',
+        date: new Date('2026-04-18T10:00:00.000Z').toISOString(),
+        timezone: 'Europe/Prague',
       },
       credentials: {
         valid: false,

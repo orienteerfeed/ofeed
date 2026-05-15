@@ -171,7 +171,7 @@ describe('useAthletes', () => {
     it('should return empty array when no athletes', () => {
       const athletes = ref<ClassifyAthletes>({ finished: [], unfinished: [] })
       const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.firstRow).toEqual(null)
+      expect(finishedAthletes.value.pinnedRows).toEqual([])
       expect(finishedAthletes.value.restRows).toEqual([])
     })
 
@@ -181,7 +181,7 @@ describe('useAthletes', () => {
         unfinished: [TestUnfinishedAthlete],
       })
       const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.firstRow).toEqual(null)
+      expect(finishedAthletes.value.pinnedRows).toEqual([])
       expect(finishedAthletes.value.restRows).toEqual([])
     })
 
@@ -191,7 +191,7 @@ describe('useAthletes', () => {
         unfinished: [TestUnfinishedAthlete],
       })
       const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.firstRow).not.toEqual(null)
+      expect(finishedAthletes.value.pinnedRows.length).toBeGreaterThan(0)
       expect(finishedAthletes.value.restRows).toEqual([])
     })
 
@@ -232,14 +232,14 @@ describe('useAthletes', () => {
         unfinished: [TestUnfinishedAthlete],
       })
       const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.firstRow).not.toEqual(null)
+      expect(finishedAthletes.value.pinnedRows.length).toBeGreaterThan(0)
       expect(finishedAthletes.value.restRows.length).toEqual(
         athletes.value.finished.length - 1
       )
 
-      expect(finishedAthletes.value.firstRow?.rank).toEqual(1)
-      expect(finishedAthletes.value.firstRow?.time).toEqual('1:01')
-      expect(finishedAthletes.value.firstRow?.loss).toEqual('')
+      expect(finishedAthletes.value.pinnedRows[0].rank).toEqual(1)
+      expect(finishedAthletes.value.pinnedRows[0].time).toEqual('1:01')
+      expect(finishedAthletes.value.pinnedRows[0].loss).toEqual('')
 
       for (let i = 0; i < finishedAthletes.value.restRows.length; i++) {
         const parsedAthlete = finishedAthletes.value.restRows[i]
@@ -272,8 +272,8 @@ describe('useAthletes', () => {
       })
 
       const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.firstRow?.id).toEqual('3')
-      expect(finishedAthletes.value.firstRow?.time).toEqual('1:01')
+      expect(finishedAthletes.value.pinnedRows[0].id).toEqual('3')
+      expect(finishedAthletes.value.pinnedRows[0].time).toEqual('1:01')
 
       for (let i = 0; i < finishedAthletes.value.restRows.length; i++) {
         expect(finishedAthletes.value.restRows[i].time).toEqual(
@@ -310,7 +310,7 @@ describe('useAthletes', () => {
       })
 
       const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.firstRow?.time).toEqual('1:01')
+      expect(finishedAthletes.value.pinnedRows[0].time).toEqual('1:01')
 
       const drawFirst = finishedAthletes.value.restRows[0]
       expect(drawFirst.rank).toEqual(1)
@@ -346,9 +346,9 @@ describe('useAthletes', () => {
       })
 
       const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.firstRow?.id).toEqual('2')
-      expect(finishedAthletes.value.firstRow?.time).toEqual('1:01')
-      expect(finishedAthletes.value.firstRow?.rank).toEqual(1)
+      expect(finishedAthletes.value.pinnedRows[0].id).toEqual('2')
+      expect(finishedAthletes.value.pinnedRows[0].time).toEqual('1:01')
+      expect(finishedAthletes.value.pinnedRows[0].rank).toEqual(1)
       expect(finishedAthletes.value.restRows[0].id).toEqual('1')
       expect(finishedAthletes.value.restRows[0].time).toEqual('1:01')
       expect(finishedAthletes.value.restRows[0].rank).not.toEqual(2)

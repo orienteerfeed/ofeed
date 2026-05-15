@@ -13,7 +13,7 @@ const bgColors = {
   X: 'bg-neutral',
 }
 const categoryBackground = computed(
-  () => bgColors[props.category.gender] || bgColors.X
+  () => bgColors[props.category.colorOverride ?? props.category.gender] ?? bgColors.X
 )
 
 const categoryDescription = computed(() => {

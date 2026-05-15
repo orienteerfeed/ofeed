@@ -29,6 +29,7 @@ export const resultStatusSchema = z.enum([
   'Cancelled',
 ]);
 export const originSchema = z.enum(['START', 'OFFICE', 'FINISH', 'IT']);
+export const protocolProcessedByTypeSchema = z.enum(['USER', 'INTEGRATION', 'SYSTEM']);
 export const protocolTypeSchema = z.enum([
   'competitor_create',
   'competitor_update',
@@ -96,6 +97,7 @@ export type ClassStatus = z.infer<typeof classStatusSchema>;
 export type ResultStatus = z.infer<typeof resultStatusSchema>;
 export type Origin = z.infer<typeof originSchema>;
 export type ProtocolType = z.infer<typeof protocolTypeSchema>;
+export type ProtocolProcessedByType = z.infer<typeof protocolProcessedByTypeSchema>;
 export type StartMode = z.infer<typeof startModeSchema>;
 export type EventDiscipline = z.infer<typeof eventDisciplineSchema>;
 export type CzechRankingType = z.infer<typeof czechRankingTypeSchema>;

@@ -483,6 +483,19 @@
           "PreviousValue": "Valor anterior",
           "NewValue": "Valor nuevo",
           "Origin": "Origen"
+        },
+        "ProcessedToast": {
+          "Title": "Marcado como procesado",
+          "Undo": "Deshacer",
+          "Error": "Error al guardar el estado",
+          "UndoError": "Error al deshacer el estado"
+        },
+        "ProcessedBy": {
+          "Unprocessed": "No procesado",
+          "User": "Procesado por {{name}}",
+          "Integration": "Procesado por {{source}}",
+          "System": "Procesado por el sistema: {{source}}",
+          "Unknown": "Procesado"
         }
       },
       "Settings": {
