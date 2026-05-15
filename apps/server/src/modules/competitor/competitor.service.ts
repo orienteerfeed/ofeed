@@ -7,6 +7,7 @@ import {
   pubsub as defaultPubsub,
 } from '../../lib/pubsub.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
+import { normalizeCountryAlpha2 } from '../../utils/country-code.js';
 import { decorateCompetitorsWithCurrentCzechRankingState } from '../../utils/czech-ranking.js';
 import {
   changeCompetitorStatus as changeEventCompetitorStatus,
@@ -216,19 +217,61 @@ export async function findOrganisationNamesByEvent(
 
   const organisations = await prisma.organisation.findMany({
     where: { id: { in: ids } },
-    select: { id: true, name: true },
+    select: { id: true, name: true, nationality: true },
   });
-  const organisationNameById = new Map(
-    organisations.map((organisation) => [organisation.id, organisation.name]),
+  const countryCodes = [
+    ...new Set(
+      organisations
+        .map((organisation) => normalizeCountryAlpha2(organisation.nationality))
+        .filter(isNonNull),
+    ),
+  ];
+  const countries =
+    countryCodes.length > 0
+      ? await prisma.country.findMany({
+          where: { countryCode: { in: countryCodes } },
+          select: { countryCode: true, countryName: true },
+        })
+      : [];
+  const countryNameByCode = new Map(
+    countries.map((country) => [country.countryCode, country.countryName]),
+  );
+  const organisationById = new Map(
+    organisations.map((organisation) => {
+      const countryCode = normalizeCountryAlpha2(organisation.nationality);
+      return [
+        organisation.id,
+        {
+          name: organisation.name,
+          countryCode,
+          country: countryCode ? (countryNameByCode.get(countryCode) ?? countryCode) : null,
+        },
+      ];
+    }),
   );
 
   return rows
-    .map((row) => ({
-      id: row.organisationId,
-      name: row.organisationId ? organisationNameById.get(row.organisationId) : null,
-      competitors: row._count.organisationId,
-    }))
-    .filter((row): row is { id: number; name: string; competitors: number } => Boolean(row.name));
+    .map((row) => {
+      const organisation = row.organisationId ? organisationById.get(row.organisationId) : null;
+      return {
+        id: row.organisationId,
+        name: organisation?.name ?? null,
+        countryCode: organisation?.countryCode ?? null,
+        country: organisation?.country ?? null,
+        competitors: row._count.organisationId,
+      };
+    })
+    .filter(
+      (
+        row,
+      ): row is {
+        id: number;
+        name: string;
+        countryCode: string | null;
+        country: string | null;
+        competitors: number;
+      } => Boolean(row.name),
+    );
 }
 
 export async function searchOrganisationNamesByEvent(

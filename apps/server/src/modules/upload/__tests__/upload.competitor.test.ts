@@ -525,3 +525,58 @@ describe('upsertCompetitor — authorId written to protocol', () => {
     expect(subscriptionUtils.publishUpdatedCompetitor).not.toHaveBeenCalled();
   });
 });
+
+describe('upsertCompetitor — organisation country import', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('stores IOF organisation country as alpha-3 nationality', async () => {
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+    mockPrisma.organisation.upsert.mockResolvedValue({
+      id: 2481,
+      externalId: '2481',
+      name: 'Klub OB Sokol Pezinok',
+      nationality: 'SVK',
+      shortName: null,
+    });
+    mockPrisma.competitor.findUnique.mockResolvedValue(null);
+    mockPrisma.competitor.findFirst.mockResolvedValue(null);
+    mockPrisma.$transaction.mockImplementation(async (cb) => {
+      const txProxy = {
+        competitor: {
+          create: vi.fn().mockResolvedValue({ id: 42 }),
+        },
+        protocol: {
+          createMany: vi.fn().mockResolvedValue({ count: 1 }),
+        },
+      };
+      return cb(txProxy);
+    });
+
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      {
+        Id: [{ _: '2481' }],
+        Name: ['Klub OB Sokol Pezinok'],
+        Country: [{ _: 'Slovakia', ATTR: { code: 'SVK' } }],
+      } as never,
+      null,
+      null,
+      'UTC',
+      null,
+      null,
+      7,
+    );
+
+    expect(mockPrisma.organisation.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          nationality: 'SVK',
+        }),
+      }),
+    );
+  });
+});

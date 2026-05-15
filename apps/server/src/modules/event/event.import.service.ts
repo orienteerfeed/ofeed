@@ -2,6 +2,7 @@ import { Parser } from 'xml2js';
 import type { EventDiscipline } from '../../generated/prisma/client.js';
 
 import env from '../../config/env.js';
+import { normalizeCountryAlpha2 } from '../../utils/country-code.js';
 import prisma from '../../utils/context.js';
 import type {
   EventImportPreviewBody,
@@ -209,25 +210,6 @@ const DISCIPLINE_KEYS = [
   'eventForm',
   'EventForm',
 ];
-
-const ALPHA3_TO_ALPHA2_COUNTRIES: Record<string, string> = {
-  CZE: 'CZ',
-  SVK: 'SK',
-  POL: 'PL',
-  AUT: 'AT',
-  DEU: 'DE',
-  SWE: 'SE',
-  NOR: 'NO',
-  FIN: 'FI',
-  DNK: 'DK',
-  GBR: 'GB',
-  USA: 'US',
-  ESP: 'ES',
-  FRA: 'FR',
-  ITA: 'IT',
-  CHE: 'CH',
-  HUN: 'HU',
-};
 
 export class ExternalImportError extends Error {
   statusCode: number;
@@ -524,23 +506,6 @@ function normalizeTime(value: string | undefined, fallbackDate?: string): string
 
   if (fallbackDate) {
     return '00:00:00';
-  }
-
-  return undefined;
-}
-
-function normalizeCountryCode(value: string | undefined): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const normalized = value.trim().toUpperCase();
-  if (/^[A-Z]{2}$/.test(normalized)) {
-    return normalized;
-  }
-
-  if (/^[A-Z]{3}$/.test(normalized)) {
-    return ALPHA3_TO_ALPHA2_COUNTRIES[normalized];
   }
 
   return undefined;
@@ -1170,7 +1135,7 @@ export async function loadExternalEventPreview(
     (body.provider === 'ORIS' ? ORIS_DEFAULT_TIMEZONE : EVENTOR_DEFAULT_TIMEZONE);
 
   const countryCode =
-    normalizeCountryCode(selected.countryRaw) || (body.provider === 'ORIS' ? 'CZ' : undefined);
+    normalizeCountryAlpha2(selected.countryRaw) || (body.provider === 'ORIS' ? 'CZ' : undefined);
 
   return {
     provider: body.provider,

@@ -64,6 +64,8 @@ const ORGANISATIONS = gql`
     organisationNames(eventId: $eventId) {
       id
       name
+      countryCode
+      country
       competitors
     }
   }
@@ -182,6 +184,8 @@ interface CompetitorsByOrganisationResponse {
 interface Organisation {
   id: number;
   name: string;
+  countryCode?: string | null;
+  country?: string | null;
   competitors: number;
 }
 
@@ -1194,8 +1198,8 @@ const ClubResultsView = ({
 
         return {
           club: org.name,
-          countryCode: 'CZ',
-          country: 'Czech Republic',
+          countryCode: org.countryCode || '',
+          country: org.country || '',
           runners: processedCompetitors.map(item => {
             const comp = item.competitor;
             return {
@@ -1361,15 +1365,25 @@ const ClubResultsView = ({
       {clubResults.map(clubResult => (
         <div key={clubResult.club} className="space-y-3">
           <div className="flex items-center gap-3 px-2">
-            <CountryFlag
-              countryCode={clubResult.countryCode}
-              className="w-8 h-6 shrink-0"
-            />
+            {clubResult.countryCode && (
+              <CountryFlag
+                countryCode={clubResult.countryCode}
+                className="w-8 h-6 shrink-0"
+              />
+            )}
             <h3 className="text-lg font-bold truncate">{clubResult.club}</h3>
-            <Badge variant="outline" className="text-xs shrink-0">
-              {clubResult.country}
-            </Badge>
-            <Badge variant="secondary" className="text-xs shrink-0">
+            {clubResult.countryCode && clubResult.country && (
+              <Badge
+                variant="outline"
+                className="hidden sm:inline-flex text-xs shrink-0"
+              >
+                {clubResult.country}
+              </Badge>
+            )}
+            <Badge
+              variant="secondary"
+              className="hidden sm:inline-flex text-xs shrink-0"
+            >
               {clubResult.runners.length} runners
             </Badge>
           </div>

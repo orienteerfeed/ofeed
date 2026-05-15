@@ -10,7 +10,7 @@ import { toValidationIssues } from '../../lib/validation/zod.js';
 import { requireAuth } from '../../middlewares/require-jwt.js';
 import type { AppBindings, AppOpenAPI } from '../../types/index.js';
 import { ensureEventOwnerOrAdmin, isAuthzError } from '../../utils/authz.js';
-
+import { normalizeCountryAlpha3 } from '../../utils/country-code.js';
 import prisma from '../../utils/context.js';
 import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
 import { error, success, validation } from '../../utils/responseApi.js';
@@ -471,7 +471,7 @@ async function upsertTeam(
         externalId: teamOrganisationExternalId,
         name: organisation?.Name?.[0] ?? null,
         shortName: organisation?.ShortName?.[0] ?? null,
-        nationality: organisation?.Country?.[0]?.ATTR?.code ?? null,
+        nationality: normalizeCountryAlpha3(organisation?.Country?.[0]?.ATTR?.code),
       })
     : undefined;
   const teamOrganisationCreateWrite =

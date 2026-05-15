@@ -10,6 +10,7 @@
 import { Prisma } from '../../generated/prisma/client.js';
 import type { ResultStatus } from '../../generated/prisma/enums.js';
 import prisma from '../../utils/context.js';
+import { normalizeCountryAlpha3 } from '../../utils/country-code.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
 import { upsertOrganisation } from '../event/organisation.helpers.js';
 import {
@@ -94,7 +95,7 @@ function buildOrganisationInput(organisation: IofOrganisation) {
     externalId,
     name: organisation?.Name?.[0] ?? null,
     shortName: organisation?.ShortName?.[0] ?? null,
-    nationality: organisation?.Country?.[0]?.ATTR?.code ?? null,
+    nationality: normalizeCountryAlpha3(organisation?.Country?.[0]?.ATTR?.code),
   };
 }
 

@@ -43,6 +43,8 @@ const OrganisationNameRef = builder
   .objectRef<{
     id?: number | null;
     name?: string | null;
+    countryCode?: string | null;
+    country?: string | null;
     competitors: number;
   }>('OrganisationName')
   .implement({
@@ -52,6 +54,14 @@ const OrganisationNameRef = builder
       }),
       name: t.string({
         resolve: (organisation) => organisation.name as string,
+      }),
+      countryCode: t.string({
+        nullable: true,
+        resolve: (organisation) => organisation.countryCode ?? null,
+      }),
+      country: t.string({
+        nullable: true,
+        resolve: (organisation) => organisation.country ?? null,
       }),
       competitors: t.exposeInt('competitors'),
     }),

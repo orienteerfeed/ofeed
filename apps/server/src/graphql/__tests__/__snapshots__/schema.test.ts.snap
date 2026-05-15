@@ -304,6 +304,8 @@ type Organisation {
 
 type OrganisationName {
   competitors: Int!
+  country: String
+  countryCode: String
   id: Int!
   name: String!
 }
