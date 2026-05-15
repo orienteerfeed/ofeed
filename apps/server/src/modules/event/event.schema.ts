@@ -15,6 +15,29 @@ export const eventProtocolParamsSchema = z.object({
   protocolId: z.string().regex(/^\d+$/),
 });
 
+export const protocolProcessedByTypeSchema = z.enum(['USER', 'INTEGRATION', 'SYSTEM']);
+
+export const markProtocolProcessedBodySchema = z
+  .object({
+    processed: z.boolean().default(true),
+    processedByType: protocolProcessedByTypeSchema.optional(),
+    processedBySource: z.string().trim().min(1).max(128).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (
+      value.processed &&
+      value.processedByType &&
+      value.processedByType !== 'USER' &&
+      !value.processedBySource
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'processedBySource is required for integration and system processing.',
+        path: ['processedBySource'],
+      });
+    }
+  });
+
 export const eventCompetitorExternalParamsSchema = z.object({
   eventId: z.string().min(1),
   competitorExternalId: z.string().min(1),
@@ -106,6 +129,8 @@ export const eventConnectionCheckBodySchema = z.object({
 export type EventIdParams = z.infer<typeof eventIdParamsSchema>;
 export type EventCompetitorParams = z.infer<typeof eventCompetitorParamsSchema>;
 export type EventCompetitorExternalParams = z.infer<typeof eventCompetitorExternalParamsSchema>;
+export type ProtocolProcessedByType = z.infer<typeof protocolProcessedByTypeSchema>;
+export type MarkProtocolProcessedBody = z.infer<typeof markProtocolProcessedBodySchema>;
 export type ChangelogQuery = z.infer<typeof changelogQuerySchema>;
 export type GeneratePasswordBody = z.infer<typeof generatePasswordBodySchema>;
 export type StateChangeBody = z.infer<typeof stateChangeBodySchema>;

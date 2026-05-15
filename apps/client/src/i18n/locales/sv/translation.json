@@ -487,7 +487,15 @@
         "ProcessedToast": {
           "Title": "Markerat som behandlat",
           "Undo": "Ångra",
-          "Error": "Det gick inte att spara behandlingsstatus"
+          "Error": "Det gick inte att spara behandlingsstatus",
+          "UndoError": "Det gick inte att ångra behandlingsstatus"
+        },
+        "ProcessedBy": {
+          "Unprocessed": "Inte behandlat",
+          "User": "Behandlat av {{name}}",
+          "Integration": "Behandlat av {{source}}",
+          "System": "Behandlat av systemet: {{source}}",
+          "Unknown": "Behandlat"
         }
       },
       "Settings": {

@@ -57,6 +57,7 @@ describe('Pothos GraphQL schema', () => {
         'createUserCard',
         'deleteMeosEventBinding',
         'deleteUserCard',
+        'markChangelogProcessed',
         'requestPasswordReset',
         'resetPassword',
         'setDefaultUserCard',

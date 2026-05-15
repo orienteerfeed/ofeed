@@ -141,9 +141,7 @@ export const EventReportPage = () => {
   const inFlightRef = useRef<Promise<ChangelogResponse> | null>(null);
   const lastResponseRef = useRef<ChangelogResponse | null>(null);
   const previousEventIdRef = useRef<string | null>(null);
-  const pendingProcessRef = useRef<
-    Map<number, { timeoutId: ReturnType<typeof setTimeout>; toastId: string | number }>
-  >(new Map());
+  const processingRequestRef = useRef<Map<number, Promise<unknown>>>(new Map());
 
   const [hideProcessed, setHideProcessed] = useState(false);
   const [activePresetFilters, setActivePresetFilters] = useState<
@@ -278,13 +276,6 @@ export const EventReportPage = () => {
     previousEventIdRef.current = eventId;
   }, [eventId]);
 
-  useEffect(() => {
-    const pending = pendingProcessRef.current;
-    return () => {
-      pending.forEach(({ timeoutId }) => clearTimeout(timeoutId));
-    };
-  }, []);
-
   const latestStatusChangeByCompetitor = useMemo(() => {
     const map = new Map<number, number>();
 
@@ -396,22 +387,85 @@ export const EventReportPage = () => {
     setRefreshCounter(REFRESH_INTERVAL_SECONDS);
   };
 
-  const toggleProcessedItem = (id: number) => {
+  const toggleProcessedItem = (id: number, checked: boolean) => {
     const now = new Date().toISOString();
 
-    setChangelogData(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, processed: true, processedAt: now } : item
-      )
-    );
+    const applyProcessed = () => {
+      setChangelogData(prev =>
+        prev.map(item =>
+          item.id === id
+            ? {
+                ...item,
+                processed: true,
+                processedAt: now,
+                processedByType: 'USER',
+                processedBySource: 'ofeed-ui',
+              }
+            : item
+        )
+      );
+    };
 
     const revert = () => {
       setChangelogData(prev =>
         prev.map(item =>
-          item.id === id ? { ...item, processed: false, processedAt: null } : item
+          item.id === id
+            ? {
+                ...item,
+                processed: false,
+                processedAt: null,
+                processedByType: null,
+                processedBySource: null,
+                processedByUser: null,
+              }
+            : item
         )
       );
     };
+
+    const clearProcessingRequest = (request: Promise<unknown>) => {
+      if (processingRequestRef.current.get(id) === request) {
+        processingRequestRef.current.delete(id);
+      }
+    };
+
+    if (!checked) {
+      revert();
+      const previousRequest = processingRequestRef.current.get(id);
+      const revertRequest = (previousRequest ?? Promise.resolve())
+        .catch(() => undefined)
+        .then(() =>
+          api.patch(ENDPOINTS.markChangelogProcessed(eventId, id), {
+            processed: false,
+          })
+        )
+        .catch(() => {
+          applyProcessed();
+          toast({
+            title: t('Pages.Event.Report.ProcessedToast.UndoError'),
+            variant: 'error',
+          });
+        });
+      processingRequestRef.current.set(id, revertRequest);
+      revertRequest.finally(() => clearProcessingRequest(revertRequest));
+      return;
+    }
+
+    applyProcessed();
+
+    const markRequest = api
+      .patch(ENDPOINTS.markChangelogProcessed(eventId, id), {
+        processed: true,
+      })
+      .catch(() => {
+        revert();
+        toast({
+          title: t('Pages.Event.Report.ProcessedToast.Error'),
+          variant: 'error',
+        });
+      });
+    processingRequestRef.current.set(id, markRequest);
+    markRequest.finally(() => clearProcessingRequest(markRequest));
 
     const toastId = toast({
       title: t('Pages.Event.Report.ProcessedToast.Title'),
@@ -420,29 +474,11 @@ export const EventReportPage = () => {
       action: {
         label: t('Pages.Event.Report.ProcessedToast.Undo'),
         onClick: () => {
-          const pending = pendingProcessRef.current.get(id);
-          if (pending) {
-            clearTimeout(pending.timeoutId);
-            pendingProcessRef.current.delete(id);
-            sonnerToast.dismiss(pending.toastId);
-          }
-          revert();
+          sonnerToast.dismiss(toastId);
+          toggleProcessedItem(id, false);
         },
       },
     });
-
-    const timeoutId = setTimeout(() => {
-      pendingProcessRef.current.delete(id);
-      api.patch(ENDPOINTS.markChangelogProcessed(eventId, id)).catch(() => {
-        revert();
-        toast({
-          title: t('Pages.Event.Report.ProcessedToast.Error'),
-          variant: 'error',
-        });
-      });
-    }, 5000);
-
-    pendingProcessRef.current.set(id, { timeoutId, toastId });
   };
 
   const visibleData = useMemo(() => {

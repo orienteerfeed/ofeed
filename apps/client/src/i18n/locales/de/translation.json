@@ -583,7 +583,15 @@
         "ProcessedToast": {
           "Title": "Als bearbeitet markiert",
           "Undo": "Rückgängig",
-          "Error": "Bearbeitungsstatus konnte nicht gespeichert werden"
+          "Error": "Bearbeitungsstatus konnte nicht gespeichert werden",
+          "UndoError": "Bearbeitungsstatus konnte nicht rückgängig gemacht werden"
+        },
+        "ProcessedBy": {
+          "Unprocessed": "Nicht bearbeitet",
+          "User": "Bearbeitet von {{name}}",
+          "Integration": "Bearbeitet von {{source}}",
+          "System": "Vom System bearbeitet: {{source}}",
+          "Unknown": "Bearbeitet"
         }
       },
       "Splits": {

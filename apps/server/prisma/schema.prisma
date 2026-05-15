@@ -91,7 +91,8 @@ model User {
   updatedAt              DateTime                 @updatedAt
   events                 Event[]
   userCards              UserCard[]
-  protocols              Protocol[]
+  protocols              Protocol[]               @relation("ProtocolAuthor")
+  processedProtocols     Protocol[]               @relation("ProtocolProcessedByUser")
   oAuthClients           OAuthClient[]
   oAuthAccessToken       OAuthAccessToken[]
   oAuthAuthorizationCode OAuthAuthorizationCode[]
@@ -272,22 +273,27 @@ model Organisation {
 }
 
 model Protocol {
-  id            Int          @id @default(autoincrement()) @db.UnsignedInt
-  event         Event        @relation(fields: [eventId], references: [id])
-  eventId       String
-  competitor    Competitor   @relation(fields: [competitorId], references: [id])
-  competitorId  Int          @db.UnsignedInt
-  origin        Origin
-  type          ProtocolType
-  previousValue String?
-  newValue      String
-  author        User         @relation(fields: [authorId], references: [id])
-  authorId      Int          @db.UnsignedInt
-  createdAt     DateTime     @default(now())
-  processed     Boolean      @default(false)
-  processedAt   DateTime?
+  id                Int                      @id @default(autoincrement()) @db.UnsignedInt
+  event             Event                    @relation(fields: [eventId], references: [id])
+  eventId           String
+  competitor        Competitor               @relation(fields: [competitorId], references: [id])
+  competitorId      Int                      @db.UnsignedInt
+  origin            Origin
+  type              ProtocolType
+  previousValue     String?
+  newValue          String
+  author            User                     @relation("ProtocolAuthor", fields: [authorId], references: [id])
+  authorId          Int                      @db.UnsignedInt
+  createdAt         DateTime                 @default(now())
+  processed         Boolean                  @default(false)
+  processedAt       DateTime?
+  processedByType   ProtocolProcessedByType?
+  processedByUser   User?                    @relation("ProtocolProcessedByUser", fields: [processedByUserId], references: [id], onDelete: SetNull)
+  processedByUserId Int?                     @db.UnsignedInt
+  processedBySource String?                  @db.VarChar(128)
 
   @@index([competitorId, createdAt], map: "Protocol_competitor_created_idx")
+  @@index([eventId, origin, processed, createdAt, id], map: "Protocol_event_origin_processed_created_idx")
 }
 
 model EventPassword {
@@ -507,6 +513,12 @@ enum ProtocolType {
   late_start_change
   note_change
   external_id_change
+}
+
+enum ProtocolProcessedByType {
+  USER
+  INTEGRATION
+  SYSTEM
 }
 
 enum StartMode {

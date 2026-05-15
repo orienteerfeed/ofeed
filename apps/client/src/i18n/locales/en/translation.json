@@ -487,7 +487,15 @@
         "ProcessedToast": {
           "Title": "Marked as processed",
           "Undo": "Undo",
-          "Error": "Failed to save processing state"
+          "Error": "Failed to save processing state",
+          "UndoError": "Failed to undo processing state"
+        },
+        "ProcessedBy": {
+          "Unprocessed": "Not processed",
+          "User": "Processed by {{name}}",
+          "Integration": "Processed by {{source}}",
+          "System": "Processed by system: {{source}}",
+          "Unknown": "Processed"
         }
       },
       "Settings": {
