@@ -142,7 +142,6 @@ model Event {
   externalSource               ExternalSource?
   externalEventId              String?                        @db.VarChar(128)
   featuredImageKey             String?                        @db.VarChar(512)
-  relay                        Boolean                        @default(false)
   discipline                   EventDiscipline                @default(OTHER)
   startMode                    StartMode                      @default(Individual)
   ranking                      Boolean                        @default(false)

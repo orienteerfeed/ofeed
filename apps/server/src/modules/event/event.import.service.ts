@@ -26,7 +26,6 @@ export type OrisEventCandidate = {
   name: string;
   date?: string;
   ranking: boolean;
-  relay: boolean;
   discipline?: EventDiscipline;
 };
 
@@ -1040,7 +1039,6 @@ export async function loadOrisEventCandidatesByDateRange(params: {
         name: candidate.name,
         date: candidate.date,
         ranking: candidate.ranking ?? false,
-        relay: candidate.relay ?? false,
         discipline: resolveImportedEventDiscipline('ORIS', candidate.disciplineRaw),
       };
 

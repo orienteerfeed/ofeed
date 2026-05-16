@@ -2,6 +2,7 @@ import { DatabaseError, NotFoundError } from '../exceptions/index.js';
 import type { EventDiscipline, ResultStatus, StartMode } from '../generated/prisma/client.js';
 import prisma from './context.js';
 import { ensureCzechRankingEventResultsSynchronized } from './czech-ranking-oris.js';
+import { isRelayDiscipline } from './relay.js';
 
 const CZECH_RANKING_REGISTRATION_REGEX = /^[A-Z]{3}\d{4}$/;
 const CZECH_RANKING_ELIGIBLE_CLASS_REGEX = /^(H20|H21|D20|D21)/i;
@@ -369,7 +370,6 @@ async function calculateCzechRankingPointsForEventOnce(eventId: string): Promise
         id: true,
         countryId: true,
         ranking: true,
-        relay: true,
         discipline: true,
         startMode: true,
         coefRanking: true,
@@ -400,7 +400,7 @@ async function calculateCzechRankingPointsForEventOnce(eventId: string): Promise
     const bucket = resolveCzechRankingBucket(event.discipline);
     const rankingType = resolveCzechRankingType(bucket);
 
-    if (!event.ranking || event.countryId !== 'CZ' || event.relay || !rankingType) {
+    if (!event.ranking || event.countryId !== 'CZ' || isRelayDiscipline(event.discipline) || !rankingType) {
       return true;
     }
 
@@ -534,7 +534,6 @@ async function buildCurrentCzechRankingDecorationsForClass(
           externalSource: true,
           externalEventId: true,
           ranking: true,
-          relay: true,
           discipline: true,
         },
       },
@@ -566,7 +565,7 @@ async function buildCurrentCzechRankingDecorationsForClass(
   if (
     !currentClass.event.ranking ||
     currentClass.event.countryId !== 'CZ' ||
-    currentClass.event.relay
+isRelayDiscipline(currentClass.event.discipline)
   ) {
     return baseDecorations;
   }

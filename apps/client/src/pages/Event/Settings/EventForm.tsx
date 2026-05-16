@@ -138,7 +138,6 @@ const convertToFormValues = (
   discipline: event.discipline || 'OTHER',
   ranking: event.ranking || false,
   coefRanking: event.coefRanking?.toString() || '',
-  relay: event.relay || false,
   published: event.published || false,
   hundredthPrecision: event.hundredthPrecision || false,
 });
@@ -624,7 +623,6 @@ export const EventForm: React.FC<EventFormProps> = ({
         discipline: 'OTHER',
         ranking: false,
         coefRanking: '',
-        relay: false,
         published: false,
         hundredthPrecision: false,
       };
@@ -725,7 +723,7 @@ export const EventForm: React.FC<EventFormProps> = ({
             coefRanking: value.coefRanking
               ? parseFloat(value.coefRanking)
               : undefined,
-            relay: value.relay || isRelayDiscipline,
+            relay: isRelayDiscipline,
             published: value.published,
             hundredthPrecision: value.hundredthPrecision,
             externalSource: externalSourcePayload,
@@ -877,14 +875,12 @@ export const EventForm: React.FC<EventFormProps> = ({
 
     if (draft.discipline) {
       form.setFieldValue('discipline', draft.discipline);
+    } else if (draft.relay === true) {
+      form.setFieldValue('discipline', 'RELAY');
     }
 
     if (draft.coefRanking !== undefined && draft.coefRanking !== null) {
       form.setFieldValue('coefRanking', String(draft.coefRanking));
-    }
-
-    if (typeof draft.relay === 'boolean') {
-      form.setFieldValue('relay', draft.relay);
     }
 
     if (typeof draft.published === 'boolean') {
@@ -1625,18 +1621,6 @@ export const EventForm: React.FC<EventFormProps> = ({
 
         {/* Pravý sloupec - Ostatní checkboxy */}
         <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <ReactiveField
-              form={form}
-              name="relay"
-              type="checkbox"
-              className="h-4 w-4"
-            />
-            <Label htmlFor="relay" className="text-sm font-medium">
-              {t('Pages.Event.Form.Relay')}
-            </Label>
-          </div>
-
           <div className="flex items-center space-x-2">
             <ReactiveField
               form={form}
