@@ -19,7 +19,6 @@ import { EventIntegrationsCard } from './EventIntegrationsCard';
 import { EventLinkCard } from './EventLinkCard';
 import { EventPasswordCard } from './EventPasswordCard';
 import { EventPublishingScheduleCard } from './EventPublishingScheduleCard';
-import { EventVisibilityCard } from './EventVisibilityCard';
 import { TroubleShootingCard } from './TroubleShootingCard';
 
 interface EventData {
@@ -233,13 +232,6 @@ export const EventSettingsPage = () => {
             </div>
 
             {/* Right Column */}
-            <div className="break-inside-avoid">
-              <EventVisibilityCard
-                t={t}
-                eventId={eventId}
-                isPublished={data.event.published}
-              />
-            </div>
             <div className="break-inside-avoid">
               <EventLinkCard
                 t={t}
