@@ -5,6 +5,7 @@ import { CompetitorRef } from '../competitor/competitor.graphql-types.js';
 import { EventRef } from '../event/event.graphql-types.js';
 import { UserRef } from '../user/user.graphql-types.js';
 
+import { isAuthzError } from '../../utils/authz.js';
 import {
   changelogByEventInputSchema,
   markChangelogProcessedInputSchema,
@@ -118,6 +119,7 @@ builder.queryFields((t) => ({
           }),
         )) as ChangelogShape[];
       } catch (err) {
+        if (isAuthzError(err)) throw err;
         const message =
           err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
             ? err.message
@@ -150,6 +152,7 @@ builder.mutationFields((t) => ({
           }),
         );
       } catch (err) {
+        if (isAuthzError(err)) throw err;
         const message =
           err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
             ? err.message
