@@ -1098,6 +1098,7 @@
       "SupportedFormats": "Podporovaný formát:",
       "Done": "Hotovo",
       "OrDragAndDrop": "nebo drag & drop",
+      "Processing": "Zpracovávám...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximální počet souborů",
