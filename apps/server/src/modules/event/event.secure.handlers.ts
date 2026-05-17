@@ -2653,10 +2653,63 @@ export function registerSecureEventRoutes(router) {
           return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
         }
 
+        const classChangeIds = [
+          ...new Set(
+            dbProtocolResponse
+              .filter(e => e.type === 'class_change')
+              .flatMap(e => {
+                const ids: number[] = [];
+                const prev = Number(e.previousValue);
+                const next = Number(e.newValue);
+                if (e.previousValue && !isNaN(prev)) ids.push(prev);
+                if (e.newValue && !isNaN(next)) ids.push(next);
+                return ids;
+              }),
+          ),
+        ];
+
+        const classNameMap = new Map<number, string>();
+        if (classChangeIds.length > 0) {
+          try {
+            const classes = await prisma.class.findMany({
+              where: { id: { in: classChangeIds } },
+              select: { id: true, name: true },
+            });
+            for (const cls of classes) {
+              classNameMap.set(cls.id, cls.name);
+            }
+          } catch (err) {
+            logEndpoint(req.c, 'warn', 'Failed to resolve class names for changelog', {
+              eventId,
+              ...getErrorDetails(err),
+            });
+          }
+        }
+
+        const resolvedProtocolResponse =
+          classNameMap.size > 0
+            ? dbProtocolResponse.map(entry => {
+                if (entry.type !== 'class_change') return entry;
+                const prevId = Number(entry.previousValue);
+                const nextId = Number(entry.newValue);
+                return {
+                  ...entry,
+                  previousValue:
+                    entry.previousValue && !isNaN(prevId) && classNameMap.has(prevId)
+                      ? classNameMap.get(prevId)!
+                      : entry.previousValue,
+                  newValue:
+                    entry.newValue && !isNaN(nextId) && classNameMap.has(nextId)
+                      ? classNameMap.get(nextId)!
+                      : entry.newValue,
+                };
+              })
+            : dbProtocolResponse;
+
         if (shouldGroup) {
           const grouped = {};
 
-          for (const entry of dbProtocolResponse) {
+          for (const entry of resolvedProtocolResponse) {
             const { competitorId } = entry;
 
             if (!grouped[competitorId]) {
@@ -2690,7 +2743,7 @@ export function registerSecureEventRoutes(router) {
 
         return res
           .status(200)
-          .json(successResponse('OK', { data: dbProtocolResponse }, res.statusCode));
+          .json(successResponse('OK', { data: resolvedProtocolResponse }, res.statusCode));
       },
     ),
   );
