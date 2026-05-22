@@ -67,6 +67,246 @@ const createCompetitorBodySchema = {
   oneOf: [{ required: ['classId'] }, { required: ['classExternalId'] }],
 };
 
+const connectionStatusEnum = {
+  type: 'string',
+  enum: ['matched', 'remapped', 'missing', 'mismatch', 'wrong_class'],
+  description:
+    'matched: id/externalId resolved to the same record; ' +
+    'remapped: stale reference resolved via the other identifier; ' +
+    'missing: no record found; ' +
+    'mismatch: id and externalId resolve to different records; ' +
+    'wrong_class: competitor found but enrolled in a different class',
+} as const;
+
+const resolvedClassSchema = {
+  type: 'object',
+  nullable: true,
+  required: ['id', 'externalId', 'name'],
+  properties: {
+    id: { type: 'integer' },
+    externalId: { type: 'string', nullable: true },
+    name: { type: 'string' },
+  },
+} as const;
+
+const classCheckSchema = {
+  type: 'object',
+  required: ['valid', 'status', 'reason', 'resolved'],
+  properties: {
+    valid: { type: 'boolean' },
+    status: connectionStatusEnum,
+    reason: {
+      type: 'string',
+      nullable: true,
+      description: 'Machine-readable reason code when not valid',
+    },
+    resolved: resolvedClassSchema,
+  },
+} as const;
+
+const connectionCheck200Schema = {
+  type: 'object',
+  required: ['message', 'error', 'code', 'results'],
+  properties: {
+    message: { type: 'string', example: 'OK' },
+    error: { type: 'boolean', example: false },
+    code: { type: 'integer', example: 200 },
+    results: {
+      type: 'object',
+      required: ['data'],
+      properties: {
+        data: {
+          type: 'object',
+          required: ['valid', 'event', 'credentials', 'classes', 'competitors'],
+          properties: {
+            valid: {
+              type: 'boolean',
+              description:
+                'true only when event exists, credentials are valid, and all requested classes and competitors resolved without errors',
+            },
+            event: {
+              type: 'object',
+              nullable: true,
+              description: 'Event details; null when eventId does not match any event',
+              required: ['id', 'name', 'organizer', 'date', 'timezone'],
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string', nullable: true },
+                organizer: { type: 'string', nullable: true },
+                date: { type: 'string', format: 'date-time' },
+                timezone: { type: 'string' },
+              },
+            },
+            credentials: {
+              type: 'object',
+              required: ['valid', 'reason', 'authType', 'expiresAt'],
+              properties: {
+                valid: { type: 'boolean' },
+                reason: {
+                  type: 'string',
+                  nullable: true,
+                  description:
+                    'Machine-readable failure code: basic_event_id_mismatch | basic_auth_required | missing_authorization_header',
+                },
+                authType: {
+                  type: 'string',
+                  nullable: true,
+                  enum: ['eventBasic', 'jwt', null],
+                  description: 'Authentication method that was evaluated',
+                },
+                expiresAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true,
+                  description:
+                    'Credential expiry in ISO 8601; null when no expiry is set or credentials are invalid',
+                },
+              },
+            },
+            classes: {
+              type: 'object',
+              required: ['valid', 'items'],
+              properties: {
+                valid: {
+                  type: 'boolean',
+                  description: 'true when every class item resolved successfully',
+                },
+                items: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    required: ['ref', 'requested', 'valid', 'status', 'reason', 'resolved'],
+                    properties: {
+                      ref: {
+                        type: 'string',
+                        nullable: true,
+                        description: 'Caller-provided reference label echoed back',
+                      },
+                      requested: {
+                        type: 'object',
+                        description: 'Identifiers as submitted by the caller',
+                        properties: {
+                          id: { type: 'integer' },
+                          externalId: { type: 'string' },
+                        },
+                      },
+                      valid: { type: 'boolean' },
+                      status: connectionStatusEnum,
+                      reason: { type: 'string', nullable: true },
+                      resolved: resolvedClassSchema,
+                    },
+                  },
+                },
+              },
+            },
+            competitors: {
+              type: 'object',
+              required: ['valid', 'items'],
+              properties: {
+                valid: {
+                  type: 'boolean',
+                  description: 'true when every competitor item resolved successfully',
+                },
+                items: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    required: ['ref', 'requested', 'valid', 'status', 'reason', 'resolved', 'class'],
+                    properties: {
+                      ref: {
+                        type: 'string',
+                        nullable: true,
+                        description: 'Caller-provided reference label echoed back',
+                      },
+                      requested: {
+                        type: 'object',
+                        description: 'Identifiers as submitted by the caller',
+                        properties: {
+                          id: { type: 'integer' },
+                          externalId: { type: 'string' },
+                          classId: { type: 'integer' },
+                          classExternalId: { type: 'string' },
+                        },
+                      },
+                      valid: { type: 'boolean' },
+                      status: connectionStatusEnum,
+                      reason: { type: 'string', nullable: true },
+                      resolved: {
+                        type: 'object',
+                        nullable: true,
+                        required: [
+                          'id',
+                          'externalId',
+                          'firstname',
+                          'lastname',
+                          'classId',
+                          'classExternalId',
+                          'className',
+                        ],
+                        properties: {
+                          id: { type: 'integer' },
+                          externalId: { type: 'string', nullable: true },
+                          firstname: { type: 'string', nullable: true },
+                          lastname: { type: 'string', nullable: true },
+                          classId: { type: 'integer' },
+                          classExternalId: { type: 'string', nullable: true },
+                          className: { type: 'string', nullable: true },
+                        },
+                      },
+                      class: {
+                        ...classCheckSchema,
+                        nullable: true,
+                        description:
+                          'Class check result; null when no class identifier was included in the request',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+const connectionCheck422Schema = {
+  type: 'object',
+  required: ['message', 'error', 'code', 'errors'],
+  properties: {
+    message: { type: 'string', example: 'Validation errors' },
+    error: { type: 'boolean', example: true },
+    code: { type: 'integer', example: 422 },
+    errors: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['msg', 'param', 'location'],
+        properties: {
+          msg: { type: 'string', description: 'Human-readable validation message' },
+          param: {
+            type: 'string',
+            description:
+              'Dot-separated path to the invalid field, or "body" for top-level errors',
+          },
+          location: { type: 'string', enum: ['all'] },
+        },
+      },
+    },
+  },
+} as const;
+
+const connectionCheck500Schema = {
+  type: 'object',
+  required: ['message', 'error', 'code'],
+  properties: {
+    message: { type: 'string', example: 'Failed to validate event connection' },
+    error: { type: 'boolean', example: true },
+    code: { type: 'integer', example: 500 },
+  },
+} as const;
+
 const eventsBase = EVENT_OPENAPI.basePath;
 
 export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
@@ -237,6 +477,14 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       tags: [EVENT_OPENAPI.tag],
       operationId: 'eventConnectionCheck',
       summary: 'Check event integration credentials and references',
+      description:
+        'Validates Basic Auth credentials for the given event and optionally checks that ' +
+        'a list of class and competitor identifiers resolve to known records. ' +
+        'Credential failures and unresolved references are reported in the response body ' +
+        'with per-item `status` and `reason` codes rather than HTTP error codes — ' +
+        'the HTTP status is always 200 when the request itself is well-formed. ' +
+        'A 422 is returned only when the `eventId` path parameter or the request body ' +
+        'fail schema validation.',
       security: [{ BasicAuth: [] }],
       parameters: [eventIdParam],
       requestBody: {
@@ -248,9 +496,35 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         },
       },
       responses: {
-        200: okJson('Event connection checked'),
-        422: okJson('Validation error'),
-        500: okJson('Connection check failed'),
+        200: {
+          description:
+            'Connection check completed. Inspect `results.data.valid` and the per-section ' +
+            '`valid` flags — a `false` value indicates a credential or reference problem ' +
+            'described by the accompanying `reason` / `status` fields.',
+          content: {
+            'application/json': {
+              schema: connectionCheck200Schema as never,
+            },
+          },
+        },
+        422: {
+          description:
+            'Request validation failed. The `errors` array contains one entry per ' +
+            'invalid field with a dot-separated `param` path and a human-readable `msg`.',
+          content: {
+            'application/json': {
+              schema: connectionCheck422Schema as never,
+            },
+          },
+        },
+        500: {
+          description: 'Unexpected server error while running the connection check.',
+          content: {
+            'application/json': {
+              schema: connectionCheck500Schema as never,
+            },
+          },
+        },
       },
     },
   },
