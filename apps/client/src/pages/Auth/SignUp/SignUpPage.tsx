@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import PATHNAMES from '@/lib/paths/pathnames';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import { useForm } from '@tanstack/react-form';
@@ -207,6 +208,12 @@ export const SignUpPage = () => {
               email: value.email,
               password: value.password,
               organisation: value.club.trim() ? value.club.trim() : null,
+            },
+          },
+          context: {
+            headers: {
+              'x-orienteerfeed-app-activate-user-url':
+                window.location.origin + PATHNAMES.getVerifyEmail().to,
             },
           },
         });

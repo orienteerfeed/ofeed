@@ -38,6 +38,21 @@ describe("auth routes (hono)", () => {
     expect(payload).toHaveProperty("error", "invalid_request");
   });
 
+  it("returns 422 for invalid email verification token", async () => {
+    const response = await app.request("http://localhost/verify-email", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ token: "invalid-token" }),
+    });
+
+    const payload = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(payload).toHaveProperty("error", true);
+  });
+
   it("returns 401 for oauth2 credentials without authenticated user", async () => {
     const response = await app.request("http://localhost/oauth2-credentials", {
       method: "GET",
@@ -52,5 +67,115 @@ describe("auth routes (hono)", () => {
     });
 
     expect(response.status).toBe(401);
+  });
+
+  describe("POST /request-password-reset", () => {
+    it("returns 422 for empty body", async () => {
+      const response = await app.request("http://localhost/request-password-reset", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("message", "Validation errors");
+      expect(payload).toHaveProperty("error", true);
+    });
+
+    it("returns 422 for invalid email format", async () => {
+      const response = await app.request("http://localhost/request-password-reset", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: "not-an-email" }),
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("error", true);
+    });
+
+    it("returns 422 for invalid JSON body", async () => {
+      const response = await app.request("http://localhost/request-password-reset", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "not json",
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("error", true);
+    });
+  });
+
+  describe("POST /reset-password", () => {
+    it("returns 422 for empty body", async () => {
+      const response = await app.request("http://localhost/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("message", "Validation errors");
+      expect(payload).toHaveProperty("error", true);
+    });
+
+    it("returns 422 when newPassword is missing", async () => {
+      const response = await app.request("http://localhost/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: "some-reset-token" }),
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("error", true);
+    });
+
+    it("returns 422 when token is missing", async () => {
+      const response = await app.request("http://localhost/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ newPassword: "validpassword" }),
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("error", true);
+    });
+
+    it("returns 422 when newPassword is shorter than 8 characters", async () => {
+      const response = await app.request("http://localhost/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: "some-reset-token", newPassword: "short" }),
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("error", true);
+    });
+
+    it("returns 422 for invalid JSON body", async () => {
+      const response = await app.request("http://localhost/reset-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "not json",
+      });
+
+      const payload = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(payload).toHaveProperty("error", true);
+    });
   });
 });

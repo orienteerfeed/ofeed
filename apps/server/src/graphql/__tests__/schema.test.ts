@@ -59,6 +59,7 @@ describe('Pothos GraphQL schema', () => {
         'deleteUserCard',
         'markChangelogProcessed',
         'requestPasswordReset',
+        'resendEmailVerification',
         'resetPassword',
         'setDefaultUserCard',
         'signin',
@@ -66,6 +67,7 @@ describe('Pothos GraphQL schema', () => {
         'updateCurrentUser',
         'updateEventVisibility',
         'updateUserCard',
+        'verifyEmail',
       ]),
     );
 

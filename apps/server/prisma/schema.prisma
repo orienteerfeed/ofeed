@@ -87,6 +87,7 @@ model User {
   emergencyContact       String?                  @db.VarChar(255)
   password               String                   @db.VarChar(255)
   active                 Boolean                  @default(false)
+  emailVerifiedAt        DateTime?
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
   events                 Event[]
@@ -97,6 +98,7 @@ model User {
   oAuthAccessToken       OAuthAccessToken[]
   oAuthAuthorizationCode OAuthAuthorizationCode[]
   oAuthRefreshToken      OAuthRefreshToken[]
+  passwordResetTokens    PasswordResetToken[]
 }
 
 model UserCard {
@@ -443,10 +445,18 @@ model OAuthRefreshToken {
   expiresAt DateTime
 }
 
-model PasswordReset {
-  email     String   @id
-  token     String
-  createdAt DateTime @default(now())
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    Int       @db.UnsignedInt
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 enum Sex {

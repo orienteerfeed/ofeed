@@ -391,12 +391,12 @@ export const buildAuthContextFromRequest = async (
 };
 
 /**
- * Verifies an activation/reset token and extracts the user ID.
+ * Verifies an email verification token and extracts the user ID.
  * @param {string} token - The JWT token to verify.
  * @returns {string} The extracted user ID from the token payload.
  * @throws {Error} If the token is invalid or expired.
  */
-export const getUserIdFromActivationToken = (token: string): string | number | undefined => {
+export const getUserIdFromEmailVerificationToken = (token: string): string | number | undefined => {
   try {
     const decoded = jwt.verify(token, JWT_TOKEN_SECRET_KEY);
     return typeof decoded === 'string' ? undefined : (decoded.id as string | number | undefined);

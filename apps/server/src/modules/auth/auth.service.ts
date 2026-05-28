@@ -1,14 +1,14 @@
 import argon2 from 'argon2';
 import crypto from 'crypto';
 import ejs from 'ejs';
-import { fileURLToPath } from 'url';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
+import { logger } from '../../lib/logging.js';
 import prisma from '../../utils/context.js';
-import { generateJwtTokenForLink } from '../../utils/jwtToken.js';
-import { getLoginSuccessPayload } from '../../utils/loginUser.js';
 import { sendEmail } from '../../utils/email.js';
-import { generateResetPasswordToken } from '../../utils/hashUtils.js';
+import { generateJwtTokenForLink, getJwtToken, getUserIdFromEmailVerificationToken } from '../../utils/jwtToken.js';
+import { getLoginSuccessPayload } from '../../utils/loginUser.js';
 
 type SignupUserPayload = {
   email: string;
@@ -21,6 +21,38 @@ type SignupUserPayload = {
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function logEmailFailure(context: string, error: unknown): void {
+  logger.error(context, { action: context, error: getErrorMessage(error) });
+}
+
+export async function sendVerificationEmailHelper(
+  firstname: string,
+  lastname: string,
+  email: string,
+  verificationLink: string,
+): Promise<void> {
+  const templatePath = path.join(__dirname, '../../views/emails/welcome.ejs');
+  try {
+    const emailTemplate = await ejs.renderFile(templatePath, {
+      user_firstname: firstname,
+      user_lastname: lastname,
+      user_email: email,
+      confirm_link: verificationLink,
+      year: new Date().getFullYear(),
+    });
+    sendEmail({
+      html: emailTemplate,
+      text: 'OFeed',
+      subject: 'OFeed - verify your email',
+      emailTo: email,
+      onSuccess: () => logger.info('Verification email sent', { action: 'verification-email' }),
+      onError: (error) => logEmailFailure('Failed to send verification email', error),
+    });
+  } catch (error) {
+    logEmailFailure('Failed to render verification email', error);
+  }
 }
 
 // Correctly calculate the directory of the current module
@@ -39,7 +71,7 @@ export const authenticateUser = async (username: string, password: string) => {
       select: { id: true, password: true, active: true },
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Database error in authenticateUser', { action: 'authenticate-user', error: getErrorMessage(err) });
     throw new DatabaseError(`An error occurred: ` + getErrorMessage(err));
   }
 
@@ -108,174 +140,193 @@ export const signupUser = async (
       },
     });
 
-    // Generate JWT token for email link
+    // Generate JWT login token — user is active immediately
     const loginSuccessPayload = await getLoginSuccessPayload({
       userId: user.id,
       prisma,
     });
     const { token } = loginSuccessPayload;
-    // Construct the link to be sent via email
-    const registrationConfirmFeAppLink = `${app_base_url}/${token}`;
 
-    // Prepare and send the email
-    // Calculate the path to the ejs file
-    const templatePath = path.join(__dirname, '../../views/emails/welcome.ejs');
+    // Generate separate 48h token for email verification link (does not block login)
+    const verificationToken = generateJwtTokenForLink(user.id);
+    const verificationLink = `${app_base_url}/${verificationToken}`;
+    await sendVerificationEmailHelper(firstname, lastname, email, verificationLink);
 
-    const emailTemplate = await ejs
-      .renderFile(templatePath, {
-        user_firstname: firstname,
-        user_lastname: lastname,
-        user_email: email,
-        confirm_link: registrationConfirmFeAppLink,
-        year: new Date().getFullYear(),
-      })
-      .catch((err: unknown) => {
-        throw new ValidationError('Error Rendering email template: ' + err);
-      });
-
-    sendEmail({
-      html: emailTemplate,
-      text: 'OrienteerFeed',
-      subject: 'Orienteering Cloud Data Hub - registration',
-      emailTo: email,
-      onSuccess: () => console.log('Email sent successfully!'),
-      onError: () => {
-        console.error('Failed to send email');
-      },
-    });
-    // Return both the token and the user object
+    // Return both the login token and the created user object
     return { token, user };
   } catch (error) {
     if (error instanceof ValidationError) {
       throw error; // rethrow to be handled by the caller
     }
-    console.error('Database error in createUser:', error);
+    logger.error('Database error in signupUser', { action: 'signup-user', error: getErrorMessage(error) });
     throw new DatabaseError('Failed to create user');
   }
 };
 
-// Function to sign up a user and send a registration confirmation email
+export const verifyEmail = async (token: string) => {
+  if (!token) {
+    throw new ValidationError('Verification token is required.');
+  }
+
+  try {
+    const rawId = getUserIdFromEmailVerificationToken(token);
+    const userId = Number(rawId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new ValidationError('Verification token is invalid.');
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { id: userId, active: true },
+      select: { id: true, emailVerifiedAt: true },
+    });
+
+    if (!user) {
+      throw new ValidationError('Verification token is invalid.');
+    }
+
+    // Idempotent: only update if not yet verified
+    if (!user.emailVerifiedAt) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { emailVerifiedAt: new Date() },
+      });
+    }
+
+    return await getLoginSuccessPayload({ userId, prisma });
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      throw error;
+    }
+    if (error instanceof Error && error.message === 'Invalid or expired token') {
+      throw new ValidationError('Verification token is invalid or expired.');
+    }
+    throw error;
+  }
+};
+
+function hashResetToken(rawToken: string): string {
+  return crypto.createHash('sha256').update(rawToken).digest('hex');
+}
+
 export const passwordResetRequest = async (email: string, app_base_url: string) => {
   const successResponse = {
     success: true,
     message: 'Please check your inbox and follow the instructions to reset your password.',
   };
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, firstname: true, active: true },
+  });
+
+  // Always return success to prevent email enumeration
+  if (!existingUser || !existingUser.active) {
+    return successResponse;
+  }
+
+  // 256-bit raw token — never stored, sent only in the email link
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = hashResetToken(rawToken);
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  // Delete previous unused tokens for this user to keep the table clean
+  await prisma.passwordResetToken.deleteMany({
+    where: { userId: existingUser.id, usedAt: null },
+  });
+
+  await prisma.passwordResetToken.create({
+    data: { userId: existingUser.id, tokenHash, expiresAt },
+  });
+
+  const resetPasswordAppLink = `${app_base_url}/${rawToken}`;
+  const templatePath = path.join(__dirname, '../../views/emails/password-reset.ejs');
+
   try {
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (!existingUser) {
-      return successResponse;
-    }
-    const token = generateResetPasswordToken(existingUser.id);
-    const createdAt = new Date(Date.now());
-
-    try {
-      await prisma.passwordReset.upsert({
-        where: { email }, // Find existing record by email
-        update: { token, createdAt }, // Update token & expiration if exists
-        create: { email, token, createdAt }, // Create new record if not found
-      });
-    } catch (error) {
-      console.error('Error creating or updating password reset record:', error);
-      throw new Error('Could not process password reset request.');
-    }
-
-    // Construct the link to be sent via email
-    const resetPasswordAppLink = `${app_base_url}/${token}`;
-
-    // Prepare and send the email
-    // Calculate the path to the ejs file
-    const templatePath = path.join(__dirname, '../../views/emails/password-reset.ejs');
-
-    const emailTemplate = await ejs
-      .renderFile(templatePath, {
-        user_firstname: existingUser.firstname,
-        password_reset_link: resetPasswordAppLink,
-        year: new Date().getFullYear(),
-      })
-      .catch((err: unknown) => {
-        throw new ValidationError('Error Rendering email template: ' + err);
-      });
+    const emailTemplate = await ejs.renderFile(templatePath, {
+      user_firstname: existingUser.firstname,
+      password_reset_link: resetPasswordAppLink,
+      year: new Date().getFullYear(),
+    });
 
     sendEmail({
       html: emailTemplate,
       text: 'OrienteerFeed',
       subject: 'OrienteerFeed - forgotten password',
       emailTo: email,
-      onSuccess: () => console.log('Email sent successfully!'),
-      onError: () => {
-        console.error('Failed to send email');
-      },
+      onSuccess: () => logger.info('Password reset email sent', { action: 'password-reset-email' }),
+      onError: (error) => logger.error('Failed to send password reset email', { action: 'password-reset-email', error: getErrorMessage(error) }),
     });
-    // Return both the token and the user object
-    return successResponse;
   } catch (error) {
-    if (error instanceof ValidationError) {
-      throw error; // rethrow to be handled by the caller
-    }
-    console.error('Database error in password reset:', error);
-    throw new DatabaseError('Failed to create password reset request');
+    logger.error('Failed to render password reset email template', { action: 'password-reset-template', error: getErrorMessage(error) });
   }
+
+  return successResponse;
 };
 
 export const passwordResetConfirm = async (token: string, newPassword: string) => {
-  try {
-    // Find the password reset request
-    const passwordRequest = await prisma.passwordReset.findFirst({
-      where: { token: token },
-    });
-
-    if (!passwordRequest) {
-      throw new ValidationError('Password reset token expired or invalid.');
-    }
-
-    // Get current time and subtract 1 hour (60 * 60 * 1000 ms)
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-
-    // Convert timestamps to Date objects and compare
-    const tokenCreatedAt = new Date(passwordRequest.createdAt);
-
-    if (tokenCreatedAt < oneHourAgo) {
-      throw new ValidationError('Password reset token expired.');
-    }
-
-    // Find the user to reset password
-    const user = await prisma.user.findUnique({
-      where: { email: passwordRequest.email },
-    });
-
-    if (!user) {
-      throw new ValidationError('Password reset token invalid.');
-    }
-
-    // Generate a random 128-bit (16 bytes) salt
-    const salt = crypto.randomBytes(16);
-    const hashedPassword = await argon2.hash(newPassword, { salt });
-
-    // Update user password
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        updatedAt: new Date(),
-      },
-    });
-
-    // Delete the used password reset token
-    await prisma.passwordReset.delete({
-      where: { email: user.email },
-    });
-
-    // Generate JWT token for email link
-    const jwtToken = generateJwtTokenForLink(user.id);
-
-    // Return both the token and the user object
-    return { jwtToken, user };
-  } catch (error) {
-    console.error('Error in confirmPasswordReset:', error);
-    throw new DatabaseError('Failed to reset password.');
+  if (!token) {
+    throw new ValidationError('Password reset token is required.');
   }
+
+  if (!newPassword || newPassword.length < 8) {
+    throw new ValidationError('New password must be at least 8 characters long.');
+  }
+
+  const tokenHash = hashResetToken(token);
+
+  const resetToken = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash },
+    select: { id: true, userId: true, expiresAt: true, usedAt: true },
+  });
+
+  if (!resetToken) {
+    throw new ValidationError('Password reset token invalid or expired.');
+  }
+
+  if (resetToken.usedAt !== null) {
+    throw new ValidationError('Password reset token has already been used.');
+  }
+
+  if (resetToken.expiresAt < new Date()) {
+    throw new ValidationError('Password reset token has expired.');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: resetToken.userId },
+    select: {
+      id: true,
+      email: true,
+      firstname: true,
+      lastname: true,
+      role: true,
+      organisation: true,
+      emergencyContact: true,
+      active: true,
+    },
+  });
+
+  if (!user || !user.active) {
+    throw new ValidationError('Password reset token invalid or expired.');
+  }
+
+  const salt = crypto.randomBytes(16);
+  const hashedPassword = await argon2.hash(newPassword, { salt });
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashedPassword },
+  });
+
+  // Mark token as used (single-use enforcement, audit trail kept)
+  await prisma.passwordResetToken.update({
+    where: { id: resetToken.id },
+    data: { usedAt: new Date() },
+  });
+
+  const jwtToken = getJwtToken({ userId: user.id });
+
+  return { jwtToken, user };
 };
 
 export const changeAuthenticatedUserPassword = async (
@@ -330,7 +381,7 @@ export const changeAuthenticatedUserPassword = async (
       throw error;
     }
 
-    console.error('Error in changeAuthenticatedUserPassword:', error);
+    logger.error('Error in changeAuthenticatedUserPassword', { action: 'change-password', error: getErrorMessage(error) });
     throw new DatabaseError('Failed to update password.');
   }
 };
