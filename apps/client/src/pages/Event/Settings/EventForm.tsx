@@ -89,7 +89,6 @@ type ExternalEventPreviewDraft = {
   discipline?: EventFormData['discipline'];
   ranking?: boolean;
   coefRanking?: number;
-  relay?: boolean;
   published?: boolean;
   hundredthPrecision?: boolean;
 };
@@ -684,9 +683,6 @@ export const EventForm: React.FC<EventFormProps> = ({
         value.date,
         value.timezone || userTimezone
       );
-      const isRelayDiscipline =
-        value.discipline === 'RELAY' || value.discipline === 'SPRINT_RELAY';
-
       let savedEventId: string | undefined;
 
       if (!normalizedZeroTime) {
@@ -723,7 +719,6 @@ export const EventForm: React.FC<EventFormProps> = ({
             coefRanking: value.coefRanking
               ? parseFloat(value.coefRanking)
               : undefined,
-            relay: isRelayDiscipline,
             published: value.published,
             hundredthPrecision: value.hundredthPrecision,
             externalSource: externalSourcePayload,
@@ -875,8 +870,6 @@ export const EventForm: React.FC<EventFormProps> = ({
 
     if (draft.discipline) {
       form.setFieldValue('discipline', draft.discipline);
-    } else if (draft.relay === true) {
-      form.setFieldValue('discipline', 'RELAY');
     }
 
     if (draft.coefRanking !== undefined && draft.coefRanking !== null) {

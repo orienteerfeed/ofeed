@@ -44,7 +44,6 @@ export type ExternalEventPreview = {
   zeroTime?: string;
   ranking?: boolean;
   coefRanking?: number;
-  relay?: boolean;
   discipline?: EventDiscipline;
   published?: boolean;
   hundredthPrecision?: boolean;
@@ -1150,7 +1149,6 @@ export async function loadExternalEventPreview(
     zeroTime: normalizeTime(selected.zeroTimeRaw, date),
     ranking: selected.ranking ?? false,
     coefRanking: selected.coefRanking,
-    relay: selected.relay ?? false,
     discipline:
       resolveImportedEventDiscipline(body.provider, selected.disciplineRaw) ??
       (selected.relay ? 'RELAY' : undefined),
