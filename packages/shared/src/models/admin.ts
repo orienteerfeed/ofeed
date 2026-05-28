@@ -33,6 +33,7 @@ export const adminUserListItemSchema = z.object({
   role: userRoleSchema,
   organisation: z.string().nullable().optional(),
   active: z.boolean(),
+  emailVerifiedAt: dateLikeSchema.nullable().optional(),
   createdAt: dateLikeSchema,
 });
 

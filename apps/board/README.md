@@ -1,6 +1,6 @@
 # OFeed Board
 
-![Node.js 24.14.1](https://img.shields.io/badge/Node.js-24.14.1-5FA04E?logo=node.js&logoColor=white)
+![Node.js 24.15.0](https://img.shields.io/badge/Node.js-24.15.0-5FA04E?logo=node.js&logoColor=white)
 ![Vue 3.5.32](https://img.shields.io/badge/Vue-3.5.32-4FC08D?logo=vue.js&logoColor=white)
 
 - Vue 3 + Vite application for displaying live orienteering event boards.
@@ -9,7 +9,7 @@
 
 ## Prerequisites
 
-- Node.js `24.14.1`
+- Node.js `24.15.0`
 - pnpm `10.33.0`
 - From the repository root, run `pnpm install`
 

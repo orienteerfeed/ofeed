@@ -18,7 +18,11 @@ export const passwordResetRequestBodySchema = z.object({
 
 export const passwordResetConfirmBodySchema = z.object({
   token: z.string().min(1),
-  newPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
+export const emailVerificationBodySchema = z.object({
+  token: z.string().min(1),
 });
 
 export const oauthTokenBodySchema = z.object({
@@ -36,5 +40,6 @@ export type SigninBody = z.infer<typeof signinBodySchema>;
 export type SignupBody = z.infer<typeof signupBodySchema>;
 export type PasswordResetRequestBody = z.infer<typeof passwordResetRequestBodySchema>;
 export type PasswordResetConfirmBody = z.infer<typeof passwordResetConfirmBodySchema>;
+export type EmailVerificationBody = z.infer<typeof emailVerificationBodySchema>;
 export type OauthTokenBody = z.infer<typeof oauthTokenBodySchema>;
 export type OauthCredentialsBody = z.infer<typeof oauthCredentialsBodySchema>;

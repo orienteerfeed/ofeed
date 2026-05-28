@@ -5,6 +5,8 @@ import { EventRef } from '../event/event.graphql-types.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 
 import {
+  verifyUserEmail,
+  resendUserEmailVerification,
   changeCurrentUserPassword,
   createAuthenticatedUserCard,
   deleteAuthenticatedUserCard,
@@ -203,6 +205,17 @@ builder.mutationFields((t) => ({
     },
     resolve: (_root, args, context) =>
       signUp(userInputSchema.parse(args.input), context.activationUrl),
+  }),
+  verifyEmail: t.field({
+    type: AuthPayloadRef,
+    args: {
+      token: t.arg.string({ required: true }),
+    },
+    resolve: (_root, args) => verifyUserEmail(args.token as string),
+  }),
+  resendEmailVerification: t.field({
+    type: ResetResponseRef,
+    resolve: (_root, _args, context) => resendUserEmailVerification(context.auth),
   }),
   updateCurrentUser: t.field({
     type: UserRef,

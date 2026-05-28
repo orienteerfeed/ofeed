@@ -18,7 +18,6 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/atoms';
 import { ButtonWithSpinner } from '../../../components/molecules';
 import { Field } from '../../../components/organisms';
-import config from '../../../config';
 import { AuthPageLayout } from '../../../templates';
 import { toast } from '../../../utils';
 
@@ -54,8 +53,6 @@ export const ForgotPasswordPage = () => {
     },
     onSubmit: async ({ value }: { value: { email: string } }) => {
       try {
-        console.log('Password reset request for:', value.email);
-
         await requestPasswordReset({
           variables: {
             email: value.email,
@@ -63,7 +60,7 @@ export const ForgotPasswordPage = () => {
           context: {
             headers: {
               'x-ofeed-app-reset-password-url':
-                config.PUBLIC_URL + PATHNAMES.getResetPassword().to,
+                window.location.origin + PATHNAMES.getResetPassword().to,
             },
           },
         });

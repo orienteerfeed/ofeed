@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG NODE_VERSION=24.14.1
+ARG NODE_VERSION=24.15.0
 ARG PNPM_VERSION=10.33.0
 
 FROM node:${NODE_VERSION}-alpine AS builder
@@ -23,7 +23,7 @@ COPY packages/shared packages/shared
 RUN --mount=type=secret,id=client_env,target=/workspace/apps/client/.env \
   pnpm --filter ./apps/client... run build
 
-FROM nginx:1.29-alpine AS runner
+FROM nginx:1.31.1-alpine AS runner
 RUN apk add --no-cache gettext
 
 COPY apps/client/nginx.conf.template /etc/nginx/templates/default.conf.template

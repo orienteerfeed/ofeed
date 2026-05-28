@@ -23,6 +23,7 @@ import { Route as AdminEventsRouteImport } from './routes/admin/events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
 import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventId/report'
+import { Route as AuthVerifyEmailTokenRouteImport } from './routes/auth/verify-email/$token'
 import { Route as AuthResetPasswordTokenRouteImport } from './routes/auth/reset-password/$token'
 import { Route as AdminRankingCzechRouteImport } from './routes/admin/ranking/czech'
 
@@ -96,6 +97,11 @@ const EventsEventIdReportRoute = EventsEventIdReportRouteImport.update({
   path: '/events/$eventId/report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthVerifyEmailTokenRoute = AuthVerifyEmailTokenRouteImport.update({
+  id: '/auth/verify-email/$token',
+  path: '/auth/verify-email/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthResetPasswordTokenRoute = AuthResetPasswordTokenRouteImport.update({
   id: '/auth/reset-password/$token',
   path: '/auth/reset-password/$token',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
+    | '/auth/verify-email/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/events/$eventId/'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
+    | '/auth/verify-email/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/events/$eventId'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
+    | '/auth/verify-email/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/events/$eventId/'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminRankingCzechRoute: typeof AdminRankingCzechRoute
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
+  AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
   EventsEventIdReportRoute: typeof EventsEventIdReportRoute
   EventsEventIdSettingsRoute: typeof EventsEventIdSettingsRoute
   EventsEventIdIndexRoute: typeof EventsEventIdIndexRoute
@@ -338,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/verify-email/$token': {
+      id: '/auth/verify-email/$token'
+      path: '/auth/verify-email/$token'
+      fullPath: '/auth/verify-email/$token'
+      preLoaderRoute: typeof AuthVerifyEmailTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/reset-password/$token': {
       id: '/auth/reset-password/$token'
       path: '/auth/reset-password/$token'
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminRankingCzechRoute: AdminRankingCzechRoute,
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
+  AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,
   EventsEventIdReportRoute: EventsEventIdReportRoute,
   EventsEventIdSettingsRoute: EventsEventIdSettingsRoute,
   EventsEventIdIndexRoute: EventsEventIdIndexRoute,
