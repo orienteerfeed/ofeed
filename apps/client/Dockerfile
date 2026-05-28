@@ -23,7 +23,7 @@ COPY packages/shared packages/shared
 RUN --mount=type=secret,id=client_env,target=/workspace/apps/client/.env \
   pnpm --filter ./apps/client... run build
 
-FROM nginx:1.29-alpine AS runner
+FROM nginx:1.31.1-alpine AS runner
 RUN apk add --no-cache gettext
 
 COPY apps/client/nginx.conf.template /etc/nginx/templates/default.conf.template
