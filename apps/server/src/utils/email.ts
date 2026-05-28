@@ -1,8 +1,8 @@
-import sgMail from '@sendgrid/mail';
-const sendgridApiKey = process.env.SENDGRID_API_KEY;
-if (sendgridApiKey) {
-  sgMail.setApiKey(sendgridApiKey);
-}
+import { Resend } from 'resend';
+
+import env from '../config/env.js';
+
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 type SendEmailOptions = {
   html: string;
@@ -25,21 +25,19 @@ export const sendEmail = async ({
 
   (async () => {
     try {
-      await sgMail.send(msg);
+      if (!resend) {
+        throw new Error('RESEND_API_KEY is not configured');
+      }
+
+      const { error } = await resend.emails.send(msg);
+
+      if (error) {
+        throw error;
+      }
+
       onSuccess();
     } catch (error) {
       console.error(error);
-
-      if (
-        error &&
-        typeof error === 'object' &&
-        'response' in error &&
-        error.response &&
-        typeof error.response === 'object' &&
-        'body' in error.response
-      ) {
-        console.error(error.response.body);
-      }
       onError(error);
     }
   })();
@@ -47,7 +45,7 @@ export const sendEmail = async ({
 
 const getMailOptions = ({ html, text, subject, emailTo }: SendEmailOptions) => ({
   to: emailTo,
-  from: { email: 'hello@martinkrivda.cz', name: 'Orienteerfeed' },
+  from: `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`,
   subject,
   text,
   html,

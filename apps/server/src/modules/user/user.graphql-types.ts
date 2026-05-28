@@ -43,6 +43,7 @@ export const UserRef = builder.prismaObject('User', {
       resolve: (user) => user.password,
     }),
     active: t.exposeBoolean('active', { nullable: true }),
+    emailVerifiedAt: t.expose('emailVerifiedAt', { type: 'DateTime', nullable: true }),
     createdAt: t.expose('createdAt', { type: 'DateTime' }),
     updatedAt: t.expose('updatedAt', { type: 'DateTime' }),
   }),

@@ -156,6 +156,9 @@ const envSchema = z.object({
   EVENTOR_API_KEY: z.string().optional(),
   MAPY_API_KEY: z.string().optional(),
   MAP_TILE_COOKIE_SECRET: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().email().default('onboarding@resend.dev'),
+  RESEND_FROM_NAME: z.string().default('OFeed'),
 
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
   CORS_METHODS: z.string().default('GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS'),

@@ -38,13 +38,15 @@ function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
   });
 
   // --- Auth headers using SetContextLink
-  const authLink = new SetContextLink((_, previousContext) => {
+  // In Apollo Client 4, SetContextLink passes the current context object
+  // (not an Operation) as the sole argument. Per-request headers set via
+  // mutate({ context: { headers: {...} } }) arrive here already merged in.
+  const authLink = new SetContextLink((context) => {
+    const { headers = {} } = context as { headers?: Record<string, string> };
     const token = getToken();
-    const previousHeaders =
-      (previousContext as { headers?: Record<string, string> })?.headers || {};
     return {
       headers: {
-        ...previousHeaders,
+        ...headers,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     };

@@ -2,6 +2,7 @@ import { API_DEFAULTS } from "../../constants/index.js";
 import { jsonBody, okJson, zodToOpenApiSchema } from "../../config/openapi.helpers.js";
 import type { OpenApiOperation, OpenApiPathItem } from "../../config/openapi.types.js";
 import {
+  emailVerificationBodySchema,
   oauthCredentialsBodySchema,
   passwordResetConfirmBodySchema,
   passwordResetRequestBodySchema,
@@ -25,6 +26,9 @@ const passwordResetRequestRequestBodySchema = zodToOpenApiSchema(
 );
 const passwordResetConfirmRequestBodySchema = zodToOpenApiSchema(
   passwordResetConfirmBodySchema,
+);
+const emailVerificationRequestBodySchema = zodToOpenApiSchema(
+  emailVerificationBodySchema,
 );
 const oauthCredentialsRequestBodySchema = zodToOpenApiSchema(
   oauthCredentialsBodySchema,
@@ -56,6 +60,19 @@ export const AUTH_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       requestBody: jsonBody(signupRequestBodySchema),
       responses: {
         200: okJson("User created"),
+        422: okJson("Validation error"),
+      },
+    },
+  },
+  [`${authBase}/verify-email`]: {
+    post: {
+      tags: [AUTH_OPENAPI.tag],
+      operationId: "authVerifyEmail",
+      summary: "Verify email address from email link",
+      security: [],
+      requestBody: jsonBody(emailVerificationRequestBodySchema),
+      responses: {
+        200: okJson("Email verified"),
         422: okJson("Validation error"),
       },
     },
