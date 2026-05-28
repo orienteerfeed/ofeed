@@ -1,4 +1,5 @@
 export * from './Badge';
+export * from './EmailVerifiedBadge';
 export * from './Button';
 export * from './Checkbox';
 export * from './CountryFlag';

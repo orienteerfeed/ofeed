@@ -5,7 +5,7 @@ import { Power, PowerOff, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Badge, Button } from '@/components/atoms';
+import { Badge, Button, EmailVerifiedBadge } from '@/components/atoms';
 import { ConfirmDialog } from '@/components/molecules';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -159,7 +159,7 @@ export function AdminUsersPage() {
             data={data?.items ?? []}
             isLoading={isLoading}
             error={error}
-            columnCount={7}
+            columnCount={8}
             emptyStateText={t('Pages.Admin.Table.Empty')}
             renderToolbar={
               <AppRowsPerPage
@@ -183,6 +183,7 @@ export function AdminUsersPage() {
                 <TableRow>
                   <TableHead>{t('Pages.Admin.Table.Name')}</TableHead>
                   <TableHead>{t('Pages.Admin.Table.Email')}</TableHead>
+                  <TableHead>{t('Pages.Admin.Table.EmailVerified')}</TableHead>
                   <TableHead>{t('Pages.Admin.Table.Role')}</TableHead>
                   <TableHead>{t('Pages.Admin.Table.Status')}</TableHead>
                   <TableHead>{t('Pages.Admin.Table.Organization')}</TableHead>
@@ -200,6 +201,11 @@ export function AdminUsersPage() {
                     {user.firstname} {user.lastname}
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <EmailVerifiedBadge
+                      verifiedAt={user.emailVerifiedAt ?? null}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={user.role === 'ADMIN' ? 'default' : 'secondary'}

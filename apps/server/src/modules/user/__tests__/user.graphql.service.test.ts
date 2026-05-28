@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthenticationError } from '../../../exceptions/index.js';
 
 const authServiceMock = vi.hoisted(() => ({
+  verifyEmail: vi.fn(),
+  sendVerificationEmailHelper: vi.fn(),
   authenticateUser: vi.fn(),
   changeAuthenticatedUserPassword: vi.fn(),
   passwordResetConfirm: vi.fn(),
@@ -11,12 +13,15 @@ const authServiceMock = vi.hoisted(() => ({
 }));
 
 vi.mock('../../auth/auth.service.js', () => authServiceMock);
+vi.mock('../../../utils/jwtToken.js', () => ({
+  generateJwtTokenForLink: vi.fn(() => 'verification-token'),
+}));
 
-import { signIn } from '../user.service.js';
+import { signIn, updateAuthenticatedUser } from '../user.service.js';
 
 describe('user GraphQL service signIn', () => {
   beforeEach(() => {
-    authServiceMock.authenticateUser.mockReset();
+    Object.values(authServiceMock).forEach((mock) => mock.mockReset());
   });
 
   it('returns a user-friendly auth error when credentials do not match', async () => {
@@ -51,5 +56,88 @@ describe('user GraphQL service signIn', () => {
         code: 'UNAUTHENTICATED',
       },
     });
+  });
+});
+
+describe('user GraphQL service updateAuthenticatedUser', () => {
+  const auth = { isAuthenticated: true, userId: 42 } as const;
+
+  beforeEach(() => {
+    Object.values(authServiceMock).forEach((mock) => mock.mockReset());
+  });
+
+  it('clears email verification and sends a verification email when email changes', async () => {
+    const db = {
+      user: {
+        findUnique: vi.fn().mockResolvedValue({ email: 'old@example.test' }),
+        update: vi.fn().mockResolvedValue({
+          id: 42,
+          firstname: 'Ada',
+          lastname: 'Lovelace',
+          email: 'new@example.test',
+          organisation: null,
+          emergencyContact: null,
+          emailVerifiedAt: null,
+        }),
+      },
+    };
+
+    const result = await updateAuthenticatedUser(db as never, auth, {
+      email: ' New@Example.Test ',
+      firstname: 'Ada',
+      lastname: 'Lovelace',
+    });
+
+    expect(result.emailVerifiedAt).toBeNull();
+    expect(db.user.update).toHaveBeenCalledWith({
+      where: { id: 42 },
+      data: {
+        email: 'new@example.test',
+        emailVerifiedAt: null,
+        firstname: 'Ada',
+        lastname: 'Lovelace',
+      },
+    });
+    expect(authServiceMock.sendVerificationEmailHelper).toHaveBeenCalledWith(
+      'Ada',
+      'Lovelace',
+      'new@example.test',
+      'http://localhost:3000/auth/verify-email/verification-token',
+    );
+  });
+
+  it('keeps email verification untouched when email is unchanged after normalization', async () => {
+    const verifiedAt = new Date('2026-05-28T10:00:00.000Z');
+    const db = {
+      user: {
+        findUnique: vi.fn().mockResolvedValue({ email: 'user@example.test' }),
+        update: vi.fn().mockResolvedValue({
+          id: 42,
+          firstname: 'Ada',
+          lastname: 'Lovelace',
+          email: 'user@example.test',
+          organisation: null,
+          emergencyContact: null,
+          emailVerifiedAt: verifiedAt,
+        }),
+      },
+    };
+
+    const result = await updateAuthenticatedUser(db as never, auth, {
+      email: ' USER@Example.Test ',
+      firstname: 'Ada',
+      lastname: 'Lovelace',
+    });
+
+    expect(result.emailVerifiedAt).toBe(verifiedAt);
+    expect(db.user.update).toHaveBeenCalledWith({
+      where: { id: 42 },
+      data: {
+        email: 'user@example.test',
+        firstname: 'Ada',
+        lastname: 'Lovelace',
+      },
+    });
+    expect(authServiceMock.sendVerificationEmailHelper).not.toHaveBeenCalled();
   });
 });

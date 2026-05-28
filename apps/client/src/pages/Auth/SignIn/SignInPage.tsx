@@ -146,7 +146,17 @@ export const SignInPage = () => {
     form.store,
     (state: { values: LoginFormValues }) => state.values.email
   );
+  const passwordValue = useStore(
+    form.store,
+    (state: { values: LoginFormValues }) => state.values.password
+  );
+  const canSubmit = useStore(
+    form.store,
+    (state: { canSubmit: boolean }) => state.canSubmit
+  );
   const showPasswordField = emailValue && emailValue.length > 0;
+  const isSubmitDisabled =
+    !canSubmit || !emailValue || !passwordValue || isLoadingMutation;
 
   return (
     <AuthPageLayout t={t}>
@@ -221,7 +231,7 @@ export const SignInPage = () => {
             <ButtonWithSpinner
               type="submit"
               className="w-full"
-              disabled={!form.state.canSubmit || isLoadingMutation}
+              disabled={isSubmitDisabled}
               isSubmitting={isLoadingMutation}
               size="lg"
             >

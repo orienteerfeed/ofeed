@@ -11,6 +11,7 @@ export interface User {
   role?: UserRole;
   avatarUrl?: string | null;
   initials?: string;
+  emailVerifiedAt?: string | Date | null;
 }
 
 export type UserRole = SharedUserRole;
