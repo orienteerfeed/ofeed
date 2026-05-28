@@ -92,6 +92,7 @@ function mapUserListItem(user: {
   role: 'USER' | 'ADMIN';
   organisation: string | null;
   active: boolean;
+  emailVerifiedAt: Date | null;
   createdAt: Date;
 }): AdminUserListItem {
   return {
@@ -102,6 +103,7 @@ function mapUserListItem(user: {
     role: user.role,
     organisation: user.organisation,
     active: user.active,
+    emailVerifiedAt: user.emailVerifiedAt,
     createdAt: user.createdAt,
   };
 }
@@ -241,6 +243,7 @@ export async function getAdminDashboard(prisma, referenceDate = new Date()) {
         role: true,
         organisation: true,
         active: true,
+        emailVerifiedAt: true,
         createdAt: true,
       },
     }),
@@ -314,6 +317,7 @@ export async function getAdminUsers(
         role: true,
         organisation: true,
         active: true,
+        emailVerifiedAt: true,
         createdAt: true,
       },
     }),
@@ -369,6 +373,7 @@ export async function updateAdminUserActive(
         role: true,
         organisation: true,
         active: true,
+        emailVerifiedAt: true,
         createdAt: true,
       },
     });

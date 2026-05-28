@@ -1,6 +1,6 @@
 # OFeed
 
-[![Nodejs Version](https://img.shields.io/badge/node.js-24.14.1%20LTS-green.svg)](https://nodejs.org/)
+[![Nodejs Version](https://img.shields.io/badge/node.js-24.15.0%20LTS-green.svg)](https://nodejs.org/)
 [![CI](https://github.com/orienteerfeed/ofeed/actions/workflows/ci.yaml/badge.svg)](https://github.com/orienteerfeed/ofeed/actions/workflows/ci.yaml)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/orienteerfeed/ofeed?label=GitHub%20Stars)](https://github.com/orienteerfeed/ofeed/stargazers)
@@ -42,7 +42,7 @@ packages/
 
 ## Requirements
 
-- Node.js version pinned in `.nvmrc` (`24.14.1`)
+- Node.js version pinned in `.nvmrc` (`24.15.0`)
 - pnpm `>=10.33.0 <11` (pinned via `packageManager` to `10.33.0`)
 
 Use nvm to install and activate the exact Node.js version from `.nvmrc`:
