@@ -12,7 +12,7 @@ project:
     owner: Martin Křivda and contributors
 
 runtime:
-  node: ">=24.14.1"
+  node: ">=24.15.0"
   pnpm: ">=10.33.0"
   package_manager: pnpm
   module_system: esm
