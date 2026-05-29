@@ -43,7 +43,7 @@ packages/
 ## Requirements
 
 - Node.js version pinned in `.nvmrc` (`24.15.0`)
-- pnpm `>=10.33.0 <11` (pinned via `packageManager` to `10.33.0`)
+- pnpm `>=11.0.0` (pinned via `packageManager` to `11.4.0`)
 
 Use nvm to install and activate the exact Node.js version from `.nvmrc`:
 
@@ -56,7 +56,7 @@ Use Corepack:
 
 ```bash
 corepack enable
-corepack use pnpm@10.33.0
+corepack use pnpm@11.4.0
 pnpm -v
 ```
 

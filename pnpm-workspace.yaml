@@ -3,17 +3,13 @@ packages:
   - packages/*
   - tools/*
 
-ignoredBuiltDependencies:
-  - "@apollo/protobufjs"
-  - "@prisma/client"
-  - "@prisma/engines"
-  - "@scarf/scarf"
-  - "@swc/core"
-  - argon2
-  - core-js
-  - esbuild
-  - prisma
+minimumReleaseAge: 0
 
-onlyBuiltDependencies:
-  - sharp
-  - vue-demi
+allowBuilds:
+  "@prisma/engines": false
+  "@swc/core": false
+  argon2: false
+  esbuild: false
+  prisma: false
+  sharp: true
+  vue-demi: true

@@ -23,7 +23,7 @@ From the repository root:
 
 ```bash
 corepack enable
-corepack use pnpm@10.33.0
+corepack use pnpm@11.4.0
 pnpm install
 cp apps/server/.env.example apps/server/.env
 docker compose -f docker-compose.mysql.yaml up -d mysql

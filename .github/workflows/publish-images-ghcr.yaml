@@ -86,7 +86,7 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           build-args: |
             NODE_VERSION=24.15.0
-            PNPM_VERSION=10.33.0
+            PNPM_VERSION=11.4.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -104,7 +104,7 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           build-args: |
             NODE_VERSION=24.15.0
-            PNPM_VERSION=10.33.0
+            PNPM_VERSION=11.4.0
           secrets: ${{ matrix.build_secrets }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

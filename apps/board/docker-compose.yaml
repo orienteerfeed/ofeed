@@ -5,7 +5,7 @@ services:
       dockerfile: apps/board/Dockerfile
       args:
         NODE_VERSION: 24.15.0
-        PNPM_VERSION: 10.33.0
+        PNPM_VERSION: 11.4.0
       secrets:
         - board_env
     env_file:

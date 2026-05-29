@@ -10,7 +10,7 @@
 ## Prerequisites
 
 - Node.js `24.15.0`
-- pnpm `10.33.0`
+- pnpm `>=11.0.0`
 - From the repository root, run `pnpm install`
 
 ## Quick Start
