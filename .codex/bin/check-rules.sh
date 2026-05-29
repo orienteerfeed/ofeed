@@ -7,6 +7,7 @@ cd "$REPO_ROOT"
 
 GIT_RULES=".codex/rules/git.readonly.rules"
 GH_RULES=".codex/rules/github.prompt.rules"
+GL_RULES=".codex/rules/gitlab.prompt.rules"
 
 for cmd in codex node; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -15,7 +16,7 @@ for cmd in codex node; do
   fi
 done
 
-for file in "$GIT_RULES" "$GH_RULES"; do
+for file in "$GIT_RULES" "$GH_RULES" "$GL_RULES"; do
   if [[ ! -f "$file" ]]; then
     echo "Missing required rules file: $file" >&2
     exit 1
@@ -26,6 +27,7 @@ decision_of() {
   codex execpolicy check \
     --rules "$GIT_RULES" \
     --rules "$GH_RULES" \
+    --rules "$GL_RULES" \
     -- "$@" \
   | node -e '
       const fs = require("node:fs");
@@ -83,6 +85,7 @@ assert_decision() {
     codex execpolicy check --pretty \
       --rules "$GIT_RULES" \
       --rules "$GH_RULES" \
+      --rules "$GL_RULES" \
       -- "$@" >&2
     exit 1
   fi
@@ -138,6 +141,45 @@ assert_decision forbidden "gh repo fork"               gh repo fork
 assert_decision forbidden "gh repo clone"              gh repo clone acme/test
 assert_decision forbidden "gh repo rename"             gh repo rename renamed-test
 assert_decision forbidden "gh repo sync"               gh repo sync
+
+echo
+echo "Checking gitlab.prompt.rules ..."
+assert_decision prompt    "glab issue list"            glab issue list
+assert_decision prompt    "glab issue view"            glab issue view 123
+assert_decision prompt    "glab issue board"           glab issue board
+assert_decision prompt    "glab mr list"               glab mr list
+assert_decision prompt    "glab mr view"               glab mr view 123
+assert_decision prompt    "glab mr diff"               glab mr diff 123
+assert_decision prompt    "glab pipeline list"         glab pipeline list
+assert_decision prompt    "glab pipeline view"         glab pipeline view 123
+assert_decision prompt    "glab pipeline status"       glab pipeline status
+assert_decision prompt    "glab ci status"             glab ci status
+assert_decision prompt    "glab ci view"               glab ci view
+assert_decision prompt    "glab repo view"             glab repo view
+assert_decision prompt    "glab repo list"             glab repo list
+assert_decision prompt    "glab release list"          glab release list
+assert_decision prompt    "glab release view"          glab release view v1.0.0
+assert_decision prompt    "glab auth status"           glab auth status
+
+assert_decision forbidden "glab issue create"          glab issue create
+assert_decision forbidden "glab issue update"          glab issue update 123
+assert_decision forbidden "glab issue close"           glab issue close 123
+assert_decision forbidden "glab mr create"             glab mr create
+assert_decision forbidden "glab mr merge"              glab mr merge 123
+assert_decision forbidden "glab mr approve"            glab mr approve 123
+assert_decision forbidden "glab mr checkout"           glab mr checkout 123
+assert_decision forbidden "glab pipeline run"          glab pipeline run
+assert_decision forbidden "glab pipeline retry"        glab pipeline retry 123
+assert_decision forbidden "glab pipeline cancel"       glab pipeline cancel 123
+assert_decision forbidden "glab ci run"                glab ci run
+assert_decision forbidden "glab ci retry"              glab ci retry 123
+assert_decision forbidden "glab ci cancel"             glab ci cancel 123
+assert_decision forbidden "glab repo create"           glab repo create acme/test --private
+assert_decision forbidden "glab repo delete"           glab repo delete acme/test
+assert_decision forbidden "glab repo fork"             glab repo fork
+assert_decision forbidden "glab repo clone"            glab repo clone acme/test
+assert_decision forbidden "glab release create"        glab release create v1.0.0
+assert_decision forbidden "glab release delete"        glab release delete v1.0.0
 
 echo
 echo "All rules passed."

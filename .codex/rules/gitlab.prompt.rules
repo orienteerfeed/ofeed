@@ -1,0 +1,182 @@
+# Prompt for read-only GitLab CLI inspection commands.
+# For common mutating GitLab CLI commands, fail fast with a clear message.
+
+prefix_rule(
+  pattern = ["glab", "issue", ["list", "view", "board"]],
+  decision = "prompt",
+  justification = "GitLab issue inspection is allowed with approval.",
+  match = [
+    "glab issue list",
+    "glab issue view 123",
+    "glab issue board",
+    "glab issue list --repo acme/api",
+  ],
+  not_match = [
+    "glab issue create",
+    "glab issue update 123",
+    "glab issue close 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "mr", ["list", "view", "diff"]],
+  decision = "prompt",
+  justification = "GitLab merge request inspection is allowed with approval.",
+  match = [
+    "glab mr list",
+    "glab mr view 123",
+    "glab mr diff 123",
+  ],
+  not_match = [
+    "glab mr create",
+    "glab mr merge 123",
+    "glab mr approve 123",
+    "glab mr checkout 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "pipeline", ["list", "view", "status", "trace"]],
+  decision = "prompt",
+  justification = "GitLab pipeline inspection is allowed with approval.",
+  match = [
+    "glab pipeline list",
+    "glab pipeline view 123",
+    "glab pipeline status",
+    "glab pipeline trace 123",
+  ],
+  not_match = [
+    "glab pipeline run",
+    "glab pipeline retry 123",
+    "glab pipeline cancel 123",
+    "glab pipeline delete 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "ci", ["status", "view", "trace"]],
+  decision = "prompt",
+  justification = "GitLab CI inspection is allowed with approval.",
+  match = [
+    "glab ci status",
+    "glab ci view",
+    "glab ci trace 123",
+  ],
+  not_match = [
+    "glab ci run",
+    "glab ci retry 123",
+    "glab ci cancel 123",
+    "glab ci delete 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "repo", ["list", "view"]],
+  decision = "prompt",
+  justification = "GitLab repository inspection is allowed with approval.",
+  match = [
+    "glab repo list",
+    "glab repo view",
+    "glab repo view acme/api",
+  ],
+  not_match = [
+    "glab repo create acme/test --private",
+    "glab repo delete acme/test",
+    "glab repo fork",
+    "glab repo clone acme/test",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "release", ["list", "view"]],
+  decision = "prompt",
+  justification = "GitLab release inspection is allowed with approval.",
+  match = [
+    "glab release list",
+    "glab release view v1.0.0",
+  ],
+  not_match = [
+    "glab release create v1.0.0",
+    "glab release delete v1.0.0",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "auth", "status"],
+  decision = "prompt",
+  justification = "GitLab auth status inspection is allowed with approval.",
+  match = [
+    "glab auth status",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "issue", ["create", "update", "close", "reopen", "delete", "note", "subscribe", "unsubscribe"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitLab issue command. Make issue changes manually outside Codex.",
+  match = [
+    "glab issue create",
+    "glab issue update 123",
+    "glab issue close 123",
+    "glab issue note 123 --message test",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "mr", ["create", "update", "close", "reopen", "merge", "approve", "revoke", "checkout", "note", "subscribe", "unsubscribe"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitLab merge request command. Make MR changes manually outside Codex.",
+  match = [
+    "glab mr create",
+    "glab mr merge 123",
+    "glab mr approve 123",
+    "glab mr checkout 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "pipeline", ["run", "retry", "cancel", "delete"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitLab pipeline command. Trigger or modify pipelines manually outside Codex.",
+  match = [
+    "glab pipeline run",
+    "glab pipeline retry 123",
+    "glab pipeline cancel 123",
+    "glab pipeline delete 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "ci", ["run", "retry", "cancel", "delete"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitLab CI command. Trigger or modify CI jobs manually outside Codex.",
+  match = [
+    "glab ci run",
+    "glab ci retry 123",
+    "glab ci cancel 123",
+    "glab ci delete 123",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "repo", ["create", "delete", "fork", "clone", "archive", "unarchive", "transfer"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitLab repository command. Change repository state manually outside Codex.",
+  match = [
+    "glab repo create acme/test --private",
+    "glab repo delete acme/test",
+    "glab repo fork",
+    "glab repo clone acme/test",
+  ],
+)
+
+prefix_rule(
+  pattern = ["glab", "release", ["create", "delete", "upload", "download"]],
+  decision = "forbidden",
+  justification = "Blocked: mutating GitLab release command. Change releases manually outside Codex.",
+  match = [
+    "glab release create v1.0.0",
+    "glab release delete v1.0.0",
+    "glab release upload v1.0.0 artifact.zip",
+  ],
+)
