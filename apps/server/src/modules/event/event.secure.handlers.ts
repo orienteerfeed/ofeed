@@ -2646,16 +2646,27 @@ export function registerSecureEventRoutes(router) {
           return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
         }
 
+        const toClassId = (value: string | null): number | undefined => {
+          if (!value) {
+            return undefined;
+          }
+
+          const id = Number(value);
+          return Number.isInteger(id) && id > 0 ? id : undefined;
+        };
+
         const classChangeIds = [
-          ...new Set(
+          ...new Set<number>(
             dbProtocolResponse
-              .filter(e => e.type === 'class_change')
-              .flatMap(e => {
+              .filter((entry) => entry.type === 'class_change')
+              .flatMap((entry) => {
                 const ids: number[] = [];
-                const prev = Number(e.previousValue);
-                const next = Number(e.newValue);
-                if (e.previousValue && !isNaN(prev)) ids.push(prev);
-                if (e.newValue && !isNaN(next)) ids.push(next);
+                const prev = toClassId(entry.previousValue);
+                const next = toClassId(entry.newValue);
+
+                if (prev) ids.push(prev);
+                if (next) ids.push(next);
+
                 return ids;
               }),
           ),
@@ -2681,20 +2692,14 @@ export function registerSecureEventRoutes(router) {
 
         const resolvedProtocolResponse =
           classNameMap.size > 0
-            ? dbProtocolResponse.map(entry => {
+            ? dbProtocolResponse.map((entry) => {
                 if (entry.type !== 'class_change') return entry;
-                const prevId = Number(entry.previousValue);
-                const nextId = Number(entry.newValue);
+                const prevId = toClassId(entry.previousValue);
+                const nextId = toClassId(entry.newValue);
                 return {
                   ...entry,
-                  previousValue:
-                    entry.previousValue && !isNaN(prevId) && classNameMap.has(prevId)
-                      ? classNameMap.get(prevId)!
-                      : entry.previousValue,
-                  newValue:
-                    entry.newValue && !isNaN(nextId) && classNameMap.has(nextId)
-                      ? classNameMap.get(nextId)!
-                      : entry.newValue,
+                  previousValueLabel: prevId ? classNameMap.get(prevId) : undefined,
+                  newValueLabel: nextId ? classNameMap.get(nextId) : undefined,
                 };
               })
             : dbProtocolResponse;
@@ -2719,6 +2724,8 @@ export function registerSecureEventRoutes(router) {
               type: entry.type,
               previousValue: entry.previousValue,
               newValue: entry.newValue,
+              previousValueLabel: entry.previousValueLabel,
+              newValueLabel: entry.newValueLabel,
               author: entry.author,
               createdAt: entry.createdAt,
               processed: entry.processed,

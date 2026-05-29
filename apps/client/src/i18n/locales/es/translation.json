@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Cambio de categoría",
+          "competitor_create": "Competidor creado",
           "firstname_change": "Cambio de nombre",
           "lastname_change": "Cambio de apellido",
           "bibNumber_change": "Cambio de dorsal",

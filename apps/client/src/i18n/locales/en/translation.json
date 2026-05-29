@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Class change",
+          "competitor_create": "Competitor created",
           "firstname_change": "First name change",
           "lastname_change": "Last name change",
           "bibNumber_change": "Bib number change",
