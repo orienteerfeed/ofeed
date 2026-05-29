@@ -90,6 +90,12 @@ export const Field = <TFormData,>(
     const value = e.target.value;
     setFieldValue(value);
     handleLocalValidation(value);
+    // When the field was previously blurred with an error and the value is now
+    // valid, re-run blur validation immediately to clear the stale onBlur error
+    // so that form.state.canSubmit reflects the corrected value right away.
+    if (field.state.meta.isTouched && validate && !validate(value)) {
+      void field.validate('blur');
+    }
   };
 
   const handleCheckboxChange = (checked: boolean | 'indeterminate'): void => {

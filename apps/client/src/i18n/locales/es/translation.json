@@ -1215,6 +1215,13 @@
     }
   },
   "validation": {
+    "emailRequired": "El correo electrónico es obligatorio",
+    "emailInvalid": "Dirección de correo electrónico no válida",
+    "firstNameRequired": "El nombre es obligatorio",
+    "firstNameMinLength": "El nombre debe tener al menos 2 caracteres",
+    "lastNameRequired": "El apellido es obligatorio",
+    "lastNameMinLength": "El apellido debe tener al menos 2 caracteres",
+    "clubRequired": "El club es obligatorio",
     "passwordRequired": "La contraseña es obligatoria",
     "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
     "confirmPasswordRequired": "Confirma tu nueva contraseña",

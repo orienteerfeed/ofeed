@@ -1220,5 +1220,18 @@
     "EmailVerifiedBadge": {
       "Tooltip": "Verifierad e-postadress"
     }
+  },
+  "validation": {
+    "emailRequired": "E-post är obligatoriskt",
+    "emailInvalid": "Ogiltig e-postadress",
+    "firstNameRequired": "Förnamn är obligatoriskt",
+    "firstNameMinLength": "Förnamnet måste vara minst 2 tecken",
+    "lastNameRequired": "Efternamn är obligatoriskt",
+    "lastNameMinLength": "Efternamnet måste vara minst 2 tecken",
+    "clubRequired": "Klubb är obligatorisk",
+    "passwordRequired": "Lösenord är obligatoriskt",
+    "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
+    "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
+    "passwordsDoNotMatch": "Lösenorden stämmer inte överens"
   }
 }
