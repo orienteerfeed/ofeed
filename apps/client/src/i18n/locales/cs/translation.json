@@ -1206,7 +1206,11 @@
     "Longitude": "Zeměpisná délka musí být mezi -180 a 180"
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Obnovení hesla selhalo",
     "Generic": "Něco se pokazilo",
+    "ResetPasswordFailedTitle": "Nastavení nového hesla selhalo",
+    "SignInFailedTitle": "Přihlášení selhalo",
+    "SignUpFailedTitle": "Registrace selhala",
     "UpdatePasswordFailedTitle": "Změna hesla selhala",
     "UpdateProfileFailedTitle": "Aktualizace profilu selhala"
   },

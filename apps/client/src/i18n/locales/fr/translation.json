@@ -53,6 +53,15 @@
       "Tooltip": "Adresse e-mail vérifiée"
     }
   },
+  "Errors": {
+    "ForgotPasswordFailedTitle": "Échec de la demande de réinitialisation du mot de passe",
+    "Generic": "Une erreur s'est produite",
+    "ResetPasswordFailedTitle": "Échec de la réinitialisation du mot de passe",
+    "SignInFailedTitle": "Échec de la connexion",
+    "SignUpFailedTitle": "Échec de l'inscription",
+    "UpdatePasswordFailedTitle": "Impossible de mettre à jour le mot de passe",
+    "UpdateProfileFailedTitle": "Impossible de mettre à jour le profil"
+  },
   "validation": {
     "emailRequired": "L'e-mail est obligatoire",
     "emailInvalid": "Adresse e-mail invalide",

@@ -1205,7 +1205,11 @@
     "Longitude": "Longitude must be between -180 and 180"
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Forgot password failed",
     "Generic": "Something went wrong",
+    "ResetPasswordFailedTitle": "Reset password failed",
+    "SignInFailedTitle": "Sign-in failed",
+    "SignUpFailedTitle": "Sign-up failed",
     "UpdatePasswordFailedTitle": "Password update failed",
     "UpdateProfileFailedTitle": "Profile update failed"
   },

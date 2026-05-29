@@ -711,7 +711,11 @@
     }
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Passwort-Zurücksetzung fehlgeschlagen",
     "Generic": "Etwas ist schiefgelaufen",
+    "ResetPasswordFailedTitle": "Passwort-Zurücksetzung fehlgeschlagen",
+    "SignInFailedTitle": "Anmeldung fehlgeschlagen",
+    "SignUpFailedTitle": "Registrierung fehlgeschlagen",
     "UpdatePasswordFailedTitle": "Passwort konnte nicht aktualisiert werden",
     "UpdateProfileFailedTitle": "Profil konnte nicht aktualisiert werden"
   },

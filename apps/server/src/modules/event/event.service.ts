@@ -7,7 +7,11 @@ import { isRelayDiscipline } from '../../utils/relay.js';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
-import { requireEventOwnerOrAdmin, type AuthzAuthContext } from '../../utils/authz.js';
+import {
+  isAuthzError,
+  requireEventOwnerOrAdmin,
+  type AuthzAuthContext,
+} from '../../utils/authz.js';
 import {
   publishUpdatedCompetitor,
   publishUpdatedCompetitors,
@@ -305,6 +309,10 @@ export async function updateEventVisibility(
       event,
     };
   } catch (error) {
+    if (isAuthzError(error)) {
+      throw error;
+    }
+
     console.error('Error updating event visibility:', error);
     throw new Error(getErrorMessage(error) || 'Failed to update event visibility.');
   }

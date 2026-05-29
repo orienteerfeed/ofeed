@@ -1205,7 +1205,11 @@
     "Longitude": "La longitud debe estar entre -180 y 180"
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Error al solicitar restablecimiento de contraseña",
     "Generic": "Algo salió mal",
+    "ResetPasswordFailedTitle": "Error al restablecer la contraseña",
+    "SignInFailedTitle": "Error al iniciar sesión",
+    "SignUpFailedTitle": "Error al registrarse",
     "UpdatePasswordFailedTitle": "No se pudo actualizar la contraseña",
     "UpdateProfileFailedTitle": "No se pudo actualizar el perfil"
   },
