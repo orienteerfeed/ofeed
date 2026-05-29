@@ -250,6 +250,7 @@
         "Ranking": "Ranking",
         "Name": "Namn",
         "Email": "E-post",
+        "EmailVerified": "Verifierad",
         "Role": "Roll",
         "Status": "Status",
         "Organization": "Organisation",
@@ -299,6 +300,21 @@
         "AlreadyHaveAnAccount": "Har du redan ett konto?",
         "CreateAccount": "Skapa konto",
         "CreatingAccount": "Skapar konto…"
+      },
+      "VerifyEmailPage": {
+        "Verifying": "Verifierar e-post",
+        "VerifyingDescription": "Vänta medan vi verifierar din e-postadress.",
+        "Verified": "E-post verifierad",
+        "VerifiedDescription": "Din e-post har verifierats och du är nu inloggad.",
+        "ContinueDescription": "Du har nu full tillgång till OFeed.",
+        "ContinueToApp": "Fortsätt till OFeed",
+        "AlreadyVerified": "Redan verifierad",
+        "AlreadyVerifiedDescription": "Din e-postadress är redan verifierad.",
+        "TokenExpired": "Länk utgången",
+        "TokenExpiredDescription": "Verifieringslänken har gått ut. Begär en ny från din profil.",
+        "Failed": "Verifiering misslyckades",
+        "FailedDescription": "Verifieringslänken är ogiltig. Begär en ny från din profil.",
+        "BackToSignIn": "Tillbaka till inloggning"
       },
       "RequestPasswordResetPage": {
         "ForgottenPassword": "Glömt lösenord",
@@ -437,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Klassbyte",
+          "competitor_create": "Deltagare skapad",
           "firstname_change": "Ändring av förnamn",
           "lastname_change": "Ändring av efternamn",
           "bibNumber_change": "Ändring av nummerlapp",
@@ -872,10 +889,15 @@
           "CopyEventId": "Tävlings-id finns nu i urklipp – dela det gärna!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Synlighet",
-          "Description": "Anger om evenemanget är offentligt eller privat. Offentliga evenemang visas i tävlingslistan på OFeeds startsida, medan privata evenemang endast är synliga för arrangören."
+          "Title": "Publicering",
+          "Description": "Anger om evenemanget är publicerat eller ligger kvar som utkast.",
+          "ActionTitle": "Publiceringsstatus",
+          "Published": "Publicerad",
+          "Publish": "Publicera",
+          "Draft": "Utkast",
+          "Unpublished": "Opublicerad"
         },
         "Toast": {
           "UpdateSuccess": "Tävlingen är nu {{status}}!",
@@ -980,6 +1002,18 @@
       "OtherIntegrations": {
         "Title": "Andra integrationer",
         "Description": "Koppla ditt konto till fler tjänster och verktyg. Nya integrationer kommer att visas här över tid."
+      },
+      "EmailVerification": {
+        "Title": "E-postverifiering",
+        "Description": "Bekräfta ägarskapet av din e-postadress.",
+        "Verified": "Din e-postadress är verifierad.",
+        "VerifiedBadge": "Verifierad",
+        "NotVerified": "Din e-postadress är ännu inte verifierad.",
+        "ResendButton": "Skicka om verifieringsmail",
+        "ResendCooldown": "Skicka igen om {{seconds}} s",
+        "Resending": "Skickar...",
+        "ResendSuccess": "Verifieringsmail skickat. Kontrollera din inkorg.",
+        "ResendError": "Det gick inte att skicka verifieringsmailet."
       },
       "Security": {
         "PasswordDescription": "Här kan du ändra kontots lösenord. Vi rekommenderar ett starkt och unikt lösenord.",
@@ -1108,6 +1142,7 @@
       "SupportedFormats": "Format som stöds:",
       "Done": "Klart",
       "OrDragAndDrop": "eller drag och släpp",
+      "Processing": "Bearbetar...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximalt antal filer",
@@ -1180,5 +1215,10 @@
     "TimeInZones": "Tiden i zonerna får inte överstiga den totala aktivitetstiden",
     "Latitude": "Latituden måste ligga mellan -90 och 90",
     "Longitude": "Longituden måste ligga mellan -180 och 180"
+  },
+  "Components": {
+    "EmailVerifiedBadge": {
+      "Tooltip": "Verifierad e-postadress"
+    }
   }
 }

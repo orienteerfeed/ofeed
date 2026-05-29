@@ -84,8 +84,10 @@ export const ResetPasswordPage = () => {
     return undefined;
   };
 
-  const validatePasswordConfirmation = (value: string): string | undefined => {
-    const password = form.getFieldValue('password');
+  const validatePasswordConfirmation = (
+    value: string,
+    password: string
+  ): string | undefined => {
     if (!value) {
       return t(
         'validation.confirmPasswordRequired',
@@ -108,20 +110,35 @@ export const ResetPasswordPage = () => {
         const errors: Partial<Record<keyof PasswordResetFormValues, string>> =
           {};
 
-        // Password validation
         if (value.password) {
           const passwordError = validatePassword(value.password);
           if (passwordError) errors.password = passwordError;
         }
 
-        // Password confirmation validation (only if password is filled)
         if (value.password && value.passwordConfirmation) {
           const passwordConfirmationError = validatePasswordConfirmation(
-            value.passwordConfirmation
+            value.passwordConfirmation,
+            value.password
           );
           if (passwordConfirmationError)
             errors.passwordConfirmation = passwordConfirmationError;
         }
+
+        return Object.keys(errors).length > 0 ? errors : undefined;
+      },
+      onSubmit: ({ value }) => {
+        const errors: Partial<Record<keyof PasswordResetFormValues, string>> =
+          {};
+
+        const passwordError = validatePassword(value.password);
+        if (passwordError) errors.password = passwordError;
+
+        const passwordConfirmationError = validatePasswordConfirmation(
+          value.passwordConfirmation,
+          value.password
+        );
+        if (passwordConfirmationError)
+          errors.passwordConfirmation = passwordConfirmationError;
 
         return Object.keys(errors).length > 0 ? errors : undefined;
       },
@@ -142,9 +159,6 @@ export const ResetPasswordPage = () => {
 
         // Save the token and user to the auth store
         signin({ token: payload.token, user: payload.user });
-
-        // Simulate successful password reset
-        console.log('Password reset successful');
 
         // Redirect after successful login
         router.navigate({ to: '/' });
@@ -184,30 +198,26 @@ export const ResetPasswordPage = () => {
           <CardContent className="space-y-4">
             {/* Password field */}
             <div className="space-y-2">
-              <form.Field name="password">
-                {field => (
-                  <>
-                    <Label htmlFor="password" className="text-sm font-medium">
-                      {t('Pages.Auth.PasswordResetPage.NewPassword')}
-                    </Label>
-                    <Field
-                      form={form}
-                      name="password"
-                      type="password"
-                      placeholder={t('Pages.Auth.User.Placeholder.NewPassword')}
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      autoComplete="new-password"
-                      disabled={isLoadingMutation}
-                      validate={validatePassword}
-                      className="w-full"
-                    />
-                    {field.state.value && (
-                      <PasswordStrengthIndicator password={field.state.value} />
-                    )}
-                  </>
-                )}
-              </form.Field>
+              <Label htmlFor="password" className="text-sm font-medium">
+                {t('Pages.Auth.PasswordResetPage.NewPassword')}
+              </Label>
+              <Field
+                form={form}
+                name="password"
+                type="password"
+                placeholder={t('Pages.Auth.User.Placeholder.NewPassword')}
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="new-password"
+                disabled={isLoadingMutation}
+                validate={validatePassword}
+                className="w-full"
+              />
+              <form.Subscribe selector={state => state.values.password}>
+                {password =>
+                  password && <PasswordStrengthIndicator password={password} />
+                }
+              </form.Subscribe>
             </div>
 
             {/* Password confirmation field */}
@@ -229,7 +239,12 @@ export const ResetPasswordPage = () => {
                 autoCorrect="off"
                 autoComplete="new-password"
                 disabled={isLoadingMutation}
-                validate={validatePasswordConfirmation}
+                validate={value =>
+                  validatePasswordConfirmation(
+                    value,
+                    form.getFieldValue('password')
+                  )
+                }
                 className="w-full"
               />
             </div>

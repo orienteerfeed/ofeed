@@ -250,6 +250,7 @@
         "Ranking": "Ranking",
         "Name": "Name",
         "Email": "Email",
+        "EmailVerified": "Verified",
         "Role": "Role",
         "Status": "Status",
         "Organization": "Organization",
@@ -299,6 +300,21 @@
         "AlreadyHaveAnAccount": "Already have an account?",
         "CreateAccount": "Create Account",
         "CreatingAccount": "Creating account..."
+      },
+      "VerifyEmailPage": {
+        "Verifying": "Verifying your email",
+        "VerifyingDescription": "Please wait while we verify your email address.",
+        "Verified": "Email verified",
+        "VerifiedDescription": "Your email has been verified and you are now signed in.",
+        "ContinueDescription": "You can now use OFeed with full access.",
+        "ContinueToApp": "Continue to OFeed",
+        "AlreadyVerified": "Already verified",
+        "AlreadyVerifiedDescription": "Your email address is already verified.",
+        "TokenExpired": "Link expired",
+        "TokenExpiredDescription": "The verification link has expired. Please request a new one from your profile.",
+        "Failed": "Verification failed",
+        "FailedDescription": "The verification link is invalid. Please request a new one from your profile.",
+        "BackToSignIn": "Back to sign in"
       },
       "RequestPasswordResetPage": {
         "ForgottenPassword": "Forgotten password",
@@ -437,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Class change",
+          "competitor_create": "Competitor created",
           "firstname_change": "First name change",
           "lastname_change": "Last name change",
           "bibNumber_change": "Bib number change",
@@ -872,10 +889,15 @@
           "CopyEventId": "Hop! Event ID is now in your clipboard, share it away!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Visibility",
-          "Description": "Determines whether the event is public or private. Public events are displayed in the event list on the OFeed's main page, while private events are visible only to their organizer."
+          "Title": "Publishing",
+          "Description": "Determines whether the event is published or remains a draft.",
+          "ActionTitle": "Publishing status",
+          "Published": "Published",
+          "Publish": "Publish",
+          "Draft": "Draft",
+          "Unpublished": "Unpublished"
         },
         "Toast": {
           "UpdateSuccess": "Event is now {{status}}!",
@@ -989,6 +1011,18 @@
         "Title": "Other integrations",
         "Description": "Connect your account with additional services and tools. New integrations will appear here over time."
       },
+      "EmailVerification": {
+        "Title": "Email verification",
+        "Description": "Confirm ownership of your email address.",
+        "Verified": "Your email address is verified.",
+        "VerifiedBadge": "Verified",
+        "NotVerified": "Your email address is not yet verified.",
+        "ResendButton": "Resend verification email",
+        "ResendCooldown": "Send again in {{seconds}}s",
+        "Resending": "Sending...",
+        "ResendSuccess": "Verification email sent. Check your inbox.",
+        "ResendError": "Failed to send verification email."
+      },
       "Security": {
         "PasswordDescription": "Here you can change your account password. We recommend using a strong, unique password.",
         "CurrentPassword": "Current password",
@@ -1097,6 +1131,7 @@
       "SupportedFormats": "Supported format:",
       "Done": "Done",
       "OrDragAndDrop": "or drag and drop",
+      "Processing": "Processing...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximum Files",
@@ -1173,6 +1208,12 @@
     "Generic": "Something went wrong",
     "UpdatePasswordFailedTitle": "Password update failed",
     "UpdateProfileFailedTitle": "Profile update failed"
+  },
+  "Components": {
+    "EmailVerifiedBadge": {
+      "Label": "Verified email",
+      "Tooltip": "Verified email"
+    }
   },
   "validation": {
     "passwordRequired": "Password is required",

@@ -250,6 +250,7 @@
         "Ranking": "Ranking",
         "Name": "Nombre",
         "Email": "Correo electrónico",
+        "EmailVerified": "Verificado",
         "Role": "Rol",
         "Status": "Estado",
         "Organization": "Organización",
@@ -299,6 +300,21 @@
         "AlreadyHaveAnAccount": "¿Ya tienes una cuenta?",
         "CreateAccount": "Crear cuenta",
         "CreatingAccount": "Creando cuenta..."
+      },
+      "VerifyEmailPage": {
+        "Verifying": "Verificando tu correo",
+        "VerifyingDescription": "Por favor espera mientras verificamos tu dirección de correo electrónico.",
+        "Verified": "Correo verificado",
+        "VerifiedDescription": "Tu correo ha sido verificado y ya has iniciado sesión.",
+        "ContinueDescription": "Ahora tienes acceso completo a OFeed.",
+        "ContinueToApp": "Continuar a OFeed",
+        "AlreadyVerified": "Ya verificado",
+        "AlreadyVerifiedDescription": "Tu dirección de correo electrónico ya está verificada.",
+        "TokenExpired": "Enlace caducado",
+        "TokenExpiredDescription": "El enlace de verificación ha caducado. Solicita uno nuevo desde tu perfil.",
+        "Failed": "Verificación fallida",
+        "FailedDescription": "El enlace de verificación no es válido. Solicita uno nuevo desde tu perfil.",
+        "BackToSignIn": "Volver al inicio de sesión"
       },
       "RequestPasswordResetPage": {
         "ForgottenPassword": "¿Ha olvidado su contraseña?",
@@ -437,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Cambio de categoría",
+          "competitor_create": "Competidor creado",
           "firstname_change": "Cambio de nombre",
           "lastname_change": "Cambio de apellido",
           "bibNumber_change": "Cambio de dorsal",
@@ -872,10 +889,15 @@
           "CopyEventId": "¡Hop! El ID del evento ya está en su portapapeles, compártalo!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Visibilidad",
-          "Description": "Determina si el evento será público o privado. Los eventos públicos se muestran en la lista de la página principal de la aplicación, mientras que los eventos privados solo son visibles para su organizador."
+          "Title": "Publicación",
+          "Description": "Determina si el evento está publicado o permanece como borrador.",
+          "ActionTitle": "Estado de publicación",
+          "Published": "Publicado",
+          "Publish": "Publicar",
+          "Draft": "Borrador",
+          "Unpublished": "No publicado"
         },
         "Toast": {
           "UpdateSuccess": "¡El evento ahora está {{status}}!",
@@ -989,6 +1011,18 @@
         "Title": "Otras integraciones",
         "Description": "Conecta tu cuenta con servicios y herramientas adicionales. Con el tiempo aparecerán aquí nuevas integraciones."
       },
+      "EmailVerification": {
+        "Title": "Verificación de correo electrónico",
+        "Description": "Confirma la titularidad de tu dirección de correo electrónico.",
+        "Verified": "Tu dirección de correo electrónico está verificada.",
+        "VerifiedBadge": "Verificado",
+        "NotVerified": "Tu dirección de correo electrónico aún no está verificada.",
+        "ResendButton": "Reenviar correo de verificación",
+        "ResendCooldown": "Reenviar en {{seconds}} s",
+        "Resending": "Enviando...",
+        "ResendSuccess": "Correo de verificación enviado. Revisa tu bandeja de entrada.",
+        "ResendError": "No se pudo enviar el correo de verificación."
+      },
       "Security": {
         "PasswordDescription": "Aquí puedes cambiar la contraseña de tu cuenta. Te recomendamos usar una contraseña fuerte y única.",
         "CurrentPassword": "Contraseña actual",
@@ -1097,6 +1131,7 @@
       "SupportedFormats": "Formato soportados:",
       "Done": "Hecho",
       "OrDragAndDrop": "o arrastre y suelte",
+      "Processing": "Procesando...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Número máximo de archivos",
@@ -1173,6 +1208,11 @@
     "Generic": "Algo salió mal",
     "UpdatePasswordFailedTitle": "No se pudo actualizar la contraseña",
     "UpdateProfileFailedTitle": "No se pudo actualizar el perfil"
+  },
+  "Components": {
+    "EmailVerifiedBadge": {
+      "Tooltip": "Correo electrónico verificado"
+    }
   },
   "validation": {
     "passwordRequired": "La contraseña es obligatoria",

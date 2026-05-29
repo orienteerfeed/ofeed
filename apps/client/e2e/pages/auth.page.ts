@@ -53,6 +53,10 @@ export class AuthPage {
     return this.page.getByRole('link', { name: /sign up/i });
   }
 
+  getSignInButton() {
+    return this.page.getByRole('button', { name: /sign in/i });
+  }
+
   getSuccessCheckIcon() {
     return this.page.locator('svg.text-green-500, [class*="text-green"]').first();
   }

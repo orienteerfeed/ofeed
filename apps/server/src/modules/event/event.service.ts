@@ -3,6 +3,7 @@ import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma, type Event as PrismaEvent } from '../../generated/prisma/client.js';
 import type { Origin, ProtocolType, ResultStatus } from '../../generated/prisma/enums.js';
 import { WINNER_UPDATED, pubsub as defaultPubsub } from '../../lib/pubsub.js';
+import { isRelayDiscipline } from '../../utils/relay.js';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import { createShortCompetitorHash } from '../../utils/hashUtils.js';
@@ -1304,11 +1305,11 @@ export const deleteAllEventData = async (eventId: string) => {
 export const getEventCompetitorDetail = async (
   eventId: string,
   competitorId: string | number,
-  dbResponseEvent: Pick<PrismaEvent, 'relay'>,
+  dbResponseEvent: Pick<PrismaEvent, 'discipline'>,
 ) => {
   const competitorIdNumber = toIntegerId(competitorId);
   let competitorData;
-  if (!dbResponseEvent.relay) {
+  if (!isRelayDiscipline(dbResponseEvent.discipline)) {
     // Return data for an individual competition
     let dbIndividualResponse;
     try {

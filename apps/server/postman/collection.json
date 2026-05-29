@@ -2094,7 +2094,6 @@
                   "assertString(previewData.name, 'body.results.data.name');",
                   "assertOptionalString(previewData.organizer, 'body.results.data.organizer');",
                   "assertOptionalString(previewData.location, 'body.results.data.location');",
-                  "const relay = previewData.relay === true;",
                   "const payload = {",
                   "  sportId: Number(previewData.sportId || pm.environment.get('sportId') || 1),",
                   "  name: `${String(previewData.name)} - Postman test`,",
@@ -2105,8 +2104,7 @@
                   "  latitude: previewData.latitude ?? null,",
                   "  longitude: previewData.longitude ?? null,",
                   "  zeroTime: String(previewData.zeroTime || pm.collectionVariables.get('runtimeEventZeroTime')),",
-                  "  relay,",
-                  "  discipline: previewData.discipline || (relay ? 'RELAY' : 'OTHER'),",
+                  "  discipline: previewData.discipline || 'OTHER',",
                   "  hundredthPrecision: previewData.hundredthPrecision === true,",
                   "  published: previewData.published === true,",
                   "  ranking: previewData.ranking === true,",
@@ -2398,7 +2396,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"Unauthorized Event {{runId}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"Prague\",\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"relay\": false,\n  \"published\": false\n}",
+              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"Unauthorized Event {{runId}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"Prague\",\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"published\": false\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2529,7 +2527,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"Invalid Zero Time {{runId}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"Prague\",\n  \"zeroTime\": \"25:61:61\",\n  \"relay\": false,\n  \"published\": false\n}",
+              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"Invalid Zero Time {{runId}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club\",\n  \"location\": \"Prague\",\n  \"zeroTime\": \"25:61:61\",\n  \"published\": false\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3003,7 +3001,7 @@
                   "if (expected.latitude === null) { pm.expect(body.results.data.latitude).to.eql(null); } else { pm.expect(body.results.data.latitude).to.be.closeTo(Number(expected.latitude), 0.000001); }",
                   "if (expected.longitude === null) { pm.expect(body.results.data.longitude).to.eql(null); } else { pm.expect(body.results.data.longitude).to.be.closeTo(Number(expected.longitude), 0.000001); }",
                   "pm.expect(body.results.data.zeroTime).to.eql(expected.zeroTime);",
-                  "pm.expect(body.results.data.relay).to.eql(expected.relay);",
+                  "pm.expect(body.results.data.relay).to.eql(expected.discipline === 'RELAY' || expected.discipline === 'SPRINT_RELAY');",
                   "pm.expect(body.results.data.discipline).to.eql(expected.discipline);",
                   "pm.expect(body.results.data.hundredthPrecision).to.eql(expected.hundredthPrecision);",
                   "pm.expect(body.results.data.published).to.eql(expected.published);",
@@ -3172,7 +3170,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{updatedEventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club Updated\",\n  \"location\": \"{{updatedEventName}} HQ\",\n  \"latitude\": 50.0755381,\n  \"longitude\": 14.4378005,\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"relay\": false,\n  \"discipline\": \"MIDDLE\",\n  \"hundredthPrecision\": false,\n  \"published\": false,\n  \"ranking\": false,\n  \"startMode\": \"Mass\",\n  \"coefRanking\": 1.27,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"{{externalImportProvider}}\",\n  \"externalEventId\": \"{{externalImportEventId}}\"\n}",
+              "raw": "{\n  \"sportId\": {{sportId}},\n  \"name\": \"{{updatedEventName}}\",\n  \"date\": \"{{eventDate}}\",\n  \"timezone\": \"{{eventTimezone}}\",\n  \"organizer\": \"Postman Club Updated\",\n  \"location\": \"{{updatedEventName}} HQ\",\n  \"latitude\": 50.0755381,\n  \"longitude\": 14.4378005,\n  \"zeroTime\": \"{{runtimeEventZeroTime}}\",\n  \"discipline\": \"MIDDLE\",\n  \"hundredthPrecision\": false,\n  \"published\": false,\n  \"ranking\": false,\n  \"startMode\": \"Mass\",\n  \"coefRanking\": 1.27,\n  \"countryCode\": \"{{eventCountryCode}}\",\n  \"externalSource\": \"{{externalImportProvider}}\",\n  \"externalEventId\": \"{{externalImportEventId}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

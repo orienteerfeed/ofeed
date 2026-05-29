@@ -11,6 +11,7 @@ export const userSchema = z.object({
   organisation: z.string().nullable().optional(),
   password: z.string().optional(),
   active: z.boolean().optional(),
+  emailVerifiedAt: z.union([z.string(), z.date()]).nullable().optional(),
   createdAt: z.union([z.string(), z.date()]).optional(),
   updatedAt: z.union([z.string(), z.date()]).optional(),
 });

@@ -66,7 +66,6 @@ describe('czech-ranking-oris', () => {
         name: 'Ranking event',
         date: '2026-03-15',
         ranking: true,
-        relay: false,
         discipline: 'LONG',
       },
       {
@@ -74,7 +73,6 @@ describe('czech-ranking-oris', () => {
         name: 'Not ranked',
         date: '2026-03-16',
         ranking: false,
-        relay: false,
         discipline: 'LONG',
       },
     ]);

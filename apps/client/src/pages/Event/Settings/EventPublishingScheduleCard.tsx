@@ -160,7 +160,6 @@ export const EventPublishingScheduleCard: React.FC<
           discipline: eventData.discipline,
           ranking: eventData.ranking,
           coefRanking: eventData.coefRanking,
-          relay: eventData.relay,
           published: eventData.published,
           hundredthPrecision: eventData.hundredthPrecision ?? false,
           externalSource: eventData.externalSource ?? undefined,

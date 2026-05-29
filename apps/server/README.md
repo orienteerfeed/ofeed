@@ -6,7 +6,7 @@ checks, and Prometheus metrics.
 
 ## Stack
 
-- Node.js 24.14.1
+- Node.js 24.15.0
 - TypeScript ESM
 - Hono
 - GraphQL Yoga + Pothos
@@ -60,8 +60,10 @@ Important variables:
   it from the `MYSQL_*` variables.
 - `JWT_TOKEN_SECRET_KEY`: JWT signing secret. It must be set to a
   production-safe value outside local development.
-- `SENDGRID_API_KEY`: optional for local development; required when sending
-  email through SendGrid.
+- `RESEND_API_KEY`: optional for local development; required when sending email
+  through Resend.
+- `RESEND_FROM_EMAIL` / `RESEND_FROM_NAME`: sender identity for transactional
+  emails.
 
 Keep `apps/server/.env.example` in sync when adding or changing server
 configuration.

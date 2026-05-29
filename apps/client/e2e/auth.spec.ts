@@ -27,6 +27,17 @@ test.describe('Authentication', () => {
     await expect(auth.getForgotPasswordLink()).toBeVisible();
   });
 
+  test('sign in button enables after correcting an invalid email', async ({ page }) => {
+    const auth = new AuthPage(page);
+    await auth.gotoSignIn();
+
+    await auth.getEmailField().fill('k.');
+    await auth.getPasswordField().fill('password');
+    await auth.getEmailField().fill('user@example.com');
+
+    await expect(auth.getSignInButton()).toBeEnabled();
+  });
+
   test('sign up link is present', async ({ page }) => {
     const auth = new AuthPage(page);
     await auth.gotoSignIn();
