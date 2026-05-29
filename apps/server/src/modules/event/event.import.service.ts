@@ -1038,7 +1038,9 @@ export async function loadOrisEventCandidatesByDateRange(params: {
         name: candidate.name,
         date: candidate.date,
         ranking: candidate.ranking ?? false,
-        discipline: resolveImportedEventDiscipline('ORIS', candidate.disciplineRaw),
+        discipline:
+          resolveImportedEventDiscipline('ORIS', candidate.disciplineRaw) ??
+          (candidate.relay ? 'RELAY' : undefined),
       };
 
       const existing = deduplicated.get(comparableId);

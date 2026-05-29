@@ -123,6 +123,7 @@ export const EventRef = builder.prismaObject('Event', {
     latitude: t.exposeFloat('latitude', { nullable: true }),
     longitude: t.exposeFloat('longitude', { nullable: true }),
     relay: t.boolean({
+      select: { discipline: true },
       resolve: (event) => isRelayDiscipline(event.discipline),
     }),
     discipline: t.field({
