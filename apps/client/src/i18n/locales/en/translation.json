@@ -888,10 +888,15 @@
           "CopyEventId": "Hop! Event ID is now in your clipboard, share it away!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Visibility",
-          "Description": "Determines whether the event is public or private. Public events are displayed in the event list on the OFeed's main page, while private events are visible only to their organizer."
+          "Title": "Publishing",
+          "Description": "Determines whether the event is published or remains a draft.",
+          "ActionTitle": "Publishing status",
+          "Published": "Published",
+          "Publish": "Publish",
+          "Draft": "Draft",
+          "Unpublished": "Unpublished"
         },
         "Toast": {
           "UpdateSuccess": "Event is now {{status}}!",

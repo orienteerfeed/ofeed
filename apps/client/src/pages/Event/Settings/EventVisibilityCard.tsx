@@ -1,22 +1,15 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { TFunction } from 'i18next';
+import type { TFunction } from 'i18next';
 import { Loader2 } from 'lucide-react';
-import React, { useState } from 'react';
-import { ToggleSwitch, VisibilityBadge } from '../../../components/atoms';
+import { useEffect, useState } from 'react';
+import { ToggleSwitch } from '../../../components/atoms';
 import { toast } from '../../../utils';
 
-// GraphQL mutation to update published status
-const UPDATE_EVENT_VISIBILITY = gql`
-  mutation UpdateEventVisibility($eventId: String!, $published: Boolean!) {
-    updateEventVisibility(eventId: $eventId, published: $published) {
+const UPDATE_EVENT_PUBLISHING_STATUS = gql`
+  mutation UpdateEventPublishingStatus($eventId: String!, $published: Boolean!) {
+    updateEventPublishingStatus: updateEventVisibility(eventId: $eventId, published: $published) {
       message
       event {
         id
@@ -26,124 +19,128 @@ const UPDATE_EVENT_VISIBILITY = gql`
   }
 `;
 
-interface UpdateEventVisibilityResponse {
-  updateEventVisibility: {
-    message: string;
+type UpdateEventPublishingStatusResponse = {
+  updateEventPublishingStatus: {
     event: {
       id: string;
       published: boolean;
     };
   };
-}
+};
 
-interface UpdateEventVisibilityVariables {
+type UpdateEventPublishingStatusVariables = {
   eventId: string;
   published: boolean;
-}
+};
 
-interface EventVisibilityCardProps {
+type EventVisibilityCardProps = {
   t: TFunction;
   eventId: string;
   isPublished: boolean;
-}
+  onUpdated?: () => Promise<void> | void;
+};
 
-export const EventVisibilityCard: React.FC<EventVisibilityCardProps> = ({
+export const EventVisibilityCard = ({
   t,
   eventId,
   isPublished,
-}) => {
-  const [published, setPublished] = useState(isPublished || false);
+  onUpdated,
+}: EventVisibilityCardProps) => {
+  const [published, setPublished] = useState(isPublished);
 
-  const [updateEventVisibility, { loading }] = useMutation<
-    UpdateEventVisibilityResponse,
-    UpdateEventVisibilityVariables
-  >(UPDATE_EVENT_VISIBILITY, {
+  useEffect(() => {
+    setPublished(isPublished);
+  }, [isPublished]);
+
+  const [updateEventPublishingStatus, { loading }] = useMutation<
+    UpdateEventPublishingStatusResponse,
+    UpdateEventPublishingStatusVariables
+  >(UPDATE_EVENT_PUBLISHING_STATUS, {
     update(cache, { data }) {
-      if (data?.updateEventVisibility?.event) {
-        const eventId = data.updateEventVisibility.event.id;
-
-        // Update the cache manually if needed
-        cache.modify({
-          id: `Event:${eventId}`, // Explicit ID format
-          fields: {
-            published() {
-              return data.updateEventVisibility.event.published;
-            },
-          },
-        });
+      const updatedEvent = data?.updateEventPublishingStatus.event;
+      if (!updatedEvent) {
+        return;
       }
+
+      const cacheId = cache.identify({ __typename: 'Event', id: updatedEvent.id });
+      if (!cacheId) {
+        return;
+      }
+
+      cache.modify({
+        id: cacheId,
+        fields: {
+          published() {
+            return updatedEvent.published;
+          },
+        },
+      });
     },
   });
 
-  const handleToggleEventVisibility = async () => {
+  const handleToggleEventPublishing = async (nextPublished: boolean) => {
     try {
-      const { data } = await updateEventVisibility({
-        variables: { eventId: eventId, published: !published },
+      const { data } = await updateEventPublishingStatus({
+        variables: { eventId, published: nextPublished },
       });
 
-      if (data?.updateEventVisibility) {
-        setPublished(!published);
+      const updatedPublished = data?.updateEventPublishingStatus.event.published;
+      if (typeof updatedPublished !== 'boolean') {
         toast({
-          title: t('Operations.Success', { ns: 'common' }),
-          description: t('Pages.Event.Visibility.Toast.UpdateSuccess', {
-            status: !published
-              ? t('Public', { ns: 'common' })
-              : t('Private', { ns: 'common' }),
-          }),
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: t('Pages.Event.Visibility.Toast.UpdateFail'),
+          title: t('Pages.Event.PublishingStatus.Toast.UpdateFail'),
           variant: 'error',
         });
+        return;
       }
-    } catch (error) {
-      console.error('Error updating event visibility:', error);
+
+      setPublished(updatedPublished);
+      await onUpdated?.();
       toast({
-        title: t('Pages.Event.Visibility.Toast.UpdateFail'),
-        description:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        title: t('Operations.Success', { ns: 'common' }),
+        description: t('Pages.Event.PublishingStatus.Toast.UpdateSuccess', {
+          status: updatedPublished
+            ? t('Pages.Event.PublishingStatus.Card.Publish')
+            : t('Pages.Event.PublishingStatus.Card.Draft'),
+        }),
+        variant: 'default',
+      });
+    } catch (error) {
+      toast({
+        title: t('Pages.Event.PublishingStatus.Toast.UpdateFail'),
+        ...(error instanceof Error ? { description: error.message } : {}),
         variant: 'error',
       });
     }
   };
 
   return (
-    <Card className="w-full h-fit">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">
-          {t('Pages.Event.Visibility.Card.Title')}
-        </CardTitle>
-        <CardDescription>
-          {t('Pages.Event.Visibility.Card.Description')}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <ToggleSwitch
-                id="event-visibility"
-                checked={published}
-                onCheckedChange={handleToggleEventVisibility}
-                disabled={loading}
-              />
-            </div>
-
-            {!loading ? (
-              <VisibilityBadge isPublic={published} />
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">
-                  {t('Loading', { ns: 'common' })}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
+    <Card className="flex w-full items-center justify-between gap-3 px-3 py-2 sm:w-auto">
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium leading-none text-muted-foreground">
+          {t('Pages.Event.PublishingStatus.Card.ActionTitle')}
+        </p>
+        <p
+          className={
+            published
+              ? 'mt-1 text-sm font-semibold leading-none'
+              : 'mt-1 text-sm font-semibold leading-none text-orange-700'
+          }
+        >
+          {published
+            ? t('Pages.Event.PublishingStatus.Card.Published')
+            : t('Pages.Event.PublishingStatus.Card.Unpublished')}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+        <ToggleSwitch
+          id="event-publishing-status"
+          checked={published}
+          onCheckedChange={handleToggleEventPublishing}
+          disabled={loading}
+          aria-label={t('Pages.Event.PublishingStatus.Card.ActionTitle')}
+        />
+      </div>
     </Card>
   );
 };

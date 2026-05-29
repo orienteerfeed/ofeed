@@ -889,10 +889,15 @@
           "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Viditelnost",
-          "Description": "Určuje, zda bude akce veřejná nebo privátní. Veřejné akce se zobrazují v seznamu na hlavní stránce OFeedu, zatímco privátní akce jsou viditelné pouze pro jejich organizátora."
+          "Title": "Zveřejnění",
+          "Description": "Určuje, zda je akce zveřejněná, nebo zůstává jako draft.",
+          "ActionTitle": "Viditelnost",
+          "Published": "Zveřejněno",
+          "Publish": "Zveřejnit",
+          "Draft": "Draft",
+          "Unpublished": "Neveřejné"
         },
         "Toast": {
           "UpdateSuccess": "Akce je nyní {{status}}!",

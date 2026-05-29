@@ -8,6 +8,7 @@ import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { normalizeUtcTimeString } from '../../utils/time.js';
 
 import { getDecryptedEventPassword } from './event.service.js';
+import { isRelayDiscipline } from '../../utils/relay.js';
 import { EVENT_OPENAPI } from './event.openapi.js';
 import { getEventStatusSummary, type EventStatusSummary } from './event.status.service.js';
 
@@ -121,7 +122,10 @@ export const EventRef = builder.prismaObject('Event', {
     location: t.exposeString('location', { nullable: true }),
     latitude: t.exposeFloat('latitude', { nullable: true }),
     longitude: t.exposeFloat('longitude', { nullable: true }),
-    relay: t.exposeBoolean('relay'),
+    relay: t.boolean({
+      select: { discipline: true },
+      resolve: (event) => isRelayDiscipline(event.discipline),
+    }),
     discipline: t.field({
       type: EventDisciplineRef,
       resolve: (event) => event.discipline,

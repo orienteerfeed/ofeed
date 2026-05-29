@@ -513,6 +513,19 @@
           }
         }
       },
+      "PublishingStatus": {
+        "Card": {
+          "ActionTitle": "Veröffentlichungsstatus",
+          "Published": "Veröffentlicht",
+          "Publish": "Veröffentlichen",
+          "Draft": "Entwurf",
+          "Unpublished": "Nicht veröffentlicht"
+        },
+        "Toast": {
+          "UpdateSuccess": "Der Veröffentlichungsstatus wurde auf {{status}} gesetzt.",
+          "UpdateFail": "Der Veröffentlichungsstatus des Events konnte nicht aktualisiert werden."
+        }
+      },
       "Detail": {
         "OpenBoard": "Board"
       },

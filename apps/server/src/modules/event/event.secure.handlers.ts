@@ -4,6 +4,7 @@ import type { Context, Handler } from 'hono';
 import sharp from 'sharp';
 
 import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
+import { isRelayDiscipline } from '../../utils/relay.js';
 import {
   parseJsonObjectSafe,
   parseMultipartPayload,
@@ -698,9 +699,6 @@ export function registerSecureEventRoutes(router) {
    *                type: string
    *                description: Optional start mode (e.g. Individual, Mass, etc.).
    *                example: Individual
-   *              relay:
-   *                type: boolean
-   *                description: Whether the event is a relay event.
    *              hundredthPrecision:
    *                type: boolean
    *                description: "Indicates whether the event timing should be recorded with hundredth-of-a-second precision."
@@ -741,7 +739,6 @@ export function registerSecureEventRoutes(router) {
         hundredthPrecision,
         published,
         sportId,
-        relay,
         externalSource,
         externalEventId,
         entriesOpenAt,
@@ -788,7 +785,6 @@ export function registerSecureEventRoutes(router) {
             hundredthPrecision,
             published,
             sportId,
-            relay,
             externalSource,
             externalEventId,
             entriesOpenAt: parsedEntriesOpenAt,
@@ -820,6 +816,7 @@ export function registerSecureEventRoutes(router) {
             {
               data: {
                 ...createdEvent,
+                relay: isRelayDiscipline(createdEvent.discipline),
                 date: serializeEventDateForResponse(createdEvent.date),
                 zeroTime: normalizeUtcTimeString(createdEvent.date),
               },
@@ -1093,9 +1090,6 @@ export function registerSecureEventRoutes(router) {
    *                type: string
    *                description: Optional start mode (e.g. Individual, Mass, etc.).
    *                example: Individual
-   *              relay:
-   *                type: boolean
-   *                description: Whether the event is a relay event.
    *              hundredthPrecision:
    *                type: boolean
    *                description: "Indicates whether the event timing should be recorded with hundredth-of-a-second precision."
@@ -1141,7 +1135,6 @@ export function registerSecureEventRoutes(router) {
           hundredthPrecision,
           published,
           sportId,
-          relay,
           externalSource,
           externalEventId,
           entriesOpenAt,
@@ -1209,7 +1202,6 @@ export function registerSecureEventRoutes(router) {
               hundredthPrecision,
               published,
               sportId,
-              relay,
               externalSource,
               externalEventId,
               entriesOpenAt: parsedEntriesOpenAt,
@@ -1245,6 +1237,7 @@ export function registerSecureEventRoutes(router) {
               {
                 data: {
                   ...updatedEvent,
+                  relay: isRelayDiscipline(updatedEvent.discipline),
                   date: serializeEventDateForResponse(updatedEvent.date),
                   zeroTime: normalizeUtcTimeString(updatedEvent.date),
                 },

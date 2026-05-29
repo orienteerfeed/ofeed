@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { isRelayDiscipline } from '../../utils/relay.js';
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { AuthenticationError, ValidationError } from '../../exceptions/index.js';
@@ -595,7 +596,7 @@ export async function listMyEvents(userId: number | string) {
       organizer: true,
       date: true,
       location: true,
-      relay: true,
+      discipline: true,
       published: true,
       timezone: true,
       entriesOpenAt: true,
@@ -617,7 +618,7 @@ export async function listMyEvents(userId: number | string) {
         organizer: event.organizer,
         date: formatUtcDateTimeRfc3339(event.date) ?? event.date,
         location: event.location,
-        relay: event.relay,
+        relay: isRelayDiscipline(event.discipline),
         published: event.published,
         statusSummary: {
           primary: statusSummary.primary,

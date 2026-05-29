@@ -355,7 +355,6 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
       discipline,
       ranking,
       coefRanking,
-      relay,
       published,
       hundredthPrecision,
     } = initialData;
@@ -411,7 +410,6 @@ export const EventExternalLinkCard: React.FC<EventExternalLinkCardProps> = ({
           discipline,
           ranking: ranking ?? false,
           coefRanking,
-          relay: relay ?? false,
           published: published ?? false,
           hundredthPrecision: hundredthPrecision ?? false,
           externalSource: isUnlinkRequested ? null : currentExternalSource,
