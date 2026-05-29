@@ -178,6 +178,8 @@ export const DragDropContainer = ({
     e.preventDefault();
     e.stopPropagation();
     setDragging(false);
+    if (isUploading) return;
+
     if (e.dataTransfer?.files?.length) {
       void handleFiles(e.dataTransfer.files);
     }
@@ -186,6 +188,8 @@ export const DragDropContainer = ({
   const onDragOver: React.DragEventHandler<HTMLDivElement> = e => {
     e.preventDefault();
     e.stopPropagation();
+    if (isUploading) return;
+
     setDragging(true);
   };
 
@@ -196,6 +200,11 @@ export const DragDropContainer = ({
   };
 
   const onInputChange: React.ChangeEventHandler<HTMLInputElement> = e => {
+    if (isUploading) {
+      e.currentTarget.value = '';
+      return;
+    }
+
     if (e.currentTarget.files?.length) {
       void handleFiles(e.currentTarget.files);
     }
@@ -205,9 +214,9 @@ export const DragDropContainer = ({
     <>
       {/* Drop zone */}
       <div
-        onDrop={isUploading ? undefined : onDrop}
-        onDragOver={isUploading ? undefined : onDragOver}
-        onDragLeave={isUploading ? undefined : onDragLeave}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
         className={cn(
           'mt-4 flex items-center justify-center rounded-md border-2 py-5 text-center',
           isUploading
@@ -265,6 +274,7 @@ export const DragDropContainer = ({
           multiple
           accept={accept}
           onChange={onInputChange}
+          disabled={isUploading}
         />
       </div>
 
