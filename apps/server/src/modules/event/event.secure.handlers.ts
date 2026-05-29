@@ -4,6 +4,7 @@ import type { Context, Handler } from 'hono';
 import sharp from 'sharp';
 
 import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
+import { isRelayDiscipline } from '../../utils/relay.js';
 import {
   parseJsonObjectSafe,
   parseMultipartPayload,
@@ -698,9 +699,6 @@ export function registerSecureEventRoutes(router) {
    *                type: string
    *                description: Optional start mode (e.g. Individual, Mass, etc.).
    *                example: Individual
-   *              relay:
-   *                type: boolean
-   *                description: Whether the event is a relay event.
    *              hundredthPrecision:
    *                type: boolean
    *                description: "Indicates whether the event timing should be recorded with hundredth-of-a-second precision."
@@ -741,7 +739,6 @@ export function registerSecureEventRoutes(router) {
         hundredthPrecision,
         published,
         sportId,
-        relay,
         externalSource,
         externalEventId,
         entriesOpenAt,
@@ -788,7 +785,6 @@ export function registerSecureEventRoutes(router) {
             hundredthPrecision,
             published,
             sportId,
-            relay,
             externalSource,
             externalEventId,
             entriesOpenAt: parsedEntriesOpenAt,
@@ -820,6 +816,7 @@ export function registerSecureEventRoutes(router) {
             {
               data: {
                 ...createdEvent,
+                relay: isRelayDiscipline(createdEvent.discipline),
                 date: serializeEventDateForResponse(createdEvent.date),
                 zeroTime: normalizeUtcTimeString(createdEvent.date),
               },
@@ -1093,9 +1090,6 @@ export function registerSecureEventRoutes(router) {
    *                type: string
    *                description: Optional start mode (e.g. Individual, Mass, etc.).
    *                example: Individual
-   *              relay:
-   *                type: boolean
-   *                description: Whether the event is a relay event.
    *              hundredthPrecision:
    *                type: boolean
    *                description: "Indicates whether the event timing should be recorded with hundredth-of-a-second precision."
@@ -1141,7 +1135,6 @@ export function registerSecureEventRoutes(router) {
           hundredthPrecision,
           published,
           sportId,
-          relay,
           externalSource,
           externalEventId,
           entriesOpenAt,
@@ -1209,7 +1202,6 @@ export function registerSecureEventRoutes(router) {
               hundredthPrecision,
               published,
               sportId,
-              relay,
               externalSource,
               externalEventId,
               entriesOpenAt: parsedEntriesOpenAt,
@@ -1245,6 +1237,7 @@ export function registerSecureEventRoutes(router) {
               {
                 data: {
                   ...updatedEvent,
+                  relay: isRelayDiscipline(updatedEvent.discipline),
                   date: serializeEventDateForResponse(updatedEvent.date),
                   zeroTime: normalizeUtcTimeString(updatedEvent.date),
                 },
@@ -2653,10 +2646,68 @@ export function registerSecureEventRoutes(router) {
           return res.status(500).json(errorResponse(`An error occurred: ` + err.message));
         }
 
+        const toClassId = (value: string | null): number | undefined => {
+          if (!value) {
+            return undefined;
+          }
+
+          const id = Number(value);
+          return Number.isInteger(id) && id > 0 ? id : undefined;
+        };
+
+        const classChangeIds = [
+          ...new Set<number>(
+            dbProtocolResponse
+              .filter((entry) => entry.type === 'class_change')
+              .flatMap((entry) => {
+                const ids: number[] = [];
+                const prev = toClassId(entry.previousValue);
+                const next = toClassId(entry.newValue);
+
+                if (prev) ids.push(prev);
+                if (next) ids.push(next);
+
+                return ids;
+              }),
+          ),
+        ];
+
+        const classNameMap = new Map<number, string>();
+        if (classChangeIds.length > 0) {
+          try {
+            const classes = await prisma.class.findMany({
+              where: { id: { in: classChangeIds } },
+              select: { id: true, name: true },
+            });
+            for (const cls of classes) {
+              classNameMap.set(cls.id, cls.name);
+            }
+          } catch (err) {
+            logEndpoint(req.c, 'warn', 'Failed to resolve class names for changelog', {
+              eventId,
+              ...getErrorDetails(err),
+            });
+          }
+        }
+
+        const resolvedProtocolResponse =
+          classNameMap.size > 0
+            ? dbProtocolResponse.map((entry) => {
+                if (entry.type !== 'class_change') return entry;
+                const prevId = toClassId(entry.previousValue);
+                const nextId = toClassId(entry.newValue);
+                return {
+                  ...entry,
+                  previousValueLabel: prevId ? classNameMap.get(prevId) : undefined,
+                  newValueLabel: nextId ? classNameMap.get(nextId) : undefined,
+                };
+              })
+            : dbProtocolResponse;
+
         if (shouldGroup) {
           const grouped = {};
 
-          for (const entry of dbProtocolResponse) {
+          for (const entry of resolvedProtocolResponse) {
             const { competitorId } = entry;
 
             if (!grouped[competitorId]) {
@@ -2673,6 +2724,8 @@ export function registerSecureEventRoutes(router) {
               type: entry.type,
               previousValue: entry.previousValue,
               newValue: entry.newValue,
+              previousValueLabel: entry.previousValueLabel,
+              newValueLabel: entry.newValueLabel,
               author: entry.author,
               createdAt: entry.createdAt,
               processed: entry.processed,
@@ -2690,7 +2743,7 @@ export function registerSecureEventRoutes(router) {
 
         return res
           .status(200)
-          .json(successResponse('OK', { data: dbProtocolResponse }, res.statusCode));
+          .json(successResponse('OK', { data: resolvedProtocolResponse }, res.statusCode));
       },
     ),
   );

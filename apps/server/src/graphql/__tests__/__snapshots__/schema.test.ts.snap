@@ -282,6 +282,7 @@ type Mutation {
   deleteUserCard(id: Int!): Boolean!
   markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
   requestPasswordReset(email: String!): ResetResponse!
+  resendEmailVerification: ResetResponse!
   resetPassword(newPassword: String!, token: String!): AuthPayload!
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
@@ -289,6 +290,7 @@ type Mutation {
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
+  verifyEmail(token: String!): AuthPayload!
 }
 
 type Organisation {
@@ -360,8 +362,8 @@ type ResetResponse {
 
 type ResponseMessage {
   message: String!
-  token: String!
-  user: User!
+  token: String
+  user: User
 }
 
 type Split {
@@ -522,6 +524,7 @@ type User {
   active: Boolean
   createdAt: DateTime!
   email: email_String_NotNull_maxLength_255_format_email!
+  emailVerifiedAt: DateTime
   emergencyContact: emergencyContact_String_maxLength_255
   firstname: firstname_String_NotNull_maxLength_255!
   id: Int!

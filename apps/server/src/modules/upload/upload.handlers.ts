@@ -1,5 +1,6 @@
 import { z } from '@hono/zod-openapi';
 import { DOMParser } from '@xmldom/xmldom';
+import { isRelayDiscipline } from '../../utils/relay.js';
 import { Parser } from 'xml2js';
 import { validateXML } from 'xmllint-wasm';
 import zlib from 'zlib';
@@ -544,7 +545,7 @@ async function processClassStarts(
   eventId: string,
   classStarts: Array<Record<string, any>>,
   dbClassLists: ClassListEntry[],
-  dbResponseEvent: { relay?: boolean; timezone?: string | null },
+  dbResponseEvent: { discipline?: string | null; timezone?: string | null },
   authorId: number,
 ): Promise<number[]> {
   const updatedClasses = new Set<number>();
@@ -580,7 +581,7 @@ async function processClassStarts(
       const classId = await upsertClass(eventId, classDetails, dbClassLists, additionalData);
       const competitorCache = await loadCompetitorCache(classId);
 
-      if (!dbResponseEvent.relay) {
+      if (!isRelayDiscipline(dbResponseEvent.discipline)) {
         // Process Individual Starts
         if (!classStart.PersonStart || classStart.PersonStart.length === 0) return;
         await forEachWithConcurrency(
@@ -675,7 +676,7 @@ async function processClassResults(
   eventId: string,
   classResults: Array<Record<string, any>>,
   dbClassLists: ClassListEntry[],
-  dbResponseEvent: { relay?: boolean; ranking?: boolean; timezone?: string | null },
+  dbResponseEvent: { discipline?: string | null; ranking?: boolean; timezone?: string | null },
   authorId: number,
 ): Promise<number[]> {
   const updatedClasses = new Set<number>(); // Unique class IDs that had changes
@@ -692,7 +693,7 @@ async function processClassResults(
       const existingCompetitorIds = [...competitorCache.values()].map((c) => c.id);
       const splitCache = await loadSplitCache(existingCompetitorIds);
 
-      if (!dbResponseEvent.relay) {
+      if (!isRelayDiscipline(dbResponseEvent.discipline)) {
         // Process Individual Results
         if (!classResult.PersonResult || classResult.PersonResult.length === 0) return;
         await forEachWithConcurrency(
@@ -881,7 +882,7 @@ async function handleIofXmlUpload(
   let authorId: number;
   try {
     const ownership = await ensureEventOwnerOrAdmin(prisma, c.get('authContext'), eventId, {
-      select: { relay: true, ranking: true, timezone: true },
+      select: { discipline: true, ranking: true, timezone: true },
       eventNotFoundStatus: 404,
       eventNotFoundMessage: 'Event not found',
       forbiddenStatus: 403,
