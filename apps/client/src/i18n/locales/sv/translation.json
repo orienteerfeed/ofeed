@@ -888,10 +888,15 @@
           "CopyEventId": "Tävlings-id finns nu i urklipp – dela det gärna!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Synlighet",
-          "Description": "Anger om evenemanget är offentligt eller privat. Offentliga evenemang visas i tävlingslistan på OFeeds startsida, medan privata evenemang endast är synliga för arrangören."
+          "Title": "Publicering",
+          "Description": "Anger om evenemanget är publicerat eller ligger kvar som utkast.",
+          "ActionTitle": "Publiceringsstatus",
+          "Published": "Publicerad",
+          "Publish": "Publicera",
+          "Draft": "Utkast",
+          "Unpublished": "Opublicerad"
         },
         "Toast": {
           "UpdateSuccess": "Tävlingen är nu {{status}}!",

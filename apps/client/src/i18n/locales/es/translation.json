@@ -888,10 +888,15 @@
           "CopyEventId": "¡Hop! El ID del evento ya está en su portapapeles, compártalo!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Visibilidad",
-          "Description": "Determina si el evento será público o privado. Los eventos públicos se muestran en la lista de la página principal de la aplicación, mientras que los eventos privados solo son visibles para su organizador."
+          "Title": "Publicación",
+          "Description": "Determina si el evento está publicado o permanece como borrador.",
+          "ActionTitle": "Estado de publicación",
+          "Published": "Publicado",
+          "Publish": "Publicar",
+          "Draft": "Borrador",
+          "Unpublished": "No publicado"
         },
         "Toast": {
           "UpdateSuccess": "¡El evento ahora está {{status}}!",

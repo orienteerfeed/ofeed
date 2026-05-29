@@ -30,6 +30,21 @@
         "ResendSuccess": "E-mail de vérification envoyé. Vérifiez votre boîte de réception.",
         "ResendError": "Impossible d'envoyer l'e-mail de vérification."
       }
+    },
+    "Event": {
+      "PublishingStatus": {
+        "Card": {
+          "ActionTitle": "Statut de publication",
+          "Published": "Publié",
+          "Publish": "Publier",
+          "Draft": "Brouillon",
+          "Unpublished": "Non publié"
+        },
+        "Toast": {
+          "UpdateSuccess": "Le statut de publication est maintenant {{status}}.",
+          "UpdateFail": "Impossible de mettre à jour le statut de publication de l'événement."
+        }
+      }
     }
   },
   "Components": {

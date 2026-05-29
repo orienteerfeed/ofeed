@@ -19,6 +19,7 @@ import { EventIntegrationsCard } from './EventIntegrationsCard';
 import { EventLinkCard } from './EventLinkCard';
 import { EventPasswordCard } from './EventPasswordCard';
 import { EventPublishingScheduleCard } from './EventPublishingScheduleCard';
+import { EventVisibilityCard } from './EventVisibilityCard';
 import { TroubleShootingCard } from './TroubleShootingCard';
 
 interface EventData {
@@ -176,7 +177,19 @@ export const EventSettingsPage = () => {
     <MainPageLayout t={t}>
       <div className="container mx-auto px-4 py-6">
         <div className="grid items-start gap-8">
-          <BackLink to={`/events/${eventId}`} />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <BackLink to={`/events/${eventId}`} />
+            <div className="sm:ml-auto">
+              <EventVisibilityCard
+                t={t}
+                eventId={eventId}
+                isPublished={data.event.published}
+                onUpdated={async () => {
+                  await refetch();
+                }}
+              />
+            </div>
+          </div>
 
           <DragDropFile eventId={eventId} />
 
