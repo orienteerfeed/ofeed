@@ -804,7 +804,7 @@
       "Link": {
         "Card": {
           "Title": "Länk till tävlingen",
-          "Description": "Dela en länk till ett evenemang – du kan kopiera, dela eller skriva ut QR-koden för enkel åtkomst till live-resultat.",
+          "Description": "Dela en evenemangslänk med dina åskådare du kan kopiera, dela eller skriva ut QR-koden för enkel åtkomst till live-resultat.",
           "Slug": {
             "Label": "Länkslug",
             "Placeholder": "sm-sprint-{{year}}",
