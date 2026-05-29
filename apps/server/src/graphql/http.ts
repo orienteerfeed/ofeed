@@ -20,14 +20,15 @@ export const yoga = createYoga<{
   context: async ({ request, requestId }): Promise<GraphQLContext> =>
     createGraphQLContextFromRequest(request, requestId),
   maskedErrors: {
-    maskError(error: GraphQLError, message: string, isDev?: boolean) {
-      if (isAuthzError(error.originalError)) {
-        const authzErr = error.originalError;
+    maskError(error: unknown, message: string, isDev?: boolean) {
+      const graphqlError = error as GraphQLError;
+      if (isAuthzError(graphqlError.originalError)) {
+        const authzErr = graphqlError.originalError;
         return new GraphQLError(authzErr.message, {
-          nodes: error.nodes,
-          source: error.source,
-          positions: error.positions,
-          path: error.path,
+          nodes: graphqlError.nodes,
+          source: graphqlError.source,
+          positions: graphqlError.positions,
+          path: graphqlError.path,
           extensions: {
             code: authzStatusToCode(authzErr.statusCode),
             http: { status: authzErr.statusCode },

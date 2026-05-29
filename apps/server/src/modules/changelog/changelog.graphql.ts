@@ -147,7 +147,7 @@ builder.mutationFields((t) => ({
           }),
         );
       } catch (err) {
-        rethrowAuthzOrError(err, 'Failed to mark changelog entry as processed');
+        return rethrowAuthzOrError(err, 'Failed to mark changelog entry as processed');
       }
     },
   }),

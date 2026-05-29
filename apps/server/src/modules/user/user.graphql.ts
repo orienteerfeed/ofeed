@@ -178,7 +178,7 @@ builder.queryFields((t) => ({
       try {
         return await requireUser(findCurrentUser(context.prisma, context.auth, query));
       } catch (err) {
-        rethrowAuthzOrError(err, 'Failed to fetch current user');
+        return rethrowAuthzOrError(err, 'Failed to fetch current user');
       }
     },
   }),
@@ -199,7 +199,7 @@ builder.queryFields((t) => ({
       try {
         return await findCurrentUserCards(context.prisma, context.auth, query);
       } catch (err) {
-        rethrowAuthzOrError(err, 'Failed to fetch current user cards');
+        return rethrowAuthzOrError(err, 'Failed to fetch current user cards');
       }
     },
   }),

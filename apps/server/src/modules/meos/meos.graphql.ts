@@ -44,7 +44,7 @@ builder.mutationFields((t) => ({
           data: { eventId: args.eventId as string },
         });
       } catch (err) {
-        rethrowAuthzOrError(err, 'Failed to create MEOS event binding');
+        return rethrowAuthzOrError(err, 'Failed to create MEOS event binding');
       }
     },
   }),
@@ -64,7 +64,7 @@ builder.mutationFields((t) => ({
         await prisma.eventMeosBinding.delete({ where: { id: args.id as number } });
         return true;
       } catch (err) {
-        rethrowAuthzOrError(err, 'Failed to delete MEOS event binding');
+        return rethrowAuthzOrError(err, 'Failed to delete MEOS event binding');
       }
     },
   }),
