@@ -706,7 +706,8 @@
     "DragDrop": {
       "ClickToUpload": "Klicken sie hier für upload",
       "Delete": "Löschen",
-      "OrdDragAndDrop": "oder drag and drop"
+      "OrdDragAndDrop": "oder drag and drop",
+      "Processing": "Wird verarbeitet..."
     }
   },
   "Errors": {

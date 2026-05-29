@@ -1142,6 +1142,7 @@
       "SupportedFormats": "Format som stöds:",
       "Done": "Klart",
       "OrDragAndDrop": "eller drag och släpp",
+      "Processing": "Bearbetar...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximalt antal filer",

@@ -1131,6 +1131,7 @@
       "SupportedFormats": "Supported format:",
       "Done": "Done",
       "OrDragAndDrop": "or drag and drop",
+      "Processing": "Processing...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximum Files",
