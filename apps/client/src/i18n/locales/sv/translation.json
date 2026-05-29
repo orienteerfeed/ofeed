@@ -1124,7 +1124,11 @@
     }
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Begäran om lösenordsåterställning misslyckades",
     "Generic": "Något gick fel",
+    "ResetPasswordFailedTitle": "Lösenordsåterställningen misslyckades",
+    "SignInFailedTitle": "Inloggningen misslyckades",
+    "SignUpFailedTitle": "Registreringen misslyckades",
     "UpdatePasswordFailedTitle": "Det gick inte att uppdatera lösenordet",
     "UpdateProfileFailedTitle": "Det gick inte att uppdatera profilen"
   },

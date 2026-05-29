@@ -1,6 +1,7 @@
 import type { outputShapeKey } from '@pothos/core';
 
 import { builder } from '../../graphql/builder.js';
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { EventRef } from '../event/event.graphql-types.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 
@@ -173,18 +174,34 @@ const ChangeCurrentUserPasswordInputRef = builder.inputType('ChangeCurrentUserPa
 builder.queryFields((t) => ({
   currentUser: t.prismaField({
     type: UserRef,
-    resolve: (query, _root, _args, context) =>
-      requireUser(findCurrentUser(context.prisma, context.auth, query)),
+    resolve: async (query, _root, _args, context) => {
+      try {
+        return await requireUser(findCurrentUser(context.prisma, context.auth, query));
+      } catch (err) {
+        rethrowAuthzOrError(err, 'Failed to fetch current user');
+      }
+    },
   }),
   myEvents: t.prismaField({
     type: [EventRef],
     nullable: { list: true, items: false },
-    resolve: (query, _root, _args, context) => findMyEvents(context.prisma, context.auth, query),
+    resolve: async (query, _root, _args, context) => {
+      try {
+        return await findMyEvents(context.prisma, context.auth, query);
+      } catch (err) {
+        rethrowAuthzOrError(err, 'Failed to fetch my events');
+      }
+    },
   }),
   currentUserCards: t.prismaField({
     type: [UserCardRef],
-    resolve: (query, _root, _args, context) =>
-      findCurrentUserCards(context.prisma, context.auth, query),
+    resolve: async (query, _root, _args, context) => {
+      try {
+        return await findCurrentUserCards(context.prisma, context.auth, query);
+      } catch (err) {
+        rethrowAuthzOrError(err, 'Failed to fetch current user cards');
+      }
+    },
   }),
 }));
 
@@ -215,7 +232,10 @@ builder.mutationFields((t) => ({
   }),
   resendEmailVerification: t.field({
     type: ResetResponseRef,
-    resolve: (_root, _args, context) => resendUserEmailVerification(context.auth),
+    resolve: (_root, _args, context) =>
+      resendUserEmailVerification(context.auth).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to resend email verification'),
+      ),
   }),
   updateCurrentUser: t.field({
     type: UserRef,
@@ -227,7 +247,7 @@ builder.mutationFields((t) => ({
         context.prisma,
         context.auth,
         updateCurrentUserInputSchema.parse(args.input),
-      ),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update current user')),
   }),
   createUserCard: t.field({
     type: UserCardRef,
@@ -239,7 +259,7 @@ builder.mutationFields((t) => ({
         context.prisma,
         context.auth,
         createUserCardInputSchema.parse(args.input),
-      ),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to create user card')),
   }),
   updateUserCard: t.field({
     type: UserCardRef,
@@ -251,14 +271,16 @@ builder.mutationFields((t) => ({
         context.prisma,
         context.auth,
         updateUserCardInputSchema.parse(args.input),
-      ),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update user card')),
   }),
   deleteUserCard: t.boolean({
     args: {
       id: t.arg.int({ required: true }),
     },
     resolve: (_root, args, context) =>
-      deleteAuthenticatedUserCard(context.prisma, context.auth, args.id),
+      deleteAuthenticatedUserCard(context.prisma, context.auth, args.id).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to delete user card'),
+      ),
   }),
   setDefaultUserCard: t.field({
     type: UserCardRef,
@@ -266,7 +288,9 @@ builder.mutationFields((t) => ({
       id: t.arg.int({ required: true }),
     },
     resolve: (_root, args, context) =>
-      setDefaultAuthenticatedUserCard(context.prisma, context.auth, args.id),
+      setDefaultAuthenticatedUserCard(context.prisma, context.auth, args.id).catch(
+        (err: unknown) => rethrowAuthzOrError(err, 'Failed to set default user card'),
+      ),
   }),
   requestPasswordReset: t.field({
     type: ResetResponseRef,
@@ -293,6 +317,8 @@ builder.mutationFields((t) => ({
       changeCurrentUserPassword(
         context.auth,
         changeCurrentUserPasswordInputSchema.parse(args.input),
+      ).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to change current user password'),
       ),
   }),
 }));

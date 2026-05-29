@@ -24,6 +24,10 @@ export const yoga = createYoga<{
       if (isAuthzError(error.originalError)) {
         const authzErr = error.originalError;
         return new GraphQLError(authzErr.message, {
+          nodes: error.nodes,
+          source: error.source,
+          positions: error.positions,
+          path: error.path,
           extensions: {
             code: authzStatusToCode(authzErr.statusCode),
             http: { status: authzErr.statusCode },

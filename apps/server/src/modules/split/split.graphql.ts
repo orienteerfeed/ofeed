@@ -1,4 +1,5 @@
 import { builder } from '../../graphql/builder.js';
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { CompetitorRef } from '../competitor/competitor.graphql-types.js';
 import { SplitPublicationModeRef } from '../event/event.graphql-types.js';
 
@@ -54,6 +55,8 @@ builder.queryFields((t) => ({
         context.prisma,
         context.auth,
         competitorSplitsInputSchema.parse({ competitorId: args.competitorId }),
+      ).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to fetch competitor splits'),
       ),
   }),
   splitPublicationStatus: t.field({
@@ -66,6 +69,8 @@ builder.queryFields((t) => ({
         context.prisma,
         context.auth,
         splitPublicationStatusInputSchema.parse({ classId: args.classId }),
+      ).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to fetch split publication status'),
       ),
   }),
 }));
@@ -77,13 +82,18 @@ builder.subscriptionFields((t) => ({
     args: {
       classId: t.arg.int({ required: true }),
     },
-    subscribe: (_root, args, context) =>
-      subscribeSplitCompetitorsByClassUpdated(
-        context.prisma,
-        context.auth,
-        args.classId,
-        context.pubsub,
-      ),
+    subscribe: async function* (_root, args, context) {
+      try {
+        yield* subscribeSplitCompetitorsByClassUpdated(
+          context.prisma,
+          context.auth,
+          args.classId,
+          context.pubsub,
+        );
+      } catch (err) {
+        rethrowAuthzOrError(err, 'Failed to subscribe to split updates');
+      }
+    },
     resolve: (payload) => payload.splitCompetitorsByClassUpdated,
   }),
 }));
