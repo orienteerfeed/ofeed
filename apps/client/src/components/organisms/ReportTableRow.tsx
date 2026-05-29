@@ -65,6 +65,12 @@ const canRevertProcessed = (item: ChangelogEntry) =>
   item.processedByType === 'USER' &&
   item.processedBySource === 'ofeed-ui';
 
+export const getDisplayPreviousValue = (item: ChangelogEntry) =>
+  item.previousValueLabel ?? item.previousValue ?? '-';
+
+export const getDisplayNewValue = (item: ChangelogEntry) =>
+  item.newValueLabel ?? item.newValue ?? '-';
+
 export const ReportTableRow = ({
   item,
   isProcessed,
@@ -102,8 +108,8 @@ export const ReportTableRow = ({
     lastname: item.competitor?.lastname ?? '-',
     firstname: item.competitor?.firstname ?? '-',
     competitorId: item.competitorId,
-    previousValue: item.previousValue ?? '-',
-    newValue: item.newValue ?? '-',
+    previousValue: getDisplayPreviousValue(item),
+    newValue: getDisplayNewValue(item),
   };
 
   return (

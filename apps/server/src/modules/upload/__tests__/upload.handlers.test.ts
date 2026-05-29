@@ -529,7 +529,7 @@ describe('processClassStarts — updated class deduplication', () => {
       'event-1',
       [makeClassStart('C10', 'H21E', [makePersonStart('REG001'), makePersonStart('REG002')])],
       dbClassLists,
-      { relay: false },
+      { discipline: 'SPRINT' },
       1,
     );
 
@@ -545,7 +545,7 @@ describe('processClassStarts — updated class deduplication', () => {
       'event-1',
       [makeClassStart('C10', 'H21E', [makePersonStart('REG001'), makePersonStart('REG002')])],
       dbClassLists,
-      { relay: false },
+      { discipline: 'SPRINT' },
       1,
     );
 

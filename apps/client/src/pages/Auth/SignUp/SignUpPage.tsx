@@ -120,13 +120,6 @@ export const SignUpPage = () => {
     return undefined;
   };
 
-  const validateClub = (value: string): string | undefined => {
-    if (!value) {
-      return t('validation.clubRequired', 'Club is required');
-    }
-    return undefined;
-  };
-
   const validatePassword = (value: string): string | undefined => {
     if (!value) {
       return t('validation.passwordRequired', 'Password is required');
@@ -177,9 +170,6 @@ export const SignUpPage = () => {
         const emailError = validateEmail(value.email);
         if (emailError) errors.email = emailError;
 
-        const clubError = validateClub(value.club);
-        if (clubError) errors.club = clubError;
-
         // Password validations
         if (value.password) {
           const passwordError = validatePassword(value.password);
@@ -225,7 +215,7 @@ export const SignUpPage = () => {
 
         const user = {
           ...payload.user,
-          club: value.club,
+          club: value.club.trim(),
         };
 
         // Save the token and user to the auth store
@@ -332,7 +322,6 @@ export const SignUpPage = () => {
                 placeholder={t('Pages.Auth.User.Placeholder.Club')}
                 autoComplete="organization"
                 disabled={isLoadingMutation}
-                validate={validateClub}
                 className="w-full"
               />
             </div>

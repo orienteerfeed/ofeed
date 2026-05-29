@@ -7,6 +7,7 @@ import type {
 import { logger } from '../lib/logging.js';
 import prisma from './context.js';
 import { loadOrisEventCandidatesByDateRange } from '../modules/event/event.import.service.js';
+import { isRelayDiscipline } from './relay.js';
 
 const ORIS_REQUEST_TIMEOUT_MS = 15_000;
 const CZECH_RANKING_ORIS_SYNC_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -313,7 +314,7 @@ export async function syncCzechRankingEventResultsFromOris(params: {
   });
 
   const rankingEventCandidates = candidates.filter((candidate) => {
-    if (!candidate.ranking || candidate.relay || !candidate.date) {
+    if (!candidate.ranking || isRelayDiscipline(candidate.discipline) || !candidate.date) {
       return false;
     }
 

@@ -181,7 +181,6 @@ export interface EventFormValues {
   discipline: EventDiscipline | '';
   ranking: boolean;
   coefRanking: string;
-  relay: boolean;
   published: boolean;
   hundredthPrecision: boolean;
 }

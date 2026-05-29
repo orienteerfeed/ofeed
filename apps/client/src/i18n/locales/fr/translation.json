@@ -30,6 +30,21 @@
         "ResendSuccess": "E-mail de vérification envoyé. Vérifiez votre boîte de réception.",
         "ResendError": "Impossible d'envoyer l'e-mail de vérification."
       }
+    },
+    "Event": {
+      "PublishingStatus": {
+        "Card": {
+          "ActionTitle": "Statut de publication",
+          "Published": "Publié",
+          "Publish": "Publier",
+          "Draft": "Brouillon",
+          "Unpublished": "Non publié"
+        },
+        "Toast": {
+          "UpdateSuccess": "Le statut de publication est maintenant {{status}}.",
+          "UpdateFail": "Impossible de mettre à jour le statut de publication de l'événement."
+        }
+      }
     }
   },
   "Components": {
@@ -37,5 +52,27 @@
       "Label": "E-mail vérifié",
       "Tooltip": "Adresse e-mail vérifiée"
     }
+  },
+  "Errors": {
+    "ForgotPasswordFailedTitle": "Échec de la demande de réinitialisation du mot de passe",
+    "Generic": "Une erreur s'est produite",
+    "ResetPasswordFailedTitle": "Échec de la réinitialisation du mot de passe",
+    "SignInFailedTitle": "Échec de la connexion",
+    "SignUpFailedTitle": "Échec de l'inscription",
+    "UpdatePasswordFailedTitle": "Impossible de mettre à jour le mot de passe",
+    "UpdateProfileFailedTitle": "Impossible de mettre à jour le profil"
+  },
+  "validation": {
+    "emailRequired": "L'e-mail est obligatoire",
+    "emailInvalid": "Adresse e-mail invalide",
+    "firstNameRequired": "Le prénom est obligatoire",
+    "firstNameMinLength": "Le prénom doit contenir au moins 2 caractères",
+    "lastNameRequired": "Le nom est obligatoire",
+    "lastNameMinLength": "Le nom doit contenir au moins 2 caractères",
+    "clubRequired": "Le club est obligatoire",
+    "passwordRequired": "Le mot de passe est obligatoire",
+    "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+    "confirmPasswordRequired": "Veuillez confirmer votre nouveau mot de passe",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas"
   }
 }

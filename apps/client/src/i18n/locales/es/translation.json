@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Cambio de categoría",
+          "competitor_create": "Competidor creado",
           "firstname_change": "Cambio de nombre",
           "lastname_change": "Cambio de apellido",
           "bibNumber_change": "Cambio de dorsal",
@@ -888,10 +889,15 @@
           "CopyEventId": "¡Hop! El ID del evento ya está en su portapapeles, compártalo!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Visibilidad",
-          "Description": "Determina si el evento será público o privado. Los eventos públicos se muestran en la lista de la página principal de la aplicación, mientras que los eventos privados solo son visibles para su organizador."
+          "Title": "Publicación",
+          "Description": "Determina si el evento está publicado o permanece como borrador.",
+          "ActionTitle": "Estado de publicación",
+          "Published": "Publicado",
+          "Publish": "Publicar",
+          "Draft": "Borrador",
+          "Unpublished": "No publicado"
         },
         "Toast": {
           "UpdateSuccess": "¡El evento ahora está {{status}}!",
@@ -1125,6 +1131,7 @@
       "SupportedFormats": "Formato soportados:",
       "Done": "Hecho",
       "OrDragAndDrop": "o arrastre y suelte",
+      "Processing": "Procesando...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Número máximo de archivos",
@@ -1198,7 +1205,11 @@
     "Longitude": "La longitud debe estar entre -180 y 180"
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Error al solicitar restablecimiento de contraseña",
     "Generic": "Algo salió mal",
+    "ResetPasswordFailedTitle": "Error al restablecer la contraseña",
+    "SignInFailedTitle": "Error al iniciar sesión",
+    "SignUpFailedTitle": "Error al registrarse",
     "UpdatePasswordFailedTitle": "No se pudo actualizar la contraseña",
     "UpdateProfileFailedTitle": "No se pudo actualizar el perfil"
   },
@@ -1208,6 +1219,13 @@
     }
   },
   "validation": {
+    "emailRequired": "El correo electrónico es obligatorio",
+    "emailInvalid": "Dirección de correo electrónico no válida",
+    "firstNameRequired": "El nombre es obligatorio",
+    "firstNameMinLength": "El nombre debe tener al menos 2 caracteres",
+    "lastNameRequired": "El apellido es obligatorio",
+    "lastNameMinLength": "El apellido debe tener al menos 2 caracteres",
+    "clubRequired": "El club es obligatorio",
     "passwordRequired": "La contraseña es obligatoria",
     "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
     "confirmPasswordRequired": "Confirma tu nueva contraseña",

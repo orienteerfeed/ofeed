@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Klassbyte",
+          "competitor_create": "Deltagare skapad",
           "firstname_change": "Ändring av förnamn",
           "lastname_change": "Ändring av efternamn",
           "bibNumber_change": "Ändring av nummerlapp",
@@ -803,7 +804,7 @@
       "Link": {
         "Card": {
           "Title": "Länk till tävlingen",
-          "Description": "Dela en länk till ett evenemang – du kan kopiera, dela eller skriva ut QR-koden för enkel åtkomst till live-resultat.",
+          "Description": "Dela en evenemangslänk med dina åskådare du kan kopiera, dela eller skriva ut QR-koden för enkel åtkomst till live-resultat.",
           "Slug": {
             "Label": "Länkslug",
             "Placeholder": "sm-sprint-{{year}}",
@@ -888,10 +889,15 @@
           "CopyEventId": "Tävlings-id finns nu i urklipp – dela det gärna!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Synlighet",
-          "Description": "Anger om evenemanget är offentligt eller privat. Offentliga evenemang visas i tävlingslistan på OFeeds startsida, medan privata evenemang endast är synliga för arrangören."
+          "Title": "Publicering",
+          "Description": "Anger om evenemanget är publicerat eller ligger kvar som utkast.",
+          "ActionTitle": "Publiceringsstatus",
+          "Published": "Publicerad",
+          "Publish": "Publicera",
+          "Draft": "Utkast",
+          "Unpublished": "Opublicerad"
         },
         "Toast": {
           "UpdateSuccess": "Tävlingen är nu {{status}}!",
@@ -1118,7 +1124,11 @@
     }
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Begäran om lösenordsåterställning misslyckades",
     "Generic": "Något gick fel",
+    "ResetPasswordFailedTitle": "Lösenordsåterställningen misslyckades",
+    "SignInFailedTitle": "Inloggningen misslyckades",
+    "SignUpFailedTitle": "Registreringen misslyckades",
     "UpdatePasswordFailedTitle": "Det gick inte att uppdatera lösenordet",
     "UpdateProfileFailedTitle": "Det gick inte att uppdatera profilen"
   },
@@ -1136,6 +1146,7 @@
       "SupportedFormats": "Format som stöds:",
       "Done": "Klart",
       "OrDragAndDrop": "eller drag och släpp",
+      "Processing": "Bearbetar...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximalt antal filer",
@@ -1213,5 +1224,18 @@
     "EmailVerifiedBadge": {
       "Tooltip": "Verifierad e-postadress"
     }
+  },
+  "validation": {
+    "emailRequired": "E-post är obligatoriskt",
+    "emailInvalid": "Ogiltig e-postadress",
+    "firstNameRequired": "Förnamn är obligatoriskt",
+    "firstNameMinLength": "Förnamnet måste vara minst 2 tecken",
+    "lastNameRequired": "Efternamn är obligatoriskt",
+    "lastNameMinLength": "Efternamnet måste vara minst 2 tecken",
+    "clubRequired": "Klubb är obligatorisk",
+    "passwordRequired": "Lösenord är obligatoriskt",
+    "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
+    "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
+    "passwordsDoNotMatch": "Lösenorden stämmer inte överens"
   }
 }

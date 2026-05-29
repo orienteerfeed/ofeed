@@ -5,6 +5,7 @@ import { CompetitorRef } from '../competitor/competitor.graphql-types.js';
 import { EventRef } from '../event/event.graphql-types.js';
 import { UserRef } from '../user/user.graphql-types.js';
 
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import {
   changelogByEventInputSchema,
   markChangelogProcessedInputSchema,
@@ -118,11 +119,7 @@ builder.queryFields((t) => ({
           }),
         )) as ChangelogShape[];
       } catch (err) {
-        const message =
-          err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
-            ? err.message
-            : 'Failed to fetch changelog';
-        throw new Error(message);
+        rethrowAuthzOrError(err, 'Failed to fetch changelog');
       }
     },
   }),
@@ -150,11 +147,7 @@ builder.mutationFields((t) => ({
           }),
         );
       } catch (err) {
-        const message =
-          err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
-            ? err.message
-            : 'Failed to mark changelog entry as processed';
-        throw new Error(message);
+        rethrowAuthzOrError(err, 'Failed to mark changelog entry as processed');
       }
     },
   }),

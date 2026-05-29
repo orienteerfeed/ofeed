@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Class change",
+          "competitor_create": "Competitor created",
           "firstname_change": "First name change",
           "lastname_change": "Last name change",
           "bibNumber_change": "Bib number change",
@@ -888,10 +889,15 @@
           "CopyEventId": "Hop! Event ID is now in your clipboard, share it away!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Visibility",
-          "Description": "Determines whether the event is public or private. Public events are displayed in the event list on the OFeed's main page, while private events are visible only to their organizer."
+          "Title": "Publishing",
+          "Description": "Determines whether the event is published or remains a draft.",
+          "ActionTitle": "Publishing status",
+          "Published": "Published",
+          "Publish": "Publish",
+          "Draft": "Draft",
+          "Unpublished": "Unpublished"
         },
         "Toast": {
           "UpdateSuccess": "Event is now {{status}}!",
@@ -1125,6 +1131,7 @@
       "SupportedFormats": "Supported format:",
       "Done": "Done",
       "OrDragAndDrop": "or drag and drop",
+      "Processing": "Processing...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximum Files",
@@ -1198,7 +1205,11 @@
     "Longitude": "Longitude must be between -180 and 180"
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Forgot password failed",
     "Generic": "Something went wrong",
+    "ResetPasswordFailedTitle": "Reset password failed",
+    "SignInFailedTitle": "Sign-in failed",
+    "SignUpFailedTitle": "Sign-up failed",
     "UpdatePasswordFailedTitle": "Password update failed",
     "UpdateProfileFailedTitle": "Profile update failed"
   },
@@ -1209,6 +1220,13 @@
     }
   },
   "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email address",
+    "firstNameRequired": "First name is required",
+    "firstNameMinLength": "First name must be at least 2 characters",
+    "lastNameRequired": "Last name is required",
+    "lastNameMinLength": "Last name must be at least 2 characters",
+    "clubRequired": "Club is required",
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 8 characters",
     "confirmPasswordRequired": "Please confirm your new password",

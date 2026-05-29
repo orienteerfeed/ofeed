@@ -1,10 +1,12 @@
 import { GraphQLError } from 'graphql';
+import { isRelayDiscipline } from '../../utils/relay.js';
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { AuthenticationError, ValidationError } from '../../exceptions/index.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import prisma from '../../utils/context.js';
+import { AuthzError } from '../../utils/authz.js';
 import { formatUtcDateTimeRfc3339 } from '../../utils/time.js';
 import {
   verifyEmail,
@@ -32,12 +34,12 @@ export type UserCardFindManySelection = Omit<Prisma.UserCardFindManyArgs, 'where
 
 export function getAuthenticatedUserId(auth: GraphQLAuthContext) {
   if (!auth?.isAuthenticated || !auth.userId) {
-    throw new Error('Unauthorized: Invalid or missing credentials');
+    throw new AuthzError('Unauthorized: Invalid or missing credentials', 401);
   }
 
   const userId = Number(auth.userId);
   if (!Number.isFinite(userId)) {
-    throw new Error('Unauthorized: Invalid user identifier');
+    throw new AuthzError('Unauthorized: Invalid user identifier', 401);
   }
 
   return userId;
@@ -595,7 +597,7 @@ export async function listMyEvents(userId: number | string) {
       organizer: true,
       date: true,
       location: true,
-      relay: true,
+      discipline: true,
       published: true,
       timezone: true,
       entriesOpenAt: true,
@@ -617,7 +619,7 @@ export async function listMyEvents(userId: number | string) {
         organizer: event.organizer,
         date: formatUtcDateTimeRfc3339(event.date) ?? event.date,
         location: event.location,
-        relay: event.relay,
+        relay: isRelayDiscipline(event.discipline),
         published: event.published,
         statusSummary: {
           primary: statusSummary.primary,
