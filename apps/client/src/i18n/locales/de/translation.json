@@ -574,6 +574,7 @@
         },
         "TypeLabels": {
           "class_change": "Klassenänderung",
+          "competitor_create": "Teilnehmer erstellt",
           "firstname_change": "Vornamensänderung",
           "lastname_change": "Nachnamensänderung",
           "bibNumber_change": "Startnummernänderung",

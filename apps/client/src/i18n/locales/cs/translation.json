@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Změna kategorie",
+          "competitor_create": "Vytvoření závodníka",
           "firstname_change": "Změna jména",
           "lastname_change": "Změna příjmení",
           "bibNumber_change": "Změna startovního čísla",

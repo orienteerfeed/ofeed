@@ -10,6 +10,8 @@ export type ChangelogEntry = {
   type: string;
   previousValue: string | null;
   newValue: string | null;
+  previousValueLabel?: string | null;
+  newValueLabel?: string | null;
   author?: {
     firstname: string;
     lastname: string;

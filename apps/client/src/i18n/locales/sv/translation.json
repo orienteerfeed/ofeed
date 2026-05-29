@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Klassbyte",
+          "competitor_create": "Deltagare skapad",
           "firstname_change": "Ändring av förnamn",
           "lastname_change": "Ändring av efternamn",
           "bibNumber_change": "Ändring av nummerlapp",
