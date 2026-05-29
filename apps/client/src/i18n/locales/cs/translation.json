@@ -250,6 +250,7 @@
         "Ranking": "Ranking",
         "Name": "Jméno",
         "Email": "Email",
+        "EmailVerified": "Ověřen",
         "Role": "Role",
         "Status": "Stav",
         "Organization": "Organizace",
@@ -309,6 +310,21 @@
         "AlreadyHaveAnAccount": "Už máš účet?",
         "CreateAccount": "Vytvořit účet",
         "CreatingAccount": "Vytvářím účet..."
+      },
+      "VerifyEmailPage": {
+        "Verifying": "Ověřuji e-mail",
+        "VerifyingDescription": "Prosím čekej, ověřujeme tvou e-mailovou adresu.",
+        "Verified": "E-mail ověřen",
+        "VerifiedDescription": "Tvůj e-mail byl ověřen a jsi přihlášen.",
+        "ContinueDescription": "Nyní máš plný přístup k OFeedu.",
+        "ContinueToApp": "Pokračovat do OFeedu",
+        "AlreadyVerified": "Již ověřeno",
+        "AlreadyVerifiedDescription": "Tvá e-mailová adresa je již ověřena.",
+        "TokenExpired": "Odkaz vypršel",
+        "TokenExpiredDescription": "Ověřovací odkaz vypršel. Požádej o nový z profilu.",
+        "Failed": "Ověření selhalo",
+        "FailedDescription": "Ověřovací odkaz je neplatný. Požádej o nový z profilu.",
+        "BackToSignIn": "Zpět na přihlášení"
       },
       "PasswordResetEmailSentPage": {
         "CheckYourEmail": "Zkontroluj svůj e-mail",
@@ -873,10 +889,15 @@
           "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Viditelnost",
-          "Description": "Určuje, zda bude akce veřejná nebo privátní. Veřejné akce se zobrazují v seznamu na hlavní stránce OFeedu, zatímco privátní akce jsou viditelné pouze pro jejich organizátora."
+          "Title": "Zveřejnění",
+          "Description": "Určuje, zda je akce zveřejněná, nebo zůstává jako draft.",
+          "ActionTitle": "Viditelnost",
+          "Published": "Zveřejněno",
+          "Publish": "Zveřejnit",
+          "Draft": "Draft",
+          "Unpublished": "Neveřejné"
         },
         "Toast": {
           "UpdateSuccess": "Akce je nyní {{status}}!",
@@ -989,6 +1010,18 @@
       "OtherIntegrations": {
         "Title": "Další integrace",
         "Description": "Propoj svůj účet s dalšími aplikacemi a nástroji. Nové integrace zde budou průběžně přibývat."
+      },
+      "EmailVerification": {
+        "Title": "Ověření e-mailu",
+        "Description": "Potvrď vlastnictví své e-mailové adresy.",
+        "Verified": "Tvá e-mailová adresa je ověřena.",
+        "VerifiedBadge": "Ověřeno",
+        "NotVerified": "Tvá e-mailová adresa ještě není ověřena.",
+        "ResendButton": "Znovu odeslat ověřovací e-mail",
+        "ResendCooldown": "Znovu odeslat za {{seconds}} s",
+        "Resending": "Odesílám...",
+        "ResendSuccess": "Ověřovací e-mail odeslán. Zkontroluj svou schránku.",
+        "ResendError": "Nepodařilo se odeslat ověřovací e-mail."
       },
       "Security": {
         "PasswordDescription": "Zde si můžeš změnit heslo k účtu. Doporučujeme použít silné a jedinečné heslo.",
@@ -1174,6 +1207,11 @@
     "Generic": "Něco se pokazilo",
     "UpdatePasswordFailedTitle": "Změna hesla selhala",
     "UpdateProfileFailedTitle": "Aktualizace profilu selhala"
+  },
+  "Components": {
+    "EmailVerifiedBadge": {
+      "Tooltip": "Ověřená e-mailová adresa"
+    }
   },
   "validation": {
     "passwordRequired": "Heslo je povinné",

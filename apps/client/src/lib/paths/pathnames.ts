@@ -38,6 +38,11 @@ export const PATHNAMES = {
   settings: () => ({ to: '/settings', params: {} as const }),
   signIn: () => ({ to: '/auth/signin', params: {} as const }),
   forgotPassword: () => ({ to: '/auth/forgot-password', params: {} as const }),
+  verifyEmail: (token: string) => ({
+    to: '/auth/verify-email/$token',
+    params: { token } as const,
+  }),
+  getVerifyEmail: () => ({ to: '/auth/verify-email', params: {} as const }),
   resetPassword: (token: string) => ({
     to: '/auth/reset-password/$token',
     params: { token } as const,

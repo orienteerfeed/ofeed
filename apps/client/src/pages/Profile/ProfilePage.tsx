@@ -32,10 +32,10 @@ import { MainPageLayout } from '@/templates';
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm } from '@tanstack/react-form';
-import { Blocks, Pencil, Shield, Trash2, User } from 'lucide-react';
+import { BadgeCheck, Blocks, Pencil, Shield, Trash2, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../../components/atoms';
+import { Badge, Button, EmailVerifiedBadge } from '../../components/atoms';
 import { PasswordStrengthIndicator } from '../../components/molecules';
 import { Field } from '../../components/organisms';
 import { useAuth } from '../../hooks';
@@ -58,6 +58,7 @@ type UpdateCurrentUserResponse = {
     email: string;
     organisation?: string | null;
     emergencyContact?: string | null;
+    emailVerifiedAt?: string | null;
   };
 };
 
@@ -160,6 +161,20 @@ type ChangePasswordFormValues = {
   confirmNewPassword: string;
 };
 
+type CurrentUserVerificationResponse = {
+  currentUser: {
+    id: number;
+    emailVerifiedAt: string | null;
+  };
+};
+
+type ResendEmailVerificationResponse = {
+  resendEmailVerification: {
+    success: boolean;
+    message?: string | null;
+  };
+};
+
 const UPDATE_CURRENT_USER_MUTATION = gql`
   mutation UpdateCurrentUser($input: UpdateCurrentUserInput!) {
     updateCurrentUser(input: $input) {
@@ -169,6 +184,7 @@ const UPDATE_CURRENT_USER_MUTATION = gql`
       email
       organisation
       emergencyContact
+      emailVerifiedAt
     }
   }
 `;
@@ -226,6 +242,24 @@ const SET_DEFAULT_USER_CARD_MUTATION = gql`
 const CHANGE_CURRENT_USER_PASSWORD_MUTATION = gql`
   mutation ChangeCurrentUserPassword($input: ChangeCurrentUserPasswordInput!) {
     changeCurrentUserPassword(input: $input) {
+      success
+      message
+    }
+  }
+`;
+
+const GET_CURRENT_USER_VERIFICATION = gql`
+  query CurrentUserVerification {
+    currentUser {
+      id
+      emailVerifiedAt
+    }
+  }
+`;
+
+const RESEND_EMAIL_VERIFICATION_MUTATION = gql`
+  mutation ResendEmailVerification {
+    resendEmailVerification {
       success
       message
     }
@@ -294,6 +328,16 @@ export const ProfilePage = () => {
       ChangeCurrentUserPasswordResponse,
       ChangeCurrentUserPasswordVars
     >(CHANGE_CURRENT_USER_PASSWORD_MUTATION);
+  const { data: verificationData, refetch: refetchVerification } =
+    useQuery<CurrentUserVerificationResponse>(GET_CURRENT_USER_VERIFICATION, {
+      skip: !user,
+      fetchPolicy: 'cache-and-network',
+    });
+  const [resendEmailVerification, { loading: isResendingVerification }] =
+    useMutation<ResendEmailVerificationResponse>(
+      RESEND_EMAIL_VERIFICATION_MUTATION
+    );
+  const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [profile, setProfile] = useState<Profile>({
     firstName: '',
@@ -325,8 +369,7 @@ export const ProfilePage = () => {
       toast({
         title: t('Operations.Error', { ns: 'common' }),
         description:
-          cardsError.message ||
-          t('Errors.Generic', 'Something went wrong'),
+          cardsError.message || t('Errors.Generic', 'Something went wrong'),
         variant: 'error',
       });
     }
@@ -338,6 +381,18 @@ export const ProfilePage = () => {
       setCardForm(prev => ({ ...prev, sportId: String(firstSport.id) }));
     }
   }, [sports, cardForm.sportId]);
+
+  useEffect(() => {
+    if (resendCooldownSeconds <= 0) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setResendCooldownSeconds(seconds => Math.max(seconds - 1, 0));
+    }, 1000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [resendCooldownSeconds]);
 
   const handleSave = async (): Promise<void> => {
     try {
@@ -382,9 +437,12 @@ export const ProfilePage = () => {
             organisation: updatedUser.organisation ?? null,
             emergencyContact: updatedUser.emergencyContact ?? null,
             club: updatedUser.organisation ?? null,
+            emailVerifiedAt: updatedUser.emailVerifiedAt ?? null,
           },
         });
       }
+
+      void refetchVerification().catch(() => undefined);
 
       setIsEditing(false);
       toast({
@@ -415,7 +473,7 @@ export const ProfilePage = () => {
     if (!value) {
       return t(
         'Pages.Profile.Security.Errors.CurrentPasswordRequired',
-        'Current password is required',
+        'Current password is required'
       );
     }
     return undefined;
@@ -425,13 +483,13 @@ export const ProfilePage = () => {
     if (!value) {
       return t(
         'Pages.Profile.Security.Errors.NewPasswordRequired',
-        'New password is required',
+        'New password is required'
       );
     }
     if (value.length < 8) {
       return t(
         'validation.passwordMinLength',
-        'Password must be at least 8 characters',
+        'Password must be at least 8 characters'
       );
     }
     return undefined;
@@ -443,7 +501,7 @@ export const ProfilePage = () => {
     if (!value) {
       return t(
         'validation.confirmPasswordRequired',
-        'Please confirm your new password',
+        'Please confirm your new password'
       );
     }
 
@@ -457,14 +515,16 @@ export const ProfilePage = () => {
   const extractRawMutationErrorMessage = (error: unknown): string => {
     if (error && typeof error === 'object') {
       if ('graphQLErrors' in error) {
-        const graphQLErrors = (error as { graphQLErrors?: unknown }).graphQLErrors;
+        const graphQLErrors = (error as { graphQLErrors?: unknown })
+          .graphQLErrors;
 
         if (
           Array.isArray(graphQLErrors) &&
           graphQLErrors[0] &&
           typeof graphQLErrors[0] === 'object' &&
           'message' in graphQLErrors[0] &&
-          typeof (graphQLErrors[0] as { message?: unknown }).message === 'string'
+          typeof (graphQLErrors[0] as { message?: unknown }).message ===
+            'string'
         ) {
           return (graphQLErrors[0] as { message: string }).message;
         }
@@ -482,19 +542,21 @@ export const ProfilePage = () => {
   };
 
   const clearPasswordSubmitErrors = (): void => {
-    (['currentPassword', 'newPassword', 'confirmNewPassword'] as const).forEach(fieldName => {
-      passwordChangeForm.setFieldMeta(fieldName, prev => ({
-        ...prev,
-        errorMap: {
-          ...prev.errorMap,
-          onSubmit: undefined,
-        },
-      }));
-    });
+    (['currentPassword', 'newPassword', 'confirmNewPassword'] as const).forEach(
+      fieldName => {
+        passwordChangeForm.setFieldMeta(fieldName, prev => ({
+          ...prev,
+          errorMap: {
+            ...prev.errorMap,
+            onSubmit: undefined,
+          },
+        }));
+      }
+    );
   };
 
   const applyPasswordSubmitErrors = (
-    fieldErrors: Partial<Record<keyof ChangePasswordFormValues, string>>,
+    fieldErrors: Partial<Record<keyof ChangePasswordFormValues, string>>
   ): void => {
     if (Object.keys(fieldErrors).length === 0) {
       return;
@@ -522,7 +584,7 @@ export const ProfilePage = () => {
   };
 
   const mapPasswordMutationError = (
-    error: unknown,
+    error: unknown
   ): {
     message: string;
     fieldErrors: Partial<Record<keyof ChangePasswordFormValues, string>>;
@@ -533,7 +595,7 @@ export const ProfilePage = () => {
     if (normalized.includes('current password is incorrect')) {
       const message = t(
         'Pages.Profile.Security.Errors.CurrentPasswordIncorrect',
-        'Current password is incorrect.',
+        'Current password is incorrect.'
       );
       return {
         message,
@@ -541,10 +603,14 @@ export const ProfilePage = () => {
       };
     }
 
-    if (normalized.includes('new password must be different from current password')) {
+    if (
+      normalized.includes(
+        'new password must be different from current password'
+      )
+    ) {
       const message = t(
         'Pages.Profile.Security.Errors.NewPasswordMustDiffer',
-        'New password must be different from current password.',
+        'New password must be different from current password.'
       );
       return {
         message,
@@ -555,7 +621,7 @@ export const ProfilePage = () => {
     if (normalized.includes('at least 8')) {
       const message = t(
         'validation.passwordMinLength',
-        'Password must be at least 8 characters',
+        'Password must be at least 8 characters'
       );
       return {
         message,
@@ -566,7 +632,7 @@ export const ProfilePage = () => {
     if (normalized.includes('passwords do not match')) {
       const message = t(
         'validation.passwordsDoNotMatch',
-        'Passwords do not match',
+        'Passwords do not match'
       );
       return {
         message,
@@ -593,7 +659,7 @@ export const ProfilePage = () => {
 
         if (value.currentPassword) {
           const currentPasswordError = validateCurrentPassword(
-            value.currentPassword,
+            value.currentPassword
           );
           if (currentPasswordError) {
             errors.currentPassword = currentPasswordError;
@@ -609,7 +675,7 @@ export const ProfilePage = () => {
 
         if (value.newPassword && value.confirmNewPassword) {
           const confirmNewPasswordError = validateConfirmNewPassword(
-            value.confirmNewPassword,
+            value.confirmNewPassword
           );
           if (confirmNewPasswordError) {
             errors.confirmNewPassword = confirmNewPasswordError;
@@ -623,7 +689,7 @@ export const ProfilePage = () => {
           {};
 
         const currentPasswordError = validateCurrentPassword(
-          value.currentPassword,
+          value.currentPassword
         );
         if (currentPasswordError) {
           errors.currentPassword = currentPasswordError;
@@ -635,7 +701,7 @@ export const ProfilePage = () => {
         }
 
         const confirmNewPasswordError = validateConfirmNewPassword(
-          value.confirmNewPassword,
+          value.confirmNewPassword
         );
         if (confirmNewPasswordError) {
           errors.confirmNewPassword = confirmNewPasswordError;
@@ -660,7 +726,7 @@ export const ProfilePage = () => {
         const payload = data?.changeCurrentUserPassword;
         if (!payload?.success) {
           throw new Error(
-            payload?.message || t('Errors.Generic', 'Something went wrong'),
+            payload?.message || t('Errors.Generic', 'Something went wrong')
           );
         }
 
@@ -672,7 +738,7 @@ export const ProfilePage = () => {
             payload.message ||
             t(
               'Pages.Profile.Security.PasswordUpdated',
-              'Password updated successfully',
+              'Password updated successfully'
             ),
           variant: 'success',
         });
@@ -683,7 +749,10 @@ export const ProfilePage = () => {
         applyPasswordSubmitErrors(fieldErrors);
 
         toast({
-          title: t('Errors.UpdatePasswordFailedTitle', 'Password update failed'),
+          title: t(
+            'Errors.UpdatePasswordFailedTitle',
+            'Password update failed'
+          ),
           description: message,
           variant: 'error',
         });
@@ -710,6 +779,53 @@ export const ProfilePage = () => {
     });
   };
 
+  const handleResendVerification = async (): Promise<void> => {
+    if (resendCooldownSeconds > 0) {
+      return;
+    }
+
+    try {
+      const { data } = await resendEmailVerification();
+      if (!data?.resendEmailVerification.success) {
+        throw new Error(data?.resendEmailVerification.message ?? undefined);
+      }
+      setResendCooldownSeconds(60);
+      toast({
+        title: t('Operations.Success', { ns: 'common' }),
+        description: t(
+          'Pages.Profile.EmailVerification.ResendSuccess',
+          'Verification email sent. Check your inbox.'
+        ),
+        variant: 'success',
+      });
+      void refetchVerification().catch(() => undefined);
+    } catch {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description: t(
+          'Pages.Profile.EmailVerification.ResendError',
+          'Failed to send verification email.'
+        ),
+        variant: 'error',
+      });
+    }
+  };
+
+  const getResendVerificationButtonText = (): string => {
+    if (isResendingVerification) {
+      return t('Pages.Profile.EmailVerification.Resending');
+    }
+
+    if (resendCooldownSeconds > 0) {
+      return t('Pages.Profile.EmailVerification.ResendCooldown', {
+        defaultValue: 'Send again in {{seconds}}s',
+        seconds: resendCooldownSeconds,
+      });
+    }
+
+    return t('Pages.Profile.EmailVerification.ResendButton');
+  };
+
   const handleCardSubmit = async (): Promise<void> => {
     const sportId = Number(cardForm.sportId);
     const cardNumber = cardForm.cardNumber.trim();
@@ -717,7 +833,10 @@ export const ProfilePage = () => {
     if (!Number.isFinite(sportId) || sportId <= 0) {
       toast({
         title: t('Operations.Error', { ns: 'common' }),
-        description: t('Pages.Profile.Cards.SportRequired', 'Sport is required'),
+        description: t(
+          'Pages.Profile.Cards.SportRequired',
+          'Sport is required'
+        ),
         variant: 'error',
       });
       return;
@@ -792,7 +911,10 @@ export const ProfilePage = () => {
     if (!Number.isFinite(sportId) || sportId <= 0) {
       toast({
         title: t('Operations.Error', { ns: 'common' }),
-        description: t('Pages.Profile.Cards.SportRequired', 'Sport is required'),
+        description: t(
+          'Pages.Profile.Cards.SportRequired',
+          'Sport is required'
+        ),
         variant: 'error',
       });
       return;
@@ -906,6 +1028,10 @@ export const ProfilePage = () => {
   const userInitials =
     `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`.toUpperCase();
   const isProfileFieldsDisabled = !isEditing || isSaving;
+  const emailVerifiedAt =
+    verificationData?.currentUser.emailVerifiedAt ??
+    user.emailVerifiedAt ??
+    null;
 
   return (
     <MainPageLayout t={t} pageName={t('Pages.Profile.Tabs.Profile')}>
@@ -918,8 +1044,12 @@ export const ProfilePage = () => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold">
+              <h1 className="flex items-center gap-2 text-3xl font-bold">
                 {profile.firstName} {profile.lastName}
+                <EmailVerifiedBadge
+                  verifiedAt={emailVerifiedAt}
+                  className="h-6 w-6"
+                />
               </h1>
               {profile.organisation && (
                 <p className="text-muted-foreground">{profile.organisation}</p>
@@ -1017,7 +1147,23 @@ export const ProfilePage = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">{t('Pages.Auth.User.Email')}</Label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Label htmlFor="email">
+                        {t('Pages.Auth.User.Email')}
+                      </Label>
+                      {emailVerifiedAt && (
+                        <Badge
+                          variant="secondary"
+                          className="border-green-200 bg-green-50 text-green-700 hover:bg-green-50 dark:border-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+                          icon={<BadgeCheck className="h-3.5 w-3.5" />}
+                        >
+                          {t(
+                            'Pages.Profile.EmailVerification.VerifiedBadge',
+                            'Verified'
+                          )}
+                        </Badge>
+                      )}
+                    </div>
                     <Input
                       id="email"
                       type="email"
@@ -1025,6 +1171,24 @@ export const ProfilePage = () => {
                       onChange={e => handleInputChange('email', e.target.value)}
                       disabled={isProfileFieldsDisabled}
                     />
+                    {!emailVerifiedAt && (
+                      <div className="flex flex-col gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-border dark:bg-muted/30 dark:text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                        <p>
+                          {t('Pages.Profile.EmailVerification.NotVerified')}
+                        </p>
+                        <Button
+                          type="button"
+                          onClick={handleResendVerification}
+                          disabled={
+                            isResendingVerification || resendCooldownSeconds > 0
+                          }
+                          variant="outline"
+                          className="border-amber-300 bg-white dark:border-border dark:bg-background sm:self-center"
+                        >
+                          {getResendVerificationButtonText()}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="organisation">
@@ -1087,7 +1251,9 @@ export const ProfilePage = () => {
                             sportId: e.target.value,
                           }))
                         }
-                        disabled={isCardMutationInProgress || sports.length === 0}
+                        disabled={
+                          isCardMutationInProgress || sports.length === 0
+                        }
                       >
                         {sports.map(sport => (
                           <option key={sport.id} value={sport.id}>
@@ -1246,10 +1412,7 @@ export const ProfilePage = () => {
                                 >
                                   <Trash2 className="h-4 w-4" />
                                   <span className="sr-only">
-                                    {t(
-                                      'Pages.Profile.Cards.Delete',
-                                      'Delete'
-                                    )}
+                                    {t('Pages.Profile.Cards.Delete', 'Delete')}
                                   </span>
                                 </Button>
                               </AlertDialogTrigger>
@@ -1275,10 +1438,7 @@ export const ProfilePage = () => {
                                   <AlertDialogAction
                                     onClick={() => handleDeleteCard(card.id)}
                                   >
-                                    {t(
-                                      'Pages.Profile.Cards.Delete',
-                                      'Delete'
-                                    )}
+                                    {t('Pages.Profile.Cards.Delete', 'Delete')}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -1432,6 +1592,39 @@ export const ProfilePage = () => {
             <TabsContent value="security" className="space-y-4">
               <Card>
                 <CardHeader>
+                  <CardTitle>
+                    {t('Pages.Profile.EmailVerification.Title')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('Pages.Profile.EmailVerification.Description')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {emailVerifiedAt ? (
+                    <p className="text-sm text-green-600">
+                      {t('Pages.Profile.EmailVerification.Verified')}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        {t('Pages.Profile.EmailVerification.NotVerified')}
+                      </p>
+                      <Button
+                        onClick={handleResendVerification}
+                        disabled={
+                          isResendingVerification || resendCooldownSeconds > 0
+                        }
+                        variant="outline"
+                      >
+                        {getResendVerificationButtonText()}
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
                   <CardTitle>{t('Pages.Auth.User.Password')}</CardTitle>
                   <CardDescription>
                     {t('Pages.Profile.Security.PasswordDescription')}
@@ -1458,7 +1651,7 @@ export const ProfilePage = () => {
                         disabled={isChangingPassword}
                         helperText={t(
                           'Pages.Profile.Security.CurrentPasswordHelper',
-                          'Enter your current account password.',
+                          'Enter your current account password.'
                         )}
                         validate={validateCurrentPassword}
                         className="w-full"
@@ -1481,7 +1674,7 @@ export const ProfilePage = () => {
                               disabled={isChangingPassword}
                               helperText={t(
                                 'Pages.Profile.Security.NewPasswordHelper',
-                                'Use at least 8 characters.',
+                                'Use at least 8 characters.'
                               )}
                               validate={validateNewPassword}
                               className="w-full"
@@ -1509,17 +1702,14 @@ export const ProfilePage = () => {
                         disabled={isChangingPassword}
                         helperText={t(
                           'Pages.Profile.Security.ConfirmNewPasswordHelper',
-                          'Repeat the new password to confirm.',
+                          'Repeat the new password to confirm.'
                         )}
                         validate={validateConfirmNewPassword}
                         className="w-full"
                       />
                     </div>
 
-                    <Button
-                      type="submit"
-                      disabled={isChangingPassword}
-                    >
+                    <Button type="submit" disabled={isChangingPassword}>
                       {t('Pages.Profile.Security.UpdatePassword')}
                     </Button>
                   </CardContent>

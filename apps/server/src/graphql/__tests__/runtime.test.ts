@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthenticationError } from '../../exceptions/index.js';
+import { AuthenticationError, ValidationError } from '../../exceptions/index.js';
 import type { GraphQLContext } from '../context.js';
 
 const eventServiceMock = vi.hoisted(() => ({
@@ -16,6 +16,7 @@ const eventServiceMock = vi.hoisted(() => ({
 }));
 
 const authServiceMock = vi.hoisted(() => ({
+  verifyEmail: vi.fn(),
   authenticateUser: vi.fn(),
   changeAuthenticatedUserPassword: vi.fn(),
   passwordResetConfirm: vi.fn(),
@@ -350,6 +351,153 @@ describe('GraphQL runtime execution', () => {
       'username_String_NotNull_maxLength_255 must be at most 255 characters long',
     );
     expect(authServiceMock.authenticateUser).not.toHaveBeenCalled();
+  });
+
+  it('returns token and user details from signup', async () => {
+    authServiceMock.signupUser.mockResolvedValue({
+      token: 'signup-token',
+      user: {
+        id: 42,
+        role: 'USER',
+        organisation: 'OK Test',
+        emergencyContact: null,
+      },
+    });
+
+    const result = await execute(
+      `#graphql
+        mutation Signup($input: UserInput) {
+          signup(input: $input) {
+            token
+            message
+            user {
+              id
+              firstname
+              lastname
+              email
+              role
+              organisation
+              emergencyContact
+            }
+          }
+        }
+      `,
+      createContext(),
+      {
+        input: {
+          email: 'runner@example.test',
+          password: 'secret-password',
+          firstname: 'Test',
+          lastname: 'Runner',
+          organisation: 'OK Test',
+        },
+      },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      signup: {
+        token: 'signup-token',
+        message: 'User successfuly created',
+        user: {
+          id: 42,
+          firstname: 'Test',
+          lastname: 'Runner',
+          email: 'runner@example.test',
+          role: 'USER',
+          organisation: 'OK Test',
+          emergencyContact: null,
+        },
+      },
+    });
+    expect(authServiceMock.signupUser).toHaveBeenCalledWith(
+      'runner@example.test',
+      'secret-password',
+      'Test',
+      'Runner',
+      'https://app.example.test/activate',
+      'OK Test',
+    );
+  });
+
+  it('maps signup validation failures to public GraphQL errors', async () => {
+    authServiceMock.signupUser.mockRejectedValue(new ValidationError('Email already in use'));
+
+    const result = await execute(
+      `#graphql
+        mutation Signup($input: UserInput) {
+          signup(input: $input) {
+            token
+          }
+        }
+      `,
+      createContext(),
+      {
+        input: {
+          email: 'runner@example.test',
+          password: 'secret-password',
+          firstname: 'Test',
+          lastname: 'Runner',
+        },
+      },
+    );
+
+    expect(result.data).toEqual({ signup: null });
+    expect(result.errors?.[0]?.message).toBe('Email already in use');
+    expect(result.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
+  });
+
+  it('returns token and user details from email verification', async () => {
+    authServiceMock.verifyEmail.mockResolvedValue({
+      token: 'verified-token',
+      user: {
+        userId: 77,
+        firstName: 'Verified',
+        lastName: 'Runner',
+        email: 'verified@example.test',
+        role: 'USER',
+        organisation: 'OK Test',
+        emergencyContact: null,
+      },
+    });
+
+    const result = await execute(
+      `#graphql
+        mutation VerifyEmail($token: String!) {
+          verifyEmail(token: $token) {
+            token
+            user {
+              id
+              firstname
+              lastname
+              email
+              role
+              organisation
+              emergencyContact
+            }
+          }
+        }
+      `,
+      createContext(),
+      { token: 'email-token' },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({
+      verifyEmail: {
+        token: 'verified-token',
+        user: {
+          id: 77,
+          firstname: 'Verified',
+          lastname: 'Runner',
+          email: 'verified@example.test',
+          role: 'USER',
+          organisation: 'OK Test',
+          emergencyContact: null,
+        },
+      },
+    });
+    expect(authServiceMock.verifyEmail).toHaveBeenCalledWith('email-token');
   });
 
   it('rejects createUserCard with an empty card number at GraphQL input validation', async () => {

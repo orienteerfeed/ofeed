@@ -16,10 +16,12 @@ export const ResponseMessageRef = builder
     fields: (t) => ({
       message: t.exposeString('message'),
       token: t.string({
+        nullable: true,
         resolve: (response) => response.token as string,
       }),
       user: t.field({
         type: UserRef,
+        nullable: true,
         resolve: (response) => response.user as UserGraphQLShape,
       }),
     }),

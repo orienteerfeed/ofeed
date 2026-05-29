@@ -250,6 +250,7 @@
         "Ranking": "Ranking",
         "Name": "Name",
         "Email": "Email",
+        "EmailVerified": "Verifiziert",
         "Role": "Rolle",
         "Status": "Status",
         "Organization": "Organisation",
@@ -293,6 +294,21 @@
       },
       "RequestPasswordResetPage": {
         "ForgottenPassword": "Passwort vergessen"
+      },
+      "VerifyEmailPage": {
+        "Verifying": "E-Mail wird verifiziert",
+        "VerifyingDescription": "Bitte warten, wir verifizieren deine E-Mail-Adresse.",
+        "Verified": "E-Mail verifiziert",
+        "VerifiedDescription": "Deine E-Mail wurde verifiziert und du bist jetzt angemeldet.",
+        "ContinueDescription": "Du hast nun vollen Zugang zu OFeed.",
+        "ContinueToApp": "Weiter zu OFeed",
+        "AlreadyVerified": "Bereits verifiziert",
+        "AlreadyVerifiedDescription": "Deine E-Mail-Adresse ist bereits verifiziert.",
+        "TokenExpired": "Link abgelaufen",
+        "TokenExpiredDescription": "Der Verifizierungslink ist abgelaufen. Bitte fordere einen neuen in deinem Profil an.",
+        "Failed": "Verifizierung fehlgeschlagen",
+        "FailedDescription": "Der Verifizierungslink ist ungültig. Bitte fordere einen neuen in deinem Profil an.",
+        "BackToSignIn": "Zurück zur Anmeldung"
       }
     },
     "Profile": {
@@ -351,6 +367,18 @@
       "OtherIntegrations": {
         "Title": "Weitere Integrationen",
         "Description": "Verbinde dein Konto mit zusätzlichen Diensten und Tools. Neue Integrationen werden hier nach und nach erscheinen."
+      },
+      "EmailVerification": {
+        "Title": "E-Mail-Verifizierung",
+        "Description": "Bestätige die Inhaberschaft deiner E-Mail-Adresse.",
+        "Verified": "Deine E-Mail-Adresse ist verifiziert.",
+        "VerifiedBadge": "Verifiziert",
+        "NotVerified": "Deine E-Mail-Adresse ist noch nicht verifiziert.",
+        "ResendButton": "Verifizierungs-E-Mail erneut senden",
+        "ResendCooldown": "Erneut senden in {{seconds}} s",
+        "Resending": "Wird gesendet...",
+        "ResendSuccess": "Verifizierungs-E-Mail gesendet. Überprüfe deinen Posteingang.",
+        "ResendError": "Verifizierungs-E-Mail konnte nicht gesendet werden."
       },
       "Security": {
         "PasswordDescription": "Hier kannst du dein Kontopasswort ändern. Wir empfehlen ein starkes, einzigartiges Passwort.",
@@ -483,6 +511,19 @@
               "DeleteSuccess": "MeOS-Verknüpfung entfernt."
             }
           }
+        }
+      },
+      "PublishingStatus": {
+        "Card": {
+          "ActionTitle": "Veröffentlichungsstatus",
+          "Published": "Veröffentlicht",
+          "Publish": "Veröffentlichen",
+          "Draft": "Entwurf",
+          "Unpublished": "Nicht veröffentlicht"
+        },
+        "Toast": {
+          "UpdateSuccess": "Der Veröffentlichungsstatus wurde auf {{status}} gesetzt.",
+          "UpdateFail": "Der Veröffentlichungsstatus des Events konnte nicht aktualisiert werden."
         }
       },
       "Detail": {
@@ -671,6 +712,11 @@
     "Generic": "Etwas ist schiefgelaufen",
     "UpdatePasswordFailedTitle": "Passwort konnte nicht aktualisiert werden",
     "UpdateProfileFailedTitle": "Profil konnte nicht aktualisiert werden"
+  },
+  "Components": {
+    "EmailVerifiedBadge": {
+      "Tooltip": "Verifizierte E-Mail-Adresse"
+    }
   },
   "validation": {
     "passwordRequired": "Passwort ist erforderlich",
