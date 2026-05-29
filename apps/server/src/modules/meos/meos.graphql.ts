@@ -1,4 +1,5 @@
 import { builder } from '../../graphql/builder.js';
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import prisma from '../../utils/context.js';
 
@@ -15,12 +16,16 @@ builder.prismaObjectFields('Event', (t) => ({
   meosEventBindings: t.relation('meosEventBindings', {
     nullable: true,
     resolve: async (query, event, _args, context) => {
-      await requireEventOwnerOrAdmin(context.prisma, context.auth, event.id);
-      return context.prisma.eventMeosBinding.findMany({
-        ...query,
-        where: { eventId: event.id },
-        orderBy: { createdAt: 'asc' },
-      });
+      try {
+        await requireEventOwnerOrAdmin(context.prisma, context.auth, event.id);
+        return context.prisma.eventMeosBinding.findMany({
+          ...query,
+          where: { eventId: event.id },
+          orderBy: { createdAt: 'asc' },
+        });
+      } catch (err) {
+        rethrowAuthzOrError(err, 'Failed to fetch MEOS event bindings');
+      }
     },
   }),
 }));
@@ -32,11 +37,15 @@ builder.mutationFields((t) => ({
       eventId: t.arg.string({ required: true }),
     },
     resolve: async (query, _root, args, context) => {
-      await requireEventOwnerOrAdmin(context.prisma, context.auth, args.eventId as string);
-      return prisma.eventMeosBinding.create({
-        ...query,
-        data: { eventId: args.eventId as string },
-      });
+      try {
+        await requireEventOwnerOrAdmin(context.prisma, context.auth, args.eventId as string);
+        return prisma.eventMeosBinding.create({
+          ...query,
+          data: { eventId: args.eventId as string },
+        });
+      } catch (err) {
+        rethrowAuthzOrError(err, 'Failed to create MEOS event binding');
+      }
     },
   }),
   deleteMeosEventBinding: t.field({
@@ -45,14 +54,18 @@ builder.mutationFields((t) => ({
       id: t.arg.int({ required: true }),
     },
     resolve: async (_root, args, context) => {
-      const binding = await prisma.eventMeosBinding.findUnique({
-        where: { id: args.id as number },
-        select: { eventId: true },
-      });
-      if (!binding) return false;
-      await requireEventOwnerOrAdmin(context.prisma, context.auth, binding.eventId);
-      await prisma.eventMeosBinding.delete({ where: { id: args.id as number } });
-      return true;
+      try {
+        const binding = await prisma.eventMeosBinding.findUnique({
+          where: { id: args.id as number },
+          select: { eventId: true },
+        });
+        if (!binding) return false;
+        await requireEventOwnerOrAdmin(context.prisma, context.auth, binding.eventId);
+        await prisma.eventMeosBinding.delete({ where: { id: args.id as number } });
+        return true;
+      } catch (err) {
+        rethrowAuthzOrError(err, 'Failed to delete MEOS event binding');
+      }
     },
   }),
 }));

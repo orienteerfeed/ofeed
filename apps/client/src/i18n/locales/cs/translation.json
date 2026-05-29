@@ -453,6 +453,7 @@
         },
         "TypeLabels": {
           "class_change": "Změna kategorie",
+          "competitor_create": "Vytvoření závodníka",
           "firstname_change": "Změna jména",
           "lastname_change": "Změna příjmení",
           "bibNumber_change": "Změna startovního čísla",
@@ -889,10 +890,15 @@
           "CopyEventId": "Hop! ID akce je teď ve schránce, sdílej dál!"
         }
       },
-      "Visibility": {
+      "PublishingStatus": {
         "Card": {
-          "Title": "Viditelnost",
-          "Description": "Určuje, zda bude akce veřejná nebo privátní. Veřejné akce se zobrazují v seznamu na hlavní stránce OFeedu, zatímco privátní akce jsou viditelné pouze pro jejich organizátora."
+          "Title": "Zveřejnění",
+          "Description": "Určuje, zda je akce zveřejněná, nebo zůstává jako draft.",
+          "ActionTitle": "Viditelnost",
+          "Published": "Zveřejněno",
+          "Publish": "Zveřejnit",
+          "Draft": "Draft",
+          "Unpublished": "Neveřejné"
         },
         "Toast": {
           "UpdateSuccess": "Akce je nyní {{status}}!",
@@ -1126,6 +1132,7 @@
       "SupportedFormats": "Podporovaný formát:",
       "Done": "Hotovo",
       "OrDragAndDrop": "nebo drag & drop",
+      "Processing": "Zpracovávám...",
       "Toast": {
         "MaximumFiles": {
           "Title": "Maximální počet souborů",
@@ -1199,7 +1206,11 @@
     "Longitude": "Zeměpisná délka musí být mezi -180 a 180"
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Obnovení hesla selhalo",
     "Generic": "Něco se pokazilo",
+    "ResetPasswordFailedTitle": "Nastavení nového hesla selhalo",
+    "SignInFailedTitle": "Přihlášení selhalo",
+    "SignUpFailedTitle": "Registrace selhala",
     "UpdatePasswordFailedTitle": "Změna hesla selhala",
     "UpdateProfileFailedTitle": "Aktualizace profilu selhala"
   },
@@ -1209,6 +1220,13 @@
     }
   },
   "validation": {
+    "emailRequired": "E-mail je povinný",
+    "emailInvalid": "Neplatná e-mailová adresa",
+    "firstNameRequired": "Jméno je povinné",
+    "firstNameMinLength": "Jméno musí mít alespoň 2 znaky",
+    "lastNameRequired": "Příjmení je povinné",
+    "lastNameMinLength": "Příjmení musí mít alespoň 2 znaky",
+    "clubRequired": "Oddíl je povinný",
     "passwordRequired": "Heslo je povinné",
     "passwordMinLength": "Heslo musí mít alespoň 8 znaků",
     "confirmPasswordRequired": "Potvrď prosím nové heslo",

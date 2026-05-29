@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import type { UploadedFile } from '@/types/upload';
-import { Upload, X } from 'lucide-react';
+import { Loader2, Upload, X } from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '../../utils/toast';
@@ -22,6 +22,8 @@ export interface DragDropContainerProps {
   formats: string[];
   /** Extra class for the drop area */
   className?: string;
+  /** Show busy/processing state while upload is in progress */
+  isUploading?: boolean;
 }
 
 /** Minimal helper: turn formats into an accept string */
@@ -85,6 +87,7 @@ export const DragDropContainer = ({
   count,
   formats,
   className,
+  isUploading = false,
 }: DragDropContainerProps) => {
   const { t } = useTranslation();
   const [dragging, setDragging] = React.useState(false);
@@ -175,6 +178,8 @@ export const DragDropContainer = ({
     e.preventDefault();
     e.stopPropagation();
     setDragging(false);
+    if (isUploading) return;
+
     if (e.dataTransfer?.files?.length) {
       void handleFiles(e.dataTransfer.files);
     }
@@ -183,6 +188,8 @@ export const DragDropContainer = ({
   const onDragOver: React.DragEventHandler<HTMLDivElement> = e => {
     e.preventDefault();
     e.stopPropagation();
+    if (isUploading) return;
+
     setDragging(true);
   };
 
@@ -193,6 +200,11 @@ export const DragDropContainer = ({
   };
 
   const onInputChange: React.ChangeEventHandler<HTMLInputElement> = e => {
+    if (isUploading) {
+      e.currentTarget.value = '';
+      return;
+    }
+
     if (e.currentTarget.files?.length) {
       void handleFiles(e.currentTarget.files);
     }
@@ -207,42 +219,63 @@ export const DragDropContainer = ({
         onDragLeave={onDragLeave}
         className={cn(
           'mt-4 flex items-center justify-center rounded-md border-2 py-5 text-center',
-          dragging
-            ? 'border-[#2B92EC] bg-[#EDF2FF]'
-            : 'border-dashed border-[#e0e0e0]',
+          isUploading
+            ? 'cursor-not-allowed border-dashed border-[#e0e0e0] opacity-70'
+            : dragging
+              ? 'border-[#2B92EC] bg-[#EDF2FF]'
+              : 'border-dashed border-[#e0e0e0]',
           className
         )}
       >
         <div className="flex flex-1 flex-col items-center">
-          <div className="mb-2 text-gray-400">
-            <Upload className="h-5 w-5" aria-hidden />
-          </div>
+          {isUploading ? (
+            <>
+              <Loader2
+                className="mb-2 h-5 w-5 animate-spin text-gray-400"
+                aria-hidden
+              />
+              <span
+                role="status"
+                aria-live="polite"
+                className="text-[12px] font-normal text-gray-500 dark:text-gray-400"
+              >
+                {t('Molecules.DragDrop.Processing')}
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="mb-2 text-gray-400">
+                <Upload className="h-5 w-5" aria-hidden />
+              </div>
 
-          <input
-            ref={fileRef}
-            className="hidden"
-            type="file"
-            multiple
-            accept={accept}
-            onChange={onInputChange}
-          />
+              <div className="text-[12px] font-normal text-gray-500 dark:text-gray-400">
+                <button
+                  type="button"
+                  className="text-[#4070f4] underline-offset-2 hover:underline"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  {t('Molecules.DragDrop.ClickToUpload')}
+                </button>{' '}
+                {t('Molecules.DragDrop.OrDragAndDrop')}
+              </div>
 
-          <div className="text-[12px] font-normal text-gray-500 dark:text-gray-400">
-            <button
-              type="button"
-              className="text-[#4070f4] underline-offset-2 hover:underline"
-              onClick={() => fileRef.current?.click()}
-            >
-              {t('Molecules.DragDrop.ClickToUpload')}
-            </button>{' '}
-            {t('Molecules.DragDrop.OrDragAndDrop')}
-          </div>
-
-          <div className="text-[10px] font-normal text-gray-500 dark:text-gray-400">
-            {t('Molecules.DragDrop.SupportedFormats')}{' '}
-            {formats.join(', ').toUpperCase()}
-          </div>
+              <div className="text-[10px] font-normal text-gray-500 dark:text-gray-400">
+                {t('Molecules.DragDrop.SupportedFormats')}{' '}
+                {formats.join(', ').toUpperCase()}
+              </div>
+            </>
+          )}
         </div>
+
+        <input
+          ref={fileRef}
+          className="hidden"
+          type="file"
+          multiple
+          accept={accept}
+          onChange={onInputChange}
+          disabled={isUploading}
+        />
       </div>
 
       {/* File List */}
