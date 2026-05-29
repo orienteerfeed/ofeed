@@ -1,6 +1,7 @@
 import type { outputShapeKey } from '@pothos/core';
 
 import { builder } from '../../graphql/builder.js';
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
 
 import {
   findEventsConnection,
@@ -143,6 +144,8 @@ builder.mutationFields((t) => ({
         context.auth,
         args.eventId as string,
         args.published as boolean,
+      ).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to update event visibility.'),
       ),
   }),
 }));

@@ -1,6 +1,7 @@
 import type { outputShapeKey } from '@pothos/core';
 
 import { builder } from '../../graphql/builder.js';
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 
 import {
@@ -250,6 +251,8 @@ builder.mutationFields((t) => ({
         context.prisma,
         context.auth,
         statusChangeInputSchema.parse(args.input),
+      ).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to change competitor status'),
       ),
   }),
   competitorUpdate: t.field({
@@ -262,7 +265,7 @@ builder.mutationFields((t) => ({
         context.prisma,
         context.auth,
         updateCompetitorInputSchema.parse(args.input),
-      ),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update competitor')),
   }),
   competitorCreate: t.field({
     type: StoreCompetitorResponseRef,
@@ -274,7 +277,7 @@ builder.mutationFields((t) => ({
         context.prisma,
         context.auth,
         storeCompetitorInputSchema.parse(args.input),
-      ),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to create competitor')),
   }),
 }));
 

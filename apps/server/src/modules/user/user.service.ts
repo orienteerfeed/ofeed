@@ -1,19 +1,24 @@
 import { GraphQLError } from 'graphql';
+import { isRelayDiscipline } from '../../utils/relay.js';
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { AuthenticationError, ValidationError } from '../../exceptions/index.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import type { GraphQLAuthContext } from '../../graphql/context.types.js';
+import prisma from '../../utils/context.js';
+import { AuthzError } from '../../utils/authz.js';
+import { formatUtcDateTimeRfc3339 } from '../../utils/time.js';
 import {
+  verifyEmail,
+  sendVerificationEmailHelper,
   authenticateUser,
   changeAuthenticatedUserPassword,
   passwordResetConfirm,
   passwordResetRequest,
   signupUser,
 } from '../auth/auth.service.js';
+import { generateJwtTokenForLink } from '../../utils/jwtToken.js';
 import { getEventStatusSummary } from '../event/event.status.service.js';
-import prisma from '../../utils/context.js';
-import { formatUtcDateTimeRfc3339 } from '../../utils/time.js';
-import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import type {
   ChangeCurrentUserPasswordInput,
   CreateUserCardInput,
@@ -29,12 +34,12 @@ export type UserCardFindManySelection = Omit<Prisma.UserCardFindManyArgs, 'where
 
 export function getAuthenticatedUserId(auth: GraphQLAuthContext) {
   if (!auth?.isAuthenticated || !auth.userId) {
-    throw new Error('Unauthorized: Invalid or missing credentials');
+    throw new AuthzError('Unauthorized: Invalid or missing credentials', 401);
   }
 
   const userId = Number(auth.userId);
   if (!Number.isFinite(userId)) {
-    throw new Error('Unauthorized: Invalid user identifier');
+    throw new AuthzError('Unauthorized: Invalid user identifier', 401);
   }
 
   return userId;
@@ -187,8 +192,54 @@ export async function signUp(input: UserInput, activationUrl: string) {
       message: 'User successfuly created',
     };
   } catch (error) {
-    throw new Error(getErrorMessage(error));
+    throw toGraphQLUserMutationError(error);
   }
+}
+
+export async function verifyUserEmail(token: string) {
+  try {
+    const verificationPayload = await verifyEmail(token);
+    return {
+      token: verificationPayload.token,
+      user: {
+        id: verificationPayload.user.userId,
+        firstname: verificationPayload.user.firstName,
+        lastname: verificationPayload.user.lastName,
+        email: verificationPayload.user.email,
+        role: verificationPayload.user.role,
+        organisation: verificationPayload.user.organisation ?? null,
+        emergencyContact: verificationPayload.user.emergencyContact ?? null,
+      },
+      message: 'Email verified',
+    };
+  } catch (error) {
+    throw toGraphQLUserMutationError(error);
+  }
+}
+
+export async function resendUserEmailVerification(auth: GraphQLAuthContext) {
+  const userId = getAuthenticatedUserId(auth);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, firstname: true, lastname: true, emailVerifiedAt: true },
+  });
+
+  if (!user) {
+    throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+  }
+
+  if (user.emailVerifiedAt) {
+    return { success: true, message: 'Email already verified.' };
+  }
+
+  const verificationToken = generateJwtTokenForLink(user.id);
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+  const verificationLink = `${frontendUrl}/auth/verify-email/${verificationToken}`;
+
+  await sendVerificationEmailHelper(user.firstname, user.lastname, user.email, verificationLink);
+
+  return { success: true, message: 'Verification email sent.' };
 }
 
 export async function updateAuthenticatedUser(
@@ -204,14 +255,31 @@ export async function updateAuthenticatedUser(
     lastname?: string;
     organisation?: string | null;
     emergencyContact?: string | null;
+    emailVerifiedAt?: Date | null;
   } = {};
+  let shouldSendVerificationEmail = false;
 
   if (input.email !== undefined) {
     const email = input.email?.trim().toLowerCase();
     if (!email) {
       throw new Error('Email cannot be empty');
     }
+
+    const currentUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    if (!currentUser) {
+      throw new Error('Current user not found');
+    }
+
+    shouldSendVerificationEmail = currentUser.email.trim().toLowerCase() !== email;
     data.email = email;
+
+    if (shouldSendVerificationEmail) {
+      data.emailVerifiedAt = null;
+    }
   }
 
   if (input.firstname !== undefined) {
@@ -245,10 +313,25 @@ export async function updateAuthenticatedUser(
   }
 
   try {
-    return db.user.update({
+    const updatedUser = await db.user.update({
       where: { id: userId },
       data,
     });
+
+    if (shouldSendVerificationEmail) {
+      const verificationToken = generateJwtTokenForLink(updatedUser.id);
+      const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+      const verificationLink = `${frontendUrl}/auth/verify-email/${verificationToken}`;
+
+      await sendVerificationEmailHelper(
+        updatedUser.firstname,
+        updatedUser.lastname,
+        updatedUser.email,
+        verificationLink,
+      );
+    }
+
+    return updatedUser;
   } catch (error) {
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
       throw new Error('Email is already in use');
@@ -473,31 +556,23 @@ export async function setDefaultAuthenticatedUserCard(
 
 export async function requestUserPasswordReset(email: string, resetPasswordUrl: string) {
   if (!resetPasswordUrl) {
-    throw new Error('Missing password reset URL in headers');
+    throw new ValidationError('Missing password reset URL in headers');
   }
 
-  try {
-    const passwordResetPayload = await passwordResetRequest(email, resetPasswordUrl);
-    return {
-      success: passwordResetPayload.success,
-      message: passwordResetPayload.message,
-    };
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
+  const passwordResetPayload = await passwordResetRequest(email, resetPasswordUrl);
+  return {
+    success: passwordResetPayload.success,
+    message: passwordResetPayload.message,
+  };
 }
 
 export async function resetUserPassword(token: string, newPassword: string) {
-  try {
-    const passwordResetPayload = await passwordResetConfirm(token, newPassword);
-    return {
-      token: passwordResetPayload.jwtToken,
-      user: passwordResetPayload.user,
-      message: 'Password reset successful',
-    };
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
+  const passwordResetPayload = await passwordResetConfirm(token, newPassword);
+  return {
+    token: passwordResetPayload.jwtToken,
+    user: passwordResetPayload.user,
+    message: 'Password reset successful',
+  };
 }
 
 export async function changeCurrentUserPassword(
@@ -522,7 +597,7 @@ export async function listMyEvents(userId: number | string) {
       organizer: true,
       date: true,
       location: true,
-      relay: true,
+      discipline: true,
       published: true,
       timezone: true,
       entriesOpenAt: true,
@@ -544,7 +619,7 @@ export async function listMyEvents(userId: number | string) {
         organizer: event.organizer,
         date: formatUtcDateTimeRfc3339(event.date) ?? event.date,
         location: event.location,
-        relay: event.relay,
+        relay: isRelayDiscipline(event.discipline),
         published: event.published,
         statusSummary: {
           primary: statusSummary.primary,

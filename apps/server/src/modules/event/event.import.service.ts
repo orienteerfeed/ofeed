@@ -26,7 +26,6 @@ export type OrisEventCandidate = {
   name: string;
   date?: string;
   ranking: boolean;
-  relay: boolean;
   discipline?: EventDiscipline;
 };
 
@@ -45,7 +44,6 @@ export type ExternalEventPreview = {
   zeroTime?: string;
   ranking?: boolean;
   coefRanking?: number;
-  relay?: boolean;
   discipline?: EventDiscipline;
   published?: boolean;
   hundredthPrecision?: boolean;
@@ -1040,8 +1038,9 @@ export async function loadOrisEventCandidatesByDateRange(params: {
         name: candidate.name,
         date: candidate.date,
         ranking: candidate.ranking ?? false,
-        relay: candidate.relay ?? false,
-        discipline: resolveImportedEventDiscipline('ORIS', candidate.disciplineRaw),
+        discipline:
+          resolveImportedEventDiscipline('ORIS', candidate.disciplineRaw) ??
+          (candidate.relay ? 'RELAY' : undefined),
       };
 
       const existing = deduplicated.get(comparableId);
@@ -1152,7 +1151,6 @@ export async function loadExternalEventPreview(
     zeroTime: normalizeTime(selected.zeroTimeRaw, date),
     ranking: selected.ranking ?? false,
     coefRanking: selected.coefRanking,
-    relay: selected.relay ?? false,
     discipline:
       resolveImportedEventDiscipline(body.provider, selected.disciplineRaw) ??
       (selected.relay ? 'RELAY' : undefined),

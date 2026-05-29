@@ -164,6 +164,7 @@ export const DragDropFile: React.FC<DragDropFileProps> = ({
         onFileValidation={handleFileValidation}
         count={maxFiles}
         formats={allowedFormats}
+        isUploading={isUploading}
       />
     </div>
   );

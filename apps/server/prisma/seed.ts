@@ -294,7 +294,6 @@ async function main() {
       if (!eventDateTime) {
         throw new Error('Invalid DATE or ZERO_TIME environment variable.');
       }
-      const isRelay = process.env.RELAY && Boolean(Number(process.env.RELAY));
       const location = process.env.LOCATION && process.env.LOCATION;
 
       const defaultEvent = await prisma.event.create({
@@ -302,7 +301,6 @@ async function main() {
           name: eventName,
           date: eventDateTime,
           organizer: organizer,
-          relay: isRelay,
           location: location,
           sportId: 1,
           published: true,

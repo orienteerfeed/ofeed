@@ -134,6 +134,13 @@ describe('event.import.service ORIS discipline mapping', () => {
                   ShortName: 'SP',
                 },
               },
+              Event_3: {
+                ID: '6500',
+                Name: 'Legacy relay event',
+                Date: '2026-04-12',
+                Ranking: '1',
+                IsRelay: '1',
+              },
             },
           }),
           {
@@ -166,6 +173,11 @@ describe('event.import.service ORIS discipline mapping', () => {
       expect.objectContaining({
         externalEventId: '6400',
         discipline: 'SPRINT',
+        ranking: true,
+      }),
+      expect.objectContaining({
+        externalEventId: '6500',
+        discipline: 'RELAY',
         ranking: true,
       }),
     ]);

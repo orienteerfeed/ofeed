@@ -17,7 +17,6 @@ export const eventWriteSchema = z
         /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/,
         'Invalid zero time. Expected HH:mm or HH:mm:ss.',
       ),
-    relay: z.boolean().optional(),
     discipline: z
       .enum([
         'SPRINT',

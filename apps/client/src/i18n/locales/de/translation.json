@@ -250,6 +250,7 @@
         "Ranking": "Ranking",
         "Name": "Name",
         "Email": "Email",
+        "EmailVerified": "Verifiziert",
         "Role": "Rolle",
         "Status": "Status",
         "Organization": "Organisation",
@@ -293,6 +294,21 @@
       },
       "RequestPasswordResetPage": {
         "ForgottenPassword": "Passwort vergessen"
+      },
+      "VerifyEmailPage": {
+        "Verifying": "E-Mail wird verifiziert",
+        "VerifyingDescription": "Bitte warten, wir verifizieren deine E-Mail-Adresse.",
+        "Verified": "E-Mail verifiziert",
+        "VerifiedDescription": "Deine E-Mail wurde verifiziert und du bist jetzt angemeldet.",
+        "ContinueDescription": "Du hast nun vollen Zugang zu OFeed.",
+        "ContinueToApp": "Weiter zu OFeed",
+        "AlreadyVerified": "Bereits verifiziert",
+        "AlreadyVerifiedDescription": "Deine E-Mail-Adresse ist bereits verifiziert.",
+        "TokenExpired": "Link abgelaufen",
+        "TokenExpiredDescription": "Der Verifizierungslink ist abgelaufen. Bitte fordere einen neuen in deinem Profil an.",
+        "Failed": "Verifizierung fehlgeschlagen",
+        "FailedDescription": "Der Verifizierungslink ist ungültig. Bitte fordere einen neuen in deinem Profil an.",
+        "BackToSignIn": "Zurück zur Anmeldung"
       }
     },
     "Profile": {
@@ -351,6 +367,18 @@
       "OtherIntegrations": {
         "Title": "Weitere Integrationen",
         "Description": "Verbinde dein Konto mit zusätzlichen Diensten und Tools. Neue Integrationen werden hier nach und nach erscheinen."
+      },
+      "EmailVerification": {
+        "Title": "E-Mail-Verifizierung",
+        "Description": "Bestätige die Inhaberschaft deiner E-Mail-Adresse.",
+        "Verified": "Deine E-Mail-Adresse ist verifiziert.",
+        "VerifiedBadge": "Verifiziert",
+        "NotVerified": "Deine E-Mail-Adresse ist noch nicht verifiziert.",
+        "ResendButton": "Verifizierungs-E-Mail erneut senden",
+        "ResendCooldown": "Erneut senden in {{seconds}} s",
+        "Resending": "Wird gesendet...",
+        "ResendSuccess": "Verifizierungs-E-Mail gesendet. Überprüfe deinen Posteingang.",
+        "ResendError": "Verifizierungs-E-Mail konnte nicht gesendet werden."
       },
       "Security": {
         "PasswordDescription": "Hier kannst du dein Kontopasswort ändern. Wir empfehlen ein starkes, einzigartiges Passwort.",
@@ -485,6 +513,19 @@
           }
         }
       },
+      "PublishingStatus": {
+        "Card": {
+          "ActionTitle": "Veröffentlichungsstatus",
+          "Published": "Veröffentlicht",
+          "Publish": "Veröffentlichen",
+          "Draft": "Entwurf",
+          "Unpublished": "Nicht veröffentlicht"
+        },
+        "Toast": {
+          "UpdateSuccess": "Der Veröffentlichungsstatus wurde auf {{status}} gesetzt.",
+          "UpdateFail": "Der Veröffentlichungsstatus des Events konnte nicht aktualisiert werden."
+        }
+      },
       "Detail": {
         "OpenBoard": "Board"
       },
@@ -533,6 +574,7 @@
         },
         "TypeLabels": {
           "class_change": "Klassenänderung",
+          "competitor_create": "Teilnehmer erstellt",
           "firstname_change": "Vornamensänderung",
           "lastname_change": "Nachnamensänderung",
           "bibNumber_change": "Startnummernänderung",
@@ -664,15 +706,32 @@
     "DragDrop": {
       "ClickToUpload": "Klicken sie hier für upload",
       "Delete": "Löschen",
-      "OrdDragAndDrop": "oder drag and drop"
+      "OrdDragAndDrop": "oder drag and drop",
+      "Processing": "Wird verarbeitet..."
     }
   },
   "Errors": {
+    "ForgotPasswordFailedTitle": "Passwort-Zurücksetzung fehlgeschlagen",
     "Generic": "Etwas ist schiefgelaufen",
+    "ResetPasswordFailedTitle": "Passwort-Zurücksetzung fehlgeschlagen",
+    "SignInFailedTitle": "Anmeldung fehlgeschlagen",
+    "SignUpFailedTitle": "Registrierung fehlgeschlagen",
     "UpdatePasswordFailedTitle": "Passwort konnte nicht aktualisiert werden",
     "UpdateProfileFailedTitle": "Profil konnte nicht aktualisiert werden"
   },
+  "Components": {
+    "EmailVerifiedBadge": {
+      "Tooltip": "Verifizierte E-Mail-Adresse"
+    }
+  },
   "validation": {
+    "emailRequired": "E-Mail ist erforderlich",
+    "emailInvalid": "Ungültige E-Mail-Adresse",
+    "firstNameRequired": "Vorname ist erforderlich",
+    "firstNameMinLength": "Der Vorname muss mindestens 2 Zeichen lang sein",
+    "lastNameRequired": "Nachname ist erforderlich",
+    "lastNameMinLength": "Der Nachname muss mindestens 2 Zeichen lang sein",
+    "clubRequired": "Verein ist erforderlich",
     "passwordRequired": "Passwort ist erforderlich",
     "passwordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
     "confirmPasswordRequired": "Bitte bestätige dein neues Passwort",
