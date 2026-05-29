@@ -146,7 +146,22 @@ const connectionCheck200Schema = {
                   type: 'string',
                   nullable: true,
                   description:
-                    'Machine-readable failure code: basic_event_id_mismatch | basic_auth_required | missing_authorization_header',
+                    'Machine-readable failure code; null when credentials are valid. Possible values: ' +
+                    'missing_authorization_header (no Authorization header), ' +
+                    'unsupported_authorization_scheme (scheme is neither Bearer nor Basic), ' +
+                    'invalid_bearer_token (Bearer token absent, malformed, or expired), ' +
+                    'oauth_access_token_not_found (OAuth client token not found), ' +
+                    'basic_malformed_credentials (Base64 payload empty or missing colon separator), ' +
+                    'basic_missing_event_id (event ID part of credentials is empty), ' +
+                    'basic_missing_password (password part of credentials is empty), ' +
+                    'basic_event_not_found (no event with the supplied ID), ' +
+                    'basic_password_not_found (event has no password record), ' +
+                    'basic_password_expired (event password has expired), ' +
+                    'basic_password_decrypt_failed (stored password could not be decrypted), ' +
+                    'basic_password_mismatch (supplied password does not match), ' +
+                    'basic_unexpected_error (unexpected error during Basic auth), ' +
+                    'basic_event_id_mismatch (authenticated event ID differs from the requested event), ' +
+                    'basic_auth_required (request is authenticated with JWT but Basic auth is required for this endpoint)',
                 },
                 authType: {
                   type: 'string',
