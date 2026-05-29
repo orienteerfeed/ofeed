@@ -1216,6 +1216,13 @@
     }
   },
   "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email address",
+    "firstNameRequired": "First name is required",
+    "firstNameMinLength": "First name must be at least 2 characters",
+    "lastNameRequired": "Last name is required",
+    "lastNameMinLength": "Last name must be at least 2 characters",
+    "clubRequired": "Club is required",
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 8 characters",
     "confirmPasswordRequired": "Please confirm your new password",

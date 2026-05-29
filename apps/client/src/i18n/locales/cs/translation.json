@@ -1216,6 +1216,13 @@
     }
   },
   "validation": {
+    "emailRequired": "E-mail je povinný",
+    "emailInvalid": "Neplatná e-mailová adresa",
+    "firstNameRequired": "Jméno je povinné",
+    "firstNameMinLength": "Jméno musí mít alespoň 2 znaky",
+    "lastNameRequired": "Příjmení je povinné",
+    "lastNameMinLength": "Příjmení musí mít alespoň 2 znaky",
+    "clubRequired": "Oddíl je povinný",
     "passwordRequired": "Heslo je povinné",
     "passwordMinLength": "Heslo musí mít alespoň 8 znaků",
     "confirmPasswordRequired": "Potvrď prosím nové heslo",

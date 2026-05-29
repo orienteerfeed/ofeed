@@ -52,5 +52,18 @@
       "Label": "E-mail vérifié",
       "Tooltip": "Adresse e-mail vérifiée"
     }
+  },
+  "validation": {
+    "emailRequired": "L'e-mail est obligatoire",
+    "emailInvalid": "Adresse e-mail invalide",
+    "firstNameRequired": "Le prénom est obligatoire",
+    "firstNameMinLength": "Le prénom doit contenir au moins 2 caractères",
+    "lastNameRequired": "Le nom est obligatoire",
+    "lastNameMinLength": "Le nom doit contenir au moins 2 caractères",
+    "clubRequired": "Le club est obligatoire",
+    "passwordRequired": "Le mot de passe est obligatoire",
+    "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+    "confirmPasswordRequired": "Veuillez confirmer votre nouveau mot de passe",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas"
   }
 }
