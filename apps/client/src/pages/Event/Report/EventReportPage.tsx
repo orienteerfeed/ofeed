@@ -8,6 +8,8 @@ import {
   AppPagination,
   AppRowsPerPage,
   AppTableHeader,
+  getDisplayNewValue,
+  getDisplayPreviousValue,
   type ReportFilterConfig,
   type PresetFilter,
   type AppTableColumn,
@@ -702,8 +704,10 @@ export const EventReportPage = () => {
       item.competitorId.toString(),
       item.competitor?.lastname ?? '',
       item.competitor?.firstname ?? '',
-      item.previousValue ?? '',
-      item.newValue ?? '',
+      getDisplayPreviousValue(item) === '-'
+        ? ''
+        : getDisplayPreviousValue(item),
+      getDisplayNewValue(item) === '-' ? '' : getDisplayNewValue(item),
       formatOriginLabel(item.origin ?? null),
     ]);
 
@@ -748,8 +752,10 @@ export const EventReportPage = () => {
       item.competitorId.toString(),
       item.competitor?.lastname ?? '',
       item.competitor?.firstname ?? '',
-      item.previousValue ?? '',
-      item.newValue ?? '',
+      getDisplayPreviousValue(item) === '-'
+        ? ''
+        : getDisplayPreviousValue(item),
+      getDisplayNewValue(item) === '-' ? '' : getDisplayNewValue(item),
       formatOriginLabel(item.origin ?? null),
     ]);
 
@@ -1104,8 +1110,8 @@ export const EventReportPage = () => {
                           </TableCell>
                           <TableCell>{typeLabel}</TableCell>
                           <TableCell>{originLabel}</TableCell>
-                          <TableCell>{item.previousValue ?? '-'}</TableCell>
-                          <TableCell>{item.newValue ?? '-'}</TableCell>
+                          <TableCell>{getDisplayPreviousValue(item)}</TableCell>
+                          <TableCell>{getDisplayNewValue(item)}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -1131,9 +1137,11 @@ const getColumnValue = (item: ChangelogEntry, column: ColumnFilter): string => {
     case 'firstname':
       return item.competitor?.firstname ?? '';
     case 'previousValue':
-      return item.previousValue ?? '';
+      return getDisplayPreviousValue(item) === '-'
+        ? ''
+        : getDisplayPreviousValue(item);
     case 'newValue':
-      return item.newValue ?? '';
+      return getDisplayNewValue(item) === '-' ? '' : getDisplayNewValue(item);
     default:
       return '';
   }
@@ -1154,9 +1162,13 @@ const getSortValue = (item: ChangelogEntry, column: SortColumn) => {
     case 'firstname':
       return item.competitor?.firstname?.toLowerCase() ?? '';
     case 'previousValue':
-      return item.previousValue?.toLowerCase() ?? '';
+      return getDisplayPreviousValue(item) === '-'
+        ? ''
+        : getDisplayPreviousValue(item).toLowerCase();
     case 'newValue':
-      return item.newValue?.toLowerCase() ?? '';
+      return getDisplayNewValue(item) === '-'
+        ? ''
+        : getDisplayNewValue(item).toLowerCase();
     case 'origin':
       return item.origin?.toLowerCase() ?? '';
     default:

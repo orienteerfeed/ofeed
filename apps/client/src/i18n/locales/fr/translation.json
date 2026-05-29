@@ -1,0 +1,69 @@
+{
+  "Pages": {
+    "Auth": {
+      "VerifyEmailPage": {
+        "Verifying": "Vérification de votre e-mail",
+        "VerifyingDescription": "Veuillez patienter pendant la vérification de votre adresse e-mail.",
+        "Verified": "E-mail vérifié",
+        "VerifiedDescription": "Votre e-mail a été vérifié et vous êtes maintenant connecté.",
+        "ContinueDescription": "Vous pouvez maintenant utiliser OFeed avec un accès complet.",
+        "ContinueToApp": "Continuer vers OFeed",
+        "AlreadyVerified": "Déjà vérifié",
+        "AlreadyVerifiedDescription": "Votre adresse e-mail est déjà vérifiée.",
+        "TokenExpired": "Lien expiré",
+        "TokenExpiredDescription": "Le lien de vérification a expiré. Veuillez en demander un nouveau depuis votre profil.",
+        "Failed": "Échec de la vérification",
+        "FailedDescription": "Le lien de vérification est invalide. Veuillez en demander un nouveau depuis votre profil.",
+        "BackToSignIn": "Retour à la connexion"
+      }
+    },
+    "Profile": {
+      "EmailVerification": {
+        "Title": "Vérification de l'e-mail",
+        "Description": "Confirmez la propriété de votre adresse e-mail.",
+        "Verified": "Votre adresse e-mail est vérifiée.",
+        "VerifiedBadge": "Vérifié",
+        "NotVerified": "Votre adresse e-mail n'est pas encore vérifiée.",
+        "ResendButton": "Renvoyer l'e-mail de vérification",
+        "ResendCooldown": "Renvoyer dans {{seconds}} s",
+        "Resending": "Envoi en cours...",
+        "ResendSuccess": "E-mail de vérification envoyé. Vérifiez votre boîte de réception.",
+        "ResendError": "Impossible d'envoyer l'e-mail de vérification."
+      }
+    },
+    "Event": {
+      "PublishingStatus": {
+        "Card": {
+          "ActionTitle": "Statut de publication",
+          "Published": "Publié",
+          "Publish": "Publier",
+          "Draft": "Brouillon",
+          "Unpublished": "Non publié"
+        },
+        "Toast": {
+          "UpdateSuccess": "Le statut de publication est maintenant {{status}}.",
+          "UpdateFail": "Impossible de mettre à jour le statut de publication de l'événement."
+        }
+      }
+    }
+  },
+  "Components": {
+    "EmailVerifiedBadge": {
+      "Label": "E-mail vérifié",
+      "Tooltip": "Adresse e-mail vérifiée"
+    }
+  },
+  "validation": {
+    "emailRequired": "L'e-mail est obligatoire",
+    "emailInvalid": "Adresse e-mail invalide",
+    "firstNameRequired": "Le prénom est obligatoire",
+    "firstNameMinLength": "Le prénom doit contenir au moins 2 caractères",
+    "lastNameRequired": "Le nom est obligatoire",
+    "lastNameMinLength": "Le nom doit contenir au moins 2 caractères",
+    "clubRequired": "Le club est obligatoire",
+    "passwordRequired": "Le mot de passe est obligatoire",
+    "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+    "confirmPasswordRequired": "Veuillez confirmer votre nouveau mot de passe",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas"
+  }
+}

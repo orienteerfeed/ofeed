@@ -16,12 +16,14 @@ import prisma from "../../utils/context.js";
 import { error as errorResponse, success as successResponse, validation as validationResponse } from "../../utils/responseApi.js";
 import { generateRandomHex } from "../../lib/crypto/random.js";
 import {
+  verifyEmail,
   authenticateUser,
   passwordResetConfirm,
   passwordResetRequest,
   signupUser,
 } from "./auth.service.js";
 import {
+  emailVerificationBodySchema,
   oauthCredentialsBodySchema,
   passwordResetConfirmBodySchema,
   passwordResetRequestBodySchema,
@@ -162,6 +164,41 @@ export function registerAuthRoutes(router: AppOpenAPI) {
 
       const message = error instanceof Error ? error.message : "Internal Server Error";
       logEndpoint(c, "error", "User sign-up failed", getErrorDetails(error));
+      return c.json(errorResponse(message, 500), 500);
+    }
+  });
+
+  router.post("/verify-email", async c => {
+    const parsedBody = await parseJsonBody(c, emailVerificationBodySchema);
+
+    if (parsedBody.ok === false) {
+      return parsedBody.response;
+    }
+
+    const { token } = parsedBody.data;
+
+    try {
+      const verificationPayload = await verifyEmail(token);
+      logEndpoint(c, "info", "Email verification completed");
+      return c.json(
+        successResponse(
+          "OK",
+          {
+            data: verificationPayload,
+            message: "Email verified",
+          },
+          200,
+        ),
+        200,
+      );
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        logEndpoint(c, "warn", "Email verification validation failed", getErrorDetails(error));
+        return c.json(errorResponse(error.message, 422), 422);
+      }
+
+      const message = error instanceof Error ? error.message : "Internal Server Error";
+      logEndpoint(c, "error", "Email verification failed", getErrorDetails(error));
       return c.json(errorResponse(message, 500), 500);
     }
   });

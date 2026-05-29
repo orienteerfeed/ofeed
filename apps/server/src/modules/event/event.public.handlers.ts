@@ -4,6 +4,7 @@ import prisma from '../../utils/context.js';
 import { formatUtcDateTimeRfc3339, normalizeUtcTimeString } from '../../utils/time.js';
 import { getPublicObject } from '../../lib/storage/s3.js';
 import { error, success, validation } from '../../utils/responseApi.js';
+import { isRelayDiscipline } from '../../utils/relay.js';
 import { calculateCzechRankingPointsForEvent } from '../../utils/czech-ranking.js';
 import { getErrorDetails, logEndpoint } from '../../lib/http/endpoint-logger.js';
 import { parseJsonObjectSafe } from '../../lib/http/body-parser.js';
@@ -122,7 +123,7 @@ export function registerPublicEventRoutes(router) {
           date: true,
           location: true,
           country: true,
-          relay: true,
+          discipline: true,
           published: true,
         },
       });
@@ -137,6 +138,7 @@ export function registerPublicEventRoutes(router) {
             data:
               dbResponse?.map((event) => ({
                 ...event,
+                relay: isRelayDiscipline(event.discipline),
                 date: serializeEventDateForResponse(event.date),
               })) ?? [],
           },
@@ -203,7 +205,6 @@ export function registerPublicEventRoutes(router) {
           longitude: true,
           country: true,
           organizer: true,
-          relay: true,
           discipline: true,
           ranking: true,
           coefRanking: true,
@@ -230,7 +231,7 @@ export function registerPublicEventRoutes(router) {
       );
     }
 
-    const { id, name, date, timezone, location, ...restData } = dbResponse;
+    const { id, name, date, timezone, location, discipline, ...restData } = dbResponse;
     return c.json(
       success(
         'OK',
@@ -242,6 +243,8 @@ export function registerPublicEventRoutes(router) {
             timezone,
             zeroTime: normalizeUtcTimeString(date),
             location,
+            discipline,
+            relay: isRelayDiscipline(discipline),
             ...restData,
           },
         },
@@ -273,7 +276,7 @@ export function registerPublicEventRoutes(router) {
         where: { id: eventId },
         select: {
           id: true,
-          relay: true,
+          discipline: true,
         },
       });
     } catch (err: any) {
@@ -295,7 +298,7 @@ export function registerPublicEventRoutes(router) {
     }
 
     let eventData;
-    if (!dbResponseEvent.relay) {
+    if (!isRelayDiscipline(dbResponseEvent.discipline)) {
       let dbIndividualResponse;
       try {
         dbIndividualResponse = await prisma.event.findUnique({
@@ -493,7 +496,7 @@ export function registerPublicEventRoutes(router) {
         where: { id: eventId },
         select: {
           id: true,
-          relay: true,
+          discipline: true,
         },
       });
     } catch (err: any) {
@@ -531,7 +534,7 @@ export function registerPublicEventRoutes(router) {
         where: { id: eventId },
         select: {
           id: true,
-          relay: true,
+          discipline: true,
         },
       });
     } catch (err: any) {
