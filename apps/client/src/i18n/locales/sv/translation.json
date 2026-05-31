@@ -1334,7 +1334,8 @@
   },
   "Components": {
     "EmailVerifiedBadge": {
-      "Tooltip": "Verifierad e-postadress"
+      "Tooltip": "Verifierad e-postadress",
+      "Label": "Verifierad e-postadress"
     }
   }
 }
