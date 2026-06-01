@@ -44,6 +44,16 @@
           "UpdateSuccess": "Le statut de publication est maintenant {{status}}.",
           "UpdateFail": "Impossible de mettre à jour le statut de publication de l'événement."
         }
+      },
+      "ClassSelect": {
+        "Title": "Sélectionner une catégorie",
+        "Description": "Choisissez une catégorie pour voir les résultats de l'événement."
+      },
+      "ClubSelect": {
+        "Title": "Sélectionner un club",
+        "Description": "Choisissez un club pour voir les résultats",
+        "NoClubs": "Aucun club trouvé",
+        "Cancel": "Annuler"
       }
     }
   },

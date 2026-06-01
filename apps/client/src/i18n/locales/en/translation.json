@@ -944,6 +944,16 @@
         "Description2": "please include any relevant files.",
         "Discord": "Join Discord",
         "GitHubIssues": "Open GitHub Issues"
+      },
+      "ClassSelect": {
+        "Title": "Select Class",
+        "Description": "Choose a class to view event results."
+      },
+      "ClubSelect": {
+        "Title": "Select Club",
+        "Description": "Choose a club to view results",
+        "NoClubs": "No clubs found",
+        "Cancel": "Cancel"
       }
     },
     "Home": {

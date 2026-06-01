@@ -681,6 +681,16 @@
           "ScheduledDescription": "Die Zwischenzeiten werden um {{datetime}} veröffentlicht.",
           "CountdownLabel": "Countdown bis zur Veröffentlichung"
         }
+      },
+      "ClassSelect": {
+        "Title": "Kategorie wählen",
+        "Description": "Wählen Sie eine Kategorie, um die Ergebnisse zu sehen."
+      },
+      "ClubSelect": {
+        "Title": "Klub wählen",
+        "Description": "Wählen Sie einen Klub, um die Ergebnisse zu sehen",
+        "NoClubs": "Keine Klubs gefunden",
+        "Cancel": "Abbrechen"
       }
     }
   },

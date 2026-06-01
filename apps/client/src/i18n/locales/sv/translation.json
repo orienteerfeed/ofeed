@@ -944,6 +944,16 @@
         "Description2": "Bifoga alla relevanta filer.",
         "Discord": "Gå med i Discord",
         "GitHubIssues": "Öppna GitHub-ärenden"
+      },
+      "ClassSelect": {
+        "Title": "Välj klass",
+        "Description": "Välj en klass för att se tävlingens resultat."
+      },
+      "ClubSelect": {
+        "Title": "Välj klubb",
+        "Description": "Välj en klubb för att se resultaten",
+        "NoClubs": "Inga klubbar hittades",
+        "Cancel": "Avbryt"
       }
     },
     "Profile": {
@@ -1133,10 +1143,17 @@
     "UpdateProfileFailedTitle": "Det gick inte att uppdatera profilen"
   },
   "validation": {
+    "emailRequired": "E-post är obligatoriskt",
+    "emailInvalid": "Ogiltig e-postadress",
+    "firstNameRequired": "Förnamn är obligatoriskt",
+    "firstNameMinLength": "Förnamnet måste vara minst 2 tecken",
+    "lastNameRequired": "Efternamn är obligatoriskt",
+    "lastNameMinLength": "Efternamnet måste vara minst 2 tecken",
+    "clubRequired": "Klubb är obligatorisk",
     "passwordRequired": "Lösenord är obligatoriskt",
     "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
     "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
-    "passwordsDoNotMatch": "Lösenorden matchar inte"
+    "passwordsDoNotMatch": "Lösenorden stämmer inte överens"
   },
   "Molecules": {
     "DragDrop": {
@@ -1224,18 +1241,5 @@
     "EmailVerifiedBadge": {
       "Tooltip": "Verifierad e-postadress"
     }
-  },
-  "validation": {
-    "emailRequired": "E-post är obligatoriskt",
-    "emailInvalid": "Ogiltig e-postadress",
-    "firstNameRequired": "Förnamn är obligatoriskt",
-    "firstNameMinLength": "Förnamnet måste vara minst 2 tecken",
-    "lastNameRequired": "Efternamn är obligatoriskt",
-    "lastNameMinLength": "Efternamnet måste vara minst 2 tecken",
-    "clubRequired": "Klubb är obligatorisk",
-    "passwordRequired": "Lösenord är obligatoriskt",
-    "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
-    "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
-    "passwordsDoNotMatch": "Lösenorden stämmer inte överens"
   }
 }

@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatSecondsToTime, formatTimeToHms } from '@/lib/date';
+import { cn } from '@/lib/utils';
 import { Event } from '@/types/event';
 import { gql } from '@apollo/client';
 import { useQuery, useSubscription } from '@apollo/client/react';
@@ -22,13 +23,29 @@ import { useNavigate } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
 import { ChevronDown, Loader2, Radio, Trophy, Users } from 'lucide-react';
 import { motion } from 'motion/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge, Button, CountryFlag, Tooltip } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
 import { MobileClubName } from './MobileClubName';
 import { WinnerNotification } from './WinnerNotifications';
+
+const CLUB_SHEET_MIN_HEIGHT = 200;
+const CLUB_SHEET_DEFAULT_RATIO = 0.8;
+const CLUB_SHEET_MAX_RATIO = 0.9;
+const CLUB_SHEET_DISMISS_THRESHOLD = 56;
+
+const getClubSheetDefaultHeight = () =>
+  typeof window !== 'undefined'
+    ? Math.round(window.innerHeight * CLUB_SHEET_DEFAULT_RATIO)
+    : 600;
+
+const getClubSheetMaxHeight = () =>
+  typeof window !== 'undefined'
+    ? Math.round(window.innerHeight * CLUB_SHEET_MAX_RATIO)
+    : 800;
 
 const mobileResultsTableClassName =
   'overflow-x-auto [&_table]:text-sm [&_th]:h-7 sm:[&_th]:h-8 [&_th]:px-1.5 sm:[&_th]:px-2 [&_th]:text-xs [&_td]:px-1.5 sm:[&_td]:px-2 [&_td]:py-0.5 sm:[&_td]:py-1 [&_td]:text-sm';
@@ -248,8 +265,52 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
 
   const [selectedClass, setSelectedClass] = useState(initialClass);
   const [viewMode, setViewMode] = useState<ViewMode>('category');
+  const { t: tLocal } = useTranslation();
   const [selectedClubId, setSelectedClubId] = useState<number | null>(null);
   const [isClubSheetOpen, setIsClubSheetOpen] = useState(false);
+  const [clubSheetHeight, setClubSheetHeight] = useState(getClubSheetDefaultHeight);
+  const [isClubSheetDragging, setIsClubSheetDragging] = useState(false);
+  const clubDragState = useRef<{ startY: number; startHeight: number } | null>(null);
+
+  useEffect(() => {
+    if (isClubSheetOpen) setClubSheetHeight(getClubSheetDefaultHeight());
+  }, [isClubSheetOpen]);
+
+  const handleClubDragStart = useCallback(
+    (e: React.PointerEvent<HTMLElement>) => {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      clubDragState.current = { startY: e.clientY, startHeight: clubSheetHeight };
+      setIsClubSheetDragging(true);
+    },
+    [clubSheetHeight],
+  );
+
+  const handleClubDragMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    if (!clubDragState.current) return;
+    const delta = clubDragState.current.startY - e.clientY;
+    const next = clubDragState.current.startHeight + delta;
+    if (next < CLUB_SHEET_MIN_HEIGHT - CLUB_SHEET_DISMISS_THRESHOLD) {
+      clubDragState.current = null;
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+      setIsClubSheetDragging(false);
+      setIsClubSheetOpen(false);
+      return;
+    }
+    setClubSheetHeight(
+      Math.min(getClubSheetMaxHeight(), Math.max(CLUB_SHEET_MIN_HEIGHT, next)),
+    );
+  }, []);
+
+  const handleClubDragEnd = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    clubDragState.current = null;
+    setIsClubSheetDragging(false);
+  }, []);
   const [categoryCompetitorsCount, setCategoryCompetitorsCount] =
     useState<number>(0);
   const [isCategoryLoading, setIsCategoryLoading] = useState(false);
@@ -385,80 +446,99 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
                   <span className="text-xs font-bold truncate max-w-[120px]">
                     {organisationsData?.organisationNames?.find(
                       org => org.id === selectedClubId
-                    )?.name || 'Select Club'}
+                    )?.name || tLocal('Pages.Event.ClubSelect.Title')}
                   </span>
                   <ChevronDown className="h-3 w-3 shrink-0" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh] max-h-[80vh]">
-                <div className="flex flex-col h-full pt-4">
-                  <div className="text-left mb-6">
-                    <SheetTitle className="text-xl font-bold">
-                      Select Club
-                    </SheetTitle>
-                    <SheetDescription className="text-muted-foreground mt-1">
-                      Choose a club to view results
-                    </SheetDescription>
+              <SheetContent
+                side="bottom"
+                className="w-full rounded-t-2xl flex flex-col overflow-hidden p-0"
+                style={{
+                  height: clubSheetHeight,
+                  maxHeight: '90vh',
+                  transition: isClubSheetDragging ? 'none' : 'height 200ms ease',
+                }}
+              >
+                <SheetHeader className="text-left shrink-0 px-6 pt-2">
+                  <div
+                    role="separator"
+                    aria-orientation="horizontal"
+                    aria-label="Resize panel"
+                    onPointerDown={handleClubDragStart}
+                    onPointerMove={handleClubDragMove}
+                    onPointerUp={handleClubDragEnd}
+                    onPointerCancel={handleClubDragEnd}
+                    className={cn(
+                      'group flex w-full touch-none cursor-row-resize select-none flex-col items-center pb-1 pt-1',
+                      isClubSheetDragging && 'cursor-grabbing',
+                    )}
+                  >
+                    <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-colors group-hover:bg-muted-foreground/50" />
                   </div>
+                  <SheetTitle className="text-xl font-bold">
+                    {tLocal('Pages.Event.ClubSelect.Title')}
+                  </SheetTitle>
+                  <SheetDescription className="text-muted-foreground mt-1">
+                    {tLocal('Pages.Event.ClubSelect.Description')}
+                  </SheetDescription>
+                </SheetHeader>
 
-                  <div className="flex-1 overflow-y-auto">
-                    {organisationsLoading && (
-                      <div className="flex items-center justify-center py-12">
-                        <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                        <span>{t('Pages.Event.Results.LoadingClubs')}</span>
+                <div className="flex-1 overflow-y-auto px-6 pb-6">
+                  {organisationsLoading && (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                      <span>{t('Pages.Event.Results.LoadingClubs')}</span>
+                    </div>
+                  )}
+
+                  {!organisationsLoading &&
+                    organisationsData?.organisationNames?.length && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-4">
+                        {organisationsData.organisationNames.map(org => (
+                          <Button
+                            key={org.id}
+                            variant={
+                              selectedClubId === org.id ? 'default' : 'outline'
+                            }
+                            className="h-auto min-h-[80px] flex flex-col items-center justify-center p-3 text-center"
+                            onClick={() => {
+                              setSelectedClubId(org.id);
+                              setIsClubSheetOpen(false);
+                            }}
+                          >
+                            <div className="flex flex-col items-center justify-center w-full gap-1">
+                              <span className="text-sm font-semibold leading-tight break-words text-center w-full">
+                                {org.name}
+                              </span>
+                              <Badge
+                                variant="secondary"
+                                className="text-xs font-normal"
+                              >
+                                {org.competitors} runners
+                              </Badge>
+                            </div>
+                          </Button>
+                        ))}
                       </div>
                     )}
 
-                    {!organisationsLoading &&
-                      organisationsData?.organisationNames?.length && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 pb-4">
-                          {organisationsData.organisationNames.map(org => (
-                            <Button
-                              key={org.id}
-                              variant={
-                                selectedClubId === org.id
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              className="h-auto min-h-[80px] flex flex-col items-center justify-center p-3 text-center"
-                              onClick={() => {
-                                setSelectedClubId(org.id);
-                                setIsClubSheetOpen(false);
-                              }}
-                            >
-                              <div className="flex flex-col items-center justify-center w-full gap-1">
-                                <span className="text-sm font-semibold leading-tight break-words text-center w-full">
-                                  {org.name}
-                                </span>
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs font-normal"
-                                >
-                                  {org.competitors} runners
-                                </Badge>
-                              </div>
-                            </Button>
-                          ))}
-                        </div>
-                      )}
+                  {!organisationsLoading &&
+                    !organisationsData?.organisationNames?.length && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        {tLocal('Pages.Event.ClubSelect.NoClubs')}
+                      </div>
+                    )}
+                </div>
 
-                    {!organisationsLoading &&
-                      !organisationsData?.organisationNames?.length && (
-                        <div className="text-center py-12 text-muted-foreground">
-                          No clubs found
-                        </div>
-                      )}
-                  </div>
-
-                  <div className="border-t pt-4 mt-4">
-                    <Button
-                      variant="ghost"
-                      className="w-full"
-                      onClick={() => setIsClubSheetOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+                <div className="border-t px-6 pt-4 pb-4 shrink-0">
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setIsClubSheetOpen(false)}
+                  >
+                    {tLocal('Pages.Event.ClubSelect.Cancel')}
+                  </Button>
                 </div>
               </SheetContent>
             </Sheet>

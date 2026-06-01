@@ -945,6 +945,16 @@
         "Description2": "prosíme přilož případně problémové soubory.",
         "Discord": "Připojit se na Discord",
         "GitHubIssues": "Otevřít GitHub Issues"
+      },
+      "ClassSelect": {
+        "Title": "Vybrat kategorii",
+        "Description": "Vyberte kategorii pro zobrazení výsledků závodu."
+      },
+      "ClubSelect": {
+        "Title": "Vybrat klub",
+        "Description": "Vyberte klub pro zobrazení výsledků",
+        "NoClubs": "Žádné kluby nenalezeny",
+        "Cancel": "Zrušit"
       }
     },
     "Home": {
