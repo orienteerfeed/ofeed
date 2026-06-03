@@ -10,6 +10,7 @@ import CompetitionSettings from '@/components/CompetitionSettings.vue'
 import { useSettingStore } from '@/stores/settings'
 import { useWinnerCommentator } from '@/composables/useWinnerCommentator'
 import type { DataProviders } from '@/composables/providers/useDataProvider'
+import { useDisplaySettingsUrlSync } from '@/composables/useDisplaySettingsUrlSync'
 
 const route = useRoute()
 const competitionId = computed(() => String(route.params.competitionId ?? '1'))
@@ -18,6 +19,7 @@ const dataProvider = computed(
 )
 
 const settingsStore = useSettingStore()
+useDisplaySettingsUrlSync()
 const { t } = useI18n()
 // Only the OFeed provider publishes leader changes.
 const announcing = computed(
