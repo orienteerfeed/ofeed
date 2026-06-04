@@ -127,6 +127,16 @@ enum UserRole {
   ADMIN
 }
 
+model Currency {
+  id               Int          @id @default(autoincrement()) @db.UnsignedInt
+  name             String       @db.VarChar(254)
+  iso4217Alpha3    String       @unique @db.Char(3)
+  iso4217Num3      Int?         @db.UnsignedSmallInt
+  events           Event[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
 model Event {
   id                           String                         @id @default(cuid())
   slug                         String?                        @unique @db.VarChar(64)
@@ -145,7 +155,8 @@ model Event {
   externalEventId              String?                        @db.VarChar(128)
   featuredImageKey             String?                        @db.VarChar(512)
   discipline                   EventDiscipline                @default(OTHER)
-  startMode                    StartMode                      @default(Individual)
+  eventFormat                  EventFormat                    @default(Standard)
+  defaultStartMode             StartMode                      @default(StartList)
   ranking                      Boolean                        @default(false)
   coefRanking                  Float?
   hundredthPrecision           Boolean                        @default(false) // Measure finish time in hundredths of a second
@@ -153,6 +164,11 @@ model Event {
   demo                         Boolean                        @default(false)
   entriesOpenAt                DateTime?
   entriesCloseAt               DateTime?
+  currency                     Currency                       @relation(fields: [currencyId], references: [id])
+  currencyId                   Int                            @default(1) @db.UnsignedInt
+  vatPayer                     Boolean                        @default(false)
+  vatRate                      Decimal?                       @db.Decimal(5, 2)
+  lateEntryFeePercent          Decimal?                       @db.Decimal(5, 2)
   splitPublicationMode         SplitPublicationMode           @default(UNRESTRICTED)
   splitPublicationAt           DateTime?
   resultsOfficialAt            DateTime?
@@ -184,17 +200,38 @@ model Class {
   climb            Int?
   controlsCount    Int?
   competitorsCount Int?
-  printedMaps      Int?
+  maxNumberOfCompetitors Int?
   minAge           Int?
   maxAge           Int?
   minTeamMembers   Int?
   maxTeamMembers   Int?
   sex              Sex          @default(B)
+  resultListMode   ResultListMode?
+  startMode        StartMode?
+  startWindowFrom  DateTime?
+  startWindowTo    DateTime?
+  fee              Decimal?     @db.Decimal(10, 2)
   status           ClassStatus  @default(NORMAL)
   competitors      Competitor[]
   teams            Team[]
+  startSlotVacancies StartSlotVacancy[]
 
   @@unique([eventId, externalId], map: "Class_event_external_uq")
+}
+
+model StartSlotVacancy {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   Int      @db.UnsignedInt
+  startTime DateTime
+  bibNumber Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, startTime], map: "StartSlotVacancy_class_start_time_uq")
+  @@index([classId], map: "StartSlotVacancy_class_idx")
+  @@index([startTime], map: "StartSlotVacancy_start_time_idx")
+  @@index([bibNumber], map: "StartSlotVacancy_bib_number_idx")
 }
 
 model Competitor {
@@ -472,6 +509,12 @@ enum ClassStatus {
   INVALIDATEDNOFEE
 }
 
+enum ResultListMode {
+  Default
+  Unordered
+  UnorderedNoTimes
+}
+
 enum ResultStatus {
   OK
   Finished
@@ -532,11 +575,15 @@ enum ProtocolProcessedByType {
 }
 
 enum StartMode {
-  Individual
-  Mass
-  Handicap
-  Pursuit
-  Wave
+  StartList
+  MassStart
+  PursuitStart
+  WaveStart
+  FreeStart
+}
+
+enum EventFormat {
+  Standard
   ScoreO
 }
 

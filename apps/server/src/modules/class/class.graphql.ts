@@ -1,6 +1,54 @@
 import { builder } from '../../graphql/builder.js';
 
-import { findClassById, findEventClasses, findEventClassesByIds } from './class.service.js';
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
+import { StartModeRef } from '../event/event.graphql-types.js';
+import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
+import { computeClassFee, type ComputedClassFee } from './class.fee.js';
+import {
+  findClassById,
+  findEventClasses,
+  findEventClassesByIds,
+  updateClassFeeForGraphQL,
+} from './class.service.js';
+
+/**
+ * Columns needed to derive a class's effective fee: the class base fee plus the
+ * event-level currency/VAT/late-entry configuration. Shared by the computed fee
+ * fields so Pothos selects them once.
+ */
+const FEE_SELECT = {
+  fee: true,
+  event: {
+    select: {
+      entriesCloseAt: true,
+      vatPayer: true,
+      vatRate: true,
+      lateEntryFeePercent: true,
+    },
+  },
+} as const;
+
+type ClassWithFeeConfig = {
+  fee: { toNumber(): number } | null;
+  event: {
+    entriesCloseAt: Date | null;
+    vatPayer: boolean;
+    vatRate: { toNumber(): number } | null;
+    lateEntryFeePercent: { toNumber(): number } | null;
+  };
+};
+
+function resolveComputedFee(eventClass: ClassWithFeeConfig): ComputedClassFee {
+  const { event } = eventClass;
+  return computeClassFee({
+    baseFee: eventClass.fee?.toNumber() ?? null,
+    now: new Date(),
+    entriesCloseAt: event.entriesCloseAt,
+    lateEntryFeePercent: event.lateEntryFeePercent?.toNumber() ?? null,
+    vatPayer: event.vatPayer,
+    vatRate: event.vatRate?.toNumber() ?? null,
+  });
+}
 
 async function requireClass<T>(eventClass: Promise<T | null>): Promise<T> {
   const result = await eventClass;
@@ -21,7 +69,35 @@ export const ClassRef = builder.prismaObject('Class', {
     climb: t.exposeInt('climb', { nullable: true }),
     controlsCount: t.exposeInt('controlsCount', { nullable: true }),
     competitorsCount: t.exposeInt('competitorsCount', { nullable: true }),
-    printedMaps: t.exposeInt('printedMaps', { nullable: true }),
+    maxNumberOfCompetitors: t.exposeInt('maxNumberOfCompetitors', { nullable: true }),
+    resultListMode: t.exposeString('resultListMode', { nullable: true }),
+    startMode: t.field({
+      type: StartModeRef,
+      nullable: true,
+      resolve: (eventClass) => eventClass.startMode,
+    }),
+    startWindowFrom: t.expose('startWindowFrom', { type: 'DateTime', nullable: true }),
+    startWindowTo: t.expose('startWindowTo', { type: 'DateTime', nullable: true }),
+    fee: t.float({
+      nullable: true,
+      select: { fee: true },
+      resolve: (eventClass) => eventClass.fee?.toNumber() ?? null,
+    }),
+    currentFee: t.float({
+      nullable: true,
+      select: FEE_SELECT,
+      resolve: (eventClass) => resolveComputedFee(eventClass).currentFee,
+    }),
+    feeNet: t.float({
+      nullable: true,
+      select: FEE_SELECT,
+      resolve: (eventClass) => resolveComputedFee(eventClass).feeNet,
+    }),
+    feeVat: t.float({
+      nullable: true,
+      select: FEE_SELECT,
+      resolve: (eventClass) => resolveComputedFee(eventClass).feeVat,
+    }),
     minAge: t.exposeInt('minAge', { nullable: true }),
     maxAge: t.exposeInt('maxAge', { nullable: true }),
     sex: t.string({
@@ -63,5 +139,27 @@ builder.queryFields((t) => ({
     },
     resolve: (query, _root, args, context) =>
       findEventClassesByIds(context.prisma, args.eventId, args.ids, query),
+  }),
+}));
+
+const UpdateClassFeeInputRef = builder.inputType('UpdateClassFeeInput', {
+  fields: (t) => ({
+    classId: t.int({ required: true }),
+    /** Gross entry fee (incl. VAT); null clears the fee. */
+    fee: t.float({ required: false }),
+  }),
+});
+
+builder.mutationFields((t) => ({
+  classFeeUpdate: t.field({
+    type: ResponseMessageRef,
+    args: {
+      input: t.arg({ type: UpdateClassFeeInputRef, required: true }),
+    },
+    resolve: (_root, args, context) =>
+      updateClassFeeForGraphQL(context.prisma, context.auth, {
+        classId: args.input.classId,
+        fee: args.input.fee ?? null,
+      }).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update class fee')),
   }),
 }));

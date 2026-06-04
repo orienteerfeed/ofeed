@@ -29,7 +29,8 @@ const GET_EVENT = gql`
       resultsOfficialManuallySetAt
       ranking
       coefRanking
-      startMode
+      eventFormat
+      defaultStartMode
       relay
       published
       authorId

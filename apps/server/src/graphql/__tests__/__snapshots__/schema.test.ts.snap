@@ -44,16 +44,24 @@ type Class {
   competitors: [Competitor!]
   competitorsCount: Int
   controlsCount: Int
+  currentFee: Float
   eventId: String!
   externalId: String
+  fee: Float
+  feeNet: Float
+  feeVat: Float
   id: Int!
   length: Int
   maxAge: Int
+  maxNumberOfCompetitors: Int
   minAge: Int
   name: String!
-  printedMaps: Int
+  resultListMode: String
   sex: String
+  startMode: StartMode
   startName: String
+  startWindowFrom: DateTime
+  startWindowTo: DateTime
   status: String
   teams: [Team!]
 }
@@ -113,6 +121,48 @@ Custom DateTime scalar (backed by JS Date, serialized as ISO8601 string)
 """
 scalar DateTime
 
+type EntryAvailability {
+  classes: [EntryAvailabilityClass!]!
+  currency: EntryAvailabilityCurrency!
+  defaultStartMode: StartMode!
+  entriesCloseAt: DateTime
+  entriesOpenAt: DateTime
+  vatPayer: Boolean!
+  vatRate: Float
+}
+
+type EntryAvailabilityClass {
+  availableCount: Int!
+  competitorCount: Int!
+  fee: EntryAvailabilityFee
+  id: Int!
+  isFull: Boolean!
+  maxAge: Int
+  maxNumberOfCompetitors: Int!
+  minAge: Int
+  name: String!
+  sex: String!
+  slots: [EntryAvailabilitySlot!]!
+  startMode: StartMode!
+}
+
+type EntryAvailabilityCurrency {
+  code: String!
+  name: String!
+}
+
+type EntryAvailabilityFee {
+  amount: Float!
+  net: Float!
+  vat: Float!
+}
+
+type EntryAvailabilitySlot {
+  bibNumber: Int
+  id: Int!
+  startTime: DateTime!
+}
+
 type Event {
   authorId: Int
   classes: [Class!]
@@ -120,11 +170,14 @@ type Event {
   country: Country
   countryId: String
   createdAt: DateTime!
+  currency: String!
   date: DateTime!
+  defaultStartMode: StartMode!
   demo: Boolean!
   discipline: EventDiscipline!
   entriesCloseAt: DateTime
   entriesOpenAt: DateTime
+  eventFormat: EventFormat!
   eventPassword: EventPassword
   externalEventId: String
   externalSource: ExternalEventProvider
@@ -132,6 +185,7 @@ type Event {
   featuredImageKey: String
   hundredthPrecision: Boolean!
   id: String!
+  lateEntryFeePercent: Float
   latitude: Float
   location: String
   longitude: Float
@@ -148,11 +202,12 @@ type Event {
   splitPublicationMode: SplitPublicationMode!
   sport: Sport!
   sportId: Int!
-  startMode: String!
   statusSummary: EventStatusSummary!
   timezone: String!
   updatedAt: DateTime!
   user: User
+  vatPayer: Boolean!
+  vatRate: Float
   zeroTime: String!
 }
 
@@ -189,6 +244,11 @@ enum EventFilter {
   RECENT
   TODAY
   UPCOMING
+}
+
+enum EventFormat {
+  ScoreO
+  Standard
 }
 
 enum EventLifecycleStatus {
@@ -273,6 +333,7 @@ input LoginInput {
 type Mutation {
   _empty(nothing: String): String
   changeCurrentUserPassword(input: ChangeCurrentUserPasswordInput!): ResetResponse!
+  classFeeUpdate(input: UpdateClassFeeInput!): ResponseMessage!
   competitorCreate(input: StoreCompetitorInput!): StoreCompetitorResponse!
   competitorStatusChange(input: StatusChange!): ResponseMessage!
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
@@ -340,6 +401,7 @@ type Query {
   event(id: String!): Event
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
+  eventEntryAvailability(eventId: String!): EntryAvailability
   events(input: EventsInput): EventConnection!
   eventsBySport(sportId: Int!): [Event!]
   eventsByUser(userId: Int!): [Event!]
@@ -400,6 +462,14 @@ type SplitPublicationStatus {
 type Sport {
   id: Int!
   name: String!
+}
+
+enum StartMode {
+  FreeStart
+  MassStart
+  PursuitStart
+  StartList
+  WaveStart
 }
 
 input StatusChange {
@@ -476,6 +546,11 @@ type Team {
   name: String!
   organisation: String
   shortName: String
+}
+
+input UpdateClassFeeInput {
+  classId: Int!
+  fee: Float
 }
 
 input UpdateCompetitorInput {

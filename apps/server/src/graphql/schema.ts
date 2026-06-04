@@ -13,6 +13,7 @@ import '../modules/split/split.graphql.js';
 import '../modules/competitor/competitor.graphql.js';
 import '../modules/changelog/changelog.graphql.js';
 import '../modules/system-message/system-message.graphql.js';
+import '../modules/start-slot-vacancy/start-slot-vacancy.graphql.js';
 
 import { builder } from './builder.js';
 

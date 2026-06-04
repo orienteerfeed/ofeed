@@ -21,6 +21,7 @@ import {
   organisationSelect,
   upsertOrganisation,
 } from './organisation.helpers.js';
+import { deleteMatchingStartSlotVacancy } from '../start-slot-vacancy/start-slot-vacancy.service.js';
 import {
   eventSlugMaxLength,
   eventSlugMinLength,
@@ -884,24 +885,35 @@ export const updateCompetitor = async (
       ...(organisationIdUpdate ?? {}),
     } as Prisma.CompetitorUncheckedUpdateInput;
 
-    await prisma.competitor.update({
-      where: { id: competitorIdNumber },
-      data: competitorUpdateData,
+    // Update the competitor, refresh splits, and free up the matching start
+    // slot vacancy for the resulting class + start time, all atomically. Using
+    // the persisted row's class/start time covers both classId and startTime
+    // changes without re-deriving the merged values here.
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.competitor.update({
+        where: { id: competitorIdNumber },
+        data: competitorUpdateData,
+      });
+
+      await deleteMatchingStartSlotVacancy(tx, {
+        classId: updated.classId,
+        startTime: updated.startTime,
+      });
+
+      if (splits && Array.isArray(splits)) {
+        await tx.split.deleteMany({
+          where: { competitorId: competitorIdNumber },
+        });
+
+        await tx.split.createMany({
+          data: splits.map((split) => ({
+            competitorId: competitorIdNumber,
+            controlCode: Number((split as { controlCode: string | number }).controlCode),
+            time: (split as { time?: number | null }).time,
+          })),
+        });
+      }
     });
-
-    if (splits && Array.isArray(splits)) {
-      await prisma.split.deleteMany({
-        where: { competitorId: competitorIdNumber },
-      });
-
-      await prisma.split.createMany({
-        data: splits.map((split) => ({
-          competitorId: competitorIdNumber,
-          controlCode: Number((split as { controlCode: string | number }).controlCode),
-          time: (split as { time?: number | null }).time,
-        })),
-      });
-    }
   } catch (err) {
     console.error('Failed to update competitor:', err);
     throw new DatabaseError('Error updating competitor');
@@ -1001,35 +1013,46 @@ export const storeCompetitor = async (
 
   let newCompetitor;
   try {
-    newCompetitor = await prisma.competitor.create({
-      data: {
-        classId: classIdNumber,
-        firstname,
-        lastname,
-        nationality: competitorData.nationality || null,
-        registration: registration || createShortCompetitorHash(classId, lastname, firstname),
-        license: competitorData.license || null,
-        rankingPoints: competitorData.rankingPoints ?? null,
-        rankingReferenceValue: competitorData.rankingReferenceValue ?? null,
-        organisationId: organisationId,
-        card: card ? toIntegerId(card) : null,
-        bibNumber: competitorData.bibNumber ? toIntegerId(competitorData.bibNumber) : null,
-        startTime: competitorData.startTime ? new Date(competitorData.startTime) : null,
-        finishTime: competitorData.finishTime ? new Date(competitorData.finishTime) : null,
-        time: competitorData.time || null,
-        teamId:
-          competitorData.teamId === undefined || competitorData.teamId === null
-            ? null
-            : parseInt(String(competitorData.teamId), 10),
-        leg:
-          competitorData.leg === undefined || competitorData.leg === null
-            ? null
-            : parseInt(String(competitorData.leg), 10),
-        status: (status as ResultStatus | undefined) || 'Inactive', // Default to Inactive if not provided
-        lateStart: competitorData.lateStart || false,
-        note: note || null,
-        externalId: competitorData.externalId || null,
-      },
+    // Create the competitor and free up the matching start slot vacancy (if the
+    // competitor has a start time) atomically in a single transaction.
+    newCompetitor = await prisma.$transaction(async (tx) => {
+      const created = await tx.competitor.create({
+        data: {
+          classId: classIdNumber,
+          firstname,
+          lastname,
+          nationality: competitorData.nationality || null,
+          registration: registration || createShortCompetitorHash(classId, lastname, firstname),
+          license: competitorData.license || null,
+          rankingPoints: competitorData.rankingPoints ?? null,
+          rankingReferenceValue: competitorData.rankingReferenceValue ?? null,
+          organisationId: organisationId,
+          card: card ? toIntegerId(card) : null,
+          bibNumber: competitorData.bibNumber ? toIntegerId(competitorData.bibNumber) : null,
+          startTime: competitorData.startTime ? new Date(competitorData.startTime) : null,
+          finishTime: competitorData.finishTime ? new Date(competitorData.finishTime) : null,
+          time: competitorData.time || null,
+          teamId:
+            competitorData.teamId === undefined || competitorData.teamId === null
+              ? null
+              : parseInt(String(competitorData.teamId), 10),
+          leg:
+            competitorData.leg === undefined || competitorData.leg === null
+              ? null
+              : parseInt(String(competitorData.leg), 10),
+          status: (status as ResultStatus | undefined) || 'Inactive', // Default to Inactive if not provided
+          lateStart: competitorData.lateStart || false,
+          note: note || null,
+          externalId: competitorData.externalId || null,
+        },
+      });
+
+      await deleteMatchingStartSlotVacancy(tx, {
+        classId: created.classId,
+        startTime: created.startTime,
+      });
+
+      return created;
     });
   } catch (err) {
     console.error('Error creating competitor:', err);

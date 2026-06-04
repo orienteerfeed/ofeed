@@ -3,7 +3,43 @@ import { combineEventDateWithZeroTime, normalizeUtcTimeString } from '../src/uti
 
 const prisma = createPrismaClient();
 
+const CURRENCIES = [
+  // CZK is inserted by migration with id=1; upsert here keeps it idempotent
+  { name: 'Czech koruna', iso4217Alpha3: 'CZK', iso4217Num3: 203 },
+  { name: 'Euro', iso4217Alpha3: 'EUR', iso4217Num3: 978 },
+  { name: 'US dollar', iso4217Alpha3: 'USD', iso4217Num3: 840 },
+  { name: 'British pound', iso4217Alpha3: 'GBP', iso4217Num3: 826 },
+  { name: 'Swiss franc', iso4217Alpha3: 'CHF', iso4217Num3: 756 },
+  { name: 'Polish zloty', iso4217Alpha3: 'PLN', iso4217Num3: 616 },
+  { name: 'Hungarian forint', iso4217Alpha3: 'HUF', iso4217Num3: 348 },
+  { name: 'Swedish krona', iso4217Alpha3: 'SEK', iso4217Num3: 752 },
+  { name: 'Norwegian krone', iso4217Alpha3: 'NOK', iso4217Num3: 578 },
+  { name: 'Danish krone', iso4217Alpha3: 'DKK', iso4217Num3: 208 },
+  { name: 'Romanian leu', iso4217Alpha3: 'RON', iso4217Num3: 946 },
+  { name: 'Bulgarian lev', iso4217Alpha3: 'BGN', iso4217Num3: 975 },
+  { name: 'Croatian kuna', iso4217Alpha3: 'HRK', iso4217Num3: 191 },
+  { name: 'Serbian dinar', iso4217Alpha3: 'RSD', iso4217Num3: 941 },
+  { name: 'Ukrainian hryvnia', iso4217Alpha3: 'UAH', iso4217Num3: 980 },
+  { name: 'Russian ruble', iso4217Alpha3: 'RUB', iso4217Num3: 643 },
+  { name: 'Canadian dollar', iso4217Alpha3: 'CAD', iso4217Num3: 124 },
+  { name: 'Australian dollar', iso4217Alpha3: 'AUD', iso4217Num3: 36 },
+  { name: 'Japanese yen', iso4217Alpha3: 'JPY', iso4217Num3: 392 },
+  // Historical currencies kept for legacy event data
+  { name: 'Slovak koruna', iso4217Alpha3: 'SKK', iso4217Num3: 703 },
+  { name: 'Austrian schilling', iso4217Alpha3: 'ATS', iso4217Num3: 40 },
+  { name: 'German mark', iso4217Alpha3: 'DEM', iso4217Num3: 280 },
+];
+
 async function main() {
+  for (const currency of CURRENCIES) {
+    await prisma.currency.upsert({
+      where: { iso4217Alpha3: currency.iso4217Alpha3 },
+      update: { name: currency.name, iso4217Num3: currency.iso4217Num3 },
+      create: currency,
+    });
+  }
+  console.log(`Seeded ${CURRENCIES.length} currencies`);
+
   const orienteering = await prisma.sport.upsert({
     where: { name: 'Orienteering' },
     update: {},

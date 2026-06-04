@@ -14,6 +14,7 @@ import {
 } from '../../lib/validation/zod.js';
 
 import { validateEventConnection } from './event.connection.service.js';
+import { listEventEntryAvailability } from '../start-slot-vacancy/start-slot-vacancy.service.js';
 import { getEventCompetitorDetail, getEventSlugAvailability } from './event.service.js';
 import { flattenOrganisation, organisationSelect } from './organisation.helpers.js';
 import {
@@ -574,6 +575,32 @@ export function registerPublicEventRoutes(router) {
     );
 
     return c.json(success('OK', { data: competitorData }, 200), 200);
+  });
+
+  router.get('/:eventId/entry-availability', async (c) => {
+    const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
+    if (!parsedParams.success) {
+      return c.json(responseValidationIssues(parsedParams.error.issues), 422);
+    }
+
+    const { eventId } = parsedParams.data;
+
+    try {
+      const result = await listEventEntryAvailability(prisma as never, eventId);
+      if (!result) {
+        return c.json(
+          validation(`Event with ID ${eventId} does not exist in the database`, 422),
+          422,
+        );
+      }
+      return c.json(success('OK', { data: result }, 200), 200);
+    } catch (err) {
+      logEndpoint(c, 'error', 'Entry availability query failed', {
+        eventId,
+        ...getErrorDetails(err),
+      });
+      return c.json(error('Failed to load entry availability', 500), 500);
+    }
   });
 
   router.post('/:eventId/czech-ranking', async (c) => {

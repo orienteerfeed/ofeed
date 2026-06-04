@@ -30,6 +30,7 @@ describe('Pothos GraphQL schema', () => {
         'event',
         'eventClasses',
         'eventClassesByIds',
+        'eventEntryAvailability',
         'events',
         'eventsBySport',
         'eventsByUser',
@@ -50,6 +51,7 @@ describe('Pothos GraphQL schema', () => {
       sorted([
         '_empty',
         'changeCurrentUserPassword',
+        'classFeeUpdate',
         'competitorCreate',
         'competitorStatusChange',
         'competitorUpdate',

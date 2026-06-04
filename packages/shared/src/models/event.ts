@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import {
+  eventFormatSchema,
   dateLikeSchema,
   eventDisciplineSchema,
   eventFilterSchema,
@@ -24,12 +25,17 @@ export const eventSchema = z.object({
     .regex(/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/, 'Expected UTC time as HH:mm:ss'),
   relay: z.boolean(),
   discipline: eventDisciplineSchema,
-  startMode: startModeSchema,
+  eventFormat: eventFormatSchema,
+  defaultStartMode: startModeSchema,
   ranking: z.boolean(),
   coefRanking: z.number().nullable().optional(),
   hundredthPrecision: z.boolean(),
   published: z.boolean(),
   demo: z.boolean(),
+  currency: z.string().optional(),
+  vatPayer: z.boolean().optional(),
+  vatRate: z.number().nullable().optional(),
+  lateEntryFeePercent: z.number().nullable().optional(),
   authorId: z.number().int().nullable().optional(),
   createdAt: dateLikeSchema,
   updatedAt: dateLikeSchema,

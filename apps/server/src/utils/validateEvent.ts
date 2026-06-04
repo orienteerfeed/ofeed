@@ -34,7 +34,10 @@ export const eventWriteSchema = z
     hundredthPrecision: z.boolean().optional(),
     published: z.boolean().optional(),
     ranking: z.boolean().optional(),
-    startMode: z.enum(['Individual', 'Mass', 'Handicap', 'Pursuit', 'Wave', 'ScoreO']).optional(),
+    eventFormat: z.enum(['Standard', 'ScoreO']).optional(),
+    defaultStartMode: z
+      .enum(['StartList', 'MassStart', 'PursuitStart', 'WaveStart', 'FreeStart'])
+      .optional(),
     coefRanking: z.coerce.number().optional().nullable(),
     countryCode: z.string().min(2).max(2).optional(),
     country: z.string().min(2).max(2).optional(),
@@ -42,6 +45,10 @@ export const eventWriteSchema = z
     externalEventId: z.string().min(1).max(128).optional().nullable(),
     entriesOpenAt: z.string().datetime({ offset: true }).optional().nullable(),
     entriesCloseAt: z.string().datetime({ offset: true }).optional().nullable(),
+    currency: z.string().length(3).optional(),
+    vatPayer: z.boolean().optional(),
+    vatRate: z.coerce.number().min(0).max(100).optional().nullable(),
+    lateEntryFeePercent: z.coerce.number().min(0).max(999.99).optional().nullable(),
     splitPublicationMode: z
       .enum(['UNRESTRICTED', 'LAST_START', 'SCHEDULED', 'DISABLED'])
       .optional(),

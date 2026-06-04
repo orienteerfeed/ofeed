@@ -1,3 +1,5 @@
+import { resolveEffectiveStartMode } from '@repo/shared';
+
 import { DatabaseError, NotFoundError } from '../exceptions/index.js';
 import type { EventDiscipline, ResultStatus, StartMode } from '../generated/prisma/client.js';
 import prisma from './context.js';
@@ -160,7 +162,7 @@ function resolveCzechRankingType(bucket: CzechRankingBucket): CzechRankingType |
 }
 
 function resolveCzechRankingStartFactor(startMode: StartMode): number {
-  return startMode === 'Mass' ? 0.15 : 0;
+  return startMode === 'MassStart' ? 0.15 : 0;
 }
 
 export function resolveCzechRankingSnapshotMonth(eventDate: Date): Date {
@@ -371,13 +373,14 @@ async function calculateCzechRankingPointsForEventOnce(eventId: string): Promise
         countryId: true,
         ranking: true,
         discipline: true,
-        startMode: true,
+        defaultStartMode: true,
         coefRanking: true,
         date: true,
         classes: {
           select: {
             id: true,
             name: true,
+            startMode: true,
             competitors: {
               select: {
                 id: true,
@@ -406,7 +409,6 @@ async function calculateCzechRankingPointsForEventOnce(eventId: string): Promise
 
     const snapshotMonth = resolveCzechRankingSnapshotMonth(event.date);
     const eventCoefficient = Number(event.coefRanking) || 1;
-    const startFactor = resolveCzechRankingStartFactor(event.startMode);
     const snapshotCache = new Map<CzechRankingCategory, Map<string, number>>();
 
     for (const eventClass of event.classes.filter((eventClass) =>
@@ -416,6 +418,12 @@ async function calculateCzechRankingPointsForEventOnce(eventId: string): Promise
       if (!rankingCategory) {
         continue;
       }
+
+      const effectiveStartMode = resolveEffectiveStartMode(
+        eventClass.startMode,
+        event.defaultStartMode,
+      );
+      const startFactor = resolveCzechRankingStartFactor(effectiveStartMode);
 
       let rankingMap = snapshotCache.get(rankingCategory);
       if (!rankingMap) {

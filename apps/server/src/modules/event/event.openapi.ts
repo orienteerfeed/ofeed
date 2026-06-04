@@ -600,6 +600,24 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       },
     },
   },
+  [`${eventsBase}/{eventId}/entry-availability`]: {
+    get: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventEntryAvailability',
+      summary: 'Entry availability — capacity and fee per class',
+      description:
+        'Returns all classes for the event with their available start slots, capacity, ' +
+        'and computed entry fee. Covers new entries, late entries, and competitor slot-change scenarios. ' +
+        'No authentication required.',
+      security: [],
+      parameters: [eventIdParam],
+      responses: {
+        200: okJson('Entry availability'),
+        422: okJson('Event not found'),
+        500: okJson('Internal server error'),
+      },
+    },
+  },
   [`${eventsBase}/{eventId}/competitors`]: {
     get: {
       tags: [EVENT_OPENAPI.tag],
