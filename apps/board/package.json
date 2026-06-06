@@ -21,10 +21,10 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@tanstack/vue-query": "^5.100.14",
+    "@tanstack/vue-query": "^5.101.0",
     "@unocss/reset": "^66.7.0",
     "@vueuse/core": "^13.0.0",
-    "axios": "^1.16.1",
+    "axios": "^1.17.0",
     "date-fns": "^2.29.3",
     "flag-icons": "^7.5.0",
     "graphql-ws": "^6.0.8",
