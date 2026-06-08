@@ -479,6 +479,7 @@ export async function deleteMeosCompetitor(
   if (!existing) return { updated: false };
 
   await tx.split.deleteMany({ where: { competitorId: existing.id } });
+  await tx.protocol.deleteMany({ where: { competitorId: existing.id } });
   await tx.competitor.deleteMany({
     where: { externalId: String(meosId), class: { eventId } },
   });
