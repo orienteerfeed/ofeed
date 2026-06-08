@@ -278,6 +278,38 @@ export const ADMIN_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       },
     },
   },
+  [`${adminUserPath}/request-email-verification`]: {
+    post: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminRequestUserEmailVerification',
+      summary: 'Send a verification email to a user',
+      security: bearerSecurity,
+      parameters: [
+        {
+          name: 'userId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+        },
+        {
+          name: 'x-orienteerfeed-app-activate-user-url',
+          in: 'header',
+          required: false,
+          schema: { type: 'string' },
+          description:
+            'Base URL for the verification link; the 48h token is appended as /{token}.',
+        },
+      ],
+      responses: {
+        200: userMutationOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        404: okJson('User not found'),
+        409: okJson('Email already verified'),
+        422: okJson('Invalid admin user request'),
+      },
+    },
+  },
   [`${adminBase}/events`]: {
     get: {
       tags: [ADMIN_OPENAPI.tag],

@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Activate",
           "Deactivate": "Deactivate",
-          "Delete": "Delete"
+          "Delete": "Delete",
+          "Menu": "Actions",
+          "RequestVerification": "Resend verification email"
         },
         "Confirm": {
           "ActivateTitle": "Activate user account",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "Failed to activate account",
           "DeactivateErrorTitle": "Failed to deactivate account",
           "DeleteErrorTitle": "Failed to delete account",
-          "UnknownError": "An unexpected error occurred."
+          "UnknownError": "An unexpected error occurred.",
+          "RequestVerificationSuccessTitle": "Verification email sent",
+          "RequestVerificationSuccessDescription": "A verification email was sent to {{name}}.",
+          "RequestVerificationErrorTitle": "Failed to send verification email"
         }
       },
       "Events": {

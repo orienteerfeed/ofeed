@@ -48,6 +48,8 @@ export const ENDPOINTS = {
     `${apiPrefix}/admin/users${qs(params)}`,
   adminUser: (userId: string | number): string =>
     `${apiPrefix}/admin/users/${userId}`,
+  adminUserRequestEmailVerification: (userId: string | number): string =>
+    `${apiPrefix}/admin/users/${userId}/request-email-verification`,
   adminEvents: (params?: PaginationParams): string =>
     `${apiPrefix}/admin/events${qs(params)}`,
   adminSystemMessages: (): string => `${apiPrefix}/admin/system-messages`,

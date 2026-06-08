@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Aktivieren",
           "Deactivate": "Deaktivieren",
-          "Delete": "Löschen"
+          "Delete": "Löschen",
+          "Menu": "Aktionen",
+          "RequestVerification": "Bestätigungs-E-Mail erneut senden"
         },
         "Confirm": {
           "ActivateTitle": "Benutzerkonto aktivieren",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "Konto konnte nicht aktiviert werden",
           "DeactivateErrorTitle": "Konto konnte nicht deaktiviert werden",
           "DeleteErrorTitle": "Konto konnte nicht gelöscht werden",
-          "UnknownError": "Ein unerwarteter Fehler ist aufgetreten."
+          "UnknownError": "Ein unerwarteter Fehler ist aufgetreten.",
+          "RequestVerificationSuccessTitle": "Bestätigungs-E-Mail gesendet",
+          "RequestVerificationSuccessDescription": "Eine Bestätigungs-E-Mail wurde an {{name}} gesendet.",
+          "RequestVerificationErrorTitle": "Bestätigungs-E-Mail konnte nicht gesendet werden"
         }
       },
       "Events": {

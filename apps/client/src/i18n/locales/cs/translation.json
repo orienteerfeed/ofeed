@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Aktivovat",
           "Deactivate": "Deaktivovat",
-          "Delete": "Odstranit"
+          "Delete": "Odstranit",
+          "Menu": "Akce",
+          "RequestVerification": "Znovu odeslat ověřovací e-mail"
         },
         "Confirm": {
           "ActivateTitle": "Aktivovat uživatelský účet",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "Nepodařilo se aktivovat účet",
           "DeactivateErrorTitle": "Nepodařilo se deaktivovat účet",
           "DeleteErrorTitle": "Nepodařilo se odstranit účet",
-          "UnknownError": "Došlo k neočekávané chybě."
+          "UnknownError": "Došlo k neočekávané chybě.",
+          "RequestVerificationSuccessTitle": "Ověřovací e-mail odeslán",
+          "RequestVerificationSuccessDescription": "Ověřovací e-mail byl odeslán uživateli {{name}}.",
+          "RequestVerificationErrorTitle": "Nepodařilo se odeslat ověřovací e-mail"
         }
       },
       "Events": {

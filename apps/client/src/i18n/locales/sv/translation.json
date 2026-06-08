@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Aktivera",
           "Deactivate": "Inaktivera",
-          "Delete": "Ta bort"
+          "Delete": "Ta bort",
+          "Menu": "Åtgärder",
+          "RequestVerification": "Skicka verifieringsmejl igen"
         },
         "Confirm": {
           "ActivateTitle": "Aktivera användarkonto",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "Det gick inte att aktivera kontot",
           "DeactivateErrorTitle": "Det gick inte att inaktivera kontot",
           "DeleteErrorTitle": "Det gick inte att ta bort kontot",
-          "UnknownError": "Ett oväntat fel inträffade."
+          "UnknownError": "Ett oväntat fel inträffade.",
+          "RequestVerificationSuccessTitle": "Verifieringsmejl skickat",
+          "RequestVerificationSuccessDescription": "Ett verifieringsmejl skickades till {{name}}.",
+          "RequestVerificationErrorTitle": "Det gick inte att skicka verifieringsmejlet"
         }
       },
       "Events": {

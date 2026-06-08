@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Activar",
           "Deactivate": "Desactivar",
-          "Delete": "Eliminar"
+          "Delete": "Eliminar",
+          "Menu": "Acciones",
+          "RequestVerification": "Reenviar correo de verificación"
         },
         "Confirm": {
           "ActivateTitle": "Activar cuenta de usuario",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "No se pudo activar la cuenta",
           "DeactivateErrorTitle": "No se pudo desactivar la cuenta",
           "DeleteErrorTitle": "No se pudo eliminar la cuenta",
-          "UnknownError": "Se produjo un error inesperado."
+          "UnknownError": "Se produjo un error inesperado.",
+          "RequestVerificationSuccessTitle": "Correo de verificación enviado",
+          "RequestVerificationSuccessDescription": "Se envió un correo de verificación a {{name}}.",
+          "RequestVerificationErrorTitle": "No se pudo enviar el correo de verificación"
         }
       },
       "Events": {
