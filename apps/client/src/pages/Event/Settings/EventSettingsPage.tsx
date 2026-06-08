@@ -142,7 +142,7 @@ export const EventSettingsPage = () => {
       }
     : null;
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <MainPageLayout t={t}>
         <div className="min-h-screen flex items-center justify-center">
