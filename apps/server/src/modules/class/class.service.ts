@@ -1,3 +1,5 @@
+import { classUpdateInputSchema } from '@repo/shared';
+
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { ValidationError } from '../../exceptions/index.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
@@ -103,4 +105,69 @@ export async function updateClassFeeForGraphQL(
   });
 
   return { message: 'Class fee updated' };
+}
+
+/**
+ * Partial update of a class's editable configuration. Validates input with the
+ * shared `classUpdateInputSchema` (including cross-field age / team-size
+ * constraints and 2-decimal fee limit), authorises against the owning event,
+ * and persists only the fields the caller supplied. Passing `null` for a
+ * nullable field clears it; omitting a field leaves it unchanged.
+ */
+export async function updateClassForGraphQL(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  input: unknown,
+) {
+  const parsed = classUpdateInputSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid class update input.');
+  }
+
+  const { classId, ...fields } = parsed.data;
+
+  const eventClass = await prisma.class.findUnique({
+    where: { id: classId },
+    select: {
+      id: true,
+      eventId: true,
+      minAge: true,
+      maxAge: true,
+      minTeamMembers: true,
+      maxTeamMembers: true,
+    },
+  });
+
+  if (!eventClass) {
+    throw new Error('Class not found');
+  }
+
+  await requireEventOwnerOrAdmin(prisma, auth, eventClass.eventId);
+
+  const merged = classUpdateInputSchema.safeParse({
+    ...parsed.data,
+    minAge: fields.minAge === undefined ? eventClass.minAge : fields.minAge,
+    maxAge: fields.maxAge === undefined ? eventClass.maxAge : fields.maxAge,
+    minTeamMembers:
+      fields.minTeamMembers === undefined ? eventClass.minTeamMembers : fields.minTeamMembers,
+    maxTeamMembers:
+      fields.maxTeamMembers === undefined ? eventClass.maxTeamMembers : fields.maxTeamMembers,
+  });
+  if (!merged.success) {
+    throw new ValidationError(merged.error.issues[0]?.message ?? 'Invalid class update input.');
+  }
+
+  const data: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value !== undefined) {
+      data[key] = value;
+    }
+  }
+
+  await prisma.class.update({
+    where: { id: eventClass.id },
+    data: data as Prisma.ClassUpdateInput,
+  });
+
+  return { message: 'Class updated' };
 }

@@ -158,6 +158,7 @@ export const EventRef = builder.prismaObject('Event', {
     entriesCloseAt: t.expose('entriesCloseAt', { type: 'DateTime', nullable: true }),
     currency: t.field({
       type: 'String',
+      nullable: true,
       resolve: async (event, args, ctx) => {
         if (!event.currencyId) return null;
         const currency = await ctx.prisma.currency.findUnique({

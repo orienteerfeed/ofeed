@@ -37,6 +37,18 @@ function serializeEventDateForResponse(date: Date) {
   return formatUtcDateTimeRfc3339(date) ?? date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
+function ageToRestClass<T extends { minAge: number | null; maxAge: number | null }>(
+  cls: T,
+  refYear: number,
+): Omit<T, 'minAge' | 'maxAge'> & { birthYearFrom: number | null; birthYearTo: number | null } {
+  const { minAge, maxAge, ...rest } = cls;
+  return {
+    ...rest,
+    birthYearFrom: maxAge !== null ? refYear - maxAge : null,
+    birthYearTo: minAge !== null ? refYear - minAge : null,
+  };
+}
+
 export function registerPublicEventRoutes(router) {
   const eventCompetitorsQuerySchema = z.object({
     class: z.string().regex(/^\d+$/).optional(),
@@ -211,7 +223,10 @@ export function registerPublicEventRoutes(router) {
           coefRanking: true,
           sport: true,
           hundredthPrecision: true,
-          classes: true,
+          defaultStartMode: true,
+          classes: {
+            include: { _count: { select: { competitors: true } } },
+          },
         },
       });
     } catch (err: any) {
@@ -233,6 +248,12 @@ export function registerPublicEventRoutes(router) {
     }
 
     const { id, name, date, timezone, location, discipline, ...restData } = dbResponse;
+    const { classes: rawClasses, ...restWithoutClasses } = restData;
+    const refYear = new Date().getFullYear();
+    const classes = (rawClasses ?? []).map((cls) => {
+      const { _count, ...classRest } = cls;
+      return { ...ageToRestClass(classRest, refYear), competitorsCount: _count.competitors };
+    });
     return c.json(
       success(
         'OK',
@@ -246,7 +267,8 @@ export function registerPublicEventRoutes(router) {
             location,
             discipline,
             relay: isRelayDiscipline(discipline),
-            ...restData,
+            ...restWithoutClasses,
+            classes,
           },
         },
         200,
@@ -593,7 +615,12 @@ export function registerPublicEventRoutes(router) {
           422,
         );
       }
-      return c.json(success('OK', { data: result }, 200), 200);
+      const refYear = new Date().getFullYear();
+      const data = {
+        ...result,
+        classes: result.classes.map((cls) => ageToRestClass(cls, refYear)),
+      };
+      return c.json(success('OK', { data }, 200), 200);
     } catch (err) {
       logEndpoint(c, 'error', 'Entry availability query failed', {
         eventId,

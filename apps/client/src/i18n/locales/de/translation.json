@@ -475,6 +475,18 @@
         }
       },
       "Form": {
+        "DefaultStartMode": "Standard-Startmodus",
+        "Currency": "Währung",
+        "StartModeOptions": {
+          "StartList": "Startliste",
+          "MassStart": "Massenstart",
+          "PursuitStart": "Verfolgungsstart",
+          "WaveStart": "Wellenstart",
+          "FreeStart": "Freier Start"
+        },
+        "Placeholders": {
+          "Currency": "Währung auswählen"
+        },
         "Import": {
           "SyncOfficialResults": "Offizielle Ergebnisse synchronisieren",
           "SyncOfficialResultsRequiresSavedLink": "Speichere zuerst die Änderungen an der externen Verknüpfung, bevor du die offiziellen Ergebnisse synchronisierst.",
@@ -691,6 +703,61 @@
         "Description": "Wählen Sie einen Klub, um die Ergebnisse zu sehen",
         "NoClubs": "Keine Klubs gefunden",
         "Cancel": "Abbrechen"
+      },
+      "Settings": {
+        "Loading": "Loading event settings",
+        "Tabs": {
+          "General": "General",
+          "Classes": "Classes"
+        },
+        "Classes": {
+          "Title": "Classes",
+          "Description": "Edit per-class configuration. Changes are saved automatically.",
+          "Columns": {
+            "Name": "Name",
+            "CompetitorsCount": "Teilnehmerzahl",
+            "MaxCompetitors": "Max competitors",
+            "BirthYearFrom": "Birth year from",
+            "BirthYearTo": "Birth year to",
+            "MinTeamMembers": "Min team members",
+            "MaxTeamMembers": "Max team members",
+            "Sex": "Sex",
+            "ResultListMode": "Result mode",
+            "Fee": "Fee",
+            "StartMode": "Start mode",
+            "AwardedPlaces": "Awarded places",
+            "Actions": "Actions"
+          },
+          "ResultListMode": {
+            "Default": "Default",
+            "Unordered": "Unordered",
+            "UnorderedNoTimes": "Unordered (no times)"
+          },
+          "StartMode": {
+            "Inherit": "Event default",
+            "StartList": "Start list",
+            "MassStart": "Mass start",
+            "PursuitStart": "Pursuit start",
+            "WaveStart": "Wave start",
+            "FreeStart": "Free start"
+          },
+          "Empty": "No classes found for this event.",
+          "SaveError": "Could not save the change.",
+          "StartTimes": {
+            "Open": "Free start times",
+            "Title": "Free start times — {{name}}",
+            "Time": "Start time",
+            "Bib": "Bib",
+            "Empty": "No free start times for this class.",
+            "Close": "Close",
+            "LoadError": "Could not load start times."
+          },
+          "MaxCompetitorsErrorPositive": "Enter a non-negative integer.",
+          "MaxCompetitorsErrorBelowCount": "Cannot be lower than the current number of registered competitors ({{count}}).",
+          "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
+          "BirthYearInvalid": "Bitte geben Sie ein gültiges Jahr ein (mind. 4 Stellen).",
+          "BirthYearRangeError": "Jahrgang von muss kleiner oder gleich Jahrgang bis sein."
+        }
       }
     }
   },

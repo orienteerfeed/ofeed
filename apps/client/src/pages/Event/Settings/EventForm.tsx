@@ -26,6 +26,7 @@ import {
   EventFormData,
   EventFormValues,
   EventSport,
+  StartMode,
 } from '../../../types';
 import { toast } from '../../../utils/toast';
 
@@ -44,6 +45,14 @@ const GET_COUNTRIES = gql`
     countries {
       countryCode
       countryName
+    }
+  }
+`;
+
+const GET_CURRENCIES = gql`
+  query CurrenciesQuery {
+    currencies {
+      iso4217Alpha3
     }
   }
 `;
@@ -91,6 +100,7 @@ type ExternalEventPreviewDraft = {
   coefRanking?: number;
   published?: boolean;
   hundredthPrecision?: boolean;
+  currency?: string;
 };
 
 type ExternalEventPreviewResponse = {
@@ -135,6 +145,8 @@ const convertToFormValues = (
         )
       : event.zeroTime || '',
   discipline: event.discipline || 'OTHER',
+  defaultStartMode: event.defaultStartMode || 'StartList',
+  currency: event.currency || 'CZK',
   ranking: event.ranking || false,
   coefRanking: event.coefRanking?.toString() || '',
   published: event.published || false,
@@ -493,6 +505,12 @@ export const EventForm: React.FC<EventFormProps> = ({
     error: countriesError,
   } = useQuery<{ countries: Country[] }>(GET_COUNTRIES);
 
+  // Fetch currencies data using Apollo Client
+  const {
+    data: currenciesData,
+    loading: currenciesLoading,
+  } = useQuery<{ currencies: { iso4217Alpha3: string }[] }>(GET_CURRENCIES);
+
   useEffect(() => {
     if (sportsError) {
       console.error('Failed to load sports:', sportsError);
@@ -620,6 +638,8 @@ export const EventForm: React.FC<EventFormProps> = ({
         countryCode: '',
         zeroTime: '',
         discipline: 'OTHER',
+        defaultStartMode: 'StartList',
+        currency: 'CZK',
         ranking: false,
         coefRanking: '',
         published: false,
@@ -715,6 +735,8 @@ export const EventForm: React.FC<EventFormProps> = ({
             countryCode: value.countryCode || undefined,
             zeroTime: normalizedZeroTime,
             discipline: value.discipline || 'OTHER',
+            defaultStartMode: value.defaultStartMode || 'StartList',
+            currency: value.currency || undefined,
             ranking: value.ranking,
             coefRanking: value.coefRanking
               ? parseFloat(value.coefRanking)
@@ -882,6 +904,10 @@ export const EventForm: React.FC<EventFormProps> = ({
 
     if (typeof draft.hundredthPrecision === 'boolean') {
       form.setFieldValue('hundredthPrecision', draft.hundredthPrecision);
+    }
+
+    if (draft.currency) {
+      form.setFieldValue('currency', draft.currency);
     }
   };
 
@@ -1487,7 +1513,7 @@ export const EventForm: React.FC<EventFormProps> = ({
         </div>
       </div>
 
-      {/* Země a Zero Time - 2 sloupce */}
+      {/* Země a Měna */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="countryCode" className="text-sm font-medium">
@@ -1498,7 +1524,7 @@ export const EventForm: React.FC<EventFormProps> = ({
             name="countryCode"
             type="select"
             placeholder={t('Pages.Event.Form.Placeholders.Country')}
-            disabled={countriesLoading} // Only disable for countries loading, not form submission
+            disabled={countriesLoading}
             className="w-full"
             options={
               countriesData?.countries?.map(country => ({
@@ -1510,6 +1536,122 @@ export const EventForm: React.FC<EventFormProps> = ({
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="currency" className="text-sm font-medium">
+            {t('Pages.Event.Form.Currency')}
+          </Label>
+          <ReactiveField
+            form={form}
+            name="currency"
+            type="select"
+            placeholder={t('Pages.Event.Form.Placeholders.Currency')}
+            disabled={currenciesLoading}
+            className="w-full"
+            options={
+              currenciesData?.currencies?.map(c => ({
+                value: c.iso4217Alpha3,
+                label: c.iso4217Alpha3,
+              })) || []
+            }
+          />
+        </div>
+      </div>
+
+      {/* Discipline and default start mode — side by side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="discipline" className="text-sm font-medium">
+            {t('Pages.Event.Form.Discipline')}
+          </Label>
+          <ReactiveField
+            form={form}
+            name="discipline"
+            type="select"
+            className="w-full"
+            options={[
+              {
+                value: 'SPRINT',
+                label: t('Pages.Event.Form.DisciplineOptions.SPRINT'),
+              },
+              {
+                value: 'MIDDLE',
+                label: t('Pages.Event.Form.DisciplineOptions.MIDDLE'),
+              },
+              {
+                value: 'LONG',
+                label: t('Pages.Event.Form.DisciplineOptions.LONG'),
+              },
+              {
+                value: 'ULTRALONG',
+                label: t('Pages.Event.Form.DisciplineOptions.ULTRALONG'),
+              },
+              {
+                value: 'NIGHT',
+                label: t('Pages.Event.Form.DisciplineOptions.NIGHT'),
+              },
+              {
+                value: 'KNOCKOUT_SPRINT',
+                label: t(
+                  'Pages.Event.Form.DisciplineOptions.KNOCKOUT_SPRINT'
+                ),
+              },
+              {
+                value: 'RELAY',
+                label: t('Pages.Event.Form.DisciplineOptions.RELAY'),
+              },
+              {
+                value: 'SPRINT_RELAY',
+                label: t('Pages.Event.Form.DisciplineOptions.SPRINT_RELAY'),
+              },
+              {
+                value: 'TEAMS',
+                label: t('Pages.Event.Form.DisciplineOptions.TEAMS'),
+              },
+              {
+                value: 'OTHER',
+                label: t('Pages.Event.Form.DisciplineOptions.OTHER'),
+              },
+            ]}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="defaultStartMode" className="text-sm font-medium">
+            {t('Pages.Event.Form.DefaultStartMode')}
+          </Label>
+          <ReactiveField
+            form={form}
+            name="defaultStartMode"
+            type="select"
+            className="w-full"
+            options={[
+              {
+                value: 'StartList' as StartMode,
+                label: t('Pages.Event.Form.StartModeOptions.StartList'),
+              },
+              {
+                value: 'MassStart' as StartMode,
+                label: t('Pages.Event.Form.StartModeOptions.MassStart'),
+              },
+              {
+                value: 'PursuitStart' as StartMode,
+                label: t('Pages.Event.Form.StartModeOptions.PursuitStart'),
+              },
+              {
+                value: 'WaveStart' as StartMode,
+                label: t('Pages.Event.Form.StartModeOptions.WaveStart'),
+              },
+              {
+                value: 'FreeStart' as StartMode,
+                label: t('Pages.Event.Form.StartModeOptions.FreeStart'),
+              },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* Zero Time */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="zeroTime" className="text-sm font-medium">
             {t('Pages.Event.Form.ZeroTime')}
@@ -1525,66 +1667,9 @@ export const EventForm: React.FC<EventFormProps> = ({
         </div>
       </div>
 
-      {/* Nastavení eventu - 2 sloupce s checkboxy */}
+      {/* Ranking, CoefRanking a HundredthPrecision */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Levý sloupec - Ranking a Coef Ranking */}
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="discipline" className="text-sm font-medium">
-              {t('Pages.Event.Form.Discipline')}
-            </Label>
-            <ReactiveField
-              form={form}
-              name="discipline"
-              type="select"
-              className="w-full"
-              options={[
-                {
-                  value: 'SPRINT',
-                  label: t('Pages.Event.Form.DisciplineOptions.SPRINT'),
-                },
-                {
-                  value: 'MIDDLE',
-                  label: t('Pages.Event.Form.DisciplineOptions.MIDDLE'),
-                },
-                {
-                  value: 'LONG',
-                  label: t('Pages.Event.Form.DisciplineOptions.LONG'),
-                },
-                {
-                  value: 'ULTRALONG',
-                  label: t('Pages.Event.Form.DisciplineOptions.ULTRALONG'),
-                },
-                {
-                  value: 'NIGHT',
-                  label: t('Pages.Event.Form.DisciplineOptions.NIGHT'),
-                },
-                {
-                  value: 'KNOCKOUT_SPRINT',
-                  label: t(
-                    'Pages.Event.Form.DisciplineOptions.KNOCKOUT_SPRINT'
-                  ),
-                },
-                {
-                  value: 'RELAY',
-                  label: t('Pages.Event.Form.DisciplineOptions.RELAY'),
-                },
-                {
-                  value: 'SPRINT_RELAY',
-                  label: t('Pages.Event.Form.DisciplineOptions.SPRINT_RELAY'),
-                },
-                {
-                  value: 'TEAMS',
-                  label: t('Pages.Event.Form.DisciplineOptions.TEAMS'),
-                },
-                {
-                  value: 'OTHER',
-                  label: t('Pages.Event.Form.DisciplineOptions.OTHER'),
-                },
-              ]}
-            />
-          </div>
-
           <div className="flex items-center space-x-2">
             <ReactiveField
               form={form}
@@ -1612,7 +1697,6 @@ export const EventForm: React.FC<EventFormProps> = ({
           </div>
         </div>
 
-        {/* Pravý sloupec - Ostatní checkboxy */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
             <ReactiveField
@@ -1625,20 +1709,23 @@ export const EventForm: React.FC<EventFormProps> = ({
               {t('Pages.Event.Form.HundredthPrecision')}
             </Label>
           </div>
-
-          <div className="flex items-center space-x-2">
-            <ReactiveField
-              form={form}
-              name="published"
-              type="checkbox"
-              className="h-4 w-4"
-            />
-            <Label htmlFor="published" className="text-sm font-medium">
-              {t('Pages.Event.Form.Published')}
-            </Label>
-          </div>
         </div>
       </div>
+
+      {/* Published - jen při vytváření eventu */}
+      {isCreateMode && (
+        <div className="flex items-center space-x-2">
+          <ReactiveField
+            form={form}
+            name="published"
+            type="checkbox"
+            className="h-4 w-4"
+          />
+          <Label htmlFor="published" className="text-sm font-medium">
+            {t('Pages.Event.Form.Published')}
+          </Label>
+        </div>
+      )}
 
       {/* Submit Button */}
       <div className="flex justify-end pt-4">

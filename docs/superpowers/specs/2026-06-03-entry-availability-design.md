@@ -52,6 +52,10 @@ GET /rest/v1/events/{eventId}/entry-availability
 - Bez autentizace — registruje se v `event.public.handlers.ts` (před
   `requireAuth`), vedle `/:eventId/competitors`.
 - Standardní `success(...)` envelope.
+- REST odpověď převádí interní věkové hranice na ročníky narození:
+  `birthYearFrom = currentYear - maxAge` a
+  `birthYearTo = currentYear - minAge`. Pole `minAge` a `maxAge` nejsou v REST
+  payloadu vystavena.
 - `422` na neexistující event, `500` na chybu DB — dle vzoru ostatních public
   handlerů.
 - OpenAPI spec v `event.openapi.ts` (`${eventsBase}/{eventId}/entry-availability`).
@@ -65,14 +69,15 @@ query ($eventId: String!) {
 }
 ```
 
-- **Dedikované objektové typy** (ne rozšíření `ClassRef`), aby tvar přesně
-  odpovídal REST a query byla single-purpose:
+- **Dedikované objektové typy** (ne rozšíření `ClassRef`), aby query byla
+  single-purpose:
   - `EntryAvailability` — event-level wrapper.
   - `EntryAvailabilityCurrency` — `{ code, name }`.
   - `EntryAvailabilityClass` — per-class data.
   - `EntryAvailabilitySlot` — `{ id, startTime, bibNumber }`.
-- Resolver volá tutéž service `listEventEntryAvailability` → identický tvar jako
-  REST.
+- Resolver volá tutéž service `listEventEntryAvailability`. GraphQL zachovává
+  interní pole `minAge` a `maxAge`; převod na `birthYearFrom` a `birthYearTo` je
+  specifický pouze pro veřejný REST transport.
 - Aktualizace GraphQL schema snapshotu (`schema.test.ts`).
 
 ## Tvar odpovědi
@@ -90,8 +95,8 @@ query ($eventId: String!) {
       "id": 10,
       "name": "H21E",
       "sex": "M",
-      "minAge": null,
-      "maxAge": null,
+      "birthYearFrom": null,
+      "birthYearTo": null,
       "maxNumberOfCompetitors": 120,
       "competitorCount": 87,            // živý _count
       "startMode": "StartList",         // efektivní: class.startMode ?? event.defaultStartMode
@@ -111,8 +116,8 @@ query ($eventId: String!) {
       "id": 11,
       "name": "HDR",
       "sex": "B",
-      "minAge": null,
-      "maxAge": null,
+      "birthYearFrom": null,
+      "birthYearTo": null,
       "maxNumberOfCompetitors": 50,
       "competitorCount": 17,
       "startMode": "FreeStart",
@@ -133,6 +138,12 @@ Poznámky k polím:
 
 - `currency`, `vatPayer`, `vatRate` jsou **event-level** (jedna měna a DPH na
   event dle fee designu), neduplikují se do tříd.
+- `birthYearFrom` je nejstarší povolený ročník narození a vzniká jako
+  `currentYear - maxAge`; `birthYearTo` je nejmladší povolený ročník a vzniká
+  jako `currentYear - minAge`. Pokud příslušná věková hranice není nastavena,
+  hodnota je `null`.
+- Service a GraphQL používají `minAge`/`maxAge`; názvy `birthYearFrom` a
+  `birthYearTo` patří pouze veřejnému REST kontraktu.
 - `startMode` je **efektivní** start mode kategorie
   (`class.startMode ?? event.defaultStartMode`). Surový override se nevrací.
 - `fee`/`currentFee`/`feeNet`/`feeVat` se počítají stávající čistou funkcí

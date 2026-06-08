@@ -2,6 +2,7 @@ import { builder } from '../../graphql/builder.js';
 import { StartModeRef } from '../event/event.graphql-types.js';
 import {
   listEventEntryAvailability,
+  listStartSlotVacanciesByClass,
   type EntryAvailabilityFee,
   type EntryAvailabilitySlot,
   type EntryAvailabilityClass,
@@ -89,6 +90,16 @@ const EntryAvailabilityRef = builder
     }),
   });
 
+const ClassStartSlotVacancyRef = builder
+  .objectRef<{ id: number; startTime: Date; bibNumber: number | null }>('ClassStartSlotVacancy')
+  .implement({
+    fields: (t) => ({
+      id: t.exposeInt('id'),
+      startTime: t.expose('startTime', { type: 'DateTime' }),
+      bibNumber: t.exposeInt('bibNumber', { nullable: true }),
+    }),
+  });
+
 builder.queryFields((t) => ({
   eventEntryAvailability: t.field({
     type: EntryAvailabilityRef,
@@ -98,5 +109,13 @@ builder.queryFields((t) => ({
     },
     resolve: (_root, args, context) =>
       listEventEntryAvailability(context.prisma, args.eventId),
+  }),
+  classStartSlotVacancies: t.field({
+    type: [ClassStartSlotVacancyRef],
+    args: {
+      classId: t.arg.int({ required: true }),
+    },
+    resolve: (_root, args, context) =>
+      listStartSlotVacanciesByClass(context.prisma, args.classId),
   }),
 }));

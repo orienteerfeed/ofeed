@@ -9,6 +9,7 @@ import {
   findEventClasses,
   findEventClassesByIds,
   updateClassFeeForGraphQL,
+  updateClassForGraphQL,
 } from './class.service.js';
 
 /**
@@ -68,8 +69,13 @@ export const ClassRef = builder.prismaObject('Class', {
     length: t.exposeInt('length', { nullable: true }),
     climb: t.exposeInt('climb', { nullable: true }),
     controlsCount: t.exposeInt('controlsCount', { nullable: true }),
-    competitorsCount: t.exposeInt('competitorsCount', { nullable: true }),
+    competitorsCount: t.int({
+      select: { _count: { select: { competitors: true } } },
+      resolve: (eventClass) => eventClass._count.competitors,
+    }),
     maxNumberOfCompetitors: t.exposeInt('maxNumberOfCompetitors', { nullable: true }),
+    minTeamMembers: t.exposeInt('minTeamMembers', { nullable: true }),
+    maxTeamMembers: t.exposeInt('maxTeamMembers', { nullable: true }),
     resultListMode: t.exposeString('resultListMode', { nullable: true }),
     startMode: t.field({
       type: StartModeRef,
@@ -100,6 +106,7 @@ export const ClassRef = builder.prismaObject('Class', {
     }),
     minAge: t.exposeInt('minAge', { nullable: true }),
     maxAge: t.exposeInt('maxAge', { nullable: true }),
+    awardedPlaces: t.exposeInt('awardedPlaces', { nullable: true }),
     sex: t.string({
       nullable: true,
       resolve: (eventClass) => eventClass.sex,
@@ -128,7 +135,8 @@ builder.queryFields((t) => ({
     args: {
       eventId: t.arg.string({ required: true }),
     },
-    resolve: (query, _root, args, context) => findEventClasses(context.prisma, args.eventId, query),
+    resolve: (query, _root, args, context) =>
+      findEventClasses(context.prisma, args.eventId, { ...query, orderBy: { name: 'asc' } }),
   }),
   eventClassesByIds: t.prismaField({
     type: [ClassRef],
@@ -150,6 +158,22 @@ const UpdateClassFeeInputRef = builder.inputType('UpdateClassFeeInput', {
   }),
 });
 
+const UpdateClassInputRef = builder.inputType('UpdateClassInput', {
+  fields: (t) => ({
+    classId: t.int({ required: true }),
+    maxNumberOfCompetitors: t.int({ required: false }),
+    minAge: t.int({ required: false }),
+    maxAge: t.int({ required: false }),
+    minTeamMembers: t.int({ required: false }),
+    maxTeamMembers: t.int({ required: false }),
+    sex: t.string({ required: false }),
+    resultListMode: t.string({ required: false }),
+    startMode: t.field({ type: StartModeRef, required: false }),
+    awardedPlaces: t.int({ required: false }),
+    fee: t.float({ required: false }),
+  }),
+});
+
 builder.mutationFields((t) => ({
   classFeeUpdate: t.field({
     type: ResponseMessageRef,
@@ -161,5 +185,25 @@ builder.mutationFields((t) => ({
         classId: args.input.classId,
         fee: args.input.fee ?? null,
       }).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update class fee')),
+  }),
+  classUpdate: t.field({
+    type: ResponseMessageRef,
+    args: {
+      input: t.arg({ type: UpdateClassInputRef, required: true }),
+    },
+    resolve: (_root, args, context) =>
+      updateClassForGraphQL(context.prisma, context.auth, {
+        classId: args.input.classId,
+        maxNumberOfCompetitors: args.input.maxNumberOfCompetitors,
+        minAge: args.input.minAge,
+        maxAge: args.input.maxAge,
+        minTeamMembers: args.input.minTeamMembers,
+        maxTeamMembers: args.input.maxTeamMembers,
+        sex: args.input.sex,
+        resultListMode: args.input.resultListMode,
+        startMode: args.input.startMode,
+        awardedPlaces: args.input.awardedPlaces,
+        fee: args.input.fee,
+      }).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update class')),
   }),
 }));

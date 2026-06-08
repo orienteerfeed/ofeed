@@ -663,6 +663,12 @@ describe('GET /:eventId/entry-availability', () => {
     const json = await response.json();
     expect(json.data.currency).toEqual({ code: 'CZK', name: 'Czech koruna' });
     expect(json.data.classes).toHaveLength(1);
+    expect(json.data.classes[0]).toMatchObject({
+      birthYearFrom: null,
+      birthYearTo: null,
+    });
+    expect(json.data.classes[0]).not.toHaveProperty('minAge');
+    expect(json.data.classes[0]).not.toHaveProperty('maxAge');
     expect(json.data.classes[0].availableCount).toBe(5);
     expect(mockListEventEntryAvailability).toHaveBeenCalledWith(prismaMock, 'event-1');
   });
@@ -703,6 +709,23 @@ Add this import at the top with the other imports (after `import { validateEvent
 import { listEventEntryAvailability } from '../start-slot-vacancy/start-slot-vacancy.service.js';
 ```
 
+Add a transport helper that converts the service's age bounds to the public
+REST contract:
+
+```typescript
+function ageToRestClass<T extends { minAge: number | null; maxAge: number | null }>(
+  cls: T,
+  refYear: number,
+): Omit<T, 'minAge' | 'maxAge'> & { birthYearFrom: number | null; birthYearTo: number | null } {
+  const { minAge, maxAge, ...rest } = cls;
+  return {
+    ...rest,
+    birthYearFrom: maxAge !== null ? refYear - maxAge : null,
+    birthYearTo: minAge !== null ? refYear - minAge : null,
+  };
+}
+```
+
 Add this route inside `registerPublicEventRoutes`, **before** the final `router.post('/:eventId/czech-ranking', ...)` handler:
 
 ```typescript
@@ -722,7 +745,12 @@ Add this route inside `registerPublicEventRoutes`, **before** the final `router.
           422,
         );
       }
-      return c.json(success('OK', { data: result }, 200), 200);
+      const refYear = new Date().getFullYear();
+      const data = {
+        ...result,
+        classes: result.classes.map((cls) => ageToRestClass(cls, refYear)),
+      };
+      return c.json(success('OK', { data }, 200), 200);
     } catch (err) {
       logEndpoint(c, 'error', 'Entry availability query failed', {
         eventId,

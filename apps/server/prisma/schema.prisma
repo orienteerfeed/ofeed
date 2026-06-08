@@ -199,7 +199,6 @@ model Class {
   length           Int?
   climb            Int?
   controlsCount    Int?
-  competitorsCount Int?
   maxNumberOfCompetitors Int?
   minAge           Int?
   maxAge           Int?
@@ -211,6 +210,7 @@ model Class {
   startWindowFrom  DateTime?
   startWindowTo    DateTime?
   fee              Decimal?     @db.Decimal(10, 2)
+  awardedPlaces    Int?         @default(3) @db.SmallInt
   status           ClassStatus  @default(NORMAL)
   competitors      Competitor[]
   teams            Team[]

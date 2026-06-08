@@ -256,6 +256,38 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
   const sameOrgByExternalId =
     incomingExternalId !== null && dbCompetitor?.organisation?.externalId === incomingExternalId;
 
+  const xmlStartTime =
+    getIofDateTime(result?.StartTime, eventTimeZone) ??
+    getIofDateTime(start?.StartTime, eventTimeZone);
+
+  const isInactive = (dbCompetitor?.status ?? 'Inactive') === 'Inactive';
+  const dbStartTime = dbCompetitor?.startTime ?? null;
+
+  // StartTime resolution rules (in priority order):
+  //
+  // 1. StartList re-import guard: if the competitor has already run
+  //    (non-Inactive) and has a recorded startTime, preserve it regardless of
+  //    what the StartList XML says. Some exporters write the event zero-time as
+  //    <StartTime> for free-start competitors; the real chip time arrives only
+  //    via ResultList and must not be overwritten on the next StartList cycle.
+  //    This guard is intentionally skipped for ResultList imports (result !== null)
+  //    so that result re-imports can always correct the startTime.
+  //
+  // 2. XML value present → use it (ResultList always lands here; StartList lands
+  //    here only when guard above did not apply).
+  //
+  // 3. No XML value, Inactive → null (competitor not yet assigned a start time).
+  //
+  // 4. No XML value, non-Inactive, no DB value → null.
+  const resolvedStartTime =
+    !isInactive && result === null && dbStartTime !== null
+      ? dbStartTime
+      : xmlStartTime !== undefined
+        ? xmlStartTime
+        : isInactive
+          ? null
+          : dbStartTime;
+
   const competitorData = {
     classId,
     class: { connect: { id: classId } },
@@ -273,10 +305,7 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
       : start?.BibNumber
         ? (parseInt(start.BibNumber.shift()) ?? dbCompetitor?.bibNumber)
         : null,
-    startTime:
-      getIofDateTime(result?.StartTime, eventTimeZone) ??
-      getIofDateTime(start?.StartTime, eventTimeZone) ??
-      (dbCompetitor?.startTime || null),
+    startTime: resolvedStartTime,
     finishTime:
       getIofDateTime(result?.FinishTime, eventTimeZone) ?? (dbCompetitor?.finishTime || null),
     time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitor?.time ?? null),

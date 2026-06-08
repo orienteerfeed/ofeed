@@ -526,6 +526,173 @@ describe('upsertCompetitor — authorId written to protocol', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// upsertCompetitor — startTime preservation for StartList re-import
+// ---------------------------------------------------------------------------
+
+describe('upsertCompetitor — startTime preservation when StartList has no <StartTime>', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // start payload without StartTime (free-start slot: only ControlCard present)
+  const startWithoutTime = { ControlCard: ['1712999'] };
+
+  function makeDbCompetitor(overrides: Partial<typeof baseDb & { id: number; externalId: string; license: null; organisationId: null; organisation: null; lateStart: boolean; note: null }>) {
+    return {
+      id: 10,
+      classId: 1,
+      firstname: 'Jan',
+      lastname: 'Novák',
+      nationality: 'CZE',
+      registration: 'REG001',
+      license: null,
+      organisationId: null,
+      organisation: null,
+      card: null,
+      bibNumber: null,
+      startTime: null,
+      finishTime: null,
+      time: null,
+      status: 'Inactive' as const,
+      lateStart: false,
+      leg: null,
+      note: null,
+      externalId: 'REG001',
+      ...overrides,
+    };
+  }
+
+  it('sets startTime to null when XML has no StartTime and competitor is Inactive', async () => {
+    const db = makeDbCompetitor({ status: 'Inactive', startTime: null });
+    mockPrisma.competitor.findUnique.mockResolvedValue(db);
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+
+    let capturedData: any;
+    mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
+      const tx = {
+        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        protocol: { createMany: vi.fn().mockResolvedValue({ count: 0 }) },
+      };
+      return cb(tx);
+    });
+
+    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithoutTime as never, null, 'UTC', null, null, 5);
+
+    expect(capturedData?.startTime).toBeNull();
+  });
+
+  it('preserves existing startTime when XML has no StartTime and competitor is OK (already ran)', async () => {
+    const actualStartTime = new Date('2026-05-31T10:35:23+02:00');
+    const db = makeDbCompetitor({ status: 'OK' as any, startTime: actualStartTime, nationality: 'SVK' });
+    mockPrisma.competitor.findUnique.mockResolvedValue(db);
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+
+    let capturedData: any;
+    mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
+      const tx = {
+        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      };
+      return cb(tx);
+    });
+
+    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithoutTime as never, null, 'UTC', null, null, 5);
+
+    expect(capturedData?.startTime).toEqual(actualStartTime);
+  });
+
+  it('sets startTime to null for a new competitor with no StartTime in XML', async () => {
+    mockPrisma.competitor.findUnique.mockResolvedValue(null);
+    mockPrisma.competitor.findFirst.mockResolvedValue(null);
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+
+    let capturedData: any;
+    mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
+      const tx = {
+        competitor: { create: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({ id: 99 }); }) },
+        protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      };
+      return cb(tx);
+    });
+
+    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithoutTime as never, null, 'UTC', null, null, 5);
+
+    expect(capturedData?.startTime).toBeNull();
+  });
+
+  it('preserves DB startTime over StartList XML start time when competitor is OK with existing time', async () => {
+    // Scenario: free-start competitor ran (status=OK, real chip time in DB).
+    // StartList XML carries the event zero-time — must NOT overwrite the real time.
+    const actualStartTime = new Date('2026-05-31T10:35:23+02:00');
+    const db = makeDbCompetitor({ status: 'OK' as any, startTime: actualStartTime, nationality: 'SVK' as any });
+    mockPrisma.competitor.findUnique.mockResolvedValue(db);
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+
+    let capturedData: any;
+    mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
+      const tx = {
+        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      };
+      return cb(tx);
+    });
+
+    // XML has zero-time (10:00:00) — a typical free-start StartList placeholder
+    const startWithZeroTime = { StartTime: ['2026-05-31T10:00:00+02:00'], ControlCard: ['8390839'] };
+    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithZeroTime as never, null, 'Europe/Prague', null, null, 5);
+
+    // DB value must be preserved — zero-time must NOT overwrite the real chip time
+    expect(capturedData?.startTime).toEqual(actualStartTime);
+  });
+
+  it('uses XML StartTime from StartList when competitor is OK but DB startTime is null', async () => {
+    // OK status but no real startTime yet — XML value is safe to use.
+    const db = makeDbCompetitor({ status: 'OK' as any, startTime: null, nationality: 'SVK' as any });
+    mockPrisma.competitor.findUnique.mockResolvedValue(db);
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+
+    let capturedData: any;
+    mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
+      const tx = {
+        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      };
+      return cb(tx);
+    });
+
+    const startWithTime = { StartTime: ['2026-05-31T10:32:00+02:00'], ControlCard: ['8390839'] };
+    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithTime as never, null, 'Europe/Prague', null, null, 5);
+
+    expect(capturedData?.startTime).not.toBeNull();
+    expect(capturedData?.startTime).toEqual(new Date('2026-05-31T10:32:00+02:00'));
+  });
+
+  it('ResultList import uses XML StartTime even when competitor is OK with existing DB startTime', async () => {
+    // ResultList always wins — this allows correcting start times via result re-import.
+    const oldStartTime = new Date('2026-05-31T10:00:00+02:00'); // wrong/default time in DB
+    const realStartTime = new Date('2026-05-31T10:35:23+02:00');
+    const db = makeDbCompetitor({ status: 'OK' as any, startTime: oldStartTime, nationality: 'SVK' as any });
+    mockPrisma.competitor.findUnique.mockResolvedValue(db);
+    mockPrisma.organisation.findFirst.mockResolvedValue(null);
+
+    let capturedData: any;
+    mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
+      const tx = {
+        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
+      };
+      return cb(tx);
+    });
+
+    // ResultList result with the real start time
+    const result = { StartTime: ['2026-05-31T10:35:23+02:00'], Status: ['OK'], ControlCard: ['8390839'] };
+    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, null, result as never, 'Europe/Prague', null, null, 5);
+
+    expect(capturedData?.startTime).toEqual(realStartTime);
+  });
+});
+
 describe('upsertCompetitor — organisation country import', () => {
   afterEach(() => {
     vi.clearAllMocks();

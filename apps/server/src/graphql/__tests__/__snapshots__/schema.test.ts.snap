@@ -40,9 +40,10 @@ type ChangelogProcessing {
 }
 
 type Class {
+  awardedPlaces: Int
   climb: Int
   competitors: [Competitor!]
-  competitorsCount: Int
+  competitorsCount: Int!
   controlsCount: Int
   currentFee: Float
   eventId: String!
@@ -54,7 +55,9 @@ type Class {
   length: Int
   maxAge: Int
   maxNumberOfCompetitors: Int
+  maxTeamMembers: Int
   minAge: Int
+  minTeamMembers: Int
   name: String!
   resultListMode: String
   sex: String
@@ -64,6 +67,12 @@ type Class {
   startWindowTo: DateTime
   status: String
   teams: [Team!]
+}
+
+type ClassStartSlotVacancy {
+  bibNumber: Int
+  id: Int!
+  startTime: DateTime!
 }
 
 type Competitor {
@@ -109,6 +118,11 @@ input CreateUserCardInput {
   isDefault: Boolean
   sportId: Int!
   type: UserCardType!
+}
+
+type Currency {
+  iso4217Alpha3: String!
+  name: String!
 }
 
 """
@@ -170,7 +184,7 @@ type Event {
   country: Country
   countryId: String
   createdAt: DateTime!
-  currency: String!
+  currency: String
   date: DateTime!
   defaultStartMode: StartMode!
   demo: Boolean!
@@ -334,6 +348,7 @@ type Mutation {
   _empty(nothing: String): String
   changeCurrentUserPassword(input: ChangeCurrentUserPasswordInput!): ResetResponse!
   classFeeUpdate(input: UpdateClassFeeInput!): ResponseMessage!
+  classUpdate(input: UpdateClassInput!): ResponseMessage!
   competitorCreate(input: StoreCompetitorInput!): StoreCompetitorResponse!
   competitorStatusChange(input: StatusChange!): ResponseMessage!
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
@@ -390,12 +405,14 @@ type Query {
   activeSystemMessages: [SystemMessage!]!
   changelogByEvent(classId: Int, eventId: String!, origin: String, since: DateTime): [Changelog!]
   classById(id: Int!): Class!
+  classStartSlotVacancies(classId: Int!): [ClassStartSlotVacancy!]!
   competitorById(id: Int!): Competitor!
   competitorSplits(competitorId: Int!): [Split!]
   competitorsByClass(id: Int!): [Competitor!]
   competitorsByOrganisation(eventId: String!, organisation: String, organisationId: Int): [Competitor!]
   competitorsByTeam(id: Int!): [Competitor!]
   countries: [Country!]!
+  currencies: [Currency!]!
   currentUser: User!
   currentUserCards: [UserCard!]!
   event(id: String!): Event
@@ -551,6 +568,20 @@ type Team {
 input UpdateClassFeeInput {
   classId: Int!
   fee: Float
+}
+
+input UpdateClassInput {
+  awardedPlaces: Int
+  classId: Int!
+  fee: Float
+  maxAge: Int
+  maxNumberOfCompetitors: Int
+  maxTeamMembers: Int
+  minAge: Int
+  minTeamMembers: Int
+  resultListMode: String
+  sex: String
+  startMode: StartMode
 }
 
 input UpdateCompetitorInput {

@@ -21,6 +21,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemMessagesRouteImport } from './routes/admin/system-messages'
 import { Route as AdminEventsRouteImport } from './routes/admin/events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
+import { Route as EEventIdIndexRouteImport } from './routes/e/$eventId/index'
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
 import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventId/report'
 import { Route as AuthVerifyEmailTokenRouteImport } from './routes/auth/verify-email/$token'
@@ -87,6 +88,11 @@ const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   path: '/events/$eventId/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EEventIdIndexRoute = EEventIdIndexRouteImport.update({
+  id: '/e/$eventId/',
+  path: '/e/$eventId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsEventIdSettingsRoute = EventsEventIdSettingsRouteImport.update({
   id: '/events/$eventId/settings',
   path: '/events/$eventId/settings',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
+  '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
+  '/e/$eventId': typeof EEventIdIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesById {
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
+  '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/auth/verify-email/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
+    | '/e/$eventId/'
     | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/auth/verify-email/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
+    | '/e/$eventId'
     | '/events/$eventId'
   id:
     | '__root__'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/auth/verify-email/$token'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
+    | '/e/$eventId/'
     | '/events/$eventId/'
   fileRoutesById: FileRoutesById
 }
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
   EventsEventIdReportRoute: typeof EventsEventIdReportRoute
   EventsEventIdSettingsRoute: typeof EventsEventIdSettingsRoute
+  EEventIdIndexRoute: typeof EEventIdIndexRoute
   EventsEventIdIndexRoute: typeof EventsEventIdIndexRoute
 }
 
@@ -337,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e/$eventId/': {
+      id: '/e/$eventId/'
+      path: '/e/$eventId'
+      fullPath: '/e/$eventId/'
+      preLoaderRoute: typeof EEventIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/$eventId/settings': {
       id: '/events/$eventId/settings'
       path: '/events/$eventId/settings'
@@ -392,6 +412,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,
   EventsEventIdReportRoute: EventsEventIdReportRoute,
   EventsEventIdSettingsRoute: EventsEventIdSettingsRoute,
+  EEventIdIndexRoute: EEventIdIndexRoute,
   EventsEventIdIndexRoute: EventsEventIdIndexRoute,
 }
 export const routeTree = rootRouteImport

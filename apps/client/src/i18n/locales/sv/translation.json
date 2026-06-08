@@ -516,7 +516,59 @@
         }
       },
       "Settings": {
-        "Loading": "Laddar tävlingens inställningar"
+        "Loading": "Laddar tävlingens inställningar",
+        "Tabs": {
+          "General": "General",
+          "Classes": "Classes"
+        },
+        "Classes": {
+          "Title": "Classes",
+          "Description": "Edit per-class configuration. Changes are saved automatically.",
+          "Columns": {
+            "Name": "Name",
+            "CompetitorsCount": "Antal deltagare",
+            "MaxCompetitors": "Max competitors",
+            "BirthYearFrom": "Birth year from",
+            "BirthYearTo": "Birth year to",
+            "MinTeamMembers": "Min team members",
+            "MaxTeamMembers": "Max team members",
+            "Sex": "Sex",
+            "ResultListMode": "Result mode",
+            "Fee": "Fee",
+            "StartMode": "Start mode",
+            "AwardedPlaces": "Awarded places",
+            "Actions": "Actions"
+          },
+          "ResultListMode": {
+            "Default": "Default",
+            "Unordered": "Unordered",
+            "UnorderedNoTimes": "Unordered (no times)"
+          },
+          "StartMode": {
+            "Inherit": "Event default",
+            "StartList": "Start list",
+            "MassStart": "Mass start",
+            "PursuitStart": "Pursuit start",
+            "WaveStart": "Wave start",
+            "FreeStart": "Free start"
+          },
+          "Empty": "No classes found for this event.",
+          "SaveError": "Could not save the change.",
+          "StartTimes": {
+            "Open": "Free start times",
+            "Title": "Free start times — {{name}}",
+            "Time": "Start time",
+            "Bib": "Bib",
+            "Empty": "No free start times for this class.",
+            "Close": "Close",
+            "LoadError": "Could not load start times."
+          },
+          "MaxCompetitorsErrorPositive": "Enter a non-negative integer.",
+          "MaxCompetitorsErrorBelowCount": "Cannot be lower than the current number of registered competitors ({{count}}).",
+          "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
+          "BirthYearInvalid": "Ange ett giltigt år (min. 4 siffror).",
+          "BirthYearRangeError": "Födelseår från måste vara mindre än eller lika med födelseår till."
+        }
       },
       "Detail": {
         "EventInformation": "Tävlingsinfo",
@@ -651,6 +703,8 @@
         "Country": "Land",
         "ZeroTime": "Nolltid",
         "Discipline": "Disciplin",
+        "DefaultStartMode": "Standard startläge",
+        "Currency": "Valuta",
         "FeaturedImage": "Presentationsbild",
         "FeaturedImageHint": "JPEG, PNG eller WEBP, max 2 MB.",
         "FeaturedImageButton": "Lägg till bild",
@@ -679,6 +733,13 @@
           "TEAMS": "Lag",
           "OTHER": "Övrigt"
         },
+        "StartModeOptions": {
+          "StartList": "Startlista",
+          "MassStart": "Masstart",
+          "PursuitStart": "Jaktstart",
+          "WaveStart": "Vågstart",
+          "FreeStart": "Fri start"
+        },
         "Placeholders": {
           "EventName": "Min första tävling",
           "Sport": "Välj sport",
@@ -688,6 +749,7 @@
           "Latitude": "Ange latitud (t.ex. 59.332562)",
           "Longitude": "Ange longitude (t.ex. 18.065205)",
           "Country": "Välj land",
+          "Currency": "Välj valuta",
           "CoefRanking": "1.02"
         },
         "Import": {

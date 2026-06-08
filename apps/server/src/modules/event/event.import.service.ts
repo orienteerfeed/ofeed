@@ -47,6 +47,7 @@ export type ExternalEventPreview = {
   discipline?: EventDiscipline;
   published?: boolean;
   hundredthPrecision?: boolean;
+  currency?: string;
 };
 
 type InternalCandidate = {
@@ -65,6 +66,7 @@ type InternalCandidate = {
   coefRanking?: number;
   relay?: boolean;
   disciplineRaw?: string;
+  currencyRaw?: string;
   score: number;
 };
 
@@ -198,6 +200,7 @@ const COEF_RANKING_KEYS = [
   'RankingKoef',
 ];
 const RELAY_KEYS = ['relay', 'Relay', 'isRelay', 'IsRelay'];
+const CURRENCY_KEYS = ['Currency', 'currency'];
 const DISCIPLINE_KEYS = [
   'discipline',
   'Discipline',
@@ -587,6 +590,7 @@ function extractCandidates(payload: unknown): InternalCandidate[] {
       coefRanking: readNumber(record, COEF_RANKING_KEYS),
       relay: readBoolean(record, RELAY_KEYS),
       disciplineRaw: readString(record, DISCIPLINE_KEYS),
+      currencyRaw: readString(record, CURRENCY_KEYS),
       score: scoreCandidate(record),
     };
 
@@ -1156,5 +1160,6 @@ export async function loadExternalEventPreview(
       (selected.relay ? 'RELAY' : undefined),
     published: false,
     hundredthPrecision: false,
+    currency: selected.currencyRaw?.toUpperCase(),
   };
 }
