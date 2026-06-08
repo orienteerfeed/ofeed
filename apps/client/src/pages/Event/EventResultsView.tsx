@@ -30,6 +30,14 @@ import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
 import { MobileClubName } from './MobileClubName';
+import {
+  compareByStatusPriorityThenName,
+  formatResultListRank,
+  getResultStatusPriority,
+  isUnorderedResultListMode,
+  shouldDisplayResultTimeLoss,
+  shouldDisplayResultTimes,
+} from './result-list.utils';
 import { WinnerNotification } from './WinnerNotifications';
 
 const CLUB_SHEET_MIN_HEIGHT = 200;
@@ -115,6 +123,7 @@ const COMPETITORS_BY_ORGANISATION = gql`
       class {
         id
         name
+        resultListMode
         competitors {
           id
           time
@@ -217,6 +226,7 @@ interface ClubRunner {
   startTime?: string | undefined;
   loss?: number | undefined;
   classId?: string | undefined;
+  resultListMode?: string | null | undefined;
 }
 
 interface ProcessedClubResult {
@@ -553,6 +563,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           eventId={event.id}
           classId={selectedClassId}
           className={selectedClass}
+          resultListMode={currentClass?.resultListMode}
           rankingType={czechRankingType}
           onSelectClub={clubId => {
             if (clubId === null) return;
@@ -621,6 +632,7 @@ interface CategoryResultsViewProps {
   eventId: string;
   classId: number;
   className: string;
+  resultListMode?: string | null | undefined;
   rankingType?: CzechRankingType;
   onSelectClub: (clubId: number | null) => void;
   showRanking?: boolean;
@@ -631,6 +643,7 @@ interface CategoryResultsViewProps {
 const CategoryResultsView = ({
   t,
   classId,
+  resultListMode,
   rankingType = null,
   onSelectClub,
   showRanking,
@@ -685,11 +698,11 @@ const CategoryResultsView = ({
       }
 
       // Process and set competitors
-      const processed = processCompetitors(newCompetitors);
+      const processed = processCompetitors(newCompetitors, resultListMode);
       setCompetitors(processed);
       previousCompetitorsRef.current = newCompetitors;
     }
-  }, [data]);
+  }, [data, resultListMode]);
 
   useEffect(() => {
     onCompetitorsCountChange?.(competitors.length);
@@ -816,6 +829,9 @@ const CategoryResultsView = ({
     return name.length > longest.length ? name : longest;
   }, '');
 
+  const showTimes = shouldDisplayResultTimes(resultListMode);
+  const showTimeLoss = shouldDisplayResultTimeLoss(resultListMode);
+
   if (loading && competitors.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -903,8 +919,7 @@ const CategoryResultsView = ({
                     className="px-2 py-1 text-sm font-bold"
                     title={competitor.positionTooltip || ''}
                   >
-                    {competitor.position}
-                    {typeof competitor.position === 'number' && '.'}
+                    {formatResultListRank(competitor.position, resultListMode)}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-sm font-medium">
                     <div className="flex flex-col">
@@ -940,7 +955,7 @@ const CategoryResultsView = ({
                   <TableCell
                     className={`px-2 py-1 text-right font-mono text-sm ${timeState.className}`}
                   >
-                    {timeState.hideOnDesktop ? (
+                    {!showTimes ? null : timeState.hideOnDesktop ? (
                       <>
                         <span className="md:hidden">{timeState.value}</span>
                         <span className="hidden md:inline">&nbsp;</span>
@@ -950,9 +965,11 @@ const CategoryResultsView = ({
                     )}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
-                    {competitor.loss && competitor.loss > 0
-                      ? `+${formatSecondsToTime(competitor.loss)}`
-                      : '-'}
+                    {!showTimeLoss
+                      ? null
+                      : competitor.loss && competitor.loss > 0
+                        ? `+${formatSecondsToTime(competitor.loss)}`
+                        : '-'}
                   </TableCell>
                   {showRanking && (
                     <TableCell className="w-px whitespace-nowrap px-1 py-1 text-right text-xs sm:px-2 lg:table-cell">
@@ -1060,6 +1077,7 @@ const ClubResultsView = ({
   type CompetitorClassInfo = {
     id?: string | number | null;
     name?: string | null;
+    resultListMode?: string | null;
     competitors?: Array<{
       id?: string | number;
       status?: string | null;
@@ -1085,6 +1103,10 @@ const ClubResultsView = ({
 
   const getCompetitorClassId = (competitor?: CompetitorWithClass | null) =>
     competitor?.class?.id ?? undefined;
+
+  const getCompetitorResultListMode = (
+    competitor?: CompetitorWithClass | null
+  ) => competitor?.class?.resultListMode ?? null;
 
   // Function to calculate position and loss in category
   const calculatePositionAndLoss = (competitor: CompetitorWithClass) => {
@@ -1229,28 +1251,24 @@ const ClubResultsView = ({
               return classA.localeCompare(classB);
             }
 
-            // Sort by status priority first
-            const statusPriority = {
-              OK: 0,
-              Active: 1,
-              Finished: 2,
-              Inactive: 3,
-              NotCompeting: 4,
-              OverTime: 5,
-              Disqualified: 6,
-              MissingPunch: 7,
-              DidNotFinish: 8,
-              DidNotStart: 9,
-            };
+            // Unordered modes: keep the status-priority grouping, but sort
+            // alphabetically within each status group instead of by time.
+            if (
+              isUnorderedResultListMode(
+                getCompetitorResultListMode(
+                  a.competitor as CompetitorWithClass
+                )
+              )
+            ) {
+              return compareByStatusPriorityThenName(
+                a.competitor as Competitor,
+                b.competitor as Competitor
+              );
+            }
 
-            const statusA =
-              statusPriority[
-                a.competitor.status as keyof typeof statusPriority
-              ] || 10;
-            const statusB =
-              statusPriority[
-                b.competitor.status as keyof typeof statusPriority
-              ] || 10;
+            // Sort by status priority first
+            const statusA = getResultStatusPriority(a.competitor.status);
+            const statusB = getResultStatusPriority(b.competitor.status);
 
             if (statusA !== statusB) {
               return statusA - statusB;
@@ -1299,6 +1317,9 @@ const ClubResultsView = ({
                 );
                 return classId != null ? String(classId) : undefined;
               })(),
+              resultListMode: getCompetitorResultListMode(
+                comp as CompetitorWithClass
+              ),
             };
           }),
         };
@@ -1514,10 +1535,10 @@ const ClubResultsView = ({
                             } ${runner.status !== 'OK' ? 'opacity-70' : ''}`}
                           >
                             <TableCell className="px-2 py-1 text-sm font-bold">
-                              {typeof runner.position === 'number'
-                                ? runner.position
-                                : runner.position}
-                              {typeof runner.position === 'number' && '.'}
+                              {formatResultListRank(
+                                runner.position,
+                                runner.resultListMode
+                              )}
                             </TableCell>
                             <TableCell className="px-2 py-1 text-sm font-medium">
                               <CompetitorName
@@ -1546,14 +1567,20 @@ const ClubResultsView = ({
                               {formatStartTime(runner.startTime)}
                             </TableCell>
                             <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
-                              {runner.time}
+                              {shouldDisplayResultTimes(runner.resultListMode)
+                                ? runner.time
+                                : null}
                             </TableCell>
                             <TableCell className="px-2 py-1 text-sm text-right font-mono">
-                              {runner.loss && runner.loss > 0
-                                ? `+${formatSecondsToTime(runner.loss)}`
-                                : runner.loss === 0
-                                  ? '-'
-                                  : ''}
+                              {!shouldDisplayResultTimeLoss(
+                                runner.resultListMode
+                              )
+                                ? null
+                                : runner.loss && runner.loss > 0
+                                  ? `+${formatSecondsToTime(runner.loss)}`
+                                  : runner.loss === 0
+                                    ? '-'
+                                    : ''}
                             </TableCell>
                             <TableCell className="px-2 py-1">
                               <span
@@ -1780,32 +1807,27 @@ const RelayResultsView = ({
 
 // Helper functions for data processing
 const processCompetitors = (
-  competitors: Competitor[]
+  competitors: Competitor[],
+  resultListMode?: string | null
 ): ProcessedCompetitor[] => {
+  // Unordered modes: keep the status-priority grouping, but sort alphabetically
+  // within each status group instead of by race time.
+  if (isUnorderedResultListMode(resultListMode)) {
+    const sortedCompetitors = competitors
+      .slice()
+      .sort(compareByStatusPriorityThenName);
+    return calculatePositions(sortedCompetitors);
+  }
+
   const getSortableStartTime = (startTime?: string): number => {
     if (!startTime) return Number.POSITIVE_INFINITY;
     const timestamp = new Date(startTime).getTime();
     return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp;
   };
 
-  const statusPriority = {
-    OK: 0,
-    Active: 1,
-    Finished: 2,
-    Inactive: 3,
-    NotCompeting: 4,
-    OverTime: 5,
-    Disqualified: 6,
-    MissingPunch: 7,
-    DidNotFinish: 8,
-    DidNotStart: 9,
-  };
-
   const sortedCompetitors = competitors.slice().sort((a, b) => {
-    const statusA =
-      statusPriority[a.status as keyof typeof statusPriority] ?? 10;
-    const statusB =
-      statusPriority[b.status as keyof typeof statusPriority] ?? 10;
+    const statusA = getResultStatusPriority(a.status);
+    const statusB = getResultStatusPriority(b.status);
     const startTimeDiff =
       getSortableStartTime(a.startTime) - getSortableStartTime(b.startTime);
 

@@ -22,6 +22,7 @@ export interface EventClass {
   length?: number;
   climb?: number;
   controls?: number;
+  resultListMode?: string | null;
 }
 
 export type EventStatusPrimary = 'DRAFT' | 'UPCOMING' | 'LIVE' | 'DONE';

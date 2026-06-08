@@ -39,6 +39,7 @@ const GET_EVENT = gql`
         name
         length
         climb
+        resultListMode
       }
       user {
         id
