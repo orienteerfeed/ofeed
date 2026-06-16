@@ -1317,12 +1317,36 @@ export const deleteAllEventData = async (eventId: string) => {
       where: { eventId: eventId },
     });
 
-    // Step 3: Delete Event Passwords
+    // Step 3: Delete course data (courses, course controls, controls, maps).
+    // These are only cascaded on full Event deletion, so clear them explicitly
+    // here. Delete the dependent CourseControls before their parent Courses, and
+    // Controls / CourseMaps last (Course references them via SetNull relations).
+    const courses = await prisma.course.findMany({
+      where: { eventId: eventId },
+      select: { id: true },
+    });
+    const courseIds = courses.map((course) => course.id);
+    if (courseIds.length > 0) {
+      await prisma.courseControl.deleteMany({
+        where: { courseId: { in: courseIds } },
+      });
+    }
+    await prisma.course.deleteMany({
+      where: { eventId: eventId },
+    });
+    await prisma.control.deleteMany({
+      where: { eventId: eventId },
+    });
+    await prisma.courseMap.deleteMany({
+      where: { eventId: eventId },
+    });
+
+    // Step 4: Delete Event Passwords
     await prisma.eventPassword.deleteMany({
       where: { eventId: eventId },
     });
 
-    // Step 4: Delete IOF import state so the same XML can be processed again
+    // Step 5: Delete IOF import state so the same XML can be processed again
     await prisma.eventImportState.deleteMany({
       where: { eventId: eventId },
     });
