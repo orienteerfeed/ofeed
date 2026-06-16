@@ -15,6 +15,13 @@ export type EventFilter =
   | 'popular'
   | 'nearby';
 
+export interface EventCourse {
+  id: number;
+  name: string;
+  length?: number | null;
+  climb?: number | null;
+}
+
 export interface EventClass {
   id: number;
   name: string;
@@ -23,6 +30,7 @@ export interface EventClass {
   climb?: number;
   controls?: number;
   resultListMode?: string | null;
+  course?: EventCourse | null;
 }
 
 export type EventStatusPrimary = 'DRAFT' | 'UPCOMING' | 'LIVE' | 'DONE';

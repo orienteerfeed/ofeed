@@ -653,6 +653,32 @@ async function upsertTeam(
   return existingTeam.id;
 }
 
+async function upsertEmbeddedCourse(
+  eventId: string,
+  courseEl: Record<string, any>,
+): Promise<number | null> {
+  const externalId = getIofTextValue(courseEl.Id);
+  const name = getIofTextValue(courseEl.Name) ?? externalId;
+  if (!name) return null;
+
+  const courseData = {
+    ...(externalId ? { externalId } : {}),
+    ...normalizeCourseMetrics({
+      length: getIofIntegerValue(courseEl.Length),
+      climb: getIofIntegerValue(courseEl.Climb),
+      controlsCount: getIofIntegerValue(courseEl.NumberOfControls),
+    }),
+  };
+
+  const course = await prisma.course.upsert({
+    where: { eventId_name: { eventId, name } },
+    update: courseData,
+    create: { eventId, name, ...courseData },
+    select: { id: true },
+  });
+  return course.id;
+}
+
 /**
  * Processes class starts for an event.
  *
@@ -690,8 +716,24 @@ async function processClassStarts(
       }
       if (classStart.StartName) startName = classStart.StartName[0];
 
+      // For relay, upsert the course once from the first leg before writing the
+      // class row. Doing it inside the concurrent TeamMemberStart loop would
+      // trigger concurrent class.update calls on the same row (MariaDB P2034).
+      let relayCourseId: number | null = null;
+      if (isRelayDiscipline(dbResponseEvent.discipline)) {
+        const firstCourseEl =
+          (classStart.TeamStart as Array<Record<string, any>> | undefined)?.[0]
+            ?.TeamMemberStart?.[0]
+            ?.Start?.[0]
+            ?.Course?.[0] ?? null;
+        if (firstCourseEl) {
+          relayCourseId = await upsertEmbeddedCourse(eventId, firstCourseEl);
+        }
+      }
+
       const additionalData = {
         startName: startName,
+        ...(relayCourseId !== null ? { courseId: relayCourseId } : {}),
         ...normalizeCourseMetrics({
           length,
           climb,
@@ -726,8 +768,7 @@ async function processClassStarts(
             Array.isArray(personStart.Person) && personStart.Person.length > 0
               ? personStart.Person[0]
               : null;
-          const givenName: string =
-            personEl?.Name?.[0]?.Given?.[0] ?? '';
+          const givenName: string = personEl?.Name?.[0]?.Given?.[0] ?? '';
           const isVacantPerson = givenName.trim().toLowerCase() === 'vacant';
           const hasPerson = personEl !== null && !isVacantPerson;
           if (hasPerson) {
@@ -743,7 +784,7 @@ async function processClassStarts(
           // of the [classId, startTime] unique key and cannot be null.
           if (!vacancyStartTime) continue;
           const bibNumber = vacantStart?.BibNumber
-            ? (parseInt(vacantStart.BibNumber[0] ?? '', 10) || null)
+            ? parseInt(vacantStart.BibNumber[0] ?? '', 10) || null
             : null;
           vacantSlots.push({ startTime: vacancyStartTime, bibNumber });
         }
@@ -854,7 +895,26 @@ async function processClassResults(
     IOF_WRITE_CONCURRENCY,
     async (classResult: Record<string, any>) => {
       const classDetails = classResult.Class.shift();
-      const classId = await upsertClass(eventId, classDetails, dbClassLists, eventTimeZone);
+
+      let relayCourseId: number | null = null;
+      if (isRelayDiscipline(dbResponseEvent.discipline)) {
+        const firstCourseEl =
+          (classResult.TeamResult as Array<Record<string, any>> | undefined)?.[0]
+            ?.TeamMemberResult?.[0]
+            ?.Result?.[0]
+            ?.Course?.[0] ?? null;
+        if (firstCourseEl) {
+          relayCourseId = await upsertEmbeddedCourse(eventId, firstCourseEl);
+        }
+      }
+
+      const classId = await upsertClass(
+        eventId,
+        classDetails,
+        dbClassLists,
+        eventTimeZone,
+        relayCourseId !== null ? { courseId: relayCourseId } : {},
+      );
       const competitorCache = await loadCompetitorCache(classId);
       // Pre-load splits for all competitors already in the DB for this class.
       // One round-trip replaces N per-competitor findMany calls on re-uploads.
@@ -1305,6 +1365,45 @@ async function handleIofXmlUpload(
           });
           await Promise.all(
             courseData.map(async (course) => {
+              const assignment = Array.isArray(course.ClassAssignment)
+                ? course.ClassAssignment[0]
+                : null;
+              const legNumber = assignment?.Leg ? getIofIntegerValue(assignment.Leg) : null;
+              const length = getIofIntegerValue(course.Length);
+              const climb = getIofIntegerValue(course.Climb);
+
+              // Per-leg course: ClassAssignment carries a Leg number and class name.
+              // Pass course metrics so the class row carries at least the last
+              // processed leg's length/climb (importCourseDataXml below sets the
+              // definitive Class.courseId linkage for full CourseData uploads).
+              if (legNumber != null && assignment) {
+                const className: string =
+                  (Array.isArray(assignment.ClassName) ? assignment.ClassName[0] : null) ??
+                  (Array.isArray(assignment.ClassShortName)
+                    ? assignment.ClassShortName[0]
+                    : null) ??
+                  course.Name[0];
+                const classDetails = { Name: [className], Id: [], ATTR: {} };
+                const additionalData = {
+                  ...normalizeCourseMetrics({
+                    length,
+                    climb,
+                    controlsCount: Array.isArray(course.CourseControl)
+                      ? course.CourseControl.length - 2
+                      : null,
+                  }),
+                };
+                await upsertClass(
+                  eventId,
+                  classDetails,
+                  dbClassLists,
+                  dbResponseEvent.timezone ?? 'UTC',
+                  additionalData,
+                );
+                return;
+              }
+
+              // Standard (non-relay) course: update the class-level length/climb
               const classDetails = {
                 Name: [course.Name[0]],
                 Id: [],
@@ -1312,8 +1411,8 @@ async function handleIofXmlUpload(
               };
               const additionalData = {
                 ...normalizeCourseMetrics({
-                  length: getIofIntegerValue(course.Length),
-                  climb: getIofIntegerValue(course.Climb),
+                  length,
+                  climb,
                   controlsCount: Array.isArray(course.CourseControl)
                     ? course.CourseControl.length - 2
                     : null,

@@ -668,6 +668,20 @@
         "LoadingClubs": "Läser in klubbar",
         "LoadingClubResults": "Läser in klubbresultat",
         "ErrorLoadingClubResults": "Fel vid inläsning av klubbresultat: {{message}}",
+        "Relay": {
+          "Overall": "Totalt",
+          "Leg": "Sträcka {{number}}",
+          "Start": "Start",
+          "Time": "Tid",
+          "Diff": "Diff",
+          "AutoFollow": "Auto",
+          "Name": "Namn",
+          "Club": "Klubb",
+          "LegHeader": "Sträcka",
+          "LegLoss": "+Sträcka",
+          "Cumul": "Kumulat.",
+          "ErrorLoading": "Fel vid inläsning av resultat"
+        },
         "Ranking": {
           "Counts": "Räknas till rankingen",
           "DoesNotCount": "Räknas inte till rankingen",
