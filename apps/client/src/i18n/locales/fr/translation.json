@@ -55,6 +55,22 @@
         "NoClubs": "Aucun club trouvé",
         "Cancel": "Annuler"
       },
+      "Results": {
+        "Relay": {
+          "Overall": "Général",
+          "Leg": "Relais {{number}}",
+          "Start": "Départ",
+          "Time": "Temps",
+          "Diff": "Écart",
+          "AutoFollow": "Auto",
+          "Name": "Nom",
+          "Club": "Club",
+          "LegHeader": "Relais",
+          "LegLoss": "+Relais",
+          "Cumul": "Cumul.",
+          "ErrorLoading": "Erreur lors du chargement des résultats"
+        }
+      },
       "Settings": {
         "Loading": "Loading event settings",
         "Tabs": {

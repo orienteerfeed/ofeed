@@ -115,6 +115,7 @@ export const ClassRef = builder.prismaObject('Class', {
       nullable: true,
       resolve: (eventClass) => eventClass.status,
     }),
+    course: t.relation('course', { nullable: true }),
     competitors: t.relation('competitors', { nullable: true }),
     teams: t.relation('teams', { nullable: true }),
   }),

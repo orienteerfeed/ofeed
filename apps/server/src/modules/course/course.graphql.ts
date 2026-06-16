@@ -17,6 +17,19 @@ import {
   type RadioCoursePoint,
 } from './course.service.js';
 
+export const CourseRef = builder.prismaObject('Course', {
+  fields: (t) => ({
+    id: t.exposeInt('id'),
+    eventId: t.exposeString('eventId'),
+    externalId: t.exposeString('externalId', { nullable: true }),
+    name: t.exposeString('name'),
+    courseFamily: t.exposeString('courseFamily', { nullable: true }),
+    length: t.exposeFloat('length', { nullable: true }),
+    climb: t.exposeFloat('climb', { nullable: true }),
+    controlsCount: t.exposeInt('controlsCount', { nullable: true }),
+  }),
+});
+
 const ControlRef = builder.objectRef<Control>('Control').implement({
   fields: (t) => ({
     id: t.exposeInt('id'),

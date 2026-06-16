@@ -668,6 +668,20 @@
         "LoadingClubs": "Načítám kluby",
         "LoadingClubResults": "Načítám klubové výsledky",
         "ErrorLoadingClubResults": "Chyba při načítání klubových výsledků: {{message}}",
+        "Relay": {
+          "Overall": "Celkově",
+          "Leg": "Úsek {{number}}",
+          "Start": "Start",
+          "Time": "Čas",
+          "Diff": "Ztráta",
+          "AutoFollow": "Auto",
+          "Name": "Jméno",
+          "Club": "Klub",
+          "LegHeader": "Úsek",
+          "LegLoss": "+Úsek",
+          "Cumul": "Celk.",
+          "ErrorLoading": "Chyba při načítání výsledků"
+        },
         "Ranking": {
           "Counts": "Započítá se do rankingu",
           "DoesNotCount": "Nezapočítá se do rankingu",
