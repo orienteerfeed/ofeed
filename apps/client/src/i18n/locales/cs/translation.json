@@ -524,6 +524,7 @@
         "Loading": "Načítám nastavení akce",
         "Tabs": {
           "General": "Obecné",
+          "Files": "Soubory",
           "Classes": "Kategorie"
         },
         "Classes": {
@@ -573,6 +574,32 @@
           "MaxCompetitorsOverCapacityTooltip": "Počet přihlášených závodníků ({{count}}) překračuje nastavený limit. Upravte limit nebo odeberte závodníky.",
           "BirthYearInvalid": "Zadejte platný rok (min. 4 číslice).",
           "BirthYearRangeError": "Ročník od musí být menší nebo roven ročníku do."
+        },
+        "Files": {
+          "StartList": "Startovní listina",
+          "Courses": "Tratě",
+          "Results": "Výsledky",
+          "Available": "K dispozici",
+          "Missing": "Není k dispozici",
+          "Locked": "Nahrání zatím není dostupné",
+          "CoursesDisabledHint": "Nejprve nahraj startovní listinu nebo výsledky, pak bude možné nahrát data tratí.",
+          "RadioControls": {
+            "Title": "Vyber, které kontroly zobrazit jako online mezičasy",
+            "Helper": "Závodníci a diváci uvidí průběžné časy na vybraných kontrolách.",
+            "NoCourseData": "Nejprve nahrej data tratí pro nastavení online kontrol.",
+            "NoControls": "Nejsou k dispozici žádné kontroly.",
+            "SaveError": "Radiovou kontrolu se nepodařilo aktualizovat.",
+            "Selected": "Vybrané radiové kontroly: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Tvůrce",
+            "ExternalStatus": "Status",
+            "LastSuccessfulImport": "Poslední import",
+            "SuccessCount": "Úspěšných",
+            "SkippedCount": "Přeskočených",
+            "CopyHash": "Kopírovat hash",
+            "HashCopied": "Hash zkopírován!"
+          }
         }
       },
       "Detail": {

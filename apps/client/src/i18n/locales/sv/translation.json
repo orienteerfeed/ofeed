@@ -524,6 +524,7 @@
         "Loading": "Laddar tävlingens inställningar",
         "Tabs": {
           "General": "General",
+          "Files": "Filer",
           "Classes": "Classes"
         },
         "Classes": {
@@ -573,6 +574,32 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "BirthYearInvalid": "Ange ett giltigt år (min. 4 siffror).",
           "BirthYearRangeError": "Födelseår från måste vara mindre än eller lika med födelseår till."
+        },
+        "Files": {
+          "StartList": "Startlista",
+          "Courses": "Banor",
+          "Results": "Resultat",
+          "Available": "Tillgänglig",
+          "Missing": "Inte tillgänglig",
+          "Locked": "Uppladdning inte tillgänglig ännu",
+          "CoursesDisabledHint": "Ladda upp en startlista eller resultat först för att möjliggöra uppladdning av bandata.",
+          "RadioControls": {
+            "Title": "Välj vilka kontroller som ska visas som online mellantider",
+            "Helper": "Tävlande och åskådare ser mellantider vid de valda kontrollerna.",
+            "NoCourseData": "Ladda först upp bandata för att konfigurera onlinekontroller.",
+            "NoControls": "Inga kontroller tillgängliga.",
+            "SaveError": "Kunde inte uppdatera radiokontrollen.",
+            "Selected": "Valda radiokontroller: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Skapare",
+            "ExternalStatus": "Status",
+            "LastSuccessfulImport": "Senaste import",
+            "SuccessCount": "Lyckade",
+            "SkippedCount": "Hoppade över",
+            "CopyHash": "Kopiera hash",
+            "HashCopied": "Hash kopierat!"
+          }
         }
       },
       "Detail": {

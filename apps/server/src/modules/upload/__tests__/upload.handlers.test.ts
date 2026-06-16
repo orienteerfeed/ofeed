@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Sex } from '../../../generated/prisma/enums.js';
+import { inferClassSex } from '../upload.iof.helpers.js';
 import { parseClassStartExtension, parseXmlForTesting } from '../upload.handlers.js';
 
 const {
@@ -14,6 +15,7 @@ const {
   normalizeIncomingSplits,
   isSplitWriteConflict,
   loadSplitCache,
+  canUploadCourseData,
   processClassResults,
   processClassStarts,
 } = parseXmlForTesting;
@@ -48,6 +50,39 @@ describe('upload.handlers testing helpers', () => {
       { isArray: true, jsonKey: 'ResultList', jsonValue: [{ id: 1 }] },
       { isArray: true, jsonKey: 'CourseData', jsonValue: [{ id: 3 }] },
     ]);
+  });
+});
+
+describe('canUploadCourseData', () => {
+  const status = (
+    startListAvailable: boolean,
+    resultsAvailable: boolean,
+  ): Parameters<typeof canUploadCourseData>[0] => ({
+    startList: {
+      available: startListAvailable,
+      classesCount: startListAvailable ? 1 : 0,
+      competitorsCount: startListAvailable ? 1 : 0,
+      competitorsWithStartTimeCount: startListAvailable ? 1 : 0,
+      source: startListAvailable ? 'data' : null,
+    },
+    results: {
+      available: resultsAvailable,
+      competitorsCount: resultsAvailable ? 1 : 0,
+      competitorsWithResultDataCount: resultsAvailable ? 1 : 0,
+      source: resultsAvailable ? 'data' : null,
+    },
+  });
+
+  it('allows CourseData upload when a start list is available', () => {
+    expect(canUploadCourseData(status(true, false))).toBe(true);
+  });
+
+  it('allows CourseData upload when result data is available', () => {
+    expect(canUploadCourseData(status(false, true))).toBe(true);
+  });
+
+  it('rejects CourseData upload when neither a start list nor result data is available', () => {
+    expect(canUploadCourseData(status(false, false))).toBe(false);
   });
 });
 
@@ -834,5 +869,39 @@ describe('processClassStarts — vacant start slots', () => {
       data: [{ classId: 10, startTime: new Date('2026-03-21T13:22:00.000Z'), bibNumber: null }],
       skipDuplicates: true,
     });
+  });
+});
+
+describe('inferClassSex', () => {
+  it('returns M for standard male class names (H prefix)', () => {
+    expect(inferClassSex('H21')).toBe('M');
+    expect(inferClassSex('H35')).toBe('M');
+  });
+
+  it('returns F for standard female class names (D prefix)', () => {
+    expect(inferClassSex('D21')).toBe('F');
+    expect(inferClassSex('D40')).toBe('F');
+  });
+
+  it('returns M for M-prefixed age class names', () => {
+    expect(inferClassSex('M21')).toBe('M');
+    expect(inferClassSex('M12')).toBe('M');
+  });
+
+  it('returns F for F-prefixed age class names', () => {
+    expect(inferClassSex('F21')).toBe('F');
+    expect(inferClassSex('F16')).toBe('F');
+  });
+
+  it('returns B for HDR (mixed handicapped/recreational) class names', () => {
+    expect(inferClassSex('HDR')).toBe('B');
+    expect(inferClassSex('HDR21')).toBe('B');
+  });
+
+  it('returns B for unrecognised prefixes', () => {
+    expect(inferClassSex('OPEN')).toBe('B');
+    expect(inferClassSex('M')).toBe('B');
+    expect(inferClassSex('F')).toBe('B');
+    expect(inferClassSex('')).toBe('B');
   });
 });

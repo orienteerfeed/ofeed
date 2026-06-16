@@ -713,6 +713,7 @@
         "Loading": "Loading event settings",
         "Tabs": {
           "General": "General",
+          "Files": "Dateien",
           "Classes": "Classes"
         },
         "Classes": {
@@ -762,6 +763,32 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "BirthYearInvalid": "Bitte geben Sie ein gültiges Jahr ein (mind. 4 Stellen).",
           "BirthYearRangeError": "Jahrgang von muss kleiner oder gleich Jahrgang bis sein."
+        },
+        "Files": {
+          "StartList": "Startliste",
+          "Courses": "Bahnen",
+          "Results": "Ergebnisse",
+          "Available": "Verfügbar",
+          "Missing": "Nicht verfügbar",
+          "Locked": "Upload noch nicht verfügbar",
+          "CoursesDisabledHint": "Lade zuerst eine Startliste oder Ergebnisse hoch, um Bahndaten hochladen zu können.",
+          "RadioControls": {
+            "Title": "Wähle, welche Posten als Online-Zwischenzeiten angezeigt werden",
+            "Helper": "Läufer und Zuschauer sehen Zwischenzeiten an den ausgewählten Posten.",
+            "NoCourseData": "Lade zuerst Bahndaten hoch, um Online-Posten zu konfigurieren.",
+            "NoControls": "Keine Posten verfügbar.",
+            "SaveError": "Funkposten konnte nicht aktualisiert werden.",
+            "Selected": "Ausgewählte Funkposten: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Ersteller",
+            "ExternalStatus": "Status",
+            "LastSuccessfulImport": "Letzter Import",
+            "SuccessCount": "Erfolgreich",
+            "SkippedCount": "Übersprungen",
+            "CopyHash": "Hash kopieren",
+            "HashCopied": "Hash kopiert!"
+          }
         }
       }
     }
