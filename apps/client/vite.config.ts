@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react-swc';
 import { createRequire } from 'node:module';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
-import checker from 'vite-plugin-checker';
 import { VitePWA } from 'vite-plugin-pwa';
 import svgr from 'vite-plugin-svgr';
 
@@ -21,9 +20,6 @@ export default defineConfig({
     }),
     react(),
     svgr(),
-    checker({
-      typescript: true,
-    }),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
