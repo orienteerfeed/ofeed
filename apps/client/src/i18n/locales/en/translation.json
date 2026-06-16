@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Activate",
           "Deactivate": "Deactivate",
-          "Delete": "Delete"
+          "Delete": "Delete",
+          "Menu": "Actions",
+          "RequestVerification": "Resend verification email"
         },
         "Confirm": {
           "ActivateTitle": "Activate user account",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "Failed to activate account",
           "DeactivateErrorTitle": "Failed to deactivate account",
           "DeleteErrorTitle": "Failed to delete account",
-          "UnknownError": "An unexpected error occurred."
+          "UnknownError": "An unexpected error occurred.",
+          "RequestVerificationSuccessTitle": "Verification email sent",
+          "RequestVerificationSuccessDescription": "A verification email was sent to {{name}}.",
+          "RequestVerificationErrorTitle": "Failed to send verification email"
         }
       },
       "Events": {
@@ -516,7 +521,87 @@
         }
       },
       "Settings": {
-        "Loading": "Loading event settings"
+        "Loading": "Loading event settings",
+        "Tabs": {
+          "General": "General",
+          "Files": "Files",
+          "Classes": "Classes"
+        },
+        "Classes": {
+          "Title": "Classes",
+          "Description": "Edit per-class configuration. Changes are saved automatically.",
+          "Columns": {
+            "Name": "Name",
+            "CompetitorsCount": "Competitors count",
+            "MaxCompetitors": "Max competitors",
+            "BirthYearFrom": "Birth year from",
+            "BirthYearTo": "Birth year to",
+            "MinTeamMembers": "Min team members",
+            "MaxTeamMembers": "Max team members",
+            "Sex": "Sex",
+            "ResultListMode": "Result mode",
+            "Fee": "Fee",
+            "StartMode": "Start mode",
+            "AwardedPlaces": "Awarded places",
+            "Actions": "Actions"
+          },
+          "ResultListMode": {
+            "Default": "Default",
+            "Unordered": "Unordered",
+            "UnorderedNoTimes": "Unordered (no times)"
+          },
+          "StartMode": {
+            "Inherit": "Event default",
+            "StartList": "Start list",
+            "MassStart": "Mass start",
+            "PursuitStart": "Pursuit start",
+            "WaveStart": "Wave start",
+            "FreeStart": "Free start"
+          },
+          "Empty": "No classes found for this event.",
+          "SaveError": "Could not save the change.",
+          "StartTimes": {
+            "Open": "Free start times",
+            "Title": "Free start times — {{name}}",
+            "Time": "Start time",
+            "Bib": "Bib",
+            "Empty": "No free start times for this class.",
+            "Close": "Close",
+            "LoadError": "Could not load start times."
+          },
+          "MaxCompetitorsErrorPositive": "Enter a non-negative integer.",
+          "MaxCompetitorsErrorBelowCount": "Cannot be lower than the current number of registered competitors ({{count}}).",
+          "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
+          "BirthYearInvalid": "Enter a valid year (min. 4 digits).",
+          "BirthYearRangeError": "Birth year from must be less than or equal to birth year to."
+        },
+        "Files": {
+          "StartList": "Start list",
+          "Courses": "Courses",
+          "CoursesHelper": "Course definitions are not required for basic functionality. They are used to match split times correctly; individual control positions are not processed.",
+          "Results": "Results",
+          "Available": "Available",
+          "Missing": "Not available",
+          "Locked": "Upload not available yet",
+          "CoursesDisabledHint": "Upload a start list or results first to enable course data upload.",
+          "RadioControls": {
+            "Title": "Select which controls to show as online split times",
+            "Helper": "Competitors and spectators will see intermediate times at the selected controls.",
+            "NoCourseData": "Upload course data first to configure online controls.",
+            "NoControls": "No controls available.",
+            "SaveError": "Could not update the radio control.",
+            "Selected": "Selected radio controls: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Creator",
+            "ExternalStatus": "Status",
+            "LastSuccessfulImport": "Last import",
+            "SuccessCount": "Successful",
+            "SkippedCount": "Skipped",
+            "CopyHash": "Copy hash",
+            "HashCopied": "Hash copied!"
+          }
+        }
       },
       "Detail": {
         "EventInformation": "Event Information",
@@ -651,6 +736,8 @@
         "Country": "Country",
         "ZeroTime": "Zero time",
         "Discipline": "Discipline",
+        "DefaultStartMode": "Default start mode",
+        "Currency": "Currency",
         "FeaturedImage": "Featured image",
         "FeaturedImageHint": "JPEG, PNG or WEBP, max 2 MB.",
         "FeaturedImageButton": "Add image",
@@ -679,6 +766,13 @@
           "TEAMS": "Teams",
           "OTHER": "Other"
         },
+        "StartModeOptions": {
+          "StartList": "Start list",
+          "MassStart": "Mass start",
+          "PursuitStart": "Pursuit start",
+          "WaveStart": "Wave start",
+          "FreeStart": "Free start"
+        },
         "Placeholders": {
           "EventName": "My first event",
           "Sport": "Select a sport",
@@ -688,6 +782,7 @@
           "Latitude": "Enter latitude (e.g., 50.0755)",
           "Longitude": "Enter longitude (e.g., 14.4378)",
           "Country": "Select country",
+          "Currency": "Select currency",
           "CoefRanking": "1.02"
         },
         "Import": {
@@ -944,6 +1039,16 @@
         "Description2": "please include any relevant files.",
         "Discord": "Join Discord",
         "GitHubIssues": "Open GitHub Issues"
+      },
+      "ClassSelect": {
+        "Title": "Select Class",
+        "Description": "Choose a class to view event results."
+      },
+      "ClubSelect": {
+        "Title": "Select Club",
+        "Description": "Choose a club to view results",
+        "NoClubs": "No clubs found",
+        "Cancel": "Cancel"
       }
     },
     "Home": {

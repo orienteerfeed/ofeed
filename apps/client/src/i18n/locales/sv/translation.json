@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Aktivera",
           "Deactivate": "Inaktivera",
-          "Delete": "Ta bort"
+          "Delete": "Ta bort",
+          "Menu": "Åtgärder",
+          "RequestVerification": "Skicka verifieringsmejl igen"
         },
         "Confirm": {
           "ActivateTitle": "Aktivera användarkonto",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "Det gick inte att aktivera kontot",
           "DeactivateErrorTitle": "Det gick inte att inaktivera kontot",
           "DeleteErrorTitle": "Det gick inte att ta bort kontot",
-          "UnknownError": "Ett oväntat fel inträffade."
+          "UnknownError": "Ett oväntat fel inträffade.",
+          "RequestVerificationSuccessTitle": "Verifieringsmejl skickat",
+          "RequestVerificationSuccessDescription": "Ett verifieringsmejl skickades till {{name}}.",
+          "RequestVerificationErrorTitle": "Det gick inte att skicka verifieringsmejlet"
         }
       },
       "Events": {
@@ -516,7 +521,87 @@
         }
       },
       "Settings": {
-        "Loading": "Laddar tävlingens inställningar"
+        "Loading": "Laddar tävlingens inställningar",
+        "Tabs": {
+          "General": "General",
+          "Files": "Filer",
+          "Classes": "Classes"
+        },
+        "Classes": {
+          "Title": "Classes",
+          "Description": "Edit per-class configuration. Changes are saved automatically.",
+          "Columns": {
+            "Name": "Name",
+            "CompetitorsCount": "Antal deltagare",
+            "MaxCompetitors": "Max competitors",
+            "BirthYearFrom": "Birth year from",
+            "BirthYearTo": "Birth year to",
+            "MinTeamMembers": "Min team members",
+            "MaxTeamMembers": "Max team members",
+            "Sex": "Sex",
+            "ResultListMode": "Result mode",
+            "Fee": "Fee",
+            "StartMode": "Start mode",
+            "AwardedPlaces": "Awarded places",
+            "Actions": "Actions"
+          },
+          "ResultListMode": {
+            "Default": "Default",
+            "Unordered": "Unordered",
+            "UnorderedNoTimes": "Unordered (no times)"
+          },
+          "StartMode": {
+            "Inherit": "Event default",
+            "StartList": "Start list",
+            "MassStart": "Mass start",
+            "PursuitStart": "Pursuit start",
+            "WaveStart": "Wave start",
+            "FreeStart": "Free start"
+          },
+          "Empty": "No classes found for this event.",
+          "SaveError": "Could not save the change.",
+          "StartTimes": {
+            "Open": "Free start times",
+            "Title": "Free start times — {{name}}",
+            "Time": "Start time",
+            "Bib": "Bib",
+            "Empty": "No free start times for this class.",
+            "Close": "Close",
+            "LoadError": "Could not load start times."
+          },
+          "MaxCompetitorsErrorPositive": "Enter a non-negative integer.",
+          "MaxCompetitorsErrorBelowCount": "Cannot be lower than the current number of registered competitors ({{count}}).",
+          "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
+          "BirthYearInvalid": "Ange ett giltigt år (min. 4 siffror).",
+          "BirthYearRangeError": "Födelseår från måste vara mindre än eller lika med födelseår till."
+        },
+        "Files": {
+          "StartList": "Startlista",
+          "Courses": "Banor",
+          "CoursesHelper": "Bandefinitioner krävs inte för grundläggande funktionalitet. De används för att matcha mellantider korrekt; positioner för enskilda kontroller behandlas inte.",
+          "Results": "Resultat",
+          "Available": "Tillgänglig",
+          "Missing": "Inte tillgänglig",
+          "Locked": "Uppladdning inte tillgänglig ännu",
+          "CoursesDisabledHint": "Ladda upp en startlista eller resultat först för att möjliggöra uppladdning av bandata.",
+          "RadioControls": {
+            "Title": "Välj vilka kontroller som ska visas som online mellantider",
+            "Helper": "Tävlande och åskådare ser mellantider vid de valda kontrollerna.",
+            "NoCourseData": "Ladda först upp bandata för att konfigurera onlinekontroller.",
+            "NoControls": "Inga kontroller tillgängliga.",
+            "SaveError": "Kunde inte uppdatera radiokontrollen.",
+            "Selected": "Valda radiokontroller: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Skapare",
+            "ExternalStatus": "Status",
+            "LastSuccessfulImport": "Senaste import",
+            "SuccessCount": "Lyckade",
+            "SkippedCount": "Hoppade över",
+            "CopyHash": "Kopiera hash",
+            "HashCopied": "Hash kopierat!"
+          }
+        }
       },
       "Detail": {
         "EventInformation": "Tävlingsinfo",
@@ -651,6 +736,8 @@
         "Country": "Land",
         "ZeroTime": "Nolltid",
         "Discipline": "Disciplin",
+        "DefaultStartMode": "Standard startläge",
+        "Currency": "Valuta",
         "FeaturedImage": "Presentationsbild",
         "FeaturedImageHint": "JPEG, PNG eller WEBP, max 2 MB.",
         "FeaturedImageButton": "Lägg till bild",
@@ -679,6 +766,13 @@
           "TEAMS": "Lag",
           "OTHER": "Övrigt"
         },
+        "StartModeOptions": {
+          "StartList": "Startlista",
+          "MassStart": "Masstart",
+          "PursuitStart": "Jaktstart",
+          "WaveStart": "Vågstart",
+          "FreeStart": "Fri start"
+        },
         "Placeholders": {
           "EventName": "Min första tävling",
           "Sport": "Välj sport",
@@ -688,6 +782,7 @@
           "Latitude": "Ange latitud (t.ex. 59.332562)",
           "Longitude": "Ange longitude (t.ex. 18.065205)",
           "Country": "Välj land",
+          "Currency": "Välj valuta",
           "CoefRanking": "1.02"
         },
         "Import": {
@@ -944,6 +1039,16 @@
         "Description2": "Bifoga alla relevanta filer.",
         "Discord": "Gå med i Discord",
         "GitHubIssues": "Öppna GitHub-ärenden"
+      },
+      "ClassSelect": {
+        "Title": "Välj klass",
+        "Description": "Välj en klass för att se tävlingens resultat."
+      },
+      "ClubSelect": {
+        "Title": "Välj klubb",
+        "Description": "Välj en klubb för att se resultaten",
+        "NoClubs": "Inga klubbar hittades",
+        "Cancel": "Avbryt"
       }
     },
     "Profile": {
@@ -1133,10 +1238,17 @@
     "UpdateProfileFailedTitle": "Det gick inte att uppdatera profilen"
   },
   "validation": {
+    "emailRequired": "E-post är obligatoriskt",
+    "emailInvalid": "Ogiltig e-postadress",
+    "firstNameRequired": "Förnamn är obligatoriskt",
+    "firstNameMinLength": "Förnamnet måste vara minst 2 tecken",
+    "lastNameRequired": "Efternamn är obligatoriskt",
+    "lastNameMinLength": "Efternamnet måste vara minst 2 tecken",
+    "clubRequired": "Klubb är obligatorisk",
     "passwordRequired": "Lösenord är obligatoriskt",
     "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
     "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
-    "passwordsDoNotMatch": "Lösenorden matchar inte"
+    "passwordsDoNotMatch": "Lösenorden stämmer inte överens"
   },
   "Molecules": {
     "DragDrop": {
@@ -1224,18 +1336,5 @@
     "EmailVerifiedBadge": {
       "Tooltip": "Verifierad e-postadress"
     }
-  },
-  "validation": {
-    "emailRequired": "E-post är obligatoriskt",
-    "emailInvalid": "Ogiltig e-postadress",
-    "firstNameRequired": "Förnamn är obligatoriskt",
-    "firstNameMinLength": "Förnamnet måste vara minst 2 tecken",
-    "lastNameRequired": "Efternamn är obligatoriskt",
-    "lastNameMinLength": "Efternamnet måste vara minst 2 tecken",
-    "clubRequired": "Klubb är obligatorisk",
-    "passwordRequired": "Lösenord är obligatoriskt",
-    "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
-    "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
-    "passwordsDoNotMatch": "Lösenorden stämmer inte överens"
   }
 }

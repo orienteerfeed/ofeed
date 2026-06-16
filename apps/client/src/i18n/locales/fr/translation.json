@@ -44,6 +44,113 @@
           "UpdateSuccess": "Le statut de publication est maintenant {{status}}.",
           "UpdateFail": "Impossible de mettre à jour le statut de publication de l'événement."
         }
+      },
+      "ClassSelect": {
+        "Title": "Sélectionner une catégorie",
+        "Description": "Choisissez une catégorie pour voir les résultats de l'événement."
+      },
+      "ClubSelect": {
+        "Title": "Sélectionner un club",
+        "Description": "Choisissez un club pour voir les résultats",
+        "NoClubs": "Aucun club trouvé",
+        "Cancel": "Annuler"
+      },
+      "Settings": {
+        "Loading": "Loading event settings",
+        "Tabs": {
+          "General": "General",
+          "Files": "Fichiers",
+          "Classes": "Classes"
+        },
+        "Classes": {
+          "Title": "Classes",
+          "Description": "Edit per-class configuration. Changes are saved automatically.",
+          "Columns": {
+            "Name": "Name",
+            "CompetitorsCount": "Nombre de concurrents",
+            "MaxCompetitors": "Max competitors",
+            "BirthYearFrom": "Birth year from",
+            "BirthYearTo": "Birth year to",
+            "MinTeamMembers": "Min team members",
+            "MaxTeamMembers": "Max team members",
+            "Sex": "Sex",
+            "ResultListMode": "Result mode",
+            "Fee": "Fee",
+            "StartMode": "Start mode",
+            "AwardedPlaces": "Awarded places",
+            "Actions": "Actions"
+          },
+          "ResultListMode": {
+            "Default": "Default",
+            "Unordered": "Unordered",
+            "UnorderedNoTimes": "Unordered (no times)"
+          },
+          "StartMode": {
+            "Inherit": "Event default",
+            "StartList": "Start list",
+            "MassStart": "Mass start",
+            "PursuitStart": "Pursuit start",
+            "WaveStart": "Wave start",
+            "FreeStart": "Free start"
+          },
+          "Empty": "No classes found for this event.",
+          "SaveError": "Could not save the change.",
+          "StartTimes": {
+            "Open": "Free start times",
+            "Title": "Free start times — {{name}}",
+            "Time": "Start time",
+            "Bib": "Bib",
+            "Empty": "No free start times for this class.",
+            "Close": "Close",
+            "LoadError": "Could not load start times."
+          },
+          "MaxCompetitorsErrorPositive": "Enter a non-negative integer.",
+          "MaxCompetitorsErrorBelowCount": "Cannot be lower than the current number of registered competitors ({{count}}).",
+          "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
+          "BirthYearInvalid": "Entrez une année valide (min. 4 chiffres).",
+          "BirthYearRangeError": "L'année de début doit être inférieure ou égale à l'année de fin."
+        },
+        "Files": {
+          "StartList": "Liste de départ",
+          "Courses": "Circuits",
+          "CoursesHelper": "Les définitions de circuits ne sont pas nécessaires au fonctionnement de base. Elles servent à associer correctement les temps intermédiaires ; les positions des postes individuels ne sont pas traitées.",
+          "Results": "Résultats",
+          "Available": "Disponible",
+          "Missing": "Non disponible",
+          "Locked": "Import non disponible pour l'instant",
+          "CoursesDisabledHint": "Importez d'abord une liste de départ ou des résultats pour pouvoir importer les données de circuits.",
+          "RadioControls": {
+            "Title": "Sélectionnez les postes à afficher comme temps intermédiaires en ligne",
+            "Helper": "Les concurrents et les spectateurs verront les temps intermédiaires aux postes sélectionnés.",
+            "NoCourseData": "Importez d'abord les données de circuits pour configurer les postes en ligne.",
+            "NoControls": "Aucun poste disponible.",
+            "SaveError": "Impossible de mettre à jour le poste radio.",
+            "Selected": "Postes radio sélectionnés : {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Créateur",
+            "ExternalStatus": "Statut",
+            "LastSuccessfulImport": "Dernière importation",
+            "SuccessCount": "Réussis",
+            "SkippedCount": "Ignorés",
+            "CopyHash": "Copier le hash",
+            "HashCopied": "Hash copié !"
+          }
+        }
+      },
+      "Form": {
+        "DefaultStartMode": "Mode de départ par défaut",
+        "Currency": "Devise",
+        "StartModeOptions": {
+          "StartList": "Liste de départ",
+          "MassStart": "Départ groupé",
+          "PursuitStart": "Départ poursuite",
+          "WaveStart": "Départ en vagues",
+          "FreeStart": "Départ libre"
+        },
+        "Placeholders": {
+          "Currency": "Sélectionner une devise"
+        }
       }
     }
   },

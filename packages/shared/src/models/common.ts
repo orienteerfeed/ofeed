@@ -58,13 +58,13 @@ export const protocolTypeSchema = z.enum([
   'external_id_change',
 ]);
 export const startModeSchema = z.enum([
-  'Individual',
-  'Mass',
-  'Handicap',
-  'Pursuit',
-  'Wave',
-  'ScoreO',
+  'StartList',
+  'MassStart',
+  'PursuitStart',
+  'WaveStart',
+  'FreeStart',
 ]);
+export const eventFormatSchema = z.enum(['Standard', 'ScoreO']);
 export const eventDisciplineSchema = z.enum([
   'SPRINT',
   'MIDDLE',
@@ -99,6 +99,7 @@ export type Origin = z.infer<typeof originSchema>;
 export type ProtocolType = z.infer<typeof protocolTypeSchema>;
 export type ProtocolProcessedByType = z.infer<typeof protocolProcessedByTypeSchema>;
 export type StartMode = z.infer<typeof startModeSchema>;
+export type EventFormat = z.infer<typeof eventFormatSchema>;
 export type EventDiscipline = z.infer<typeof eventDisciplineSchema>;
 export type CzechRankingType = z.infer<typeof czechRankingTypeSchema>;
 export type CzechRankingCategory = z.infer<typeof czechRankingCategorySchema>;

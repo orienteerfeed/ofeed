@@ -25,6 +25,11 @@
   "Orienteering": {
     "Class": "Class"
   },
+  "Sex": {
+    "B": "Both",
+    "M": "Male",
+    "F": "Female"
+  },
   "Timer": {
     "Days": "days",
     "Hours": "hours",

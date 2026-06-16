@@ -60,6 +60,7 @@ describe('event.import.service ORIS discipline mapping', () => {
               RankingKoef: '1,00',
               RankingKS: '0',
               StartTime: '10:00',
+              Currency: 'CZK',
             },
           }),
           {
@@ -84,6 +85,7 @@ describe('event.import.service ORIS discipline mapping', () => {
     expect(preview.zeroTime).toBe('10:00:00');
     expect(preview.organizer).toBe('K.O.B. Chocen');
     expect(preview.discipline).toBe('MIDDLE');
+    expect(preview.currency).toBe('CZK');
   });
 
   it('loads ORIS event candidates in date-range chunks and merges duplicate events', async () => {

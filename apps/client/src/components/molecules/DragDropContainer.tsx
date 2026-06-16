@@ -251,7 +251,7 @@ export const DragDropContainer = ({
               <div className="text-[12px] font-normal text-gray-500 dark:text-gray-400">
                 <button
                   type="button"
-                  className="text-[#4070f4] underline-offset-2 hover:underline"
+                  className="cursor-pointer text-[#4070f4] underline-offset-2 hover:underline"
                   onClick={() => fileRef.current?.click()}
                 >
                   {t('Molecules.DragDrop.ClickToUpload')}

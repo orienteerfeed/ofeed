@@ -11,8 +11,10 @@ import {
   hasDisplayableCourseInfo,
   hasDisplayableCourseLength,
 } from '@/lib/course-info';
+import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/atoms';
 
 interface Class {
@@ -29,13 +31,88 @@ interface ClassSelectProps {
   currentClass: Class;
 }
 
+// Sheet sizing limits (in px). The sheet height is user-adjustable within these
+// bounds; the upper bound is additionally clamped to the viewport at drag time.
+const MIN_SHEET_HEIGHT = 200;
+const DEFAULT_HEIGHT_RATIO = 0.8;
+const MAX_HEIGHT_RATIO = 0.9;
+// How far past the minimum the user must drag down to dismiss (close) the sheet.
+const DISMISS_THRESHOLD = 56;
+
+const getDefaultHeight = () =>
+  typeof window !== 'undefined'
+    ? Math.round(window.innerHeight * DEFAULT_HEIGHT_RATIO)
+    : 600;
+
+const getMaxHeight = () =>
+  typeof window !== 'undefined'
+    ? Math.round(window.innerHeight * MAX_HEIGHT_RATIO)
+    : 800;
+
 export const ClassSelect: React.FC<ClassSelectProps> = ({
   classes,
   selectedClass,
   onClassChange,
   currentClass,
 }) => {
+  const { t } = useTranslation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  // Sheet-behavior state. Height is fully adjustable (not fixed); dragging
+  // disables the height transition for responsive feedback.
+  const [sheetHeight, setSheetHeight] = useState(getDefaultHeight);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const dragState = useRef<{ startY: number; startHeight: number } | null>(null);
+
+  // Reset to a sensible default each time the sheet opens.
+  useEffect(() => {
+    if (isSheetOpen) {
+      setSheetHeight(getDefaultHeight());
+    }
+  }, [isSheetOpen]);
+
+  const handleDragStart = useCallback(
+    (e: React.PointerEvent<HTMLElement>) => {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      dragState.current = {
+        startY: e.clientY,
+        startHeight: sheetHeight,
+      };
+      setIsDragging(true);
+    },
+    [sheetHeight],
+  );
+
+  const handleDragMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    if (!dragState.current) return;
+    // Dragging up (smaller clientY) increases height; down decreases it.
+    const delta = dragState.current.startY - e.clientY;
+    const next = dragState.current.startHeight + delta;
+
+    // Pulled well below the minimum (e.g. a quick swipe down) → close the sheet.
+    if (next < MIN_SHEET_HEIGHT - DISMISS_THRESHOLD) {
+      dragState.current = null;
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+      setIsDragging(false);
+      setIsSheetOpen(false);
+      return;
+    }
+
+    const clamped = Math.min(getMaxHeight(), Math.max(MIN_SHEET_HEIGHT, next));
+    setSheetHeight(clamped);
+  }, []);
+
+  const handleDragEnd = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    dragState.current = null;
+    setIsDragging(false);
+  }, []);
 
   // Create a sorted copy of classes for display
   const sortedClasses = useMemo(() => {
@@ -57,15 +134,37 @@ export const ClassSelect: React.FC<ClassSelectProps> = ({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="w-full rounded-t-2xl h-[80vh] max-h-[80vh] flex flex-col"
+          className="w-full rounded-t-2xl flex flex-col overflow-hidden p-0"
+          style={{
+            height: sheetHeight,
+            maxHeight: '90vh',
+            transition: isDragging ? 'none' : 'height 200ms ease',
+          }}
         >
-          <SheetHeader className="text-left pb-4 shrink-0">
-            <SheetTitle>Select Class</SheetTitle>
+          <SheetHeader className="text-left shrink-0 px-6 pt-2">
+            {/* Drag handle: drag up/down to resize the sheet height. */}
+            <div
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="Resize panel"
+              onPointerDown={handleDragStart}
+              onPointerMove={handleDragMove}
+              onPointerUp={handleDragEnd}
+              onPointerCancel={handleDragEnd}
+              className={cn(
+                'group flex w-full touch-none cursor-row-resize select-none flex-col items-center pb-1 pt-1',
+                isDragging && 'cursor-grabbing',
+              )}
+            >
+              <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-colors group-hover:bg-muted-foreground/50" />
+            </div>
+
+            <SheetTitle>{t('Pages.Event.ClassSelect.Title')}</SheetTitle>
             <SheetDescription className="sr-only">
-              Choose a class to view event results.
+              {t('Pages.Event.ClassSelect.Description')}
             </SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto pb-6">
+          <div className="flex-1 overflow-y-auto px-6 pb-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {sortedClasses.map(classItem => (
                 <ClassButton

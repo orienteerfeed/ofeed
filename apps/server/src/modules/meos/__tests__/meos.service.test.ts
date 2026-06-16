@@ -515,15 +515,42 @@ describe('upsertMeosTeam', () => {
 // ---------------------------------------------------------------------------
 
 describe('deleteMeosCompetitor', () => {
-  it('deletes splits then competitor', async () => {
+  it('deletes splits, protocols, then competitor', async () => {
     mockTx.competitor.findFirst.mockResolvedValue({ id: 55 });
 
     await deleteMeosCompetitor(mockTx as never, EVENT_ID, 55);
 
     expect(mockTx.split.deleteMany).toHaveBeenCalledWith({ where: { competitorId: 55 } });
+    expect(mockTx.protocol.deleteMany).toHaveBeenCalledWith({ where: { competitorId: 55 } });
     expect(mockTx.competitor.deleteMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ externalId: '55' }) }),
     );
+  });
+
+  it('removes protocol rows before the competitor to satisfy the FK constraint', async () => {
+    // Regression: a competitor added then deleted in MeOS still has a
+    // `competitor_create` protocol row referencing it. Deleting the competitor
+    // before its protocols violates the Protocol → Competitor foreign key and
+    // crashes the whole MOPDiff upload.
+    mockTx.competitor.findFirst.mockResolvedValue({ id: 55 });
+
+    const callOrder: string[] = [];
+    mockTx.split.deleteMany.mockImplementation(async () => {
+      callOrder.push('split');
+      return { count: 0 };
+    });
+    mockTx.protocol.deleteMany.mockImplementation(async () => {
+      callOrder.push('protocol');
+      return { count: 1 };
+    });
+    mockTx.competitor.deleteMany.mockImplementation(async () => {
+      callOrder.push('competitor');
+      return { count: 1 };
+    });
+
+    await deleteMeosCompetitor(mockTx as never, EVENT_ID, 55);
+
+    expect(callOrder).toEqual(['split', 'protocol', 'competitor']);
   });
 
   it('is a no-op if competitor not found', async () => {

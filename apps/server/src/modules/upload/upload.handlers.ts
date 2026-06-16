@@ -18,11 +18,20 @@ import { error, success, validation } from '../../utils/responseApi.js';
 import { publishUpdatedClasses } from '../competitor/competitor-change.service.js';
 import { detectCompetitorChanges } from '../competitor/competitor-change.helpers.js';
 import { upsertOrganisation } from '../event/organisation.helpers.js';
+import { getEventFilesStatus, importCourseDataXml } from '../course/index.js';
+import type { EventFilesStatus } from '../course/index.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
 import { getCompetitorKeys, loadCompetitorCache, upsertCompetitor } from './upload.competitor.js';
 import { IOF_WRITE_CONCURRENCY } from './upload.constants.js';
 import { normalizeCourseMetrics } from './upload.course.js';
-import { getIofIntegerValue, toSex } from './upload.iof.helpers.js';
+import {
+  getIofDateTime,
+  getIofIntegerValue,
+  getIofTextValue,
+  inferClassSex,
+  toSex,
+} from './upload.iof.helpers.js';
+import { bulkCreateStartSlotVacancies } from '../start-slot-vacancy/start-slot-vacancy.service.js';
 import {
   isIofPayloadType,
   type IofOrganisation,
@@ -258,6 +267,10 @@ const validateIofXml = async (
   return returnState;
 };
 
+function canUploadCourseData(status: Pick<EventFilesStatus, 'startList' | 'results'>): boolean {
+  return status.startList.available || status.results.available;
+}
+
 /**
  * Retrieves a list of classes for a given event.
  *
@@ -265,13 +278,86 @@ const validateIofXml = async (
  * @returns Class list with external identifiers.
  * @throws Error if database query fails.
  */
-type ClassListEntry = { id: number; externalId: string | null; name: string; sex: Sex | null };
+type ResultListMode = 'Default' | 'Unordered' | 'UnorderedNoTimes';
+const RESULT_LIST_MODES = new Set<string>(['Default', 'Unordered', 'UnorderedNoTimes']);
+
+function toResultListMode(value: string | undefined): ResultListMode | null {
+  if (value && RESULT_LIST_MODES.has(value)) return value as ResultListMode;
+  return null;
+}
+
+type StartModeValue = 'StartList' | 'MassStart' | 'PursuitStart' | 'WaveStart' | 'FreeStart';
+const START_MODES = new Set<string>([
+  'StartList',
+  'MassStart',
+  'PursuitStart',
+  'WaveStart',
+  'FreeStart',
+]);
+
+function toStartMode(value: string | undefined): StartModeValue | null {
+  if (value && START_MODES.has(value)) return value as StartModeValue;
+  return null;
+}
+
+/**
+ * Parses an IOF `<Class><Extensions>` block for the OrienteerFeed start-mode
+ * override and optional start window. Returns nulls when the extension or its
+ * fields are absent. Exported for direct unit testing without Prisma.
+ */
+export function parseClassStartExtension(
+  extensions: unknown,
+  timeZone: string,
+): {
+  startMode: StartModeValue | null;
+  startWindowFrom: Date | null;
+  startWindowTo: Date | null;
+} {
+  const ext = Array.isArray(extensions) ? extensions[0] : extensions;
+  if (!ext || typeof ext !== 'object') {
+    return { startMode: null, startWindowFrom: null, startWindowTo: null };
+  }
+  const record = ext as Record<string, unknown>;
+  const startMode = toStartMode(getIofTextValue(record.StartMode));
+  const windowRaw = Array.isArray(record.StartWindow) ? record.StartWindow[0] : record.StartWindow;
+  const window = (windowRaw && typeof windowRaw === 'object' ? windowRaw : {}) as Record<
+    string,
+    unknown
+  >;
+  return {
+    startMode,
+    startWindowFrom: getIofDateTime(window.StartTime, timeZone) ?? null,
+    startWindowTo: getIofDateTime(window.EndTime, timeZone) ?? null,
+  };
+}
+
+type ClassListEntry = {
+  id: number;
+  externalId: string | null;
+  name: string;
+  sex: Sex | null;
+  maxNumberOfCompetitors: number | null;
+  resultListMode: ResultListMode | null;
+  startMode: StartModeValue | null;
+  startWindowFrom: Date | null;
+  startWindowTo: Date | null;
+};
 
 async function getClassLists(eventId: string): Promise<ClassListEntry[]> {
   try {
     return await prisma.class.findMany({
       where: { eventId: eventId },
-      select: { id: true, externalId: true, name: true, sex: true },
+      select: {
+        id: true,
+        externalId: true,
+        name: true,
+        sex: true,
+        maxNumberOfCompetitors: true,
+        resultListMode: true,
+        startMode: true,
+        startWindowFrom: true,
+        startWindowTo: true,
+      },
     });
   } catch (err: unknown) {
     console.error(err);
@@ -310,18 +396,32 @@ function findExistingClass(
  */
 async function upsertClass(
   eventId: string,
-  classDetails: { Id?: string[]; Name: string[]; ATTR?: { sex?: string } },
+  classDetails: {
+    Id?: string[];
+    Name: string[];
+    Extensions?: unknown;
+    ATTR?: {
+      sex?: string;
+      maxNumberOfCompetitors?: string | number;
+      resultListMode?: string;
+    };
+  },
   dbClassLists: ClassListEntry[],
+  eventTimeZone: string,
   additionalData: Record<string, unknown> = {},
 ): Promise<number> {
   const sourceClassId = classDetails.Id?.shift() ?? null;
   const className = classDetails.Name.shift() ?? sourceClassId ?? '';
   const existingClass = findExistingClass(sourceClassId, className, dbClassLists);
 
-  // Determine sex based on the first letter of the class name
-  const inferredSex: Sex =
-    className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
-  const classSex = toSex(classDetails.ATTR?.sex, inferredSex);
+  const classSex = toSex(classDetails.ATTR?.sex, inferClassSex(className));
+  const maxNumberOfCompetitors =
+    getIofIntegerValue(classDetails.ATTR?.maxNumberOfCompetitors) ?? null;
+  const resultListMode = toResultListMode(classDetails.ATTR?.resultListMode);
+  const { startMode, startWindowFrom, startWindowTo } = parseClassStartExtension(
+    classDetails.Extensions,
+    eventTimeZone,
+  );
 
   if (!existingClass) {
     const dbClassInsert = await prisma.class.create({
@@ -330,6 +430,11 @@ async function upsertClass(
         externalId: sourceClassId,
         name: className,
         sex: classSex,
+        maxNumberOfCompetitors,
+        resultListMode,
+        startMode,
+        startWindowFrom,
+        startWindowTo,
         ...additionalData,
       },
     });
@@ -339,8 +444,19 @@ async function upsertClass(
   // Skip the DB write when nothing has changed. additionalData (course metrics
   // from StartList) is always empty for ResultList processing, covering the
   // common re-upload scenario where dozens of classes remain unchanged.
+  const sameDateTime = (a: Date | null, b: Date | null) =>
+    (a?.getTime() ?? null) === (b?.getTime() ?? null);
   const hasAdditionalData = Object.keys(additionalData).length > 0;
-  if (!hasAdditionalData && existingClass.name === className && existingClass.sex === classSex) {
+  if (
+    !hasAdditionalData &&
+    existingClass.name === className &&
+    existingClass.sex === classSex &&
+    existingClass.maxNumberOfCompetitors === maxNumberOfCompetitors &&
+    existingClass.resultListMode === resultListMode &&
+    existingClass.startMode === startMode &&
+    sameDateTime(existingClass.startWindowFrom, startWindowFrom) &&
+    sameDateTime(existingClass.startWindowTo, startWindowTo)
+  ) {
     return existingClass.id;
   }
 
@@ -349,6 +465,11 @@ async function upsertClass(
     data: {
       name: className,
       sex: classSex,
+      maxNumberOfCompetitors,
+      resultListMode,
+      startMode,
+      startWindowFrom,
+      startWindowTo,
       ...additionalData,
     },
   });
@@ -578,14 +699,61 @@ async function processClassStarts(
         }),
       };
 
-      const classId = await upsertClass(eventId, classDetails, dbClassLists, additionalData);
+      const classId = await upsertClass(
+        eventId,
+        classDetails,
+        dbClassLists,
+        eventTimeZone,
+        additionalData,
+      );
       const competitorCache = await loadCompetitorCache(classId);
 
       if (!isRelayDiscipline(dbResponseEvent.discipline)) {
         // Process Individual Starts
         if (!classStart.PersonStart || classStart.PersonStart.length === 0) return;
+
+        // A PersonStart without a <Person> child, or with <Given>Vacant</Given>,
+        // is a vacant reserved slot in the IOF start list (e.g. a regular class
+        // or free-start vacancy). These carry a start time but no real
+        // competitor, so they are recorded in the StartSlotVacancy table instead
+        // of creating an empty competitor. The matching vacancy is removed
+        // automatically once a competitor later occupies that slot (see
+        // deleteMatchingStartSlotVacancy).
+        const competitorStarts: Array<Record<string, any>> = [];
+        const vacantSlots: { startTime: Date; bibNumber: number | null }[] = [];
+        for (const personStart of classStart.PersonStart as Array<Record<string, any>>) {
+          const personEl =
+            Array.isArray(personStart.Person) && personStart.Person.length > 0
+              ? personStart.Person[0]
+              : null;
+          const givenName: string =
+            personEl?.Name?.[0]?.Given?.[0] ?? '';
+          const isVacantPerson = givenName.trim().toLowerCase() === 'vacant';
+          const hasPerson = personEl !== null && !isVacantPerson;
+          if (hasPerson) {
+            competitorStarts.push(personStart);
+            continue;
+          }
+          const vacantStart =
+            Array.isArray(personStart.Start) && personStart.Start.length > 0
+              ? personStart.Start[0]
+              : null;
+          const vacancyStartTime = getIofDateTime(vacantStart?.StartTime, eventTimeZone);
+          // Skip vacant slots without a parseable start time — startTime is part
+          // of the [classId, startTime] unique key and cannot be null.
+          if (!vacancyStartTime) continue;
+          const bibNumber = vacantStart?.BibNumber
+            ? (parseInt(vacantStart.BibNumber[0] ?? '', 10) || null)
+            : null;
+          vacantSlots.push({ startTime: vacancyStartTime, bibNumber });
+        }
+
+        if (vacantSlots.length > 0) {
+          await bulkCreateStartSlotVacancies(prisma, classId, vacantSlots);
+        }
+
         await forEachWithConcurrency(
-          classStart.PersonStart as Array<Record<string, any>>,
+          competitorStarts,
           IOF_WRITE_CONCURRENCY,
           async (competitorStart: Record<string, any>) => {
             const person = competitorStart.Person.shift();
@@ -686,7 +854,7 @@ async function processClassResults(
     IOF_WRITE_CONCURRENCY,
     async (classResult: Record<string, any>) => {
       const classDetails = classResult.Class.shift();
-      const classId = await upsertClass(eventId, classDetails, dbClassLists);
+      const classId = await upsertClass(eventId, classDetails, dbClassLists, eventTimeZone);
       const competitorCache = await loadCompetitorCache(classId);
       // Pre-load splits for all competitors already in the DB for this class.
       // One round-trip replaces N per-competitor findMany calls on re-uploads.
@@ -981,6 +1149,34 @@ async function handleIofXmlUpload(
     });
   }
 
+  if (iofXmlType.some((type) => type.jsonKey === 'CourseData')) {
+    let eventFilesStatus: EventFilesStatus;
+    try {
+      eventFilesStatus = await getEventFilesStatus(prisma, eventId);
+    } catch (err: any) {
+      logUploadEvent(c, 'error', 'IOF upload failed while checking CourseData prerequisites', {
+        ...uploadDetails,
+        success: false,
+        stage: 'course-data-prerequisites',
+        reason: err?.message || 'Unable to check CourseData prerequisites',
+      });
+      return c.json(error(err.message, 500), 500);
+    }
+
+    if (!canUploadCourseData(eventFilesStatus)) {
+      const message =
+        'CourseData upload requires an existing start list or result data for this event.';
+      logUploadEvent(c, 'warn', 'IOF upload CourseData rejected: missing prerequisites', {
+        ...uploadDetails,
+        success: false,
+        stage: 'course-data-prerequisites',
+        startListAvailable: eventFilesStatus.startList.available,
+        resultsAvailable: eventFilesStatus.results.available,
+      });
+      return c.json(validation(message, 422), 422);
+    }
+  }
+
   let dbClassLists;
   try {
     dbClassLists = await getClassLists(eventId);
@@ -1083,6 +1279,11 @@ async function handleIofXmlUpload(
                 externalId: true,
                 name: true,
                 sex: true,
+                maxNumberOfCompetitors: true,
+                resultListMode: true,
+                startMode: true,
+                startWindowFrom: true,
+                startWindowTo: true,
               },
             });
           } catch (err) {
@@ -1119,7 +1320,13 @@ async function handleIofXmlUpload(
                 }),
               };
 
-              await upsertClass(eventId, classDetails, dbClassLists, additionalData);
+              await upsertClass(
+                eventId,
+                classDetails,
+                dbClassLists,
+                dbResponseEvent.timezone ?? 'UTC',
+                additionalData,
+              );
             }),
           );
           logUploadEvent(c, 'info', 'IOF upload CourseData processed', {
@@ -1127,6 +1334,24 @@ async function handleIofXmlUpload(
             success: false,
             stage: 'processed-course-data',
             courseCount: Array.isArray(courseData) ? courseData.length : 0,
+          });
+
+          // Populate the dedicated course-data tables (Control / Course /
+          // CourseControl / CourseMap) and Class.courseId assignments. Manually
+          // managed Control.radio flags are preserved across reimports.
+          const courseImportResult = await importCourseDataXml(
+            eventId,
+            xmlBuffer.toString('utf-8'),
+          );
+          logUploadEvent(c, 'info', 'IOF upload CourseData tables imported', {
+            ...uploadDetails,
+            success: false,
+            stage: 'imported-course-data-tables',
+            coursesImported: courseImportResult.coursesImported,
+            controlsImported: courseImportResult.controlsImported,
+            courseControlsImported: courseImportResult.courseControlsImported,
+            classesAssigned: courseImportResult.classesAssigned,
+            radioControlsPreserved: courseImportResult.radioControlsPreserved,
           });
         }
       }),
@@ -1458,6 +1683,7 @@ export function registerUploadRoutes(router: AppOpenAPI) {
 export const parseXmlForTesting = {
   parseXml,
   checkXmlType,
+  canUploadCourseData,
   upsertCompetitor,
   findExistingClass,
   getCompetitorKeys,

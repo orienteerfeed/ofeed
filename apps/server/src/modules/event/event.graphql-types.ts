@@ -1,7 +1,9 @@
 import {
+  EventFormat,
   EventDiscipline,
   ExternalSource,
   SplitPublicationMode,
+  StartMode,
 } from '../../generated/prisma/enums.js';
 import { builder } from '../../graphql/builder.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
@@ -42,6 +44,14 @@ const EventOfficialResultsSourceRef = builder.enumType('EventOfficialResultsSour
 
 export const SplitPublicationModeRef = builder.enumType(SplitPublicationMode, {
   name: 'SplitPublicationMode',
+});
+
+const EventFormatRef = builder.enumType(EventFormat, {
+  name: 'EventFormat',
+});
+
+export const StartModeRef = builder.enumType(StartMode, {
+  name: 'StartMode',
 });
 
 const EventStatusSummaryRef = builder
@@ -133,14 +143,41 @@ export const EventRef = builder.prismaObject('Event', {
     ranking: t.exposeBoolean('ranking'),
     coefRanking: t.exposeFloat('coefRanking', { nullable: true }),
     hundredthPrecision: t.exposeBoolean('hundredthPrecision'),
-    startMode: t.string({
-      resolve: (event) => event.startMode,
+    eventFormat: t.field({
+      type: EventFormatRef,
+      resolve: (event) => event.eventFormat,
+    }),
+    defaultStartMode: t.field({
+      type: StartModeRef,
+      resolve: (event) => event.defaultStartMode,
     }),
     countryId: t.exposeString('countryId', { nullable: true }),
     published: t.exposeBoolean('published'),
     demo: t.exposeBoolean('demo'),
     entriesOpenAt: t.expose('entriesOpenAt', { type: 'DateTime', nullable: true }),
     entriesCloseAt: t.expose('entriesCloseAt', { type: 'DateTime', nullable: true }),
+    currency: t.field({
+      type: 'String',
+      nullable: true,
+      resolve: async (event, args, ctx) => {
+        if (!event.currencyId) return null;
+        const currency = await ctx.prisma.currency.findUnique({
+          where: { id: event.currencyId },
+        });
+        return currency?.iso4217Alpha3 ?? null;
+      },
+    }),
+    vatPayer: t.exposeBoolean('vatPayer'),
+    vatRate: t.float({
+      nullable: true,
+      select: { vatRate: true },
+      resolve: (event) => event.vatRate?.toNumber() ?? null,
+    }),
+    lateEntryFeePercent: t.float({
+      nullable: true,
+      select: { lateEntryFeePercent: true },
+      resolve: (event) => event.lateEntryFeePercent?.toNumber() ?? null,
+    }),
     splitPublicationMode: t.field({
       type: SplitPublicationModeRef,
       resolve: (event) => event.splitPublicationMode,

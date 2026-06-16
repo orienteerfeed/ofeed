@@ -19,7 +19,10 @@ const log = config.REQUEST_LOGGING
 export const useApi = () => {
   const { token, logout } = useAuthForRequest();
 
-  const createHeaders = (skipAuth: boolean = false): Record<string, string> => {
+  const createHeaders = (
+    skipAuth: boolean = false,
+    extraHeaders?: Record<string, string>
+  ): Record<string, string> => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -28,7 +31,7 @@ export const useApi = () => {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    return headers;
+    return { ...headers, ...extraHeaders };
   };
 
   const handleResponse = async <T>(response: Response): Promise<T> => {
@@ -91,14 +94,14 @@ export const useApi = () => {
   const post = async <T>(
     endpoint: string,
     data?: unknown,
-    options?: { skipAuth?: boolean }
+    options?: { skipAuth?: boolean; headers?: Record<string, string> }
   ): Promise<T> => {
     const url = `${config.BASE_API_URL}${endpoint}`;
     log(`POST ${url}`, data);
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: createHeaders(options?.skipAuth),
+      headers: createHeaders(options?.skipAuth, options?.headers),
       body: JSON.stringify(data),
     });
 

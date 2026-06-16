@@ -14,6 +14,7 @@ import {
 } from '../../lib/validation/zod.js';
 
 import { validateEventConnection } from './event.connection.service.js';
+import { listEventEntryAvailability } from '../start-slot-vacancy/start-slot-vacancy.service.js';
 import { getEventCompetitorDetail, getEventSlugAvailability } from './event.service.js';
 import { flattenOrganisation, organisationSelect } from './organisation.helpers.js';
 import {
@@ -34,6 +35,18 @@ function responseValidationString(issues: z.ZodIssue[]) {
 
 function serializeEventDateForResponse(date: Date) {
   return formatUtcDateTimeRfc3339(date) ?? date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+function ageToRestClass<T extends { minAge: number | null; maxAge: number | null }>(
+  cls: T,
+  refYear: number,
+): Omit<T, 'minAge' | 'maxAge'> & { birthYearFrom: number | null; birthYearTo: number | null } {
+  const { minAge, maxAge, ...rest } = cls;
+  return {
+    ...rest,
+    birthYearFrom: maxAge !== null ? refYear - maxAge : null,
+    birthYearTo: minAge !== null ? refYear - minAge : null,
+  };
 }
 
 export function registerPublicEventRoutes(router) {
@@ -210,7 +223,10 @@ export function registerPublicEventRoutes(router) {
           coefRanking: true,
           sport: true,
           hundredthPrecision: true,
-          classes: true,
+          defaultStartMode: true,
+          classes: {
+            include: { _count: { select: { competitors: true } } },
+          },
         },
       });
     } catch (err: any) {
@@ -232,6 +248,12 @@ export function registerPublicEventRoutes(router) {
     }
 
     const { id, name, date, timezone, location, discipline, ...restData } = dbResponse;
+    const { classes: rawClasses, ...restWithoutClasses } = restData;
+    const refYear = new Date().getFullYear();
+    const classes = (rawClasses ?? []).map((cls) => {
+      const { _count, ...classRest } = cls;
+      return { ...ageToRestClass(classRest, refYear), competitorsCount: _count.competitors };
+    });
     return c.json(
       success(
         'OK',
@@ -245,7 +267,8 @@ export function registerPublicEventRoutes(router) {
             location,
             discipline,
             relay: isRelayDiscipline(discipline),
-            ...restData,
+            ...restWithoutClasses,
+            classes,
           },
         },
         200,
@@ -574,6 +597,37 @@ export function registerPublicEventRoutes(router) {
     );
 
     return c.json(success('OK', { data: competitorData }, 200), 200);
+  });
+
+  router.get('/:eventId/entry-availability', async (c) => {
+    const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
+    if (!parsedParams.success) {
+      return c.json(responseValidationIssues(parsedParams.error.issues), 422);
+    }
+
+    const { eventId } = parsedParams.data;
+
+    try {
+      const result = await listEventEntryAvailability(prisma as never, eventId);
+      if (!result) {
+        return c.json(
+          validation(`Event with ID ${eventId} does not exist in the database`, 422),
+          422,
+        );
+      }
+      const refYear = new Date().getFullYear();
+      const data = {
+        ...result,
+        classes: result.classes.map((cls) => ageToRestClass(cls, refYear)),
+      };
+      return c.json(success('OK', { data }, 200), 200);
+    } catch (err) {
+      logEndpoint(c, 'error', 'Entry availability query failed', {
+        eventId,
+        ...getErrorDetails(err),
+      });
+      return c.json(error('Failed to load entry availability', 500), 500);
+    }
   });
 
   router.post('/:eventId/czech-ranking', async (c) => {

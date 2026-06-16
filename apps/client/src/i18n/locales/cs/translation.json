@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Aktivovat",
           "Deactivate": "Deaktivovat",
-          "Delete": "Odstranit"
+          "Delete": "Odstranit",
+          "Menu": "Akce",
+          "RequestVerification": "Znovu odeslat ověřovací e-mail"
         },
         "Confirm": {
           "ActivateTitle": "Aktivovat uživatelský účet",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "Nepodařilo se aktivovat účet",
           "DeactivateErrorTitle": "Nepodařilo se deaktivovat účet",
           "DeleteErrorTitle": "Nepodařilo se odstranit účet",
-          "UnknownError": "Došlo k neočekávané chybě."
+          "UnknownError": "Došlo k neočekávané chybě.",
+          "RequestVerificationSuccessTitle": "Ověřovací e-mail odeslán",
+          "RequestVerificationSuccessDescription": "Ověřovací e-mail byl odeslán uživateli {{name}}.",
+          "RequestVerificationErrorTitle": "Nepodařilo se odeslat ověřovací e-mail"
         }
       },
       "Events": {
@@ -516,7 +521,87 @@
         }
       },
       "Settings": {
-        "Loading": "Načítám nastavení akce"
+        "Loading": "Načítám nastavení akce",
+        "Tabs": {
+          "General": "Obecné",
+          "Files": "Soubory",
+          "Classes": "Kategorie"
+        },
+        "Classes": {
+          "Title": "Kategorie",
+          "Description": "Uprav nastavení jednotlivých kategorií. Změny se ukládají automaticky.",
+          "Columns": {
+            "Name": "Název",
+            "CompetitorsCount": "Počet závodníků",
+            "MaxCompetitors": "Max. závodníků",
+            "BirthYearFrom": "Ročník od",
+            "BirthYearTo": "Ročník do",
+            "MinTeamMembers": "Min. členů týmu",
+            "MaxTeamMembers": "Max. členů týmu",
+            "Sex": "Pohlaví",
+            "ResultListMode": "Režim výsledků",
+            "Fee": "Startovné",
+            "StartMode": "Režim startu",
+            "AwardedPlaces": "Vyhlašovaná místa",
+            "Actions": "Akce"
+          },
+          "ResultListMode": {
+            "Default": "Výchozí",
+            "Unordered": "Neseřazené",
+            "UnorderedNoTimes": "Neseřazené (bez časů)"
+          },
+          "StartMode": {
+            "Inherit": "Výchozí dle závodu",
+            "StartList": "Startovní listina",
+            "MassStart": "Hromadný start",
+            "PursuitStart": "Stíhací start",
+            "WaveStart": "Vlnový start",
+            "FreeStart": "Volný start"
+          },
+          "Empty": "Pro tento závod nebyly nalezeny žádné kategorie.",
+          "SaveError": "Změnu se nepodařilo uložit.",
+          "StartTimes": {
+            "Open": "Volné startovní časy",
+            "Title": "Volné startovní časy — {{name}}",
+            "Time": "Startovní čas",
+            "Bib": "Číslo",
+            "Empty": "Pro tuto kategorii nejsou volné startovní časy.",
+            "Close": "Zavřít",
+            "LoadError": "Startovní časy se nepodařilo načíst."
+          },
+          "MaxCompetitorsErrorPositive": "Zadejte nezáporné celé číslo.",
+          "MaxCompetitorsErrorBelowCount": "Nelze nastavit méně, než je aktuální počet přihlášených závodníků ({{count}}).",
+          "MaxCompetitorsOverCapacityTooltip": "Počet přihlášených závodníků ({{count}}) překračuje nastavený limit. Upravte limit nebo odeberte závodníky.",
+          "BirthYearInvalid": "Zadejte platný rok (min. 4 číslice).",
+          "BirthYearRangeError": "Ročník od musí být menší nebo roven ročníku do."
+        },
+        "Files": {
+          "StartList": "Startovní listina",
+          "Courses": "Tratě",
+          "CoursesHelper": "Definice tratí nejsou pro základní funkčnost nutné. Slouží ke správnému přiřazení mezičasů; poloha jednotlivých kontrol se nezpracovává.",
+          "Results": "Výsledky",
+          "Available": "K dispozici",
+          "Missing": "Není k dispozici",
+          "Locked": "Nahrání zatím není dostupné",
+          "CoursesDisabledHint": "Nejprve nahraj startovní listinu nebo výsledky, pak bude možné nahrát data tratí.",
+          "RadioControls": {
+            "Title": "Vyber, které kontroly zobrazit jako online mezičasy",
+            "Helper": "Závodníci a diváci uvidí průběžné časy na vybraných kontrolách.",
+            "NoCourseData": "Nejprve nahrej data tratí pro nastavení online kontrol.",
+            "NoControls": "Nejsou k dispozici žádné kontroly.",
+            "SaveError": "Radiovou kontrolu se nepodařilo aktualizovat.",
+            "Selected": "Vybrané radiové kontroly: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Tvůrce",
+            "ExternalStatus": "Status",
+            "LastSuccessfulImport": "Poslední import",
+            "SuccessCount": "Úspěšných",
+            "SkippedCount": "Přeskočených",
+            "CopyHash": "Kopírovat hash",
+            "HashCopied": "Hash zkopírován!"
+          }
+        }
       },
       "Detail": {
         "EventInformation": "Informace o akci",
@@ -652,6 +737,8 @@
         "Country": "Země",
         "ZeroTime": "Čas startu",
         "Discipline": "Disciplína",
+        "DefaultStartMode": "Výchozí režim startu",
+        "Currency": "Měna",
         "FeaturedImage": "Úvodní obrázek",
         "FeaturedImageHint": "JPEG, PNG nebo WEBP, max 2 MB.",
         "FeaturedImageButton": "Přidat obrázek",
@@ -680,6 +767,13 @@
           "TEAMS": "Družstva",
           "OTHER": "Ostatní"
         },
+        "StartModeOptions": {
+          "StartList": "Startovní listina",
+          "MassStart": "Hromadný start",
+          "PursuitStart": "Stíhací start",
+          "WaveStart": "Vlnový start",
+          "FreeStart": "Volný start"
+        },
         "Placeholders": {
           "EventName": "Moje první akce",
           "Sport": "Vyberte sport",
@@ -689,6 +783,7 @@
           "Latitude": "Zadej gps šířku (např., 50.0755)",
           "Longitude": "Zadej gps délku (např., 14.4378)",
           "Country": "Vyberte zemi",
+          "Currency": "Vyberte měnu",
           "CoefRanking": "1.02"
         },
         "Import": {
@@ -945,6 +1040,16 @@
         "Description2": "prosíme přilož případně problémové soubory.",
         "Discord": "Připojit se na Discord",
         "GitHubIssues": "Otevřít GitHub Issues"
+      },
+      "ClassSelect": {
+        "Title": "Vybrat kategorii",
+        "Description": "Vyberte kategorii pro zobrazení výsledků závodu."
+      },
+      "ClubSelect": {
+        "Title": "Vybrat klub",
+        "Description": "Vyberte klub pro zobrazení výsledků",
+        "NoClubs": "Žádné kluby nenalezeny",
+        "Cancel": "Zrušit"
       }
     },
     "Home": {

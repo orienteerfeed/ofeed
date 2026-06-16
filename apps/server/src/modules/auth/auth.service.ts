@@ -55,6 +55,23 @@ export async function sendVerificationEmailHelper(
   }
 }
 
+export async function sendVerificationEmailForUser(params: {
+  userId: number;
+  firstname: string;
+  lastname: string;
+  email: string;
+  appBaseUrl: string;
+}): Promise<void> {
+  const verificationToken = generateJwtTokenForLink(params.userId);
+  const verificationLink = `${params.appBaseUrl}/${verificationToken}`;
+  await sendVerificationEmailHelper(
+    params.firstname,
+    params.lastname,
+    params.email,
+    verificationLink,
+  );
+}
+
 // Correctly calculate the directory of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -148,9 +165,13 @@ export const signupUser = async (
     const { token } = loginSuccessPayload;
 
     // Generate separate 48h token for email verification link (does not block login)
-    const verificationToken = generateJwtTokenForLink(user.id);
-    const verificationLink = `${app_base_url}/${verificationToken}`;
-    await sendVerificationEmailHelper(firstname, lastname, email, verificationLink);
+    await sendVerificationEmailForUser({
+      userId: user.id,
+      firstname,
+      lastname,
+      email,
+      appBaseUrl: app_base_url,
+    });
 
     // Return both the login token and the created user object
     return { token, user };

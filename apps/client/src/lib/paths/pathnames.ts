@@ -18,7 +18,7 @@ export const PATHNAMES = {
   eventDetail: (eventId: string) => ({
     to: '/events/$eventId',
     params: { eventId } as const,
-    url: `/events/${eventId}`,
+    url: `/e/${eventId}`,
   }),
   eventReport: (eventId: string) => ({
     to: '/events/$eventId/report',

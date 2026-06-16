@@ -1,7 +1,7 @@
 import type { AdminUserListItem } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Power, PowerOff, Trash2 } from 'lucide-react';
+import { Mail, MoreHorizontal, Power, PowerOff, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,6 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { PATHNAMES } from '@/lib/paths/pathnames';
 import { AdminPageLayout } from '@/templates';
 import { toast } from '@/utils';
@@ -26,6 +33,7 @@ import { toast } from '@/utils';
 import {
   useAdminUserActiveMutation,
   useAdminUserDeleteMutation,
+  useAdminUserRequestVerificationMutation,
   useAdminUsersQuery,
 } from './admin.hooks';
 
@@ -52,6 +60,7 @@ export function AdminUsersPage() {
 
   const updateUserActiveMutation = useAdminUserActiveMutation();
   const deleteUserMutation = useAdminUserDeleteMutation();
+  const requestVerificationMutation = useAdminUserRequestVerificationMutation();
   const [activeToggleTarget, setActiveToggleTarget] = useState<{
     user: AdminUserListItem;
     nextActive: boolean;
@@ -124,6 +133,34 @@ export function AdminUsersPage() {
     } catch (mutationError) {
       toast({
         title: t('Pages.Admin.Users.Toast.DeleteErrorTitle'),
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : t('Pages.Admin.Users.Toast.UnknownError'),
+        variant: 'error',
+      });
+    }
+  };
+
+  const handleRequestVerification = async (user: AdminUserListItem) => {
+    try {
+      await requestVerificationMutation.mutateAsync(user.id);
+
+      toast({
+        title: t('Pages.Admin.Users.Toast.RequestVerificationSuccessTitle'),
+        description: t(
+          'Pages.Admin.Users.Toast.RequestVerificationSuccessDescription',
+          {
+            name: `${user.firstname} ${user.lastname}`,
+          }
+        ),
+        variant: 'success',
+      });
+
+      await invalidateAdminQueries();
+    } catch (mutationError) {
+      toast({
+        title: t('Pages.Admin.Users.Toast.RequestVerificationErrorTitle'),
         description:
           mutationError instanceof Error
             ? mutationError.message
@@ -223,39 +260,51 @@ export function AdminUsersPage() {
                   <TableCell>{user.organisation || '—'}</TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        disabled={isCurrentUser}
-                        onClick={() =>
-                          setActiveToggleTarget({
-                            user,
-                            nextActive: !user.active,
-                          })
-                        }
-                      >
-                        {user.active ? (
-                          <PowerOff className="h-4 w-4" />
-                        ) : (
-                          <Power className="h-4 w-4" />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <MoreHorizontal className="h-4 w-4" />
+                          {t('Pages.Admin.Users.Actions.Menu')}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          disabled={isCurrentUser}
+                          onSelect={() =>
+                            setActiveToggleTarget({
+                              user,
+                              nextActive: !user.active,
+                            })
+                          }
+                        >
+                          {user.active ? (
+                            <PowerOff className="mr-2 h-4 w-4" />
+                          ) : (
+                            <Power className="mr-2 h-4 w-4" />
+                          )}
+                          {user.active
+                            ? t('Pages.Admin.Users.Actions.Deactivate')
+                            : t('Pages.Admin.Users.Actions.Activate')}
+                        </DropdownMenuItem>
+                        {!user.emailVerifiedAt && (
+                          <DropdownMenuItem
+                            onSelect={() => handleRequestVerification(user)}
+                          >
+                            <Mail className="mr-2 h-4 w-4" />
+                            {t('Pages.Admin.Users.Actions.RequestVerification')}
+                          </DropdownMenuItem>
                         )}
-                        {user.active
-                          ? t('Pages.Admin.Users.Actions.Deactivate')
-                          : t('Pages.Admin.Users.Actions.Activate')}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="gap-2"
-                        disabled={isCurrentUser}
-                        onClick={() => setDeleteTarget(user)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        {t('Pages.Admin.Users.Actions.Delete')}
-                      </Button>
-                    </div>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          disabled={isCurrentUser}
+                          onSelect={() => setDeleteTarget(user)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {t('Pages.Admin.Users.Actions.Delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );

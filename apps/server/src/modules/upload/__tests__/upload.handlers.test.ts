@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Sex } from '../../../generated/prisma/enums.js';
-import { parseXmlForTesting } from '../upload.handlers.js';
+import { inferClassSex } from '../upload.iof.helpers.js';
+import { parseClassStartExtension, parseXmlForTesting } from '../upload.handlers.js';
 
 const {
   checkXmlType,
@@ -14,6 +15,7 @@ const {
   normalizeIncomingSplits,
   isSplitWriteConflict,
   loadSplitCache,
+  canUploadCourseData,
   processClassResults,
   processClassStarts,
 } = parseXmlForTesting;
@@ -51,11 +53,104 @@ describe('upload.handlers testing helpers', () => {
   });
 });
 
+describe('canUploadCourseData', () => {
+  const status = (
+    startListAvailable: boolean,
+    resultsAvailable: boolean,
+  ): Parameters<typeof canUploadCourseData>[0] => ({
+    startList: {
+      available: startListAvailable,
+      classesCount: startListAvailable ? 1 : 0,
+      competitorsCount: startListAvailable ? 1 : 0,
+      competitorsWithStartTimeCount: startListAvailable ? 1 : 0,
+      source: startListAvailable ? 'data' : null,
+    },
+    results: {
+      available: resultsAvailable,
+      competitorsCount: resultsAvailable ? 1 : 0,
+      competitorsWithResultDataCount: resultsAvailable ? 1 : 0,
+      source: resultsAvailable ? 'data' : null,
+    },
+  });
+
+  it('allows CourseData upload when a start list is available', () => {
+    expect(canUploadCourseData(status(true, false))).toBe(true);
+  });
+
+  it('allows CourseData upload when result data is available', () => {
+    expect(canUploadCourseData(status(false, true))).toBe(true);
+  });
+
+  it('rejects CourseData upload when neither a start list nor result data is available', () => {
+    expect(canUploadCourseData(status(false, false))).toBe(false);
+  });
+});
+
+describe('parseClassStartExtension', () => {
+  it('parses StartMode and a full StartWindow', () => {
+    const result = parseClassStartExtension(
+      [
+        {
+          StartMode: ['FreeStart'],
+          StartWindow: [
+            { StartTime: ['2026-05-01T10:00:00+02:00'], EndTime: ['2026-05-01T11:30:00+02:00'] },
+          ],
+        },
+      ],
+      'Europe/Prague',
+    );
+
+    expect(result.startMode).toBe('FreeStart');
+    expect(result.startWindowFrom?.toISOString()).toBe('2026-05-01T08:00:00.000Z');
+    expect(result.startWindowTo?.toISOString()).toBe('2026-05-01T09:30:00.000Z');
+  });
+
+  it('parses a StartMode override without a window', () => {
+    const result = parseClassStartExtension([{ StartMode: ['StartList'] }], 'Europe/Prague');
+
+    expect(result).toEqual({ startMode: 'StartList', startWindowFrom: null, startWindowTo: null });
+  });
+
+  it('keeps only the provided side of a partial window', () => {
+    const result = parseClassStartExtension(
+      [{ StartMode: ['FreeStart'], StartWindow: [{ StartTime: ['2026-05-01T10:00:00+02:00'] }] }],
+      'Europe/Prague',
+    );
+
+    expect(result.startWindowFrom?.toISOString()).toBe('2026-05-01T08:00:00.000Z');
+    expect(result.startWindowTo).toBeNull();
+  });
+
+  it('ignores an unknown StartMode value', () => {
+    const result = parseClassStartExtension([{ StartMode: ['Bogus'] }], 'Europe/Prague');
+
+    expect(result.startMode).toBeNull();
+  });
+
+  it('returns nulls when the extension is absent', () => {
+    expect(parseClassStartExtension(undefined, 'Europe/Prague')).toEqual({
+      startMode: null,
+      startWindowFrom: null,
+      startWindowTo: null,
+    });
+  });
+});
+
 describe('findExistingClass', () => {
-  const dbClassLists: { id: number; externalId: string | null; name: string; sex: Sex | null }[] = [
-    { id: 1, externalId: '198732', name: 'D10C', sex: null },
-    { id: 2, externalId: '10', name: 'H10', sex: null },
-    { id: 3, externalId: null, name: 'D21', sex: null },
+  const dbClassLists: {
+    id: number;
+    externalId: string | null;
+    name: string;
+    sex: Sex | null;
+    maxNumberOfCompetitors: number | null;
+    resultListMode: 'Default' | 'Unordered' | 'UnorderedNoTimes' | null;
+    startMode: 'StartList' | 'MassStart' | 'PursuitStart' | 'WaveStart' | 'FreeStart' | null;
+    startWindowFrom: Date | null;
+    startWindowTo: Date | null;
+  }[] = [
+    { id: 1, externalId: '198732', name: 'D10C', sex: null, maxNumberOfCompetitors: null, resultListMode: null, startMode: null, startWindowFrom: null, startWindowTo: null },
+    { id: 2, externalId: '10', name: 'H10', sex: null, maxNumberOfCompetitors: null, resultListMode: null, startMode: null, startWindowFrom: null, startWindowTo: null },
+    { id: 3, externalId: null, name: 'D21', sex: null, maxNumberOfCompetitors: null, resultListMode: null, startMode: null, startWindowFrom: null, startWindowTo: null },
   ];
 
   it('matches by externalId when XML carries an Id', () => {
@@ -253,6 +348,10 @@ const mockPrisma = vi.hoisted(() => ({
   // Required by the real loadCompetitorCache used in publish-aggregation tests.
   competitor: {
     findMany: vi.fn().mockResolvedValue([]),
+  },
+  // Used by the real bulkCreateStartSlotVacancies for vacant start slots.
+  startSlotVacancy: {
+    createMany: vi.fn().mockResolvedValue({ count: 0 }),
   },
 }));
 
@@ -501,8 +600,28 @@ describe('loadSplitCache', () => {
 // the StartList handler can publish once per affected class.
 
 describe('processClassStarts — updated class deduplication', () => {
-  const dbClassLists: { id: number; externalId: string | null; name: string; sex: Sex | null }[] = [
-    { id: 10, externalId: 'C10', name: 'H21E', sex: 'M' },
+  const dbClassLists: {
+    id: number;
+    externalId: string | null;
+    name: string;
+    sex: Sex | null;
+    maxNumberOfCompetitors: number | null;
+    resultListMode: 'Default' | 'Unordered' | 'UnorderedNoTimes' | null;
+    startMode: 'StartList' | 'MassStart' | 'PursuitStart' | 'WaveStart' | 'FreeStart' | null;
+    startWindowFrom: Date | null;
+    startWindowTo: Date | null;
+  }[] = [
+    {
+      id: 10,
+      externalId: 'C10',
+      name: 'H21E',
+      sex: 'M',
+      maxNumberOfCompetitors: null,
+      resultListMode: null,
+      startMode: null,
+      startWindowFrom: null,
+      startWindowTo: null,
+    },
   ];
 
   const makePersonStart = (registration: string) => ({
@@ -550,5 +669,239 @@ describe('processClassStarts — updated class deduplication', () => {
     );
 
     expect(updated).toEqual([]);
+  });
+});
+
+describe('processClassStarts — vacant start slots', () => {
+  const dbClassLists: {
+    id: number;
+    externalId: string | null;
+    name: string;
+    sex: Sex | null;
+    maxNumberOfCompetitors: number | null;
+    resultListMode: 'Default' | 'Unordered' | 'UnorderedNoTimes' | null;
+    startMode: 'StartList' | 'MassStart' | 'PursuitStart' | 'WaveStart' | 'FreeStart' | null;
+    startWindowFrom: Date | null;
+    startWindowTo: Date | null;
+  }[] = [
+    {
+      id: 10,
+      externalId: 'C10',
+      name: 'H21E',
+      sex: 'M',
+      maxNumberOfCompetitors: null,
+      resultListMode: null,
+      startMode: null,
+      startWindowFrom: null,
+      startWindowTo: null,
+    },
+  ];
+
+  // A vacant PersonStart has a <Start>/<StartTime> but no <Person> child.
+  const makeVacantStart = (startTime: string) => ({ Start: [{ StartTime: [startTime] }] });
+
+  // A "named-vacant" PersonStart has a <Person> child with <Given>Vacant</Given>
+  // (and typically an empty <Family>). Some IOF exporters emit this form instead
+  // of omitting the <Person> element entirely.
+  const makeNamedVacantStart = (startTime: string) => ({
+    Person: [{ Name: [{ Family: [''], Given: ['Vacant'] }] }],
+    Start: [{ StartTime: [startTime] }],
+  });
+
+  const makePersonStart = () => ({
+    Person: [
+      {
+        Id: [{ _: 'REG001', ATTR: { type: 'CZE' } }],
+        Name: [{ Family: ['X'], Given: ['Y'] }],
+        Nationality: [{ ATTR: { code: 'CZE' } }],
+      },
+    ],
+    Organisation: [],
+    Start: [{}],
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('stores vacant start times as vacancies without creating competitors', async () => {
+    mockPrisma.startSlotVacancy.createMany.mockResolvedValue({ count: 2 });
+
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [{ Id: ['C10'], Name: ['H21E'], ATTR: {} }],
+          PersonStart: [
+            makeVacantStart('2026-05-08T15:34:00+02:00'),
+            makeVacantStart('2026-05-08T15:30:00+02:00'),
+          ],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockUpsertCompetitor).not.toHaveBeenCalled();
+    expect(mockPrisma.startSlotVacancy.createMany).toHaveBeenCalledWith({
+      data: [
+        { classId: 10, startTime: new Date('2026-05-08T13:34:00.000Z'), bibNumber: null },
+        { classId: 10, startTime: new Date('2026-05-08T13:30:00.000Z'), bibNumber: null },
+      ],
+      skipDuplicates: true,
+    });
+  });
+
+  it('stores bibNumber from IOF XML <BibNumber> element when present', async () => {
+    mockPrisma.startSlotVacancy.createMany.mockResolvedValue({ count: 1 });
+    const vacantWithBib = {
+      Start: [{ StartTime: ['2026-05-08T15:34:00+02:00'], BibNumber: ['77'] }],
+    };
+
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [{ Id: ['C10'], Name: ['H21E'], ATTR: {} }],
+          PersonStart: [vacantWithBib],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockUpsertCompetitor).not.toHaveBeenCalled();
+    expect(mockPrisma.startSlotVacancy.createMany).toHaveBeenCalledWith({
+      data: [{ classId: 10, startTime: new Date('2026-05-08T13:34:00.000Z'), bibNumber: 77 }],
+      skipDuplicates: true,
+    });
+  });
+
+  it('handles real competitors and vacant slots in the same class', async () => {
+    mockUpsertCompetitor.mockResolvedValue({ id: 3, updated: true });
+    mockPrisma.startSlotVacancy.createMany.mockResolvedValue({ count: 1 });
+
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [{ Id: ['C10'], Name: ['H21E'], ATTR: {} }],
+          PersonStart: [makePersonStart(), makeVacantStart('2026-05-08T15:34:00+02:00')],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockUpsertCompetitor).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.startSlotVacancy.createMany).toHaveBeenCalledWith({
+      data: [{ classId: 10, startTime: new Date('2026-05-08T13:34:00.000Z'), bibNumber: null }],
+      skipDuplicates: true,
+    });
+  });
+
+  it('skips vacant slots without a parseable start time and never touches the DB', async () => {
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [{ Id: ['C10'], Name: ['H21E'], ATTR: {} }],
+          PersonStart: [{ Start: [{}] }],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockUpsertCompetitor).not.toHaveBeenCalled();
+    expect(mockPrisma.startSlotVacancy.createMany).not.toHaveBeenCalled();
+  });
+
+  it('treats PersonStart with Given=Vacant as a vacancy (no competitor created)', async () => {
+    mockPrisma.startSlotVacancy.createMany.mockResolvedValue({ count: 1 });
+
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [{ Id: ['C10'], Name: ['H21E'], ATTR: {} }],
+          PersonStart: [makeNamedVacantStart('2026-03-21T14:22:00+01:00')],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockUpsertCompetitor).not.toHaveBeenCalled();
+    expect(mockPrisma.startSlotVacancy.createMany).toHaveBeenCalledWith({
+      data: [{ classId: 10, startTime: new Date('2026-03-21T13:22:00.000Z'), bibNumber: null }],
+      skipDuplicates: true,
+    });
+  });
+
+  it('treats named-vacant slots and real competitors in the same class correctly', async () => {
+    mockUpsertCompetitor.mockResolvedValue({ id: 3, updated: true });
+    mockPrisma.startSlotVacancy.createMany.mockResolvedValue({ count: 1 });
+
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [{ Id: ['C10'], Name: ['H21E'], ATTR: {} }],
+          PersonStart: [
+            makeNamedVacantStart('2026-03-21T14:22:00+01:00'),
+            makePersonStart(),
+          ],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockUpsertCompetitor).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.startSlotVacancy.createMany).toHaveBeenCalledWith({
+      data: [{ classId: 10, startTime: new Date('2026-03-21T13:22:00.000Z'), bibNumber: null }],
+      skipDuplicates: true,
+    });
+  });
+});
+
+describe('inferClassSex', () => {
+  it('returns M for standard male class names (H prefix)', () => {
+    expect(inferClassSex('H21')).toBe('M');
+    expect(inferClassSex('H35')).toBe('M');
+  });
+
+  it('returns F for standard female class names (D prefix)', () => {
+    expect(inferClassSex('D21')).toBe('F');
+    expect(inferClassSex('D40')).toBe('F');
+  });
+
+  it('returns M for M-prefixed age class names', () => {
+    expect(inferClassSex('M21')).toBe('M');
+    expect(inferClassSex('M12')).toBe('M');
+  });
+
+  it('returns F for F-prefixed age class names', () => {
+    expect(inferClassSex('F21')).toBe('F');
+    expect(inferClassSex('F16')).toBe('F');
+  });
+
+  it('returns B for HDR (mixed handicapped/recreational) class names', () => {
+    expect(inferClassSex('HDR')).toBe('B');
+    expect(inferClassSex('HDR21')).toBe('B');
+  });
+
+  it('returns B for unrecognised prefixes', () => {
+    expect(inferClassSex('OPEN')).toBe('B');
+    expect(inferClassSex('M')).toBe('B');
+    expect(inferClassSex('F')).toBe('B');
+    expect(inferClassSex('')).toBe('B');
   });
 });

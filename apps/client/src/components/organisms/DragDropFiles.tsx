@@ -11,6 +11,7 @@ export const DragDropFile: React.FC<DragDropFileProps> = ({
   onUploadSuccess,
   maxFiles = 1,
   allowedFormats = ['xml'],
+  hideHeader = false,
 }) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -148,14 +149,16 @@ export const DragDropFile: React.FC<DragDropFileProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      <div className="pb-2 border-b border-border">
-        <h2 className="font-semibold text-foreground">
-          {t('Organisms.DragDrop.UploadIofXml.Title')}
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t('Organisms.DragDrop.UploadIofXml.Description')}
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="pb-2 border-b border-border">
+          <h2 className="font-semibold text-foreground">
+            {t('Organisms.DragDrop.UploadIofXml.Title')}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('Organisms.DragDrop.UploadIofXml.Description')}
+          </p>
+        </div>
+      )}
 
       <DragDropContainer
         uploadedFiles={uploadedFiles}

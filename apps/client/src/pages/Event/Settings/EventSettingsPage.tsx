@@ -1,26 +1,17 @@
-import { config } from '@/config';
-import { formatDate } from '@/lib/utils';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { useParams } from '@tanstack/react-router';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BackLink } from '../../../components/molecules';
-import { DragDropFile } from '../../../components/organisms';
+import { BackLink, Tabs } from '../../../components/molecules';
 import { useAuth } from '../../../hooks/useAuth';
-import { ENDPOINTS } from '../../../lib/api/endpoints';
 import { NotAuthorizedPage } from '../../../pages';
 import { MainPageLayout } from '../../../templates/MainPageLayout';
-import { Event, EventFormData } from '../../../types';
-import { DangerZoneCard } from './DangerZoneCard';
-import { EventExternalLinkCard } from './EventExternalLinkCard';
-import { EventInfoCard } from './EventInfoCard';
-import { EventIntegrationsCard } from './EventIntegrationsCard';
-import { EventLinkCard } from './EventLinkCard';
-import { EventPasswordCard } from './EventPasswordCard';
-import { EventPublishingScheduleCard } from './EventPublishingScheduleCard';
+import { Event, EventFormData, StartMode } from '../../../types';
+import { ClassesSettingsTab } from './ClassesSettingsTab';
 import { EventVisibilityCard } from './EventVisibilityCard';
-import { TroubleShootingCard } from './TroubleShootingCard';
+import { FilesSettingsTab } from './FilesSettingsTab';
+import { GeneralSettingsTab } from './GeneralSettingsTab';
 
 interface EventData {
   event: Event;
@@ -55,7 +46,9 @@ export const GET_EVENT = gql`
       resultsOfficialManuallySetAt
       ranking
       coefRanking
-      startMode
+      eventFormat
+      defaultStartMode
+      currency
       relay
       hundredthPrecision
       published
@@ -79,6 +72,14 @@ export const EventSettingsPage = () => {
   const { t } = useTranslation();
   const { eventId } = useParams({ from: '/events/$eventId/settings' });
   const { user, isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as { tab?: string };
+  const activeTab =
+    search.tab === 'classes'
+      ? 'classes'
+      : search.tab === 'files'
+        ? 'files'
+        : 'general';
 
   const [password, setPassword] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
@@ -87,8 +88,13 @@ export const EventSettingsPage = () => {
     variables: { eventId },
   });
 
-  const apiEventsEndpoint = new URL(ENDPOINTS.events(), config.BASE_API_URL)
-    .href;
+  const handleTabChange = (tabValue: string) => {
+    navigate({
+      to: `/events/${eventId}/settings`,
+      search: { tab: tabValue },
+      replace: true,
+    });
+  };
 
   useEffect(() => {
     if (data?.event?.eventPassword) {
@@ -125,6 +131,9 @@ export const EventSettingsPage = () => {
           ? new Date(data.event.date).toISOString().slice(11, 19)
           : '',
         discipline: data.event.discipline,
+        defaultStartMode:
+          (data.event.defaultStartMode as StartMode | undefined) ?? 'StartList',
+        currency: data.event.currency ?? '',
         ranking: data.event.ranking || false,
         coefRanking: data.event.coefRanking,
         relay: data.event.relay || false,
@@ -139,7 +148,7 @@ export const EventSettingsPage = () => {
       }
     : null;
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <MainPageLayout t={t}>
         <div className="min-h-screen flex items-center justify-center">
@@ -191,84 +200,47 @@ export const EventSettingsPage = () => {
             </div>
           </div>
 
-          <DragDropFile eventId={eventId} />
-
-          <div className="columns-1 md:columns-2 xl:columns-3 gap-6 space-y-6">
-            {/* Left Column */}
-            <div className="break-inside-avoid">
-              <EventInfoCard t={t} initialData={initialData} />
-            </div>
-            <div className="break-inside-avoid">
-              <EventPublishingScheduleCard
-                t={t}
-                eventId={eventId}
-                eventData={data.event}
-                onUpdated={async () => {
-                  await refetch();
-                }}
-              />
-            </div>
-            <div className="break-inside-avoid">
-              <EventExternalLinkCard
-                t={t}
-                eventId={eventId}
-                initialData={initialData}
-                onUpdated={async () => {
-                  await refetch();
-                }}
-              />
-            </div>
-            {/* Middle Column */}
-            <div className="break-inside-avoid">
-              <EventPasswordCard
-                t={t}
-                eventId={initialData?.id || ''}
-                eventData={data.event}
-                password={password}
-                expiresAt={expiresAt}
-                onPasswordUpdate={setPassword}
-              />
-            </div>
-
-            <div className="break-inside-avoid">
-              <EventIntegrationsCard
-                t={t}
-                eventId={eventId}
-                eventPassword={password}
-                eventName={data.event.name}
-                eventDate={formatDate(data.event.date)}
-                apiEventsEndpoint={apiEventsEndpoint}
-                apiBaseUrl={config.BASE_API_URL}
-                meosEventBindings={data.event.meosEventBindings ?? []}
-                onMeosBindingChanged={refetch}
-              />
-            </div>
-
-            {/* Right Column */}
-            <div className="break-inside-avoid">
-              <EventLinkCard
-                t={t}
-                eventId={initialData?.id || ''}
-                eventSlug={data.event.slug ?? null}
-                eventName={data.event.name}
-                eventLocation={data.event.location}
-                eventDateFormatted={formatDate(data.event.date)}
-                onSlugUpdated={async () => {
-                  await refetch();
-                }}
-              />
-            </div>
-            <div className="break-inside-avoid">
-              <DangerZoneCard
-                t={t}
-                eventId={eventId}
-                onEventDataDeleted={handleEventDataDeleted}
-              />
-            </div>
-            <div className="break-inside-avoid">
-              <TroubleShootingCard t={t} />
-            </div>
-          </div>
+          <Tabs
+            tabs={[
+              {
+                value: 'general',
+                label: t('Pages.Event.Settings.Tabs.General'),
+              },
+              {
+                value: 'files',
+                label: t('Pages.Event.Settings.Tabs.Files'),
+              },
+              {
+                value: 'classes',
+                label: t('Pages.Event.Settings.Tabs.Classes'),
+              },
+            ]}
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="space-y-6"
+            listClassName="grid w-full grid-cols-3 max-w-md"
+          >
+            <GeneralSettingsTab
+              key="general"
+              t={t}
+              eventId={eventId}
+              event={data.event}
+              initialData={initialData}
+              password={password}
+              expiresAt={expiresAt}
+              onPasswordUpdate={setPassword}
+              onEventDataDeleted={handleEventDataDeleted}
+              refetch={refetch}
+            />
+            <FilesSettingsTab key="files" t={t} eventId={eventId} />
+            <ClassesSettingsTab
+              key="classes"
+              t={t}
+              eventId={eventId}
+              isRelay={data.event.relay ?? false}
+              timezone={data.event.timezone || 'UTC'}
+            />
+          </Tabs>
         </div>
       </div>
     </MainPageLayout>

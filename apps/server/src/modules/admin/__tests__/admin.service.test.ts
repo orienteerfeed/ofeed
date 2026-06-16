@@ -6,6 +6,7 @@ import {
   getAdminDashboard,
   getAdminEvents,
   getAdminUsers,
+  requestAdminUserEmailVerification,
   updateAdminUserActive,
 } from '../admin.service.js';
 
@@ -158,7 +159,7 @@ function createUserMutationPrismaMock(
   const deletedOauthClientWhere: unknown[] = [];
   const deletedProtocolWhere: unknown[] = [];
   const updatedEventWhere: unknown[] = [];
-  const deletedPasswordResetWhere: unknown[] = [];
+  const deletedPasswordResetTokenWhere: unknown[] = [];
   const deletedUserIds: number[] = [];
 
   const oauthClients = [{ id: 'client-1', userId: 2 }];
@@ -256,9 +257,9 @@ function createUserMutationPrismaMock(
         return { count: 0 };
       },
     },
-    passwordReset: {
+    passwordResetToken: {
       deleteMany: async ({ where }: { where: unknown }) => {
-        deletedPasswordResetWhere.push(where);
+        deletedPasswordResetTokenWhere.push(where);
         return { count: 0 };
       },
     },
@@ -280,7 +281,7 @@ function createUserMutationPrismaMock(
       deletedOauthClientWhere,
       deletedProtocolWhere,
       updatedEventWhere,
-      deletedPasswordResetWhere,
+      deletedPasswordResetTokenWhere,
     },
   };
 }
@@ -487,7 +488,101 @@ describe('admin service', () => {
     expect(state.users.find((user) => user.id === 2)).toBeUndefined();
     expect(state.deletedProtocolWhere).toEqual([{ authorId: 2 }]);
     expect(state.updatedEventWhere).toEqual([{ authorId: 2 }]);
-    expect(state.deletedPasswordResetWhere).toEqual([{ email: 'user@example.com' }]);
+    expect(state.deletedPasswordResetTokenWhere).toEqual([{ userId: 2 }]);
     expect(state.deletedOauthClientWhere).toEqual([{ id: { in: ['client-1'] } }]);
+  });
+
+  it('sends a verification email for an unverified user', async () => {
+    const sent: unknown[] = [];
+    const prisma = {
+      user: {
+        findUnique: async ({ where }: { where: { id: number } }) => ({
+          id: where.id,
+          email: 'user@example.com',
+          firstname: 'Uma',
+          lastname: 'User',
+          role: 'USER' as const,
+          organisation: null,
+          active: true,
+          emailVerifiedAt: null,
+          createdAt: new Date('2026-02-10T10:00:00.000Z'),
+        }),
+      },
+    };
+
+    const result = await requestAdminUserEmailVerification(
+      prisma,
+      { targetUserId: 2, appBaseUrl: 'https://app.test/auth/verify-email' },
+      {
+        sendVerificationEmail: async (payload) => {
+          sent.push(payload);
+        },
+      },
+    );
+
+    expect(result.user.id).toBe(2);
+    expect(sent).toEqual([
+      {
+        userId: 2,
+        firstname: 'Uma',
+        lastname: 'User',
+        email: 'user@example.com',
+        appBaseUrl: 'https://app.test/auth/verify-email',
+      },
+    ]);
+  });
+
+  it('rejects verification request for a missing user', async () => {
+    const prisma = {
+      user: {
+        findUnique: async () => null,
+      },
+    };
+
+    await expect(
+      requestAdminUserEmailVerification(
+        prisma,
+        { targetUserId: 999, appBaseUrl: 'https://app.test/auth/verify-email' },
+        { sendVerificationEmail: async () => undefined },
+      ),
+    ).rejects.toMatchObject({
+      message: 'Admin user target not found',
+      statusCode: 404,
+    });
+  });
+
+  it('rejects verification request when email already verified', async () => {
+    const sent: unknown[] = [];
+    const prisma = {
+      user: {
+        findUnique: async ({ where }: { where: { id: number } }) => ({
+          id: where.id,
+          email: 'user@example.com',
+          firstname: 'Uma',
+          lastname: 'User',
+          role: 'USER' as const,
+          organisation: null,
+          active: true,
+          emailVerifiedAt: new Date('2026-05-01T10:00:00.000Z'),
+          createdAt: new Date('2026-02-10T10:00:00.000Z'),
+        }),
+      },
+    };
+
+    await expect(
+      requestAdminUserEmailVerification(
+        prisma,
+        { targetUserId: 2, appBaseUrl: 'https://app.test/auth/verify-email' },
+        {
+          sendVerificationEmail: async (payload) => {
+            sent.push(payload);
+          },
+        },
+      ),
+    ).rejects.toMatchObject({
+      message: 'User email is already verified.',
+      statusCode: 409,
+    });
+    expect(sent).toEqual([]);
   });
 });

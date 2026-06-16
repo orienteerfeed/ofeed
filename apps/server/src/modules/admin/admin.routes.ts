@@ -14,6 +14,7 @@ import {
   getAdminEventsHandler,
   getAdminSystemMessagesHandler,
   getAdminUsersHandler,
+  requestAdminUserEmailVerificationHandler,
   syncAdminCzechRankingEventResultsHandler,
   updateAdminSystemMessageHandler,
   updateAdminUserHandler,
@@ -28,6 +29,7 @@ router.get('/dashboard', getAdminDashboardHandler);
 router.get('/users', getAdminUsersHandler);
 router.patch('/users/:userId', updateAdminUserHandler);
 router.delete('/users/:userId', deleteAdminUserHandler);
+router.post('/users/:userId/request-email-verification', requestAdminUserEmailVerificationHandler);
 router.get('/events', getAdminEventsHandler);
 router.get('/system-messages', getAdminSystemMessagesHandler);
 router.post('/system-messages', createAdminSystemMessageHandler);

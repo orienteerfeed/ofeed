@@ -11,6 +11,7 @@ export * from './protocol.js';
 export * from './ranking-czech.js';
 export * from './split.js';
 export * from './sport.js';
+export * from './startMode.js';
 export * from './system-message.js';
 export * from './team.js';
 export * from './user.js';

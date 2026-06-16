@@ -29,7 +29,8 @@ const GET_EVENT = gql`
       resultsOfficialManuallySetAt
       ranking
       coefRanking
-      startMode
+      eventFormat
+      defaultStartMode
       relay
       published
       authorId
@@ -38,6 +39,7 @@ const GET_EVENT = gql`
         name
         length
         climb
+        resultListMode
       }
       user {
         id

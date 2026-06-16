@@ -13,19 +13,29 @@ describe('eventWriteSchema', () => {
     zeroTime: '10:00:00',
   };
 
-  it('accepts supported start modes', () => {
+  it('accepts supported competition format and default start mode', () => {
     const result = eventWriteSchema.safeParse({
       ...basePayload,
-      startMode: 'Individual',
+      eventFormat: 'Standard',
+      defaultStartMode: 'MassStart',
     });
 
     expect(result.success).toBe(true);
   });
 
-  it('rejects unsupported start modes', () => {
+  it('rejects an unsupported default start mode', () => {
     const result = eventWriteSchema.safeParse({
       ...basePayload,
-      startMode: 'INTERVAL',
+      defaultStartMode: 'INTERVAL',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an unsupported competition format', () => {
+    const result = eventWriteSchema.safeParse({
+      ...basePayload,
+      eventFormat: 'Relay',
     });
 
     expect(result.success).toBe(false);

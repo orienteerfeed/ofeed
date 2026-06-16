@@ -42,7 +42,9 @@
         "Actions": {
           "Activate": "Activar",
           "Deactivate": "Desactivar",
-          "Delete": "Eliminar"
+          "Delete": "Eliminar",
+          "Menu": "Acciones",
+          "RequestVerification": "Reenviar correo de verificación"
         },
         "Confirm": {
           "ActivateTitle": "Activar cuenta de usuario",
@@ -61,7 +63,10 @@
           "ActivateErrorTitle": "No se pudo activar la cuenta",
           "DeactivateErrorTitle": "No se pudo desactivar la cuenta",
           "DeleteErrorTitle": "No se pudo eliminar la cuenta",
-          "UnknownError": "Se produjo un error inesperado."
+          "UnknownError": "Se produjo un error inesperado.",
+          "RequestVerificationSuccessTitle": "Correo de verificación enviado",
+          "RequestVerificationSuccessDescription": "Se envió un correo de verificación a {{name}}.",
+          "RequestVerificationErrorTitle": "No se pudo enviar el correo de verificación"
         }
       },
       "Events": {
@@ -516,7 +521,87 @@
         }
       },
       "Settings": {
-        "Loading": "Cargando ajustes del evento"
+        "Loading": "Cargando ajustes del evento",
+        "Tabs": {
+          "General": "General",
+          "Files": "Archivos",
+          "Classes": "Classes"
+        },
+        "Classes": {
+          "Title": "Classes",
+          "Description": "Edit per-class configuration. Changes are saved automatically.",
+          "Columns": {
+            "Name": "Name",
+            "CompetitorsCount": "Número de competidores",
+            "MaxCompetitors": "Max competitors",
+            "BirthYearFrom": "Birth year from",
+            "BirthYearTo": "Birth year to",
+            "MinTeamMembers": "Min team members",
+            "MaxTeamMembers": "Max team members",
+            "Sex": "Sex",
+            "ResultListMode": "Result mode",
+            "Fee": "Fee",
+            "StartMode": "Start mode",
+            "AwardedPlaces": "Awarded places",
+            "Actions": "Actions"
+          },
+          "ResultListMode": {
+            "Default": "Default",
+            "Unordered": "Unordered",
+            "UnorderedNoTimes": "Unordered (no times)"
+          },
+          "StartMode": {
+            "Inherit": "Event default",
+            "StartList": "Start list",
+            "MassStart": "Mass start",
+            "PursuitStart": "Pursuit start",
+            "WaveStart": "Wave start",
+            "FreeStart": "Free start"
+          },
+          "Empty": "No classes found for this event.",
+          "SaveError": "Could not save the change.",
+          "StartTimes": {
+            "Open": "Free start times",
+            "Title": "Free start times — {{name}}",
+            "Time": "Start time",
+            "Bib": "Bib",
+            "Empty": "No free start times for this class.",
+            "Close": "Close",
+            "LoadError": "Could not load start times."
+          },
+          "MaxCompetitorsErrorPositive": "Enter a non-negative integer.",
+          "MaxCompetitorsErrorBelowCount": "Cannot be lower than the current number of registered competitors ({{count}}).",
+          "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
+          "BirthYearInvalid": "Introduce un año válido (mín. 4 dígitos).",
+          "BirthYearRangeError": "El año de inicio debe ser menor o igual al año de fin."
+        },
+        "Files": {
+          "StartList": "Lista de salida",
+          "Courses": "Recorridos",
+          "CoursesHelper": "Las definiciones de recorridos no son necesarias para la funcionalidad básica. Se usan para asociar correctamente los tiempos parciales; no se procesan las posiciones de los controles individuales.",
+          "Results": "Resultados",
+          "Available": "Disponible",
+          "Missing": "No disponible",
+          "Locked": "Carga no disponible todavía",
+          "CoursesDisabledHint": "Sube primero una lista de salida o resultados para habilitar la carga de datos de recorridos.",
+          "RadioControls": {
+            "Title": "Selecciona qué controles mostrar como tiempos intermedios en línea",
+            "Helper": "Los competidores y espectadores podrán ver los tiempos parciales en los controles seleccionados.",
+            "NoCourseData": "Sube primero los datos de recorridos para configurar los controles en línea.",
+            "NoControls": "No hay controles disponibles.",
+            "SaveError": "No se pudo actualizar el control radio.",
+            "Selected": "Controles radio seleccionados: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Creador",
+            "ExternalStatus": "Estado",
+            "LastSuccessfulImport": "Última importación",
+            "SuccessCount": "Exitosos",
+            "SkippedCount": "Omitidos",
+            "CopyHash": "Copiar hash",
+            "HashCopied": "¡Hash copiado!"
+          }
+        }
       },
       "Detail": {
         "EventInformation": "Información del evento",
@@ -651,6 +736,8 @@
         "Country": "País",
         "ZeroTime": "Hora cero",
         "Discipline": "Disciplina",
+        "DefaultStartMode": "Modo de salida predeterminado",
+        "Currency": "Moneda",
         "FeaturedImage": "Imagen destacada",
         "FeaturedImageHint": "JPEG, PNG o WEBP, máx. 2 MB.",
         "FeaturedImageButton": "Añadir imagen",
@@ -679,6 +766,13 @@
           "TEAMS": "Equipos",
           "OTHER": "Otra"
         },
+        "StartModeOptions": {
+          "StartList": "Lista de salidas",
+          "MassStart": "Salida en masa",
+          "PursuitStart": "Salida persecución",
+          "WaveStart": "Salida en oleadas",
+          "FreeStart": "Salida libre"
+        },
         "Placeholders": {
           "EventName": "Mi primer evento",
           "Sport": "Seleccione un deporte",
@@ -688,6 +782,7 @@
           "Latitude": "Introduzca la latitud (p.ej., 50.0755)",
           "Longitude": "Introduzca la longitud (p.ej., 14.4378)",
           "Country": "Seleccione un país",
+          "Currency": "Seleccione una moneda",
           "CoefRanking": "1.02"
         },
         "Import": {
@@ -944,6 +1039,16 @@
         "Description2": "por favor incluya cualquier archivo relevante.",
         "Discord": "Join Discord",
         "GitHubIssues": "Open GitHub Issues"
+      },
+      "ClassSelect": {
+        "Title": "Seleccionar categoría",
+        "Description": "Elige una categoría para ver los resultados del evento."
+      },
+      "ClubSelect": {
+        "Title": "Seleccionar club",
+        "Description": "Elige un club para ver los resultados",
+        "NoClubs": "No se encontraron clubes",
+        "Cancel": "Cancelar"
       }
     },
     "Home": {

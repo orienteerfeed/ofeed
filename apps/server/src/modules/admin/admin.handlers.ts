@@ -17,6 +17,7 @@ import {
   getAdminEvents,
   getAdminUsers,
   isAdminUserActionError,
+  requestAdminUserEmailVerification,
   updateAdminUserActive,
 } from './admin.service.js';
 export * from './admin.czech-ranking.handlers.js';
@@ -290,6 +291,63 @@ export async function deleteAdminUserHandler(c) {
 
     return c.json(
       errorResponse('Failed to delete admin user', HTTP_STATUS.INTERNAL_SERVER_ERROR),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
+
+export async function requestAdminUserEmailVerificationHandler(c) {
+  const adminUserId = getAdminUserId(c);
+  const logContext = buildAdminLogContext(c, adminUserId);
+
+  try {
+    const targetUserId = parseAdminUserId(c.req.param('userId'));
+    const appBaseUrl = c.req.header('x-orienteerfeed-app-activate-user-url') ?? 'localhost';
+
+    const result = await requestAdminUserEmailVerification(prisma, {
+      targetUserId,
+      appBaseUrl,
+    });
+
+    logger.info('Admin requested user email verification', {
+      ...logContext,
+      results: {
+        targetUserId,
+        email: result.user.email,
+      },
+    });
+
+    return c.json(
+      successResponse('Verification email requested', result, HTTP_STATUS.OK),
+      HTTP_STATUS.OK,
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Invalid admin user id') {
+      return c.json(
+        errorResponse('Invalid admin user request', HTTP_STATUS.UNPROCESSABLE_CONTENT),
+        HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      );
+    }
+
+    if (isAdminUserActionError(error)) {
+      logger.warn('Admin user email verification request rejected', {
+        ...logContext,
+        error: error.message,
+      });
+
+      return c.json(errorResponse(error.message, error.statusCode), error.statusCode);
+    }
+
+    logger.error('Failed to request admin user email verification', {
+      ...logContext,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    return c.json(
+      errorResponse(
+        'Failed to request admin user email verification',
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
     );
   }

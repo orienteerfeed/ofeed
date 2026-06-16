@@ -695,10 +695,16 @@ export function registerSecureEventRoutes(router) {
    *                format: float
    *                description: Optional ranking coefficient (float number).
    *                example: 1.05
-   *              startMode:
+   *              eventFormat:
    *                type: string
-   *                description: Optional start mode (e.g. Individual, Mass, etc.).
-   *                example: Individual
+   *                enum: [Standard, ScoreO]
+   *                description: Optional competition format.
+   *                example: Standard
+   *              defaultStartMode:
+   *                type: string
+   *                enum: [StartList, MassStart, PursuitStart, WaveStart, FreeStart]
+   *                description: Optional default start mode for the event.
+   *                example: StartList
    *              hundredthPrecision:
    *                type: boolean
    *                description: "Indicates whether the event timing should be recorded with hundredth-of-a-second precision."
@@ -735,7 +741,8 @@ export function registerSecureEventRoutes(router) {
         ranking,
         coefRanking,
         discipline,
-        startMode,
+        eventFormat,
+        defaultStartMode,
         hundredthPrecision,
         published,
         sportId,
@@ -743,6 +750,10 @@ export function registerSecureEventRoutes(router) {
         externalEventId,
         entriesOpenAt,
         entriesCloseAt,
+        currency,
+        vatPayer,
+        vatRate,
+        lateEntryFeePercent,
         splitPublicationMode,
         splitPublicationAt,
         resultsOfficialManuallySetAt,
@@ -768,6 +779,17 @@ export function registerSecureEventRoutes(router) {
           throw new ValidationError('Invalid event date or zero time.');
         }
 
+        let resolvedCurrencyId: number | undefined;
+        if (currency) {
+          const currencyRecord = await appPrisma.currency.findUnique({
+            where: { iso4217Alpha3: currency },
+          });
+          if (!currencyRecord) {
+            throw new ValidationError(`Currency '${currency}' not found.`);
+          }
+          resolvedCurrencyId = currencyRecord.id;
+        }
+
         const createdEvent = await appPrisma.event.create({
           data: {
             name,
@@ -781,7 +803,8 @@ export function registerSecureEventRoutes(router) {
             ranking,
             coefRanking,
             discipline,
-            startMode,
+            ...(typeof eventFormat !== 'undefined' ? { eventFormat } : {}),
+            ...(typeof defaultStartMode !== 'undefined' ? { defaultStartMode } : {}),
             hundredthPrecision,
             published,
             sportId,
@@ -789,6 +812,10 @@ export function registerSecureEventRoutes(router) {
             externalEventId,
             entriesOpenAt: parsedEntriesOpenAt,
             entriesCloseAt: parsedEntriesCloseAt,
+            ...(typeof resolvedCurrencyId !== 'undefined' ? { currencyId: resolvedCurrencyId } : {}),
+            ...(typeof vatPayer !== 'undefined' ? { vatPayer } : {}),
+            ...(typeof vatRate !== 'undefined' ? { vatRate } : {}),
+            ...(typeof lateEntryFeePercent !== 'undefined' ? { lateEntryFeePercent } : {}),
             ...(typeof splitPublicationMode !== 'undefined'
               ? {
                   splitPublicationMode,
@@ -1086,10 +1113,16 @@ export function registerSecureEventRoutes(router) {
    *                format: float
    *                description: Optional ranking coefficient (float number).
    *                example: 1.05
-   *              startMode:
+   *              eventFormat:
    *                type: string
-   *                description: Optional start mode (e.g. Individual, Mass, etc.).
-   *                example: Individual
+   *                enum: [Standard, ScoreO]
+   *                description: Optional competition format.
+   *                example: Standard
+   *              defaultStartMode:
+   *                type: string
+   *                enum: [StartList, MassStart, PursuitStart, WaveStart, FreeStart]
+   *                description: Optional default start mode for the event.
+   *                example: StartList
    *              hundredthPrecision:
    *                type: boolean
    *                description: "Indicates whether the event timing should be recorded with hundredth-of-a-second precision."
@@ -1131,7 +1164,8 @@ export function registerSecureEventRoutes(router) {
           ranking,
           coefRanking,
           discipline,
-          startMode,
+          eventFormat,
+          defaultStartMode,
           hundredthPrecision,
           published,
           sportId,
@@ -1139,6 +1173,10 @@ export function registerSecureEventRoutes(router) {
           externalEventId,
           entriesOpenAt,
           entriesCloseAt,
+          currency,
+          vatPayer,
+          vatRate,
+          lateEntryFeePercent,
           splitPublicationMode,
           splitPublicationAt,
           resultsOfficialManuallySetAt,
@@ -1170,6 +1208,18 @@ export function registerSecureEventRoutes(router) {
           // 🔥 Normalize latitude and longitude
           const dbLatitude = normalizeOptionalCoordinate(latitude, 'latitude');
           const dbLongitude = normalizeOptionalCoordinate(longitude, 'longitude');
+
+          let resolvedCurrencyId: number | undefined;
+          if (currency) {
+            const currencyRecord = await appPrisma.currency.findUnique({
+              where: { iso4217Alpha3: currency },
+            });
+            if (!currencyRecord) {
+              throw new ValidationError(`Currency '${currency}' not found.`);
+            }
+            resolvedCurrencyId = currencyRecord.id;
+          }
+
           const existingEvent = await prisma.event.findUnique({
             where: { id: eventId },
             select: {
@@ -1198,7 +1248,8 @@ export function registerSecureEventRoutes(router) {
               ranking,
               coefRanking,
               discipline,
-              startMode,
+              ...(typeof eventFormat !== 'undefined' ? { eventFormat } : {}),
+              ...(typeof defaultStartMode !== 'undefined' ? { defaultStartMode } : {}),
               hundredthPrecision,
               published,
               sportId,
@@ -1206,6 +1257,10 @@ export function registerSecureEventRoutes(router) {
               externalEventId,
               entriesOpenAt: parsedEntriesOpenAt,
               entriesCloseAt: parsedEntriesCloseAt,
+              ...(typeof resolvedCurrencyId !== 'undefined' ? { currencyId: resolvedCurrencyId } : {}),
+              ...(typeof vatPayer !== 'undefined' ? { vatPayer } : {}),
+              ...(typeof vatRate !== 'undefined' ? { vatRate } : {}),
+              ...(typeof lateEntryFeePercent !== 'undefined' ? { lateEntryFeePercent } : {}),
               ...(typeof splitPublicationMode !== 'undefined'
                 ? {
                     splitPublicationMode,

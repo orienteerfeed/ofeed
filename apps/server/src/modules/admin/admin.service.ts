@@ -8,6 +8,7 @@ import {
   type AdminUserListItem,
 } from '@repo/shared';
 
+import { sendVerificationEmailForUser } from '../auth/auth.service.js';
 import { formatUtcDateTimeRfc3339 } from '../../utils/time.js';
 
 const DASHBOARD_ACTIVITY_MONTHS = 6;
@@ -460,8 +461,10 @@ export async function deleteAdminUser(
       where: { authorId: params.targetUserId },
       data: { authorId: null },
     });
-    await tx.passwordReset.deleteMany({
-      where: { email: targetUser.email },
+    // PasswordResetToken rows are also removed via the userId foreign key's
+    // ON DELETE CASCADE, but delete them explicitly for clarity/safety.
+    await tx.passwordResetToken.deleteMany({
+      where: { userId: params.targetUserId },
     });
     await tx.user.delete({
       where: { id: params.targetUserId },
@@ -470,6 +473,54 @@ export async function deleteAdminUser(
     return adminUserMutationResultSchema.parse({
       user: mapUserListItem(targetUser),
     });
+  });
+}
+
+export async function requestAdminUserEmailVerification(
+  prisma,
+  params: {
+    targetUserId: number;
+    appBaseUrl: string;
+  },
+  deps: {
+    sendVerificationEmail?: typeof sendVerificationEmailForUser;
+  } = {},
+) {
+  const sendVerificationEmail = deps.sendVerificationEmail ?? sendVerificationEmailForUser;
+
+  const user = await prisma.user.findUnique({
+    where: { id: params.targetUserId },
+    select: {
+      id: true,
+      email: true,
+      firstname: true,
+      lastname: true,
+      role: true,
+      organisation: true,
+      active: true,
+      emailVerifiedAt: true,
+      createdAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AdminUserActionError('Admin user target not found', 404);
+  }
+
+  if (user.emailVerifiedAt) {
+    throw new AdminUserActionError('User email is already verified.', 409);
+  }
+
+  await sendVerificationEmail({
+    userId: user.id,
+    firstname: user.firstname,
+    lastname: user.lastname,
+    email: user.email,
+    appBaseUrl: params.appBaseUrl,
+  });
+
+  return adminUserMutationResultSchema.parse({
+    user: mapUserListItem(user),
   });
 }
 

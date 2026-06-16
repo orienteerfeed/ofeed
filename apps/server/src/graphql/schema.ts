@@ -4,6 +4,7 @@ import './scalars/constraint-scalars.js';
 
 import '../modules/meos/meos.graphql.js';
 import '../modules/country/country.graphql.js';
+import '../modules/currency/currency.graphql.js';
 import '../modules/class/class.graphql.js';
 import '../modules/sport/sport.graphql.js';
 import '../modules/team/team.graphql.js';
@@ -13,6 +14,8 @@ import '../modules/split/split.graphql.js';
 import '../modules/competitor/competitor.graphql.js';
 import '../modules/changelog/changelog.graphql.js';
 import '../modules/system-message/system-message.graphql.js';
+import '../modules/start-slot-vacancy/start-slot-vacancy.graphql.js';
+import '../modules/course/course.graphql.js';
 
 import { builder } from './builder.js';
 

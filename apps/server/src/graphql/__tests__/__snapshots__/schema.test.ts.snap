@@ -40,22 +40,39 @@ type ChangelogProcessing {
 }
 
 type Class {
+  awardedPlaces: Int
   climb: Int
   competitors: [Competitor!]
-  competitorsCount: Int
+  competitorsCount: Int!
   controlsCount: Int
+  currentFee: Float
   eventId: String!
   externalId: String
+  fee: Float
+  feeNet: Float
+  feeVat: Float
   id: Int!
   length: Int
   maxAge: Int
+  maxNumberOfCompetitors: Int
+  maxTeamMembers: Int
   minAge: Int
+  minTeamMembers: Int
   name: String!
-  printedMaps: Int
+  resultListMode: String
   sex: String
+  startMode: StartMode
   startName: String
+  startWindowFrom: DateTime
+  startWindowTo: DateTime
   status: String
   teams: [Team!]
+}
+
+type ClassStartSlotVacancy {
+  bibNumber: Int
+  id: Int!
+  startTime: DateTime!
 }
 
 type Competitor {
@@ -90,6 +107,18 @@ type Competitor {
   updatedAt: DateTime!
 }
 
+type Control {
+  altitude: Float
+  code: String!
+  eventId: String!
+  id: Int!
+  latitude: Float
+  longitude: Float
+  name: String
+  radio: Boolean!
+  type: String!
+}
+
 type Country {
   countryCode: String!
   countryName: String!
@@ -103,6 +132,11 @@ input CreateUserCardInput {
   type: UserCardType!
 }
 
+type Currency {
+  iso4217Alpha3: String!
+  name: String!
+}
+
 """
 Date scalar type representing a date in format YYYY-MM-DD (no time part).
 """
@@ -113,6 +147,48 @@ Custom DateTime scalar (backed by JS Date, serialized as ISO8601 string)
 """
 scalar DateTime
 
+type EntryAvailability {
+  classes: [EntryAvailabilityClass!]!
+  currency: EntryAvailabilityCurrency!
+  defaultStartMode: StartMode!
+  entriesCloseAt: DateTime
+  entriesOpenAt: DateTime
+  vatPayer: Boolean!
+  vatRate: Float
+}
+
+type EntryAvailabilityClass {
+  availableCount: Int!
+  competitorCount: Int!
+  fee: EntryAvailabilityFee
+  id: Int!
+  isFull: Boolean!
+  maxAge: Int
+  maxNumberOfCompetitors: Int!
+  minAge: Int
+  name: String!
+  sex: String!
+  slots: [EntryAvailabilitySlot!]!
+  startMode: StartMode!
+}
+
+type EntryAvailabilityCurrency {
+  code: String!
+  name: String!
+}
+
+type EntryAvailabilityFee {
+  amount: Float!
+  net: Float!
+  vat: Float!
+}
+
+type EntryAvailabilitySlot {
+  bibNumber: Int
+  id: Int!
+  startTime: DateTime!
+}
+
 type Event {
   authorId: Int
   classes: [Class!]
@@ -120,11 +196,14 @@ type Event {
   country: Country
   countryId: String
   createdAt: DateTime!
+  currency: String
   date: DateTime!
+  defaultStartMode: StartMode!
   demo: Boolean!
   discipline: EventDiscipline!
   entriesCloseAt: DateTime
   entriesOpenAt: DateTime
+  eventFormat: EventFormat!
   eventPassword: EventPassword
   externalEventId: String
   externalSource: ExternalEventProvider
@@ -132,6 +211,7 @@ type Event {
   featuredImageKey: String
   hundredthPrecision: Boolean!
   id: String!
+  lateEntryFeePercent: Float
   latitude: Float
   location: String
   longitude: Float
@@ -148,11 +228,12 @@ type Event {
   splitPublicationMode: SplitPublicationMode!
   sport: Sport!
   sportId: Int!
-  startMode: String!
   statusSummary: EventStatusSummary!
   timezone: String!
   updatedAt: DateTime!
   user: User
+  vatPayer: Boolean!
+  vatRate: Float
   zeroTime: String!
 }
 
@@ -184,11 +265,64 @@ enum EventEntriesStatus {
   OPEN
 }
 
+type EventFilesCoursesStatus {
+  available: Boolean!
+  controlsCount: Int!
+  courseControlsCount: Int!
+  coursesCount: Int!
+  source: String
+}
+
+type EventFilesRadioControl {
+  code: String!
+  id: Int!
+  radio: Boolean!
+  type: String!
+}
+
+type EventFilesResultsStatus {
+  available: Boolean!
+  competitorsCount: Int!
+  competitorsWithResultDataCount: Int!
+  source: String
+}
+
+type EventFilesStartListStatus {
+  available: Boolean!
+  classesCount: Int!
+  competitorsCount: Int!
+  competitorsWithStartTimeCount: Int!
+  source: String
+}
+
+type EventFilesStatus {
+  courses: EventFilesCoursesStatus!
+  radioControls: [EventFilesRadioControl!]!
+  results: EventFilesResultsStatus!
+  startList: EventFilesStartListStatus!
+}
+
 enum EventFilter {
   ALL
   RECENT
   TODAY
   UPCOMING
+}
+
+enum EventFormat {
+  ScoreO
+  Standard
+}
+
+type EventImportState {
+  creator: String
+  externalStatus: String
+  lastSuccessfulImportAt: DateTime
+  payloadType: String!
+  rawHash: String!
+  skippedCount: Int!
+  sourceType: String!
+  successCount: Int!
 }
 
 enum EventLifecycleStatus {
@@ -265,6 +399,16 @@ enum ExternalEventProvider {
   ORIS
 }
 
+type LeafletCoursePoint {
+  code: String!
+  latitude: Float!
+  legLength: Float
+  longitude: Float!
+  radio: Boolean!
+  sequence: Int!
+  type: String!
+}
+
 input LoginInput {
   password: password_String_NotNull_maxLength_255!
   username: username_String_NotNull_maxLength_255!
@@ -273,6 +417,8 @@ input LoginInput {
 type Mutation {
   _empty(nothing: String): String
   changeCurrentUserPassword(input: ChangeCurrentUserPasswordInput!): ResetResponse!
+  classFeeUpdate(input: UpdateClassFeeInput!): ResponseMessage!
+  classUpdate(input: UpdateClassInput!): ResponseMessage!
   competitorCreate(input: StoreCompetitorInput!): StoreCompetitorResponse!
   competitorStatusChange(input: StatusChange!): ResponseMessage!
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
@@ -287,6 +433,7 @@ type Mutation {
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
   signup(input: UserInput): ResponseMessage
+  updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
@@ -329,17 +476,24 @@ type Query {
   activeSystemMessages: [SystemMessage!]!
   changelogByEvent(classId: Int, eventId: String!, origin: String, since: DateTime): [Changelog!]
   classById(id: Int!): Class!
+  classStartSlotVacancies(classId: Int!): [ClassStartSlotVacancy!]!
   competitorById(id: Int!): Competitor!
   competitorSplits(competitorId: Int!): [Split!]
   competitorsByClass(id: Int!): [Competitor!]
   competitorsByOrganisation(eventId: String!, organisation: String, organisationId: Int): [Competitor!]
   competitorsByTeam(id: Int!): [Competitor!]
   countries: [Country!]!
+  courseLeafletPoints(classId: Int!): [LeafletCoursePoint!]!
+  courseRadioControls(classId: Int!): [RadioCoursePoint!]!
+  currencies: [Currency!]!
   currentUser: User!
   currentUserCards: [UserCard!]!
   event(id: String!): Event
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
+  eventEntryAvailability(eventId: String!): EntryAvailability
+  eventFilesStatus(eventId: String!): EventFilesStatus!
+  eventImportStates(eventId: String!): [EventImportState!]!
   events(input: EventsInput): EventConnection!
   eventsBySport(sportId: Int!): [Event!]
   eventsByUser(userId: Int!): [Event!]
@@ -353,6 +507,14 @@ type Query {
   sports: [Sport!]!
   teamById(id: Int!): Team!
   teamsByClass(id: Int!): [Team!]
+}
+
+type RadioCoursePoint {
+  code: String!
+  latitude: Float
+  legLength: Float
+  longitude: Float
+  sequence: Int!
 }
 
 type ResetResponse {
@@ -400,6 +562,14 @@ type SplitPublicationStatus {
 type Sport {
   id: Int!
   name: String!
+}
+
+enum StartMode {
+  FreeStart
+  MassStart
+  PursuitStart
+  StartList
+  WaveStart
 }
 
 input StatusChange {
@@ -476,6 +646,25 @@ type Team {
   name: String!
   organisation: String
   shortName: String
+}
+
+input UpdateClassFeeInput {
+  classId: Int!
+  fee: Float
+}
+
+input UpdateClassInput {
+  awardedPlaces: Int
+  classId: Int!
+  fee: Float
+  maxAge: Int
+  maxNumberOfCompetitors: Int
+  maxTeamMembers: Int
+  minAge: Int
+  minTeamMembers: Int
+  resultListMode: String
+  sex: String
+  startMode: StartMode
 }
 
 input UpdateCompetitorInput {

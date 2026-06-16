@@ -22,6 +22,7 @@ export interface EventClass {
   length?: number;
   climb?: number;
   controls?: number;
+  resultListMode?: string | null;
 }
 
 export type EventStatusPrimary = 'DRAFT' | 'UPCOMING' | 'LIVE' | 'DONE';
@@ -90,6 +91,8 @@ export interface Event {
   resultsOfficialAt?: string | null;
   resultsOfficialManuallySetAt?: string | null;
   relay: boolean;
+  defaultStartMode?: StartMode;
+  currency?: string | null;
   ranking: boolean;
   coefRanking?: number;
   hundredthPrecision?: boolean; // Whether to use hundredth precision for times
@@ -144,6 +147,13 @@ export interface MeosEventBinding {
   id: number;
 }
 
+export type StartMode =
+  | 'StartList'
+  | 'MassStart'
+  | 'PursuitStart'
+  | 'WaveStart'
+  | 'FreeStart';
+
 export interface EventFormData {
   id?: string;
   name: string;
@@ -157,6 +167,8 @@ export interface EventFormData {
   countryCode?: string;
   zeroTime: string;
   discipline: EventDiscipline;
+  defaultStartMode?: StartMode;
+  currency?: string;
   ranking: boolean;
   coefRanking?: number | undefined;
   relay: boolean;
@@ -179,6 +191,8 @@ export interface EventFormValues {
   countryCode: string;
   zeroTime: string;
   discipline: EventDiscipline | '';
+  defaultStartMode: StartMode;
+  currency: string;
   ranking: boolean;
   coefRanking: string;
   published: boolean;

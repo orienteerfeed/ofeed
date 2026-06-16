@@ -22,6 +22,7 @@ import { config } from '@/config';
 import { useApi } from '@/hooks/useApi';
 import { useAuthForRequest } from '@/hooks/useAuth';
 import { ENDPOINTS } from '@/lib/api/endpoints';
+import { PATHNAMES } from '@/lib/paths/pathnames';
 import type {
   ApiResponse,
   SuccessApiResponse,
@@ -129,6 +130,26 @@ export function useAdminUserDeleteMutation() {
     mutationFn: async (userId: number) =>
       adminUserMutationResultSchema.parse(
         await api.delete(ENDPOINTS.adminUser(userId))
+      ),
+  });
+}
+
+export function useAdminUserRequestVerificationMutation() {
+  const api = useApi();
+
+  return useMutation({
+    mutationFn: async (userId: number) =>
+      adminUserMutationResultSchema.parse(
+        await api.post(
+          ENDPOINTS.adminUserRequestEmailVerification(userId),
+          undefined,
+          {
+            headers: {
+              'x-orienteerfeed-app-activate-user-url':
+                window.location.origin + PATHNAMES.getVerifyEmail().to,
+            },
+          }
+        )
       ),
   });
 }
