@@ -12,6 +12,19 @@ const prismaMock = vi.hoisted(() => ({
     findMany: vi.fn(),
     deleteMany: vi.fn(),
   },
+  course: {
+    findMany: vi.fn(),
+    deleteMany: vi.fn(),
+  },
+  courseControl: {
+    deleteMany: vi.fn(),
+  },
+  control: {
+    deleteMany: vi.fn(),
+  },
+  courseMap: {
+    deleteMany: vi.fn(),
+  },
   eventImportState: {
     deleteMany: vi.fn(),
   },
@@ -117,6 +130,11 @@ describe('event.service event data deletion', () => {
     prismaMock.team.deleteMany.mockResolvedValue({ count: 1 });
     prismaMock.organisation.deleteMany.mockResolvedValue({ count: 1 });
     prismaMock.class.deleteMany.mockResolvedValue({ count: 2 });
+    prismaMock.course.findMany.mockResolvedValue([{ id: 10 }, { id: 11 }]);
+    prismaMock.course.deleteMany.mockResolvedValue({ count: 2 });
+    prismaMock.courseControl.deleteMany.mockResolvedValue({ count: 4 });
+    prismaMock.control.deleteMany.mockResolvedValue({ count: 6 });
+    prismaMock.courseMap.deleteMany.mockResolvedValue({ count: 1 });
     prismaMock.eventPassword.deleteMany.mockResolvedValue({ count: 1 });
     prismaMock.eventImportState.deleteMany.mockResolvedValue({ count: 1 });
   });
@@ -137,6 +155,23 @@ describe('event.service event data deletion', () => {
     await deleteAllEventData('event-1');
 
     expect(prismaMock.eventImportState.deleteMany).toHaveBeenCalledWith({
+      where: { eventId: 'event-1' },
+    });
+  });
+
+  it('deletes course data (courses, course controls, controls, maps) with all event data', async () => {
+    await deleteAllEventData('event-1');
+
+    expect(prismaMock.courseControl.deleteMany).toHaveBeenCalledWith({
+      where: { courseId: { in: [10, 11] } },
+    });
+    expect(prismaMock.course.deleteMany).toHaveBeenCalledWith({
+      where: { eventId: 'event-1' },
+    });
+    expect(prismaMock.control.deleteMany).toHaveBeenCalledWith({
+      where: { eventId: 'event-1' },
+    });
+    expect(prismaMock.courseMap.deleteMany).toHaveBeenCalledWith({
       where: { eventId: 'event-1' },
     });
   });

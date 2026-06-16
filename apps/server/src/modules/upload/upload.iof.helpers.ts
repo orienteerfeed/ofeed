@@ -94,6 +94,14 @@ export function getIofIntegerValue(value: unknown): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+export function getIofFloatValue(value: unknown): number | null {
+  const raw = getIofTextValue(value);
+  if (!raw) return null;
+
+  const parsed = Number.parseFloat(raw);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 export function toResultStatus(value: unknown, fallback: ResultStatus): ResultStatus {
   const rawStatus = getIofTextValue(value);
   if (!rawStatus) {
@@ -120,4 +128,18 @@ export function toSex(value: string | undefined, fallback: Sex): Sex {
   }
 
   return fallback;
+}
+
+/**
+ * Infer sex from the IOF class name prefix.
+ * HDR (mixed handicapped/recreational) must be checked before the generic H→M rule.
+ * M/F prefixes are treated as sex markers only when followed by an age number (for example M21/F16).
+ */
+export function inferClassSex(className: string): Sex {
+  if (className.startsWith('HDR')) return 'B';
+  if (className.charAt(0) === 'H') return 'M';
+  if (className.charAt(0) === 'D') return 'F';
+  if (/^M\d/.test(className)) return 'M';
+  if (/^F\d/.test(className)) return 'F';
+  return 'B';
 }

@@ -11,4 +11,9 @@ export interface DragDropFileProps {
   onUploadSuccess?: (response: unknown) => void;
   maxFiles?: number;
   allowedFormats?: string[];
+  /**
+   * Hide the built-in "Upload IOF XML" heading/description block. Use when the
+   * surrounding UI already provides its own section title (e.g. the Files tab).
+   */
+  hideHeader?: boolean;
 }

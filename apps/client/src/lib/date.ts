@@ -6,6 +6,7 @@ import { cs, de, enGB, es, sv } from 'date-fns/locale';
 export const DATE_FORMATS = {
   date: 'd. M. yyyy',
   datetime: 'dd. MM. yyyy HH:mm',
+  datetimeSeconds: 'dd. MM. yyyy HH:mm:ss',
   dateWithDay: 'ccc, dd. MM. yyyy',
   timeHms: 'HH:mm:ss',
   timeHhMm: 'HH:mm',
@@ -66,6 +67,15 @@ export function formatDateTime(
   const d = parseDate(value);
   if (!d) return '';
   return format(d, DATE_FORMATS.datetime, fmtOpts(locale));
+}
+
+export function formatDateTimeSeconds(
+  value: Date | string | number,
+  locale?: LocaleKey
+): string {
+  const d = parseDate(value);
+  if (!d) return '';
+  return format(d, DATE_FORMATS.datetimeSeconds, fmtOpts(locale));
 }
 
 export function formatDateWithDay(
