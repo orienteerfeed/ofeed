@@ -44,7 +44,12 @@ const t = ((key: string) => key) as never;
 const statusResult = (overrides?: {
   startListAvailable?: boolean;
   coursesAvailable?: boolean;
-  radioControls?: Array<{ id: number; code: string; type: string; radio: boolean }>;
+  radioControls?: Array<{
+    id: number;
+    code: string;
+    type: string;
+    radio: boolean;
+  }>;
 }) => ({
   eventFilesStatus: {
     __typename: 'EventFilesStatus',
@@ -76,7 +81,7 @@ const statusResult = (overrides?: {
         { id: 101, code: '100', type: 'CONTROL', radio: false },
         { id: 102, code: '101', type: 'CONTROL', radio: true },
       ]
-    ).map((c) => ({ __typename: 'EventFilesRadioControl', ...c })),
+    ).map(c => ({ __typename: 'EventFilesRadioControl', ...c })),
   },
 });
 
@@ -97,10 +102,13 @@ const importStatesMock = (
     skippedCount: number;
   }> = []
 ) => ({
-  request: { query: GET_EVENT_IMPORT_STATES, variables: { eventId: 'event-1' } },
+  request: {
+    query: GET_EVENT_IMPORT_STATES,
+    variables: { eventId: 'event-1' },
+  },
   result: {
     data: {
-      eventImportStates: states.map((s) => ({
+      eventImportStates: states.map(s => ({
         __typename: 'EventImportState',
         creator: null,
         externalStatus: null,
@@ -132,6 +140,9 @@ describe('FilesSettingsTab', () => {
       screen.getByText('Pages.Event.Settings.Files.Courses')
     ).toBeInTheDocument();
     expect(
+      screen.getByText('Pages.Event.Settings.Files.CoursesHelper')
+    ).toBeInTheDocument();
+    expect(
       screen.getByText('Pages.Event.Settings.Files.Results')
     ).toBeInTheDocument();
     // Courses upload is locked (no startlist/results yet) → only start list + results buttons.
@@ -143,7 +154,9 @@ describe('FilesSettingsTab', () => {
 
   it('shows courses upload once the start list is available', async () => {
     render(
-      <MockedProvider mocks={[statusMock({ startListAvailable: true }), importStatesMock()]}>
+      <MockedProvider
+        mocks={[statusMock({ startListAvailable: true }), importStatesMock()]}
+      >
         <FilesSettingsTab t={t} eventId="event-1" />
       </MockedProvider>
     );
@@ -171,7 +184,11 @@ describe('FilesSettingsTab', () => {
   it('refetches status after a successful upload', async () => {
     render(
       <MockedProvider
-        mocks={[statusMock(), importStatesMock(), statusMock({ startListAvailable: true })]}
+        mocks={[
+          statusMock(),
+          importStatesMock(),
+          statusMock({ startListAvailable: true }),
+        ]}
       >
         <FilesSettingsTab t={t} eventId="event-1" />
       </MockedProvider>
@@ -200,7 +217,8 @@ describe('FilesSettingsTab', () => {
       {
         sourceType: 'IOF_XML',
         payloadType: 'StartList',
-        rawHash: 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        rawHash:
+          'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
         creator: 'organizer@example.com',
         externalStatus: 'OK',
         lastSuccessfulImportAt: '2026-06-11T10:00:00.000Z',

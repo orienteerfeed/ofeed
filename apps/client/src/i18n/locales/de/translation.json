@@ -767,6 +767,7 @@
         "Files": {
           "StartList": "Startliste",
           "Courses": "Bahnen",
+          "CoursesHelper": "Bahndefinitionen sind für die Grundfunktionen nicht erforderlich. Sie werden zur korrekten Zuordnung von Zwischenzeiten verwendet; Positionen einzelner Posten werden nicht verarbeitet.",
           "Results": "Ergebnisse",
           "Available": "Verfügbar",
           "Missing": "Nicht verfügbar",

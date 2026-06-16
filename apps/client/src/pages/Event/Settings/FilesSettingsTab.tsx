@@ -110,7 +110,11 @@ export const UPDATE_CONTROL_RADIO_FLAG = gql`
     $controlId: Int!
     $radio: Boolean!
   ) {
-    updateControlRadioFlag(eventId: $eventId, controlId: $controlId, radio: $radio) {
+    updateControlRadioFlag(
+      eventId: $eventId
+      controlId: $controlId
+      radio: $radio
+    ) {
       id
       radio
     }
@@ -122,7 +126,11 @@ interface FilesSettingsTabProps {
   eventId: string;
 }
 
-const ImportStateMeta = ({ importState }: { importState: EventImportStateEntry }) => {
+const ImportStateMeta = ({
+  importState,
+}: {
+  importState: EventImportStateEntry;
+}) => {
   const { t, i18n } = useTranslation();
   const locale = getLocaleKey(i18n.language);
 
@@ -200,7 +208,10 @@ const StatusIcon = ({ available, t }: { available: boolean; t: TFunction }) => {
       aria-label={label}
     />
   ) : (
-    <Circle className="h-5 w-5 shrink-0 text-muted-foreground" aria-label={label} />
+    <Circle
+      className="h-5 w-5 shrink-0 text-muted-foreground"
+      aria-label={label}
+    />
   );
 };
 
@@ -221,7 +232,10 @@ const FileSection = ({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           {disabled ? (
-            <Lock className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+            <Lock
+              className="h-5 w-5 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
           ) : (
             <StatusIcon available={available} t={t} />
           )}
@@ -244,13 +258,19 @@ const FileSection = ({
       </div>
     </CardHeader>
     <CardContent className="space-y-3">
-      {helper ? <p className="text-sm text-muted-foreground">{helper}</p> : null}
+      {helper ? (
+        <p className="text-sm text-muted-foreground">{helper}</p>
+      ) : null}
       {disabled ? (
         <p className="text-sm text-muted-foreground">
           {disabledHint ?? t('Pages.Event.Settings.Files.CoursesDisabledHint')}
         </p>
       ) : (
-        <DragDropFile eventId={eventId} hideHeader onUploadSuccess={onUploaded} />
+        <DragDropFile
+          eventId={eventId}
+          hideHeader
+          onUploadSuccess={onUploaded}
+        />
       )}
       {importState ? <ImportStateMeta importState={importState} /> : null}
     </CardContent>
@@ -277,7 +297,7 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
 
   const findImportState = (payloadType: string): EventImportStateEntry | null =>
     importStates.find(
-      (s) => s.sourceType === 'IOF_XML' && s.payloadType === payloadType
+      s => s.sourceType === 'IOF_XML' && s.payloadType === payloadType
     ) ?? null;
 
   const handleUploaded = () => {
@@ -324,6 +344,7 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
         eventId={eventId}
         title={t('Pages.Event.Settings.Files.Courses')}
         format={IOF_XML_V3}
+        helper={t('Pages.Event.Settings.Files.CoursesHelper')}
         available={status.courses.available}
         disabled={coursesUploadLocked}
         importState={findImportState('CourseData')}

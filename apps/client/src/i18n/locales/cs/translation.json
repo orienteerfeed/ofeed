@@ -578,6 +578,7 @@
         "Files": {
           "StartList": "Startovní listina",
           "Courses": "Tratě",
+          "CoursesHelper": "Definice tratí nejsou pro základní funkčnost nutné. Slouží ke správnému přiřazení mezičasů; poloha jednotlivých kontrol se nezpracovává.",
           "Results": "Výsledky",
           "Available": "K dispozici",
           "Missing": "Není k dispozici",

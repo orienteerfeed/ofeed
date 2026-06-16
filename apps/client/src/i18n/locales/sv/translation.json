@@ -578,6 +578,7 @@
         "Files": {
           "StartList": "Startlista",
           "Courses": "Banor",
+          "CoursesHelper": "Bandefinitioner krävs inte för grundläggande funktionalitet. De används för att matcha mellantider korrekt; positioner för enskilda kontroller behandlas inte.",
           "Results": "Resultat",
           "Available": "Tillgänglig",
           "Missing": "Inte tillgänglig",

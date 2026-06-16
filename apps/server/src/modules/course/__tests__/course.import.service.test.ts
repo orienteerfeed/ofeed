@@ -59,17 +59,28 @@ describe('importCourseDataXml', () => {
     expect(store.courses.map((c) => c.name)).toEqual(['A', 'B']);
   });
 
-  it('creates start, control and finish records with stored coordinates', async () => {
+  it('creates start, control and finish records without stored coordinates', async () => {
     await importCourseDataXml('evt1', fixtureXml);
     const { store } = holder.prisma;
     const s1 = store.controls.find((c) => c.code === 'S1');
     const c100 = store.controls.find((c) => c.code === '100');
     const f1 = store.controls.find((c) => c.code === 'F1');
 
-    expect(s1).toMatchObject({ type: 'START', longitude: 16.21053, latitude: 49.976484 });
-    expect(s1?.mapX).toBe(-79.2);
-    expect(s1?.mapY).toBe(-86.3);
-    expect(c100?.altitude ?? null).toBeNull(); // altitude missing in XML
+    expect(s1).toMatchObject({
+      type: 'START',
+      longitude: null,
+      latitude: null,
+      altitude: null,
+      mapX: null,
+      mapY: null,
+    });
+    expect(c100).toMatchObject({
+      longitude: null,
+      latitude: null,
+      altitude: null,
+      mapX: null,
+      mapY: null,
+    });
     expect(f1?.type).toBe('FINISH');
   });
 

@@ -113,6 +113,7 @@
         "Files": {
           "StartList": "Liste de départ",
           "Courses": "Circuits",
+          "CoursesHelper": "Les définitions de circuits ne sont pas nécessaires au fonctionnement de base. Elles servent à associer correctement les temps intermédiaires ; les positions des postes individuels ne sont pas traitées.",
           "Results": "Résultats",
           "Available": "Disponible",
           "Missing": "Non disponible",

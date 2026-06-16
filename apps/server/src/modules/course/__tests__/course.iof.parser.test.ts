@@ -62,31 +62,32 @@ describe('parseCourseData', () => {
     });
   });
 
-  it('parses controls including start and finish with correct lat/lng/alt', async () => {
+  it('parses controls including start and finish without storing positions', async () => {
     const parsed = await parseFixture();
     const byCode = Object.fromEntries(parsed.controls.map((c) => [c.code, c]));
 
     expect(parsed.controls.map((c) => c.code)).toEqual(['S1', '100', '101', 'F1']);
     expect(byCode.S1.type).toBe('START');
     expect(byCode.F1.type).toBe('FINISH');
-
-    // longitude = lng, latitude = lat
-    expect(byCode.S1.longitude).toBe(16.21053);
-    expect(byCode.S1.latitude).toBe(49.976484);
-    expect(byCode.S1.altitude).toBe(300.9);
-
-    // MapPosition x/y stored as mapX/mapY
-    expect(byCode.S1.mapX).toBe(-79.2);
-    expect(byCode.S1.mapY).toBe(-86.3);
+    expect(byCode.S1.longitude).toBeNull();
+    expect(byCode.S1.latitude).toBeNull();
+    expect(byCode.S1.altitude).toBeNull();
+    expect(byCode.S1.mapX).toBeNull();
+    expect(byCode.S1.mapY).toBeNull();
     expect(byCode.S1.mapUnit).toBe('MM');
   });
 
-  it('imports a control even when altitude is missing', async () => {
+  it('imports a control while ignoring IOF position data', async () => {
     const parsed = await parseFixture();
     const control100 = parsed.controls.find((c) => c.code === '100');
     expect(control100).toBeDefined();
-    expect(control100?.altitude).toBeNull();
-    expect(control100?.latitude).toBe(49.983008);
+    expect(control100).toMatchObject({
+      latitude: null,
+      longitude: null,
+      altitude: null,
+      mapX: null,
+      mapY: null,
+    });
   });
 
   it('keeps CourseControl XML order in sequence and records control codes', async () => {

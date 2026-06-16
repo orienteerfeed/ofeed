@@ -146,20 +146,6 @@ function getAttr(node: XmlNode | undefined): Record<string, string | undefined> 
   return attr && typeof attr === 'object' ? (attr as Record<string, string | undefined>) : {};
 }
 
-function parsePosition(node: XmlNode | undefined): {
-  latitude: number | null;
-  longitude: number | null;
-  altitude: number | null;
-} {
-  const position = firstNode(node?.Position);
-  const attr = getAttr(position);
-  return {
-    latitude: getIofFloatValue(attr.lat),
-    longitude: getIofFloatValue(attr.lng),
-    altitude: getIofFloatValue(attr.alt),
-  };
-}
-
 function parseMap(raceCourseData: XmlNode): ParsedCourseMap | null {
   const map = firstNode(raceCourseData.Map);
   if (!map) return null;
@@ -186,19 +172,27 @@ function parseControl(node: XmlNode): ParsedControl {
   }
 
   const attr = getAttr(node);
-  const { latitude, longitude, altitude } = parsePosition(node);
-  const mapPosition = getAttr(firstNode(node.MapPosition));
+  /*
+   * Prepared for future development of control position handling.
+   * Keep the data structures in place, but do not persist IOF control
+   * coordinates or map positions until the feature is ready.
+   *
+   * const { latitude, longitude, altitude } = parsePosition(node);
+   *
+   * const position = getAttr(firstNode(node.Position));
+   * const mapPosition = getAttr(firstNode(node.MapPosition));
+   */
 
   return {
     code,
     type: mapControlType(attr.type),
     name: getIofTextValue(node.Name) ?? null,
-    latitude,
-    longitude,
-    altitude,
-    mapX: getIofFloatValue(mapPosition.x),
-    mapY: getIofFloatValue(mapPosition.y),
-    mapUnit: mapMapPositionUnit(mapPosition.unit),
+    latitude: null,
+    longitude: null,
+    altitude: null,
+    mapX: null,
+    mapY: null,
+    mapUnit: 'MM',
   };
 }
 

@@ -578,6 +578,7 @@
         "Files": {
           "StartList": "Lista de salida",
           "Courses": "Recorridos",
+          "CoursesHelper": "Las definiciones de recorridos no son necesarias para la funcionalidad básica. Se usan para asociar correctamente los tiempos parciales; no se procesan las posiciones de los controles individuales.",
           "Results": "Resultados",
           "Available": "Disponible",
           "Missing": "No disponible",

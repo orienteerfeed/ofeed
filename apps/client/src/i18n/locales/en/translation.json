@@ -578,6 +578,7 @@
         "Files": {
           "StartList": "Start list",
           "Courses": "Courses",
+          "CoursesHelper": "Course definitions are not required for basic functionality. They are used to match split times correctly; individual control positions are not processed.",
           "Results": "Results",
           "Available": "Available",
           "Missing": "Not available",
