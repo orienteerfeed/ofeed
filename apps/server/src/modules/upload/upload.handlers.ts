@@ -653,10 +653,13 @@ async function upsertTeam(
   return existingTeam.id;
 }
 
-async function upsertEmbeddedCourse(eventId: string, courseEl: Record<string, any>): Promise<void> {
+async function upsertEmbeddedCourse(
+  eventId: string,
+  courseEl: Record<string, any>,
+): Promise<number | null> {
   const externalId = getIofTextValue(courseEl.Id);
   const name = getIofTextValue(courseEl.Name) ?? externalId;
-  if (!name) return;
+  if (!name) return null;
 
   const courseData = {
     ...(externalId ? { externalId } : {}),
@@ -667,15 +670,13 @@ async function upsertEmbeddedCourse(eventId: string, courseEl: Record<string, an
     }),
   };
 
-  await prisma.course.upsert({
+  const course = await prisma.course.upsert({
     where: { eventId_name: { eventId, name } },
     update: courseData,
-    create: {
-      eventId,
-      name,
-      ...courseData,
-    },
+    create: { eventId, name, ...courseData },
+    select: { id: true },
   });
+  return course.id;
 }
 
 /**
@@ -715,8 +716,24 @@ async function processClassStarts(
       }
       if (classStart.StartName) startName = classStart.StartName[0];
 
+      // For relay, upsert the course once from the first leg before writing the
+      // class row. Doing it inside the concurrent TeamMemberStart loop would
+      // trigger concurrent class.update calls on the same row (MariaDB P2034).
+      let relayCourseId: number | null = null;
+      if (isRelayDiscipline(dbResponseEvent.discipline)) {
+        const firstCourseEl =
+          (classStart.TeamStart as Array<Record<string, any>> | undefined)?.[0]
+            ?.TeamMemberStart?.[0]
+            ?.Start?.[0]
+            ?.Course?.[0] ?? null;
+        if (firstCourseEl) {
+          relayCourseId = await upsertEmbeddedCourse(eventId, firstCourseEl);
+        }
+      }
+
       const additionalData = {
         startName: startName,
+        ...(relayCourseId !== null ? { courseId: relayCourseId } : {}),
         ...normalizeCourseMetrics({
           length,
           climb,
@@ -830,11 +847,6 @@ async function processClassStarts(
                   const start = [...teamMemberStart.Start].shift();
                   const leg = [...start.Leg].shift();
 
-                  const startCourse = Array.isArray(start.Course) ? start.Course[0] : null;
-                  if (startCourse) {
-                    await upsertEmbeddedCourse(eventId, startCourse);
-                  }
-
                   const { updated } = await upsertCompetitor(
                     eventId,
                     classId,
@@ -883,7 +895,26 @@ async function processClassResults(
     IOF_WRITE_CONCURRENCY,
     async (classResult: Record<string, any>) => {
       const classDetails = classResult.Class.shift();
-      const classId = await upsertClass(eventId, classDetails, dbClassLists, eventTimeZone);
+
+      let relayCourseId: number | null = null;
+      if (isRelayDiscipline(dbResponseEvent.discipline)) {
+        const firstCourseEl =
+          (classResult.TeamResult as Array<Record<string, any>> | undefined)?.[0]
+            ?.TeamMemberResult?.[0]
+            ?.Result?.[0]
+            ?.Course?.[0] ?? null;
+        if (firstCourseEl) {
+          relayCourseId = await upsertEmbeddedCourse(eventId, firstCourseEl);
+        }
+      }
+
+      const classId = await upsertClass(
+        eventId,
+        classDetails,
+        dbClassLists,
+        eventTimeZone,
+        relayCourseId !== null ? { courseId: relayCourseId } : {},
+      );
       const competitorCache = await loadCompetitorCache(classId);
       // Pre-load splits for all competitors already in the DB for this class.
       // One round-trip replaces N per-competitor findMany calls on re-uploads.
@@ -967,11 +998,6 @@ async function processClassResults(
                     if (!person || !result || !leg) {
                       console.warn('Skipping incomplete TeamMemberResult:', teamMemberResult);
                       return;
-                    }
-
-                    const resultCourse = Array.isArray(result.Course) ? result.Course[0] : null;
-                    if (resultCourse) {
-                      await upsertEmbeddedCourse(eventId, resultCourse);
                     }
 
                     const { id: competitorId, updated } = await upsertCompetitor(
@@ -1346,7 +1372,10 @@ async function handleIofXmlUpload(
               const length = getIofIntegerValue(course.Length);
               const climb = getIofIntegerValue(course.Climb);
 
-              // Per-leg course: ClassAssignment carries a Leg number and class name
+              // Per-leg course: ClassAssignment carries a Leg number and class name.
+              // Pass course metrics so the class row carries at least the last
+              // processed leg's length/climb (importCourseDataXml below sets the
+              // definitive Class.courseId linkage for full CourseData uploads).
               if (legNumber != null && assignment) {
                 const className: string =
                   (Array.isArray(assignment.ClassName) ? assignment.ClassName[0] : null) ??
@@ -1355,11 +1384,21 @@ async function handleIofXmlUpload(
                     : null) ??
                   course.Name[0];
                 const classDetails = { Name: [className], Id: [], ATTR: {} };
+                const additionalData = {
+                  ...normalizeCourseMetrics({
+                    length,
+                    climb,
+                    controlsCount: Array.isArray(course.CourseControl)
+                      ? course.CourseControl.length - 2
+                      : null,
+                  }),
+                };
                 await upsertClass(
                   eventId,
                   classDetails,
                   dbClassLists,
                   dbResponseEvent.timezone ?? 'UTC',
+                  additionalData,
                 );
                 return;
               }

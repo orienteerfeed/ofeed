@@ -140,6 +140,7 @@ const COMPETITORS_BY_CLASS_UPDATED = gql`
   }
 `;
 
+
 const ORGANISATIONS = gql`
   query OrganisationNames($eventId: String!) {
     organisationNames(eventId: $eventId) {
@@ -194,6 +195,7 @@ const COMPETITORS_BY_ORGANISATION = gql`
 interface CompetitorsByClassUpdatedResponse {
   competitorsByClassUpdated: Competitor[];
 }
+
 
 interface EventResultsViewProps {
   t: TFunction;
@@ -1121,40 +1123,8 @@ const ClubResultsView = ({
 
     // For non-OK status competitors, return appropriate position emoji
     if (competitor.status !== 'OK') {
-      let positionWithEmoji: string;
-
-      switch (competitor.status) {
-        case 'Active':
-          positionWithEmoji = '🏃';
-          break;
-        case 'DidNotFinish':
-          positionWithEmoji = '🏳️';
-          break;
-        case 'DidNotStart':
-          positionWithEmoji = '🚷';
-          break;
-        case 'Disqualified':
-          positionWithEmoji = '🟥';
-          break;
-        case 'Finished':
-          positionWithEmoji = '🏁';
-          break;
-        case 'Inactive':
-          positionWithEmoji = '🛏️';
-          break;
-        case 'MissingPunch':
-          positionWithEmoji = '🙈';
-          break;
-        case 'NotCompeting':
-          positionWithEmoji = '🦄';
-          break;
-        case 'OverTime':
-          positionWithEmoji = '⌛';
-          break;
-        default:
-          positionWithEmoji = '❓';
-      }
-
+      const positionWithEmoji =
+        getStatusDisplay(competitor.status).emoji;
       return { position: positionWithEmoji, loss: undefined };
     }
 
@@ -1386,8 +1356,7 @@ const ClubResultsView = ({
     return 'text-gray-600 dark:text-gray-400';
   };
 
-  // Get status display text
-  const getStatusDisplay = (status: string) => {
+  const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
       OK: 'OK',
       Active: 'Active',
@@ -1573,7 +1542,7 @@ const ClubResultsView = ({
                               <span
                                 className={`text-xs font-medium ${getStatusColor(runner.status)}`}
                               >
-                                {getStatusDisplay(runner.status)}
+                                {getStatusLabel(runner.status)}
                               </span>
                             </TableCell>
                           </TableRow>
@@ -1793,29 +1762,25 @@ const computeRelayOverall = (
   return results;
 };
 
-const relayStatusEmoji: Record<string, string> = {
-  Active: '🏃',
-  DidNotFinish: '🏳️',
-  DidNotStart: '🚷',
-  Disqualified: '🟥',
-  Finished: '🏁',
-  Inactive: '🛏️',
-  MissingPunch: '🙈',
-  NotCompeting: '🦄',
-  OverTime: '⌛',
+const COMPETITOR_STATUS_DISPLAY: Record<
+  string,
+  { emoji: string; tooltip: string }
+> = {
+  Active: { emoji: '🏃', tooltip: 'Giving it their all right now' },
+  DidNotFinish: { emoji: '🏳️', tooltip: 'Did Not Finish' },
+  DidNotStart: { emoji: '🚷', tooltip: 'Did Not Start' },
+  Disqualified: { emoji: '🟥', tooltip: 'Disqualified' },
+  Finished: { emoji: '🏁', tooltip: 'Waiting for readout' },
+  Inactive: { emoji: '🛏️', tooltip: 'Waiting for start time' },
+  MissingPunch: { emoji: '🙈', tooltip: 'Missing Punch' },
+  NotCompeting: { emoji: '🦄', tooltip: 'Not competing' },
+  OverTime: { emoji: '⌛', tooltip: 'Over Time' },
 };
-
-const relayStatusTooltip: Record<string, string> = {
-  Active: 'Giving it their all right now',
-  DidNotFinish: 'Did Not Finish',
-  DidNotStart: 'Did Not Start',
-  Disqualified: 'Disqualified',
-  Finished: 'Waiting for readout',
-  Inactive: 'Waiting for start time',
-  MissingPunch: 'Missing Punch',
-  NotCompeting: 'Not competing',
-  OverTime: 'Over Time',
-};
+const getStatusDisplay = (status: string | null | undefined) =>
+  COMPETITOR_STATUS_DISPLAY[status ?? ''] ?? {
+    emoji: '❓',
+    tooltip: 'Unknown status',
+  };
 
 const PositionChange: React.FC<{ change: number }> = ({ change }) => {
   if (change === 0) {
@@ -1839,7 +1804,10 @@ const PositionChange: React.FC<{ change: number }> = ({ change }) => {
   );
 };
 
-const RelayOverallView: React.FC<{ teams: TeamResult[] }> = ({ teams }) => {
+const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
+  teams,
+  t,
+}) => {
   if (teams.length === 0) return null;
 
   return (
@@ -1849,19 +1817,23 @@ const RelayOverallView: React.FC<{ teams: TeamResult[] }> = ({ teams }) => {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-8 px-2 text-xs">#</TableHead>
-              <TableHead className="h-8 px-2 text-xs">Name</TableHead>
+              <TableHead className="h-8 px-2 text-xs">
+                {t('Pages.Event.Results.Relay.Name')}
+              </TableHead>
               <TableHead className="h-8 px-2 text-xs hidden lg:table-cell">
-                Club
+                {t('Pages.Event.Results.Relay.Club')}
               </TableHead>
-              <TableHead className="h-8 px-2 text-right text-xs">Leg</TableHead>
+              <TableHead className="h-8 px-2 text-right text-xs">
+                {t('Pages.Event.Results.Relay.LegHeader')}
+              </TableHead>
               <TableHead className="h-8 px-2 text-right text-xs hidden sm:table-cell">
-                +Leg
+                {t('Pages.Event.Results.Relay.LegLoss')}
               </TableHead>
               <TableHead className="h-8 px-2 text-right text-xs">
-                Time
+                {t('Pages.Event.Results.Relay.Time')}
               </TableHead>
               <TableHead className="h-8 px-2 text-right text-xs">
-                +Time
+                {t('Pages.Event.Results.Relay.Diff')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -1877,12 +1849,7 @@ const RelayOverallView: React.FC<{ teams: TeamResult[] }> = ({ teams }) => {
                     {team.finalRank != null ? `${team.finalRank}.` : '–'}
                   </TableCell>
                   <TableCell className="px-2 py-1.5 text-sm font-bold">
-                    <div className="flex flex-col">
-                      <span>{team.teamName}</span>
-                      <span className="text-xs font-normal text-muted-foreground lg:hidden">
-                        {team.club}
-                      </span>
-                    </div>
+                    {team.teamName}
                   </TableCell>
                   <TableCell className="px-2 py-1.5 text-xs text-muted-foreground hidden lg:table-cell">
                     {team.club}
@@ -1909,10 +1876,7 @@ const RelayOverallView: React.FC<{ teams: TeamResult[] }> = ({ teams }) => {
                   >
                     <TableCell />
                     <TableCell className="px-2 py-0.5 text-xs">
-                      <span className="text-muted-foreground mr-1">
-                        {leg.runner.registration}
-                      </span>
-                      {leg.runner.firstname} {leg.runner.lastname}
+                      <CompetitorName competitor={leg.runner} />
                     </TableCell>
                     <TableCell className="hidden lg:table-cell" />
                     <TableCell className="px-2 py-0.5 text-right font-mono text-xs">
@@ -1928,12 +1892,9 @@ const RelayOverallView: React.FC<{ teams: TeamResult[] }> = ({ teams }) => {
                       ) : (
                         <span
                           className="text-muted-foreground cursor-help"
-                          title={
-                            relayStatusTooltip[leg.runner.status] ??
-                            leg.runner.status
-                          }
+                          title={getStatusDisplay(leg.runner.status).tooltip}
                         >
-                          {relayStatusEmoji[leg.runner.status] ?? '–'}
+                          {getStatusDisplay(leg.runner.status).emoji}
                         </span>
                       )}
                     </TableCell>
@@ -2055,18 +2016,6 @@ const processRelayLegCompetitors = (
     position++;
   }
 
-  const statusEmojis: Record<string, [string, string]> = {
-    Active: ['🏃', 'Giving it their all right now'],
-    DidNotFinish: ['🏳️', 'Did Not Finish'],
-    DidNotStart: ['🚷', 'Did not start'],
-    Disqualified: ['🟥', 'Disqualified'],
-    Finished: ['🏁', 'Waiting for readout'],
-    Inactive: ['🛏️', 'Waiting for start time'],
-    MissingPunch: ['🙈', 'Missing Punch'],
-    NotCompeting: ['🦄', 'Not competing'],
-    OverTime: ['⌛', 'Over Time'],
-  };
-
   return withCumulative.map(c => {
     const pos = posMap.get(c.id);
     if (pos !== undefined) {
@@ -2078,14 +2027,19 @@ const processRelayLegCompetitors = (
       if (loss !== undefined && loss > 0) result.loss = loss;
       return result;
     }
-    const [emoji, tooltip] = statusEmojis[c.status] ?? ['❓', 'Unknown status'];
+    const display = getStatusDisplay(c.status);
     return {
       ...c,
-      position: emoji,
-      positionTooltip: tooltip,
+      position: display.emoji,
+      positionTooltip: display.tooltip,
     } as RelayLegCompetitor;
   });
 };
+
+const hasRelayResultSignal = (competitor: Competitor): boolean =>
+  competitor.time != null ||
+  competitor.finishTime != null ||
+  competitor.status === 'Active';
 
 interface RelayResultsViewProps {
   t: TFunction;
@@ -2102,6 +2056,8 @@ const RelayResultsView = ({
 }: RelayResultsViewProps) => {
   const [selectedTab, setSelectedTab] = useState<'overall' | number>('overall');
   const [currentTime, setCurrentTime] = useState<number>(Date.now());
+  const [autoFollowEnabled, setAutoFollowEnabled] = useState(false);
+  const previousClassIdRef = useRef<number | undefined>(undefined);
   const navigate = useNavigate();
 
   const currentClass = event.classes?.find(cls => cls.name === selectedClass);
@@ -2114,6 +2070,8 @@ const RelayResultsView = ({
     );
 
   useEffect(() => {
+    if (previousClassIdRef.current === selectedClassId) return;
+    previousClassIdRef.current = selectedClassId;
     setSelectedTab('overall');
   }, [selectedClassId]);
 
@@ -2127,7 +2085,7 @@ const RelayResultsView = ({
   const allCompetitors = data?.competitorsByClassUpdated ?? [];
 
   const maxLeg = useMemo(
-    () => allCompetitors.reduce((max, c) => Math.max(max, c.leg ?? 1), 0),
+    () => allCompetitors.reduce((max, c) => Math.max(max, c.leg ?? 0), 0),
     [allCompetitors]
   );
 
@@ -2156,9 +2114,18 @@ const RelayResultsView = ({
 
   const processedLegCompetitors = useMemo(() => {
     if (selectedLeg == null) return [];
-    const legComps = allCompetitors.filter(c => (c.leg ?? 1) === selectedLeg);
+    const legComps = allCompetitors.filter(c => c.leg === selectedLeg);
     return processRelayLegCompetitors(legComps, selectedLeg, teamTimeMap);
   }, [allCompetitors, selectedLeg, teamTimeMap]);
+
+  const mobileClubWidthReference = useMemo(
+    () =>
+      processedLegCompetitors.reduce((longest, competitor) => {
+        const name = getMobileCompetitorName(competitor);
+        return name.length > longest.length ? name : longest;
+      }, ''),
+    [processedLegCompetitors]
+  );
 
   const legPositionChangeMap = useMemo(() => {
     if (selectedLeg == null || selectedLeg <= 1)
@@ -2177,6 +2144,29 @@ const RelayResultsView = ({
     selectedTab === 'overall'
       ? teamResults.length > 0
       : processedLegCompetitors.length > 0;
+
+  const autoFollowTargetLeg = useMemo(() => {
+    if (maxLeg === 0) return null;
+    const highestLegWithResults = allCompetitors.reduce(
+      (highest, competitor) => {
+        const leg = competitor.leg ?? 0;
+        return hasRelayResultSignal(competitor) && leg > highest
+          ? leg
+          : highest;
+      },
+      0
+    );
+    return highestLegWithResults > 0
+      ? Math.min(maxLeg, highestLegWithResults)
+      : null;
+  }, [allCompetitors, maxLeg]);
+
+  useEffect(() => {
+    if (!autoFollowEnabled || autoFollowTargetLeg == null) return;
+    if (selectedTab !== autoFollowTargetLeg) {
+      setSelectedTab(autoFollowTargetLeg);
+    }
+  }, [autoFollowEnabled, autoFollowTargetLeg, selectedTab]);
 
   const showFirstLegStartTimes = selectedLeg === 1;
 
@@ -2219,6 +2209,19 @@ const RelayResultsView = ({
     setSelectedClass(cls.name);
   };
 
+  const handleManualTabChange = (tab: 'overall' | number) => {
+    setAutoFollowEnabled(false);
+    setSelectedTab(tab);
+  };
+
+  const handleAutoFollowToggle = () => {
+    const nextEnabled = !autoFollowEnabled;
+    setAutoFollowEnabled(nextEnabled);
+    if (nextEnabled && autoFollowTargetLeg != null) {
+      setSelectedTab(autoFollowTargetLeg);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="sticky top-0 z-10 bg-background border-b border-border pb-2 mb-2">
@@ -2234,7 +2237,7 @@ const RelayResultsView = ({
                   className={
                     courseLength > 0 ? 'h-auto py-0.5 px-2' : 'h-7 px-2'
                   }
-                  onClick={() => setSelectedTab('overall')}
+                  onClick={() => handleManualTabChange('overall')}
                 >
                   <span className="flex flex-col items-center leading-none gap-0.5">
                     <span className="text-xs font-medium">
@@ -2259,7 +2262,7 @@ const RelayResultsView = ({
                   variant={selectedTab === leg ? 'default' : 'ghost'}
                   size="sm"
                   className={courseLength ? 'h-auto py-0.5 px-2' : 'h-7 px-2'}
-                  onClick={() => setSelectedTab(leg)}
+                  onClick={() => handleManualTabChange(leg)}
                 >
                   <span className="flex flex-col items-center leading-none gap-0.5">
                     <span className="text-xs font-medium">
@@ -2275,6 +2278,18 @@ const RelayResultsView = ({
                 </Button>
               );
             })}
+            <Button
+              variant={autoFollowEnabled ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 gap-1"
+              disabled={maxLeg === 0}
+              onClick={handleAutoFollowToggle}
+            >
+              <Radio className="w-3 h-3" />
+              <span className="text-xs font-medium">
+                {t('Pages.Event.Results.Relay.AutoFollow')}
+              </span>
+            </Button>
           </div>
           {event.classes && currentClass && (
             <EventCategorySwitcher
@@ -2298,7 +2313,7 @@ const RelayResultsView = ({
         <Alert
           severity="error"
           variant="outlined"
-          title="Error loading results"
+          title={t('Pages.Event.Results.Relay.ErrorLoading')}
         >
           {error.message}
         </Alert>
@@ -2316,7 +2331,9 @@ const RelayResultsView = ({
         </Alert>
       )}
 
-      {selectedTab === 'overall' && <RelayOverallView teams={teamResults} />}
+      {selectedTab === 'overall' && (
+        <RelayOverallView teams={teamResults} t={t} />
+      )}
 
       {typeof selectedTab === 'number' &&
         processedLegCompetitors.length > 0 && (
@@ -2326,9 +2343,11 @@ const RelayResultsView = ({
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="h-8 px-2 text-xs">#</TableHead>
-                    <TableHead className="h-8 px-2 text-xs">Name</TableHead>
+                    <TableHead className="h-8 px-2 text-xs">
+                      {t('Pages.Event.Results.Relay.Name')}
+                    </TableHead>
                     <TableHead className="h-8 px-2 text-xs hidden lg:table-cell">
-                      Club
+                      {t('Pages.Event.Results.Relay.Club')}
                     </TableHead>
                     {showFirstLegStartTimes && (
                       <TableHead className="h-8 px-2 text-xs text-right hidden md:table-cell">
@@ -2340,11 +2359,11 @@ const RelayResultsView = ({
                     </TableHead>
                     {selectedLeg != null && selectedLeg > 1 && (
                       <TableHead className="h-8 px-2 text-right text-xs hidden sm:table-cell">
-                        Cumul.
+                        {t('Pages.Event.Results.Relay.Cumul')}
                       </TableHead>
                     )}
                     <TableHead className="h-8 px-2 text-right text-xs">
-                      Diff
+                      {t('Pages.Event.Results.Relay.Diff')}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -2389,9 +2408,11 @@ const RelayResultsView = ({
                         <TableCell className="px-2 py-1 text-sm font-medium">
                           <div className="flex flex-col">
                             <CompetitorName competitor={competitor} />
-                            <span className="mt-0.5 block truncate text-left text-xs text-muted-foreground lg:hidden">
-                              {competitor.organisation}
-                            </span>
+                            <MobileClubName
+                              clubName={competitor.organisation}
+                              referenceText={mobileClubWidthReference}
+                              className="mt-0.5 block truncate text-left text-xs text-muted-foreground lg:hidden"
+                            />
                           </div>
                         </TableCell>
                         <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden lg:table-cell">
@@ -2548,55 +2569,12 @@ const calculatePositions = (runners: Competitor[]): ProcessedCompetitor[] => {
     }
 
     // Non-finished běžci
-    let positionWithEmoji: string;
-    let positionTooltip: string;
-
-    switch (runner.status) {
-      case 'Active':
-        positionWithEmoji = '🏃';
-        positionTooltip = 'Giving it their all right now';
-        break;
-      case 'DidNotFinish':
-        positionWithEmoji = '🏳️';
-        positionTooltip = 'Did Not Finish';
-        break;
-      case 'DidNotStart':
-        positionWithEmoji = '🚷';
-        positionTooltip = 'Did not start';
-        break;
-      case 'Disqualified':
-        positionWithEmoji = '🟥';
-        positionTooltip = 'Disqualified';
-        break;
-      case 'Finished':
-        positionWithEmoji = '🏁';
-        positionTooltip = 'Waiting for readout';
-        break;
-      case 'Inactive':
-        positionWithEmoji = '🛏️';
-        positionTooltip = 'Waiting for start time';
-        break;
-      case 'MissingPunch':
-        positionWithEmoji = '🙈';
-        positionTooltip = 'Missing Punch';
-        break;
-      case 'NotCompeting':
-        positionWithEmoji = '🦄';
-        positionTooltip = 'Not competing';
-        break;
-      case 'OverTime':
-        positionWithEmoji = '⌛';
-        positionTooltip = 'Over Time';
-        break;
-      default:
-        positionWithEmoji = '❓';
-        positionTooltip = 'Unknown status';
-    }
+    const statusDisplay = getStatusDisplay(runner.status);
 
     return {
       ...runner,
-      position: positionWithEmoji,
-      positionTooltip,
+      position: statusDisplay.emoji,
+      positionTooltip: statusDisplay.tooltip,
     };
   });
 };

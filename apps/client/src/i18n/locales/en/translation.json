@@ -672,7 +672,15 @@
           "Overall": "Overall",
           "Leg": "Leg {{number}}",
           "Start": "Start",
-          "Time": "Time"
+          "Time": "Time",
+          "Diff": "Diff",
+          "AutoFollow": "Auto-follow",
+          "Name": "Name",
+          "Club": "Club",
+          "LegHeader": "Leg",
+          "LegLoss": "+Leg",
+          "Cumul": "Cumul.",
+          "ErrorLoading": "Error loading results"
         },
         "Ranking": {
           "Counts": "Counts towards ranking",

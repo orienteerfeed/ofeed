@@ -714,7 +714,15 @@
           "Overall": "Gesamt",
           "Leg": "Abschnitt {{number}}",
           "Start": "Start",
-          "Time": "Zeit"
+          "Time": "Zeit",
+          "Diff": "Rückstand",
+          "AutoFollow": "Auto",
+          "Name": "Name",
+          "Club": "Verein",
+          "LegHeader": "Abschn.",
+          "LegLoss": "+Abschn.",
+          "Cumul": "Kumulativ",
+          "ErrorLoading": "Fehler beim Laden der Ergebnisse"
         }
       },
       "Settings": {

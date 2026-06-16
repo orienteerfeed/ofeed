@@ -672,7 +672,15 @@
           "Overall": "General",
           "Leg": "Tramo {{number}}",
           "Start": "Salida",
-          "Time": "Tiempo"
+          "Time": "Tiempo",
+          "Diff": "Diferencia",
+          "AutoFollow": "Auto",
+          "Name": "Nombre",
+          "Club": "Club",
+          "LegHeader": "Tramo",
+          "LegLoss": "+Tramo",
+          "Cumul": "Acum.",
+          "ErrorLoading": "Error al cargar los resultados"
         },
         "Ranking": {
           "Counts": "Cuenta para el ranking",
