@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CourseData xmlns="http://www.orienteering.org/datastandard/3.0" iofVersion="3.0" creator="OCAD">
+  <Event>
+    <Name>Course import test event</Name>
+  </Event>
+  <RaceCourseData>
+    <Map>
+      <Scale>10000</Scale>
+      <MapPositionTopLeft x="-229.3" y="13.4" unit="mm"/>
+      <MapPositionBottomRight x="12.0" y="-163.3" unit="mm"/>
+    </Map>
+    <Control type="Start">
+      <Id>S1</Id>
+      <Position lng="16.210530" lat="49.976484" alt="300.900" />
+      <MapPosition x="-79.2" y="-86.3" unit="mm" />
+    </Control>
+    <Control type="Control">
+      <Id>100</Id>
+      <Position lng="16.198932" lat="49.983008" />
+      <MapPosition x="-168.6" y="-21.7" unit="mm" />
+    </Control>
+    <Control type="Control">
+      <Id>101</Id>
+      <Position lng="16.205745" lat="49.984004" alt="285.920" />
+      <MapPosition x="-121.0" y="-6.2" unit="mm" />
+    </Control>
+    <Control type="Finish">
+      <Id>F1</Id>
+      <Position lng="16.197631" lat="49.982359" />
+      <MapPosition x="-177.3" y="-29.7" unit="mm" />
+    </Control>
+
+    <Course>
+      <Name>A</Name>
+      <Length>2550</Length>
+      <Climb>35</Climb>
+      <CourseControl type="Start">
+        <Control>S1</Control>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>100</Control>
+        <LegLength>360</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>101</Control>
+        <LegLength>232</LegLength>
+      </CourseControl>
+      <CourseControl type="Finish">
+        <Control>F1</Control>
+        <LegLength>118</LegLength>
+      </CourseControl>
+    </Course>
+
+    <Course>
+      <Name>B</Name>
+      <Length>1800</Length>
+      <Climb>20</Climb>
+      <CourseControl type="Start">
+        <Control>S1</Control>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>100</Control>
+        <LegLength>360</LegLength>
+      </CourseControl>
+      <CourseControl type="Control">
+        <Control>999</Control>
+        <LegLength>200</LegLength>
+      </CourseControl>
+      <CourseControl type="Finish">
+        <Control>F1</Control>
+        <LegLength>118</LegLength>
+      </CourseControl>
+    </Course>
+
+    <ClassCourseAssignment numberOfCompetitors="15">
+      <ClassName>A</ClassName>
+      <CourseName>A</CourseName>
+    </ClassCourseAssignment>
+    <ClassCourseAssignment numberOfCompetitors="10">
+      <ClassName>B</ClassName>
+      <CourseName>B</CourseName>
+    </ClassCourseAssignment>
+  </RaceCourseData>
+</CourseData>

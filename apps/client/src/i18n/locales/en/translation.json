@@ -524,6 +524,7 @@
         "Loading": "Loading event settings",
         "Tabs": {
           "General": "General",
+          "Files": "Files",
           "Classes": "Classes"
         },
         "Classes": {
@@ -573,6 +574,33 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "BirthYearInvalid": "Enter a valid year (min. 4 digits).",
           "BirthYearRangeError": "Birth year from must be less than or equal to birth year to."
+        },
+        "Files": {
+          "StartList": "Start list",
+          "Courses": "Courses",
+          "CoursesHelper": "Course definitions are not required for basic functionality. They are used to match split times correctly; individual control positions are not processed.",
+          "Results": "Results",
+          "Available": "Available",
+          "Missing": "Not available",
+          "Locked": "Upload not available yet",
+          "CoursesDisabledHint": "Upload a start list or results first to enable course data upload.",
+          "RadioControls": {
+            "Title": "Select which controls to show as online split times",
+            "Helper": "Competitors and spectators will see intermediate times at the selected controls.",
+            "NoCourseData": "Upload course data first to configure online controls.",
+            "NoControls": "No controls available.",
+            "SaveError": "Could not update the radio control.",
+            "Selected": "Selected radio controls: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Creator",
+            "ExternalStatus": "Status",
+            "LastSuccessfulImport": "Last import",
+            "SuccessCount": "Successful",
+            "SkippedCount": "Skipped",
+            "CopyHash": "Copy hash",
+            "HashCopied": "Hash copied!"
+          }
         }
       },
       "Detail": {

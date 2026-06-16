@@ -1,7 +1,6 @@
 import { config } from '@/config';
 import { formatDate } from '@/lib/utils';
 import { TFunction } from 'i18next';
-import { DragDropFile } from '../../../components/organisms';
 import { ENDPOINTS } from '../../../lib/api/endpoints';
 import { Event, EventFormData } from '../../../types';
 import { DangerZoneCard } from './DangerZoneCard';
@@ -40,8 +39,6 @@ export const GeneralSettingsTab = ({
 
   return (
     <div className="grid items-start gap-8">
-      <DragDropFile eventId={eventId} />
-
       <div className="columns-1 md:columns-2 xl:columns-3 gap-6 space-y-6">
         <div className="break-inside-avoid">
           <EventInfoCard t={t} initialData={initialData} />

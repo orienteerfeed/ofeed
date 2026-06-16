@@ -59,6 +59,7 @@
         "Loading": "Loading event settings",
         "Tabs": {
           "General": "General",
+          "Files": "Fichiers",
           "Classes": "Classes"
         },
         "Classes": {
@@ -108,6 +109,33 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "BirthYearInvalid": "Entrez une année valide (min. 4 chiffres).",
           "BirthYearRangeError": "L'année de début doit être inférieure ou égale à l'année de fin."
+        },
+        "Files": {
+          "StartList": "Liste de départ",
+          "Courses": "Circuits",
+          "CoursesHelper": "Les définitions de circuits ne sont pas nécessaires au fonctionnement de base. Elles servent à associer correctement les temps intermédiaires ; les positions des postes individuels ne sont pas traitées.",
+          "Results": "Résultats",
+          "Available": "Disponible",
+          "Missing": "Non disponible",
+          "Locked": "Import non disponible pour l'instant",
+          "CoursesDisabledHint": "Importez d'abord une liste de départ ou des résultats pour pouvoir importer les données de circuits.",
+          "RadioControls": {
+            "Title": "Sélectionnez les postes à afficher comme temps intermédiaires en ligne",
+            "Helper": "Les concurrents et les spectateurs verront les temps intermédiaires aux postes sélectionnés.",
+            "NoCourseData": "Importez d'abord les données de circuits pour configurer les postes en ligne.",
+            "NoControls": "Aucun poste disponible.",
+            "SaveError": "Impossible de mettre à jour le poste radio.",
+            "Selected": "Postes radio sélectionnés : {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Créateur",
+            "ExternalStatus": "Statut",
+            "LastSuccessfulImport": "Dernière importation",
+            "SuccessCount": "Réussis",
+            "SkippedCount": "Ignorés",
+            "CopyHash": "Copier le hash",
+            "HashCopied": "Hash copié !"
+          }
         }
       },
       "Form": {
