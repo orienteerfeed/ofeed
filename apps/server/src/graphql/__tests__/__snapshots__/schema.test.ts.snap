@@ -45,6 +45,7 @@ type Class {
   competitors: [Competitor!]
   competitorsCount: Int!
   controlsCount: Int
+  course: Course
   currentFee: Float
   eventId: String!
   externalId: String
@@ -123,6 +124,17 @@ type Country {
   countryCode: String!
   countryName: String!
   events: [Event!]
+}
+
+type Course {
+  climb: Float
+  controlsCount: Int
+  courseFamily: String
+  eventId: String!
+  externalId: String
+  id: Int!
+  length: Float
+  name: String!
 }
 
 input CreateUserCardInput {
