@@ -185,6 +185,10 @@ model Event {
   importStates                 EventImportState[]
   meosEventBindings            EventMeosBinding[]
 
+  controls                     Control[]
+  courses                      Course[]
+  courseMaps                   CourseMap[]
+
   @@index([externalSource, externalEventId])
   @@fulltext([name, organizer, location])
 }
@@ -196,6 +200,8 @@ model Class {
   externalId       String?      @db.VarChar(64)
   name             String
   startName        String?
+  course           Course?      @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  courseId         Int?         @db.UnsignedInt
   length           Int?
   climb            Int?
   controlsCount    Int?
@@ -217,6 +223,142 @@ model Class {
   startSlotVacancies StartSlotVacancy[]
 
   @@unique([eventId, externalId], map: "Class_event_external_uq")
+  @@index([courseId], map: "Class_course_idx")
+}
+
+model CourseMap {
+  id              Int             @id @default(autoincrement()) @db.UnsignedInt
+
+  event           Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId         String
+
+  externalId      String?         @db.VarChar(64)
+
+  scale           Float?
+
+  mapTopLeftX     Float?
+  mapTopLeftY     Float?
+  mapBottomRightX Float?
+  mapBottomRightY Float?
+  mapPositionUnit MapPositionUnit @default(MM)
+
+  courses         Course[]
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([eventId, externalId], map: "CourseMap_event_external_uq")
+  @@index([eventId], map: "CourseMap_event_idx")
+}
+
+model Control {
+  id             Int             @id @default(autoincrement()) @db.UnsignedInt
+
+  event          Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId        String
+
+  code           String          @db.VarChar(32)
+  type           ControlType     @default(CONTROL)
+
+  // Application-level flag for radio / online controls.
+  // Used to show split times in the UI.
+  // Managed manually in administration.
+  // Must be preserved by default during IOF CourseData reimport.
+  radio          Boolean         @default(false)
+
+  name           String?         @db.VarChar(128)
+
+  latitude       Float?
+  longitude      Float?
+  altitude       Float?
+
+  mapX           Float?
+  mapY           Float?
+  mapUnit        MapPositionUnit @default(MM)
+
+  courseControls CourseControl[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([eventId, code], map: "Control_event_code_uq")
+  @@index([eventId, type], map: "Control_event_type_idx")
+  @@index([eventId, radio], map: "Control_event_radio_idx")
+}
+
+model Course {
+  id             Int             @id @default(autoincrement()) @db.UnsignedInt
+
+  event          Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId        String
+
+  externalId     String?         @db.VarChar(64)
+  name           String          @db.VarChar(128)
+
+  // IOF Course/CourseFamily.
+  // A family/group of forked course variants, relay variants, mass-start variants, etc.
+  courseFamily   String?         @db.VarChar(128)
+
+  length         Float?
+  climb          Float?
+  controlsCount  Int?            @db.UnsignedInt
+
+  externalMapId  String?         @db.VarChar(64)
+
+  map            CourseMap?      @relation(fields: [mapId], references: [id], onDelete: SetNull)
+  mapId          Int?            @db.UnsignedInt
+
+  classes        Class[]
+  courseControls CourseControl[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([eventId, name], map: "Course_event_name_uq")
+  @@index([eventId], map: "Course_event_idx")
+  @@index([courseFamily], map: "Course_family_idx")
+  @@index([mapId], map: "Course_map_idx")
+}
+
+model CourseControl {
+  id                 Int                      @id @default(autoincrement()) @db.UnsignedInt
+
+  course             Course                   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId           Int                      @db.UnsignedInt
+
+  control            Control?                 @relation(fields: [controlId], references: [id], onDelete: SetNull)
+  controlId          Int?                     @db.UnsignedInt
+
+  // Original control code from XML.
+  // Always store this, even if the relation to Control cannot be resolved.
+  controlCode        String                   @db.VarChar(32)
+
+  // Position in the course: 1 = start, 2 = first control, etc.
+  sequence           Int                      @db.UnsignedInt
+
+  type               ControlType?
+
+  mapText            String?                  @db.VarChar(32)
+
+  mapTextX           Float?
+  mapTextY           Float?
+  mapTextUnit        MapPositionUnit?
+
+  // Length of the leg from the previous CourseControl to this control.
+  legLength          Float?
+
+  score              Float?
+
+  randomOrder        Boolean                  @default(false)
+  specialInstruction CourseControlInstruction @default(NONE)
+  tapedRouteLength   Float?
+
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  @@unique([courseId, sequence], map: "CourseControl_course_sequence_uq")
+  @@index([courseId], map: "CourseControl_course_idx")
+  @@index([controlId], map: "CourseControl_control_idx")
 }
 
 model StartSlotVacancy {
@@ -632,4 +774,25 @@ enum ExternalResultsSyncStatus {
 enum ImportSourceType {
   IOF_XML
   MEOS
+}
+
+enum ControlType {
+  CONTROL
+  START
+  FINISH
+  CROSSING_POINT
+  END_OF_MARKED_ROUTE
+}
+
+enum MapPositionUnit {
+  PX
+  MM
+}
+
+enum CourseControlInstruction {
+  NONE
+  TAPED_ROUTE
+  FUNNEL_TAPED_ROUTE
+  MANDATORY_CROSSING_POINT
+  MANDATORY_OUT_OF_BOUNDS_AREA_PASSAGE
 }

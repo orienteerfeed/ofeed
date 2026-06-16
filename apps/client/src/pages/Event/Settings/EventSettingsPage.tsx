@@ -10,6 +10,7 @@ import { MainPageLayout } from '../../../templates/MainPageLayout';
 import { Event, EventFormData, StartMode } from '../../../types';
 import { ClassesSettingsTab } from './ClassesSettingsTab';
 import { EventVisibilityCard } from './EventVisibilityCard';
+import { FilesSettingsTab } from './FilesSettingsTab';
 import { GeneralSettingsTab } from './GeneralSettingsTab';
 
 interface EventData {
@@ -73,7 +74,12 @@ export const EventSettingsPage = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const search = useSearch({ strict: false }) as { tab?: string };
-  const activeTab = search.tab === 'classes' ? 'classes' : 'general';
+  const activeTab =
+    search.tab === 'classes'
+      ? 'classes'
+      : search.tab === 'files'
+        ? 'files'
+        : 'general';
 
   const [password, setPassword] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
@@ -201,6 +207,10 @@ export const EventSettingsPage = () => {
                 label: t('Pages.Event.Settings.Tabs.General'),
               },
               {
+                value: 'files',
+                label: t('Pages.Event.Settings.Tabs.Files'),
+              },
+              {
                 value: 'classes',
                 label: t('Pages.Event.Settings.Tabs.Classes'),
               },
@@ -208,7 +218,7 @@ export const EventSettingsPage = () => {
             value={activeTab}
             onValueChange={handleTabChange}
             className="space-y-6"
-            listClassName="grid w-full grid-cols-2 max-w-md"
+            listClassName="grid w-full grid-cols-3 max-w-md"
           >
             <GeneralSettingsTab
               key="general"
@@ -222,6 +232,7 @@ export const EventSettingsPage = () => {
               onEventDataDeleted={handleEventDataDeleted}
               refetch={refetch}
             />
+            <FilesSettingsTab key="files" t={t} eventId={eventId} />
             <ClassesSettingsTab
               key="classes"
               t={t}

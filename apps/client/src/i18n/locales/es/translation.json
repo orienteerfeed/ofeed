@@ -524,6 +524,7 @@
         "Loading": "Cargando ajustes del evento",
         "Tabs": {
           "General": "General",
+          "Files": "Archivos",
           "Classes": "Classes"
         },
         "Classes": {
@@ -573,6 +574,33 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "BirthYearInvalid": "Introduce un año válido (mín. 4 dígitos).",
           "BirthYearRangeError": "El año de inicio debe ser menor o igual al año de fin."
+        },
+        "Files": {
+          "StartList": "Lista de salida",
+          "Courses": "Recorridos",
+          "CoursesHelper": "Las definiciones de recorridos no son necesarias para la funcionalidad básica. Se usan para asociar correctamente los tiempos parciales; no se procesan las posiciones de los controles individuales.",
+          "Results": "Resultados",
+          "Available": "Disponible",
+          "Missing": "No disponible",
+          "Locked": "Carga no disponible todavía",
+          "CoursesDisabledHint": "Sube primero una lista de salida o resultados para habilitar la carga de datos de recorridos.",
+          "RadioControls": {
+            "Title": "Selecciona qué controles mostrar como tiempos intermedios en línea",
+            "Helper": "Los competidores y espectadores podrán ver los tiempos parciales en los controles seleccionados.",
+            "NoCourseData": "Sube primero los datos de recorridos para configurar los controles en línea.",
+            "NoControls": "No hay controles disponibles.",
+            "SaveError": "No se pudo actualizar el control radio.",
+            "Selected": "Controles radio seleccionados: {{count}}"
+          },
+          "ImportState": {
+            "Creator": "Creador",
+            "ExternalStatus": "Estado",
+            "LastSuccessfulImport": "Última importación",
+            "SuccessCount": "Exitosos",
+            "SkippedCount": "Omitidos",
+            "CopyHash": "Copiar hash",
+            "HashCopied": "¡Hash copiado!"
+          }
         }
       },
       "Detail": {

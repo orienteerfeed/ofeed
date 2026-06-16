@@ -18,6 +18,8 @@ import { error, success, validation } from '../../utils/responseApi.js';
 import { publishUpdatedClasses } from '../competitor/competitor-change.service.js';
 import { detectCompetitorChanges } from '../competitor/competitor-change.helpers.js';
 import { upsertOrganisation } from '../event/organisation.helpers.js';
+import { getEventFilesStatus, importCourseDataXml } from '../course/index.js';
+import type { EventFilesStatus } from '../course/index.js';
 import { notifyWinnerChanges } from './../event/event.winner-cache.service.js';
 import { getCompetitorKeys, loadCompetitorCache, upsertCompetitor } from './upload.competitor.js';
 import { IOF_WRITE_CONCURRENCY } from './upload.constants.js';
@@ -26,6 +28,7 @@ import {
   getIofDateTime,
   getIofIntegerValue,
   getIofTextValue,
+  inferClassSex,
   toSex,
 } from './upload.iof.helpers.js';
 import { bulkCreateStartSlotVacancies } from '../start-slot-vacancy/start-slot-vacancy.service.js';
@@ -264,6 +267,10 @@ const validateIofXml = async (
   return returnState;
 };
 
+function canUploadCourseData(status: Pick<EventFilesStatus, 'startList' | 'results'>): boolean {
+  return status.startList.available || status.results.available;
+}
+
 /**
  * Retrieves a list of classes for a given event.
  *
@@ -407,10 +414,7 @@ async function upsertClass(
   const className = classDetails.Name.shift() ?? sourceClassId ?? '';
   const existingClass = findExistingClass(sourceClassId, className, dbClassLists);
 
-  // Determine sex based on the first letter of the class name
-  const inferredSex: Sex =
-    className.charAt(0) === 'H' ? 'M' : className.charAt(0) === 'D' ? 'F' : 'B';
-  const classSex = toSex(classDetails.ATTR?.sex, inferredSex);
+  const classSex = toSex(classDetails.ATTR?.sex, inferClassSex(className));
   const maxNumberOfCompetitors =
     getIofIntegerValue(classDetails.ATTR?.maxNumberOfCompetitors) ?? null;
   const resultListMode = toResultListMode(classDetails.ATTR?.resultListMode);
@@ -1145,6 +1149,34 @@ async function handleIofXmlUpload(
     });
   }
 
+  if (iofXmlType.some((type) => type.jsonKey === 'CourseData')) {
+    let eventFilesStatus: EventFilesStatus;
+    try {
+      eventFilesStatus = await getEventFilesStatus(prisma, eventId);
+    } catch (err: any) {
+      logUploadEvent(c, 'error', 'IOF upload failed while checking CourseData prerequisites', {
+        ...uploadDetails,
+        success: false,
+        stage: 'course-data-prerequisites',
+        reason: err?.message || 'Unable to check CourseData prerequisites',
+      });
+      return c.json(error(err.message, 500), 500);
+    }
+
+    if (!canUploadCourseData(eventFilesStatus)) {
+      const message =
+        'CourseData upload requires an existing start list or result data for this event.';
+      logUploadEvent(c, 'warn', 'IOF upload CourseData rejected: missing prerequisites', {
+        ...uploadDetails,
+        success: false,
+        stage: 'course-data-prerequisites',
+        startListAvailable: eventFilesStatus.startList.available,
+        resultsAvailable: eventFilesStatus.results.available,
+      });
+      return c.json(validation(message, 422), 422);
+    }
+  }
+
   let dbClassLists;
   try {
     dbClassLists = await getClassLists(eventId);
@@ -1302,6 +1334,24 @@ async function handleIofXmlUpload(
             success: false,
             stage: 'processed-course-data',
             courseCount: Array.isArray(courseData) ? courseData.length : 0,
+          });
+
+          // Populate the dedicated course-data tables (Control / Course /
+          // CourseControl / CourseMap) and Class.courseId assignments. Manually
+          // managed Control.radio flags are preserved across reimports.
+          const courseImportResult = await importCourseDataXml(
+            eventId,
+            xmlBuffer.toString('utf-8'),
+          );
+          logUploadEvent(c, 'info', 'IOF upload CourseData tables imported', {
+            ...uploadDetails,
+            success: false,
+            stage: 'imported-course-data-tables',
+            coursesImported: courseImportResult.coursesImported,
+            controlsImported: courseImportResult.controlsImported,
+            courseControlsImported: courseImportResult.courseControlsImported,
+            classesAssigned: courseImportResult.classesAssigned,
+            radioControlsPreserved: courseImportResult.radioControlsPreserved,
           });
         }
       }),
@@ -1633,6 +1683,7 @@ export function registerUploadRoutes(router: AppOpenAPI) {
 export const parseXmlForTesting = {
   parseXml,
   checkXmlType,
+  canUploadCourseData,
   upsertCompetitor,
   findExistingClass,
   getCompetitorKeys,

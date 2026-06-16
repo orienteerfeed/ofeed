@@ -107,6 +107,18 @@ type Competitor {
   updatedAt: DateTime!
 }
 
+type Control {
+  altitude: Float
+  code: String!
+  eventId: String!
+  id: Int!
+  latitude: Float
+  longitude: Float
+  name: String
+  radio: Boolean!
+  type: String!
+}
+
 type Country {
   countryCode: String!
   countryName: String!
@@ -253,6 +265,43 @@ enum EventEntriesStatus {
   OPEN
 }
 
+type EventFilesCoursesStatus {
+  available: Boolean!
+  controlsCount: Int!
+  courseControlsCount: Int!
+  coursesCount: Int!
+  source: String
+}
+
+type EventFilesRadioControl {
+  code: String!
+  id: Int!
+  radio: Boolean!
+  type: String!
+}
+
+type EventFilesResultsStatus {
+  available: Boolean!
+  competitorsCount: Int!
+  competitorsWithResultDataCount: Int!
+  source: String
+}
+
+type EventFilesStartListStatus {
+  available: Boolean!
+  classesCount: Int!
+  competitorsCount: Int!
+  competitorsWithStartTimeCount: Int!
+  source: String
+}
+
+type EventFilesStatus {
+  courses: EventFilesCoursesStatus!
+  radioControls: [EventFilesRadioControl!]!
+  results: EventFilesResultsStatus!
+  startList: EventFilesStartListStatus!
+}
+
 enum EventFilter {
   ALL
   RECENT
@@ -263,6 +312,17 @@ enum EventFilter {
 enum EventFormat {
   ScoreO
   Standard
+}
+
+type EventImportState {
+  creator: String
+  externalStatus: String
+  lastSuccessfulImportAt: DateTime
+  payloadType: String!
+  rawHash: String!
+  skippedCount: Int!
+  sourceType: String!
+  successCount: Int!
 }
 
 enum EventLifecycleStatus {
@@ -339,6 +399,16 @@ enum ExternalEventProvider {
   ORIS
 }
 
+type LeafletCoursePoint {
+  code: String!
+  latitude: Float!
+  legLength: Float
+  longitude: Float!
+  radio: Boolean!
+  sequence: Int!
+  type: String!
+}
+
 input LoginInput {
   password: password_String_NotNull_maxLength_255!
   username: username_String_NotNull_maxLength_255!
@@ -363,6 +433,7 @@ type Mutation {
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
   signup(input: UserInput): ResponseMessage
+  updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
@@ -412,6 +483,8 @@ type Query {
   competitorsByOrganisation(eventId: String!, organisation: String, organisationId: Int): [Competitor!]
   competitorsByTeam(id: Int!): [Competitor!]
   countries: [Country!]!
+  courseLeafletPoints(classId: Int!): [LeafletCoursePoint!]!
+  courseRadioControls(classId: Int!): [RadioCoursePoint!]!
   currencies: [Currency!]!
   currentUser: User!
   currentUserCards: [UserCard!]!
@@ -419,6 +492,8 @@ type Query {
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
   eventEntryAvailability(eventId: String!): EntryAvailability
+  eventFilesStatus(eventId: String!): EventFilesStatus!
+  eventImportStates(eventId: String!): [EventImportState!]!
   events(input: EventsInput): EventConnection!
   eventsBySport(sportId: Int!): [Event!]
   eventsByUser(userId: Int!): [Event!]
@@ -432,6 +507,14 @@ type Query {
   sports: [Sport!]!
   teamById(id: Int!): Team!
   teamsByClass(id: Int!): [Team!]
+}
+
+type RadioCoursePoint {
+  code: String!
+  latitude: Float
+  legLength: Float
+  longitude: Float
+  sequence: Int!
 }
 
 type ResetResponse {
