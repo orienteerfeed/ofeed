@@ -57,6 +57,10 @@ describe('storeCompetitor start slot vacancy cleanup', () => {
     (prismaMock.class as { findUnique: ReturnType<typeof vi.fn> }).findUnique.mockResolvedValue({
       id: 42,
       eventId: 'event-1',
+      startMode: 'FreeStart',
+      maxNumberOfCompetitors: 100,
+      event: { defaultStartMode: 'StartList' },
+      _count: { competitors: 0, startSlotVacancies: 0 },
     });
   });
 
@@ -132,11 +136,12 @@ describe('updateCompetitor start slot vacancy cleanup', () => {
     (prismaMock.competitor as { findFirst: ReturnType<typeof vi.fn> }).findFirst.mockResolvedValue({
       id: 7,
       classId: 42,
-      class: { eventId: 'event-1' },
+      class: { eventId: 'event-1', startMode: 'FreeStart', event: { defaultStartMode: 'StartList' } },
       firstname: 'Jana',
       lastname: 'Nova',
       organisation: null,
       startTime: null,
+      bibNumber: null,
       status: 'Inactive',
       splits: [],
     });
