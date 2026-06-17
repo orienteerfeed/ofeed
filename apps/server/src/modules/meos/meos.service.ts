@@ -296,7 +296,7 @@ export async function upsertMeosCompetitor(
   const dbOrgId = getOrganisationId(orgRef);
   const organisation = getOrganisationName(orgRef);
   const shortName = getOrganisationShortName(orgRef);
-  const status = mapMopStat(cmp.stat);
+  const status = cmp.competing && cmp.stat === 0 ? 'Active' : mapMopStat(cmp.stat);
   const startTime =
     cmp.startTenths !== undefined && cmp.startTenths > 0
       ? meosTimeToDateTime(cmp.startTenths, event.date, event.timezone)

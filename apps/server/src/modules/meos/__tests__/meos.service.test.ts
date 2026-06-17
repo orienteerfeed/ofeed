@@ -254,6 +254,7 @@ describe('upsertMeosCompetitor', () => {
     const cmp = {
       id: 101,
       card: 1234567,
+      competing: false,
       firstname: 'Štěpán',
       lastname: 'Novák',
       classId: 5,
@@ -311,6 +312,7 @@ describe('upsertMeosCompetitor', () => {
     const cmp = {
       id: 23,
       card: 502266,
+      competing: false,
       firstname: 'Lennart',
       lastname: 'Ekman',
       classId: 1,
@@ -355,6 +357,7 @@ describe('upsertMeosCompetitor', () => {
     const cmp = {
       id: 200,
       card: 0,
+      competing: false,
       firstname: 'X',
       lastname: 'Y',
       classId: 999,
@@ -386,6 +389,7 @@ describe('upsertMeosCompetitor', () => {
     const cmp = {
       id: 101,
       card: undefined,
+      competing: false,
       firstname: 'A',
       lastname: 'B',
       classId: 5,
@@ -411,6 +415,7 @@ describe('upsertMeosCompetitor', () => {
     const cmp = {
       id: 102,
       card: 999,
+      competing: false,
       firstname: 'D',
       lastname: 'E',
       classId: 5,
@@ -646,6 +651,7 @@ describe('processMopDocument', () => {
         {
           id: 101,
           card: 0,
+          competing: false,
           firstname: 'A',
           lastname: 'B',
           classId: 5,
@@ -681,6 +687,7 @@ describe('processMopDocument', () => {
         {
           id: 101,
           card: undefined,
+          competing: false,
           firstname: 'A',
           lastname: 'B',
           classId: 5,

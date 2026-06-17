@@ -35,6 +35,7 @@ export interface MopSplit {
 export interface MopCompetitor {
   id: number;
   card?: number;
+  competing: boolean;
   firstname: string;
   lastname: string;
   classId?: number;
@@ -245,6 +246,7 @@ function parseCompetitor(el: Element): MopCompetitor {
     return {
       id,
       card,
+      competing: false,
       firstname: '',
       lastname: '',
       stat: 0,
@@ -252,6 +254,8 @@ function parseCompetitor(el: Element): MopCompetitor {
       delete: true,
     };
   }
+
+  const competing = el.getAttribute('competing') === 'true';
 
   const baseEl = el.getElementsByTagName('base')[0];
   let firstname = '';
@@ -296,6 +300,7 @@ function parseCompetitor(el: Element): MopCompetitor {
     classId,
     orgId,
     bibNumber: baseEl ? positiveIntAttr(baseEl, 'bib') : positiveIntAttr(el, 'bib'),
+    competing,
     stat,
     startTenths,
     runTimeTenths,
