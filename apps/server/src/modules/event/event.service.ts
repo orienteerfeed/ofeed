@@ -1,4 +1,4 @@
-import { DatabaseError, ValidationError } from '../../exceptions/index.js';
+import { ConflictError, DatabaseError, ValidationError } from '../../exceptions/index.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma, type Event as PrismaEvent } from '../../generated/prisma/client.js';
 import type { Origin, ProtocolType, ResultStatus } from '../../generated/prisma/enums.js';
@@ -21,7 +21,8 @@ import {
   organisationSelect,
   upsertOrganisation,
 } from './organisation.helpers.js';
-import { deleteMatchingStartSlotVacancy } from '../start-slot-vacancy/start-slot-vacancy.service.js';
+import { deleteMatchingStartSlotVacancy, restoreStartSlotVacancy } from '../start-slot-vacancy/start-slot-vacancy.service.js';
+import { resolveEffectiveStartMode } from '@repo/shared';
 import {
   eventSlugMaxLength,
   eventSlugMinLength,
@@ -748,7 +749,13 @@ export const updateCompetitor = async (
       select: {
         id: true,
         classId: true,
-        class: { select: { eventId: true } },
+        class: {
+          select: {
+            eventId: true,
+            startMode: true,
+            event: { select: { defaultStartMode: true } },
+          },
+        },
         firstname: true,
         lastname: true,
         nationality: true,
@@ -790,6 +797,75 @@ export const updateCompetitor = async (
     // It is forbidden to change the state of the runner after he has finished
     if (!['Inactive', 'DidNotStart', 'Active'].includes(dbResponseCompetitor.status)) {
       throw new ValidationError(`Could not change status of runner that has already finished`);
+    }
+  }
+
+  // Determine whether startTime is actually changing to a different value
+  const oldStartTime = dbResponseCompetitor.startTime;
+  const isStartTimeInPayload = Object.prototype.hasOwnProperty.call(updateData, 'startTime');
+  const newStartTimeValue = isStartTimeInPayload
+    ? (updateData.startTime as Date | null | undefined)
+    : undefined;
+  const startTimeIsChanging =
+    isStartTimeInPayload &&
+    (oldStartTime?.getTime() ?? null) !== (newStartTimeValue?.getTime() ?? null);
+
+  // Effective start mode of the current (old) class — used to decide vacancy restore
+  const oldEffectiveStartMode = resolveEffectiveStartMode(
+    dbResponseCompetitor.class.startMode,
+    dbResponseCompetitor.class.event.defaultStartMode,
+  );
+
+  // If classId is also changing, load the new class to determine its start mode
+  const incomingClassId = Object.prototype.hasOwnProperty.call(updateData, 'classId')
+    ? (updateData.classId as number | null | undefined)
+    : undefined;
+  const targetClassId =
+    incomingClassId != null ? incomingClassId : dbResponseCompetitor.classId;
+  const classIsChanging = targetClassId !== dbResponseCompetitor.classId;
+
+  let targetEffectiveStartMode = oldEffectiveStartMode;
+  if (classIsChanging) {
+    let targetClass;
+    try {
+      targetClass = await prisma.class.findUnique({
+        where: { id: targetClassId },
+        select: {
+          startMode: true,
+          event: { select: { defaultStartMode: true } },
+        },
+      });
+    } catch (err) {
+      console.error('Database error:', err);
+      throw new DatabaseError('Error retrieving target class information.');
+    }
+    if (!targetClass) {
+      throw new ValidationError(`Class with ID ${targetClassId} does not exist.`);
+    }
+    targetEffectiveStartMode = resolveEffectiveStartMode(
+      targetClass.startMode,
+      targetClass.event.defaultStartMode,
+    );
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updateData, 'bibNumber') && updateData.bibNumber != null) {
+    const bibNumber = toIntegerId(updateData.bibNumber as string | number);
+    let bibConflict;
+    try {
+      bibConflict = await prisma.competitor.findFirst({
+        where: {
+          bibNumber,
+          class: { eventId: dbResponseCompetitor.class.eventId },
+          NOT: { id: competitorIdNumber },
+        },
+        select: { id: true },
+      });
+    } catch (err) {
+      console.error('Database error:', err);
+      throw new DatabaseError('Error checking bib number uniqueness.');
+    }
+    if (bibConflict) {
+      throw new ConflictError(`Bib number ${bibNumber} is already assigned to another competitor in this event.`);
     }
   }
 
@@ -885,20 +961,42 @@ export const updateCompetitor = async (
       ...(organisationIdUpdate ?? {}),
     } as Prisma.CompetitorUncheckedUpdateInput;
 
-    // Update the competitor, refresh splits, and free up the matching start
-    // slot vacancy for the resulting class + start time, all atomically. Using
-    // the persisted row's class/start time covers both classId and startTime
-    // changes without re-deriving the merged values here.
+    // Update the competitor, refresh splits, and atomically manage start slot
+    // vacancies when the start time changes.
     await prisma.$transaction(async (tx) => {
+      // When moving to a new start time in a StartList class, verify the new
+      // slot exists before committing the update.
+      if (startTimeIsChanging && newStartTimeValue && targetEffectiveStartMode !== 'FreeStart') {
+        const vacancy = await tx.startSlotVacancy.findUnique({
+          where: {
+            classId_startTime: { classId: targetClassId, startTime: newStartTimeValue },
+          },
+          select: { id: true },
+        });
+        if (!vacancy) {
+          throw new ConflictError('The requested start time is not available.');
+        }
+      }
+
       const updated = await tx.competitor.update({
         where: { id: competitorIdNumber },
         data: competitorUpdateData,
       });
 
+      // Consume the new start slot vacancy (no-op when no vacancy exists).
       await deleteMatchingStartSlotVacancy(tx, {
         classId: updated.classId,
         startTime: updated.startTime,
       });
+
+      // Free the old start slot vacancy when the start time actually changed.
+      if (startTimeIsChanging && oldStartTime && oldEffectiveStartMode !== 'FreeStart') {
+        await restoreStartSlotVacancy(tx, {
+          classId: dbResponseCompetitor.classId,
+          startTime: oldStartTime,
+          bibNumber: dbResponseCompetitor.bibNumber,
+        });
+      }
 
       if (splits && Array.isArray(splits)) {
         await tx.split.deleteMany({
@@ -915,6 +1013,7 @@ export const updateCompetitor = async (
       }
     });
   } catch (err) {
+    if (err instanceof ConflictError) throw err;
     console.error('Failed to update competitor:', err);
     throw new DatabaseError('Error updating competitor');
   }
@@ -992,7 +1091,14 @@ export const storeCompetitor = async (
   try {
     existingClass = await prisma.class.findUnique({
       where: { id: classIdNumber },
-      select: { id: true, eventId: true },
+      select: {
+        id: true,
+        eventId: true,
+        startMode: true,
+        maxNumberOfCompetitors: true,
+        event: { select: { defaultStartMode: true } },
+        _count: { select: { competitors: true, startSlotVacancies: true } },
+      },
     });
   } catch (err) {
     console.error('Database error:', err);
@@ -1001,6 +1107,55 @@ export const storeCompetitor = async (
 
   if (!existingClass) {
     throw new ValidationError(`Class with ID ${classId} does not exist.`);
+  }
+
+  const effectiveStartMode = resolveEffectiveStartMode(
+    existingClass.startMode,
+    existingClass.event.defaultStartMode,
+  );
+
+  if (effectiveStartMode !== 'FreeStart' && !competitorData.startTime) {
+    throw new ValidationError('startTime is required for this start mode.');
+  }
+
+  const { maxNumberOfCompetitors } = existingClass;
+  const competitorCount = existingClass._count.competitors;
+  const vacancyCount = existingClass._count.startSlotVacancies;
+
+  if (maxNumberOfCompetitors === null) {
+    throw new ConflictError('This category does not have a competitor limit configured.');
+  }
+
+  if (maxNumberOfCompetitors === 0) {
+    throw new ConflictError('Registration for this category is not allowed.');
+  }
+
+  if (competitorCount >= maxNumberOfCompetitors) {
+    throw new ConflictError('This category is full.');
+  }
+
+  if (effectiveStartMode !== 'FreeStart' && vacancyCount === 0) {
+    throw new ConflictError('No start slots are available for this category.');
+  }
+
+  if (competitorData.bibNumber != null) {
+    const bibNumber = toIntegerId(competitorData.bibNumber as string | number);
+    let bibConflict;
+    try {
+      bibConflict = await prisma.competitor.findFirst({
+        where: {
+          bibNumber,
+          class: { eventId: existingClass.eventId },
+        },
+        select: { id: true },
+      });
+    } catch (err) {
+      console.error('Database error:', err);
+      throw new DatabaseError('Error checking bib number uniqueness.');
+    }
+    if (bibConflict) {
+      throw new ConflictError(`Bib number ${bibNumber} is already assigned to another competitor in this event.`);
+    }
   }
 
   // Resolve organisation relation (event-scoped) for the new competitor
@@ -1016,6 +1171,19 @@ export const storeCompetitor = async (
     // Create the competitor and free up the matching start slot vacancy (if the
     // competitor has a start time) atomically in a single transaction.
     newCompetitor = await prisma.$transaction(async (tx) => {
+      if (effectiveStartMode !== 'FreeStart') {
+        const startTimeDate = new Date(competitorData.startTime as string | number | Date);
+        const vacancy = await tx.startSlotVacancy.findUnique({
+          where: {
+            classId_startTime: { classId: classIdNumber, startTime: startTimeDate },
+          },
+          select: { id: true },
+        });
+        if (!vacancy) {
+          throw new ConflictError('The requested start time is not available.');
+        }
+      }
+
       const created = await tx.competitor.create({
         data: {
           classId: classIdNumber,
@@ -1055,6 +1223,7 @@ export const storeCompetitor = async (
       return created;
     });
   } catch (err) {
+    if (err instanceof ConflictError) throw err;
     console.error('Error creating competitor:', err);
     throw new DatabaseError('Error storing competitor.');
   }
@@ -1216,7 +1385,7 @@ export const deleteEventCompetitorAndProtocols = async (eventId: string, competi
     // 1. Verify that the competitor belongs to the given event
     const competitor = await prisma.competitor.findUnique({
       where: { id: competitorId },
-      select: { classId: true },
+      select: { classId: true, startTime: true, bibNumber: true },
     });
 
     if (!competitor) {
@@ -1224,29 +1393,40 @@ export const deleteEventCompetitorAndProtocols = async (eventId: string, competi
       return;
     }
 
-    // 2. Check if the competitor's class is associated with the event
-    const classExists = await prisma.class.findFirst({
-      where: { id: competitor.classId, eventId: eventId },
+    // 2. Check if the competitor's class is associated with the event; load start mode
+    const eventClass = await prisma.class.findFirst({
+      where: { id: competitor.classId, eventId },
+      select: {
+        id: true,
+        startMode: true,
+        event: { select: { defaultStartMode: true } },
+      },
     });
 
-    if (!classExists) {
+    if (!eventClass) {
       console.warn(`Competitor ${competitorId} does not belong to event ${eventId}.`);
       return;
     }
 
-    // 3. Delete Protocols linked to the competitor
-    await prisma.protocol.deleteMany({
-      where: { competitorId: competitorId },
-    });
+    const effectiveStartMode = resolveEffectiveStartMode(
+      eventClass.startMode,
+      eventClass.event.defaultStartMode,
+    );
 
-    // 4. Delete Splits linked to the competitor
-    await prisma.split.deleteMany({
-      where: { competitorId: competitorId },
-    });
+    // 3–5. Delete protocols, splits and the competitor atomically, then restore
+    //      the start slot vacancy when the class uses a start list.
+    await prisma.$transaction(async (tx) => {
+      await tx.protocol.deleteMany({ where: { competitorId } });
+      await tx.split.deleteMany({ where: { competitorId } });
+      await tx.competitor.delete({ where: { id: competitorId } });
 
-    // 5. Delete the Competitor
-    await prisma.competitor.delete({
-      where: { id: competitorId },
+      if (effectiveStartMode !== 'FreeStart' && competitor.startTime) {
+        await restoreStartSlotVacancy(tx, {
+          classId: competitor.classId,
+          startTime: competitor.startTime,
+          bibNumber: competitor.bibNumber,
+        });
+      }
     });
 
     // Publish changes to subscribers

@@ -119,6 +119,33 @@ export function deleteStartSlotVacancy(prisma: AppPrismaClient, id: number) {
 }
 
 /**
+ * Restore a vacancy after a competitor is removed from a StartList class.
+ *
+ * Intended to be called inside the same transaction as the competitor delete so
+ * that the slot is freed atomically. Uses `skipDuplicates` so an already-present
+ * vacancy (e.g. from a data-repair operation) is silently ignored.
+ *
+ * - No-op when `startTime` is null.
+ */
+export async function restoreStartSlotVacancy(
+  tx: Prisma.TransactionClient,
+  input: CreateStartSlotVacancyInput,
+): Promise<void> {
+  if (!input.startTime) return;
+
+  await tx.startSlotVacancy.createMany({
+    data: [
+      {
+        classId: input.classId,
+        startTime: input.startTime,
+        bibNumber: input.bibNumber ?? null,
+      },
+    ],
+    skipDuplicates: true,
+  });
+}
+
+/**
  * Delete the vacancy (if any) that matches a competitor's class + start time.
  *
  * Intended to be called inside the same transaction as the competitor

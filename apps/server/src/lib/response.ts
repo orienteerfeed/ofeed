@@ -34,7 +34,7 @@ export type LegacyValidationEnvelope = {
   errors: unknown;
 };
 
-const LEGACY_STATUS_CODES = [200, 201, 400, 401, 403, 404, 413, 422, 500] as const;
+const LEGACY_STATUS_CODES = [200, 201, 400, 401, 403, 404, 409, 413, 422, 500] as const;
 
 function normalizeLegacyStatusCode(statusCode: number, fallback: number) {
   const matched = LEGACY_STATUS_CODES.find(code => code == statusCode);

@@ -3,7 +3,7 @@ import { z } from '@hono/zod-openapi';
 import type { Context, Handler } from 'hono';
 import sharp from 'sharp';
 
-import { AuthenticationError, DatabaseError, ValidationError } from '../../exceptions/index.js';
+import { AuthenticationError, ConflictError, DatabaseError, ValidationError } from '../../exceptions/index.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import {
   parseJsonObjectSafe,
@@ -1987,6 +1987,8 @@ export function registerSecureEventRoutes(router) {
 
           if (error instanceof ValidationError) {
             return res.status(422).json(validationResponse(error.message, 422));
+          } else if (error instanceof ConflictError) {
+            return res.status(409).json(errorResponse(error.message, 409));
           } else if (error instanceof AuthenticationError) {
             return res.status(401).json(errorResponse(error.message, 401));
           } else if (error instanceof DatabaseError) {
@@ -2094,6 +2096,8 @@ export function registerSecureEventRoutes(router) {
       });
       if (error instanceof ValidationError) {
         return res.status(422).json(validationResponse(error.message, res.statusCode));
+      } else if (error instanceof ConflictError) {
+        return res.status(409).json(errorResponse(error.message, 409));
       } else if (error instanceof AuthenticationError) {
         return res.status(401).json(errorResponse(error.message, res.statusCode));
       } else if (error instanceof DatabaseError) {
