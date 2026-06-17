@@ -300,6 +300,15 @@ function toStartMode(value: string | undefined): StartModeValue | null {
   return null;
 }
 
+function hasOwnProperty(record: object | null | undefined, property: string): boolean {
+  return Object.prototype.hasOwnProperty.call(record ?? {}, property);
+}
+
+function getClassStartExtensionRecord(extensions: unknown): Record<string, unknown> | null {
+  const ext = Array.isArray(extensions) ? extensions[0] : extensions;
+  return ext && typeof ext === 'object' ? (ext as Record<string, unknown>) : null;
+}
+
 /**
  * Parses an IOF `<Class><Extensions>` block for the OrienteerFeed start-mode
  * override and optional start window. Returns nulls when the extension or its
@@ -313,11 +322,10 @@ export function parseClassStartExtension(
   startWindowFrom: Date | null;
   startWindowTo: Date | null;
 } {
-  const ext = Array.isArray(extensions) ? extensions[0] : extensions;
-  if (!ext || typeof ext !== 'object') {
+  const record = getClassStartExtensionRecord(extensions);
+  if (!record) {
     return { startMode: null, startWindowFrom: null, startWindowTo: null };
   }
-  const record = ext as Record<string, unknown>;
   const startMode = toStartMode(getIofTextValue(record.StartMode));
   const windowRaw = Array.isArray(record.StartWindow) ? record.StartWindow[0] : record.StartWindow;
   const window = (windowRaw && typeof windowRaw === 'object' ? windowRaw : {}) as Record<
@@ -415,13 +423,48 @@ async function upsertClass(
   const existingClass = findExistingClass(sourceClassId, className, dbClassLists);
 
   const classSex = toSex(classDetails.ATTR?.sex, inferClassSex(className));
-  const maxNumberOfCompetitors =
-    getIofIntegerValue(classDetails.ATTR?.maxNumberOfCompetitors) ?? null;
-  const resultListMode = toResultListMode(classDetails.ATTR?.resultListMode);
-  const { startMode, startWindowFrom, startWindowTo } = parseClassStartExtension(
+  const classAttr = classDetails.ATTR ?? {};
+  const hasMaxNumberOfCompetitorsAttr = hasOwnProperty(classAttr, 'maxNumberOfCompetitors');
+  const incomingMaxNumberOfCompetitors = hasMaxNumberOfCompetitorsAttr
+    ? (getIofIntegerValue(classAttr.maxNumberOfCompetitors) ?? null)
+    : undefined;
+  const maxNumberOfCompetitors = hasMaxNumberOfCompetitorsAttr
+    ? incomingMaxNumberOfCompetitors
+    : (existingClass?.maxNumberOfCompetitors ?? null);
+
+  const hasResultListModeAttr = hasOwnProperty(classAttr, 'resultListMode');
+  const incomingResultListMode = hasResultListModeAttr
+    ? toResultListMode(classAttr.resultListMode)
+    : undefined;
+  const resultListMode = hasResultListModeAttr
+    ? incomingResultListMode
+    : (existingClass?.resultListMode ?? null);
+
+  const extensionRecord = getClassStartExtensionRecord(classDetails.Extensions);
+  const startWindowRaw =
+    extensionRecord && Array.isArray(extensionRecord.StartWindow)
+      ? extensionRecord.StartWindow[0]
+      : extensionRecord?.StartWindow;
+  const startWindowRecord =
+    startWindowRaw && typeof startWindowRaw === 'object'
+      ? (startWindowRaw as Record<string, unknown>)
+      : null;
+  const hasStartModeExtension = hasOwnProperty(extensionRecord, 'StartMode');
+  const hasStartWindowFrom = hasOwnProperty(startWindowRecord, 'StartTime');
+  const hasStartWindowTo = hasOwnProperty(startWindowRecord, 'EndTime');
+  const parsedClassStartExtension = parseClassStartExtension(
     classDetails.Extensions,
     eventTimeZone,
   );
+  const startMode = hasStartModeExtension
+    ? parsedClassStartExtension.startMode
+    : (existingClass?.startMode ?? null);
+  const startWindowFrom = hasStartWindowFrom
+    ? parsedClassStartExtension.startWindowFrom
+    : (existingClass?.startWindowFrom ?? null);
+  const startWindowTo = hasStartWindowTo
+    ? parsedClassStartExtension.startWindowTo
+    : (existingClass?.startWindowTo ?? null);
 
   if (!existingClass) {
     const dbClassInsert = await prisma.class.create({

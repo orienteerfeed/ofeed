@@ -670,6 +670,126 @@ describe('processClassStarts — updated class deduplication', () => {
 
     expect(updated).toEqual([]);
   });
+
+  it('preserves existing maxNumberOfCompetitors when the XML attribute is absent', async () => {
+    const dbClassWithManualLimit = [
+      {
+        ...dbClassLists[0],
+        maxNumberOfCompetitors: 42,
+      },
+    ];
+
+    await processClassStarts(
+      'event-1',
+      [makeClassStart('C10', 'H21E', [])],
+      dbClassWithManualLimit,
+      { discipline: 'SPRINT' },
+      1,
+    );
+
+    expect(mockPrisma.class.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ maxNumberOfCompetitors: 42 }),
+      }),
+    );
+  });
+
+  it('updates maxNumberOfCompetitors when the XML attribute is present', async () => {
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [{ Id: ['C10'], Name: ['H21E'], ATTR: { maxNumberOfCompetitors: '24' } }],
+          PersonStart: [],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT' },
+      1,
+    );
+
+    expect(mockPrisma.class.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ maxNumberOfCompetitors: 24 }),
+      }),
+    );
+  });
+
+  it('preserves existing result and start settings when XML values are absent', async () => {
+    const startWindowFrom = new Date('2026-05-08T08:00:00.000Z');
+    const startWindowTo = new Date('2026-05-08T10:00:00.000Z');
+    const dbClassWithManualSettings = [
+      {
+        ...dbClassLists[0],
+        resultListMode: 'UnorderedNoTimes' as const,
+        startMode: 'FreeStart' as const,
+        startWindowFrom,
+        startWindowTo,
+      },
+    ];
+
+    await processClassStarts(
+      'event-1',
+      [makeClassStart('C10', 'H21E', [])],
+      dbClassWithManualSettings,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockPrisma.class.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          resultListMode: 'UnorderedNoTimes',
+          startMode: 'FreeStart',
+          startWindowFrom,
+          startWindowTo,
+        }),
+      }),
+    );
+  });
+
+  it('updates result and start settings when XML values are present', async () => {
+    await processClassStarts(
+      'event-1',
+      [
+        {
+          Class: [
+            {
+              Id: ['C10'],
+              Name: ['H21E'],
+              ATTR: { resultListMode: 'Unordered' },
+              Extensions: [
+                {
+                  StartMode: ['MassStart'],
+                  StartWindow: [
+                    {
+                      StartTime: ['2026-05-08T10:00:00+02:00'],
+                      EndTime: ['2026-05-08T11:30:00+02:00'],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          PersonStart: [],
+        },
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockPrisma.class.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          resultListMode: 'Unordered',
+          startMode: 'MassStart',
+          startWindowFrom: new Date('2026-05-08T08:00:00.000Z'),
+          startWindowTo: new Date('2026-05-08T09:30:00.000Z'),
+        }),
+      }),
+    );
+  });
 });
 
 describe('processClassStarts — vacant start slots', () => {
