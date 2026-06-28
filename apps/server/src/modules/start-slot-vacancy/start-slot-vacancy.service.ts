@@ -4,6 +4,10 @@ import { resolveEffectiveStartMode } from '@repo/shared';
 
 import { computeClassFee } from '../class/class.fee.js';
 import { computeClassCapacity, type CapacityMode } from '../class/class.capacity.js';
+import {
+  SYSTEM_EVENT_SERVICE_KEYS,
+  type EventServiceSystemKey,
+} from '../event/event-services.service.js';
 
 /**
  * A start slot vacancy is an empty start slot in a specific race category
@@ -202,6 +206,21 @@ export interface EntryAvailabilityClass {
   slots: EntryAvailabilitySlot[];
 }
 
+export interface EntryAvailabilityEntryAction {
+  key: EventServiceSystemKey;
+  enabled: boolean;
+  price: number | null;
+}
+
+export interface EntryAvailabilityAddOn {
+  id: number;
+  enabled: boolean;
+  name: string;
+  description: string | null;
+  price: number | null;
+  maxQuantity: number | null;
+}
+
 export interface EventEntryAvailability {
   entriesOpenAt: Date | null;
   entriesCloseAt: Date | null;
@@ -209,6 +228,8 @@ export interface EventEntryAvailability {
   vatPayer: boolean;
   vatRate: number | null;
   defaultStartMode: string;
+  entryActions: EntryAvailabilityEntryAction[];
+  addOns: EntryAvailabilityAddOn[];
   classes: EntryAvailabilityClass[];
 }
 
@@ -234,6 +255,18 @@ export async function listEventEntryAvailability(
       vatRate: true,
       lateEntryFeePercent: true,
       currency: { select: { iso4217Alpha3: true, name: true } },
+      services: {
+        select: {
+          id: true,
+          systemKey: true,
+          active: true,
+          name: true,
+          description: true,
+          price: true,
+          maxQuantity: true,
+        },
+        orderBy: [{ systemKey: 'asc' }, { id: 'asc' }],
+      },
       classes: {
         select: {
           id: true,
@@ -244,6 +277,7 @@ export async function listEventEntryAvailability(
           maxNumberOfCompetitors: true,
           startMode: true,
           fee: true,
+          lateEntryFeeDisabled: true,
           startSlotVacancies: {
             select: { id: true, startTime: true, bibNumber: true },
             orderBy: { startTime: 'asc' },
@@ -259,6 +293,11 @@ export async function listEventEntryAvailability(
 
   const now = new Date();
   const { entriesCloseAt, vatPayer, vatRate, lateEntryFeePercent } = event;
+  const systemServicesByKey = new Map(
+    event.services
+      .filter((service) => service.systemKey !== null)
+      .map((service) => [service.systemKey as EventServiceSystemKey, service]),
+  );
 
   const classes: EntryAvailabilityClass[] = event.classes.map((eventClass) => {
     const effectiveStartMode = resolveEffectiveStartMode(
@@ -273,6 +312,7 @@ export async function listEventEntryAvailability(
       now,
       entriesCloseAt,
       lateEntryFeePercent: lateEntryFeePercent?.toNumber() ?? null,
+      lateEntryFeeDisabled: eventClass.lateEntryFeeDisabled,
       vatPayer,
       vatRate: vatRate?.toNumber() ?? null,
     });
@@ -319,6 +359,24 @@ export async function listEventEntryAvailability(
     vatPayer: event.vatPayer,
     vatRate: event.vatRate?.toNumber() ?? null,
     defaultStartMode: event.defaultStartMode,
+    entryActions: SYSTEM_EVENT_SERVICE_KEYS.map((systemKey) => {
+      const service = systemServicesByKey.get(systemKey);
+      return {
+        key: systemKey,
+        enabled: service?.active ?? false,
+        price: service?.price?.toNumber() ?? null,
+      };
+    }),
+    addOns: event.services
+      .filter((service) => service.systemKey === null)
+      .map((service) => ({
+        id: service.id,
+        enabled: service.active,
+        name: service.name,
+        description: service.description,
+        price: service.price?.toNumber() ?? null,
+        maxQuantity: service.maxQuantity,
+      })),
     classes,
   };
 }

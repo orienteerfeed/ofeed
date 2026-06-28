@@ -1,11 +1,18 @@
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
-import { Clock } from 'lucide-react';
+import { Clock, RefreshCw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { Button, Experimental, Input, Select } from '@/components/atoms';
+import {
+  Button,
+  Checkbox,
+  Experimental,
+  Input,
+  Select,
+} from '@/components/atoms';
 import { cn } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/molecules';
 import { AppDataTable } from '@/components/organisms';
 import {
   Tooltip,
@@ -37,6 +44,7 @@ export const EVENT_CLASSES = gql`
       sex
       resultListMode
       fee
+      lateEntryFeeDisabled
       awardedPlaces
       startMode
     }
@@ -46,6 +54,14 @@ export const EVENT_CLASSES = gql`
 export const CLASS_UPDATE = gql`
   mutation ClassUpdate($input: UpdateClassInput!) {
     classUpdate(input: $input) {
+      message
+    }
+  }
+`;
+
+export const LOAD_CLASS_DEFINITIONS_FROM_EXTERNAL_SYSTEM = gql`
+  mutation LoadClassDefinitionsFromExternalSystem($eventId: String!) {
+    loadClassDefinitionsFromExternalSystem(eventId: $eventId) {
       message
     }
   }
@@ -65,6 +81,7 @@ export type ClassRow = {
   sex: string | null;
   resultListMode: string | null;
   fee: number | null;
+  lateEntryFeeDisabled: boolean;
   awardedPlaces: number | null;
   startMode: string | null;
 };
@@ -77,6 +94,8 @@ interface ClassesSettingsTabProps {
   eventId: string;
   isRelay: boolean;
   timezone: string;
+  externalSource?: 'ORIS' | 'EVENTOR' | null;
+  externalEventId?: string | null;
 }
 
 function toIntOrNull(value: string): number | null {
@@ -115,15 +134,23 @@ export const ClassesSettingsTab = ({
   eventId,
   isRelay,
   timezone,
+  externalSource,
+  externalEventId,
 }: ClassesSettingsTabProps) => {
-  const { data, loading, error } = useQuery<EventClassesData>(EVENT_CLASSES, {
-    variables: { eventId },
-  });
+  const { data, loading, error, refetch } = useQuery<EventClassesData>(
+    EVENT_CLASSES,
+    {
+      variables: { eventId },
+    }
+  );
   const [classUpdate] = useMutation(CLASS_UPDATE);
+  const [loadClassDefinitions, { loading: loadingClassDefinitions }] =
+    useMutation(LOAD_CLASS_DEFINITIONS_FROM_EXTERNAL_SYSTEM);
 
   const [rows, setRows] = useState<ClassRow[]>([]);
   const committedRowsRef = useRef<ClassRow[]>([]);
   const [startTimesClass, setStartTimesClass] = useState<ClassRow | null>(null);
+  const [confirmLoadOpen, setConfirmLoadOpen] = useState(false);
 
   useEffect(() => {
     if (data?.eventClasses) {
@@ -132,7 +159,9 @@ export const ClassesSettingsTab = ({
     }
   }, [data?.eventClasses]);
 
-  const columnCount = isRelay ? 13 : 11;
+  const columnCount = isRelay ? 14 : 12;
+  const canLoadClassDefinitions =
+    Boolean(externalSource && externalEventId) && rows.length > 0;
 
   // Age is stored in the DB, but entered/displayed as a birth year for clarity.
   // Conversion is pinned to the current calendar year:
@@ -197,6 +226,30 @@ export const ClassesSettingsTab = ({
     setRows(current => applyPatch(current, classId, patch));
   };
 
+  const handleLoadClassDefinitions = async () => {
+    try {
+      await loadClassDefinitions({ variables: { eventId } });
+      const refreshed = await refetch();
+      if (refreshed.data?.eventClasses) {
+        setRows(refreshed.data.eventClasses);
+        committedRowsRef.current = refreshed.data.eventClasses;
+      }
+      toast({
+        title: t('Operations.Success', { ns: 'common' }),
+        description: t('Pages.Event.Settings.Classes.LoadDefinitions.Success'),
+      });
+    } catch (mutationError) {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : t('Pages.Event.Settings.Classes.LoadDefinitions.Error'),
+        variant: 'error',
+      });
+    }
+  };
+
   const sexOptions = [
     { value: 'B', label: t('Sex.B', { ns: 'common' }) },
     { value: 'M', label: t('Sex.M', { ns: 'common' }) },
@@ -246,16 +299,35 @@ export const ClassesSettingsTab = ({
 
   return (
     <div className="space-y-3">
-      <div>
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {t('Pages.Event.Settings.Classes.Title')}
-          </h2>
-          <Experimental />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold tracking-tight">
+              {t('Pages.Event.Settings.Classes.Title')}
+            </h2>
+            <Experimental />
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t('Pages.Event.Settings.Classes.Description')}
+          </p>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('Pages.Event.Settings.Classes.Description')}
-        </p>
+        {canLoadClassDefinitions && (
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2 self-start"
+            disabled={loadingClassDefinitions}
+            onClick={() => setConfirmLoadOpen(true)}
+          >
+            <RefreshCw
+              className={cn(
+                'h-4 w-4',
+                loadingClassDefinitions && 'animate-spin'
+              )}
+            />
+            {t('Pages.Event.Settings.Classes.LoadDefinitions.Action')}
+          </Button>
+        )}
       </div>
 
       <AppDataTable<ClassRow>
@@ -300,6 +372,24 @@ export const ClassesSettingsTab = ({
               </TableHead>
               <TableHead>
                 {t('Pages.Event.Settings.Classes.Columns.Fee')}
+              </TableHead>
+              <TableHead>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex cursor-help items-center underline decoration-dotted underline-offset-4">
+                        {t(
+                          'Pages.Event.Settings.Classes.Columns.LateEntryFeeDisabled'
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" sideOffset={6}>
+                      {t(
+                        'Pages.Event.Settings.Classes.LateEntryFeeDisabledTooltip'
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </TableHead>
               <TableHead>
                 {t('Pages.Event.Settings.Classes.Columns.StartMode')}
@@ -603,6 +693,36 @@ export const ClassesSettingsTab = ({
             </TableCell>
 
             <TableCell>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-center">
+                      <Checkbox
+                        aria-label={t(
+                          'Pages.Event.Settings.Classes.LateEntryFeeDisabledAria',
+                          {
+                            name: row.name,
+                          }
+                        )}
+                        checked={row.lateEntryFeeDisabled}
+                        onCheckedChange={value => {
+                          const next = value === true;
+                          updateLocal(row.id, { lateEntryFeeDisabled: next });
+                          void commit(row.id, { lateEntryFeeDisabled: next });
+                        }}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6}>
+                    {t(
+                      'Pages.Event.Settings.Classes.LateEntryFeeDisabledTooltip'
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableCell>
+
+            <TableCell>
               <Select
                 value={row.startMode ?? NONE}
                 options={startModeOptions}
@@ -654,6 +774,22 @@ export const ClassesSettingsTab = ({
         open={startTimesClass !== null}
         onOpenChange={open => {
           if (!open) setStartTimesClass(null);
+        }}
+      />
+      <ConfirmDialog
+        open={confirmLoadOpen}
+        onOpenChange={setConfirmLoadOpen}
+        title={t('Pages.Event.Settings.Classes.LoadDefinitions.ConfirmTitle')}
+        description={t(
+          'Pages.Event.Settings.Classes.LoadDefinitions.ConfirmDescription'
+        )}
+        confirmText={t(
+          'Pages.Event.Settings.Classes.LoadDefinitions.ConfirmButton'
+        )}
+        cancelText={t('Operations.Cancel', { ns: 'common' })}
+        onConfirm={() => {
+          setConfirmLoadOpen(false);
+          void handleLoadClassDefinitions();
         }}
       />
     </div>

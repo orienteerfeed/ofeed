@@ -525,7 +525,70 @@
         "Tabs": {
           "General": "Obecné",
           "Files": "Soubory",
-          "Classes": "Kategorie"
+          "Classes": "Kategorie",
+          "Services": "Služby"
+        },
+        "Services": {
+          "Title": "Služby",
+          "Description": "Nastav služby nabízené u této akce, sazby a navýšení startovného pro pozdní přihlášky.",
+          "LateEntry": {
+            "Title": "Pozdní přihlášky",
+            "Percent": "Procentuální navýšení startovného",
+            "Helper": "Nastav procentuální navýšení oproti základnímu vkladu. Prázdné pole znamená bez navýšení. Kategorie mohou mít navýšení vypnuté v záložce Kategorie.",
+            "Invalid": "Zadej nezápornou procentuální hodnotu."
+          },
+          "SystemTitle": "Systémové služby",
+          "CustomTitle": "Vlastní služby",
+          "Columns": {
+            "Active": "Aktivní",
+            "Name": "Název",
+            "Description": "Popis",
+            "Price": "Cena",
+            "MaxQuantity": "Max. počet",
+            "Actions": "Akce"
+          },
+          "System": {
+            "CARD_CHANGE": {
+              "Name": "Změna čísla čipu",
+              "Description": "Změna čísla SI čipu závodníka."
+            },
+            "NAME_CHANGE": {
+              "Name": "Změna jména",
+              "Description": "Změna jména závodníka."
+            },
+            "CLASS_CHANGE": {
+              "Name": "Změna kategorie",
+              "Description": "Změna kategorie závodníka."
+            },
+            "START_TIME_CHANGE": {
+              "Name": "Změna startovního času",
+              "Description": "Změna startovního času závodníka."
+            },
+            "ENTRY_CANCEL": {
+              "Name": "Odhláška",
+              "Description": "Zrušení registrace na akci."
+            },
+            "CARD_RENTAL": {
+              "Name": "Půjčení čipu",
+              "Description": "Půjčení SI čipu závodníkovi."
+            }
+          },
+          "Placeholders": {
+            "Name": "Název služby",
+            "Description": "Popis",
+            "Price": "Cena",
+            "MaxQuantity": "Max. počet"
+          },
+          "New": "Nová služba",
+          "Add": "Přidat",
+          "Update": "Uložit",
+          "Edit": "Upravit",
+          "Unlimited": "Neomezeno",
+          "EmptyCustom": "Zatím nejsou přidané žádné vlastní služby.",
+          "SaveError": "Službu se nepodařilo uložit.",
+          "DeleteError": "Službu se nepodařilo odstranit.",
+          "ActiveAria": "Aktivovat službu {{name}}",
+          "PriceAria": "Cena služby {{name}}"
         },
         "Classes": {
           "Title": "Kategorie",
@@ -541,6 +604,7 @@
             "Sex": "Pohlaví",
             "ResultListMode": "Režim výsledků",
             "Fee": "Startovné",
+            "LateEntryFeeDisabled": "Nezvyšovat",
             "StartMode": "Režim startu",
             "AwardedPlaces": "Vyhlašovaná místa",
             "Actions": "Akce"
@@ -569,9 +633,19 @@
             "Close": "Zavřít",
             "LoadError": "Startovní časy se nepodařilo načíst."
           },
+          "LoadDefinitions": {
+            "Action": "Načíst definice z externího IS",
+            "ConfirmTitle": "Přepsat nastavení kategorií?",
+            "ConfirmDescription": "Aktuálně nakonfigurované startovné, věkové omezení, pohlaví a nastavení pozdního startovného u shodných kategorií bude přepsáno daty z externího IS.",
+            "ConfirmButton": "Načíst a přepsat",
+            "Success": "Definice kategorií byly načteny z externího IS.",
+            "Error": "Definice kategorií se nepodařilo načíst."
+          },
           "MaxCompetitorsErrorPositive": "Zadejte nezáporné celé číslo.",
           "MaxCompetitorsErrorBelowCount": "Nelze nastavit méně, než je aktuální počet přihlášených závodníků ({{count}}).",
           "MaxCompetitorsOverCapacityTooltip": "Počet přihlášených závodníků ({{count}}) překračuje nastavený limit. Upravte limit nebo odeberte závodníky.",
+          "LateEntryFeeDisabledTooltip": "Startovné nezvýšit pro pozdní přihlášky.",
+          "LateEntryFeeDisabledAria": "Nezvyšovat startovné pro pozdní přihlášky v kategorii {{name}}",
           "BirthYearInvalid": "Zadejte platný rok (min. 4 číslice).",
           "BirthYearRangeError": "Ročník od musí být menší nebo roven ročníku do."
         },
@@ -764,7 +838,7 @@
         "Published": "Zveřejněno",
         "EntriesOpenAt": "Přihlášky otevřeny od",
         "EntriesOpenAtHelper": "Nech prázdné, pokud mají přihlášky zůstat zatím zavřené.",
-        "EntriesCloseAt": "Přihlášky uzavřeny od",
+        "EntriesCloseAt": "Přihlášky otevřeny do",
         "EntriesCloseAtHelper": "Nech prázdné, pokud nechceš zatím nastavit pevnou uzávěrku.",
         "ResultsOfficialManuallySetAt": "Finální výsledky potvrzeny",
         "ResultsOfficialManuallySetAtHelper": "Použij jen pro lokální akce bez napojení na ORIS nebo Eventor.",
@@ -864,8 +938,8 @@
       },
       "EntriesResults": {
         "Card": {
-          "Title": "Zveřejnění a termíny",
-          "Description": "Nastav termíny přihlášek, čas zveřejnění dat a stav výsledků."
+          "Title": "Zveřejnění",
+          "Description": "Nastav čas zveřejnění dat a stav výsledků."
         },
         "ResultsOfficial": "Výsledky jsou finální",
         "ResultsOfficialHelper": "Použij tento přepínač u lokálních akcí, jakmile jsou výsledky finální.",

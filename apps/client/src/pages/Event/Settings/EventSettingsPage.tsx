@@ -12,6 +12,7 @@ import { ClassesSettingsTab } from './ClassesSettingsTab';
 import { EventVisibilityCard } from './EventVisibilityCard';
 import { FilesSettingsTab } from './FilesSettingsTab';
 import { GeneralSettingsTab } from './GeneralSettingsTab';
+import { ServicesSettingsTab } from './ServicesSettingsTab';
 
 interface EventData {
   event: Event;
@@ -77,9 +78,11 @@ export const EventSettingsPage = () => {
   const activeTab =
     search.tab === 'classes'
       ? 'classes'
-      : search.tab === 'files'
-        ? 'files'
-        : 'general';
+      : search.tab === 'services'
+        ? 'services'
+        : search.tab === 'files'
+          ? 'files'
+          : 'general';
 
   const [password, setPassword] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
@@ -214,11 +217,15 @@ export const EventSettingsPage = () => {
                 value: 'classes',
                 label: t('Pages.Event.Settings.Tabs.Classes'),
               },
+              {
+                value: 'services',
+                label: t('Pages.Event.Settings.Tabs.Services'),
+              },
             ]}
             value={activeTab}
             onValueChange={handleTabChange}
             className="space-y-6"
-            listClassName="grid w-full grid-cols-3 max-w-md"
+            listClassName="grid w-full grid-cols-4 max-w-xl"
           >
             <GeneralSettingsTab
               key="general"
@@ -239,6 +246,17 @@ export const EventSettingsPage = () => {
               eventId={eventId}
               isRelay={data.event.relay ?? false}
               timezone={data.event.timezone || 'UTC'}
+              externalSource={data.event.externalSource ?? null}
+              externalEventId={data.event.externalEventId ?? null}
+            />
+            <ServicesSettingsTab
+              key="services"
+              t={t}
+              eventId={eventId}
+              event={data.event}
+              onUpdated={async () => {
+                await refetch();
+              }}
             />
           </Tabs>
         </div>

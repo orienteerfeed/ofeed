@@ -8,6 +8,7 @@ import {
   findClassById,
   findEventClasses,
   findEventClassesByIds,
+  loadClassDefinitionsFromExternalSystemForGraphQL,
   updateClassFeeForGraphQL,
   updateClassForGraphQL,
 } from './class.service.js';
@@ -19,6 +20,7 @@ import {
  */
 const FEE_SELECT = {
   fee: true,
+  lateEntryFeeDisabled: true,
   event: {
     select: {
       entriesCloseAt: true,
@@ -31,6 +33,7 @@ const FEE_SELECT = {
 
 type ClassWithFeeConfig = {
   fee: { toNumber(): number } | null;
+  lateEntryFeeDisabled: boolean;
   event: {
     entriesCloseAt: Date | null;
     vatPayer: boolean;
@@ -46,6 +49,7 @@ function resolveComputedFee(eventClass: ClassWithFeeConfig): ComputedClassFee {
     now: new Date(),
     entriesCloseAt: event.entriesCloseAt,
     lateEntryFeePercent: event.lateEntryFeePercent?.toNumber() ?? null,
+    lateEntryFeeDisabled: eventClass.lateEntryFeeDisabled,
     vatPayer: event.vatPayer,
     vatRate: event.vatRate?.toNumber() ?? null,
   });
@@ -89,6 +93,7 @@ export const ClassRef = builder.prismaObject('Class', {
       select: { fee: true },
       resolve: (eventClass) => eventClass.fee?.toNumber() ?? null,
     }),
+    lateEntryFeeDisabled: t.exposeBoolean('lateEntryFeeDisabled'),
     currentFee: t.float({
       nullable: true,
       select: FEE_SELECT,
@@ -172,6 +177,7 @@ const UpdateClassInputRef = builder.inputType('UpdateClassInput', {
     startMode: t.field({ type: StartModeRef, required: false }),
     awardedPlaces: t.int({ required: false }),
     fee: t.float({ required: false }),
+    lateEntryFeeDisabled: t.boolean({ required: false }),
   }),
 });
 
@@ -205,6 +211,26 @@ builder.mutationFields((t) => ({
         startMode: args.input.startMode,
         awardedPlaces: args.input.awardedPlaces,
         fee: args.input.fee,
+        lateEntryFeeDisabled: args.input.lateEntryFeeDisabled,
       }).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update class')),
+  }),
+  loadClassDefinitionsFromExternalSystem: t.field({
+    type: ResponseMessageRef,
+    args: {
+      eventId: t.arg.string({ required: true }),
+    },
+    resolve: async (_root, args, context) => {
+      const result = await loadClassDefinitionsFromExternalSystemForGraphQL(
+        context.prisma,
+        context.auth,
+        args.eventId,
+      ).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to load class definitions from external system'),
+      );
+
+      return {
+        message: `Class definitions loaded for ${result.updatedCount} classes`,
+      };
+    },
   }),
 }));
