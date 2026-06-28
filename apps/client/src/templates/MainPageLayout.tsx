@@ -40,6 +40,11 @@ export const MainPageLayout: React.FC<EventPageLayoutProps> = ({
         external: true,
       },
       {
+        path: externalLinks.board,
+        label: t('Templates.Routes.Board'),
+        external: true,
+      },
+      {
         path: externalLinks.github,
         label: t('Templates.Routes.GitHub'),
         external: true,
