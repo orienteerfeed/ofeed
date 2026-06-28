@@ -986,7 +986,8 @@
               "CreateSuccess": "MeOS-koppling skapad.",
               "DeleteSuccess": "MeOS-koppling borttagen."
             }
-          }
+          },
+          "ViewProject": "Visa projekt"
         },
         "PrintWindow": {
           "Header": "OFeed",

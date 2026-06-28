@@ -987,7 +987,8 @@
               "CreateSuccess": "MeOS vazba byla úspěšně vytvořena.",
               "DeleteSuccess": "MeOS vazba byla odstraněna."
             }
-          }
+          },
+          "ViewProject": "Zobrazit projekt"
         },
         "PrintWindow": {
           "Header": "OFeed",
