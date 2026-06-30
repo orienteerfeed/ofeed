@@ -17,8 +17,11 @@ import { useMutation } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import {
   Copy,
+  ExternalLink,
   Eye,
   EyeOff,
+  Github,
+  Globe,
   Loader2,
   Printer,
   Send,
@@ -80,9 +83,35 @@ interface QrTabPanelProps {
   codeSize: number;
   errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
   qrBackgroundColor: string;
+  projectUrl?: string;
+  projectLinkLabel?: string;
+  projectIcon?: ComponentType<{ className?: string }>;
 }
 
 const panelClassName = 'rounded-lg border bg-card p-6 shadow-sm';
+
+const ProjectLink = ({
+  url,
+  label,
+  icon: Icon,
+}: {
+  url: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+}) => (
+  <div className="mt-5 pt-4 border-t flex items-center justify-end">
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span>{label}</span>
+      <ExternalLink className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-100 group-hover:translate-x-px group-hover:-translate-y-px transition-all duration-150" />
+    </a>
+  </div>
+);
 
 const QrTabPanel = ({
   description,
@@ -103,6 +132,9 @@ const QrTabPanel = ({
   codeSize,
   errorCorrectionLevel,
   qrBackgroundColor,
+  projectUrl,
+  projectLinkLabel,
+  projectIcon,
 }: QrTabPanelProps) => {
   const qrImageSettings = qrCenterIconSrc
     ? {
@@ -171,6 +203,13 @@ const QrTabPanel = ({
           <span className="sr-only">{openLabel}</span>
         </Button>
       </div>
+      {projectUrl && projectLinkLabel && projectIcon && (
+        <ProjectLink
+          url={projectUrl}
+          label={projectLinkLabel}
+          icon={projectIcon}
+        />
+      )}
     </div>
   );
 };
@@ -568,6 +607,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                 codeSize={codeSize}
                 errorCorrectionLevel={errorCorrectionLevel}
                 qrBackgroundColor={qrBackgroundColor}
+                projectUrl="https://stigning.se/checklist/news.html"
+                projectLinkLabel={t(
+                  'Pages.Event.Integration.Card.ViewProject'
+                )}
+                projectIcon={Globe}
               />
             </TabsContent>
 
@@ -710,6 +754,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     {t('Pages.Event.Integration.Card.Tabs.QuickEvent.CopyLink')}
                   </Button>
                 </div>
+                <ProjectLink
+                  url="https://github.com/Quick-Box/quickevent"
+                  label={t('Pages.Event.Integration.Card.ViewProject')}
+                  icon={Github}
+                />
               </div>
             </TabsContent>
 
@@ -737,6 +786,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                 codeSize={codeSize}
                 errorCorrectionLevel={errorCorrectionLevel}
                 qrBackgroundColor={qrBackgroundColor}
+                projectUrl="https://github.com/orienteerfeed/ofeed-sidroid-connector"
+                projectLinkLabel={t(
+                  'Pages.Event.Integration.Card.ViewProject'
+                )}
+                projectIcon={Github}
               />
             </TabsContent>
 
@@ -953,6 +1007,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     </Button>
                   </div>
                 )}
+                <ProjectLink
+                  url="https://github.com/melinsoftware/meos/"
+                  label={t('Pages.Event.Integration.Card.ViewProject')}
+                  icon={Github}
+                />
               </div>
             </TabsContent>
           </Tabs>

@@ -1061,7 +1061,8 @@
               "CreateSuccess": "Vinculación MeOS creada correctamente.",
               "DeleteSuccess": "Vinculación MeOS eliminada."
             }
-          }
+          },
+          "ViewProject": "Ver proyecto"
         },
         "PrintWindow": {
           "Header": "OFeed",

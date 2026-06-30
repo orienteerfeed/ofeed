@@ -528,7 +528,8 @@
               "CreateSuccess": "MeOS-Verknüpfung erfolgreich erstellt.",
               "DeleteSuccess": "MeOS-Verknüpfung entfernt."
             }
-          }
+          },
+          "ViewProject": "Projekt ansehen"
         }
       },
       "PublishingStatus": {

@@ -1061,7 +1061,8 @@
               "CreateSuccess": "MeOS binding created successfully.",
               "DeleteSuccess": "MeOS binding removed."
             }
-          }
+          },
+          "ViewProject": "View project"
         },
         "PrintWindow": {
           "Header": "OFeed",
