@@ -601,7 +601,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                         type="button"
                         onClick={() =>
                           copyWithToast(
-                            apiEventsEndpoint,
+                            config.BASE_API_URL,
                             t('Pages.Event.Integration.Toast.CopyBaseUrl')
                           )
                         }
@@ -610,7 +610,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                         className="h-6 w-6 p-0 shrink-0"
                       >
                         <Copy className="h-3 w-3" />
-                        <span className="sr-only">Copy API endpoint</span>
+                        <span className="sr-only">Copy API base URL</span>
                       </Button>
                     </div>
                   </div>
