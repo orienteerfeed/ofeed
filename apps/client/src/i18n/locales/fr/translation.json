@@ -185,7 +185,7 @@
             "LoadError": "Could not load start times."
           },
           "LoadDefinitions": {
-            "Action": "Charger les définitions depuis l'IS externe",
+            "Action": "Charger les définitions depuis {{provider}}",
             "ConfirmTitle": "Écraser les paramètres des catégories ?",
             "ConfirmDescription": "Les frais, limites d'âge, sexe et paramètres de frais d'inscription tardive des catégories correspondantes seront écrasés par les données de l'IS externe.",
             "ConfirmButton": "Charger et écraser",
@@ -225,6 +225,28 @@
             "SkippedCount": "Ignorés",
             "CopyHash": "Copier le hash",
             "HashCopied": "Hash copié !"
+          }
+        }
+      },
+      "Integration": {
+        "Card": {
+          "MissingPasswordTitle": "Create event password first",
+          "MissingPasswordDescription": "Generate the password in the Event Password card before configuring the apps.",
+          "CopyCredentials": "Copy credentials",
+          "OpenApp": "Open {{appName}}",
+          "Tabs": {
+            "MeOS": {
+              "Description": "Connect this event to MeOS. Generate a binding and use the URLs and competition ID below in MeOS.",
+              "MopUrl": "MOP URL",
+              "MipUrl": "MIP URL",
+              "ActiveBindings": "Active bindings",
+              "NoBinding": "No MeOS binding configured yet.",
+              "CompetitionId": "Competition ID",
+              "CreateBindingButton": "Generate binding",
+              "DeleteBinding": "Remove binding",
+              "CreateSuccess": "MeOS binding created successfully.",
+              "DeleteSuccess": "MeOS binding removed."
+            }
           }
         }
       },

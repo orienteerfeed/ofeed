@@ -634,7 +634,7 @@
             "LoadError": "Startovní časy se nepodařilo načíst."
           },
           "LoadDefinitions": {
-            "Action": "Načíst definice z externího IS",
+            "Action": "Načíst definice z {{provider}}",
             "ConfirmTitle": "Přepsat nastavení kategorií?",
             "ConfirmDescription": "Aktuálně nakonfigurované startovné, věkové omezení, pohlaví a nastavení pozdního startovného u shodných kategorií bude přepsáno daty z externího IS.",
             "ConfirmButton": "Načíst a přepsat",
@@ -1052,7 +1052,8 @@
             },
             "MeOS": {
               "Description": "Propoj tuto akci s MeOS. Kliknutím na tlačítko vygeneruj vazbu — OFeed automaticky přidělí ID soutěže. Nakonfiguruj MeOS, aby odesílal výsledky na níže uvedenou URL s daným ID.",
-              "UploadUrl": "Upload URL",
+              "MopUrl": "MOP URL",
+              "MipUrl": "MIP URL",
               "ActiveBindings": "Aktivní vazby",
               "NoBinding": "Zatím není nakonfigurována žádná MeOS vazba.",
               "CompetitionId": "ID soutěže",

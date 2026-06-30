@@ -162,6 +162,12 @@ export const ClassesSettingsTab = ({
   const columnCount = isRelay ? 14 : 12;
   const canLoadClassDefinitions =
     Boolean(externalSource && externalEventId) && rows.length > 0;
+  const externalSourceLabel = externalSource
+    ? t(
+        `Pages.Event.Form.Import.Providers.${externalSource}`,
+        externalSource === 'EVENTOR' ? 'Eventor' : 'ORIS'
+      )
+    : '';
 
   // Age is stored in the DB, but entered/displayed as a birth year for clarity.
   // Conversion is pinned to the current calendar year:
@@ -325,7 +331,9 @@ export const ClassesSettingsTab = ({
                 loadingClassDefinitions && 'animate-spin'
               )}
             />
-            {t('Pages.Event.Settings.Classes.LoadDefinitions.Action')}
+            {t('Pages.Event.Settings.Classes.LoadDefinitions.Action', {
+              provider: externalSourceLabel,
+            })}
           </Button>
         )}
       </div>

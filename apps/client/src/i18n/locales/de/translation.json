@@ -518,7 +518,8 @@
             },
             "MeOS": {
               "Description": "Verknüpfe dieses Event mit MeOS. Klicke auf den Button, um eine Verknüpfung zu erstellen — OFeed weist automatisch eine Wettkampf-ID zu. Konfiguriere MeOS, Ergebnisse über die unten stehende URL mit dieser ID an OFeed zu senden.",
-              "UploadUrl": "Upload-URL",
+              "MopUrl": "MOP URL",
+              "MipUrl": "MIP-URL",
               "ActiveBindings": "Aktive Verknüpfungen",
               "NoBinding": "Noch keine MeOS-Verknüpfung konfiguriert.",
               "CompetitionId": "Wettkampf-ID",
@@ -839,7 +840,7 @@
             "LoadError": "Could not load start times."
           },
           "LoadDefinitions": {
-            "Action": "Definitionen aus externem IS laden",
+            "Action": "Definitionen aus {{provider}} laden",
             "ConfirmTitle": "Klasseneinstellungen überschreiben?",
             "ConfirmDescription": "Startgeld, Altersgrenzen, Geschlecht und Einstellung für Nachmeldegebühren werden für passende Klassen mit Daten aus dem externen IS überschrieben.",
             "ConfirmButton": "Laden und überschreiben",

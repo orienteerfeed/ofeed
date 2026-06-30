@@ -58,12 +58,36 @@ describe('rest router registry', () => {
     expect(response.status).toBe(401);
   });
 
-  it('mounts the MeOS upload router before the authenticated upload router', () => {
+  it('mounts the MeOS router under /rest/v1/meos', async () => {
+    const app = new Hono();
+    app.route('/', restRouter as any);
+
+    const response = await app.request('http://localhost/rest/v1/meos/mip');
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain('status="BADCMP"');
+  });
+
+  it('does not mount legacy MeOS routes', async () => {
+    const app = new Hono();
+    app.route('/', restRouter as any);
+
+    const oldMopResponse = await app.request('http://localhost/rest/v1/upload/meos', {
+      method: 'POST',
+    });
+    const oldMipResponse = await app.request('http://localhost/rest/v1/events/event-1/meos/mip');
+
+    expect(oldMopResponse.status).toBe(401);
+    expect(oldMipResponse.status).toBe(401);
+  });
+
+  it('mounts the MeOS router outside the authenticated upload router', () => {
     const meosIndex = REST_ROUTE_REGISTRY.findIndex((entry) => entry.router === meosRouter);
     const uploadIndex = REST_ROUTE_REGISTRY.findIndex((entry) => entry.router === uploadRouter);
 
     expect(meosIndex).toBeGreaterThanOrEqual(0);
     expect(uploadIndex).toBeGreaterThanOrEqual(0);
-    expect(meosIndex).toBeLessThan(uploadIndex);
+    expect(REST_ROUTE_REGISTRY[meosIndex]?.path).toBe('/rest/v1/meos');
+    expect(REST_ROUTE_REGISTRY[uploadIndex]?.path).toBe('/rest/v1/upload');
   });
 });

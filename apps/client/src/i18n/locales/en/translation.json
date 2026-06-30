@@ -634,7 +634,7 @@
             "LoadError": "Could not load start times."
           },
           "LoadDefinitions": {
-            "Action": "Load definitions from external IS",
+            "Action": "Load definitions from {{provider}}",
             "ConfirmTitle": "Overwrite class settings?",
             "ConfirmDescription": "The currently configured fee, age range, sex, and late-entry fee setting for matching classes will be overwritten with data from the external IS.",
             "ConfirmButton": "Load and overwrite",
@@ -1051,7 +1051,8 @@
             },
             "MeOS": {
               "Description": "Connect this event to MeOS. Click the button to generate a binding — OFeed assigns a competition ID automatically. Configure MeOS to send results to OFeed using the URL and ID below.",
-              "UploadUrl": "Upload URL",
+              "MopUrl": "MOP URL",
+              "MipUrl": "MIP URL",
               "ActiveBindings": "Active bindings",
               "NoBinding": "No MeOS binding configured yet.",
               "CompetitionId": "Competition ID",

@@ -634,7 +634,7 @@
             "LoadError": "Could not load start times."
           },
           "LoadDefinitions": {
-            "Action": "Ladda definitioner från externt IS",
+            "Action": "Ladda definitioner från {{provider}}",
             "ConfirmTitle": "Skriv över klassinställningar?",
             "ConfirmDescription": "Avgift, åldersgränser, kön och inställning för sen anmälningsavgift skrivs över för matchande klasser med data från det externa IS.",
             "ConfirmButton": "Ladda och skriv över",
@@ -1051,7 +1051,8 @@
             },
             "MeOS": {
               "Description": "Koppla den här tävlingen till MeOS. Klicka på knappen för att skapa en koppling — OFeed tilldelar automatiskt ett tävlings-ID. Konfigurera MeOS att skicka resultat till OFeed via URL:en nedan med det angivna ID:t.",
-              "UploadUrl": "Uppladdnings-URL",
+              "MopUrl": "MOP URL",
+              "MipUrl": "MIP-URL",
               "ActiveBindings": "Aktiva kopplingar",
               "NoBinding": "Ingen MeOS-koppling konfigurerad ännu.",
               "CompetitionId": "Tävlings-ID",

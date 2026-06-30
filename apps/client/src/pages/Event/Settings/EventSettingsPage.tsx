@@ -92,6 +92,10 @@ export const EventSettingsPage = () => {
   });
 
   const handleTabChange = (tabValue: string) => {
+    if (tabValue === activeTab) {
+      return;
+    }
+
     navigate({
       to: `/events/${eventId}/settings`,
       search: { tab: tabValue },
