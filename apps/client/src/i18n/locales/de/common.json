@@ -54,6 +54,10 @@
     "Label": "Experimentell",
     "Description": "Diese Funktion befindet sich noch in Entwicklung und Test. Sie kann sich noch ändern und Fehler enthalten."
   },
+  "Testing": {
+    "Label": "Testphase",
+    "Description": "Diese Alpha-Funktion wurde noch nicht von einer größeren Gruppe von Nutzerinnen und Nutzern getestet. Feedback ist willkommen."
+  },
   "Theme": {
     "Toggle": "Motiv ändern"
   },

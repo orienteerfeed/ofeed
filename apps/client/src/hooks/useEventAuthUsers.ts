@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 
 // 1. Definice typů
 interface EventAuth {
-  authorId: string;
+  authorId: number;
 }
 
 interface GetEventAuthUsersData {
@@ -15,7 +15,7 @@ interface GetEventAuthUsersVariables {
 }
 
 const GET_EVENT_AUTH_USERS = gql`
-  query Event($eventId: String!) {
+  query GetEventAuthUsers($eventId: String!) {
     event(id: $eventId) {
       authorId
     }
@@ -28,7 +28,7 @@ export const useEventAuthUsers = (eventId: string) => {
     GetEventAuthUsersVariables
   >(GET_EVENT_AUTH_USERS, {
     variables: { eventId },
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'cache-first',
     errorPolicy: 'all',
     skip: !eventId,
   });

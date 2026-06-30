@@ -53,6 +53,7 @@ type Class {
   feeNet: Float
   feeVat: Float
   id: Int!
+  lateEntryFeeDisabled: Boolean!
   length: Int
   maxAge: Int
   maxNumberOfCompetitors: Int
@@ -159,12 +160,20 @@ Custom DateTime scalar (backed by JS Date, serialized as ISO8601 string)
 """
 scalar DateTime
 
+type EntryAction {
+  enabled: Boolean!
+  key: EventServiceSystemKey!
+  price: Float
+}
+
 type EntryAvailability {
+  addOns: [EventAddOn!]!
   classes: [EntryAvailabilityClass!]!
   currency: EntryAvailabilityCurrency!
   defaultStartMode: StartMode!
   entriesCloseAt: DateTime
   entriesOpenAt: DateTime
+  entryActions: [EntryAction!]!
   vatPayer: Boolean!
   vatRate: Float
 }
@@ -247,6 +256,15 @@ type Event {
   vatPayer: Boolean!
   vatRate: Float
   zeroTime: String!
+}
+
+type EventAddOn {
+  description: String
+  enabled: Boolean!
+  id: Int!
+  maxQuantity: Int
+  name: String!
+  price: Float
 }
 
 type EventConnection {
@@ -386,6 +404,32 @@ enum EventResultsStatus {
   UNOFFICIAL
 }
 
+type EventServiceSetting {
+  active: Boolean!
+  custom: Boolean!
+  description: String
+  id: Int
+  maxQuantity: Int
+  name: String!
+  price: Float
+  systemKey: EventServiceSystemKey
+}
+
+type EventServiceSettings {
+  eventId: String!
+  lateEntryFeePercent: Float
+  services: [EventServiceSetting!]!
+}
+
+enum EventServiceSystemKey {
+  CARD_CHANGE
+  CARD_RENTAL
+  CLASS_CHANGE
+  ENTRY_CANCEL
+  NAME_CHANGE
+  START_TIME_CHANGE
+}
+
 type EventStatusSummary {
   entries: EventEntriesStatus!
   entriesConfigured: Boolean!
@@ -436,18 +480,23 @@ type Mutation {
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
   createMeosEventBinding(eventId: String!): EventMeosBinding!
   createUserCard(input: CreateUserCardInput!): UserCard!
+  deleteCustomEventService(eventId: String!, id: Int!): ResponseMessage!
   deleteMeosEventBinding(id: Int!): Boolean!
   deleteUserCard(id: Int!): Boolean!
+  loadClassDefinitionsFromExternalSystem(eventId: String!): ResponseMessage!
   markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
   requestPasswordReset(email: String!): ResetResponse!
   resendEmailVerification: ResetResponse!
   resetPassword(newPassword: String!, token: String!): AuthPayload!
+  saveCustomEventService(input: SaveCustomEventServiceInput!): EventServiceSetting!
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
   signup(input: UserInput): ResponseMessage
   updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
+  updateLateEntryFeePercent(eventId: String!, lateEntryFeePercent: Float): ResponseMessage!
+  updateSystemEventService(input: UpdateSystemEventServiceInput!): ResponseMessage!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
   verifyEmail(token: String!): AuthPayload!
 }
@@ -506,6 +555,7 @@ type Query {
   eventEntryAvailability(eventId: String!): EntryAvailability
   eventFilesStatus(eventId: String!): EventFilesStatus!
   eventImportStates(eventId: String!): [EventImportState!]!
+  eventServiceSettings(eventId: String!): EventServiceSettings!
   events(input: EventsInput): EventConnection!
   eventsBySport(sportId: Int!): [Event!]
   eventsByUser(userId: Int!): [Event!]
@@ -538,6 +588,16 @@ type ResponseMessage {
   message: String!
   token: String
   user: User
+}
+
+input SaveCustomEventServiceInput {
+  active: Boolean
+  description: String
+  eventId: String!
+  id: Int
+  maxQuantity: Int
+  name: String!
+  price: Float
 }
 
 type Split {
@@ -669,6 +729,7 @@ input UpdateClassInput {
   awardedPlaces: Int
   classId: Int!
   fee: Float
+  lateEntryFeeDisabled: Boolean
   maxAge: Int
   maxNumberOfCompetitors: Int
   maxTeamMembers: Int
@@ -712,6 +773,13 @@ input UpdateCurrentUserInput {
   firstname: firstname_String_minLength_1_maxLength_255
   lastname: lastname_String_minLength_1_maxLength_255
   organisation: organisation_String_maxLength_191
+}
+
+input UpdateSystemEventServiceInput {
+  active: Boolean!
+  eventId: String!
+  price: Float
+  systemKey: EventServiceSystemKey!
 }
 
 input UpdateUserCardInput {
