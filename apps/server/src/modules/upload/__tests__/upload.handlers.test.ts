@@ -630,6 +630,8 @@ describe('processClassStarts — updated class deduplication', () => {
     Start: [{}],
   });
 
+  const makeVacantStart = (startTime: string) => ({ Start: [{ StartTime: [startTime] }] });
+
   const makeClassStart = (externalId: string, name: string, personStarts: object[]) => ({
     Class: [{ Id: [externalId], Name: [name], ATTR: {} }],
     PersonStart: personStarts,
@@ -684,6 +686,84 @@ describe('processClassStarts — updated class deduplication', () => {
       [makeClassStart('C10', 'H21E', [])],
       dbClassWithManualLimit,
       { discipline: 'SPRINT' },
+      1,
+    );
+
+    expect(mockPrisma.class.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ maxNumberOfCompetitors: 42 }),
+      }),
+    );
+  });
+
+  it('derives maxNumberOfCompetitors from real competitors and vacancies when unset and XML attribute is absent', async () => {
+    mockUpsertCompetitor.mockResolvedValue({ id: 3, updated: false });
+
+    await processClassStarts(
+      'event-1',
+      [
+        makeClassStart('C10', 'H21E', [
+          makePersonStart('REG001'),
+          makePersonStart('REG002'),
+          makeVacantStart('2026-05-08T15:34:00+02:00'),
+        ]),
+      ],
+      dbClassLists,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockPrisma.class.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ maxNumberOfCompetitors: 3 }),
+      }),
+    );
+  });
+
+  it('sets derived maxNumberOfCompetitors when creating a class from a start list without the XML attribute', async () => {
+    mockPrisma.class.create.mockResolvedValueOnce({ id: 99 });
+    mockUpsertCompetitor.mockResolvedValue({ id: 3, updated: false });
+
+    await processClassStarts(
+      'event-1',
+      [
+        makeClassStart('C11', 'D21E', [
+          makePersonStart('REG001'),
+          makeVacantStart('2026-05-08T15:34:00+02:00'),
+        ]),
+      ],
+      [],
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
+      1,
+    );
+
+    expect(mockPrisma.class.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ maxNumberOfCompetitors: 2 }),
+      }),
+    );
+  });
+
+  it('does not overwrite a manual maxNumberOfCompetitors with the derived start-list capacity', async () => {
+    mockUpsertCompetitor.mockResolvedValue({ id: 3, updated: false });
+    const dbClassWithManualLimit = [
+      {
+        ...dbClassLists[0],
+        maxNumberOfCompetitors: 42,
+      },
+    ];
+
+    await processClassStarts(
+      'event-1',
+      [
+        makeClassStart('C10', 'H21E', [
+          makePersonStart('REG001'),
+          makePersonStart('REG002'),
+          makeVacantStart('2026-05-08T15:34:00+02:00'),
+        ]),
+      ],
+      dbClassWithManualLimit,
+      { discipline: 'SPRINT', timezone: 'Europe/Prague' },
       1,
     );
 

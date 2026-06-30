@@ -1,7 +1,6 @@
 import zlib from 'node:zlib';
 
 import env from '../../config/env.js';
-import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
 import type { AppOpenAPI } from '../../types/index.js';
 import prisma from '../../utils/context.js';
 
@@ -18,29 +17,16 @@ import {
   recordSkippedImport,
   upsertImportState,
 } from '../upload/upload.import-state.js';
+import { verifyMeosEventPassword } from './meos.auth.js';
 import { parseMopDocument } from './meos.parser.js';
+import { meosStatusXml, parseMeosPositiveIntegerHeader } from './meos.protocol.js';
 import { processMopDocument } from './meos.service.js';
-
-const MOP_RESPONSE = {
-  OK: '<?xml version="1.0"?><MOPStatus status="OK"></MOPStatus>',
-  BADCMP: '<?xml version="1.0"?><MOPStatus status="BADCMP"></MOPStatus>',
-  BADPWD: '<?xml version="1.0"?><MOPStatus status="BADPWD"></MOPStatus>',
-  NOZIP: '<?xml version="1.0"?><MOPStatus status="NOZIP"></MOPStatus>',
-  ERROR: '<?xml version="1.0"?><MOPStatus status="ERROR"></MOPStatus>',
-} as const;
 
 const ZIP_LOCAL_FILE_HEADER_SIGNATURE = 0x04034b50;
 const ZIP_CENTRAL_DIRECTORY_SIGNATURE = 0x02014b50;
 const ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054b50;
 const ZIP_COMPRESSION_STORE = 0;
 const ZIP_COMPRESSION_DEFLATE = 8;
-
-function mopXml(status: keyof typeof MOP_RESPONSE): Response {
-  return new Response(MOP_RESPONSE[status], {
-    status: 200,
-    headers: { 'Content-Type': 'text/xml; charset=utf-8' },
-  });
-}
 
 function isZipPayload(buffer: Buffer): boolean {
   return (
@@ -207,7 +193,7 @@ function extractZipEntry(
 }
 
 export function registerMeosHandler(router: AppOpenAPI): void {
-  router.post('/meos', async (c) => {
+  router.post('/mop', async (c) => {
     const rawBuffer = Buffer.from(await c.req.arrayBuffer());
     const payloadSizeBytes = rawBuffer.length;
 
@@ -220,22 +206,18 @@ export function registerMeosHandler(router: AppOpenAPI): void {
           payloadSizeBytes,
           error: err instanceof Error ? err.message : String(err),
         });
-        return mopXml('ERROR');
+        return meosStatusXml('ERROR');
       }
     } else {
       xmlBody = rawBuffer.toString('utf8');
     }
 
-    // competition header
-    const competitionHeader = c.req.header('competition');
-    if (!competitionHeader) {
-      logger.warn('MeOS MOP upload: missing competition header');
-      return mopXml('BADCMP');
-    }
-    const meosCompetitionId = parseInt(competitionHeader, 10);
-    if (!Number.isInteger(meosCompetitionId) || meosCompetitionId <= 0) {
-      logger.warn('MeOS MOP upload: invalid competition header', { competitionHeader });
-      return mopXml('BADCMP');
+    const meosCompetitionId = parseMeosPositiveIntegerHeader(c.req.header('competition'));
+    if (meosCompetitionId === null) {
+      logger.warn('MeOS MOP upload: missing or invalid competition header', {
+        competitionHeader: c.req.header('competition'),
+      });
+      return meosStatusXml('BADCMP');
     }
 
     // Binding lookup — the competition header value is the binding's PK
@@ -249,35 +231,22 @@ export function registerMeosHandler(router: AppOpenAPI): void {
     });
     if (!binding) {
       logger.warn('MeOS MOP upload: no active binding found', { meosCompetitionId });
-      return mopXml('BADCMP');
+      return meosStatusXml('BADCMP');
     }
 
     const { eventId, event } = binding;
 
-    // Password check
-    const pwdHeader = c.req.header('pwd');
-    const eventPassword = await prisma.eventPassword.findFirst({
-      where: { eventId },
-      select: { password: true, expiresAt: true },
-    });
-    if (!eventPassword || eventPassword.expiresAt <= new Date()) {
-      logger.warn('MeOS MOP upload: missing or expired event password', {
-        eventId,
-        meosCompetitionId,
-      });
-      return mopXml('BADPWD');
-    }
-
-    let decryptedPassword: string;
-    try {
-      decryptedPassword = decrypt(decodeBase64(eventPassword.password));
-    } catch {
-      logger.error('MeOS MOP upload: password decryption failed', { eventId });
-      return mopXml('ERROR');
-    }
-    if (pwdHeader !== decryptedPassword) {
-      logger.warn('MeOS MOP upload: password mismatch', { eventId, meosCompetitionId });
-      return mopXml('BADPWD');
+    const passwordStatus = await verifyMeosEventPassword(eventId, c.req.header('pwd'));
+    if (passwordStatus !== 'OK') {
+      if (passwordStatus === 'ERROR') {
+        logger.error('MeOS MOP upload: password decryption failed', { eventId, meosCompetitionId });
+      } else {
+        logger.warn('MeOS MOP upload: password missing, expired, or mismatched', {
+          eventId,
+          meosCompetitionId,
+        });
+      }
+      return meosStatusXml(passwordStatus);
     }
 
     // XML parse
@@ -288,7 +257,7 @@ export function registerMeosHandler(router: AppOpenAPI): void {
         meosCompetitionId,
         payloadSizeBytes,
       });
-      return mopXml('ERROR');
+      return meosStatusXml('ERROR');
     }
 
     const rawHash = computeRawHash(rawBuffer);
@@ -316,7 +285,7 @@ export function registerMeosHandler(router: AppOpenAPI): void {
         payloadSizeBytes,
         rawHash,
       });
-      return mopXml('OK');
+      return meosStatusXml('OK');
     }
 
     // Process in transaction
@@ -336,7 +305,7 @@ export function registerMeosHandler(router: AppOpenAPI): void {
         rootElement: doc.rootType,
         error: err instanceof Error ? err.message : String(err),
       });
-      return mopXml('ERROR');
+      return meosStatusXml('ERROR');
     }
 
     if (processResult.updatedClassIds.length > 0) {
@@ -388,6 +357,6 @@ export function registerMeosHandler(router: AppOpenAPI): void {
       updatedCompetitorCount: processResult.updatedCompetitorIds.length,
     });
 
-    return mopXml('OK');
+    return meosStatusXml('OK');
   });
 }

@@ -13,6 +13,7 @@ function makeEvent(overrides: Record<string, unknown> = {}) {
     vatRate: null,
     lateEntryFeePercent: null,
     currency: { iso4217Alpha3: 'CZK', name: 'Czech koruna' },
+    services: [],
     classes: [],
     ...overrides,
   };
@@ -28,6 +29,7 @@ function makeClass(overrides: Record<string, unknown> = {}) {
     maxNumberOfCompetitors: 100,
     startMode: null,
     fee: null,
+    lateEntryFeeDisabled: false,
     startSlotVacancies: [],
     _count: { competitors: 0 },
     ...overrides,
@@ -50,6 +52,57 @@ describe('listEventEntryAvailability', () => {
     expect(result?.currency).toEqual({ code: 'CZK', name: 'Czech koruna' });
     expect(result?.vatPayer).toBe(false);
     expect(result?.defaultStartMode).toBe('StartList');
+  });
+
+  it('returns entry action availability and event add-ons', async () => {
+    const prisma = {
+      event: {
+        findUnique: vi.fn().mockResolvedValue(
+          makeEvent({
+            services: [
+              {
+                id: 1,
+                systemKey: 'CARD_CHANGE',
+                active: true,
+                name: 'Stored card change',
+                description: 'Stored description',
+                price: { toNumber: () => 15 },
+                maxQuantity: null,
+              },
+              {
+                id: 2,
+                systemKey: null,
+                active: true,
+                name: 'Parking',
+                description: 'Nearby parking',
+                price: { toNumber: () => 50 },
+                maxQuantity: 20,
+              },
+            ],
+          }),
+        ),
+      },
+    };
+
+    const result = await listEventEntryAvailability(prisma as never, 'event-1');
+
+    expect(result?.entryActions).toEqual(
+      expect.arrayContaining([
+        { key: 'CARD_CHANGE', enabled: true, price: 15 },
+        { key: 'NAME_CHANGE', enabled: false, price: null },
+        { key: 'START_TIME_CHANGE', enabled: false, price: null },
+      ]),
+    );
+    expect(result?.addOns).toEqual([
+      {
+        id: 2,
+        enabled: true,
+        name: 'Parking',
+        description: 'Nearby parking',
+        price: 50,
+        maxQuantity: 20,
+      },
+    ]);
   });
 
   it('StartList class: availableCount = vacancyCount, slots populated', async () => {
@@ -295,6 +348,7 @@ describe('listEventEntryAvailability', () => {
       }),
     );
     const select = prisma.event.findUnique.mock.calls[0][0].select;
+    expect(select.services).toBeDefined();
     expect(select.classes.select).toHaveProperty('startSlotVacancies');
     expect(select.classes.select).toHaveProperty('_count');
     expect(select.currency).toBeDefined();
