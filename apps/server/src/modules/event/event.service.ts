@@ -1526,7 +1526,12 @@ export const deleteAllEventData = async (eventId: string) => {
       where: { eventId: eventId },
     });
 
-    // Step 5: Delete IOF import state so the same XML can be processed again
+    // Step 5: Delete user-configured event services
+    await prisma.eventService.deleteMany({
+      where: { eventId: eventId },
+    });
+
+    // Step 6: Delete IOF import state so the same XML can be processed again
     await prisma.eventImportState.deleteMany({
       where: { eventId: eventId },
     });

@@ -22,6 +22,17 @@ const AVAILABILITY_FIXTURE = {
   vatPayer: false,
   vatRate: null,
   defaultStartMode: 'StartList',
+  entryActions: [{ key: 'CARD_CHANGE', enabled: true, price: 10 }],
+  addOns: [
+    {
+      id: 2,
+      enabled: true,
+      name: 'Parking',
+      description: 'Nearby parking',
+      price: 50,
+      maxQuantity: 20,
+    },
+  ],
   classes: [
     {
       id: 10,
@@ -62,6 +73,8 @@ describe('GET /:eventId/entry-availability', () => {
     const json = await response.json();
     // success() wraps payload in results: { data: ... }
     expect(json.results.data.currency).toEqual({ code: 'CZK', name: 'Czech koruna' });
+    expect(json.results.data.entryActions).toEqual(AVAILABILITY_FIXTURE.entryActions);
+    expect(json.results.data.addOns).toEqual(AVAILABILITY_FIXTURE.addOns);
     expect(json.results.data.classes).toHaveLength(1);
     expect(json.results.data.classes[0].availableCount).toBe(5);
     expect(mockListEventEntryAvailability).toHaveBeenCalledWith(prismaMock, 'event-1');

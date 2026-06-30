@@ -9,6 +9,7 @@ import '../modules/class/class.graphql.js';
 import '../modules/sport/sport.graphql.js';
 import '../modules/team/team.graphql.js';
 import '../modules/event/event.graphql.js';
+import '../modules/event/event-services.graphql.js';
 import '../modules/user/user.graphql.js';
 import '../modules/split/split.graphql.js';
 import '../modules/competitor/competitor.graphql.js';
