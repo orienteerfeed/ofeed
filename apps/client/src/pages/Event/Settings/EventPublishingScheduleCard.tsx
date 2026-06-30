@@ -47,12 +47,6 @@ export const EventPublishingScheduleCard: React.FC<
   const [splitPublicationAt, setSplitPublicationAt] = React.useState(
     toDateTimeLocalValue(eventData.splitPublicationAt)
   );
-  const [entriesOpenAt, setEntriesOpenAt] = React.useState(
-    toDateTimeLocalValue(eventData.entriesOpenAt)
-  );
-  const [entriesCloseAt, setEntriesCloseAt] = React.useState(
-    toDateTimeLocalValue(eventData.entriesCloseAt)
-  );
   const [resultsOfficial, setResultsOfficial] = React.useState(
     Boolean(
       eventData.resultsOfficialAt || eventData.resultsOfficialManuallySetAt
@@ -68,8 +62,6 @@ export const EventPublishingScheduleCard: React.FC<
   const initialSplitPublicationAt = toDateTimeLocalValue(
     eventData.splitPublicationAt
   );
-  const initialEntriesOpenAt = toDateTimeLocalValue(eventData.entriesOpenAt);
-  const initialEntriesCloseAt = toDateTimeLocalValue(eventData.entriesCloseAt);
   const initialResultsOfficial = Boolean(
     eventData.resultsOfficialAt || eventData.resultsOfficialManuallySetAt
   );
@@ -77,27 +69,14 @@ export const EventPublishingScheduleCard: React.FC<
   React.useEffect(() => {
     setSplitPublicationMode(initialSplitPublicationMode);
     setSplitPublicationAt(initialSplitPublicationAt);
-    setEntriesOpenAt(initialEntriesOpenAt);
-    setEntriesCloseAt(initialEntriesCloseAt);
     setResultsOfficial(initialResultsOfficial);
   }, [
     initialSplitPublicationMode,
     initialSplitPublicationAt,
-    initialEntriesCloseAt,
-    initialEntriesOpenAt,
     initialResultsOfficial,
     eventData.id,
   ]);
 
-  const entriesValidationError =
-    entriesOpenAt &&
-    entriesCloseAt &&
-    new Date(entriesOpenAt).getTime() > new Date(entriesCloseAt).getTime()
-      ? t(
-          'Pages.Event.Form.Validation.EntriesCloseAtAfterOpen',
-          'Entries close must be after entries open.'
-        )
-      : null;
   const splitPublicationValidationError =
     splitPublicationMode === 'SCHEDULED' && !splitPublicationAt
       ? t(
@@ -109,16 +88,13 @@ export const EventPublishingScheduleCard: React.FC<
   const isDirty =
     splitPublicationMode !== initialSplitPublicationMode ||
     splitPublicationAt !== initialSplitPublicationAt ||
-    entriesOpenAt !== initialEntriesOpenAt ||
-    entriesCloseAt !== initialEntriesCloseAt ||
     resultsOfficial !== initialResultsOfficial;
 
   const handleSave = async () => {
-    if (entriesValidationError || splitPublicationValidationError) {
+    if (splitPublicationValidationError) {
       toast({
         title: t('Operations.Error', { ns: 'common' }),
-        description:
-          entriesValidationError ?? splitPublicationValidationError ?? '',
+        description: splitPublicationValidationError,
         variant: 'error',
       });
       return;
@@ -164,8 +140,8 @@ export const EventPublishingScheduleCard: React.FC<
           hundredthPrecision: eventData.hundredthPrecision ?? false,
           externalSource: eventData.externalSource ?? undefined,
           externalEventId: eventData.externalEventId ?? undefined,
-          entriesOpenAt: toApiDateTime(entriesOpenAt),
-          entriesCloseAt: toApiDateTime(entriesCloseAt),
+          entriesOpenAt: eventData.entriesOpenAt ?? null,
+          entriesCloseAt: eventData.entriesCloseAt ?? null,
           splitPublicationMode,
           splitPublicationAt:
             splitPublicationMode === 'SCHEDULED'
@@ -315,51 +291,6 @@ export const EventPublishingScheduleCard: React.FC<
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="entries-open-at" className="text-sm font-medium">
-              {t('Pages.Event.Form.EntriesOpenAt', 'Entries open at')}
-            </Label>
-            <Input
-              id="entries-open-at"
-              type="datetime-local"
-              value={entriesOpenAt}
-              onChange={e => setEntriesOpenAt(e.target.value)}
-              disabled={isSaving}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t(
-                'Pages.Event.Form.EntriesOpenAtHelper',
-                'Leave empty to keep entries closed until you decide otherwise.'
-              )}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="entries-close-at" className="text-sm font-medium">
-              {t('Pages.Event.Form.EntriesCloseAt', 'Entries close at')}
-            </Label>
-            <Input
-              id="entries-close-at"
-              type="datetime-local"
-              value={entriesCloseAt}
-              onChange={e => setEntriesCloseAt(e.target.value)}
-              disabled={isSaving}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t(
-                'Pages.Event.Form.EntriesCloseAtHelper',
-                'Leave empty to keep the entries window open without a fixed deadline.'
-              )}
-            </p>
-            {entriesValidationError && (
-              <p className="text-xs text-destructive">
-                {entriesValidationError}
-              </p>
-            )}
-          </div>
-        </div>
-
         <div className="space-y-3 rounded-lg border p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-1">
@@ -395,10 +326,7 @@ export const EventPublishingScheduleCard: React.FC<
           <Button
             type="button"
             disabled={
-              isSaving ||
-              !isDirty ||
-              Boolean(entriesValidationError) ||
-              Boolean(splitPublicationValidationError)
+              isSaving || !isDirty || Boolean(splitPublicationValidationError)
             }
             onClick={handleSave}
           >

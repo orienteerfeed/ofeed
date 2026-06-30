@@ -30,7 +30,7 @@ import {
 import { QRCodeCanvas } from 'qrcode.react';
 import type { ComponentType, RefObject } from 'react';
 import { useRef, useState } from 'react';
-import { Button } from '../../../components/atoms';
+import { Button, Testing } from '../../../components/atoms';
 import { Alert } from '../../../components/organisms';
 import type { MeosEventBinding } from '../../../types/event';
 import { toast } from '../../../utils';
@@ -283,7 +283,9 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
     deleteMeosBinding({ variables: { id: bindingId } });
   };
 
-  const meosUploadEndpoint = `${config.BASE_API_URL.replace(/\/+$/, '')}/rest/v1/upload/meos`;
+  const meosBaseEndpoint = `${config.BASE_API_URL.replace(/\/+$/, '')}/rest/v1/meos`;
+  const meosUploadEndpoint = `${meosBaseEndpoint}/mop`;
+  const meosMipEndpoint = `${meosBaseEndpoint}/mip`;
 
   // Format the QuickEvent credentials link
   const quickEventLinkUrl = new URL(config.PUBLIC_URL, window.location.origin);
@@ -643,7 +645,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                         type="button"
                         onClick={() =>
                           copyWithToast(
-                            apiEventsEndpoint,
+                            config.BASE_API_URL,
                             t('Pages.Event.Integration.Toast.CopyBaseUrl')
                           )
                         }
@@ -652,7 +654,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                         className="h-6 w-6 p-0 shrink-0"
                       >
                         <Copy className="h-3 w-3" />
-                        <span className="sr-only">Copy API endpoint</span>
+                        <span className="sr-only">Copy API base URL</span>
                       </Button>
                     </div>
                   </div>
@@ -795,6 +797,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
             <TabsContent value="meos" className="space-y-4">
               <div className={panelClassName}>
                 <div className="space-y-2 mb-4">
+                  <Testing />
                   <p className="text-sm text-muted-foreground">
                     {t('Pages.Event.Integration.Card.Tabs.MeOS.Description')}
                   </p>
@@ -804,7 +807,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                       <div className="flex justify-between items-center gap-2">
                         <Label className="text-sm font-medium shrink-0">
                           {t(
-                            'Pages.Event.Integration.Card.Tabs.MeOS.UploadUrl'
+                            'Pages.Event.Integration.Card.Tabs.MeOS.MopUrl'
                           )}
                         </Label>
                         <div className="flex items-center gap-2">
@@ -826,7 +829,37 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                             <Copy className="h-3 w-3" />
                             <span className="sr-only">
                               {t(
-                                'Pages.Event.Integration.Card.Tabs.MeOS.UploadUrl'
+                                'Pages.Event.Integration.Card.Tabs.MeOS.MopUrl'
+                              )}
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center gap-2">
+                        <Label className="text-sm font-medium shrink-0">
+                          {t('Pages.Event.Integration.Card.Tabs.MeOS.MipUrl')}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                            {meosMipEndpoint}
+                          </p>
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              copyWithToast(
+                                meosMipEndpoint,
+                                t('Pages.Event.Integration.Toast.CopyBaseUrl')
+                              )
+                            }
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 shrink-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                            <span className="sr-only">
+                              {t(
+                                'Pages.Event.Integration.Card.Tabs.MeOS.MipUrl'
                               )}
                             </span>
                           </Button>
