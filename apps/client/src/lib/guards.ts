@@ -107,7 +107,7 @@ async function getEventAuthUsers(eventId: string): Promise<EventAuthUsers> {
     const result = await apolloClient.query<GetEventAuthUsersResponse>({
       query: GET_EVENT_AUTH_USERS,
       variables: { eventId },
-      fetchPolicy: 'network-only',
+      fetchPolicy: 'cache-first',
     });
 
     if (result.error) {

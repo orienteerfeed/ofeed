@@ -19,6 +19,7 @@ export const classSchema = z
     startWindowFrom: dateLikeSchema.nullable().optional(),
     startWindowTo: dateLikeSchema.nullable().optional(),
     fee: z.number().nullable().optional(),
+    lateEntryFeeDisabled: z.boolean().optional(),
     awardedPlaces: z.number().int().min(1).nullable().optional(),
     currentFee: z.number().nullable().optional(),
     feeNet: z.number().nullable().optional(),
@@ -60,6 +61,7 @@ export const classUpdateInputSchema = z
       .refine(value => value == null || Number.isInteger(value * 100), {
         message: 'Class fee can have at most 2 decimal places.',
       }),
+    lateEntryFeeDisabled: z.boolean().optional(),
   })
   .refine(value => value.minAge == null || value.maxAge == null || value.minAge <= value.maxAge, {
     message: 'minAge must be less than or equal to maxAge.',

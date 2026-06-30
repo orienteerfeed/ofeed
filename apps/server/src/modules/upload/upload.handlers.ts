@@ -417,6 +417,7 @@ async function upsertClass(
   dbClassLists: ClassListEntry[],
   eventTimeZone: string,
   additionalData: Record<string, unknown> = {},
+  options: { derivedMaxNumberOfCompetitors?: number } = {},
 ): Promise<number> {
   const sourceClassId = classDetails.Id?.shift() ?? null;
   const className = classDetails.Name.shift() ?? sourceClassId ?? '';
@@ -430,7 +431,7 @@ async function upsertClass(
     : undefined;
   const maxNumberOfCompetitors = hasMaxNumberOfCompetitorsAttr
     ? incomingMaxNumberOfCompetitors
-    : (existingClass?.maxNumberOfCompetitors ?? null);
+    : (existingClass?.maxNumberOfCompetitors ?? options.derivedMaxNumberOfCompetitors ?? null);
 
   const hasResultListModeAttr = hasOwnProperty(classAttr, 'resultListMode');
   const incomingResultListMode = hasResultListModeAttr
@@ -722,6 +723,48 @@ async function upsertEmbeddedCourse(
   return course.id;
 }
 
+type ParsedIndividualStarts = {
+  competitorStarts: Array<Record<string, any>>;
+  vacantSlots: { startTime: Date; bibNumber: number | null }[];
+};
+
+function parseIndividualStarts(
+  personStarts: Array<Record<string, any>>,
+  eventTimeZone: string,
+): ParsedIndividualStarts {
+  const competitorStarts: Array<Record<string, any>> = [];
+  const vacantSlots: { startTime: Date; bibNumber: number | null }[] = [];
+
+  for (const personStart of personStarts) {
+    const personEl =
+      Array.isArray(personStart.Person) && personStart.Person.length > 0
+        ? personStart.Person[0]
+        : null;
+    const givenName: string = personEl?.Name?.[0]?.Given?.[0] ?? '';
+    const isVacantPerson = givenName.trim().toLowerCase() === 'vacant';
+    const hasPerson = personEl !== null && !isVacantPerson;
+    if (hasPerson) {
+      competitorStarts.push(personStart);
+      continue;
+    }
+
+    const vacantStart =
+      Array.isArray(personStart.Start) && personStart.Start.length > 0
+        ? personStart.Start[0]
+        : null;
+    const vacancyStartTime = getIofDateTime(vacantStart?.StartTime, eventTimeZone);
+    // Skip vacant slots without a parseable start time — startTime is part
+    // of the [classId, startTime] unique key and cannot be null.
+    if (!vacancyStartTime) continue;
+    const bibNumber = vacantStart?.BibNumber
+      ? parseInt(vacantStart.BibNumber[0] ?? '', 10) || null
+      : null;
+    vacantSlots.push({ startTime: vacancyStartTime, bibNumber });
+  }
+
+  return { competitorStarts, vacantSlots };
+}
+
 /**
  * Processes class starts for an event.
  *
@@ -784,18 +827,30 @@ async function processClassStarts(
         }),
       };
 
+      const individualStarts =
+        !isRelayDiscipline(dbResponseEvent.discipline) &&
+        Array.isArray(classStart.PersonStart) &&
+        classStart.PersonStart.length > 0
+          ? parseIndividualStarts(classStart.PersonStart, eventTimeZone)
+          : null;
+      const derivedMaxNumberOfCompetitors =
+        individualStarts !== null
+          ? individualStarts.competitorStarts.length + individualStarts.vacantSlots.length
+          : undefined;
+
       const classId = await upsertClass(
         eventId,
         classDetails,
         dbClassLists,
         eventTimeZone,
         additionalData,
+        { derivedMaxNumberOfCompetitors },
       );
       const competitorCache = await loadCompetitorCache(classId);
 
       if (!isRelayDiscipline(dbResponseEvent.discipline)) {
         // Process Individual Starts
-        if (!classStart.PersonStart || classStart.PersonStart.length === 0) return;
+        if (!individualStarts) return;
 
         // A PersonStart without a <Person> child, or with <Given>Vacant</Given>,
         // is a vacant reserved slot in the IOF start list (e.g. a regular class
@@ -804,33 +859,7 @@ async function processClassStarts(
         // of creating an empty competitor. The matching vacancy is removed
         // automatically once a competitor later occupies that slot (see
         // deleteMatchingStartSlotVacancy).
-        const competitorStarts: Array<Record<string, any>> = [];
-        const vacantSlots: { startTime: Date; bibNumber: number | null }[] = [];
-        for (const personStart of classStart.PersonStart as Array<Record<string, any>>) {
-          const personEl =
-            Array.isArray(personStart.Person) && personStart.Person.length > 0
-              ? personStart.Person[0]
-              : null;
-          const givenName: string = personEl?.Name?.[0]?.Given?.[0] ?? '';
-          const isVacantPerson = givenName.trim().toLowerCase() === 'vacant';
-          const hasPerson = personEl !== null && !isVacantPerson;
-          if (hasPerson) {
-            competitorStarts.push(personStart);
-            continue;
-          }
-          const vacantStart =
-            Array.isArray(personStart.Start) && personStart.Start.length > 0
-              ? personStart.Start[0]
-              : null;
-          const vacancyStartTime = getIofDateTime(vacantStart?.StartTime, eventTimeZone);
-          // Skip vacant slots without a parseable start time — startTime is part
-          // of the [classId, startTime] unique key and cannot be null.
-          if (!vacancyStartTime) continue;
-          const bibNumber = vacantStart?.BibNumber
-            ? parseInt(vacantStart.BibNumber[0] ?? '', 10) || null
-            : null;
-          vacantSlots.push({ startTime: vacancyStartTime, bibNumber });
-        }
+        const { competitorStarts, vacantSlots } = individualStarts;
 
         if (vacantSlots.length > 0) {
           await bulkCreateStartSlotVacancies(prisma, classId, vacantSlots);

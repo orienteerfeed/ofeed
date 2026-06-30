@@ -46,7 +46,7 @@ function buildApp() {
   const app = new Hono();
   const subRouter = new Hono();
   registerMeosHandler(subRouter as never);
-  app.route('/rest/v1/upload', subRouter);
+  app.route('/rest/v1/meos', subRouter);
   return app;
 }
 
@@ -162,7 +162,7 @@ function createZipPayload(
 }
 
 function post(app: Hono, body: string | ArrayBuffer, headers: Record<string, string> = {}) {
-  return app.request('/rest/v1/upload/meos', {
+  return app.request('/rest/v1/meos/mop', {
     method: 'POST',
     body,
     headers: { 'Content-Type': 'text/plain; charset=utf-8', ...headers },
@@ -173,7 +173,7 @@ function post(app: Hono, body: string | ArrayBuffer, headers: Record<string, str
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('POST /rest/v1/upload/meos', () => {
+describe('POST /rest/v1/meos/mop', () => {
   it('returns BADCMP when competition header is missing', async () => {
     const app = buildApp();
     const res = await post(app, COMPLETE_XML);
