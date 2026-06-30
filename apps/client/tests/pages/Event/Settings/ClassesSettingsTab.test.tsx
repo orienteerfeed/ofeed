@@ -6,6 +6,7 @@ import {
   ClassesSettingsTab,
   CLASS_UPDATE,
   EVENT_CLASSES,
+  LOAD_CLASS_DEFINITIONS_FROM_EXTERNAL_SYSTEM,
 } from '@/pages/Event/Settings/ClassesSettingsTab';
 
 const t = ((key: string) => key) as never;
@@ -22,6 +23,7 @@ const baseClass = {
   sex: 'M',
   resultListMode: null,
   fee: 100,
+  lateEntryFeeDisabled: false,
   awardedPlaces: 3,
   startMode: null,
   __typename: 'Class',
@@ -307,5 +309,99 @@ describe('ClassesSettingsTab', () => {
 
     await waitFor(() => expect(capacityInput).toHaveValue(20));
     expect(feeInput).toHaveValue(125);
+  });
+
+  it('shows the external definition action only for linked events with classes', async () => {
+    const { rerender } = render(
+      <MockedProvider mocks={[classesMock]}>
+        <ClassesSettingsTab
+          t={t}
+          eventId="event-1"
+          isRelay={false}
+          timezone="Europe/Prague"
+        />
+      </MockedProvider>
+    );
+
+    await screen.findByText('H21');
+    expect(
+      screen.queryByRole('button', {
+        name: 'Pages.Event.Settings.Classes.LoadDefinitions.Action',
+      })
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <MockedProvider mocks={[classesMock]}>
+        <ClassesSettingsTab
+          t={t}
+          eventId="event-1"
+          isRelay={false}
+          timezone="Europe/Prague"
+          externalSource="ORIS"
+          externalEventId="8835"
+        />
+      </MockedProvider>
+    );
+
+    expect(
+      await screen.findByRole('button', {
+        name: 'Pages.Event.Settings.Classes.LoadDefinitions.Action',
+      })
+    ).toBeInTheDocument();
+  });
+
+  it('confirms and loads class definitions from the external system', async () => {
+    const loadedClass = {
+      ...baseClass,
+      fee: 150,
+      sex: 'B',
+      lateEntryFeeDisabled: true,
+    };
+    const loadMock = {
+      request: {
+        query: LOAD_CLASS_DEFINITIONS_FROM_EXTERNAL_SYSTEM,
+        variables: { eventId: 'event-1' },
+      },
+      result: {
+        data: {
+          loadClassDefinitionsFromExternalSystem: {
+            message: 'Class definitions loaded',
+            __typename: 'ResponseMessage',
+          },
+        },
+      },
+    };
+    const refetchMock = {
+      request: { query: EVENT_CLASSES, variables: { eventId: 'event-1' } },
+      result: { data: { eventClasses: [loadedClass] } },
+    };
+
+    render(
+      <MockedProvider mocks={[classesMock, loadMock, refetchMock]}>
+        <ClassesSettingsTab
+          t={t}
+          eventId="event-1"
+          isRelay={false}
+          timezone="Europe/Prague"
+          externalSource="ORIS"
+          externalEventId="8835"
+        />
+      </MockedProvider>
+    );
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Pages.Event.Settings.Classes.LoadDefinitions.Action',
+      })
+    );
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Pages.Event.Settings.Classes.LoadDefinitions.ConfirmButton',
+      })
+    );
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('H21 fee')).toHaveValue(150)
+    );
   });
 });

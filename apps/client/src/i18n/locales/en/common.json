@@ -56,6 +56,10 @@
     "Label": "Experimental",
     "Description": "This feature is still in development and testing. It may change and can contain bugs."
   },
+  "Testing": {
+    "Label": "Testing",
+    "Description": "This alpha feature has not been tested by a wider group of users yet. Feedback is appreciated."
+  },
   "Theme": {
     "Toggle": "Toggle theme"
   }
