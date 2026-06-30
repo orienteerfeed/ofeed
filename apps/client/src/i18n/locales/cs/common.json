@@ -56,6 +56,10 @@
     "Label": "Experimentální",
     "Description": "Tato funkce je stále ve fázi vývoje a testování. Může se ještě měnit a může obsahovat chyby."
   },
+  "Testing": {
+    "Label": "Testování",
+    "Description": "Toto je alfa funkce, která zatím nebyla otestována širší skupinou uživatelů. Budeme rádi za feedback."
+  },
   "Theme": {
     "Toggle": "Přepnout barevný režim"
   }

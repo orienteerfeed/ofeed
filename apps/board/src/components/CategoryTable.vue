@@ -65,8 +65,9 @@ watchEffect(() => {
       />
       <!-- TODO Add 2rem text class -->
       <div
-        v-if="finishedAthletes.pinnedRows.length && finishedAthletes.restRows.length"
-        class="w-full text-3xl font-bold bg-white border-b-2 border-gray-600 border-dashed"
+        v-if="finishedAthletes.pinnedRows.length"
+        class="w-full text-3xl font-bold bg-white"
+        :class="{ 'border-b-2 border-gray-600 border-dashed': finishedAthletes.restRows.length }"
       >
         <TableFinishedRow
           v-for="(row, index) in finishedAthletes.pinnedRows"

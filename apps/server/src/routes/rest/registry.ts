@@ -13,7 +13,7 @@ export const REST_ROUTE_REGISTRY = [
   { path: REST_ROUTE_PATHS.auth, router: authRouter },
   { path: REST_ROUTE_PATHS.events, router: eventRouter },
   { path: REST_ROUTE_PATHS.map, router: mapRouter },
-  { path: REST_ROUTE_PATHS.upload, router: meosRouter },
+  { path: REST_ROUTE_PATHS.meos, router: meosRouter },
   { path: REST_ROUTE_PATHS.upload, router: uploadRouter },
   { path: REST_ROUTE_PATHS.myEvents, router: userRouter },
 ] as const;
