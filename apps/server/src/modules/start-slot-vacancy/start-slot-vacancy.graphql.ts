@@ -1,11 +1,14 @@
 import { builder } from '../../graphql/builder.js';
+import { EventServiceSystemKeyRef } from '../event/event-services.graphql-types.js';
 import { StartModeRef } from '../event/event.graphql-types.js';
 import {
   listEventEntryAvailability,
   listStartSlotVacanciesByClass,
+  type EntryAvailabilityAddOn,
   type EntryAvailabilityFee,
   type EntryAvailabilitySlot,
   type EntryAvailabilityClass,
+  type EntryAvailabilityEntryAction,
   type EventEntryAvailability,
 } from './start-slot-vacancy.service.js';
 
@@ -67,6 +70,32 @@ const EntryAvailabilityClassRef = builder
     }),
   });
 
+const EntryActionRef = builder
+  .objectRef<EntryAvailabilityEntryAction>('EntryAction')
+  .implement({
+    fields: (t) => ({
+      key: t.field({
+        type: EventServiceSystemKeyRef,
+        resolve: (action) => action.key,
+      }),
+      enabled: t.exposeBoolean('enabled'),
+      price: t.exposeFloat('price', { nullable: true }),
+    }),
+  });
+
+const EventAddOnRef = builder
+  .objectRef<EntryAvailabilityAddOn>('EventAddOn')
+  .implement({
+    fields: (t) => ({
+      id: t.exposeInt('id'),
+      enabled: t.exposeBoolean('enabled'),
+      name: t.exposeString('name'),
+      description: t.exposeString('description', { nullable: true }),
+      price: t.exposeFloat('price', { nullable: true }),
+      maxQuantity: t.exposeInt('maxQuantity', { nullable: true }),
+    }),
+  });
+
 const EntryAvailabilityRef = builder
   .objectRef<EventEntryAvailability>('EntryAvailability')
   .implement({
@@ -82,6 +111,14 @@ const EntryAvailabilityRef = builder
       defaultStartMode: t.field({
         type: StartModeRef,
         resolve: (ea) => ea.defaultStartMode as never,
+      }),
+      entryActions: t.field({
+        type: [EntryActionRef],
+        resolve: (ea) => ea.entryActions,
+      }),
+      addOns: t.field({
+        type: [EventAddOnRef],
+        resolve: (ea) => ea.addOns,
       }),
       classes: t.field({
         type: [EntryAvailabilityClassRef],

@@ -31,6 +31,9 @@ const prismaMock = vi.hoisted(() => ({
   eventPassword: {
     deleteMany: vi.fn(),
   },
+  eventService: {
+    deleteMany: vi.fn(),
+  },
   event: {
     findFirst: vi.fn(),
     findUnique: vi.fn(),
@@ -136,6 +139,7 @@ describe('event.service event data deletion', () => {
     prismaMock.control.deleteMany.mockResolvedValue({ count: 6 });
     prismaMock.courseMap.deleteMany.mockResolvedValue({ count: 1 });
     prismaMock.eventPassword.deleteMany.mockResolvedValue({ count: 1 });
+    prismaMock.eventService.deleteMany.mockResolvedValue({ count: 2 });
     prismaMock.eventImportState.deleteMany.mockResolvedValue({ count: 1 });
   });
 
@@ -155,6 +159,14 @@ describe('event.service event data deletion', () => {
     await deleteAllEventData('event-1');
 
     expect(prismaMock.eventImportState.deleteMany).toHaveBeenCalledWith({
+      where: { eventId: 'event-1' },
+    });
+  });
+
+  it('deletes event services with all event data', async () => {
+    await deleteAllEventData('event-1');
+
+    expect(prismaMock.eventService.deleteMany).toHaveBeenCalledWith({
       where: { eventId: 'event-1' },
     });
   });

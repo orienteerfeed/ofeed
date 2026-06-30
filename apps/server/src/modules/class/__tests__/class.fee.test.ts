@@ -44,6 +44,19 @@ describe('computeClassFee', () => {
     expect(result.currentFee).toBe(300);
   });
 
+  it('keeps the base fee after the deadline when late-entry fee is disabled', () => {
+    const result = computeClassFee({
+      baseFee: 200,
+      now: AFTER,
+      entriesCloseAt: DEADLINE,
+      lateEntryFeePercent: 50,
+      lateEntryFeeDisabled: true,
+      vatPayer: false,
+      vatRate: null,
+    });
+    expect(result.currentFee).toBe(200);
+  });
+
   it('does not apply a surcharge when no deadline is set', () => {
     const result = computeClassFee({
       baseFee: 200,
