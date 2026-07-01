@@ -42,6 +42,11 @@ export const changeCurrentUserPasswordInputSchema = z.object({
   newPassword: z.string().min(8).max(255),
 });
 
+export const deleteCurrentAccountInputSchema = z.object({
+  currentPassword: z.string().min(1).max(255),
+  deleteEvents: z.boolean().optional().default(false),
+});
+
 export const myEventSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -72,3 +77,4 @@ export type UpdateCurrentUserInput = z.infer<typeof updateCurrentUserInputSchema
 export type CreateUserCardInput = z.infer<typeof createUserCardInputSchema>;
 export type UpdateUserCardInput = z.infer<typeof updateUserCardInputSchema>;
 export type ChangeCurrentUserPasswordInput = z.infer<typeof changeCurrentUserPasswordInputSchema>;
+export type DeleteCurrentAccountInput = z.infer<typeof deleteCurrentAccountInputSchema>;

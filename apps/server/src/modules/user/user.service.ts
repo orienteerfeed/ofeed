@@ -1,3 +1,4 @@
+import argon2 from 'argon2';
 import { GraphQLError } from 'graphql';
 import { isRelayDiscipline } from '../../utils/relay.js';
 
@@ -22,6 +23,7 @@ import { getEventStatusSummary } from '../event/event.status.service.js';
 import type {
   ChangeCurrentUserPasswordInput,
   CreateUserCardInput,
+  DeleteCurrentAccountInput,
   LoginInput,
   UpdateCurrentUserInput,
   UpdateUserCardInput,
@@ -586,6 +588,119 @@ export async function changeCurrentUserPassword(
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
+}
+
+export async function anonymizeCurrentUserAccount(
+  auth: GraphQLAuthContext,
+  input: DeleteCurrentAccountInput,
+) {
+  const userId = getAuthenticatedUserId(auth);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, password: true, deletedAt: true },
+  });
+
+  if (!user) {
+    throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+  }
+
+  if (user.deletedAt) {
+    throw new GraphQLError('Account is already scheduled for deletion', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+
+  const isPasswordValid = await argon2.verify(user.password, input.currentPassword);
+  if (!isPasswordValid) {
+    throw new GraphQLError('Current password is incorrect', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const clients = await tx.oAuthClient.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    const clientIds = clients.map((c) => c.id);
+
+    if (clientIds.length > 0) {
+      await tx.oAuthAuthorizationCode.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthAccessToken.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthRefreshToken.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthGrant.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthScope.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthRedirectUri.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthClient.deleteMany({ where: { userId } });
+    }
+
+    await tx.passwordResetToken.deleteMany({ where: { userId } });
+
+    await tx.userCard.deleteMany({ where: { userId } });
+
+    if (input.deleteEvents) {
+      const eventIds = (
+        await tx.event.findMany({ where: { authorId: userId }, select: { id: true } })
+      ).map((e) => e.id);
+
+      if (eventIds.length > 0) {
+        const classIds = (
+          await tx.class.findMany({
+            where: { eventId: { in: eventIds } },
+            select: { id: true },
+          })
+        ).map((c) => c.id);
+
+        if (classIds.length > 0) {
+          const competitorIds = (
+            await tx.competitor.findMany({
+              where: { classId: { in: classIds } },
+              select: { id: true },
+            })
+          ).map((c) => c.id);
+
+          if (competitorIds.length > 0) {
+            await tx.split.deleteMany({ where: { competitorId: { in: competitorIds } } });
+          }
+
+          await tx.protocol.deleteMany({ where: { eventId: { in: eventIds } } });
+
+          if (competitorIds.length > 0) {
+            await tx.competitor.deleteMany({ where: { id: { in: competitorIds } } });
+          }
+
+          await tx.team.deleteMany({ where: { classId: { in: classIds } } });
+          await tx.class.deleteMany({ where: { id: { in: classIds } } });
+        } else {
+          await tx.protocol.deleteMany({ where: { eventId: { in: eventIds } } });
+        }
+
+        await tx.eventExternalResultsSyncState.deleteMany({
+          where: { eventId: { in: eventIds } },
+        });
+
+        await tx.event.deleteMany({ where: { id: { in: eventIds } } });
+      }
+    }
+
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        email: `deleted-${userId}@deleted.invalid`,
+        firstname: 'Deleted',
+        lastname: 'User',
+        password: 'ACCOUNT_DELETED',
+        organisation: null,
+        emergencyContact: null,
+        active: false,
+        emailVerifiedAt: null,
+        deletedAt: new Date(),
+      },
+    });
+  });
+
+  return true;
 }
 
 export async function listMyEvents(userId: number | string) {

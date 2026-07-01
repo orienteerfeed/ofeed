@@ -28,10 +28,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { MainPageLayout } from '@/templates';
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm } from '@tanstack/react-form';
+import { useNavigate } from '@tanstack/react-router';
 import { BadgeCheck, Blocks, Pencil, Shield, Trash2, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -175,6 +177,15 @@ type ResendEmailVerificationResponse = {
   };
 };
 
+type DeleteCurrentAccountResponse = {
+  deleteCurrentAccount: boolean;
+};
+
+type DeleteCurrentAccountVars = {
+  currentPassword: string;
+  deleteEvents?: boolean;
+};
+
 const UPDATE_CURRENT_USER_MUTATION = gql`
   mutation UpdateCurrentUser($input: UpdateCurrentUserInput!) {
     updateCurrentUser(input: $input) {
@@ -266,9 +277,16 @@ const RESEND_EMAIL_VERIFICATION_MUTATION = gql`
   }
 `;
 
+const DELETE_CURRENT_ACCOUNT_MUTATION = gql`
+  mutation DeleteCurrentAccount($currentPassword: String!, $deleteEvents: Boolean) {
+    deleteCurrentAccount(currentPassword: $currentPassword, deleteEvents: $deleteEvents)
+  }
+`;
+
 export const ProfilePage = () => {
   const { t } = useTranslation();
-  const { token, user, signin } = useAuth();
+  const { token, user, signin, signout } = useAuth();
+  const navigate = useNavigate();
   const [isEditCardDialogOpen, setIsEditCardDialogOpen] = useState(false);
   const [cardForm, setCardForm] = useState<{
     sportId: string;
@@ -337,7 +355,15 @@ export const ProfilePage = () => {
     useMutation<ResendEmailVerificationResponse>(
       RESEND_EMAIL_VERIFICATION_MUTATION
     );
+  const [deleteCurrentAccount, { loading: isDeletingAccount }] = useMutation<
+    DeleteCurrentAccountResponse,
+    DeleteCurrentAccountVars
+  >(DELETE_CURRENT_ACCOUNT_MUTATION);
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
+  const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] =
+    useState(false);
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState('');
+  const [deleteEventsChecked, setDeleteEventsChecked] = useState(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [profile, setProfile] = useState<Profile>({
     firstName: '',
@@ -824,6 +850,39 @@ export const ProfilePage = () => {
     }
 
     return t('Pages.Profile.EmailVerification.ResendButton');
+  };
+
+  const handleDeleteAccount = async (): Promise<void> => {
+    try {
+      await deleteCurrentAccount({
+        variables: {
+          currentPassword: deleteAccountPassword,
+          deleteEvents: deleteEventsChecked,
+        },
+      });
+      signout();
+      void navigate({ to: '/' });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : undefined;
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description:
+          message === 'Current password is incorrect'
+            ? t(
+                'Pages.Profile.Security.Errors.CurrentPasswordIncorrect',
+                'Current password is incorrect.'
+              )
+            : t(
+                'Pages.Profile.Security.DangerZone.DeleteError',
+                'Account deletion failed. Please try again.'
+              ),
+        variant: 'error',
+      });
+      setDeleteAccountPassword('');
+      setDeleteEventsChecked(false);
+      setIsDeleteAccountDialogOpen(false);
+    }
   };
 
   const handleCardSubmit = async (): Promise<void> => {
@@ -1715,6 +1774,119 @@ export const ProfilePage = () => {
                   </CardContent>
                 </form>
               </Card>
+
+              <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="text-destructive">
+                    {t('Pages.Profile.Security.DeleteAccount.Title')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('Pages.Profile.Security.DeleteAccount.Description')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setIsDeleteAccountDialogOpen(true)}
+                  >
+                    {t('Pages.Profile.Security.DeleteAccount.DeleteButton')}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Dialog
+                open={isDeleteAccountDialogOpen}
+                onOpenChange={(open) => {
+                  setIsDeleteAccountDialogOpen(open);
+                  if (!open) {
+                    setDeleteAccountPassword('');
+                    setDeleteEventsChecked(false);
+                  }
+                }}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="text-destructive">
+                      {t('Pages.Profile.Security.DeleteAccount.DialogTitle')}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {t(
+                        'Pages.Profile.Security.DeleteAccount.DialogDescription'
+                      )}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="deleteAccountPassword">
+                        {t('Pages.Profile.Security.CurrentPassword')}
+                      </Label>
+                      <Input
+                        id="deleteAccountPassword"
+                        type="password"
+                        autoComplete="current-password"
+                        value={deleteAccountPassword}
+                        onChange={(e) =>
+                          setDeleteAccountPassword(e.target.value)
+                        }
+                        placeholder={t(
+                          'Pages.Profile.Security.DeleteAccount.PasswordPlaceholder'
+                        )}
+                      />
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="deleteEventsCheckbox"
+                        checked={deleteEventsChecked}
+                        onCheckedChange={(checked) =>
+                          setDeleteEventsChecked(checked === true)
+                        }
+                        className="mt-0.5"
+                      />
+                      <div className="space-y-1">
+                        <Label
+                          htmlFor="deleteEventsCheckbox"
+                          className="cursor-pointer font-medium"
+                        >
+                          {t(
+                            'Pages.Profile.Security.DeleteAccount.DeleteEventsLabel'
+                          )}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          {t(
+                            'Pages.Profile.Security.DeleteAccount.DeleteEventsHelper'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsDeleteAccountDialogOpen(false);
+                        setDeleteAccountPassword('');
+                        setDeleteEventsChecked(false);
+                      }}
+                      disabled={isDeletingAccount}
+                    >
+                      {t('Operations.Cancel', { ns: 'common' })}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAccount}
+                      disabled={isDeletingAccount || !deleteAccountPassword}
+                    >
+                      {isDeletingAccount
+                        ? t(
+                            'Pages.Profile.Security.DeleteAccount.DeletingButton'
+                          )
+                        : t(
+                            'Pages.Profile.Security.DeleteAccount.ConfirmDeleteButton'
+                          )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             {/* TODO: implement tabs notifications, security, billing as needed
