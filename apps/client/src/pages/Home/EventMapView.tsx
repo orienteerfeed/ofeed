@@ -31,6 +31,7 @@ import {
   useLeafletMap,
 } from 'react-mapy';
 import './EventMapView.css';
+import { formatZeroTime } from './eventListUtils';
 import type { HomeEventListItem } from './types';
 
 interface EventMapViewProps {
@@ -47,6 +48,7 @@ interface MappableEvent {
   id: string;
   name: string;
   date: string;
+  zeroTime?: string;
   featuredImage?: string;
   latitude: number;
   location: string;
@@ -122,6 +124,15 @@ const escapeHtml = (value: string): string =>
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
 
+const ICON_CALENDAR =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>';
+
+const ICON_CLOCK =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+const ICON_MAP_PIN =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>';
+
 const normalizeTileLanguage = (value: string | undefined): string => {
   return resolveSupportedMapTileLang(value) ?? 'en';
 };
@@ -148,6 +159,7 @@ const toMappableEvent = (event: HomeEventListItem): MappableEvent | null => {
     id: event.id,
     name: event.name,
     date: event.date,
+    ...(event.zeroTime ? { zeroTime: event.zeroTime } : {}),
     location: event.location || '',
     ...(event.featuredImage ? { featuredImage: event.featuredImage } : {}),
     latitude: event.latitude,
@@ -173,13 +185,17 @@ const buildEventTooltipHtml = (event: MappableEvent): string => {
     ? `<img alt="${escapeHtml(event.name)}" class="event-map-tooltip-card__image" loading="lazy" src="${escapeHtml(imageUrl)}" />`
     : '';
 
+  const zeroTimeMarkup = event.zeroTime
+    ? `<span class="event-map-tooltip-card__meta-sep">·</span>${ICON_CLOCK}<span>${escapeHtml(formatZeroTime(event.zeroTime))}</span>`
+    : '';
+
   return `
     <div class="event-map-tooltip-card">
       ${imageMarkup}
       <div class="event-map-tooltip-card__body">
         <div class="event-map-tooltip-card__title">${escapeHtml(event.name)}</div>
-        <div class="event-map-tooltip-card__meta">${escapeHtml(event.date)}</div>
-        <div class="event-map-tooltip-card__meta">${escapeHtml(event.location)}</div>
+        <div class="event-map-tooltip-card__meta">${ICON_CALENDAR}<span>${escapeHtml(event.date)}</span>${zeroTimeMarkup}</div>
+        <div class="event-map-tooltip-card__meta">${ICON_MAP_PIN}<span>${escapeHtml(event.location)}</span></div>
       </div>
     </div>
   `.trim();

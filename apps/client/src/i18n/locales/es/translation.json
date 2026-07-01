@@ -365,6 +365,7 @@
         "Name": "Nombre",
         "Organizer": "Organizador",
         "Date": "Fecha",
+        "ZeroTime": "Hora cero",
         "Location": "Ubicación",
         "Visibility": "Visibilidad",
         "Actions": "Acciones",

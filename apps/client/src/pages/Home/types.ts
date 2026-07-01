@@ -11,6 +11,7 @@ export interface HomeEventListItem {
   slug: string;
   name: string;
   date: string;
+  zeroTime?: string;
   organizer?: string;
   location?: string;
   latitude?: number;

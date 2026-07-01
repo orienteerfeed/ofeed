@@ -14,6 +14,7 @@ export interface GraphQLEvent {
   name: string;
   organizer?: string | null;
   date: string;
+  zeroTime?: string | null;
   location?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -60,6 +61,7 @@ export const EVENTS_QUERY = gql`
           name
           organizer
           date
+          zeroTime
           location
           latitude
           longitude
@@ -118,6 +120,7 @@ export const convertGraphQLEventToHomeEvent = (
     slug,
     name: graphqlEvent.name,
     date: formattedDate,
+    ...(graphqlEvent.zeroTime ? { zeroTime: graphqlEvent.zeroTime } : {}),
     ...(graphqlEvent.organizer ? { organizer: graphqlEvent.organizer } : {}),
     ...(graphqlEvent.location ? { location: graphqlEvent.location } : {}),
     ...(graphqlEvent.featuredImage

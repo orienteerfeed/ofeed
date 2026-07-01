@@ -365,6 +365,7 @@
         "Name": "Name",
         "Organizer": "Organizer",
         "Date": "Date",
+        "ZeroTime": "Zero time",
         "Location": "Location",
         "Visibility": "Visibility",
         "Actions": "Actions",

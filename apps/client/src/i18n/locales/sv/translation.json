@@ -365,6 +365,7 @@
         "Name": "Namn",
         "Organizer": "Arrangör",
         "Date": "Datum",
+        "ZeroTime": "Nolltid",
         "Location": "Plats",
         "Visibility": "Synlighet",
         "Actions": "Åtgärder",
