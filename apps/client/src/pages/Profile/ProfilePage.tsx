@@ -363,7 +363,7 @@ export const ProfilePage = () => {
   const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] =
     useState(false);
   const [deleteAccountPassword, setDeleteAccountPassword] = useState('');
-  const [deleteEventsChecked, setDeleteEventsChecked] = useState(false);
+  const [deleteEventsChecked, setDeleteEventsChecked] = useState(true);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [profile, setProfile] = useState<Profile>({
     firstName: '',
@@ -880,7 +880,7 @@ export const ProfilePage = () => {
         variant: 'error',
       });
       setDeleteAccountPassword('');
-      setDeleteEventsChecked(false);
+      setDeleteEventsChecked(true);
       setIsDeleteAccountDialogOpen(false);
     }
   };
@@ -1800,7 +1800,7 @@ export const ProfilePage = () => {
                   setIsDeleteAccountDialogOpen(open);
                   if (!open) {
                     setDeleteAccountPassword('');
-                    setDeleteEventsChecked(false);
+                    setDeleteEventsChecked(true);
                   }
                 }}
               >
@@ -1865,7 +1865,7 @@ export const ProfilePage = () => {
                       onClick={() => {
                         setIsDeleteAccountDialogOpen(false);
                         setDeleteAccountPassword('');
-                        setDeleteEventsChecked(false);
+                        setDeleteEventsChecked(true);
                       }}
                       disabled={isDeletingAccount}
                     >
