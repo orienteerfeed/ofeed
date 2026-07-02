@@ -10,6 +10,7 @@ export interface HomeEventListItem {
   id: string;
   slug: string;
   name: string;
+  /** raw ISO datetime — format at render time so it reacts to locale changes */
   date: string;
   zeroTime?: string;
   organizer?: string;

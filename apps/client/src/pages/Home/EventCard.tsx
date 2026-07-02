@@ -1,10 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { config } from '@/config';
-import { formatTimeToHms } from '@/lib/date';
+import { formatDateWithDay, formatTimeToHms, getLocaleKey } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Link } from '@tanstack/react-router';
-import { t } from 'i18next';
+import i18n, { t } from 'i18next';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
 import {
@@ -70,7 +70,9 @@ export const EventCard = ({ event }: EventCardProps) => {
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
             <div className="flex items-center gap-2 text-white text-xs md:text-sm mb-2">
               <Calendar className="w-4 h-4 shrink-0" />
-              <span className="font-mono">{event.date}</span>
+              <span className="font-mono">
+                {formatDateWithDay(event.date, getLocaleKey(i18n.language))}
+              </span>
               {event.zeroTime && (
                 <>
                   <Clock className="w-4 h-4 shrink-0 ml-1" />

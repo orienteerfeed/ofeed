@@ -1,9 +1,9 @@
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { formatTimeToHms } from '@/lib/date';
+import { formatDateWithDay, formatTimeToHms, getLocaleKey } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Link } from '@tanstack/react-router';
-import { TFunction } from 'i18next';
+import i18n, { TFunction } from 'i18next';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
 import {
@@ -51,7 +51,9 @@ export function EventTableRow({
       <TableCell>
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-muted-foreground" />
-          <span className="font-mono text-sm">{event.date}</span>
+          <span className="font-mono text-sm">
+            {formatDateWithDay(event.date, getLocaleKey(i18n.language))}
+          </span>
         </div>
       </TableCell>
 

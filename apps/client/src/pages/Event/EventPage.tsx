@@ -2,6 +2,7 @@ import { notFound, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import {
   Calendar,
+  Clock,
   FileText,
   Loader2,
   MapPin,
@@ -20,7 +21,11 @@ import {
 } from '../../components/ui/dropdown-menu';
 import { useAuth } from '../../hooks/useAuth';
 import { useEvent } from '../../hooks/useEvent';
-import { formatDateWithDay, getLocaleKey } from '../../lib/date';
+import {
+  formatDateWithDay,
+  formatTimeToHms,
+  getLocaleKey,
+} from '../../lib/date';
 import { buildBoardEventUrl } from '../../lib/paths/externalLinks';
 import PATHNAMES from '../../lib/paths/pathnames';
 import { MainPageLayout } from '../../templates/MainPageLayout';
@@ -131,6 +136,16 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                 <span className="font-mono whitespace-nowrap">
                   {formatDateWithDay(event.date, getLocaleKey(i18n.language))}
                 </span>
+                {event.zeroTime && (
+                  <>
+                    <Clock className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                    <span className="font-mono whitespace-nowrap">
+                      {formatTimeToHms(event.zeroTime, {
+                        dropZeroSeconds: true,
+                      })}
+                    </span>
+                  </>
+                )}
               </div>
               <div className="flex min-w-0 items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
