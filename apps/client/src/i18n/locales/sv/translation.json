@@ -1226,6 +1226,21 @@
           "NewPasswordRequired": "Nytt lösenord är obligatoriskt",
           "CurrentPasswordIncorrect": "Nuvarande lösenord är felaktigt.",
           "NewPasswordMustDiffer": "Det nya lösenordet måste skilja sig från det nuvarande lösenordet."
+        },
+        "DeleteAccount": {
+          "Title": "Ta bort konto",
+          "Description": "Ta permanent bort ditt konto och personuppgifter.",
+          "Consequences": "Att ta bort ditt konto tar permanent bort dina personuppgifter. Dina evenemang bevaras men kopplas inte längre till din identitet.",
+          "DeleteButton": "Ta bort mitt konto",
+          "DialogTitle": "Ta bort ditt konto?",
+          "DialogDescription": "Den här åtgärden är permanent och kan inte ångras. Ange ditt nuvarande lösenord för att bekräfta.",
+          "PasswordPlaceholder": "Ange ditt lösenord för att bekräfta",
+          "DeleteEventsLabel": "Ta även bort alla mina evenemang",
+          "DeleteEventsHelper": "Alla evenemang du skapat, inklusive klasser, deltagare och resultat, kommer att tas bort permanent.",
+          "ConfirmDeleteButton": "Ta bort konto permanent",
+          "DeletingButton": "Tar bort...",
+          "DeletedDescription": "Ditt konto har tagits bort.",
+          "DeleteError": "Det gick inte att ta bort kontot. Försök igen."
         }
       },
       "Notifications": {

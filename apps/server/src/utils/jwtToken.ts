@@ -14,6 +14,7 @@ type AuthFailureReason =
   | 'missing_authorization_header'
   | 'unsupported_authorization_scheme'
   | 'invalid_bearer_token'
+  | 'inactive_user'
   | 'oauth_access_token_not_found'
   | 'basic_malformed_credentials'
   | 'basic_missing_event_id'
@@ -308,10 +309,29 @@ export const buildAuthContextFromRequest = async (
         }
       }
 
+      const userId = Number(decoded.userId);
+      if (!Number.isFinite(userId)) {
+        return unauthenticated('invalid_bearer_token');
+      }
+
+      const activeUser = await prisma.user.findFirst({
+        where: { id: userId, active: true, deletedAt: null },
+        select: { id: true },
+      });
+
+      if (!activeUser) {
+        logger.warn('JWT verification failed', {
+          authType: 'bearer',
+          reason: 'inactive_user',
+          userId,
+        });
+        return unauthenticated('inactive_user');
+      }
+
       return {
         isAuthenticated: true,
         type: 'jwt',
-        userId: decoded.userId,
+        userId,
         rawToken,
         tokenPayload: decoded,
       };

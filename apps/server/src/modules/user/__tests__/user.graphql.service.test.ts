@@ -12,12 +12,17 @@ const authServiceMock = vi.hoisted(() => ({
   signupUser: vi.fn(),
 }));
 
+const eventServiceMock = vi.hoisted(() => ({
+  deleteAllEventData: vi.fn(),
+}));
+
 vi.mock('../../auth/auth.service.js', () => authServiceMock);
+vi.mock('../../event/event.service.js', () => eventServiceMock);
 vi.mock('../../../utils/jwtToken.js', () => ({
   generateJwtTokenForLink: vi.fn(() => 'verification-token'),
 }));
 
-import { signIn, updateAuthenticatedUser } from '../user.service.js';
+import { anonymizeCurrentUserAccount, signIn, updateAuthenticatedUser } from '../user.service.js';
 
 describe('user GraphQL service signIn', () => {
   beforeEach(() => {
@@ -139,5 +144,23 @@ describe('user GraphQL service updateAuthenticatedUser', () => {
       },
     });
     expect(authServiceMock.sendVerificationEmailHelper).not.toHaveBeenCalled();
+  });
+});
+
+describe('user GraphQL service anonymizeCurrentUserAccount', () => {
+  beforeEach(() => {
+    Object.values(authServiceMock).forEach((mock) => mock.mockReset());
+    Object.values(eventServiceMock).forEach((mock) => mock.mockReset());
+  });
+
+  it('requires JWT authentication', async () => {
+    await expect(
+      anonymizeCurrentUserAccount(
+        { isAuthenticated: true, type: 'eventBasic', userId: 42, eventId: 'event-1' },
+        { currentPassword: 'secret', deleteEvents: false },
+      ),
+    ).rejects.toMatchObject({
+      message: 'Unauthorized: JWT credentials are required',
+    });
   });
 });

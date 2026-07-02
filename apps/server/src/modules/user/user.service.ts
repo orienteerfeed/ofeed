@@ -1,3 +1,4 @@
+import argon2 from 'argon2';
 import { GraphQLError } from 'graphql';
 import { isRelayDiscipline } from '../../utils/relay.js';
 
@@ -18,10 +19,12 @@ import {
   signupUser,
 } from '../auth/auth.service.js';
 import { generateJwtTokenForLink } from '../../utils/jwtToken.js';
+import { deleteAllEventData } from '../event/event.service.js';
 import { getEventStatusSummary } from '../event/event.status.service.js';
 import type {
   ChangeCurrentUserPasswordInput,
   CreateUserCardInput,
+  DeleteCurrentAccountInput,
   LoginInput,
   UpdateCurrentUserInput,
   UpdateUserCardInput,
@@ -43,6 +46,14 @@ export function getAuthenticatedUserId(auth: GraphQLAuthContext) {
   }
 
   return userId;
+}
+
+export function getAuthenticatedJwtUserId(auth: GraphQLAuthContext) {
+  if (!auth?.isAuthenticated || auth.type !== 'jwt') {
+    throw new AuthzError('Unauthorized: JWT credentials are required', 401);
+  }
+
+  return getAuthenticatedUserId(auth);
 }
 
 function getErrorMessage(error: unknown) {
@@ -586,6 +597,86 @@ export async function changeCurrentUserPassword(
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
+}
+
+export async function anonymizeCurrentUserAccount(
+  auth: GraphQLAuthContext,
+  input: DeleteCurrentAccountInput,
+) {
+  const userId = getAuthenticatedJwtUserId(auth);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, password: true, deletedAt: true },
+  });
+
+  if (!user) {
+    throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+  }
+
+  if (user.deletedAt) {
+    throw new GraphQLError('Account is already scheduled for deletion', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+
+  const isPasswordValid = await argon2.verify(user.password, input.currentPassword);
+  if (!isPasswordValid) {
+    throw new GraphQLError('Current password is incorrect', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const clients = await tx.oAuthClient.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    const clientIds = clients.map((c) => c.id);
+
+    if (clientIds.length > 0) {
+      await tx.oAuthAuthorizationCode.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthAccessToken.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthRefreshToken.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthGrant.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthScope.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthRedirectUri.deleteMany({ where: { clientId: { in: clientIds } } });
+      await tx.oAuthClient.deleteMany({ where: { userId } });
+    }
+
+    await tx.passwordResetToken.deleteMany({ where: { userId } });
+
+    await tx.userCard.deleteMany({ where: { userId } });
+
+    if (input.deleteEvents) {
+      const eventIds = (
+        await tx.event.findMany({ where: { authorId: userId }, select: { id: true } })
+      ).map((e) => e.id);
+
+      for (const eventId of eventIds) {
+        await deleteAllEventData(eventId, tx);
+      }
+
+      await tx.event.deleteMany({ where: { id: { in: eventIds } } });
+    }
+
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        email: `deleted-${userId}@deleted.invalid`,
+        firstname: 'Deleted',
+        lastname: 'User',
+        password: 'ACCOUNT_DELETED',
+        organisation: null,
+        emergencyContact: null,
+        active: false,
+        emailVerifiedAt: null,
+        deletedAt: new Date(),
+      },
+    });
+  });
+
+  return true;
 }
 
 export async function listMyEvents(userId: number | string) {
