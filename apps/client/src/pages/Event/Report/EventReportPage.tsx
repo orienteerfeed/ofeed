@@ -24,11 +24,12 @@ import { useApi, useEvent } from '@/hooks';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 import { MainPageLayout } from '@/templates/MainPageLayout';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from '@tanstack/react-router';
+import { Link, useParams } from '@tanstack/react-router';
 import {
   Clock,
   CreditCard,
   Download,
+  ExternalLink,
   List,
   MoreHorizontal,
   Printer,
@@ -50,6 +51,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { badgeVariants } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast as sonnerToast } from 'sonner';
@@ -921,6 +924,12 @@ export const EventReportPage = () => {
     return parts.length ? parts.join(' ') : null;
   }, [selectedCompetitorChanges, selectedCompetitorId]);
 
+  const selectedCompetitorClass = useMemo(() => {
+    if (!selectedCompetitorId) return null;
+    const match = selectedCompetitorChanges.find(item => item.competitor?.class);
+    return match?.competitor?.class?.name ?? null;
+  }, [selectedCompetitorChanges, selectedCompetitorId]);
+
   return (
     <MainPageLayout t={t}>
       <div className="container mx-auto px-4 py-6 space-y-6">
@@ -1058,16 +1067,33 @@ export const EventReportPage = () => {
         >
           <DialogContent className="left-0 top-0 h-[100vh] w-[100vw] max-w-none translate-x-0 translate-y-0 rounded-none sm:left-1/2 sm:top-1/2 sm:h-auto sm:w-[95vw] sm:max-w-4xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg max-h-[100vh] sm:max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {selectedCompetitorId
-                  ? t('Pages.Event.Report.CompetitorChangesTitle', {
-                      name: selectedCompetitorName ?? '-',
-                      id: selectedCompetitorId,
-                    })
-                  : t('Pages.Event.Report.CompetitorChangesTitle', {
-                      name: '-',
-                      id: '-',
-                    })}
+              <DialogTitle className="flex flex-wrap items-center gap-2">
+                <span>
+                  {selectedCompetitorId
+                    ? t('Pages.Event.Report.CompetitorChangesTitle', {
+                        name: selectedCompetitorName ?? '-',
+                        id: selectedCompetitorId,
+                      })
+                    : t('Pages.Event.Report.CompetitorChangesTitle', {
+                        name: '-',
+                        id: '-',
+                      })}
+                </span>
+                {selectedCompetitorClass && (
+                  <Link
+                    to="/events/$eventId"
+                    params={{ eventId }}
+                    search={{ tab: 'results', class: selectedCompetitorClass }}
+                    onClick={() => setSelectedCompetitorId(null)}
+                    className={cn(
+                      badgeVariants({ variant: 'secondary' }),
+                      'gap-1 cursor-pointer font-normal text-xs'
+                    )}
+                  >
+                    {selectedCompetitorClass}
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                )}
               </DialogTitle>
               <DialogDescription>
                 {t('Pages.Event.Report.CompetitorChangesDescription')}
