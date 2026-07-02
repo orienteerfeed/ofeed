@@ -1,13 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { config } from '@/config';
+import { formatTimeToHms } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Link } from '@tanstack/react-router';
 import { t } from 'i18next';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
 import {
-  formatZeroTime,
   getEventLocationLabel,
   getEventStatusClassName,
 } from './eventListUtils';
@@ -74,7 +74,9 @@ export const EventCard = ({ event }: EventCardProps) => {
               {event.zeroTime && (
                 <>
                   <Clock className="w-4 h-4 shrink-0 ml-1" />
-                  <span className="font-mono">{formatZeroTime(event.zeroTime)}</span>
+                  <span className="font-mono">
+                    {formatTimeToHms(event.zeroTime, { dropZeroSeconds: true })}
+                  </span>
                 </>
               )}
             </div>

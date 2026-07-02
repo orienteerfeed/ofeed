@@ -78,10 +78,6 @@ export function appendUniqueEvents(
     : [...currentEvents, ...uniqueNextEvents];
 }
 
-export function formatZeroTime(zeroTime: string): string {
-  return zeroTime.endsWith(':00') ? zeroTime.slice(0, -3) : zeroTime;
-}
-
 export function getEventLocationLabel(event: HomeEventListItem): string {
   return (
     [event.location, event.country?.countryName].filter(Boolean).join(', ') ||

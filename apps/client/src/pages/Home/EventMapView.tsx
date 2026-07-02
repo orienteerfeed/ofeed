@@ -1,4 +1,5 @@
 import { config } from '@/config';
+import { formatTimeToHms } from '@/lib/date';
 import {
   createProxiedMapyProvider,
   MAP_TILE_SESSION_URL,
@@ -31,7 +32,6 @@ import {
   useLeafletMap,
 } from 'react-mapy';
 import './EventMapView.css';
-import { formatZeroTime } from './eventListUtils';
 import type { HomeEventListItem } from './types';
 
 interface EventMapViewProps {
@@ -186,7 +186,7 @@ const buildEventTooltipHtml = (event: MappableEvent): string => {
     : '';
 
   const zeroTimeMarkup = event.zeroTime
-    ? `<span class="event-map-tooltip-card__meta-sep">·</span>${ICON_CLOCK}<span>${escapeHtml(formatZeroTime(event.zeroTime))}</span>`
+    ? `<span class="event-map-tooltip-card__meta-sep">·</span>${ICON_CLOCK}<span>${escapeHtml(formatTimeToHms(event.zeroTime, { dropZeroSeconds: true }))}</span>`
     : '';
 
   return `

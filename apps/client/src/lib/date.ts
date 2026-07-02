@@ -87,13 +87,23 @@ export function formatDateWithDay(
   return format(d, DATE_FORMATS.dateWithDay, { locale: LOCALES[locale] });
 }
 
-export function formatTimeToHms(value: Date | string | number): string {
+export function formatTimeToHms(
+  value: Date | string | number,
+  options?: { dropZeroSeconds?: boolean }
+): string {
   const d = parseDate(value);
+  let result: string;
   if (!d && typeof value === 'string') {
-    return normalizeTimeInput(value) ?? '';
+    result = normalizeTimeInput(value) ?? '';
+  } else if (!d) {
+    return '';
+  } else {
+    result = format(d, DATE_FORMATS.timeHms);
   }
-  if (!d) return '';
-  return format(d, DATE_FORMATS.timeHms);
+
+  return options?.dropZeroSeconds && result.endsWith(':00')
+    ? result.slice(0, -3)
+    : result;
 }
 
 export function normalizeTimeInput(value?: string): string | undefined {
