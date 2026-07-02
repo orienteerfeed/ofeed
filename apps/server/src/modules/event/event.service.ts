@@ -1316,10 +1316,13 @@ export const storeCompetitor = async (
  * @param {string} eventId - The event ID.
  * @throws {DatabaseError} If any deletion fails.
  */
-export const deleteEventCompetitorsAndProtocols = async (eventId: string) => {
+export const deleteEventCompetitorsAndProtocols = async (
+  eventId: string,
+  db: AppPrismaClient | Prisma.TransactionClient = prisma,
+) => {
   try {
     // 1. Find all class IDs associated with the eventId
-    const classIds = await prisma.class.findMany({
+    const classIds = await db.class.findMany({
       where: { eventId: eventId },
       select: { id: true },
     });
@@ -1328,14 +1331,14 @@ export const deleteEventCompetitorsAndProtocols = async (eventId: string) => {
 
     if (classIdList.length === 0) {
       console.warn(`No classes found for event ${eventId}.`);
-      await prisma.organisation.deleteMany({
+      await db.organisation.deleteMany({
         where: { eventId: eventId },
       });
       return;
     }
 
     // 2. Find all competitors under these classes
-    const competitors = await prisma.competitor.findMany({
+    const competitors = await db.competitor.findMany({
       where: { classId: { in: classIdList } },
       select: { id: true },
     });
@@ -1344,27 +1347,27 @@ export const deleteEventCompetitorsAndProtocols = async (eventId: string) => {
 
     if (competitorIdList.length > 0) {
       // 3. Delete Protocols linked to competitors
-      await prisma.protocol.deleteMany({
+      await db.protocol.deleteMany({
         where: { competitorId: { in: competitorIdList } },
       });
 
       // 4. Delete Splits linked to competitors
-      await prisma.split.deleteMany({
+      await db.split.deleteMany({
         where: { competitorId: { in: competitorIdList } },
       });
 
       // 5. Delete Competitors
-      await prisma.competitor.deleteMany({
+      await db.competitor.deleteMany({
         where: { id: { in: competitorIdList } },
       });
     }
 
     // Teams reference classId, so remove them here
-    await prisma.team.deleteMany({
+    await db.team.deleteMany({
       where: { classId: { in: classIdList } },
     });
 
-    await prisma.organisation.deleteMany({
+    await db.organisation.deleteMany({
       where: { eventId: eventId },
     });
   } catch (err) {
@@ -1487,13 +1490,16 @@ export const deleteEventCompetitor = async (eventId: string, competitorId: numbe
  * @throws {DatabaseError} If there is an error deleting records from the database.
  * @returns {Promise<string>} Success message indicating the data has been deleted.
  */
-export const deleteAllEventData = async (eventId: string) => {
+export const deleteAllEventData = async (
+  eventId: string,
+  db: AppPrismaClient | Prisma.TransactionClient = prisma,
+) => {
   try {
     // Step 1: Delete competitors, protocols, splits
-    await deleteEventCompetitorsAndProtocols(eventId);
+    await deleteEventCompetitorsAndProtocols(eventId, db);
 
     // Step 2: Delete Classes linked to event
-    await prisma.class.deleteMany({
+    await db.class.deleteMany({
       where: { eventId: eventId },
     });
 
@@ -1501,38 +1507,43 @@ export const deleteAllEventData = async (eventId: string) => {
     // These are only cascaded on full Event deletion, so clear them explicitly
     // here. Delete the dependent CourseControls before their parent Courses, and
     // Controls / CourseMaps last (Course references them via SetNull relations).
-    const courses = await prisma.course.findMany({
+    const courses = await db.course.findMany({
       where: { eventId: eventId },
       select: { id: true },
     });
     const courseIds = courses.map((course) => course.id);
     if (courseIds.length > 0) {
-      await prisma.courseControl.deleteMany({
+      await db.courseControl.deleteMany({
         where: { courseId: { in: courseIds } },
       });
     }
-    await prisma.course.deleteMany({
+    await db.course.deleteMany({
       where: { eventId: eventId },
     });
-    await prisma.control.deleteMany({
+    await db.control.deleteMany({
       where: { eventId: eventId },
     });
-    await prisma.courseMap.deleteMany({
+    await db.courseMap.deleteMany({
       where: { eventId: eventId },
     });
 
     // Step 4: Delete Event Passwords
-    await prisma.eventPassword.deleteMany({
+    await db.eventPassword.deleteMany({
       where: { eventId: eventId },
     });
 
     // Step 5: Delete user-configured event services
-    await prisma.eventService.deleteMany({
+    await db.eventService.deleteMany({
       where: { eventId: eventId },
     });
 
     // Step 6: Delete IOF import state so the same XML can be processed again
-    await prisma.eventImportState.deleteMany({
+    await db.eventImportState.deleteMany({
+      where: { eventId: eventId },
+    });
+
+    // Step 7: Delete external result sync state, which does not cascade.
+    await db.eventExternalResultsSyncState.deleteMany({
       where: { eventId: eventId },
     });
   } catch (err) {

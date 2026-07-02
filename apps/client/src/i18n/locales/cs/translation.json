@@ -1234,6 +1234,21 @@
           "NewPasswordRequired": "Nové heslo je povinné",
           "CurrentPasswordIncorrect": "Aktuální heslo není správné.",
           "NewPasswordMustDiffer": "Nové heslo se musí lišit od aktuálního hesla."
+        },
+        "DeleteAccount": {
+          "Title": "Smazání účtu",
+          "Description": "Trvale odstraň svůj účet a osobní údaje.",
+          "Consequences": "Smazáním účtu trvale odstraníš své osobní údaje. Tvoje akce zůstanou zachovány, ale nebudou nadále spojeny s tvou identitou.",
+          "DeleteButton": "Smazat můj účet",
+          "DialogTitle": "Smazat účet?",
+          "DialogDescription": "Tato akce je trvalá a nelze ji vrátit zpět. Pro potvrzení zadej své aktuální heslo.",
+          "PasswordPlaceholder": "Zadej heslo pro potvrzení",
+          "DeleteEventsLabel": "Také smazat všechny moje akce",
+          "DeleteEventsHelper": "Všechny tvoje vytvořené akce včetně kategorií, závodníků a výsledků budou trvale smazány.",
+          "ConfirmDeleteButton": "Trvale smazat účet",
+          "DeletingButton": "Mazání...",
+          "DeletedDescription": "Tvůj účet byl smazán.",
+          "DeleteError": "Smazání účtu se nezdařilo. Zkus to znovu."
         }
       },
       "Tabs": {

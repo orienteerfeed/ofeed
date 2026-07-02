@@ -400,6 +400,21 @@
           "NewPasswordRequired": "Neues Passwort ist erforderlich",
           "CurrentPasswordIncorrect": "Aktuelles Passwort ist falsch.",
           "NewPasswordMustDiffer": "Das neue Passwort muss sich vom aktuellen Passwort unterscheiden."
+        },
+        "DeleteAccount": {
+          "Title": "Konto löschen",
+          "Description": "Entferne dauerhaft dein Konto und deine persönlichen Daten.",
+          "Consequences": "Wenn du dein Konto löschst, werden deine persönlichen Daten dauerhaft entfernt. Deine Veranstaltungen bleiben erhalten, sind aber nicht mehr mit deiner Identität verknüpft.",
+          "DeleteButton": "Mein Konto löschen",
+          "DialogTitle": "Konto löschen?",
+          "DialogDescription": "Diese Aktion ist dauerhaft und kann nicht rückgängig gemacht werden. Gib dein aktuelles Passwort zur Bestätigung ein.",
+          "PasswordPlaceholder": "Passwort zur Bestätigung eingeben",
+          "DeleteEventsLabel": "Auch alle meine Veranstaltungen löschen",
+          "DeleteEventsHelper": "Alle von dir erstellten Veranstaltungen einschließlich Klassen, Teilnehmern und Ergebnissen werden dauerhaft gelöscht.",
+          "ConfirmDeleteButton": "Konto dauerhaft löschen",
+          "DeletingButton": "Wird gelöscht...",
+          "DeletedDescription": "Dein Konto wurde gelöscht.",
+          "DeleteError": "Kontolöschung fehlgeschlagen. Bitte versuche es erneut."
         }
       },
       "Notifications": {

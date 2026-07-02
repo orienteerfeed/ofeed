@@ -8,6 +8,7 @@ import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 import {
   verifyUserEmail,
   resendUserEmailVerification,
+  anonymizeCurrentUserAccount,
   changeCurrentUserPassword,
   createAuthenticatedUserCard,
   deleteAuthenticatedUserCard,
@@ -26,6 +27,7 @@ import { UserCardRef, UserCardTypeRef, UserRef } from './user.graphql-types.js';
 import {
   changeCurrentUserPasswordInputSchema,
   createUserCardInputSchema,
+  deleteCurrentAccountInputSchema,
   loginInputSchema,
   updateCurrentUserInputSchema,
   updateUserCardInputSchema,
@@ -320,5 +322,19 @@ builder.mutationFields((t) => ({
       ).catch((err: unknown) =>
         rethrowAuthzOrError(err, 'Failed to change current user password'),
       ),
+  }),
+  deleteCurrentAccount: t.boolean({
+    args: {
+      currentPassword: t.arg.string({ required: true }),
+      deleteEvents: t.arg.boolean(),
+    },
+    resolve: (_root, args, context) =>
+      anonymizeCurrentUserAccount(
+        context.auth,
+        deleteCurrentAccountInputSchema.parse({
+          currentPassword: args.currentPassword,
+          deleteEvents: args.deleteEvents ?? false,
+        }),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to delete account')),
   }),
 }));
