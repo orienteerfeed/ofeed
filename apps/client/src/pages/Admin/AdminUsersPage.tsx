@@ -1,5 +1,6 @@
 import type { AdminUserListItem } from '@repo/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { Mail, MoreHorizontal, Power, PowerOff, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -13,6 +14,13 @@ import {
   AppPagination,
   AppRowsPerPage,
 } from '@/components/organisms';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   TableCell,
   TableHead,
@@ -31,6 +39,7 @@ import { AdminPageLayout } from '@/templates';
 import { toast } from '@/utils';
 
 import {
+  useAdminEventsQuery,
   useAdminUserActiveMutation,
   useAdminUserDeleteMutation,
   useAdminUserRequestVerificationMutation,
@@ -68,6 +77,27 @@ export function AdminUsersPage() {
   const [deleteTarget, setDeleteTarget] = useState<AdminUserListItem | null>(
     null
   );
+  const [eventsTarget, setEventsTarget] = useState<AdminUserListItem | null>(
+    null
+  );
+  const [eventsPage, setEventsPage] = useState(1);
+  const [eventsPageSize, setEventsPageSize] = useState(25);
+  const {
+    data: eventsData,
+    isLoading: eventsLoading,
+    error: eventsError,
+  } = useAdminEventsQuery({
+    page: eventsPage,
+    limit: eventsPageSize,
+    authorId: eventsTarget?.id,
+    enabled: eventsTarget !== null,
+  });
+
+  useEffect(() => {
+    if (!eventsData) return;
+    const totalPages = Math.max(1, Math.ceil(eventsData.total / eventsPageSize));
+    if (eventsPage > totalPages) setEventsPage(totalPages);
+  }, [eventsData, eventsPage, eventsPageSize]);
 
   const invalidateAdminQueries = async () => {
     await queryClient.invalidateQueries({
@@ -235,7 +265,16 @@ export function AdminUsersPage() {
               return (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">
-                    {user.firstname} {user.lastname}
+                    <button
+                      type="button"
+                      className="text-left transition-colors hover:text-primary hover:underline"
+                      onClick={() => {
+                        setEventsTarget(user);
+                        setEventsPage(1);
+                      }}
+                    >
+                      {user.firstname} {user.lastname}
+                    </button>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
@@ -365,6 +404,97 @@ export function AdminUsersPage() {
         variant="destructive"
         onConfirm={() => void handleDeleteUser()}
       />
+
+      <Dialog
+        open={eventsTarget !== null}
+        onOpenChange={open => {
+          if (!open) {
+            setEventsTarget(null);
+          }
+        }}
+      >
+        <DialogContent className="left-0 top-0 h-[100vh] w-[100vw] max-w-none translate-x-0 translate-y-0 rounded-none sm:left-1/2 sm:top-1/2 sm:h-auto sm:w-[95vw] sm:max-w-4xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg max-h-[100vh] sm:max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {eventsTarget &&
+                t('Pages.Admin.Users.EventsDialog.Title', {
+                  name: `${eventsTarget.firstname} ${eventsTarget.lastname}`,
+                })}
+            </DialogTitle>
+            <DialogDescription>
+              {t('Pages.Admin.Users.EventsDialog.Description')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <AppDataTable
+            data={eventsData?.items ?? []}
+            isLoading={eventsLoading}
+            error={eventsError}
+            columnCount={6}
+            emptyStateText={t('Pages.Admin.Users.EventsDialog.Empty')}
+            renderToolbar={
+              <AppRowsPerPage
+                pageSize={eventsPageSize}
+                onPageSizeChange={size => {
+                  setEventsPageSize(size);
+                  setEventsPage(1);
+                }}
+              />
+            }
+            renderPagination={
+              <AppPagination
+                page={eventsPage}
+                pageSize={eventsPageSize}
+                totalItems={eventsData?.total ?? 0}
+                onPageChange={setEventsPage}
+              />
+            }
+            renderHeader={
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('Pages.Admin.Table.Event')}</TableHead>
+                  <TableHead>{t('Pages.Admin.Table.Date')}</TableHead>
+                  <TableHead>{t('Pages.Admin.Table.Organizer')}</TableHead>
+                  <TableHead>{t('Pages.Admin.Table.Discipline')}</TableHead>
+                  <TableHead>{t('Pages.Admin.Table.Published')}</TableHead>
+                  <TableHead>{t('Pages.Admin.Table.Ranking')}</TableHead>
+                </TableRow>
+              </TableHeader>
+            }
+            renderRow={event => (
+              <TableRow key={event.id}>
+                <TableCell className="font-medium">
+                  <Link
+                    {...PATHNAMES.eventDetail(event.id)}
+                    className="transition-colors hover:text-primary"
+                  >
+                    {event.name}
+                  </Link>
+                </TableCell>
+                <TableCell>{formatDate(event.date)}</TableCell>
+                <TableCell>{event.organizer || '—'}</TableCell>
+                <TableCell>
+                  {t(`Pages.Event.Form.DisciplineOptions.${event.discipline}`)}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={event.published ? 'default' : 'secondary'}>
+                    {event.published
+                      ? t('Pages.Admin.Table.Yes')
+                      : t('Pages.Admin.Table.No')}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={event.ranking ? 'default' : 'secondary'}>
+                    {event.ranking
+                      ? t('Pages.Admin.Table.Yes')
+                      : t('Pages.Admin.Table.No')}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            )}
+          />
+        </DialogContent>
+      </Dialog>
     </AdminPageLayout>
   );
 }

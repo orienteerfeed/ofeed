@@ -67,6 +67,11 @@
           "RequestVerificationSuccessTitle": "Verifieringsmejl skickat",
           "RequestVerificationSuccessDescription": "Ett verifieringsmejl skickades till {{name}}.",
           "RequestVerificationErrorTitle": "Det gick inte att skicka verifieringsmejlet"
+        },
+        "EventsDialog": {
+          "Title": "Tävlingar av {{name}}",
+          "Description": "Tävlingar skapade av denna användare.",
+          "Empty": "Den här användaren har inte skapat några tävlingar än."
         }
       },
       "Events": {

@@ -67,6 +67,11 @@
           "RequestVerificationSuccessTitle": "Correo de verificación enviado",
           "RequestVerificationSuccessDescription": "Se envió un correo de verificación a {{name}}.",
           "RequestVerificationErrorTitle": "No se pudo enviar el correo de verificación"
+        },
+        "EventsDialog": {
+          "Title": "Eventos de {{name}}",
+          "Description": "Eventos creados por este usuario.",
+          "Empty": "Este usuario aún no ha creado ningún evento."
         }
       },
       "Events": {

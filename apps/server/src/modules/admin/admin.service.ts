@@ -526,13 +526,19 @@ export async function requestAdminUserEmailVerification(
 
 export async function getAdminEvents(
   prisma,
-  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
+  {
+    page = 1,
+    limit = 25,
+    authorId,
+  }: { page?: number; limit?: number; authorId?: number } = {},
 ) {
   const skip = (page - 1) * limit;
+  const where = authorId ? { authorId } : undefined;
 
   const [total, events] = await Promise.all([
-    prisma.event.count(),
+    prisma.event.count({ where }),
     prisma.event.findMany({
+      where,
       orderBy: [{ createdAt: 'desc' }, { date: 'desc' }],
       skip,
       take: limit,

@@ -67,6 +67,11 @@
           "RequestVerificationSuccessTitle": "Ověřovací e-mail odeslán",
           "RequestVerificationSuccessDescription": "Ověřovací e-mail byl odeslán uživateli {{name}}.",
           "RequestVerificationErrorTitle": "Nepodařilo se odeslat ověřovací e-mail"
+        },
+        "EventsDialog": {
+          "Title": "Akce uživatele {{name}}",
+          "Description": "Akce vytvořené tímto uživatelem.",
+          "Empty": "Tento uživatel ještě nevytvořil žádnou akci."
         }
       },
       "Events": {

@@ -331,6 +331,13 @@ export const ADMIN_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
           schema: { type: 'integer', minimum: 1, maximum: 200, default: 25 },
           description: 'Items per page',
         },
+        {
+          name: 'authorId',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', minimum: 1 },
+          description: 'Filter events to those authored by this user id',
+        },
       ],
       responses: {
         200: eventsOkResponse,

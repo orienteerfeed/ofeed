@@ -157,15 +157,23 @@ export function useAdminUserRequestVerificationMutation() {
 export function useAdminEventsQuery({
   page = 1,
   limit = 25,
-}: { page?: number; limit?: number } = {}) {
+  authorId,
+  enabled = true,
+}: {
+  page?: number;
+  limit?: number;
+  authorId?: number | undefined;
+  enabled?: boolean;
+} = {}) {
   const api = useApi();
 
   return useQuery({
-    queryKey: ['admin', 'events', page, limit],
+    queryKey: ['admin', 'events', page, limit, authorId],
     queryFn: async () =>
       adminEventListSchema.parse(
-        await api.get(ENDPOINTS.adminEvents({ page, limit }))
+        await api.get(ENDPOINTS.adminEvents({ page, limit, authorId }))
       ),
+    enabled,
   });
 }
 

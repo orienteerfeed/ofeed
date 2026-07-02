@@ -67,6 +67,11 @@
           "RequestVerificationSuccessTitle": "Verification email sent",
           "RequestVerificationSuccessDescription": "A verification email was sent to {{name}}.",
           "RequestVerificationErrorTitle": "Failed to send verification email"
+        },
+        "EventsDialog": {
+          "Title": "Events by {{name}}",
+          "Description": "Events authored by this user.",
+          "Empty": "This user has not authored any events yet."
         }
       },
       "Events": {
