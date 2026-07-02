@@ -19,6 +19,7 @@ import {
   signupUser,
 } from '../auth/auth.service.js';
 import { generateJwtTokenForLink } from '../../utils/jwtToken.js';
+import { deleteAllEventData } from '../event/event.service.js';
 import { getEventStatusSummary } from '../event/event.status.service.js';
 import type {
   ChangeCurrentUserPasswordInput,
@@ -45,6 +46,14 @@ export function getAuthenticatedUserId(auth: GraphQLAuthContext) {
   }
 
   return userId;
+}
+
+export function getAuthenticatedJwtUserId(auth: GraphQLAuthContext) {
+  if (!auth?.isAuthenticated || auth.type !== 'jwt') {
+    throw new AuthzError('Unauthorized: JWT credentials are required', 401);
+  }
+
+  return getAuthenticatedUserId(auth);
 }
 
 function getErrorMessage(error: unknown) {
@@ -594,7 +603,7 @@ export async function anonymizeCurrentUserAccount(
   auth: GraphQLAuthContext,
   input: DeleteCurrentAccountInput,
 ) {
-  const userId = getAuthenticatedUserId(auth);
+  const userId = getAuthenticatedJwtUserId(auth);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -644,44 +653,11 @@ export async function anonymizeCurrentUserAccount(
         await tx.event.findMany({ where: { authorId: userId }, select: { id: true } })
       ).map((e) => e.id);
 
-      if (eventIds.length > 0) {
-        const classIds = (
-          await tx.class.findMany({
-            where: { eventId: { in: eventIds } },
-            select: { id: true },
-          })
-        ).map((c) => c.id);
-
-        if (classIds.length > 0) {
-          const competitorIds = (
-            await tx.competitor.findMany({
-              where: { classId: { in: classIds } },
-              select: { id: true },
-            })
-          ).map((c) => c.id);
-
-          if (competitorIds.length > 0) {
-            await tx.split.deleteMany({ where: { competitorId: { in: competitorIds } } });
-          }
-
-          await tx.protocol.deleteMany({ where: { eventId: { in: eventIds } } });
-
-          if (competitorIds.length > 0) {
-            await tx.competitor.deleteMany({ where: { id: { in: competitorIds } } });
-          }
-
-          await tx.team.deleteMany({ where: { classId: { in: classIds } } });
-          await tx.class.deleteMany({ where: { id: { in: classIds } } });
-        } else {
-          await tx.protocol.deleteMany({ where: { eventId: { in: eventIds } } });
-        }
-
-        await tx.eventExternalResultsSyncState.deleteMany({
-          where: { eventId: { in: eventIds } },
-        });
-
-        await tx.event.deleteMany({ where: { id: { in: eventIds } } });
+      for (const eventId of eventIds) {
+        await deleteAllEventData(eventId, tx);
       }
+
+      await tx.event.deleteMany({ where: { id: { in: eventIds } } });
     }
 
     await tx.user.update({
