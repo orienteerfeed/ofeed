@@ -246,7 +246,7 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
                 className={`p-4 border-2 rounded-lg transition-all duration-200 hover:shadow-sm ${getSeverityStyles(action.severity)}`}
               >
                 <div className="flex items-center justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className={`flex-shrink-0 ${getIconColor(action.severity)}`}>
                       <action.icon className="h-5 w-5" />
                     </div>

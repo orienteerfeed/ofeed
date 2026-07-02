@@ -525,7 +525,70 @@
         "Tabs": {
           "General": "General",
           "Files": "Filer",
-          "Classes": "Classes"
+          "Classes": "Classes",
+          "Services": "Services"
+        },
+        "Services": {
+          "Title": "Services",
+          "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
+          "LateEntry": {
+            "Title": "Late entries",
+            "Percent": "Entry fee increase percentage",
+            "Helper": "Set the percentage increase against the base entry fee. Leave empty for no increase. Individual classes can opt out in the Classes tab.",
+            "Invalid": "Enter a non-negative percentage value."
+          },
+          "SystemTitle": "System services",
+          "CustomTitle": "Custom services",
+          "Columns": {
+            "Active": "Active",
+            "Name": "Name",
+            "Description": "Description",
+            "Price": "Price",
+            "MaxQuantity": "Max quantity",
+            "Actions": "Actions"
+          },
+          "System": {
+            "CARD_CHANGE": {
+              "Name": "Card change",
+              "Description": "Change of competitor SI card number."
+            },
+            "NAME_CHANGE": {
+              "Name": "Name change",
+              "Description": "Change of competitor name."
+            },
+            "CLASS_CHANGE": {
+              "Name": "Class change",
+              "Description": "Change of competitor class."
+            },
+            "START_TIME_CHANGE": {
+              "Name": "Ändring av starttid",
+              "Description": "Ändring av tävlandes starttid."
+            },
+            "ENTRY_CANCEL": {
+              "Name": "Entry cancellation",
+              "Description": "Cancellation of event registration."
+            },
+            "CARD_RENTAL": {
+              "Name": "Card rental",
+              "Description": "Rental of an SI card."
+            }
+          },
+          "Placeholders": {
+            "Name": "Service name",
+            "Description": "Description",
+            "Price": "Price",
+            "MaxQuantity": "Max quantity"
+          },
+          "New": "New service",
+          "Add": "Add",
+          "Update": "Save",
+          "Edit": "Edit",
+          "Unlimited": "Unlimited",
+          "EmptyCustom": "No custom services have been added yet.",
+          "SaveError": "Could not save the service.",
+          "DeleteError": "Could not delete the service.",
+          "ActiveAria": "Activate service {{name}}",
+          "PriceAria": "Price for service {{name}}"
         },
         "Classes": {
           "Title": "Classes",
@@ -541,6 +604,7 @@
             "Sex": "Sex",
             "ResultListMode": "Result mode",
             "Fee": "Fee",
+            "LateEntryFeeDisabled": "Do not increase",
             "StartMode": "Start mode",
             "AwardedPlaces": "Awarded places",
             "Actions": "Actions"
@@ -569,9 +633,19 @@
             "Close": "Close",
             "LoadError": "Could not load start times."
           },
+          "LoadDefinitions": {
+            "Action": "Ladda definitioner från {{provider}}",
+            "ConfirmTitle": "Skriv över klassinställningar?",
+            "ConfirmDescription": "Avgift, åldersgränser, kön och inställning för sen anmälningsavgift skrivs över för matchande klasser med data från det externa IS.",
+            "ConfirmButton": "Ladda och skriv över",
+            "Success": "Klassdefinitioner laddades från det externa IS.",
+            "Error": "Kunde inte ladda klassdefinitioner."
+          },
           "MaxCompetitorsErrorPositive": "Enter a non-negative integer.",
           "MaxCompetitorsErrorBelowCount": "Cannot be lower than the current number of registered competitors ({{count}}).",
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
+          "LateEntryFeeDisabledTooltip": "Do not increase the fee for late entries.",
+          "LateEntryFeeDisabledAria": "Do not increase the fee for late entries in class {{name}}",
           "BirthYearInvalid": "Ange ett giltigt år (min. 4 siffror).",
           "BirthYearRangeError": "Födelseår från måste vara mindre än eller lika med födelseår till."
         },
@@ -763,7 +837,7 @@
         "Published": "Publicerad",
         "EntriesOpenAt": "Anmälan öppnar",
         "EntriesOpenAtHelper": "Lämna tomt om anmälan ska vara stängd tills vidare.",
-        "EntriesCloseAt": "Anmälan stänger",
+        "EntriesCloseAt": "Anmälan öppen till",
         "EntriesCloseAtHelper": "Lämna tomt om du inte vill sätta en fast sista anmälningsdag ännu.",
         "ResultsOfficialManuallySetAt": "Slutgiltiga resultat bekräftade",
         "ResultsOfficialManuallySetAtHelper": "Använd bara detta för lokala tävlingar utan ORIS- eller Eventor-integration.",
@@ -863,8 +937,8 @@
       },
       "EntriesResults": {
         "Card": {
-          "Title": "Publicering och tider",
-          "Description": "Hantera anmälningsfönster, när data publiceras och resultatstatus."
+          "Title": "Publicering",
+          "Description": "Hantera när data publiceras och resultatstatus."
         },
         "ResultsOfficial": "Resultaten är officiella",
         "ResultsOfficialHelper": "Använd den här växeln för lokala evenemang när resultaten är slutgiltiga.",
@@ -977,7 +1051,8 @@
             },
             "MeOS": {
               "Description": "Koppla den här tävlingen till MeOS. Klicka på knappen för att skapa en koppling — OFeed tilldelar automatiskt ett tävlings-ID. Konfigurera MeOS att skicka resultat till OFeed via URL:en nedan med det angivna ID:t.",
-              "UploadUrl": "Uppladdnings-URL",
+              "MopUrl": "MOP URL",
+              "MipUrl": "MIP-URL",
               "ActiveBindings": "Aktiva kopplingar",
               "NoBinding": "Ingen MeOS-koppling konfigurerad ännu.",
               "CompetitionId": "Tävlings-ID",
@@ -986,7 +1061,8 @@
               "CreateSuccess": "MeOS-koppling skapad.",
               "DeleteSuccess": "MeOS-koppling borttagen."
             }
-          }
+          },
+          "ViewProject": "Visa projekt"
         },
         "PrintWindow": {
           "Header": "OFeed",

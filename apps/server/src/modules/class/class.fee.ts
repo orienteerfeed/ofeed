@@ -18,6 +18,8 @@ export interface ComputeClassFeeInput {
   entriesCloseAt: Date | null;
   /** Global percentage surcharge after the deadline (e.g. 50 for +50 %). */
   lateEntryFeePercent: number | null;
+  /** Whether this class opts out of the late-entry surcharge. */
+  lateEntryFeeDisabled?: boolean;
   /** Whether the event organiser is a VAT payer. */
   vatPayer: boolean;
   /** VAT rate in percent (e.g. 21 for 21 %); only used when `vatPayer`. */
@@ -38,14 +40,23 @@ function round2(value: number): number {
 }
 
 export function computeClassFee(input: ComputeClassFeeInput): ComputedClassFee {
-  const { baseFee, now, entriesCloseAt, lateEntryFeePercent, vatPayer, vatRate } = input;
+  const {
+    baseFee,
+    now,
+    entriesCloseAt,
+    lateEntryFeePercent,
+    lateEntryFeeDisabled = false,
+    vatPayer,
+    vatRate,
+  } = input;
 
   if (baseFee === null) {
     return { currentFee: null, feeNet: null, feeVat: null };
   }
 
   const afterDeadline = entriesCloseAt !== null && now.getTime() > entriesCloseAt.getTime();
-  const surchargePercent = afterDeadline && lateEntryFeePercent ? lateEntryFeePercent : 0;
+  const surchargePercent =
+    afterDeadline && !lateEntryFeeDisabled && lateEntryFeePercent ? lateEntryFeePercent : 0;
   const currentFee = round2(baseFee * (1 + surchargePercent / 100));
 
   if (vatPayer && vatRate) {

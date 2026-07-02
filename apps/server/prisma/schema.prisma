@@ -184,6 +184,7 @@ model Event {
   organisations                Organisation[]
   importStates                 EventImportState[]
   meosEventBindings            EventMeosBinding[]
+  services                     EventService[]
 
   controls                     Control[]
   courses                      Course[]
@@ -216,6 +217,7 @@ model Class {
   startWindowFrom  DateTime?
   startWindowTo    DateTime?
   fee              Decimal?     @db.Decimal(10, 2)
+  lateEntryFeeDisabled Boolean   @default(false)
   awardedPlaces    Int?         @default(3) @db.SmallInt
   status           ClassStatus  @default(NORMAL)
   competitors      Competitor[]
@@ -224,6 +226,23 @@ model Class {
 
   @@unique([eventId, externalId], map: "Class_event_external_uq")
   @@index([courseId], map: "Class_course_idx")
+}
+
+model EventService {
+  id          Int                    @id @default(autoincrement()) @db.UnsignedInt
+  event       Event                  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  systemKey   EventServiceSystemKey?
+  active      Boolean                @default(true)
+  name        String                 @db.VarChar(128)
+  description String?                @db.Text
+  price       Decimal?               @db.Decimal(10, 2)
+  maxQuantity Int?                   @db.UnsignedInt
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@unique([eventId, systemKey], map: "EventService_event_system_uq")
+  @@index([eventId], map: "EventService_event_idx")
 }
 
 model CourseMap {
@@ -649,6 +668,15 @@ enum ClassStatus {
   JOINED
   INVALIDATED
   INVALIDATEDNOFEE
+}
+
+enum EventServiceSystemKey {
+  CARD_CHANGE
+  NAME_CHANGE
+  CLASS_CHANGE
+  START_TIME_CHANGE
+  ENTRY_CANCEL
+  CARD_RENTAL
 }
 
 enum ResultListMode {

@@ -17,8 +17,11 @@ import { useMutation } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import {
   Copy,
+  ExternalLink,
   Eye,
   EyeOff,
+  Github,
+  Globe,
   Loader2,
   Printer,
   Send,
@@ -27,7 +30,7 @@ import {
 import { QRCodeCanvas } from 'qrcode.react';
 import type { ComponentType, RefObject } from 'react';
 import { useRef, useState } from 'react';
-import { Button } from '../../../components/atoms';
+import { Button, Testing } from '../../../components/atoms';
 import { Alert } from '../../../components/organisms';
 import type { MeosEventBinding } from '../../../types/event';
 import { toast } from '../../../utils';
@@ -80,9 +83,35 @@ interface QrTabPanelProps {
   codeSize: number;
   errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
   qrBackgroundColor: string;
+  projectUrl?: string;
+  projectLinkLabel?: string;
+  projectIcon?: ComponentType<{ className?: string }>;
 }
 
 const panelClassName = 'rounded-lg border bg-card p-6 shadow-sm';
+
+const ProjectLink = ({
+  url,
+  label,
+  icon: Icon,
+}: {
+  url: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+}) => (
+  <div className="mt-5 pt-4 border-t flex items-center justify-end">
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span>{label}</span>
+      <ExternalLink className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-100 group-hover:translate-x-px group-hover:-translate-y-px transition-all duration-150" />
+    </a>
+  </div>
+);
 
 const QrTabPanel = ({
   description,
@@ -103,6 +132,9 @@ const QrTabPanel = ({
   codeSize,
   errorCorrectionLevel,
   qrBackgroundColor,
+  projectUrl,
+  projectLinkLabel,
+  projectIcon,
 }: QrTabPanelProps) => {
   const qrImageSettings = qrCenterIconSrc
     ? {
@@ -171,6 +203,13 @@ const QrTabPanel = ({
           <span className="sr-only">{openLabel}</span>
         </Button>
       </div>
+      {projectUrl && projectLinkLabel && projectIcon && (
+        <ProjectLink
+          url={projectUrl}
+          label={projectLinkLabel}
+          icon={projectIcon}
+        />
+      )}
     </div>
   );
 };
@@ -244,7 +283,9 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
     deleteMeosBinding({ variables: { id: bindingId } });
   };
 
-  const meosUploadEndpoint = `${config.BASE_API_URL.replace(/\/+$/, '')}/rest/v1/upload/meos`;
+  const meosBaseEndpoint = `${config.BASE_API_URL.replace(/\/+$/, '')}/rest/v1/meos`;
+  const meosUploadEndpoint = `${meosBaseEndpoint}/mop`;
+  const meosMipEndpoint = `${meosBaseEndpoint}/mip`;
 
   // Format the QuickEvent credentials link
   const quickEventLinkUrl = new URL(config.PUBLIC_URL, window.location.origin);
@@ -566,6 +607,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                 codeSize={codeSize}
                 errorCorrectionLevel={errorCorrectionLevel}
                 qrBackgroundColor={qrBackgroundColor}
+                projectUrl="https://stigning.se/checklist/news.html"
+                projectLinkLabel={t(
+                  'Pages.Event.Integration.Card.ViewProject'
+                )}
+                projectIcon={Globe}
               />
             </TabsContent>
 
@@ -599,7 +645,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                         type="button"
                         onClick={() =>
                           copyWithToast(
-                            apiEventsEndpoint,
+                            config.BASE_API_URL,
                             t('Pages.Event.Integration.Toast.CopyBaseUrl')
                           )
                         }
@@ -608,7 +654,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                         className="h-6 w-6 p-0 shrink-0"
                       >
                         <Copy className="h-3 w-3" />
-                        <span className="sr-only">Copy API endpoint</span>
+                        <span className="sr-only">Copy API base URL</span>
                       </Button>
                     </div>
                   </div>
@@ -708,6 +754,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     {t('Pages.Event.Integration.Card.Tabs.QuickEvent.CopyLink')}
                   </Button>
                 </div>
+                <ProjectLink
+                  url="https://github.com/Quick-Box/quickevent"
+                  label={t('Pages.Event.Integration.Card.ViewProject')}
+                  icon={Github}
+                />
               </div>
             </TabsContent>
 
@@ -735,12 +786,18 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                 codeSize={codeSize}
                 errorCorrectionLevel={errorCorrectionLevel}
                 qrBackgroundColor={qrBackgroundColor}
+                projectUrl="https://github.com/orienteerfeed/ofeed-sidroid-connector"
+                projectLinkLabel={t(
+                  'Pages.Event.Integration.Card.ViewProject'
+                )}
+                projectIcon={Github}
               />
             </TabsContent>
 
             <TabsContent value="meos" className="space-y-4">
               <div className={panelClassName}>
                 <div className="space-y-2 mb-4">
+                  <Testing />
                   <p className="text-sm text-muted-foreground">
                     {t('Pages.Event.Integration.Card.Tabs.MeOS.Description')}
                   </p>
@@ -750,7 +807,7 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                       <div className="flex justify-between items-center gap-2">
                         <Label className="text-sm font-medium shrink-0">
                           {t(
-                            'Pages.Event.Integration.Card.Tabs.MeOS.UploadUrl'
+                            'Pages.Event.Integration.Card.Tabs.MeOS.MopUrl'
                           )}
                         </Label>
                         <div className="flex items-center gap-2">
@@ -772,7 +829,37 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                             <Copy className="h-3 w-3" />
                             <span className="sr-only">
                               {t(
-                                'Pages.Event.Integration.Card.Tabs.MeOS.UploadUrl'
+                                'Pages.Event.Integration.Card.Tabs.MeOS.MopUrl'
+                              )}
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center gap-2">
+                        <Label className="text-sm font-medium shrink-0">
+                          {t('Pages.Event.Integration.Card.Tabs.MeOS.MipUrl')}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                            {meosMipEndpoint}
+                          </p>
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              copyWithToast(
+                                meosMipEndpoint,
+                                t('Pages.Event.Integration.Toast.CopyBaseUrl')
+                              )
+                            }
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 shrink-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                            <span className="sr-only">
+                              {t(
+                                'Pages.Event.Integration.Card.Tabs.MeOS.MipUrl'
                               )}
                             </span>
                           </Button>
@@ -920,6 +1007,11 @@ export const EventIntegrationsCard: React.FC<EventIntegrationsCardProps> = ({
                     </Button>
                   </div>
                 )}
+                <ProjectLink
+                  url="https://github.com/melinsoftware/meos/"
+                  label={t('Pages.Event.Integration.Card.ViewProject')}
+                  icon={Github}
+                />
               </div>
             </TabsContent>
           </Tabs>

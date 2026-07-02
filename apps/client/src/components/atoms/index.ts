@@ -13,6 +13,7 @@ export * from './Select';
 export * from './TableFetchError';
 export * from './TableLoadingProgress';
 export * from './TableNoDataAvailable';
+export * from './Testing';
 export * from './ToggleSwitch';
 export * from './Tooltip';
 export * from './VisibilityBadge';
