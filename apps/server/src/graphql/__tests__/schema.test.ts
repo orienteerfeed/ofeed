@@ -65,6 +65,7 @@ describe('Pothos GraphQL schema', () => {
         'competitorUpdate',
         'createMeosEventBinding',
         'createUserCard',
+        'deleteCurrentAccount',
         'deleteCustomEventService',
         'deleteMeosEventBinding',
         'deleteUserCard',
