@@ -22,6 +22,7 @@ import type {
 } from '@/types/reportTable';
 import { useApi, useEvent } from '@/hooks';
 import { ENDPOINTS } from '@/lib/api/endpoints';
+import { applyTimeToDate } from '@/lib/date';
 import { MainPageLayout } from '@/templates/MainPageLayout';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
@@ -1202,17 +1203,3 @@ const getSortValue = (item: ChangelogEntry, column: SortColumn) => {
   }
 };
 
-const applyTimeToDate = (date: Date, time: string) => {
-  const [hoursRaw, minutesRaw, secondsRaw] = time.split(':');
-  const hours = Number(hoursRaw);
-  const minutes = Number(minutesRaw);
-  const seconds = Number(secondsRaw);
-  const result = new Date(date);
-  result.setHours(
-    Number.isFinite(hours) ? hours : 0,
-    Number.isFinite(minutes) ? minutes : 0,
-    Number.isFinite(seconds) ? seconds : 0,
-    0
-  );
-  return result;
-};

@@ -273,7 +273,20 @@
         "Actions": "Åtgärder",
         "Yes": "Ja",
         "No": "Nej",
-        "Discipline": "Disciplin"
+        "Discipline": "Disciplin",
+        "Filters": {
+          "NamePlaceholder": "Filtrera namn",
+          "EmailPlaceholder": "Filtrera e-post",
+          "OrganizerPlaceholder": "Filtrera arrangör",
+          "OwnerPlaceholder": "Filtrera ägare",
+          "OrganizationPlaceholder": "Filtrera organisation",
+          "DisciplinePlaceholder": "Välj disciplin",
+          "PublishedPlaceholder": "Välj publicerad",
+          "RankingPlaceholder": "Välj ranking",
+          "RolePlaceholder": "Välj roll",
+          "StatusPlaceholder": "Välj status",
+          "EmailVerifiedPlaceholder": "Välj verifiering"
+        }
       }
     },
     "Auth": {

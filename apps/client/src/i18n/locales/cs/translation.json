@@ -273,7 +273,20 @@
         "Actions": "Akce",
         "Yes": "Ano",
         "No": "Ne",
-        "Discipline": "Disciplína"
+        "Discipline": "Disciplína",
+        "Filters": {
+          "NamePlaceholder": "Filtrovat jméno",
+          "EmailPlaceholder": "Filtrovat email",
+          "OrganizerPlaceholder": "Filtrovat pořadatele",
+          "OwnerPlaceholder": "Filtrovat vlastníka",
+          "OrganizationPlaceholder": "Filtrovat organizaci",
+          "DisciplinePlaceholder": "Vybrat disciplínu",
+          "PublishedPlaceholder": "Vybrat publikováno",
+          "RankingPlaceholder": "Vybrat ranking",
+          "RolePlaceholder": "Vybrat roli",
+          "StatusPlaceholder": "Vybrat stav",
+          "EmailVerifiedPlaceholder": "Vybrat ověření"
+        }
       }
     },
     "Auth": {

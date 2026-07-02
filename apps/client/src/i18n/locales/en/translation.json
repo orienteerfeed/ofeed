@@ -273,7 +273,20 @@
         "Actions": "Actions",
         "Yes": "Yes",
         "No": "No",
-        "Discipline": "Discipline"
+        "Discipline": "Discipline",
+        "Filters": {
+          "NamePlaceholder": "Filter name",
+          "EmailPlaceholder": "Filter email",
+          "OrganizerPlaceholder": "Filter organizer",
+          "OwnerPlaceholder": "Filter owner",
+          "OrganizationPlaceholder": "Filter organization",
+          "DisciplinePlaceholder": "Select discipline",
+          "PublishedPlaceholder": "Select published",
+          "RankingPlaceholder": "Select ranking",
+          "RolePlaceholder": "Select role",
+          "StatusPlaceholder": "Select status",
+          "EmailVerifiedPlaceholder": "Select verification"
+        }
       }
     },
     "Auth": {
