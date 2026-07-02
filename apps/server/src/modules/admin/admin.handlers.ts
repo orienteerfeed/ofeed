@@ -140,8 +140,11 @@ export async function getAdminEventsHandler(c) {
   try {
     const rawPage = c.req.query('page');
     const rawLimit = c.req.query('limit');
+    const rawAuthorId = c.req.query('authorId');
     const parsedPage = parsePositiveIntegerQueryParam(rawPage, 1);
     const parsedLimit = parsePositiveIntegerQueryParam(rawLimit, 25);
+    const parsedAuthorId =
+      rawAuthorId === undefined ? undefined : parsePositiveIntegerQueryParam(rawAuthorId, 1);
 
     if (parsedPage === null) {
       return c.json(
@@ -155,17 +158,25 @@ export async function getAdminEventsHandler(c) {
         HTTP_STATUS.UNPROCESSABLE_CONTENT,
       );
     }
+    if (parsedAuthorId === null) {
+      return c.json(
+        validationResponse('Invalid authorId parameter'),
+        HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      );
+    }
 
     const page = parsedPage;
     const limit = Math.min(200, parsedLimit);
+    const authorId = parsedAuthorId ?? undefined;
 
-    const events = await getAdminEvents(prisma, { page, limit });
+    const events = await getAdminEvents(prisma, { page, limit, authorId });
 
     logger.info('Admin events list loaded', {
       ...logContext,
       results: {
         total: events.total,
         returned: events.items.length,
+        authorId,
       },
     });
 

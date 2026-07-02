@@ -10460,7 +10460,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/rest/v1/admin/events?page=1&limit=25",
+              "raw": "{{baseUrl}}/rest/v1/admin/events?page=1&limit=25&authorId={{authorId}}",
               "host": ["{{baseUrl}}"],
               "path": ["rest", "v1", "admin", "events"],
               "query": [
@@ -10473,6 +10473,11 @@
                   "key": "limit",
                   "value": "25",
                   "description": "Items per page (max 200)"
+                },
+                {
+                  "key": "authorId",
+                  "value": "{{authorId}}",
+                  "description": "Filter events to those authored by this user id (optional)"
                 }
               ]
             },

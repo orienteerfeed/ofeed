@@ -67,6 +67,11 @@
           "RequestVerificationSuccessTitle": "Verification email sent",
           "RequestVerificationSuccessDescription": "A verification email was sent to {{name}}.",
           "RequestVerificationErrorTitle": "Failed to send verification email"
+        },
+        "EventsDialog": {
+          "Title": "Events by {{name}}",
+          "Description": "Events authored by this user.",
+          "Empty": "This user has not authored any events yet."
         }
       },
       "Events": {
@@ -268,7 +273,20 @@
         "Actions": "Actions",
         "Yes": "Yes",
         "No": "No",
-        "Discipline": "Discipline"
+        "Discipline": "Discipline",
+        "Filters": {
+          "NamePlaceholder": "Filter name",
+          "EmailPlaceholder": "Filter email",
+          "OrganizerPlaceholder": "Filter organizer",
+          "OwnerPlaceholder": "Filter owner",
+          "OrganizationPlaceholder": "Filter organization",
+          "DisciplinePlaceholder": "Select discipline",
+          "PublishedPlaceholder": "Select published",
+          "RankingPlaceholder": "Select ranking",
+          "RolePlaceholder": "Select role",
+          "StatusPlaceholder": "Select status",
+          "EmailVerifiedPlaceholder": "Select verification"
+        }
       }
     },
     "Auth": {

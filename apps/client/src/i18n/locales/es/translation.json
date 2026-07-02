@@ -67,6 +67,11 @@
           "RequestVerificationSuccessTitle": "Correo de verificación enviado",
           "RequestVerificationSuccessDescription": "Se envió un correo de verificación a {{name}}.",
           "RequestVerificationErrorTitle": "No se pudo enviar el correo de verificación"
+        },
+        "EventsDialog": {
+          "Title": "Eventos de {{name}}",
+          "Description": "Eventos creados por este usuario.",
+          "Empty": "Este usuario aún no ha creado ningún evento."
         }
       },
       "Events": {
@@ -268,7 +273,20 @@
         "Actions": "Acciones",
         "Yes": "Sí",
         "No": "No",
-        "Discipline": "Disciplina"
+        "Discipline": "Disciplina",
+        "Filters": {
+          "NamePlaceholder": "Filtrar nombre",
+          "EmailPlaceholder": "Filtrar correo electrónico",
+          "OrganizerPlaceholder": "Filtrar organizador",
+          "OwnerPlaceholder": "Filtrar propietario",
+          "OrganizationPlaceholder": "Filtrar organización",
+          "DisciplinePlaceholder": "Seleccionar disciplina",
+          "PublishedPlaceholder": "Seleccionar publicado",
+          "RankingPlaceholder": "Seleccionar ranking",
+          "RolePlaceholder": "Seleccionar rol",
+          "StatusPlaceholder": "Seleccionar estado",
+          "EmailVerifiedPlaceholder": "Seleccionar verificación"
+        }
       }
     },
     "Auth": {
