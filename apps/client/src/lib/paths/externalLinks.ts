@@ -103,6 +103,7 @@ export function buildBoardEventUrl(
 
 export const externalLinks = {
   docs: config.DOCS_URL,
+  board: config.BOARD_APP_URL,
   buyMeCoffee: 'https://buymeacoffee.com/ofeed',
   discord: 'https://discord.gg/YWURC23tHZ',
   github: 'https://github.com/orienteerfeed/ofeed',

@@ -314,5 +314,10 @@
     "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
     "confirmPasswordRequired": "Veuillez confirmer votre nouveau mot de passe",
     "passwordsDoNotMatch": "Les mots de passe ne correspondent pas"
+  },
+  "Templates": {
+    "Routes": {
+      "Board": "Board"
+    }
   }
 }
