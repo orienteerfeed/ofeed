@@ -1234,6 +1234,21 @@
           "NewPasswordRequired": "La nueva contraseña es obligatoria",
           "CurrentPasswordIncorrect": "La contraseña actual es incorrecta.",
           "NewPasswordMustDiffer": "La nueva contraseña debe ser distinta de la actual."
+        },
+        "DeleteAccount": {
+          "Title": "Eliminar cuenta",
+          "Description": "Elimina permanentemente tu cuenta y datos personales.",
+          "Consequences": "Eliminar tu cuenta eliminará permanentemente tus datos personales. Tus eventos se conservarán pero ya no estarán asociados a tu identidad.",
+          "DeleteButton": "Eliminar mi cuenta",
+          "DialogTitle": "¿Eliminar tu cuenta?",
+          "DialogDescription": "Esta acción es permanente y no se puede deshacer. Introduce tu contraseña actual para confirmar.",
+          "PasswordPlaceholder": "Introduce tu contraseña para confirmar",
+          "DeleteEventsLabel": "Eliminar también todos mis eventos",
+          "DeleteEventsHelper": "Todos los eventos que has creado, incluidas las categorías, los competidores y los resultados, se eliminarán permanentemente.",
+          "ConfirmDeleteButton": "Eliminar cuenta permanentemente",
+          "DeletingButton": "Eliminando...",
+          "DeletedDescription": "Tu cuenta ha sido eliminada.",
+          "DeleteError": "Error al eliminar la cuenta. Por favor, inténtalo de nuevo."
         }
       },
       "Tabs": {
@@ -1379,6 +1394,7 @@
       "About": "Acerca de",
       "Docs": "Documentación",
       "Contact": "Contacto",
+      "Board": "Board",
       "GitHub": "GitHub"
     }
   },

@@ -5,6 +5,7 @@ export type ChangelogEntry = {
     lastname: string;
     firstname: string;
     classId: number | null;
+    class: { name: string } | null;
   };
   origin: string;
   type: string;

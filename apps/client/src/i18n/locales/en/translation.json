@@ -1234,6 +1234,21 @@
           "NewPasswordRequired": "New password is required",
           "CurrentPasswordIncorrect": "Current password is incorrect.",
           "NewPasswordMustDiffer": "New password must be different from current password."
+        },
+        "DeleteAccount": {
+          "Title": "Delete account",
+          "Description": "Permanently remove your account and personal data.",
+          "Consequences": "Deleting your account will permanently remove your personal data. Your events will remain but will no longer be associated with your identity.",
+          "DeleteButton": "Delete my account",
+          "DialogTitle": "Delete your account?",
+          "DialogDescription": "This action is permanent and cannot be undone. Enter your current password to confirm.",
+          "PasswordPlaceholder": "Enter your password to confirm",
+          "DeleteEventsLabel": "Also delete all my events",
+          "DeleteEventsHelper": "All events you created, including their classes, competitors, and results, will be permanently deleted.",
+          "ConfirmDeleteButton": "Permanently delete account",
+          "DeletingButton": "Deleting...",
+          "DeletedDescription": "Your account has been deleted.",
+          "DeleteError": "Account deletion failed. Please try again."
         }
       },
       "Tabs": {
@@ -1379,6 +1394,7 @@
       "About": "About",
       "Docs": "Docs",
       "Contact": "Contact",
+      "Board": "Board",
       "GitHub": "GitHub"
     }
   },

@@ -2671,6 +2671,11 @@ export function registerSecureEventRoutes(router) {
                   lastname: true,
                   firstname: true,
                   classId: true,
+                  class: {
+                    select: {
+                      name: true,
+                    },
+                  },
                 },
               },
               origin: true,

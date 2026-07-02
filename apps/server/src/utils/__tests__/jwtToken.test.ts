@@ -1,6 +1,16 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
 
+const prismaMock = vi.hoisted(() => ({
+  user: {
+    findFirst: vi.fn(),
+  },
+}));
+
+vi.mock("../context.js", () => ({
+  default: prismaMock,
+}));
+
 type JwtTokenModule = typeof import("../jwtToken.js");
 
 let jwtToken: JwtTokenModule;
@@ -36,6 +46,8 @@ describe("buildAuthContextFromRequest", () => {
   });
 
   it("returns authenticated jwt context for valid bearer token", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce({ id: 42 });
+
     const token = jwtToken.getJwtToken({ userId: 42 });
     const context = await jwtToken.buildAuthContextFromRequest({
       headers: { authorization: `Bearer ${token}` },
@@ -47,6 +59,25 @@ describe("buildAuthContextFromRequest", () => {
       throw new Error("Expected authenticated context");
     }
     expect(context.userId).toBe(42);
+    expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
+      where: { id: 42, active: true, deletedAt: null },
+      select: { id: true },
+    });
+  });
+
+  it("returns unauthenticated context when bearer user is inactive or deleted", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce(null);
+
+    const token = jwtToken.getJwtToken({ userId: 42 });
+    const context = await jwtToken.buildAuthContextFromRequest({
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(context).toEqual({
+      isAuthenticated: false,
+      type: null,
+      failureReason: "inactive_user",
+    });
   });
 });
 
@@ -61,6 +92,8 @@ describe("verifyJwtToken middleware", () => {
   });
 
   it("sets auth context and calls next when token is valid", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce({ id: 7 });
+
     const token = jwtToken.getJwtToken({ userId: 7 });
     const app = new Hono();
     app.use("*", jwtToken.verifyJwtToken);

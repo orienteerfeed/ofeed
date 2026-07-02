@@ -29,6 +29,27 @@
         "Resending": "Envoi en cours...",
         "ResendSuccess": "E-mail de vérification envoyé. Vérifiez votre boîte de réception.",
         "ResendError": "Impossible d'envoyer l'e-mail de vérification."
+      },
+      "Security": {
+        "CurrentPassword": "Mot de passe actuel",
+        "Errors": {
+          "CurrentPasswordIncorrect": "Le mot de passe actuel est incorrect."
+        },
+        "DeleteAccount": {
+          "Title": "Supprimer le compte",
+          "Description": "Supprimez définitivement votre compte et vos données personnelles.",
+          "Consequences": "La suppression de votre compte effacera définitivement vos données personnelles. Vos événements seront conservés mais ne seront plus associés à votre identité.",
+          "DeleteButton": "Supprimer mon compte",
+          "DialogTitle": "Supprimer votre compte ?",
+          "DialogDescription": "Cette action est permanente et ne peut pas être annulée. Entrez votre mot de passe actuel pour confirmer.",
+          "PasswordPlaceholder": "Entrez votre mot de passe pour confirmer",
+          "DeleteEventsLabel": "Supprimer également tous mes événements",
+          "DeleteEventsHelper": "Tous les événements que vous avez créés, y compris les catégories, les concurrents et les résultats, seront définitivement supprimés.",
+          "ConfirmDeleteButton": "Supprimer définitivement le compte",
+          "DeletingButton": "Suppression...",
+          "DeletedDescription": "Votre compte a été supprimé.",
+          "DeleteError": "Échec de la suppression du compte. Veuillez réessayer."
+        }
       }
     },
     "Event": {
@@ -293,5 +314,10 @@
     "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
     "confirmPasswordRequired": "Veuillez confirmer votre nouveau mot de passe",
     "passwordsDoNotMatch": "Les mots de passe ne correspondent pas"
+  },
+  "Templates": {
+    "Routes": {
+      "Board": "Board"
+    }
   }
 }
