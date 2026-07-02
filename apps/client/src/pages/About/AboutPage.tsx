@@ -99,12 +99,92 @@ export const AboutPage = () => {
               </li>
             </ul>
           </Card>
+          <Card className="p-0 border-border overflow-hidden">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-primary/5" />
+              <div className="relative p-6 md:p-8 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold">
+                    OFeed Team
+                  </p>
+                  <h2 className="text-2xl md:text-3xl font-bold">
+                    Built by Orienteers
+                  </h2>
+                </div>
 
+                <div className="grid gap-5 md:grid-cols-[1fr_1.2fr_1fr] items-stretch">
+                  <div className="rounded-xl border border-border/70 bg-background/80 p-5 backdrop-blur-sm">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                      Author
+                    </p>
+                    <h3 className="text-xl font-bold">Martin Křivda</h3>
+                    <p className="text-sm font-medium text-primary/90 mt-1">
+                      K.O.B. Choceň
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Leads development and shapes the core vision behind
+                      OrienteerFeed.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-primary/30 bg-background/70 p-2 min-h-44">
+                    <img
+                      src="/images/team_foto.jpg"
+                      alt="Martin Křivda and Lukáš Kettner"
+                      className="h-full w-full min-h-40 rounded-lg object-cover"
+                    />
+                  </div>
+
+                  <div className="rounded-xl border border-border/70 bg-background/80 p-5 backdrop-blur-sm">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                      Author
+                    </p>
+                    <h3 className="text-xl font-bold">Lukáš Kettner</h3>
+                    <p className="text-sm font-medium text-primary/90 mt-1">
+                      OK Kamenice
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Drives integrations, outreach, and documentation to keep
+                      OrienteerFeed connected and accessible.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm md:text-base text-muted-foreground">
+                  We are orienteering enthusiasts who enjoy
+                  connecting technology with orienteering.
+                </p>
+
+                <p className="text-sm md:text-base text-muted-foreground">
+                  After using the core of the platform privately for many years, we
+                  decided to open it to the wider orienteering community to make
+                  event organization simpler, faster, and more reliable.
+                </p>
+              </div>
+            </div>
+          </Card>
           <Card className="p-6 md:p-8 border-border">
             <h2 className="text-2xl font-bold mb-4">Contact</h2>
             <p className="text-muted-foreground">
-              Questions or feedback? Get in touch via our GitHub repository or
-              check the documentation for more details.
+              Questions or feedback? Get in touch via{' '}
+              <a
+                href="https://github.com/orienteerfeed"
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary font-medium hover:underline underline-offset-4"
+              >
+                GitHub
+              </a>{' '}
+              or check the{' '}
+              <a
+                href="https://docs.orienteerfeed.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary font-medium hover:underline underline-offset-4"
+              >
+                documentation
+              </a>{' '}
+              for more details.
             </p>
           </Card>
         </div>
