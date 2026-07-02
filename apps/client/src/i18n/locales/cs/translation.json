@@ -366,6 +366,7 @@
         "Organizer": "Pořadatel",
         "Location": "Lokalita",
         "Date": "Datum",
+        "ZeroTime": "Čas startu",
         "Visibility": "Viditelnost",
         "Actions": "Akce",
         "Format": "Formát",

@@ -1,10 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { config } from '@/config';
+import { formatDateWithDay, formatTimeToHms, getLocaleKey } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Link } from '@tanstack/react-router';
-import { t } from 'i18next';
-import { Calendar, MapPin } from 'lucide-react';
+import i18n, { t } from 'i18next';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
 import {
   getEventLocationLabel,
@@ -68,8 +69,18 @@ export const EventCard = ({ event }: EventCardProps) => {
           {/* Event Info Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
             <div className="flex items-center gap-2 text-white text-xs md:text-sm mb-2">
-              <Calendar className="w-4 h-4" />
-              <span className="font-mono">{event.date}</span>
+              <Calendar className="w-4 h-4 shrink-0" />
+              <span className="font-mono">
+                {formatDateWithDay(event.date, getLocaleKey(i18n.language))}
+              </span>
+              {event.zeroTime && (
+                <>
+                  <Clock className="w-4 h-4 shrink-0 ml-1" />
+                  <span className="font-mono">
+                    {formatTimeToHms(event.zeroTime, { dropZeroSeconds: true })}
+                  </span>
+                </>
+              )}
             </div>
             <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight line-clamp-2">
               {event.name}

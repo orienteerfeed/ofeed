@@ -1,4 +1,3 @@
-import { formatDate } from '@/lib/utils';
 import type { Country } from '@/types/country';
 import type {
   EventDiscipline,
@@ -14,6 +13,7 @@ export interface GraphQLEvent {
   name: string;
   organizer?: string | null;
   date: string;
+  zeroTime?: string | null;
   location?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -60,6 +60,7 @@ export const EVENTS_QUERY = gql`
           name
           organizer
           date
+          zeroTime
           location
           latitude
           longitude
@@ -110,14 +111,14 @@ export const convertGraphQLEventToHomeEvent = (
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
 
-  const formattedDate = formatDate(graphqlEvent.date);
   const country = toOptionalCountry(graphqlEvent.country);
 
   return {
     id: graphqlEvent.id,
     slug,
     name: graphqlEvent.name,
-    date: formattedDate,
+    date: graphqlEvent.date,
+    ...(graphqlEvent.zeroTime ? { zeroTime: graphqlEvent.zeroTime } : {}),
     ...(graphqlEvent.organizer ? { organizer: graphqlEvent.organizer } : {}),
     ...(graphqlEvent.location ? { location: graphqlEvent.location } : {}),
     ...(graphqlEvent.featuredImage
