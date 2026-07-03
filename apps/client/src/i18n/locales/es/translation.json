@@ -1229,6 +1229,10 @@
         "FeaturedImageHint": "JPEG, PNG o WEBP, máx. 2 MB.",
         "FeaturedImageButton": "Añadir imagen",
         "FeaturedImageRemove": "Quitar",
+        "FeaturedImageReplace": "Sustituir imagen",
+        "FeaturedImageRemoveExisting": "Eliminar imagen",
+        "FeaturedImagePendingRemoval": "La imagen se eliminará al guardar.",
+        "FeaturedImageUndoRemoval": "Deshacer",
         "Ranking": "Ranking",
         "CoefRanking": "Coeficiente de ranking",
         "Relay": "Relevo",
@@ -1327,7 +1331,9 @@
           "CreateSuccess": "¡El evento se ha creado correctamente!",
           "EditSuccess": "¡El evento se ha actualizado correctamente!",
           "FeaturedImageUploadSuccess": "La imagen destacada se subió correctamente.",
-          "FeaturedImageUploadError": "No se pudo subir la imagen destacada."
+          "FeaturedImageUploadError": "No se pudo subir la imagen destacada.",
+          "FeaturedImageRemoveSuccess": "La imagen destacada se eliminó correctamente.",
+          "FeaturedImageRemoveError": "No se pudo eliminar la imagen destacada."
         }
       },
       "Card": {

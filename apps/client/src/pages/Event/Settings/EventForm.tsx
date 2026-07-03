@@ -8,9 +8,10 @@ import {
   localTimeToUtcTimeForStorage,
   normalizeTimeInput,
 } from '@/lib/date';
+import { resolveFeaturedImageUrl } from '@/lib/images';
 import { cn } from '@/lib/utils';
 import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
 import { format, toDate } from 'date-fns-tz';
@@ -196,6 +197,7 @@ export const EventForm: React.FC<EventFormProps> = ({
   const { post } = useApi();
   const request = useRequest();
   const imageRequest = useRequest();
+  const apolloClient = useApolloClient();
   const isCreateMode = !initialData?.id;
   const userTimezone = React.useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
@@ -207,6 +209,11 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   const [featuredImage, setFeaturedImage] = React.useState<File | null>(null);
   const [isDraggingImage, setIsDraggingImage] = React.useState(false);
+  const [persistedImageUrl, setPersistedImageUrl] = React.useState<
+    string | undefined
+  >(initialData?.featuredImage);
+  const [isImageRemovalPending, setIsImageRemovalPending] =
+    React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const [externalProvider, setExternalProvider] =
@@ -277,6 +284,19 @@ export const EventForm: React.FC<EventFormProps> = ({
       }
     };
   }, [featuredImagePreview]);
+
+  useEffect(() => {
+    setPersistedImageUrl(initialData?.featuredImage);
+    setIsImageRemovalPending(false);
+  }, [initialData?.featuredImage]);
+
+  useEffect(() => {
+    return () => {
+      if (persistedImageUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(persistedImageUrl);
+      }
+    };
+  }, [persistedImageUrl]);
 
   useEffect(() => {
     apiPostRef.current = post;
@@ -451,6 +471,7 @@ export const EventForm: React.FC<EventFormProps> = ({
   const handleFeaturedImageSelect = (file: File) => {
     if (!validateFeaturedImage(file)) return;
     setFeaturedImage(file);
+    setIsImageRemovalPending(false);
   };
 
   const handleFeaturedImageInput: React.ChangeEventHandler<
@@ -489,6 +510,33 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   const handleFeaturedImageRemove = () => {
     setFeaturedImage(null);
+  };
+
+  const handlePersistedImageRemove = () => {
+    setIsImageRemovalPending(true);
+  };
+
+  const handlePersistedImageUndoRemove = () => {
+    setIsImageRemovalPending(false);
+  };
+
+  const syncFeaturedImageCache = (
+    eventId: string,
+    featuredImage: string | null
+  ) => {
+    const eventCacheId = apolloClient.cache.identify({
+      __typename: 'Event',
+      id: eventId,
+    });
+
+    if (!eventCacheId) return;
+
+    apolloClient.cache.modify({
+      id: eventCacheId,
+      fields: {
+        featuredImage: () => featuredImage,
+      },
+    });
   };
 
   // Fetch sports data using Apollo Client
@@ -794,8 +842,9 @@ export const EventForm: React.FC<EventFormProps> = ({
         const uploadTargetId = savedEventId ?? initialData?.id;
 
         if (uploadTargetId && featuredImage) {
+          const uploadedFile = featuredImage;
           const formData = new FormData();
-          formData.append('file', featuredImage);
+          formData.append('file', uploadedFile);
 
           await imageRequest.request(
             ENDPOINTS.uploadEventImage(uploadTargetId),
@@ -811,12 +860,46 @@ export const EventForm: React.FC<EventFormProps> = ({
                   variant: 'default',
                 });
                 setFeaturedImage(null);
+                setIsImageRemovalPending(false);
+                setPersistedImageUrl(URL.createObjectURL(uploadedFile));
+                syncFeaturedImageCache(
+                  uploadTargetId,
+                  ENDPOINTS.uploadEventImage(uploadTargetId)
+                );
               },
               onError: () => {
                 toast({
                   title: t('Operations.Error', { ns: 'common' }),
                   description: t(
                     'Pages.Event.Form.Toast.FeaturedImageUploadError'
+                  ),
+                  variant: 'error',
+                });
+              },
+            }
+          );
+        } else if (uploadTargetId && isImageRemovalPending && persistedImageUrl) {
+          await imageRequest.request(
+            ENDPOINTS.deleteEventImage(uploadTargetId),
+            {
+              method: 'DELETE',
+              onSuccess: () => {
+                toast({
+                  title: t('Operations.Success', { ns: 'common' }),
+                  description: t(
+                    'Pages.Event.Form.Toast.FeaturedImageRemoveSuccess'
+                  ),
+                  variant: 'default',
+                });
+                setPersistedImageUrl(undefined);
+                setIsImageRemovalPending(false);
+                syncFeaturedImageCache(uploadTargetId, null);
+              },
+              onError: () => {
+                toast({
+                  title: t('Operations.Error', { ns: 'common' }),
+                  description: t(
+                    'Pages.Event.Form.Toast.FeaturedImageRemoveError'
                   ),
                   variant: 'error',
                 });
@@ -1338,36 +1421,93 @@ export const EventForm: React.FC<EventFormProps> = ({
             {t('Pages.Event.Form.FeaturedImage')}
           </Label>
 
-          <div
-            onDrop={handleFeaturedImageDrop}
-            onDragOver={handleFeaturedImageDragOver}
-            onDragLeave={handleFeaturedImageDragLeave}
-            className={cn(
-              'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors',
-              isDraggingImage
-                ? 'border-primary bg-primary/5'
-                : 'border-border bg-muted/20'
-            )}
-          >
-            <Upload className="h-5 w-5 text-muted-foreground" />
-            <div className="text-sm text-muted-foreground">
-              {t('Pages.Event.Form.FeaturedImageHint')}
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => fileInputRef.current?.click()}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFeaturedImageInput}
+          />
+
+          {!featuredImage && !isImageRemovalPending && persistedImageUrl ? (
+            <div
+              onDrop={handleFeaturedImageDrop}
+              onDragOver={handleFeaturedImageDragOver}
+              onDragLeave={handleFeaturedImageDragLeave}
+              className={cn(
+                'flex items-center gap-4 rounded-lg border p-3 transition-colors',
+                isDraggingImage
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-card'
+              )}
             >
-              {t('Pages.Event.Form.FeaturedImageButton')}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={handleFeaturedImageInput}
-            />
-          </div>
+              <img
+                src={resolveFeaturedImageUrl(persistedImageUrl) ?? undefined}
+                alt={t('Pages.Event.Form.FeaturedImage')}
+                className="h-16 w-16 rounded-md object-cover"
+              />
+              <div className="flex-1 text-sm text-muted-foreground">
+                {t('Pages.Event.Form.FeaturedImageHint')}
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {t('Pages.Event.Form.FeaturedImageReplace')}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handlePersistedImageRemove}
+                aria-label={t('Pages.Event.Form.FeaturedImageRemoveExisting')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div
+              onDrop={handleFeaturedImageDrop}
+              onDragOver={handleFeaturedImageDragOver}
+              onDragLeave={handleFeaturedImageDragLeave}
+              className={cn(
+                'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors',
+                isDraggingImage
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-muted/20'
+              )}
+            >
+              <Upload className="h-5 w-5 text-muted-foreground" />
+              <div className="text-sm text-muted-foreground">
+                {t('Pages.Event.Form.FeaturedImageHint')}
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {t('Pages.Event.Form.FeaturedImageButton')}
+              </Button>
+              {isImageRemovalPending && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>
+                    {t('Pages.Event.Form.FeaturedImagePendingRemoval')}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs"
+                    onClick={handlePersistedImageUndoRemove}
+                  >
+                    {t('Pages.Event.Form.FeaturedImageUndoRemoval')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           {featuredImage && (
             <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-3">
