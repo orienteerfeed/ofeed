@@ -60,7 +60,7 @@
     "workbox-window": "^7.4.1"
   },
   "dependencies": {
-    "@apollo/client": "^4.2.3",
+    "@apollo/client": "^4.2.5",
     "@hookform/resolvers": "^5.4.0",
     "@radix-ui/react-alert-dialog": "^1.1.17",
     "@radix-ui/react-avatar": "^1.2.0",
