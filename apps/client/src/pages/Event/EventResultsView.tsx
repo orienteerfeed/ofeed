@@ -1611,13 +1611,18 @@ const computeRelayOverall = (
   if (teamMap.size === 0) return [];
 
   const legBestTimes = new Map<number, number>();
+  const legSecondBestTimes = new Map<number, number>();
   const legRankById = new Map<string, number>();
   for (let leg = 1; leg <= maxLeg; leg++) {
     const legRunners = allCompetitors
-      .filter(c => c.leg === leg && c.status === 'OK' && c.time != null)
+      .filter(
+        c => c.leg === leg && c.status === 'OK' && c.time != null && c.time > 0
+      )
       .sort((a, b) => (a.time ?? 0) - (b.time ?? 0));
     const firstTime = legRunners[0]?.time;
     if (firstTime != null) legBestTimes.set(leg, firstTime);
+    const secondTime = legRunners[1]?.time;
+    if (secondTime != null) legSecondBestTimes.set(leg, secondTime);
     let pos = 1;
     for (let i = 0; i < legRunners.length; i++) {
       const cur = legRunners[i]!;
@@ -1631,6 +1636,9 @@ const computeRelayOverall = (
   }
 
   const teamCumulByLeg = new Map<number, Map<number, number>>();
+  // A team is "broken" once any leg is missing an OK finisher (DSQ/DNF/DNS/…),
+  // which also disqualifies every earlier leg's standing for that team.
+  const brokenTeamIds = new Set<number>();
   for (const [teamId, runners] of teamMap) {
     const byLeg = new Map<number, Competitor>();
     for (const r of runners) {
@@ -1650,11 +1658,13 @@ const computeRelayOverall = (
       cumul.set(leg, total);
     }
     teamCumulByLeg.set(teamId, cumul);
+    if (broken) brokenTeamIds.add(teamId);
   }
 
   const cumulRankKey = (tid: number, leg: number) => `${tid}_${leg}`;
   const cumulRankMap = new Map<string, number>();
   const legLeaderCumulTime = new Map<number, number>();
+  const legSecondCumulTime = new Map<number, number>();
   for (let leg = 1; leg <= maxLeg; leg++) {
     const entries: { teamId: number; time: number }[] = [];
     for (const [teamId, cumul] of teamCumulByLeg) {
@@ -1664,6 +1674,8 @@ const computeRelayOverall = (
     entries.sort((a, b) => a.time - b.time);
     const firstEntry = entries[0];
     if (firstEntry != null) legLeaderCumulTime.set(leg, firstEntry.time);
+    const secondEntry = entries[1];
+    if (secondEntry != null) legSecondCumulTime.set(leg, secondEntry.time);
     let pos = 1;
     for (let i = 0; i < entries.length; i++) {
       const cur = entries[i]!;
@@ -1702,6 +1714,8 @@ const computeRelayOverall = (
     const teamName = firstRunner.team?.name ?? String(teamId);
     const club = firstRunner.organisation ?? '';
 
+    const isTeamBroken = brokenTeamIds.has(teamId);
+
     const legs: TeamLegResult[] = [];
     for (let leg = 1; leg <= maxLeg; leg++) {
       const runner = byLeg.get(leg);
@@ -1710,10 +1724,13 @@ const computeRelayOverall = (
         runner.status === 'OK' ? (runner.time ?? undefined) : undefined;
       const legBest = legBestTimes.get(leg);
       const legRank = legRankById.get(runner.id);
+      const legSecondBest = legSecondBestTimes.get(leg);
       const legLoss =
         legTime != null && legBest != null && legTime > legBest
           ? legTime - legBest
-          : undefined;
+          : legRank === 1 && legBest != null && legSecondBest != null
+            ? -(legSecondBest - legBest)
+            : undefined;
       const cumulTime = cumul.get(leg);
       const cumulRank = cumulRankMap.get(cumulRankKey(teamId, leg));
       const prevCumulRank =
@@ -1723,21 +1740,29 @@ const computeRelayOverall = (
           ? cumulRank - prevCumulRank
           : undefined;
       const leaderCumul = legLeaderCumulTime.get(leg);
+      const secondCumul = legSecondCumulTime.get(leg);
       const cumulativeLoss =
         cumulTime != null && leaderCumul != null && cumulTime > leaderCumul
           ? cumulTime - leaderCumul
-          : undefined;
+          : cumulRank === 1 && leaderCumul != null && secondCumul != null
+            ? -(secondCumul - leaderCumul)
+            : undefined;
 
       const legResult: TeamLegResult = { legNumber: leg, runner };
       if (legTime !== undefined) legResult.legTime = legTime;
-      if (legRank !== undefined) legResult.legRank = legRank;
-      if (legLoss !== undefined) legResult.legLoss = legLoss;
       if (cumulTime !== undefined) legResult.cumulativeTime = cumulTime;
-      if (cumulRank !== undefined) legResult.cumulativeRank = cumulRank;
-      if (positionChange !== undefined)
-        legResult.positionChange = positionChange;
-      if (cumulativeLoss !== undefined)
-        legResult.cumulativeLoss = cumulativeLoss;
+      // A disqualified/DNF team keeps its raw leg/cumulative times for
+      // reference, but loses rank badges and losses — same as an individual
+      // DSQ competitor loses standings in the Splits view.
+      if (!isTeamBroken) {
+        if (legRank !== undefined) legResult.legRank = legRank;
+        if (legLoss !== undefined) legResult.legLoss = legLoss;
+        if (cumulRank !== undefined) legResult.cumulativeRank = cumulRank;
+        if (positionChange !== undefined)
+          legResult.positionChange = positionChange;
+        if (cumulativeLoss !== undefined)
+          legResult.cumulativeLoss = cumulativeLoss;
+      }
       legs.push(legResult);
     }
 
@@ -1781,6 +1806,18 @@ const getStatusDisplay = (status: string | null | undefined) =>
     emoji: '❓',
     tooltip: 'Unknown status',
   };
+
+// Positive loss is time behind the leader ("+m:ss"); a leg/leader's own row
+// carries a negative margin instead of no value ("-m:ss" = lead over 2nd place).
+const formatSignedLoss = (loss: number | undefined): string => {
+  if (loss == null || loss === 0) return '';
+  return loss > 0
+    ? `+${formatSecondsToTime(loss)}`
+    : `-${formatSecondsToTime(-loss)}`;
+};
+
+const bestLegTimeClassName =
+  'rounded bg-green-50 px-1 text-green-700 dark:bg-green-950/30 dark:text-green-300';
 
 const PositionChange: React.FC<{ change: number }> = ({ change }) => {
   if (change === 0) {
@@ -1882,7 +1919,13 @@ const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
                     <TableCell className="px-2 py-0.5 text-right font-mono text-xs">
                       {leg.legTime != null ? (
                         <>
-                          {formatSecondsToTime(leg.legTime)}
+                          <span
+                            className={
+                              leg.legRank === 1 ? bestLegTimeClassName : ''
+                            }
+                          >
+                            {formatSecondsToTime(leg.legTime)}
+                          </span>
                           {leg.legRank != null && (
                             <span className="text-muted-foreground ml-1">
                               ({leg.legRank}.)
@@ -1899,9 +1942,7 @@ const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
                       )}
                     </TableCell>
                     <TableCell className="px-2 py-0.5 text-right font-mono text-xs text-muted-foreground hidden sm:table-cell">
-                      {leg.legLoss != null
-                        ? `+${formatSecondsToTime(leg.legLoss)}`
-                        : ''}
+                      {formatSignedLoss(leg.legLoss)}
                     </TableCell>
                     <TableCell className="px-2 py-0.5 text-right font-mono text-xs">
                       {leg.cumulativeTime != null ? (
@@ -1922,9 +1963,7 @@ const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
                       )}
                     </TableCell>
                     <TableCell className="px-2 py-0.5 text-right font-mono text-xs text-muted-foreground">
-                      {leg.cumulativeLoss != null
-                        ? `+${formatSecondsToTime(leg.cumulativeLoss)}`
-                        : ''}
+                      {formatSignedLoss(leg.cumulativeLoss)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1943,6 +1982,7 @@ interface RelayLegCompetitor extends Competitor {
   position?: number | string;
   positionTooltip?: string;
   loss?: number;
+  isBestLegTime?: boolean;
 }
 
 const processRelayLegCompetitors = (
@@ -1950,9 +1990,13 @@ const processRelayLegCompetitors = (
   selectedLeg: number,
   teamTimeMap: Map<number, Map<number, number>>
 ): RelayLegCompetitor[] => {
+  const hasValidTime = (time: number | null | undefined): time is number =>
+    time != null && time > 0;
+
   const getCumulativeTime = (c: Competitor): number | undefined => {
-    if (selectedLeg === 1) return c.time ?? undefined;
-    if (c.teamId == null || c.leg == null) return c.time ?? undefined;
+    if (selectedLeg === 1) return hasValidTime(c.time) ? c.time : undefined;
+    if (c.teamId == null || c.leg == null)
+      return hasValidTime(c.time) ? c.time : undefined;
     const legMap = teamTimeMap.get(c.teamId);
     if (!legMap) return undefined;
     let total = 0;
@@ -2000,14 +2044,20 @@ const processRelayLegCompetitors = (
     return sa - sb;
   });
 
-  const okCompetitors = withCumulative.filter(c => c.status === 'OK');
-  const leaderTime = okCompetitors[0]?.cumulativeTime ?? null;
+  // Only runners with a genuine cumulative time can be ranked or crowned the
+  // leg's leader — a zero/missing time earlier in the chain (this team's own
+  // broken leg) leaves cumulativeTime undefined, same treatment as DSQ/DNF.
+  const rankableCompetitors = withCumulative.filter(
+    c => c.status === 'OK' && c.cumulativeTime != null
+  );
+  const leaderTime = rankableCompetitors[0]?.cumulativeTime ?? null;
+  const secondTime = rankableCompetitors[1]?.cumulativeTime ?? null;
 
   let position = 1;
   const posMap = new Map<string, number>();
-  for (let i = 0; i < okCompetitors.length; i++) {
-    const cur = okCompetitors[i]!;
-    const prev = i > 0 ? okCompetitors[i - 1] : undefined;
+  for (let i = 0; i < rankableCompetitors.length; i++) {
+    const cur = rankableCompetitors[i]!;
+    const prev = i > 0 ? rankableCompetitors[i - 1] : undefined;
     const curT = cur.cumulativeTime ?? -1;
     const prevT = prev?.cumulativeTime ?? -1;
     const assignedPos =
@@ -2016,16 +2066,33 @@ const processRelayLegCompetitors = (
     position++;
   }
 
+  const validLegTimes = withCumulative
+    .filter(c => c.status === 'OK' && hasValidTime(c.time))
+    .map(c => c.time as number);
+  const bestLegTime =
+    validLegTimes.length > 0 ? Math.min(...validLegTimes) : undefined;
+
   return withCumulative.map(c => {
     const pos = posMap.get(c.id);
+    const isBestLegTime =
+      c.status === 'OK' && bestLegTime != null && c.time === bestLegTime;
     if (pos !== undefined) {
-      const loss =
-        leaderTime != null && c.cumulativeTime != null
-          ? c.cumulativeTime - leaderTime
-          : undefined;
-      const result: RelayLegCompetitor = { ...c, position: pos };
-      if (loss !== undefined && loss > 0) result.loss = loss;
+      let loss: number | undefined;
+      if (leaderTime != null && c.cumulativeTime != null) {
+        if (c.cumulativeTime > leaderTime) {
+          loss = c.cumulativeTime - leaderTime;
+        } else if (pos === 1 && secondTime != null) {
+          loss = -(secondTime - leaderTime);
+        }
+      }
+      const result: RelayLegCompetitor = { ...c, position: pos, isBestLegTime };
+      if (loss !== undefined) result.loss = loss;
       return result;
+    }
+    // Status OK but not rankable (this team's chain is already broken by an
+    // earlier disqualified/missing leg) — keep raw times, drop the standing.
+    if (c.status === 'OK') {
+      return { ...c, isBestLegTime } as RelayLegCompetitor;
     }
     const display = getStatusDisplay(c.status);
     return {
@@ -2102,7 +2169,7 @@ const RelayResultsView = ({
   const teamTimeMap = useMemo(() => {
     const map = new Map<number, Map<number, number>>();
     for (const c of allCompetitors) {
-      if (c.teamId != null && c.leg != null && c.time != null) {
+      if (c.teamId != null && c.leg != null && c.time != null && c.time > 0) {
         if (!map.has(c.teamId)) map.set(c.teamId, new Map());
         map.get(c.teamId)!.set(c.leg, c.time);
       }
@@ -2426,7 +2493,9 @@ const RelayResultsView = ({
                           </TableCell>
                         )}
                         <TableCell
-                          className={`px-2 py-1 text-right font-mono text-sm ${timeState.className}`}
+                          className={`px-2 py-1 text-right font-mono text-sm ${timeState.className} ${
+                            competitor.isBestLegTime ? bestLegTimeClassName : ''
+                          }`}
                         >
                           {timeState.hideOnDesktop ? (
                             <>
@@ -2447,8 +2516,8 @@ const RelayResultsView = ({
                           </TableCell>
                         )}
                         <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
-                          {competitor.loss && competitor.loss > 0
-                            ? `+${formatSecondsToTime(competitor.loss)}`
+                          {competitor.loss != null
+                            ? formatSignedLoss(competitor.loss)
                             : '-'}
                         </TableCell>
                       </motion.tr>
