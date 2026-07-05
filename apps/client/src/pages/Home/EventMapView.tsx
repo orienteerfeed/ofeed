@@ -564,7 +564,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
 
   return (
     <div className="event-map-view space-y-3">
-      <div className="relative h-[520px] w-full overflow-hidden rounded-lg border bg-muted/20">
+      <div className="relative isolate h-[520px] w-full overflow-hidden rounded-lg border bg-muted/20">
         <LeafletMap
           key={mapInstanceKey}
           center={mapCenter}
