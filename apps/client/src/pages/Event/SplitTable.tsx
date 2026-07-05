@@ -29,6 +29,15 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { MobileClubName } from './MobileClubName';
+import {
+  getResultStatusDisplay,
+  getResultStatusPriority,
+} from './result-list.utils';
+import {
+  computeLoss,
+  rankByTime,
+  type TimedEntry,
+} from './result-ranking.utils';
 import { filterValidSplitResultCompetitors } from './split-results.utils';
 
 const mobileResultsTableClassName =
@@ -92,56 +101,6 @@ interface SortConfig {
   direction: SortDirection;
 }
 
-// Constants
-const STATUS_PRIORITY = {
-  OK: 0,
-  Active: 1,
-  Finished: 2,
-  Inactive: 3,
-  NotCompeting: 4,
-  OverTime: 5,
-  Disqualified: 6,
-  MissingPunch: 7,
-  DidNotFinish: 8,
-  DidNotStart: 9,
-} as const;
-
-const STATUS_CONFIG = {
-  Active: { emoji: '🏃', tooltip: 'Currently running', color: 'text-blue-600' },
-  DidNotFinish: {
-    emoji: '🏳️',
-    tooltip: 'Did Not Finish',
-    color: 'text-orange-600',
-  },
-  DidNotStart: {
-    emoji: '🚷',
-    tooltip: 'Did not start',
-    color: 'text-gray-600',
-  },
-  Disqualified: { emoji: '🟥', tooltip: 'Disqualified', color: 'text-red-600' },
-  Finished: {
-    emoji: '🏁',
-    tooltip: 'Waiting for readout',
-    color: 'text-yellow-600',
-  },
-  Inactive: {
-    emoji: '🛏️',
-    tooltip: 'Waiting for start time',
-    color: 'text-gray-500',
-  },
-  MissingPunch: {
-    emoji: '🙈',
-    tooltip: 'Missing Punch',
-    color: 'text-red-500',
-  },
-  NotCompeting: {
-    emoji: '🦄',
-    tooltip: 'Not competing',
-    color: 'text-purple-600',
-  },
-  OverTime: { emoji: '⌛', tooltip: 'Over Time', color: 'text-orange-500' },
-} as const;
-
 // Thresholds for highlighting - based on standard deviation from competitor's average loss
 const TIME_LOSS_DEVIATION_THRESHOLDS = {
   SIGNIFICANT_LOSS: 1.5, // 1.5x standard deviation
@@ -164,52 +123,27 @@ const calculatePositions = (runners: Competitor[]): ProcessedCompetitor[] => {
   }));
 
   const finishedRunners = filterValidSplitResultCompetitors(clonedRunners);
-
-  finishedRunners.sort((a, b) => (a.time || 0) - (b.time || 0));
-
-  let position = 1;
-  for (let i = 0; i < finishedRunners.length; i++) {
-    const currentRunner = finishedRunners[i];
-    const previousRunner = finishedRunners[i - 1];
-    if (
-      currentRunner &&
-      previousRunner &&
-      i > 0 &&
-      currentRunner.time === previousRunner.time
-    ) {
-      currentRunner.position = previousRunner.position;
-    } else if (currentRunner) {
-      currentRunner.position = position;
-    }
-    position++;
-  }
-
-  const leaderTime = finishedRunners[0]?.time || null;
+  const { rankById, bestTime } = rankByTime(
+    finishedRunners.map(r => ({ id: r.id, time: r.time ?? 0 }))
+  );
 
   return clonedRunners.map(runner => {
     const finished = finishedRunners.find(r => r.id === runner.id);
 
-    let positionWithEmoji: string | undefined;
-    let positionTooltip: string | undefined;
-    let lossToLeader: number | undefined;
-
     if (finished) {
-      lossToLeader =
-        leaderTime !== null ? (finished.time || 0) - leaderTime : undefined;
-    } else {
-      const statusConfig =
-        STATUS_CONFIG[runner.status as keyof typeof STATUS_CONFIG];
-      if (statusConfig) {
-        positionWithEmoji = statusConfig.emoji;
-        positionTooltip = statusConfig.tooltip;
-      }
+      return {
+        ...runner,
+        position: rankById.get(finished.id),
+        loss: computeLoss(finished.time, bestTime),
+      };
     }
 
+    const statusDisplay = getResultStatusDisplay(runner.status);
     return {
       ...runner,
-      position: finished ? finished.position : positionWithEmoji,
-      positionTooltip: finished ? undefined : positionTooltip,
-      loss: lossToLeader,
+      position: statusDisplay.emoji,
+      positionTooltip: statusDisplay.tooltip,
+      loss: undefined,
     };
   });
 };
@@ -221,29 +155,16 @@ const calculateSplitPositions = (
   const positions: SplitPositionData = {};
 
   controlCodes.forEach(code => {
-    const runnersWithSplit = competitors
+    const runnersWithSplit: TimedEntry[] = competitors
       .map(c => {
         const split = c.splits.find(s => s.controlCode === code);
         return split && typeof split.time === 'number'
           ? { id: c.id, time: split.time }
           : null;
       })
-      .filter(Boolean)
-      .sort((a, b) => a!.time - b!.time);
+      .filter((entry): entry is TimedEntry => entry !== null);
 
-    let currentPosition = 1;
-    let lastTime: number | null = null;
-    const positionMap: { [competitorId: string]: number } = {};
-
-    runnersWithSplit.forEach((r, i) => {
-      if (lastTime !== null && r!.time !== lastTime) {
-        currentPosition = i + 1;
-      }
-      positionMap[r!.id] = currentPosition;
-      lastTime = r!.time;
-    });
-
-    positions[code] = positionMap;
+    positions[code] = Object.fromEntries(rankByTime(runnersWithSplit).rankById);
   });
 
   return positions;
@@ -441,10 +362,8 @@ export const SplitTable: React.FC<SplitTableProps> = ({
   // Sort competitors by status and time initially
   const sortedCompetitors = useMemo(() => {
     return [...competitors].sort((a, b) => {
-      const statusA =
-        STATUS_PRIORITY[a.status as keyof typeof STATUS_PRIORITY] ?? 99;
-      const statusB =
-        STATUS_PRIORITY[b.status as keyof typeof STATUS_PRIORITY] ?? 99;
+      const statusA = getResultStatusPriority(a.status);
+      const statusB = getResultStatusPriority(b.status);
       if (statusA !== statusB) return statusA - statusB;
       return (a.time ?? Infinity) - (b.time ?? Infinity);
     });
@@ -484,7 +403,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     } = {};
 
     controlCodes.forEach((code, idx) => {
-      const legResults: Array<{ id: string; time: number }> = [];
+      const legResults: TimedEntry[] = [];
 
       validResultCompetitors.forEach(c => {
         const legTime = getLegTime(c.splits, idx);
@@ -493,37 +412,15 @@ export const SplitTable: React.FC<SplitTableProps> = ({
         }
       });
 
-      legResults.sort((a, b) => a.time - b.time);
-      bestLegTimes[code] = legResults[0]?.time ?? null;
+      const { rankById, bestTime } = rankByTime(legResults);
+      bestLegTimes[code] = bestTime ?? null;
+      legPositions[code] = Object.fromEntries(rankById);
 
-      legPositions[code] = {};
       legLosses[code] = {};
-
-      let pos = 1;
-      for (let i = 0; i < legResults.length; i++) {
-        const currentResult = legResults[i];
-        const previousResult = legResults[i - 1];
-
-        if (
-          currentResult &&
-          previousResult &&
-          i > 0 &&
-          currentResult.time === previousResult.time
-        ) {
-          legPositions[code][currentResult.id] =
-            legPositions[code][previousResult.id]!;
-        } else if (currentResult) {
-          legPositions[code][currentResult.id] = pos;
-        }
-
-        if (currentResult) {
-          const bestTime = bestLegTimes[code];
-          if (bestTime != null) {
-            legLosses[code][currentResult.id] = currentResult.time - bestTime;
-          }
-        }
-
-        pos++;
+      if (bestTime != null) {
+        legResults.forEach(r => {
+          legLosses[code]![r.id] = r.time - bestTime;
+        });
       }
     });
 

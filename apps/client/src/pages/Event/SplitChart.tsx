@@ -23,13 +23,14 @@ import {
   createInitialSplitChartVisibility,
   createSplitChartCheckpoints,
 } from './split-chart.utils';
+import { getResultStatusPriority } from './result-list.utils';
+import { rankByTime } from './result-ranking.utils';
 import {
   filterValidSplitResultCompetitors,
 } from './split-results.utils';
 import type { SplitChartCheckpoint } from './split-chart.utils';
 
 // TODO: Refactor type definitions - move to shared types file
-// TODO: Define STATUS_PRIORITY in shared constants
 interface Split {
   controlCode: string;
   time: number;
@@ -76,20 +77,6 @@ interface RechartsCustomTooltipProps {
 
 type PositionsByLeg = Array<Record<string, number>>;
 type SplitChartComparisonMode = 'leader' | 'fastest';
-
-// TODO: Move to shared constants - used in both SplitTable and SplitChart
-const STATUS_PRIORITY = {
-  OK: 0,
-  Active: 1,
-  Finished: 2,
-  Inactive: 3,
-  NotCompeting: 4,
-  OverTime: 5,
-  Disqualified: 6,
-  MissingPunch: 7,
-  DidNotFinish: 8,
-  DidNotStart: 9,
-} as const;
 
 // Helper function - competitor display name
 const getCompetitorLabel = (c: Competitor) =>
@@ -172,10 +159,8 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   // Sort competitors same as in SplitTable (by status priority, then time)
   const sortedCompetitors = useMemo(() => {
     return [...competitors].sort((a, b) => {
-      const statusA =
-        STATUS_PRIORITY[a.status as keyof typeof STATUS_PRIORITY] ?? 99;
-      const statusB =
-        STATUS_PRIORITY[b.status as keyof typeof STATUS_PRIORITY] ?? 99;
+      const statusA = getResultStatusPriority(a.status);
+      const statusB = getResultStatusPriority(b.status);
       if (statusA !== statusB) return statusA - statusB;
       return (a.time ?? Infinity) - (b.time ?? Infinity);
     });
@@ -266,26 +251,14 @@ export const SplitChart: React.FC<SplitChartProps> = ({
 
       if (allResults.length === 0 || referenceResults.length === 0) return;
 
-      referenceResults.sort((a, b) => a.time - b.time);
-      const leaderTime = referenceResults[0]?.time ?? null;
+      const { rankById, bestTime } = rankByTime(referenceResults);
+      const leaderTime = bestTime ?? null;
       const referenceTime =
         comparisonMode === 'fastest'
           ? fastestReferenceTimes[checkpointIndex] ?? leaderTime
           : leaderTime;
 
-      const positionMap: Record<string, number> = {};
-      let currentPosition = 1;
-      let lastTime: number | null = null;
-
-      referenceResults.forEach((res, i) => {
-        if (lastTime !== null && res.time !== lastTime) {
-          currentPosition = i + 1;
-        }
-        positionMap[res.id] = currentPosition;
-        lastTime = res.time;
-      });
-
-      positionsByLeg[checkpointIndex] = positionMap;
+      positionsByLeg[checkpointIndex] = Object.fromEntries(rankById);
 
       const point: ChartPoint = {
         axisLabel: getCheckpointAxisLabel(checkpoint.kind, checkpoint.controlCode),

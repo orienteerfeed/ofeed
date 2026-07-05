@@ -39,11 +39,20 @@ import { MobileClubName } from './MobileClubName';
 import {
   compareByStatusPriorityThenName,
   formatResultListRank,
+  getResultStatusDisplay,
   getResultStatusPriority,
   isUnorderedResultListMode,
   shouldDisplayResultTimeLoss,
   shouldDisplayResultTimes,
 } from './result-list.utils';
+import {
+  computeLoss,
+  hasValidRaceTime,
+  rankByTime,
+  formatSignedLoss,
+  type TimedEntry,
+  type TimeRanking,
+} from './result-ranking.utils';
 import { WinnerNotification } from './WinnerNotifications';
 
 const CLUB_SHEET_MIN_HEIGHT = 200;
@@ -1103,70 +1112,32 @@ const ClubResultsView = ({
   const calculatePositionAndLoss = (competitor: CompetitorWithClass) => {
     const classCompetitors = competitor.class?.competitors || [];
 
-    // Filter only competitors with valid time and OK status for position calculation
-    const validCompetitors = classCompetitors
-      .filter(
-        (
-          comp
-        ): comp is {
-          id?: string | number;
-          status?: string | null;
-          time: number;
-        } =>
-          comp.status === 'OK' && comp.time !== null && comp.time !== undefined
-      )
-      .sort((a, b) => a.time - b.time);
-
-    // Find best time in category (only from OK status competitors)
-    const bestTime =
-      validCompetitors.length > 0 ? (validCompetitors[0]?.time ?? null) : null;
-
     // For non-OK status competitors, return appropriate position emoji
     if (competitor.status !== 'OK') {
-      const positionWithEmoji =
-        getStatusDisplay(competitor.status).emoji;
-      return { position: positionWithEmoji, loss: undefined };
+      return {
+        position: getResultStatusDisplay(competitor.status).emoji,
+        loss: undefined,
+      };
     }
 
-    // For OK status competitors, calculate actual position
-    if (validCompetitors.length === 0) {
+    // Only competitors with valid time and OK status count for position calculation
+    const validCompetitors = classCompetitors.filter(
+      (
+        comp
+      ): comp is { id?: string | number; status?: string | null; time: number } =>
+        comp.status === 'OK' && comp.time !== null && comp.time !== undefined
+    );
+
+    if (validCompetitors.length === 0 || competitor.id == null) {
       return { position: '❓', loss: undefined };
     }
 
-    // Find position of current competitor
-    let position = 1;
-    let previousTime: number | null = null;
-    let currentPosition = 1;
+    const { rankById, bestTime } = rankByTime(
+      validCompetitors.map(comp => ({ id: String(comp.id), time: comp.time }))
+    );
 
-    for (let i = 0; i < validCompetitors.length; i++) {
-      const comp = validCompetitors[i];
-      if (!comp) continue;
-
-      if (previousTime !== null && comp.time === previousTime) {
-        // Same time - same position
-        if (comp.id != null && competitor.id != null) {
-          if (String(comp.id) === String(competitor.id)) {
-            position = currentPosition;
-          }
-        }
-      } else {
-        // Different time - new position
-        currentPosition = i + 1;
-        if (comp.id != null && competitor.id != null) {
-          if (String(comp.id) === String(competitor.id)) {
-            position = currentPosition;
-          }
-        }
-      }
-
-      previousTime = comp.time ?? null;
-    }
-
-    // Calculate loss only for OK status competitors with valid time
-    const loss =
-      competitor.time && bestTime && competitor.time > bestTime
-        ? competitor.time - bestTime
-        : undefined;
+    const position = rankById.get(String(competitor.id)) ?? '❓';
+    const loss = computeLoss(competitor.time ?? undefined, bestTime);
 
     return { position, loss };
   };
@@ -1610,29 +1581,14 @@ const computeRelayOverall = (
   }
   if (teamMap.size === 0) return [];
 
-  const legBestTimes = new Map<number, number>();
-  const legSecondBestTimes = new Map<number, number>();
-  const legRankById = new Map<string, number>();
+  const legRankings = new Map<number, TimeRanking>();
   for (let leg = 1; leg <= maxLeg; leg++) {
-    const legRunners = allCompetitors
+    const legRunners: TimedEntry[] = allCompetitors
       .filter(
-        c => c.leg === leg && c.status === 'OK' && c.time != null && c.time > 0
+        c => c.leg === leg && c.status === 'OK' && hasValidRaceTime(c.time)
       )
-      .sort((a, b) => (a.time ?? 0) - (b.time ?? 0));
-    const firstTime = legRunners[0]?.time;
-    if (firstTime != null) legBestTimes.set(leg, firstTime);
-    const secondTime = legRunners[1]?.time;
-    if (secondTime != null) legSecondBestTimes.set(leg, secondTime);
-    let pos = 1;
-    for (let i = 0; i < legRunners.length; i++) {
-      const cur = legRunners[i]!;
-      const prev = i > 0 ? legRunners[i - 1] : undefined;
-      const prevRank = prev ? (legRankById.get(prev.id) ?? pos) : undefined;
-      const rank =
-        prev && cur.time === prev.time && prevRank != null ? prevRank : pos;
-      legRankById.set(cur.id, rank);
-      pos++;
-    }
+      .map(c => ({ id: c.id, time: c.time as number }));
+    legRankings.set(leg, rankByTime(legRunners));
   }
 
   const teamCumulByLeg = new Map<number, Map<number, number>>();
@@ -1661,33 +1617,14 @@ const computeRelayOverall = (
     if (broken) brokenTeamIds.add(teamId);
   }
 
-  const cumulRankKey = (tid: number, leg: number) => `${tid}_${leg}`;
-  const cumulRankMap = new Map<string, number>();
-  const legLeaderCumulTime = new Map<number, number>();
-  const legSecondCumulTime = new Map<number, number>();
+  const cumulRankings = new Map<number, TimeRanking>();
   for (let leg = 1; leg <= maxLeg; leg++) {
-    const entries: { teamId: number; time: number }[] = [];
+    const entries: TimedEntry[] = [];
     for (const [teamId, cumul] of teamCumulByLeg) {
       const t = cumul.get(leg);
-      if (t != null) entries.push({ teamId, time: t });
+      if (t != null) entries.push({ id: String(teamId), time: t });
     }
-    entries.sort((a, b) => a.time - b.time);
-    const firstEntry = entries[0];
-    if (firstEntry != null) legLeaderCumulTime.set(leg, firstEntry.time);
-    const secondEntry = entries[1];
-    if (secondEntry != null) legSecondCumulTime.set(leg, secondEntry.time);
-    let pos = 1;
-    for (let i = 0; i < entries.length; i++) {
-      const cur = entries[i]!;
-      const prev = i > 0 ? entries[i - 1] : undefined;
-      const prevRank = prev
-        ? (cumulRankMap.get(cumulRankKey(prev.teamId, leg)) ?? pos)
-        : undefined;
-      const rank =
-        prev && cur.time === prev.time && prevRank != null ? prevRank : pos;
-      cumulRankMap.set(cumulRankKey(cur.teamId, leg), rank);
-      pos++;
-    }
+    cumulRankings.set(leg, rankByTime(entries));
   }
 
   const results: TeamResult[] = [];
@@ -1698,14 +1635,9 @@ const computeRelayOverall = (
     }
     const cumul = teamCumulByLeg.get(teamId) ?? new Map<number, number>();
     const totalTime = cumul.get(maxLeg);
-    const finalRank = cumulRankMap.get(cumulRankKey(teamId, maxLeg));
-    const leaderFinalTime = legLeaderCumulTime.get(maxLeg);
-    const timeDiff =
-      totalTime != null &&
-      leaderFinalTime != null &&
-      totalTime > leaderFinalTime
-        ? totalTime - leaderFinalTime
-        : undefined;
+    const finalCumulRanking = cumulRankings.get(maxLeg);
+    const finalRank = finalCumulRanking?.rankById.get(String(teamId));
+    const timeDiff = computeLoss(totalTime, finalCumulRanking?.bestTime);
 
     const sortedRunners = [...byLeg.entries()]
       .sort(([a], [b]) => a - b)
@@ -1722,31 +1654,28 @@ const computeRelayOverall = (
       if (!runner) continue;
       const legTime =
         runner.status === 'OK' ? (runner.time ?? undefined) : undefined;
-      const legBest = legBestTimes.get(leg);
-      const legRank = legRankById.get(runner.id);
-      const legSecondBest = legSecondBestTimes.get(leg);
-      const legLoss =
-        legTime != null && legBest != null && legTime > legBest
-          ? legTime - legBest
-          : legRank === 1 && legBest != null && legSecondBest != null
-            ? -(legSecondBest - legBest)
-            : undefined;
+      const legRanking = legRankings.get(leg);
+      const legRank = legRanking?.rankById.get(runner.id);
+      const legLoss = computeLoss(legTime, legRanking?.bestTime, {
+        rank: legRank,
+        secondBestTime: legRanking?.secondBestTime,
+      });
+
       const cumulTime = cumul.get(leg);
-      const cumulRank = cumulRankMap.get(cumulRankKey(teamId, leg));
+      const cumulRanking = cumulRankings.get(leg);
+      const cumulRank = cumulRanking?.rankById.get(String(teamId));
       const prevCumulRank =
-        leg > 1 ? cumulRankMap.get(cumulRankKey(teamId, leg - 1)) : undefined;
+        leg > 1
+          ? cumulRankings.get(leg - 1)?.rankById.get(String(teamId))
+          : undefined;
       const positionChange =
         cumulRank != null && prevCumulRank != null
           ? cumulRank - prevCumulRank
           : undefined;
-      const leaderCumul = legLeaderCumulTime.get(leg);
-      const secondCumul = legSecondCumulTime.get(leg);
-      const cumulativeLoss =
-        cumulTime != null && leaderCumul != null && cumulTime > leaderCumul
-          ? cumulTime - leaderCumul
-          : cumulRank === 1 && leaderCumul != null && secondCumul != null
-            ? -(secondCumul - leaderCumul)
-            : undefined;
+      const cumulativeLoss = computeLoss(cumulTime, cumulRanking?.bestTime, {
+        rank: cumulRank,
+        secondBestTime: cumulRanking?.secondBestTime,
+      });
 
       const legResult: TeamLegResult = { legNumber: leg, runner };
       if (legTime !== undefined) legResult.legTime = legTime;
@@ -1785,35 +1714,6 @@ const computeRelayOverall = (
   });
 
   return results;
-};
-
-const COMPETITOR_STATUS_DISPLAY: Record<
-  string,
-  { emoji: string; tooltip: string }
-> = {
-  Active: { emoji: '🏃', tooltip: 'Giving it their all right now' },
-  DidNotFinish: { emoji: '🏳️', tooltip: 'Did Not Finish' },
-  DidNotStart: { emoji: '🚷', tooltip: 'Did Not Start' },
-  Disqualified: { emoji: '🟥', tooltip: 'Disqualified' },
-  Finished: { emoji: '🏁', tooltip: 'Waiting for readout' },
-  Inactive: { emoji: '🛏️', tooltip: 'Waiting for start time' },
-  MissingPunch: { emoji: '🙈', tooltip: 'Missing Punch' },
-  NotCompeting: { emoji: '🦄', tooltip: 'Not competing' },
-  OverTime: { emoji: '⌛', tooltip: 'Over Time' },
-};
-const getStatusDisplay = (status: string | null | undefined) =>
-  COMPETITOR_STATUS_DISPLAY[status ?? ''] ?? {
-    emoji: '❓',
-    tooltip: 'Unknown status',
-  };
-
-// Positive loss is time behind the leader ("+m:ss"); a leg/leader's own row
-// carries a negative margin instead of no value ("-m:ss" = lead over 2nd place).
-const formatSignedLoss = (loss: number | undefined): string => {
-  if (loss == null || loss === 0) return '';
-  return loss > 0
-    ? `+${formatSecondsToTime(loss)}`
-    : `-${formatSecondsToTime(-loss)}`;
 };
 
 const bestLegTimeClassName =
@@ -1935,9 +1835,9 @@ const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
                       ) : (
                         <span
                           className="text-muted-foreground cursor-help"
-                          title={getStatusDisplay(leg.runner.status).tooltip}
+                          title={getResultStatusDisplay(leg.runner.status).tooltip}
                         >
-                          {getStatusDisplay(leg.runner.status).emoji}
+                          {getResultStatusDisplay(leg.runner.status).emoji}
                         </span>
                       )}
                     </TableCell>
@@ -1990,13 +1890,10 @@ const processRelayLegCompetitors = (
   selectedLeg: number,
   teamTimeMap: Map<number, Map<number, number>>
 ): RelayLegCompetitor[] => {
-  const hasValidTime = (time: number | null | undefined): time is number =>
-    time != null && time > 0;
-
   const getCumulativeTime = (c: Competitor): number | undefined => {
-    if (selectedLeg === 1) return hasValidTime(c.time) ? c.time : undefined;
+    if (selectedLeg === 1) return hasValidRaceTime(c.time) ? c.time : undefined;
     if (c.teamId == null || c.leg == null)
-      return hasValidTime(c.time) ? c.time : undefined;
+      return hasValidRaceTime(c.time) ? c.time : undefined;
     const legMap = teamTimeMap.get(c.teamId);
     if (!legMap) return undefined;
     let total = 0;
@@ -2006,19 +1903,6 @@ const processRelayLegCompetitors = (
       total += t;
     }
     return total;
-  };
-
-  const statusPriority: Record<string, number> = {
-    OK: 0,
-    Active: 1,
-    Finished: 2,
-    Inactive: 3,
-    NotCompeting: 4,
-    OverTime: 5,
-    Disqualified: 6,
-    MissingPunch: 7,
-    DidNotFinish: 8,
-    DidNotStart: 9,
   };
 
   type WithCumulative = Competitor & { cumulativeTime?: number };
@@ -2036,8 +1920,8 @@ const processRelayLegCompetitors = (
     }
     if (a.status === 'OK') return -1;
     if (b.status === 'OK') return 1;
-    const pa = statusPriority[a.status] ?? 10;
-    const pb = statusPriority[b.status] ?? 10;
+    const pa = getResultStatusPriority(a.status);
+    const pb = getResultStatusPriority(b.status);
     if (pa !== pb) return pa - pb;
     const sa = a.startTime ? new Date(a.startTime).getTime() : Infinity;
     const sb = b.startTime ? new Date(b.startTime).getTime() : Infinity;
@@ -2050,41 +1934,28 @@ const processRelayLegCompetitors = (
   const rankableCompetitors = withCumulative.filter(
     c => c.status === 'OK' && c.cumulativeTime != null
   );
-  const leaderTime = rankableCompetitors[0]?.cumulativeTime ?? null;
-  const secondTime = rankableCompetitors[1]?.cumulativeTime ?? null;
+  const {
+    rankById,
+    bestTime: leaderTime,
+    secondBestTime: secondTime,
+  } = rankByTime(
+    rankableCompetitors.map(c => ({ id: c.id, time: c.cumulativeTime as number }))
+  );
 
-  let position = 1;
-  const posMap = new Map<string, number>();
-  for (let i = 0; i < rankableCompetitors.length; i++) {
-    const cur = rankableCompetitors[i]!;
-    const prev = i > 0 ? rankableCompetitors[i - 1] : undefined;
-    const curT = cur.cumulativeTime ?? -1;
-    const prevT = prev?.cumulativeTime ?? -1;
-    const assignedPos =
-      prev && curT === prevT ? (posMap.get(prev.id) ?? position) : position;
-    posMap.set(cur.id, assignedPos);
-    position++;
-  }
-
-  const validLegTimes = withCumulative
-    .filter(c => c.status === 'OK' && hasValidTime(c.time))
-    .map(c => c.time as number);
-  const bestLegTime =
-    validLegTimes.length > 0 ? Math.min(...validLegTimes) : undefined;
+  const validLegTimes: TimedEntry[] = withCumulative
+    .filter(c => c.status === 'OK' && hasValidRaceTime(c.time))
+    .map(c => ({ id: c.id, time: c.time as number }));
+  const bestLegTime = rankByTime(validLegTimes).bestTime;
 
   return withCumulative.map(c => {
-    const pos = posMap.get(c.id);
+    const pos = rankById.get(c.id);
     const isBestLegTime =
       c.status === 'OK' && bestLegTime != null && c.time === bestLegTime;
     if (pos !== undefined) {
-      let loss: number | undefined;
-      if (leaderTime != null && c.cumulativeTime != null) {
-        if (c.cumulativeTime > leaderTime) {
-          loss = c.cumulativeTime - leaderTime;
-        } else if (pos === 1 && secondTime != null) {
-          loss = -(secondTime - leaderTime);
-        }
-      }
+      const loss = computeLoss(c.cumulativeTime, leaderTime, {
+        rank: pos,
+        secondBestTime: secondTime,
+      });
       const result: RelayLegCompetitor = { ...c, position: pos, isBestLegTime };
       if (loss !== undefined) result.loss = loss;
       return result;
@@ -2094,7 +1965,7 @@ const processRelayLegCompetitors = (
     if (c.status === 'OK') {
       return { ...c, isBestLegTime } as RelayLegCompetitor;
     }
-    const display = getStatusDisplay(c.status);
+    const display = getResultStatusDisplay(c.status);
     return {
       ...c,
       position: display.emoji,
@@ -2169,7 +2040,7 @@ const RelayResultsView = ({
   const teamTimeMap = useMemo(() => {
     const map = new Map<number, Map<number, number>>();
     for (const c of allCompetitors) {
-      if (c.teamId != null && c.leg != null && c.time != null && c.time > 0) {
+      if (c.teamId != null && c.leg != null && hasValidRaceTime(c.time)) {
         if (!map.has(c.teamId)) map.set(c.teamId, new Map());
         map.get(c.teamId)!.set(c.leg, c.time);
       }
@@ -2592,53 +2463,30 @@ const processCompetitors = (
 
 // Refactored calculatePositions function with proper TypeScript types
 const calculatePositions = (runners: Competitor[]): ProcessedCompetitor[] => {
-  const positionsMap = new Map<
-    string,
-    { position: number | string; positionTooltip?: string; loss?: number }
-  >();
-
-  const finishedRunners = runners
-    .filter(
-      (runner): runner is Competitor & { time: number } =>
-        runner.status === 'OK' && runner.time !== undefined
-    )
-    .sort((a, b) => a.time - b.time);
-
-  let position = 1;
-  for (let i = 0; i < finishedRunners.length; i++) {
-    const currentRunner = finishedRunners[i]!;
-    const prevRunner = i > 0 ? finishedRunners[i - 1] : undefined;
-
-    const assignedPosition =
-      prevRunner && currentRunner.time === prevRunner.time
-        ? (positionsMap.get(prevRunner.id)?.position as number)
-        : position;
-
-    positionsMap.set(currentRunner.id, { position: assignedPosition });
-    position++;
-  }
-
-  const leaderTime = finishedRunners[0]?.time ?? null;
+  const finishedRunners = runners.filter(
+    (runner): runner is Competitor & { time: number } =>
+      runner.status === 'OK' && runner.time !== undefined
+  );
+  const { rankById, bestTime } = rankByTime(
+    finishedRunners.map(r => ({ id: r.id, time: r.time }))
+  );
 
   return runners.map((runner): ProcessedCompetitor => {
-    const positionData = positionsMap.get(runner.id);
+    const position = rankById.get(runner.id);
 
-    if (positionData) {
-      const lossToLeader =
-        leaderTime !== null && runner.time !== undefined
-          ? runner.time - leaderTime
-          : undefined;
+    if (position !== undefined) {
+      const loss = computeLoss(runner.time, bestTime);
 
       // DŮLEŽITÉ: nepřidávat pole s hodnotou undefined
       return {
         ...runner,
-        position: positionData.position,
-        ...(lossToLeader !== undefined ? { loss: lossToLeader } : {}),
+        position,
+        ...(loss !== undefined ? { loss } : {}),
       };
     }
 
     // Non-finished běžci
-    const statusDisplay = getStatusDisplay(runner.status);
+    const statusDisplay = getResultStatusDisplay(runner.status);
 
     return {
       ...runner,
