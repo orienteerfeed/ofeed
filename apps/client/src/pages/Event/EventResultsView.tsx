@@ -1680,12 +1680,14 @@ const computeRelayOverall = (
       const legResult: TeamLegResult = { legNumber: leg, runner };
       if (legTime !== undefined) legResult.legTime = legTime;
       if (cumulTime !== undefined) legResult.cumulativeTime = cumulTime;
-      // A disqualified/DNF team keeps its raw leg/cumulative times for
-      // reference, but loses rank badges and losses — same as an individual
-      // DSQ competitor loses standings in the Splits view.
+      // A leg's own placement is independent of the team's eventual fate — a
+      // runner from a team disqualified on another leg can still have run
+      // the fastest leg, so legRank/legLoss are never suppressed. Only the
+      // team-level standing built by chaining legs together (cumulative rank/
+      // loss/position-change) is void once the team is broken.
+      if (legRank !== undefined) legResult.legRank = legRank;
+      if (legLoss !== undefined) legResult.legLoss = legLoss;
       if (!isTeamBroken) {
-        if (legRank !== undefined) legResult.legRank = legRank;
-        if (legLoss !== undefined) legResult.legLoss = legLoss;
         if (cumulRank !== undefined) legResult.cumulativeRank = cumulRank;
         if (positionChange !== undefined)
           legResult.positionChange = positionChange;
