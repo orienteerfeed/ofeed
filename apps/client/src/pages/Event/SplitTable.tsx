@@ -26,6 +26,7 @@ import {
   User,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { MobileClubName } from './MobileClubName';
@@ -256,6 +257,7 @@ const getLossColorClass = (lossLevel: string): string => {
 };
 
 const getLossTooltip = (
+  t: TFunction,
   loss: number,
   averageLoss: number,
   standardDeviation: number,
@@ -265,19 +267,33 @@ const getLossTooltip = (
 ): string => {
   const lossToBest =
     bestTime !== null && legTime !== null
-      ? `Loss to best: +${formatSecondsToTime(legTime - bestTime)}`
+      ? t('Pages.Event.Splits.TooltipLossToBest', {
+          time: formatSecondsToTime(legTime - bestTime),
+        })
       : '';
 
   if (standardDeviation === 0) {
-    return lossToBest || `Time loss: +${formatSecondsToTime(loss)}`;
+    return (
+      lossToBest ||
+      t('Pages.Event.Splits.TooltipTimeLoss', {
+        time: formatSecondsToTime(loss),
+      })
+    );
   }
 
   const deviation = (loss - averageLoss) / standardDeviation;
+  const deviationParams = {
+    time: formatSecondsToTime(loss),
+    deviation: deviation.toFixed(1),
+  };
   const levels = {
-    significant: `Significantly above average: +${formatSecondsToTime(loss)} (${deviation.toFixed(1)}σ)`,
-    major: `Major deviation: +${formatSecondsToTime(loss)} (${deviation.toFixed(1)}σ)`,
-    critical: `Critical deviation: +${formatSecondsToTime(loss)} (${deviation.toFixed(1)}σ)`,
-    none: `Time loss: +${formatSecondsToTime(loss)} (${deviation.toFixed(1)}σ)`,
+    significant: t(
+      'Pages.Event.Splits.TooltipSignificantDeviation',
+      deviationParams
+    ),
+    major: t('Pages.Event.Splits.TooltipMajorDeviation', deviationParams),
+    critical: t('Pages.Event.Splits.TooltipCriticalDeviation', deviationParams),
+    none: t('Pages.Event.Splits.TooltipTimeLossDeviation', deviationParams),
   };
 
   const baseMessage = levels[lossLevel as keyof typeof levels] || levels.none;
@@ -601,7 +617,9 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                   </Button>
                 </TableHead>
 
-                <TableHead className="min-w-[140px]">Competitor</TableHead>
+                <TableHead className="min-w-[140px]">
+                  {t('Pages.Event.Splits.Competitor')}
+                </TableHead>
 
                 {/* Finish Time Column */}
                 <TableHead className="w-20 text-center">
@@ -632,20 +650,17 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                 {/* Leg Columns */}
                 {controlCodes.map((code, i) => (
                   <TableHead key={i} className="text-center min-w-[110px]">
-                    <div className="flex flex-col text-xs">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSort(`leg-${i}`)}
-                        className="h-8 font-medium hover:bg-muted p-1"
-                      >
-                        <span className="mr-1 text-xs">Leg {i + 1}</span>
-                        {getSortIcon(`leg-${i}`)}
-                      </Button>
-                      <span className="text-muted-foreground font-normal">
-                        ({code})
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort(`leg-${i}`)}
+                      className="h-8 font-medium hover:bg-muted p-1"
+                    >
+                      <span className="mr-1 text-xs">
+                        {i + 1} ({code})
                       </span>
-                    </div>
+                      {getSortIcon(`leg-${i}`)}
+                    </Button>
                   </TableHead>
                 ))}
 
@@ -744,6 +759,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
   splitPositions,
   mobileClubWidthReference,
 }) => {
+  const { t } = useTranslation();
   const competitorStats = competitorLossStats[competitor.id];
 
   return (
@@ -849,13 +865,20 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-[300px] whitespace-pre-line">
-                  <p>Leg time to {code}</p>
+                  <p>
+                    {t('Pages.Event.Splits.TooltipLegTimeTo', {
+                      controlCode: code,
+                    })}
+                  </p>
                   {isBestLeg && (
-                    <p className="text-xs mt-1 text-green-600">Fastest leg!</p>
+                    <p className="text-xs mt-1 text-green-600">
+                      {t('Pages.Event.Splits.TooltipFastestLeg')}
+                    </p>
                   )}
                   {showLossWarning && competitorStats && (
                     <p className="text-xs mt-1 text-red-600">
                       {getLossTooltip(
+                        t,
                         legLoss!,
                         competitorStats.averageLoss,
                         competitorStats.standardDeviation,
@@ -870,7 +893,9 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                     bestTime !== null &&
                     legTime !== null && (
                       <p className="text-xs mt-1 text-muted-foreground">
-                        Loss to best: +{formatSecondsToTime(legTime - bestTime)}
+                        {t('Pages.Event.Splits.TooltipLossToBest', {
+                          time: formatSecondsToTime(legTime - bestTime),
+                        })}
                       </p>
                     )}
                 </TooltipContent>
@@ -901,10 +926,14 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Cumulative time at {code}</p>
+                  <p>
+                    {t('Pages.Event.Splits.TooltipCumulativeTimeAt', {
+                      controlCode: code,
+                    })}
+                  </p>
                   {isBestSplit && (
                     <p className="text-xs mt-1 text-blue-600">
-                      Leading at this point!
+                      {t('Pages.Event.Splits.TooltipLeadingAtPoint')}
                     </p>
                   )}
                 </TooltipContent>
