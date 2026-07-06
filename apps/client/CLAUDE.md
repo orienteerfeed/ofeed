@@ -20,7 +20,7 @@ Don't wrap Apollo flows inside TanStack Query.
 
 File-based via TanStack Router. Generated barrel `src/routeTree.gen.ts` is auto-generated — never hand-edit.
 
-Top-level under `src/routes/`: `auth/`, `admin/`, `events/$eventId/`, plus `index.tsx`, `my-events.tsx`, `profile.tsx`, `about.tsx`, `__root.tsx`.
+Top-level under `src/routes/`: `auth/`, `admin/`, `events/$eventId/`, `utils/`, plus `index.tsx`, `my-events.tsx`, `profile.tsx`, `about.tsx`, `__root.tsx`.
 
 ## Forms
 

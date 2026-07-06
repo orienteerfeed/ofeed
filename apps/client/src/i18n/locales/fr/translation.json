@@ -52,6 +52,39 @@
         }
       }
     },
+    "Utils": {
+      "Title": "Outils pour organisateurs",
+      "Description": "De petits outils pour vous aider à organiser et gérer vos événements.",
+      "QrCodes": {
+        "TileTitle": "Générateur de codes QR",
+        "TileDescription": "Générez des étiquettes de codes QR imprimables pour les dossards des équipes de relais.",
+        "Title": "Générateur de codes QR pour les dossards de relais",
+        "Description": "Saisissez les plages d'équipes et de relais, puis téléchargez un PDF prêt à imprimer avec les étiquettes de codes QR.",
+        "PrintGuidance": "Pour une meilleure fiabilité de lecture, imprimez sur papier mat à 40-50 mm, utilisez un contraste élevé (noir sur blanc) et placez l'étiquette dans la partie supérieure du dossard, loin des plis.",
+        "LabelText": "Équipe {{team}} · Relais {{leg}}",
+        "Form": {
+          "TeamFrom": "Équipe de",
+          "TeamTo": "Équipe à",
+          "LegFrom": "Relais de",
+          "LegTo": "Relais à",
+          "Size": "Taille du code QR",
+          "Submit": "Générer le PDF",
+          "Generating": "Génération du PDF..."
+        },
+        "Validation": {
+          "TeamRangeOrder": "« Équipe de » doit être inférieur ou égal à « Équipe à »",
+          "LegRangeOrder": "« Relais de » doit être inférieur ou égal à « Relais à »",
+          "TooManyCodes": "Cette plage générerait plus de {{max}} codes QR. Merci de réduire la plage."
+        },
+        "Preview": {
+          "Count": "Cela générera {{count}} codes QR.",
+          "Title": "Aperçu"
+        },
+        "Errors": {
+          "PdfGenerationFailed": "Impossible de générer le PDF. Veuillez réessayer."
+        }
+      }
+    },
     "Event": {
       "PublishingStatus": {
         "Card": {
@@ -760,7 +793,8 @@
   },
   "Templates": {
     "Routes": {
-      "Board": "Board"
+      "Board": "Board",
+      "Utils": "Outils"
     }
   }
 }

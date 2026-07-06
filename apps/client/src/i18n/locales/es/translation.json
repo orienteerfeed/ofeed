@@ -1783,6 +1783,39 @@
           "LastnameRequired": "Los apellidos son obligatorios"
         }
       }
+    },
+    "Utils": {
+      "Title": "Herramientas para organizadores",
+      "Description": "Pequeñas herramientas que te ayudan a organizar y gestionar tus eventos.",
+      "QrCodes": {
+        "TileTitle": "Generador de códigos QR",
+        "TileDescription": "Genera etiquetas de códigos QR imprimibles para los dorsales de equipos de relevos.",
+        "Title": "Generador de códigos QR para dorsales de relevos",
+        "Description": "Introduce los rangos de equipo y de tramo de tu relevo y descarga un PDF listo para imprimir con las etiquetas de códigos QR.",
+        "PrintGuidance": "Para mayor fiabilidad de escaneo, imprime en papel mate a 40-50 mm, usa alto contraste (negro sobre blanco) y coloca la etiqueta en la parte superior del dorsal, lejos de los pliegues.",
+        "LabelText": "Equipo {{team}} · Tramo {{leg}}",
+        "Form": {
+          "TeamFrom": "Equipo desde",
+          "TeamTo": "Equipo hasta",
+          "LegFrom": "Tramo desde",
+          "LegTo": "Tramo hasta",
+          "Size": "Tamaño del código QR",
+          "Submit": "Generar PDF",
+          "Generating": "Generando PDF..."
+        },
+        "Validation": {
+          "TeamRangeOrder": "\"Equipo desde\" debe ser menor o igual que \"Equipo hasta\"",
+          "LegRangeOrder": "\"Tramo desde\" debe ser menor o igual que \"Tramo hasta\"",
+          "TooManyCodes": "Este rango generaría más de {{max}} códigos QR. Reduce los rangos."
+        },
+        "Preview": {
+          "Count": "Esto generará {{count}} códigos QR.",
+          "Title": "Vista previa"
+        },
+        "Errors": {
+          "PdfGenerationFailed": "No se pudo generar el PDF. Inténtalo de nuevo."
+        }
+      }
     }
   },
   "Organisms": {
@@ -1884,6 +1917,7 @@
       "Home": "Inicio",
       "Events": "Eventos",
       "About": "Acerca de",
+      "Utils": "Herramientas",
       "Docs": "Documentación",
       "Contact": "Contacto",
       "Board": "Board",

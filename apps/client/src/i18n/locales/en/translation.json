@@ -1783,6 +1783,39 @@
           "LastnameRequired": "Last name is required"
         }
       }
+    },
+    "Utils": {
+      "Title": "Organizer utilities",
+      "Description": "Small tools that help you organize and run your events.",
+      "QrCodes": {
+        "TileTitle": "QR code generator",
+        "TileDescription": "Generate printable QR code labels for relay team bibs.",
+        "Title": "QR code generator for relay bibs",
+        "Description": "Enter the team and leg ranges for your relay and download a print-ready PDF of QR code labels.",
+        "PrintGuidance": "For best scanning reliability, print on matte paper at 40-50 mm, use high contrast (black on white), and place the label in the upper area of the bib, away from folds.",
+        "LabelText": "Team {{team}} · Leg {{leg}}",
+        "Form": {
+          "TeamFrom": "Team from",
+          "TeamTo": "Team to",
+          "LegFrom": "Leg from",
+          "LegTo": "Leg to",
+          "Size": "QR code size",
+          "Submit": "Generate PDF",
+          "Generating": "Generating PDF..."
+        },
+        "Validation": {
+          "TeamRangeOrder": "\"Team from\" must be less than or equal to \"Team to\"",
+          "LegRangeOrder": "\"Leg from\" must be less than or equal to \"Leg to\"",
+          "TooManyCodes": "This range would generate more than {{max}} QR codes. Please narrow the ranges."
+        },
+        "Preview": {
+          "Count": "This will generate {{count}} QR codes.",
+          "Title": "Preview"
+        },
+        "Errors": {
+          "PdfGenerationFailed": "Failed to generate the PDF. Please try again."
+        }
+      }
     }
   },
   "Organisms": {
@@ -1884,6 +1917,7 @@
       "Home": "Home",
       "Events": "Events",
       "About": "About",
+      "Utils": "Utils",
       "Docs": "Docs",
       "Contact": "Contact",
       "Board": "Board",

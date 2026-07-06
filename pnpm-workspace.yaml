@@ -9,6 +9,7 @@ allowBuilds:
   "@prisma/engines": false
   "@swc/core": false
   argon2: false
+  core-js: false
   esbuild: false
   prisma: false
   sharp: true
