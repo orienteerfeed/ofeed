@@ -72,7 +72,7 @@ describe('compareCompetitorsByName', () => {
 
     const sorted = people.slice().sort(compareCompetitorsByName);
 
-    expect(sorted.map((p) => `${p.lastname} ${p.firstname}`)).toEqual([
+    expect(sorted.map(p => `${p.lastname} ${p.firstname}`)).toEqual([
       'Adamova Eva',
       'novak Adam',
       'Novak Petr',
@@ -101,7 +101,7 @@ describe('compareByStatusPriorityThenName', () => {
 
     const sorted = competitors.slice().sort(compareByStatusPriorityThenName);
 
-    expect(sorted.map((c) => c.lastname)).toEqual([
+    expect(sorted.map(c => c.lastname)).toEqual([
       'Brown', // OK, alphabetical
       'Clark', // OK, alphabetical
       'Adams', // Active, alphabetical
@@ -118,7 +118,7 @@ describe('compareByStatusPriorityThenName', () => {
 
     const sorted = competitors.slice().sort(compareByStatusPriorityThenName);
 
-    expect(sorted.map((c) => c.status)).toEqual(['DidNotStart', 'Weird']);
+    expect(sorted.map(c => c.status)).toEqual(['DidNotStart', 'Weird']);
   });
 });
 

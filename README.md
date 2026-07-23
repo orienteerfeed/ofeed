@@ -111,7 +111,8 @@ Default local URLs:
 - GraphQL: `http://localhost:3001/graphql`
 - OpenAPI JSON: `http://localhost:3001/doc`
 - API Reference UI: `http://localhost:3001/reference`
-- Health: `http://localhost:3001/health`
+- Liveness: `http://localhost:3001/healthz`
+- Readiness: `http://localhost:3001/readyz`
 - Metrics (Prometheus): `http://localhost:3001/metrics`
 
 ## Development Commands (Root)

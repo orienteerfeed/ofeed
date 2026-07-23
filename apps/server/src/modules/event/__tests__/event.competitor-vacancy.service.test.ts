@@ -59,7 +59,7 @@ describe('storeCompetitor start slot vacancy cleanup', () => {
       eventId: 'event-1',
       startMode: 'FreeStart',
       maxNumberOfCompetitors: 100,
-      event: { defaultStartMode: 'StartList' },
+      event: { defaultStartMode: 'StartList', date: new Date('2026-07-10T14:30:00.000Z') },
       _count: { competitors: 0, startSlotVacancies: 0 },
     });
   });
@@ -96,6 +96,42 @@ describe('storeCompetitor start slot vacancy cleanup', () => {
     expect(
       (prismaMock.startSlotVacancy as { deleteMany: ReturnType<typeof vi.fn> }).deleteMany,
     ).toHaveBeenCalledWith({ where: { classId: 42, startTime: START_TIME } });
+  });
+
+  it('uses the full event date-time for a free-start competitor without a selected start time', async () => {
+    const created = { id: 9, classId: 42, startTime: new Date('2026-07-10T14:30:00.000Z') };
+    (prismaMock.competitor as { create: ReturnType<typeof vi.fn> }).create.mockResolvedValue(
+      created,
+    );
+    (
+      prismaMock.competitor as { findUnique: ReturnType<typeof vi.fn> }
+    ).findUnique.mockResolvedValue({
+      id: 9,
+      classId: 42,
+      startTime: created.startTime,
+      organisation: null,
+      team: null,
+    });
+
+    await storeCompetitor(
+      'event-1',
+      {
+        classId: 42,
+        firstname: 'Jana',
+        lastname: 'Nova',
+        registration: 'ABC1234567',
+      } as never,
+      1,
+      'START',
+    );
+
+    expect(
+      (prismaMock.competitor as { create: ReturnType<typeof vi.fn> }).create,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ startTime: created.startTime }),
+      }),
+    );
   });
 
   it('does not delete any vacancy when the competitor has no start time', async () => {
@@ -136,7 +172,11 @@ describe('updateCompetitor start slot vacancy cleanup', () => {
     (prismaMock.competitor as { findFirst: ReturnType<typeof vi.fn> }).findFirst.mockResolvedValue({
       id: 7,
       classId: 42,
-      class: { eventId: 'event-1', startMode: 'FreeStart', event: { defaultStartMode: 'StartList' } },
+      class: {
+        eventId: 'event-1',
+        startMode: 'FreeStart',
+        event: { defaultStartMode: 'StartList' },
+      },
       firstname: 'Jana',
       lastname: 'Nova',
       organisation: null,

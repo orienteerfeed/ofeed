@@ -2,6 +2,7 @@ import { notFound, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import {
   Calendar,
+  ClipboardList,
   FileText,
   Loader2,
   MapPin,
@@ -54,6 +55,11 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
   const handleReportClick = () => {
     if (event) {
       navigate(PATHNAMES.eventReport(event.id));
+    }
+  };
+  const handleEntriesClick = () => {
+    if (event) {
+      navigate(PATHNAMES.eventEntries(event.id));
     }
   };
   const boardEventUrl = event ? buildBoardEventUrl(event.id) : null;
@@ -172,6 +178,17 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={handleEntriesClick}
+                  className="flex items-center gap-2"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  <span className="hidden sm:block">
+                    {t('Pages.Event.Detail.EntriesManage')}
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleSettingsClick}
                   className="flex items-center gap-2"
                 >
@@ -190,7 +207,8 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                   variant="outline"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  aria-label={t('Common.OpenMenu', {
+                  aria-label={t('OpenMenu', {
+                    ns: 'common',
                     defaultValue: 'Open menu',
                   })}
                 >
@@ -215,6 +233,10 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                     <DropdownMenuItem onSelect={handleReportClick}>
                       <FileText className="h-4 w-4" />
                       {t('Pages.Event.Detail.Report')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleEntriesClick}>
+                      <ClipboardList className="h-4 w-4" />
+                      {t('Pages.Event.Detail.EntriesManage')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={handleSettingsClick}>
                       <Settings className="h-4 w-4" />
