@@ -43,7 +43,7 @@
       "dependsOn": ["^type-check"]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^build", "^test"]
     },
     "test:watch": {
       "cache": false,
