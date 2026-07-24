@@ -2042,7 +2042,12 @@ const RelayResultsView = ({
   const teamTimeMap = useMemo(() => {
     const map = new Map<number, Map<number, number>>();
     for (const c of allCompetitors) {
-      if (c.teamId != null && c.leg != null && hasValidRaceTime(c.time)) {
+      if (
+        c.teamId != null &&
+        c.leg != null &&
+        c.status === 'OK' &&
+        hasValidRaceTime(c.time)
+      ) {
         if (!map.has(c.teamId)) map.set(c.teamId, new Map());
         map.get(c.teamId)!.set(c.leg, c.time);
       }
