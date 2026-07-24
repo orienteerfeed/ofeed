@@ -92,6 +92,19 @@
           "ErrorLoading": "Erreur lors du chargement des résultats"
         }
       },
+      "Splits": {
+        "Competitor": "Concurrent",
+        "TooltipCriticalDeviation": "Écart critique : +{{time}} ({{deviation}}σ)",
+        "TooltipCumulativeTimeAt": "Temps cumulé au poste {{controlCode}}",
+        "TooltipFastestLeg": "Meilleur temps de relais !",
+        "TooltipLeadingAtPoint": "En tête à ce point !",
+        "TooltipLegTimeTo": "Temps de relais jusqu'au poste {{controlCode}}",
+        "TooltipLossToBest": "Écart par rapport au meilleur : +{{time}}",
+        "TooltipMajorDeviation": "Écart important : +{{time}} ({{deviation}}σ)",
+        "TooltipSignificantDeviation": "Écart significativement supérieur à la moyenne : +{{time}} ({{deviation}}σ)",
+        "TooltipTimeLoss": "Perte de temps : +{{time}}",
+        "TooltipTimeLossDeviation": "Perte de temps : +{{time}} ({{deviation}}σ)"
+      },
       "Settings": {
         "Loading": "Loading event settings",
         "Tabs": {
