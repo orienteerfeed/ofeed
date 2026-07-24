@@ -1,5 +1,8 @@
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
+import type { EntryStatus } from '../../generated/prisma/enums.js';
+import type { GraphQLAuthContext } from '../../graphql/context.types.js';
+import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { resolveEffectiveStartMode } from '@repo/shared';
 
 import { computeClassFee } from '../class/class.fee.js';
@@ -21,6 +24,12 @@ export interface CreateStartSlotVacancyInput {
   bibNumber?: number | null;
 }
 
+export interface UpdateStartSlotVacancyInput {
+  id: number;
+  startTime: Date;
+  bibNumber?: number | null;
+}
+
 export interface StartSlotVacancySlot {
   startTime: Date;
   bibNumber?: number | null;
@@ -37,6 +46,11 @@ export interface EventStartSlotVacancyGroup {
   vacancies: { id: number; startTime: Date; bibNumber: number | null }[];
 }
 
+export interface ClassCompetitorStartTime {
+  id: number;
+  startTime: Date;
+}
+
 /**
  * Create a single vacancy for a class at a specific start time. Relies on the
  * `[classId, startTime]` unique constraint to reject duplicates.
@@ -46,8 +60,127 @@ export function createStartSlotVacancy(
   input: CreateStartSlotVacancyInput,
 ) {
   return prisma.startSlotVacancy.create({
-    data: { classId: input.classId, startTime: input.startTime, bibNumber: input.bibNumber ?? null },
+    data: {
+      classId: input.classId,
+      startTime: input.startTime,
+      bibNumber: input.bibNumber ?? null,
+    },
   });
+}
+
+async function requireClassStartSlotAccess(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  classId: number,
+) {
+  const eventClass = await prisma.class.findUnique({
+    where: { id: classId },
+    select: { eventId: true },
+  });
+
+  if (!eventClass) {
+    throw new Error('Class not found');
+  }
+
+  await requireEventOwnerOrAdmin(prisma, auth, eventClass.eventId);
+  return eventClass;
+}
+
+async function requireVacancyStartSlotAccess(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  vacancyId: number,
+) {
+  const vacancy = await prisma.startSlotVacancy.findUnique({
+    where: { id: vacancyId },
+    select: { classId: true, class: { select: { eventId: true } } },
+  });
+
+  if (!vacancy) {
+    throw new Error('Start slot vacancy not found');
+  }
+
+  await requireEventOwnerOrAdmin(prisma, auth, vacancy.class.eventId);
+  return vacancy;
+}
+
+async function assertStartTimeIsNotAssignedToCompetitor(
+  prisma: AppPrismaClient,
+  classId: number,
+  startTime: Date,
+) {
+  const existingCompetitor = await prisma.competitor.findFirst({
+    where: {
+      classId,
+      startTime,
+    },
+    select: { id: true },
+  });
+
+  if (existingCompetitor) {
+    throw new Error('Start time is already assigned to a competitor in this class');
+  }
+}
+
+export async function createStartSlotVacancyForGraphQL(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  input: CreateStartSlotVacancyInput,
+) {
+  await requireClassStartSlotAccess(prisma, auth, input.classId);
+  await assertStartTimeIsNotAssignedToCompetitor(prisma, input.classId, input.startTime);
+  return createStartSlotVacancy(prisma, input);
+}
+
+export async function listClassCompetitorStartTimesForGraphQL(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  classId: number,
+): Promise<ClassCompetitorStartTime[]> {
+  await requireClassStartSlotAccess(prisma, auth, classId);
+
+  const competitors = await prisma.competitor.findMany({
+    where: {
+      classId,
+      startTime: { not: null },
+    },
+    select: {
+      id: true,
+      startTime: true,
+    },
+    orderBy: { startTime: 'asc' },
+  });
+
+  return competitors.filter(
+    (competitor): competitor is ClassCompetitorStartTime => competitor.startTime !== null,
+  );
+}
+
+export async function updateStartSlotVacancyForGraphQL(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  input: UpdateStartSlotVacancyInput,
+) {
+  const vacancy = await requireVacancyStartSlotAccess(prisma, auth, input.id);
+  await assertStartTimeIsNotAssignedToCompetitor(prisma, vacancy.classId, input.startTime);
+
+  return prisma.startSlotVacancy.update({
+    where: { id: input.id },
+    data: {
+      startTime: input.startTime,
+      bibNumber: input.bibNumber ?? null,
+    },
+  });
+}
+
+export async function deleteStartSlotVacancyForGraphQL(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  id: number,
+) {
+  await requireVacancyStartSlotAccess(prisma, auth, id);
+  await deleteStartSlotVacancy(prisma, id);
+  return { message: 'Start slot vacancy deleted' };
 }
 
 /**
@@ -195,8 +328,9 @@ export interface EntryAvailabilityClass {
   sex: string;
   minAge: number | null;
   maxAge: number | null;
-  /** Effective registration cap: min(dbMax, vacancyCount) for StartSlot, dbMax for FreeStart; 0 when unconfigured. */
+  /** Effective registration cap: dbMax (or competitor fallback), also limited by all start-list positions. */
   maxNumberOfCompetitors: number;
+  /** Confirmed competitors plus active registrations awaiting processing. */
   competitorCount: number;
   startMode: string;
   /** null when no fee is configured for this class. */
@@ -232,6 +366,11 @@ export interface EventEntryAvailability {
   addOns: EntryAvailabilityAddOn[];
   classes: EntryAvailabilityClass[];
 }
+
+// Only these states represent a submitted registration that has not yet been
+// propagated into Competitor. Terminal orders must not reserve capacity or a
+// start-list position; processed orders are represented by Competitor instead.
+const ACTIVE_UNPROCESSED_ENTRY_STATUSES: EntryStatus[] = ['RECEIVED', 'APPROVED'];
 
 /**
  * Aggregate entry availability for an event: per-class capacity (vacant start
@@ -282,7 +421,27 @@ export async function listEventEntryAvailability(
             select: { id: true, startTime: true, bibNumber: true },
             orderBy: { startTime: 'asc' },
           },
-          _count: { select: { competitors: true } },
+          entryItems: {
+            where: {
+              competitorId: null,
+              entry: { status: { in: ACTIVE_UNPROCESSED_ENTRY_STATUSES } },
+            },
+            select: { startTime: true },
+          },
+          _count: {
+            select: {
+              competitors: true,
+              // Processed items already have a Competitor and are included in
+              // competitors. Count only outstanding active applications here
+              // so a registration never consumes capacity twice.
+              entryItems: {
+                where: {
+                  competitorId: null,
+                  entry: { status: { in: ACTIVE_UNPROCESSED_ENTRY_STATUSES } },
+                },
+              },
+            },
+          },
         },
         orderBy: { name: 'asc' },
       },
@@ -305,7 +464,16 @@ export async function listEventEntryAvailability(
       event.defaultStartMode,
     );
     const competitorCount = eventClass._count.competitors;
-    const vacancyCount = eventClass.startSlotVacancies.length;
+    const pendingEntryCount = eventClass._count.entryItems ?? 0;
+    const reservedStartTimes = new Set(
+      (eventClass.entryItems ?? []).flatMap((entryItem) =>
+        entryItem.startTime === null ? [] : [entryItem.startTime.getTime()],
+      ),
+    );
+    const availableSlots = eventClass.startSlotVacancies.filter(
+      (slot) => !reservedStartTimes.has(slot.startTime.getTime()),
+    );
+    const vacancyCount = availableSlots.length;
 
     const { currentFee, feeNet, feeVat } = computeClassFee({
       baseFee: eventClass.fee?.toNumber() ?? null,
@@ -326,15 +494,15 @@ export async function listEventEntryAvailability(
       effectiveStartMode,
       maxNumberOfCompetitors: eventClass.maxNumberOfCompetitors,
       competitorCount,
+      pendingEntryCount,
       vacancyCount,
     });
 
+    const configuredMax = eventClass.maxNumberOfCompetitors ?? competitorCount;
     const effectiveMax =
-      eventClass.maxNumberOfCompetitors === null
-        ? 0
-        : effectiveStartMode === 'FreeStart'
-          ? eventClass.maxNumberOfCompetitors
-          : Math.min(eventClass.maxNumberOfCompetitors, vacancyCount);
+      effectiveStartMode === 'FreeStart'
+        ? configuredMax
+        : Math.min(configuredMax, competitorCount + pendingEntryCount + vacancyCount);
 
     return {
       id: eventClass.id,
@@ -343,12 +511,12 @@ export async function listEventEntryAvailability(
       minAge: eventClass.minAge,
       maxAge: eventClass.maxAge,
       maxNumberOfCompetitors: effectiveMax,
-      competitorCount,
+      competitorCount: competitorCount + pendingEntryCount,
       startMode: effectiveStartMode,
       fee,
       availableCount,
       isFull,
-      slots: capacityMode === 'StartSlot' ? eventClass.startSlotVacancies : [],
+      slots: capacityMode === 'StartSlot' ? availableSlots : [],
     };
   });
 

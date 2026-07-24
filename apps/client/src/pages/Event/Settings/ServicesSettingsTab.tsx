@@ -1,10 +1,18 @@
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
-import { Plus, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Plus, Search, Trash2, Upload } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, Experimental, Input, ToggleSwitch } from '@/components/atoms';
+import {
+  Button,
+  Experimental,
+  Input,
+  ToggleSwitch,
+  Tooltip,
+} from '@/components/atoms';
+import { ConfirmDialog } from '@/components/molecules';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
   Table,
@@ -21,6 +29,10 @@ import { ENDPOINTS } from '@/lib/api/endpoints';
 import { formatDateForInput } from '@/lib/utils';
 import { Event } from '@/types';
 import { toast } from '@/utils';
+
+import { RentalCardDialog } from './RentalCardDialog';
+import { RentalCardImportDialog } from './RentalCardImportDialog';
+import { PaymentMethodsSettings } from './PaymentMethodsSettings';
 
 const EVENT_SERVICE_SETTINGS = gql`
   query EventServiceSettings($eventId: String!) {
@@ -86,6 +98,58 @@ const DELETE_CUSTOM_EVENT_SERVICE = gql`
   }
 `;
 
+const EVENT_RENTAL_CARDS = gql`
+  query EventRentalCards($eventId: String!) {
+    eventRentalCards(eventId: $eventId) {
+      id
+      cardNumber
+      active
+      returned
+      isLent
+    }
+  }
+`;
+
+const UPDATE_EVENT_RENTAL_CARD = gql`
+  mutation UpdateEventRentalCard($input: UpdateEventRentalCardInput!) {
+    updateEventRentalCard(input: $input) {
+      id
+      cardNumber
+      active
+      returned
+      isLent
+    }
+  }
+`;
+
+const DELETE_EVENT_RENTAL_CARD = gql`
+  mutation DeleteEventRentalCard($eventId: String!, $id: Int!) {
+    deleteEventRentalCard(eventId: $eventId, id: $id) {
+      message
+    }
+  }
+`;
+
+const DELETE_ALL_EVENT_RENTAL_CARDS = gql`
+  mutation DeleteAllEventRentalCards($eventId: String!) {
+    deleteAllEventRentalCards(eventId: $eventId) {
+      message
+    }
+  }
+`;
+
+type EventRentalCardRow = {
+  id: number;
+  cardNumber: number;
+  active: boolean;
+  returned: boolean;
+  isLent: boolean;
+};
+
+type EventRentalCardsData = {
+  eventRentalCards: EventRentalCardRow[];
+};
+
 type EventServiceRow = {
   id: number | null;
   systemKey: string | null;
@@ -120,6 +184,14 @@ type CustomDraft = {
   price: number | null;
   maxQuantity: number | null;
 };
+
+const COMING_SOON_SYSTEM_SERVICE_KEYS = new Set([
+  'CARD_CHANGE',
+  'NAME_CHANGE',
+  'CLASS_CHANGE',
+  'START_TIME_CHANGE',
+  'ENTRY_CANCEL',
+]);
 
 function toNumberOrNull(value: string): number | null {
   const trimmed = value.trim();
@@ -194,6 +266,88 @@ export const ServicesSettingsTab = ({
   const [updateSystemEventService] = useMutation(UPDATE_SYSTEM_EVENT_SERVICE);
   const [saveCustomEventService] = useMutation(SAVE_CUSTOM_EVENT_SERVICE);
   const [deleteCustomEventService] = useMutation(DELETE_CUSTOM_EVENT_SERVICE);
+
+  const {
+    data: rentalCardsData,
+    loading: rentalCardsLoading,
+    refetch: refetchRentalCards,
+  } = useQuery<EventRentalCardsData>(EVENT_RENTAL_CARDS, {
+    variables: { eventId },
+  });
+  const [updateEventRentalCard] = useMutation(UPDATE_EVENT_RENTAL_CARD);
+  const [deleteEventRentalCard] = useMutation(DELETE_EVENT_RENTAL_CARD);
+  const [deleteAllEventRentalCards] = useMutation(
+    DELETE_ALL_EVENT_RENTAL_CARDS
+  );
+  const [isRentalCardDialogOpen, setIsRentalCardDialogOpen] = useState(false);
+  const [isRentalCardImportOpen, setIsRentalCardImportOpen] = useState(false);
+  const [isDeleteAllRentalCardsOpen, setIsDeleteAllRentalCardsOpen] =
+    useState(false);
+  const [rentalCardSearch, setRentalCardSearch] = useState('');
+  const rentalCards = rentalCardsData?.eventRentalCards ?? [];
+  const visibleRentalCards = useMemo(() => {
+    const normalized = rentalCardSearch.trim();
+    if (!normalized) return rentalCards;
+
+    return rentalCards.filter(card =>
+      String(card.cardNumber).includes(normalized)
+    );
+  }, [rentalCards, rentalCardSearch]);
+
+  const toggleRentalCardFlag = async (
+    card: EventRentalCardRow,
+    patch: Partial<Pick<EventRentalCardRow, 'active' | 'returned'>>
+  ) => {
+    try {
+      await updateEventRentalCard({
+        variables: { input: { eventId, id: card.id, ...patch } },
+      });
+      await refetchRentalCards();
+    } catch (mutationError) {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : t('Pages.Event.Settings.Services.RentalCards.SaveError'),
+        variant: 'error',
+      });
+    }
+  };
+
+  const deleteRentalCard = async (card: EventRentalCardRow) => {
+    try {
+      await deleteEventRentalCard({ variables: { eventId, id: card.id } });
+      await refetchRentalCards();
+    } catch (mutationError) {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : t('Pages.Event.Settings.Services.RentalCards.DeleteError'),
+        variant: 'error',
+      });
+    }
+  };
+
+  const deleteAllRentalCards = async () => {
+    try {
+      await deleteAllEventRentalCards({ variables: { eventId } });
+      setIsDeleteAllRentalCardsOpen(false);
+      setRentalCardSearch('');
+      await refetchRentalCards();
+    } catch (mutationError) {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : t('Pages.Event.Settings.Services.RentalCards.DeleteAllError'),
+        variant: 'error',
+      });
+    }
+  };
 
   const [lateEntryFeePercent, setLateEntryFeePercent] = useState<number | null>(
     null
@@ -609,56 +763,79 @@ export const ServicesSettingsTab = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {systemServices.map(service => (
-                <TableRow key={service.systemKey}>
-                  <TableCell>
-                    <ToggleSwitch
-                      aria-label={t(
-                        'Pages.Event.Settings.Services.ActiveAria',
-                        {
-                          name: serviceLabel(t, service),
-                        }
+              {systemServices.map(service => {
+                const activationUnavailable =
+                  service.systemKey !== null &&
+                  COMING_SOON_SYSTEM_SERVICE_KEYS.has(service.systemKey);
+                const toggle = (
+                  <ToggleSwitch
+                    aria-label={t('Pages.Event.Settings.Services.ActiveAria', {
+                      name: serviceLabel(t, service),
+                    })}
+                    checked={service.active}
+                    disabled={activationUnavailable}
+                    onCheckedChange={value => {
+                      if (activationUnavailable) return;
+                      const next = { ...service, active: value };
+                      updateSystemLocal(service.systemKey ?? '', {
+                        active: next.active,
+                      });
+                      void commitSystem(next);
+                    }}
+                  />
+                );
+
+                return (
+                  <TableRow key={service.systemKey}>
+                    <TableCell>
+                      {activationUnavailable ? (
+                        <Tooltip content={t('ComingSoon', { ns: 'common' })}>
+                          <span
+                            aria-disabled="true"
+                            className="inline-flex cursor-not-allowed"
+                            tabIndex={0}
+                          >
+                            {toggle}
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        toggle
                       )}
-                      checked={service.active}
-                      onCheckedChange={value => {
-                        const next = { ...service, active: value };
-                        updateSystemLocal(service.systemKey ?? '', {
-                          active: next.active,
-                        });
-                        void commitSystem(next);
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {serviceLabel(t, service)}
-                  </TableCell>
-                  <TableCell className="min-w-64 text-sm text-muted-foreground">
-                    {serviceDescription(t, service)}
-                  </TableCell>
-                  <TableCell className="w-40">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      aria-label={t('Pages.Event.Settings.Services.PriceAria', {
-                        name: serviceLabel(t, service),
-                      })}
-                      value={service.price ?? ''}
-                      onChange={event =>
-                        updateSystemLocal(service.systemKey ?? '', {
-                          price: toNumberOrNull(event.target.value),
-                        })
-                      }
-                      onBlur={() => {
-                        const current = systemServices.find(
-                          item => item.systemKey === service.systemKey
-                        );
-                        if (current) void commitSystem(current);
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {serviceLabel(t, service)}
+                    </TableCell>
+                    <TableCell className="min-w-64 text-sm text-muted-foreground">
+                      {serviceDescription(t, service)}
+                    </TableCell>
+                    <TableCell className="w-40">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        aria-label={t(
+                          'Pages.Event.Settings.Services.PriceAria',
+                          {
+                            name: serviceLabel(t, service),
+                          }
+                        )}
+                        value={service.price ?? ''}
+                        onChange={event =>
+                          updateSystemLocal(service.systemKey ?? '', {
+                            price: toNumberOrNull(event.target.value),
+                          })
+                        }
+                        onBlur={() => {
+                          const current = systemServices.find(
+                            item => item.systemKey === service.systemKey
+                          );
+                          if (current) void commitSystem(current);
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -808,6 +985,226 @@ export const ServicesSettingsTab = ({
           </Table>
         </div>
       </section>
+
+      <PaymentMethodsSettings t={t} eventId={eventId} />
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold">
+              {t('Pages.Event.Settings.Services.RentalCards.Title')}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('Pages.Event.Settings.Services.RentalCards.Description')}
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+              disabled={rentalCardsLoading || rentalCards.length === 0}
+              onClick={() => setIsDeleteAllRentalCardsOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              {t('Pages.Event.Settings.Services.RentalCards.DeleteAll')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setIsRentalCardImportOpen(true)}
+            >
+              <Upload className="h-4 w-4" />
+              {t('Pages.Event.Settings.Services.RentalCards.Import')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => setIsRentalCardDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              {t('Pages.Event.Settings.Services.RentalCards.Add')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative max-w-sm">
+          <Label htmlFor="rental-card-search" className="sr-only">
+            {t('Pages.Event.Settings.Services.RentalCards.Search')}
+          </Label>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="rental-card-search"
+            value={rentalCardSearch}
+            onChange={event => setRentalCardSearch(event.target.value)}
+            placeholder={t(
+              'Pages.Event.Settings.Services.RentalCards.SearchPlaceholder'
+            )}
+            className="pl-9"
+          />
+        </div>
+
+        <div className="overflow-x-auto rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  {t(
+                    'Pages.Event.Settings.Services.RentalCards.Columns.CardNumber'
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    'Pages.Event.Settings.Services.RentalCards.Columns.Active'
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t('Pages.Event.Settings.Services.RentalCards.Columns.Lent')}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    'Pages.Event.Settings.Services.RentalCards.Columns.Returned'
+                  )}
+                </TableHead>
+                <TableHead>
+                  {t(
+                    'Pages.Event.Settings.Services.RentalCards.Columns.Actions'
+                  )}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rentalCardsLoading && rentalCards.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-8 text-center text-sm text-muted-foreground"
+                  >
+                    {t('Pages.Event.Settings.Loading')}
+                  </TableCell>
+                </TableRow>
+              ) : rentalCards.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-8 text-center text-sm text-muted-foreground"
+                  >
+                    {t('Pages.Event.Settings.Services.RentalCards.Empty')}
+                  </TableCell>
+                </TableRow>
+              ) : visibleRentalCards.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-8 text-center text-sm text-muted-foreground"
+                  >
+                    {t('Pages.Event.Settings.Services.RentalCards.NoResults')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                visibleRentalCards.map(card => (
+                  <TableRow key={card.id}>
+                    <TableCell className="font-medium">
+                      {card.cardNumber}
+                    </TableCell>
+                    <TableCell>
+                      <ToggleSwitch
+                        aria-label={t(
+                          'Pages.Event.Settings.Services.RentalCards.Columns.Active'
+                        )}
+                        checked={card.active}
+                        onCheckedChange={value =>
+                          void toggleRentalCardFlag(card, { active: value })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {card.isLent ? (
+                        <Badge variant="secondary">
+                          {t(
+                            'Pages.Event.Settings.Services.RentalCards.LentBadge'
+                          )}
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          {t(
+                            'Pages.Event.Settings.Services.RentalCards.AvailableBadge'
+                          )}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <ToggleSwitch
+                        aria-label={t(
+                          'Pages.Event.Settings.Services.RentalCards.Columns.Returned'
+                        )}
+                        checked={card.returned}
+                        onCheckedChange={value =>
+                          void toggleRentalCardFlag(card, { returned: value })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={card.isLent}
+                        title={
+                          card.isLent
+                            ? t(
+                                'Pages.Event.Settings.Services.RentalCards.DeleteBlockedByLent'
+                              )
+                            : undefined
+                        }
+                        onClick={() => void deleteRentalCard(card)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </section>
+
+      <RentalCardDialog
+        t={t}
+        eventId={eventId}
+        open={isRentalCardDialogOpen}
+        onOpenChange={setIsRentalCardDialogOpen}
+        onCreated={async () => {
+          await refetchRentalCards();
+        }}
+      />
+      <RentalCardImportDialog
+        t={t}
+        eventId={eventId}
+        open={isRentalCardImportOpen}
+        onOpenChange={setIsRentalCardImportOpen}
+        onImported={async () => {
+          await refetchRentalCards();
+        }}
+      />
+      <ConfirmDialog
+        open={isDeleteAllRentalCardsOpen}
+        onOpenChange={setIsDeleteAllRentalCardsOpen}
+        title={t(
+          'Pages.Event.Settings.Services.RentalCards.DeleteAllConfirm.Title'
+        )}
+        description={t(
+          'Pages.Event.Settings.Services.RentalCards.DeleteAllConfirm.Description'
+        )}
+        confirmText={t(
+          'Pages.Event.Settings.Services.RentalCards.DeleteAllConfirm.Confirm'
+        )}
+        cancelText={t('Operations.Cancel', { ns: 'common' })}
+        variant="destructive"
+        onConfirm={() => void deleteAllRentalCards()}
+      />
     </div>
   );
 };

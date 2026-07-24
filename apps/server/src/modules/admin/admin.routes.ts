@@ -11,11 +11,15 @@ import {
   getAdminCzechRankingOverviewHandler,
   getAdminCzechRankingSnapshotDetailHandler,
   getAdminDashboardHandler,
+  getAdminClubsHandler,
   getAdminEventsHandler,
+  getAdminRegistrationSyncStatusHandler,
+  getAdminRegistrationsHandler,
   getAdminSystemMessagesHandler,
   getAdminUsersHandler,
   requestAdminUserEmailVerificationHandler,
   syncAdminCzechRankingEventResultsHandler,
+  triggerAdminRegistrationSyncHandler,
   updateAdminSystemMessageHandler,
   updateAdminUserHandler,
   uploadAdminCzechRankingSnapshotHandler,
@@ -42,5 +46,9 @@ router.delete('/ranking/czech/snapshots', clearAdminCzechRankingSnapshotsHandler
 router.get('/ranking/czech/event-results', getAdminCzechRankingEventDetailHandler);
 router.post('/ranking/czech/oris-sync', syncAdminCzechRankingEventResultsHandler);
 router.delete('/ranking/czech/event-results', clearAdminCzechRankingEventResultsHandler);
+router.get('/registrations/sync-status', getAdminRegistrationSyncStatusHandler);
+router.get('/registrations', getAdminRegistrationsHandler);
+router.get('/registrations/clubs', getAdminClubsHandler);
+router.post('/registrations/oris-sync', triggerAdminRegistrationSyncHandler);
 
 export default router;

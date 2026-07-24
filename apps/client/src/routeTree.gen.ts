@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -19,14 +20,18 @@ import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSystemMessagesRouteImport } from './routes/admin/system-messages'
+import { Route as AdminRegistrationsRouteImport } from './routes/admin/registrations'
 import { Route as AdminEventsRouteImport } from './routes/admin/events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
 import { Route as EEventIdIndexRouteImport } from './routes/e/$eventId/index'
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
 import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventId/report'
+import { Route as EventsEventIdEntriesRouteImport } from './routes/events/$eventId/entries'
 import { Route as AuthVerifyEmailTokenRouteImport } from './routes/auth/verify-email/$token'
 import { Route as AuthResetPasswordTokenRouteImport } from './routes/auth/reset-password/$token'
 import { Route as AdminRankingCzechRouteImport } from './routes/admin/ranking/czech'
+import { Route as EventsEventIdEntriesEntryIdRouteImport } from './routes/events/$eventId/entries_.$entryId'
+import { Route as EventsEventIdEntriesEntryIdEditRouteImport } from './routes/events/$eventId/entries_.$entryId_.edit'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -36,6 +41,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const MyEventsRoute = MyEventsRouteImport.update({
   id: '/my-events',
   path: '/my-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -78,6 +88,11 @@ const AdminSystemMessagesRoute = AdminSystemMessagesRouteImport.update({
   path: '/admin/system-messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRegistrationsRoute = AdminRegistrationsRouteImport.update({
+  id: '/admin/registrations',
+  path: '/admin/registrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEventsRoute = AdminEventsRouteImport.update({
   id: '/admin/events',
   path: '/admin/events',
@@ -103,6 +118,11 @@ const EventsEventIdReportRoute = EventsEventIdReportRouteImport.update({
   path: '/events/$eventId/report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdEntriesRoute = EventsEventIdEntriesRouteImport.update({
+  id: '/events/$eventId/entries',
+  path: '/events/$eventId/entries',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthVerifyEmailTokenRoute = AuthVerifyEmailTokenRouteImport.update({
   id: '/auth/verify-email/$token',
   path: '/auth/verify-email/$token',
@@ -118,13 +138,27 @@ const AdminRankingCzechRoute = AdminRankingCzechRouteImport.update({
   path: '/admin/ranking/czech',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdEntriesEntryIdRoute =
+  EventsEventIdEntriesEntryIdRouteImport.update({
+    id: '/events/$eventId/entries_/$entryId',
+    path: '/events/$eventId/entries/$entryId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const EventsEventIdEntriesEntryIdEditRoute =
+  EventsEventIdEntriesEntryIdEditRouteImport.update({
+    id: '/events/$eventId/entries_/$entryId_/edit',
+    path: '/events/$eventId/entries/$entryId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -134,17 +168,22 @@ export interface FileRoutesByFullPath {
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
+  '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -154,18 +193,23 @@ export interface FileRoutesByTo {
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
+  '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/e/$eventId': typeof EEventIdIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
+  '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
   '/profile': typeof ProfileRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
   '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -175,19 +219,24 @@ export interface FileRoutesById {
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
+  '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/events/$eventId/entries_/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/entries_/$entryId_/edit': typeof EventsEventIdEntriesEntryIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
+    | '/checkout'
     | '/my-events'
     | '/profile'
     | '/admin/events'
+    | '/admin/registrations'
     | '/admin/system-messages'
     | '/admin/users'
     | '/auth/forgot-password'
@@ -197,17 +246,22 @@ export interface FileRouteTypes {
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
+    | '/events/$eventId/entries'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/e/$eventId/'
     | '/events/$eventId/'
+    | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/entries/$entryId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/checkout'
     | '/my-events'
     | '/profile'
     | '/admin/events'
+    | '/admin/registrations'
     | '/admin/system-messages'
     | '/admin/users'
     | '/auth/forgot-password'
@@ -217,17 +271,22 @@ export interface FileRouteTypes {
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
+    | '/events/$eventId/entries'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/e/$eventId'
     | '/events/$eventId'
+    | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/entries/$entryId/edit'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/checkout'
     | '/my-events'
     | '/profile'
     | '/admin/events'
+    | '/admin/registrations'
     | '/admin/system-messages'
     | '/admin/users'
     | '/auth/forgot-password'
@@ -237,18 +296,23 @@ export interface FileRouteTypes {
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
+    | '/events/$eventId/entries'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/e/$eventId/'
     | '/events/$eventId/'
+    | '/events/$eventId/entries_/$entryId'
+    | '/events/$eventId/entries_/$entryId_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  CheckoutRoute: typeof CheckoutRoute
   MyEventsRoute: typeof MyEventsRoute
   ProfileRoute: typeof ProfileRoute
   AdminEventsRoute: typeof AdminEventsRoute
+  AdminRegistrationsRoute: typeof AdminRegistrationsRoute
   AdminSystemMessagesRoute: typeof AdminSystemMessagesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
@@ -258,10 +322,13 @@ export interface RootRouteChildren {
   AdminRankingCzechRoute: typeof AdminRankingCzechRoute
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
   AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
+  EventsEventIdEntriesRoute: typeof EventsEventIdEntriesRoute
   EventsEventIdReportRoute: typeof EventsEventIdReportRoute
   EventsEventIdSettingsRoute: typeof EventsEventIdSettingsRoute
   EEventIdIndexRoute: typeof EEventIdIndexRoute
   EventsEventIdIndexRoute: typeof EventsEventIdIndexRoute
+  EventsEventIdEntriesEntryIdRoute: typeof EventsEventIdEntriesEntryIdRoute
+  EventsEventIdEntriesEntryIdEditRoute: typeof EventsEventIdEntriesEntryIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -278,6 +345,13 @@ declare module '@tanstack/react-router' {
       path: '/my-events'
       fullPath: '/my-events'
       preLoaderRoute: typeof MyEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -336,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSystemMessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/registrations': {
+      id: '/admin/registrations'
+      path: '/admin/registrations'
+      fullPath: '/admin/registrations'
+      preLoaderRoute: typeof AdminRegistrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/events': {
       id: '/admin/events'
       path: '/admin/events'
@@ -371,6 +452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId/entries': {
+      id: '/events/$eventId/entries'
+      path: '/events/$eventId/entries'
+      fullPath: '/events/$eventId/entries'
+      preLoaderRoute: typeof EventsEventIdEntriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/verify-email/$token': {
       id: '/auth/verify-email/$token'
       path: '/auth/verify-email/$token'
@@ -392,15 +480,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRankingCzechRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId/entries_/$entryId': {
+      id: '/events/$eventId/entries_/$entryId'
+      path: '/events/$eventId/entries/$entryId'
+      fullPath: '/events/$eventId/entries/$entryId'
+      preLoaderRoute: typeof EventsEventIdEntriesEntryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId/entries_/$entryId_/edit': {
+      id: '/events/$eventId/entries_/$entryId_/edit'
+      path: '/events/$eventId/entries/$entryId/edit'
+      fullPath: '/events/$eventId/entries/$entryId/edit'
+      preLoaderRoute: typeof EventsEventIdEntriesEntryIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  CheckoutRoute: CheckoutRoute,
   MyEventsRoute: MyEventsRoute,
   ProfileRoute: ProfileRoute,
   AdminEventsRoute: AdminEventsRoute,
+  AdminRegistrationsRoute: AdminRegistrationsRoute,
   AdminSystemMessagesRoute: AdminSystemMessagesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
@@ -410,10 +514,13 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRankingCzechRoute: AdminRankingCzechRoute,
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
   AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,
+  EventsEventIdEntriesRoute: EventsEventIdEntriesRoute,
   EventsEventIdReportRoute: EventsEventIdReportRoute,
   EventsEventIdSettingsRoute: EventsEventIdSettingsRoute,
   EEventIdIndexRoute: EEventIdIndexRoute,
   EventsEventIdIndexRoute: EventsEventIdIndexRoute,
+  EventsEventIdEntriesEntryIdRoute: EventsEventIdEntriesEntryIdRoute,
+  EventsEventIdEntriesEntryIdEditRoute: EventsEventIdEntriesEntryIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

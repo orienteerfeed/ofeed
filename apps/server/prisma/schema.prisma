@@ -70,6 +70,104 @@ model CzechRankingEventResult {
   @@index([registration, rankingType, eventDate])
 }
 
+enum RegistrationSport {
+  OB
+  LOB
+  MTBO
+  TRAIL
+}
+
+// Cache of athlete registrations from external federation systems (currently
+// ORIS/ČSOS only). Deliberately source-independent: `source` distinguishes
+// provenance, `sport` uses this app's own enum instead of the source
+// system's raw numbering. Not a system of record — periodically refreshed
+// cache, see `syncedAt`. Field naming and the club relation mirror
+// `Competitor` (firstname/lastname, license as a single char, card, optional
+// FK with onDelete: SetNull) for consistency across the schema.
+model Registration {
+  id           Int               @id @default(autoincrement()) @db.UnsignedInt
+  source       ExternalSource    @default(ORIS)
+  externalId   String            @db.VarChar(64)
+  registration String            @db.VarChar(10)
+  firstname    String
+  lastname     String
+  birthYear    Int?              @db.UnsignedSmallInt
+  license      String?           @db.Char(1)
+  gender       Sex?
+  club         Club?             @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  clubId       Int?              @db.UnsignedInt
+  card         Int?              @db.UnsignedInt
+  sport        RegistrationSport
+  year         Int               @db.UnsignedSmallInt
+  syncedAt     DateTime          @default(now())
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([source, registration, sport, year], map: "Registration_source_reg_sport_year_uq")
+  @@index([source, card, sport, year], map: "Registration_source_card_sport_year_idx")
+  @@index([sport, year], map: "Registration_sport_year_idx")
+  @@index([clubId], map: "Registration_club_idx")
+}
+
+// Global club directory cache from external federation systems (e.g. ORIS
+// getCSOSClubList). Distinct from `Organisation`, which is a per-event
+// snapshot populated from start-list imports, not a global directory.
+model Club {
+  id            Int            @id @default(autoincrement()) @db.UnsignedInt
+  source        ExternalSource @default(ORIS)
+  externalId    String         @db.VarChar(64)
+  name          String         @db.VarChar(191)
+  abbr          String         @db.VarChar(20)
+  region        String?        @db.VarChar(64)
+  syncedAt      DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  registrations Registration[]
+
+  @@unique([source, externalId], map: "Club_source_external_uq")
+  @@index([abbr], map: "Club_abbr_idx")
+}
+
+enum SyncStatus {
+  PENDING
+  SUCCESS
+  ERROR
+}
+
+// Persisted sync attempt history for the Registration cache (per source +
+// sport + year). Mirrors EventExternalResultsSyncState's shape/semantics: an
+// upsert on every attempt, preserving the last successful timestamp when a
+// later attempt fails.
+model RegistrationSyncState {
+  id                   Int               @id @default(autoincrement()) @db.UnsignedInt
+  source               ExternalSource
+  sport                RegistrationSport
+  year                 Int               @db.UnsignedSmallInt
+  lastCheckedAt        DateTime?
+  lastSuccessfulSyncAt DateTime?
+  lastStatus           SyncStatus        @default(PENDING)
+  lastError            String?           @db.Text
+  recordCount          Int?              @db.UnsignedInt
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@unique([source, sport, year], name: "source_sport_year", map: "RegistrationSyncState_source_sport_year_uq")
+}
+
+// Same shape for the Club directory cache — single row per source (clubs are
+// not sport/year-scoped).
+model ClubSyncState {
+  id                   Int            @id @default(autoincrement()) @db.UnsignedInt
+  source               ExternalSource @unique
+  lastCheckedAt        DateTime?
+  lastSuccessfulSyncAt DateTime?
+  lastStatus           SyncStatus     @default(PENDING)
+  lastError            String?        @db.Text
+  recordCount          Int?           @db.UnsignedInt
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
 model Sport {
   id        Int        @id @default(autoincrement()) @db.UnsignedInt
   name      String     @unique
@@ -100,6 +198,8 @@ model User {
   oAuthAuthorizationCode OAuthAuthorizationCode[]
   oAuthRefreshToken      OAuthRefreshToken[]
   passwordResetTokens    PasswordResetToken[]
+  entries                Entry[]
+  entryStatusChanges     EntryStatusHistory[]
 }
 
 model UserCard {
@@ -129,13 +229,13 @@ enum UserRole {
 }
 
 model Currency {
-  id               Int          @id @default(autoincrement()) @db.UnsignedInt
-  name             String       @db.VarChar(254)
-  iso4217Alpha3    String       @unique @db.Char(3)
-  iso4217Num3      Int?         @db.UnsignedSmallInt
-  events           Event[]
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  name          String   @db.VarChar(254)
+  iso4217Alpha3 String   @unique @db.Char(3)
+  iso4217Num3   Int?     @db.UnsignedSmallInt
+  events        Event[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Event {
@@ -170,6 +270,9 @@ model Event {
   vatPayer                     Boolean                        @default(false)
   vatRate                      Decimal?                       @db.Decimal(5, 2)
   lateEntryFeePercent          Decimal?                       @db.Decimal(5, 2)
+  ofeedPaymentAvailable        Boolean                        @default(false)
+  bankAccountIban              String?                        @db.VarChar(34)
+  bankAccountName              String?                        @db.VarChar(191)
   splitPublicationMode         SplitPublicationMode           @default(UNRESTRICTED)
   splitPublicationAt           DateTime?
   resultsOfficialAt            DateTime?
@@ -186,44 +289,48 @@ model Event {
   importStates                 EventImportState[]
   meosEventBindings            EventMeosBinding[]
   services                     EventService[]
+  paymentMethods               EventPaymentMethod[]
+  entries                      Entry[]
+  rentalCards                  EventRentalCard[]
 
-  controls                     Control[]
-  courses                      Course[]
-  courseMaps                   CourseMap[]
+  controls   Control[]
+  courses    Course[]
+  courseMaps CourseMap[]
 
   @@index([externalSource, externalEventId])
   @@fulltext([name, organizer, location])
 }
 
 model Class {
-  id               Int          @id @default(autoincrement()) @db.UnsignedInt
-  event            Event        @relation(fields: [eventId], references: [id])
-  eventId          String
-  externalId       String?      @db.VarChar(64)
-  name             String
-  startName        String?
-  course           Course?      @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  courseId         Int?         @db.UnsignedInt
-  length           Int?
-  climb            Int?
-  controlsCount    Int?
+  id                     Int                @id @default(autoincrement()) @db.UnsignedInt
+  event                  Event              @relation(fields: [eventId], references: [id])
+  eventId                String
+  externalId             String?            @db.VarChar(64)
+  name                   String
+  startName              String?
+  course                 Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  courseId               Int?               @db.UnsignedInt
+  length                 Int?
+  climb                  Int?
+  controlsCount          Int?
   maxNumberOfCompetitors Int?
-  minAge           Int?
-  maxAge           Int?
-  minTeamMembers   Int?
-  maxTeamMembers   Int?
-  sex              Sex          @default(B)
-  resultListMode   ResultListMode?
-  startMode        StartMode?
-  startWindowFrom  DateTime?
-  startWindowTo    DateTime?
-  fee              Decimal?     @db.Decimal(10, 2)
-  lateEntryFeeDisabled Boolean   @default(false)
-  awardedPlaces    Int?         @default(3) @db.SmallInt
-  status           ClassStatus  @default(NORMAL)
-  competitors      Competitor[]
-  teams            Team[]
-  startSlotVacancies StartSlotVacancy[]
+  minAge                 Int?
+  maxAge                 Int?
+  minTeamMembers         Int?
+  maxTeamMembers         Int?
+  sex                    Sex                @default(B)
+  resultListMode         ResultListMode?
+  startMode              StartMode?
+  startWindowFrom        DateTime?
+  startWindowTo          DateTime?
+  fee                    Decimal?           @db.Decimal(10, 2)
+  lateEntryFeeDisabled   Boolean            @default(false)
+  awardedPlaces          Int?               @default(3) @db.SmallInt
+  status                 ClassStatus        @default(NORMAL)
+  competitors            Competitor[]
+  teams                  Team[]
+  startSlotVacancies     StartSlotVacancy[]
+  entryItems             EntryItem[]
 
   @@unique([eventId, externalId], map: "Class_event_external_uq")
   @@index([courseId], map: "Class_course_idx")
@@ -241,20 +348,183 @@ model EventService {
   maxQuantity Int?                   @db.UnsignedInt
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
+  addOnItems  EntryAddOnItem[]
 
   @@unique([eventId, systemKey], map: "EventService_event_system_uq")
   @@index([eventId], map: "EventService_event_idx")
 }
 
+enum EventPaymentMethodType {
+  OFEED_PAYMENT
+  CUSTOM_PAYMENT_LINK
+  QR_PAYMENT
+  CASH
+}
+
+model EventPaymentMethod {
+  id                  Int                    @id @default(autoincrement()) @db.UnsignedInt
+  event               Event                  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId             String
+  type                EventPaymentMethodType
+  enabled             Boolean                @default(false)
+  position            Int                    @db.UnsignedTinyInt
+  displayName         String?                @db.VarChar(128)
+  paymentLinkTemplate String?                @db.Text
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  @@unique([eventId, type], map: "EventPaymentMethod_event_type_uq")
+  @@unique([eventId, position], map: "EventPaymentMethod_event_position_uq")
+  @@index([eventId], map: "EventPaymentMethod_event_idx")
+}
+
+model EventRentalCard {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId    String
+  cardNumber Int      @db.UnsignedInt
+  active     Boolean  @default(true)
+  returned   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([eventId, cardNumber], map: "EventRentalCard_event_card_uq")
+  @@index([eventId], map: "EventRentalCard_event_idx")
+}
+
+// An entry order: a batch of competitor entries submitted through the public
+// entry shop. Competitors are propagated into `Competitor` only after the
+// order is approved and processed (see EntryItem.competitorId).
+model Entry {
+  id               String               @id @default(cuid())
+  event            Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId          String
+  status           EntryStatus          @default(RECEIVED)
+  paid             Boolean              @default(false)
+  paymentMethod    EventPaymentMethodType?
+  // Variable symbol used to pair incoming payments; unique per event.
+  paymentReference String               @db.VarChar(10)
+  user             User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId           Int?                 @db.UnsignedInt
+  contactEmail     String               @db.VarChar(254)
+  contactFirstname String               @db.VarChar(191)
+  contactLastname  String               @db.VarChar(191)
+  totalAmount      Decimal              @db.Decimal(10, 2)
+  // ISO 4217 alpha-3 snapshot of the event currency at order time.
+  currency         String               @db.Char(3)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  items            EntryItem[]
+  addOnItems       EntryAddOnItem[]
+  statusHistory    EntryStatusHistory[]
+
+  @@unique([eventId, paymentReference], map: "Entry_event_payment_reference_uq")
+  @@index([eventId, status], map: "Entry_event_status_idx")
+  @@index([userId], map: "Entry_user_idx")
+}
+
+// A single competitor entry inside an entry order. Fee amounts are snapshots
+// taken at order time so later fee changes never alter a submitted order.
+model EntryItem {
+  id            Int                @id @default(autoincrement()) @db.UnsignedInt
+  entry         Entry              @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId       String
+  class         Class              @relation(fields: [classId], references: [id])
+  classId       Int                @db.UnsignedInt
+  firstname     String
+  lastname      String
+  registration  String?            @db.VarChar(10)
+  birthYear     Int?               @db.UnsignedSmallInt
+  organisation  String?            @db.VarChar(191)
+  license       String?            @db.Char(1)
+  note          String?            @db.Text
+  card          Int?               @db.UnsignedInt
+  cardRental    Boolean            @default(false)
+  // Requested start time; must match a StartSlotVacancy for StartList classes.
+  startTime     DateTime?
+  fee           Decimal            @db.Decimal(10, 2)
+  cardRentalFee Decimal?           @db.Decimal(10, 2)
+  // What this item is: a new registration, or a requested change against an
+  // already-submitted one (see EntryItemActionKey).
+  actionKey     EntryItemActionKey @default(NEW_ENTRY)
+  // Snapshot of the field(s) `actionKey` replaced (e.g. `{ "card": 123456 }`
+  // for CARD_CHANGE); shape depends on actionKey. Null for NEW_ENTRY.
+  previousValue Json?
+  competitor    Competitor?        @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+  competitorId  Int?               @db.UnsignedInt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([entryId], map: "EntryItem_entry_idx")
+  @@index([classId], map: "EntryItem_class_idx")
+  @@index([competitorId], map: "EntryItem_competitor_idx")
+}
+
+enum EntryStatus {
+  RECEIVED
+  APPROVED
+  PROCESSED
+  REJECTED
+  CANCELLED
+}
+
+enum EntryItemActionKey {
+  NEW_ENTRY
+  CARD_CHANGE
+  NAME_CHANGE
+  CLASS_CHANGE
+  START_TIME_CHANGE
+}
+
+// A purchased add-on service (e.g. accommodation, food, parking) attached to
+// an entry order. Distinct from EntryItem, which always represents a single
+// competitor; an add-on has no competitor/class of its own. No public flow
+// creates these yet (see EventService's non-system-key rows for available
+// add-ons) — the model exists so the order detail view has a real, typed
+// place to render them once that flow ships.
+model EntryAddOnItem {
+  id        Int          @id @default(autoincrement()) @db.UnsignedInt
+  entry     Entry        @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId   String
+  service   EventService @relation(fields: [serviceId], references: [id])
+  serviceId Int          @db.UnsignedInt
+  quantity  Int          @default(1) @db.UnsignedInt
+  // Per-unit price snapshot at order time (mirrors EntryItem.fee).
+  price     Decimal      @db.Decimal(10, 2)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([entryId], map: "EntryAddOnItem_entry_idx")
+  @@index([serviceId], map: "EntryAddOnItem_service_idx")
+}
+
+// Append-only audit trail of an entry order's status transitions, for the
+// order detail view's payment/status timeline. Not a record of actual bank
+// transactions — see `Entry.paymentReference` for bank payment pairing.
+model EntryStatusHistory {
+  id          Int         @id @default(autoincrement()) @db.UnsignedInt
+  entry       Entry       @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId     String
+  // Null for payment-only changes; populated for lifecycle status transitions.
+  status       EntryStatus?
+  // Null for lifecycle changes; true/false records a manual payment update.
+  paymentState Boolean?
+  changedBy   User?       @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  changedById Int?        @db.UnsignedInt
+  createdAt   DateTime    @default(now())
+
+  @@index([entryId], map: "EntryStatusHistory_entry_idx")
+}
+
 model CourseMap {
-  id              Int             @id @default(autoincrement()) @db.UnsignedInt
+  id Int @id @default(autoincrement()) @db.UnsignedInt
 
-  event           Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId         String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
 
-  externalId      String?         @db.VarChar(64)
+  externalId String? @db.VarChar(64)
 
-  scale           Float?
+  scale Float?
 
   mapTopLeftX     Float?
   mapTopLeftY     Float?
@@ -262,44 +532,44 @@ model CourseMap {
   mapBottomRightY Float?
   mapPositionUnit MapPositionUnit @default(MM)
 
-  courses         Course[]
+  courses Course[]
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([eventId, externalId], map: "CourseMap_event_external_uq")
   @@index([eventId], map: "CourseMap_event_idx")
 }
 
 model Control {
-  id             Int             @id @default(autoincrement()) @db.UnsignedInt
+  id Int @id @default(autoincrement()) @db.UnsignedInt
 
-  event          Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId        String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
 
-  code           String          @db.VarChar(32)
-  type           ControlType     @default(CONTROL)
+  code String      @db.VarChar(32)
+  type ControlType @default(CONTROL)
 
   // Application-level flag for radio / online controls.
   // Used to show split times in the UI.
   // Managed manually in administration.
   // Must be preserved by default during IOF CourseData reimport.
-  radio          Boolean         @default(false)
+  radio Boolean @default(false)
 
-  name           String?         @db.VarChar(128)
+  name String? @db.VarChar(128)
 
-  latitude       Float?
-  longitude      Float?
-  altitude       Float?
+  latitude  Float?
+  longitude Float?
+  altitude  Float?
 
-  mapX           Float?
-  mapY           Float?
-  mapUnit        MapPositionUnit @default(MM)
+  mapX    Float?
+  mapY    Float?
+  mapUnit MapPositionUnit @default(MM)
 
   courseControls CourseControl[]
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([eventId, code], map: "Control_event_code_uq")
   @@index([eventId, type], map: "Control_event_type_idx")
@@ -307,32 +577,32 @@ model Control {
 }
 
 model Course {
-  id             Int             @id @default(autoincrement()) @db.UnsignedInt
+  id Int @id @default(autoincrement()) @db.UnsignedInt
 
-  event          Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId        String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
 
-  externalId     String?         @db.VarChar(64)
-  name           String          @db.VarChar(128)
+  externalId String? @db.VarChar(64)
+  name       String  @db.VarChar(128)
 
   // IOF Course/CourseFamily.
   // A family/group of forked course variants, relay variants, mass-start variants, etc.
-  courseFamily   String?         @db.VarChar(128)
+  courseFamily String? @db.VarChar(128)
 
-  length         Float?
-  climb          Float?
-  controlsCount  Int?            @db.UnsignedInt
+  length        Float?
+  climb         Float?
+  controlsCount Int?   @db.UnsignedInt
 
-  externalMapId  String?         @db.VarChar(64)
+  externalMapId String? @db.VarChar(64)
 
-  map            CourseMap?      @relation(fields: [mapId], references: [id], onDelete: SetNull)
-  mapId          Int?            @db.UnsignedInt
+  map   CourseMap? @relation(fields: [mapId], references: [id], onDelete: SetNull)
+  mapId Int?       @db.UnsignedInt
 
   classes        Class[]
   courseControls CourseControl[]
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([eventId, name], map: "Course_event_name_uq")
   @@index([eventId], map: "Course_event_idx")
@@ -341,40 +611,40 @@ model Course {
 }
 
 model CourseControl {
-  id                 Int                      @id @default(autoincrement()) @db.UnsignedInt
+  id Int @id @default(autoincrement()) @db.UnsignedInt
 
-  course             Course                   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseId           Int                      @db.UnsignedInt
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId Int    @db.UnsignedInt
 
-  control            Control?                 @relation(fields: [controlId], references: [id], onDelete: SetNull)
-  controlId          Int?                     @db.UnsignedInt
+  control   Control? @relation(fields: [controlId], references: [id], onDelete: SetNull)
+  controlId Int?     @db.UnsignedInt
 
   // Original control code from XML.
   // Always store this, even if the relation to Control cannot be resolved.
-  controlCode        String                   @db.VarChar(32)
+  controlCode String @db.VarChar(32)
 
   // Position in the course: 1 = start, 2 = first control, etc.
-  sequence           Int                      @db.UnsignedInt
+  sequence Int @db.UnsignedInt
 
-  type               ControlType?
+  type ControlType?
 
-  mapText            String?                  @db.VarChar(32)
+  mapText String? @db.VarChar(32)
 
-  mapTextX           Float?
-  mapTextY           Float?
-  mapTextUnit        MapPositionUnit?
+  mapTextX    Float?
+  mapTextY    Float?
+  mapTextUnit MapPositionUnit?
 
   // Length of the leg from the previous CourseControl to this control.
-  legLength          Float?
+  legLength Float?
 
-  score              Float?
+  score Float?
 
   randomOrder        Boolean                  @default(false)
   specialInstruction CourseControlInstruction @default(NONE)
   tapedRouteLength   Float?
 
-  createdAt          DateTime                 @default(now())
-  updatedAt          DateTime                 @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([courseId, sequence], map: "CourseControl_course_sequence_uq")
   @@index([courseId], map: "CourseControl_course_idx")
@@ -424,6 +694,7 @@ model Competitor {
   externalId            String?
   protocols             Protocol[]
   splits                Split[]
+  entryItems            EntryItem[]
 
   @@unique([classId, externalId], map: "Competitor_class_external_uq")
   @@index([organisationId])

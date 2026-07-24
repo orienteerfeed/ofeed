@@ -5,8 +5,10 @@ import {
   czechRankingTypeSchema,
   dateLikeSchema,
   eventDisciplineSchema,
+  sexSchema,
   userRoleSchema,
 } from './common.js';
+import { externalSourceSchema, registrationSportSchema } from './registration.js';
 import { systemMessageSeveritySchema } from './system-message.js';
 
 export const adminDashboardSummarySchema = z.object({
@@ -208,6 +210,85 @@ export const adminCzechRankingClearResultSchema = z.object({
   deletedCount: z.number().int().nonnegative(),
 });
 
+export const syncStatusSchema = z.enum(['PENDING', 'SUCCESS', 'ERROR']);
+
+export const adminRegistrationSyncStateItemSchema = z.object({
+  source: externalSourceSchema,
+  sport: registrationSportSchema,
+  year: z.number().int(),
+  lastCheckedAt: dateLikeSchema.nullable(),
+  lastSuccessfulSyncAt: dateLikeSchema.nullable(),
+  lastStatus: syncStatusSchema,
+  lastError: z.string().nullable(),
+  recordCount: z.number().int().nullable(),
+});
+
+export const adminClubSyncStateItemSchema = z.object({
+  source: externalSourceSchema,
+  lastCheckedAt: dateLikeSchema.nullable(),
+  lastSuccessfulSyncAt: dateLikeSchema.nullable(),
+  lastStatus: syncStatusSchema,
+  lastError: z.string().nullable(),
+  recordCount: z.number().int().nullable(),
+});
+
+export const adminRegistrationSyncStatusSchema = z.object({
+  registrations: z.array(adminRegistrationSyncStateItemSchema),
+  clubs: adminClubSyncStateItemSchema.nullable(),
+});
+
+export const adminRegistrationListItemSchema = z.object({
+  id: z.number().int(),
+  source: externalSourceSchema,
+  registration: z.string(),
+  firstname: z.string(),
+  lastname: z.string(),
+  birthYear: z.number().int().nullable(),
+  license: z.string().nullable(),
+  gender: sexSchema.nullable(),
+  organisation: z.string().nullable(),
+  card: z.number().int().nullable(),
+  sport: registrationSportSchema,
+  year: z.number().int(),
+  syncedAt: dateLikeSchema,
+});
+
+export const adminRegistrationListSchema = z.object({
+  total: z.number().int().nonnegative(),
+  items: z.array(adminRegistrationListItemSchema),
+});
+
+export const adminClubListItemSchema = z.object({
+  id: z.number().int(),
+  source: externalSourceSchema,
+  externalId: z.string(),
+  name: z.string(),
+  abbr: z.string(),
+  region: z.string().nullable(),
+  syncedAt: dateLikeSchema,
+});
+
+export const adminClubListSchema = z.object({
+  total: z.number().int().nonnegative(),
+  items: z.array(adminClubListItemSchema),
+});
+
+export const adminRegistrationSyncTriggerInputSchema = z.object({
+  scope: z.enum(['REGISTRATIONS', 'CLUBS', 'ALL']).default('ALL'),
+  sport: registrationSportSchema.default('OB'),
+  year: z.number().int().optional(),
+});
+
+export const adminRegistrationSyncTriggerResultSchema = z.object({
+  scope: z.enum(['REGISTRATIONS', 'CLUBS', 'ALL']),
+  sport: registrationSportSchema,
+  year: z.number().int(),
+  registrationsSynced: z.number().int().nullable(),
+  clubsSynced: z.number().int().nullable(),
+  startedAt: dateLikeSchema,
+  finishedAt: dateLikeSchema,
+});
+
 export type AdminDashboardSummary = z.infer<typeof adminDashboardSummarySchema>;
 export type AdminDashboardActivityPoint = z.infer<typeof adminDashboardActivityPointSchema>;
 export type AdminUserListItem = z.infer<typeof adminUserListItemSchema>;
@@ -236,3 +317,17 @@ export type AdminCzechRankingOverview = z.infer<typeof adminCzechRankingOverview
 export type AdminCzechRankingSyncResult = z.infer<typeof adminCzechRankingSyncResultSchema>;
 export type AdminCzechRankingUploadResult = z.infer<typeof adminCzechRankingUploadResultSchema>;
 export type AdminCzechRankingClearResult = z.infer<typeof adminCzechRankingClearResultSchema>;
+export type SyncStatus = z.infer<typeof syncStatusSchema>;
+export type AdminRegistrationSyncStateItem = z.infer<typeof adminRegistrationSyncStateItemSchema>;
+export type AdminClubSyncStateItem = z.infer<typeof adminClubSyncStateItemSchema>;
+export type AdminRegistrationSyncStatus = z.infer<typeof adminRegistrationSyncStatusSchema>;
+export type AdminRegistrationListItem = z.infer<typeof adminRegistrationListItemSchema>;
+export type AdminRegistrationList = z.infer<typeof adminRegistrationListSchema>;
+export type AdminClubListItem = z.infer<typeof adminClubListItemSchema>;
+export type AdminClubList = z.infer<typeof adminClubListSchema>;
+export type AdminRegistrationSyncTriggerInput = z.infer<
+  typeof adminRegistrationSyncTriggerInputSchema
+>;
+export type AdminRegistrationSyncTriggerResult = z.infer<
+  typeof adminRegistrationSyncTriggerResultSchema
+>;

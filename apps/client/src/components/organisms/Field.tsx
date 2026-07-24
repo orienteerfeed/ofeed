@@ -122,10 +122,20 @@ export const Field = <TFormData,>(
     };
   }, []);
 
-  // Reset local error when field is reset
+  // Re-sync validation state whenever the field's value changes, including
+  // when it's set from outside this component (e.g. an autocomplete calling
+  // form.setFieldValue) — that path bypasses handleInputChange/handleBlur
+  // below, so without this a stale "required" error from an earlier blur on
+  // an empty field would otherwise linger even after the field is filled in.
   React.useEffect(() => {
     if (!field.state.value) {
       setLocalError(undefined);
+      return;
+    }
+    if (!validate) return;
+    setLocalError(validate(String(field.state.value)));
+    if (field.state.meta.isTouched) {
+      void field.validate('blur');
     }
   }, [field.state.value]);
 

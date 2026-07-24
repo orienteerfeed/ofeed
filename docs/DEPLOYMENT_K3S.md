@@ -110,7 +110,8 @@ Health endpoint API:
 
 ```bash
 kubectl -n ofeed port-forward svc/api 3001:3001
-curl http://localhost:3001/health
+curl http://localhost:3001/healthz
+curl http://localhost:3001/readyz
 ```
 
 OpenAPI:
