@@ -21,6 +21,7 @@ import {
   updateAdminUserActive,
 } from './admin.service.js';
 export * from './admin.czech-ranking.handlers.js';
+export * from './admin.registration.handlers.js';
 export * from './admin.system-message.handlers.js';
 
 function buildAdminLogContext(c, adminUserId: number | null) {

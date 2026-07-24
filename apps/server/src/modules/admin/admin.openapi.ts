@@ -1,5 +1,6 @@
 import { z } from '@hono/zod-openapi';
 import {
+  adminClubListSchema,
   adminCzechRankingClearResultSchema,
   adminCzechRankingEventDetailSchema,
   adminCzechRankingOverviewSchema,
@@ -8,6 +9,10 @@ import {
   adminCzechRankingSnapshotDetailSchema,
   adminDashboardSchema,
   adminEventListSchema,
+  adminRegistrationListSchema,
+  adminRegistrationSyncStatusSchema,
+  adminRegistrationSyncTriggerInputSchema,
+  adminRegistrationSyncTriggerResultSchema,
   adminSystemMessageListSchema,
   adminSystemMessageMutationResultSchema,
   adminSystemMessageUpdateInputSchema,
@@ -70,6 +75,14 @@ const czechRankingEventDetailEnvelopeSchema = createEnvelopeSchema(
 const czechRankingUploadEnvelopeSchema = createEnvelopeSchema(adminCzechRankingUploadResultSchema);
 const czechRankingSyncEnvelopeSchema = createEnvelopeSchema(adminCzechRankingSyncResultSchema);
 const czechRankingClearEnvelopeSchema = createEnvelopeSchema(adminCzechRankingClearResultSchema);
+const registrationSyncStatusEnvelopeSchema = createEnvelopeSchema(
+  adminRegistrationSyncStatusSchema,
+);
+const registrationListEnvelopeSchema = createEnvelopeSchema(adminRegistrationListSchema);
+const clubListEnvelopeSchema = createEnvelopeSchema(adminClubListSchema);
+const registrationSyncTriggerEnvelopeSchema = createEnvelopeSchema(
+  adminRegistrationSyncTriggerResultSchema,
+);
 
 const dashboardOkResponse = {
   description: 'Admin dashboard data',
@@ -179,11 +192,51 @@ const czechRankingClearOkResponse = {
   },
 };
 
+const registrationSyncStatusOkResponse = {
+  description: 'Admin registration/club sync status and history',
+  content: {
+    'application/json': {
+      schema: registrationSyncStatusEnvelopeSchema,
+    },
+  },
+};
+
+const registrationListOkResponse = {
+  description: 'Admin cached registrations list',
+  content: {
+    'application/json': {
+      schema: registrationListEnvelopeSchema,
+    },
+  },
+};
+
+const clubListOkResponse = {
+  description: 'Admin cached club directory list',
+  content: {
+    'application/json': {
+      schema: clubListEnvelopeSchema,
+    },
+  },
+};
+
+const registrationSyncTriggerOkResponse = {
+  description: 'Admin registration/club ORIS sync result',
+  content: {
+    'application/json': {
+      schema: registrationSyncTriggerEnvelopeSchema,
+    },
+  },
+};
+
 const adminBase = ADMIN_OPENAPI.basePath;
 const adminUserPath = `${adminBase}/users/{userId}`;
 const adminSystemMessagePath = `${adminBase}/system-messages/{messageId}`;
 const czechRankingBase = `${adminBase}/ranking/czech`;
 const czechRankingSnapshotsPath = `${czechRankingBase}/snapshots`;
+const registrationsBase = `${adminBase}/registrations`;
+const registrationSyncStatusPath = `${registrationsBase}/sync-status`;
+const registrationClubsPath = `${registrationsBase}/clubs`;
+const registrationOrisSyncPath = `${registrationsBase}/oris-sync`;
 const czechRankingEventResultsPath = `${czechRankingBase}/event-results`;
 const czechRankingOrisSyncPath = `${czechRankingBase}/oris-sync`;
 
@@ -610,6 +663,109 @@ export const ADMIN_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
         422: okJson('Validation error'),
+      },
+    },
+  },
+  [registrationSyncStatusPath]: {
+    get: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminRegistrationSyncStatus',
+      summary: 'Get registration/club sync status and history',
+      security: bearerSecurity,
+      responses: {
+        200: registrationSyncStatusOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+      },
+    },
+  },
+  [registrationsBase]: {
+    get: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminRegistrations',
+      summary: 'Get admin cached registrations list',
+      security: bearerSecurity,
+      parameters: [
+        {
+          name: 'page',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', minimum: 1, default: 1 },
+          description: 'Page number (1-indexed)',
+        },
+        {
+          name: 'limit',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', minimum: 1, maximum: 200, default: 25 },
+          description: 'Items per page',
+        },
+        {
+          name: 'q',
+          in: 'query',
+          required: false,
+          schema: { type: 'string' },
+          description: 'Free-text filter matched against registration/firstname/lastname',
+        },
+      ],
+      responses: {
+        200: registrationListOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        422: okJson('Invalid pagination parameters'),
+      },
+    },
+  },
+  [registrationClubsPath]: {
+    get: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminRegistrationClubs',
+      summary: 'Get admin cached club directory list',
+      security: bearerSecurity,
+      parameters: [
+        {
+          name: 'page',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', minimum: 1, default: 1 },
+          description: 'Page number (1-indexed)',
+        },
+        {
+          name: 'limit',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', minimum: 1, maximum: 200, default: 25 },
+          description: 'Items per page',
+        },
+        {
+          name: 'q',
+          in: 'query',
+          required: false,
+          schema: { type: 'string' },
+          description: 'Free-text filter matched against club name/abbreviation',
+        },
+      ],
+      responses: {
+        200: clubListOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        422: okJson('Invalid pagination parameters'),
+      },
+    },
+  },
+  [registrationOrisSyncPath]: {
+    post: {
+      tags: [ADMIN_OPENAPI.tag],
+      operationId: 'adminSyncRegistrationOrisResults',
+      summary: 'Force registration/club ORIS synchronization',
+      security: bearerSecurity,
+      requestBody: jsonBody(zodToOpenApiSchema(adminRegistrationSyncTriggerInputSchema)),
+      responses: {
+        200: registrationSyncTriggerOkResponse,
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        422: okJson('Validation error'),
+        500: okJson('Sync failed'),
       },
     },
   },

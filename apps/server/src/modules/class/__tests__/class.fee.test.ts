@@ -20,7 +20,7 @@ describe('computeClassFee', () => {
     ).toEqual({ currentFee: null, feeNet: null, feeVat: null });
   });
 
-  it('keeps the base fee before the deadline (no surcharge)', () => {
+  it('applies the configured surcharge to an eligible class', () => {
     const result = computeClassFee({
       baseFee: 200,
       now: BEFORE,
@@ -29,10 +29,10 @@ describe('computeClassFee', () => {
       vatPayer: false,
       vatRate: null,
     });
-    expect(result.currentFee).toBe(200);
+    expect(result.currentFee).toBe(300);
   });
 
-  it('applies the late-entry surcharge after the deadline', () => {
+  it('does not depend on whether the entry deadline has passed', () => {
     const result = computeClassFee({
       baseFee: 200,
       now: AFTER,
@@ -44,7 +44,7 @@ describe('computeClassFee', () => {
     expect(result.currentFee).toBe(300);
   });
 
-  it('keeps the base fee after the deadline when late-entry fee is disabled', () => {
+  it('keeps the base fee when a class opts out of the surcharge', () => {
     const result = computeClassFee({
       baseFee: 200,
       now: AFTER,
@@ -57,7 +57,7 @@ describe('computeClassFee', () => {
     expect(result.currentFee).toBe(200);
   });
 
-  it('does not apply a surcharge when no deadline is set', () => {
+  it('applies the configured surcharge even when no deadline is set', () => {
     const result = computeClassFee({
       baseFee: 200,
       now: AFTER,
@@ -66,7 +66,7 @@ describe('computeClassFee', () => {
       vatPayer: false,
       vatRate: null,
     });
-    expect(result.currentFee).toBe(200);
+    expect(result.currentFee).toBe(300);
   });
 
   it('does not apply a surcharge when percent is null', () => {
@@ -94,7 +94,7 @@ describe('computeClassFee', () => {
     expect(result).toEqual({ currentFee: 242, feeNet: 200, feeVat: 42 });
   });
 
-  it('computes VAT on the surcharged price after the deadline', () => {
+  it('computes VAT on the surcharged price', () => {
     const result = computeClassFee({
       baseFee: 242,
       now: AFTER,

@@ -14,7 +14,7 @@ describe('split chart utils', () => {
       hasSplitChartData({
         id: '1',
         splits: [{ controlCode: '31', time: 120 }],
-      }),
+      })
     ).toBe(true);
     expect(hasSplitChartData({ id: '2', time: 900, splits: [] })).toBe(true);
     expect(hasSplitChartData({ id: '3', splits: [] })).toBe(false);
@@ -103,7 +103,7 @@ describe('split chart utils', () => {
             { controlCode: '32', time: 205 },
           ],
         },
-      ]),
+      ])
     ).toEqual([0, 100, 195, 275]);
   });
 
@@ -116,7 +116,7 @@ describe('split chart utils', () => {
     ]);
 
     expect(Object.values(visibility).filter(Boolean)).toHaveLength(
-      DEFAULT_VISIBLE_SPLIT_CHART_RUNNERS,
+      DEFAULT_VISIBLE_SPLIT_CHART_RUNNERS
     );
     expect(visibility).toEqual({
       a: true,
@@ -137,7 +137,7 @@ describe('split chart utils', () => {
         a: false,
         b: true,
         c: false,
-      },
+      }
     );
 
     expect(visibility).toEqual({

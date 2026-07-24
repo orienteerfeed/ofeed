@@ -11,7 +11,8 @@
         "Events": "Akce",
         "SystemMessages": "Systémové zprávy",
         "CzechRanking": "Český ranking",
-        "BackToSite": "Zpět na web"
+        "BackToSite": "Zpět na web",
+        "Registrations": "Registrace"
       },
       "Dashboard": {
         "Title": "Přehled administrace",
@@ -269,6 +270,56 @@
         "Yes": "Ano",
         "No": "Ne",
         "Discipline": "Disciplína"
+      },
+      "Registrations": {
+        "Title": "Registrace a kluby",
+        "Description": "Přehled registrací sportovců a klubů naimportovaných z externích federačních systémů (ORIS).",
+        "RegistrationsCard": "Registrace",
+        "ClubsCard": "Kluby",
+        "LastSuccess": "Poslední úspěšný sync: {{date}}",
+        "NeverSynced": "Ještě nesynchronizováno",
+        "RecordCount": "{{count}} záznamů",
+        "SyncErrorTitle": "Poslední sync se nezdařil",
+        "SearchPlaceholder": "Vyhledat podle registrace, jména nebo příjmení…",
+        "ClubSearchPlaceholder": "Vyhledat podle názvu nebo zkratky klubu…",
+        "Status": {
+          "PENDING": "Čeká",
+          "SUCCESS": "Úspěch",
+          "ERROR": "Chyba"
+        },
+        "Tabs": {
+          "Registrations": "Registrace",
+          "Clubs": "Kluby"
+        },
+        "Table": {
+          "Registration": "Registrace",
+          "Name": "Jméno",
+          "Organisation": "Oddíl",
+          "BirthYear": "Ročník",
+          "Source": "Zdroj",
+          "SyncedAt": "Synchronizováno",
+          "ClubName": "Název",
+          "ClubAbbr": "Zkratka"
+        },
+        "Actions": {
+          "ForceSync": "Vynutit sync",
+          "Cancel": "Zrušit",
+          "Syncing": "Synchronizuji…"
+        },
+        "SyncDialog": {
+          "Title": "Vynutit ORIS synchronizaci registrací",
+          "Description": "Okamžitě stáhnout cache registrací/klubů z ORIS, bez ohledu na běžný TTL.",
+          "Scope": "Rozsah",
+          "ScopeAll": "Registrace a kluby",
+          "ScopeRegistrations": "Jen registrace",
+          "ScopeClubs": "Jen kluby"
+        },
+        "Toast": {
+          "SyncSuccessTitle": "Synchronizace dokončena",
+          "SyncSuccessDescription": "Synchronizováno {{registrations}} registrací a {{clubs}} klubů.",
+          "SyncErrorTitle": "Synchronizace se nezdařila",
+          "UnknownError": "Došlo k neznámé chybě."
+        }
       }
     },
     "Auth": {
@@ -392,7 +443,8 @@
         "Map": "Mapa",
         "Cat": "Kat",
         "Club": "Klub",
-        "Live": "Živě"
+        "Live": "Živě",
+        "Entries": "Přihlášky"
       },
       "Overview": {
         "NoEventsToday": "Dnes žádné akce",
@@ -520,6 +572,175 @@
           "Unknown": "Zpracováno"
         }
       },
+      "EntriesManage": {
+        "Title": "Přihlášky",
+        "Description": "Přehled odeslaných přihlášek, jejich stavu platby a zpracování schválených přihlášek na závodníky.",
+        "Export": {
+          "Button": "Export",
+          "CsosUnifiedFormat": "Jednotný formát ČSOS",
+          "ProcessedItemsCsv": "Zpracované položky (CSV)",
+          "PrintAll": "Tisk všech přihlášek"
+        },
+        "Print": {
+          "Description": "Přehled všech dosavadních přihlášek ({{count}})",
+          "Footer": "Vyrobeno aplikací OFeed",
+          "Page": "Strana",
+          "Of": "z"
+        },
+        "Empty": "Zatím žádné přihlášky.",
+        "Filters": {
+          "SearchLabel": "Vyhledávání",
+          "SearchPlaceholder": "Vyhledat podle variabilního symbolu, kontaktu nebo závodníka…",
+          "StatusVisibility": "Zobrazit stavy",
+          "ShowStatus": "Zobrazit: {{status}}"
+        },
+        "Sort": {
+          "By": "Řadit podle: {{column}}"
+        },
+        "Columns": {
+          "PaymentReference": "Var. symbol",
+          "Contact": "Kontakt",
+          "Items": "Položky",
+          "Total": "Celkem",
+          "Paid": "Zaplaceno",
+          "Created": "Vytvořeno",
+          "Status": "Stav",
+          "Actions": "Akce"
+        },
+        "ItemsCount_one": "{{count}} položka",
+        "ItemsCount_few": "{{count}} položky",
+        "ItemsCount_many": "{{count}} položky",
+        "ItemsCount_other": "{{count}} položek",
+        "Status": {
+          "RECEIVED": "Přijato",
+          "APPROVED": "Schváleno",
+          "PROCESSED": "Zpracováno",
+          "REJECTED": "Zamítnuto",
+          "CANCELLED": "Stornováno"
+        },
+        "Paid": {
+          "Yes": "Ano",
+          "No": "Ne"
+        },
+        "Actions": {
+          "Menu": "Akce",
+          "MarkPaid": "Označit jako zaplaceno",
+          "UnmarkPaid": "Zrušit zaplacení",
+          "Approve": "Schválit",
+          "ApproveBlockedByMissingCard": "Nejprve přiřaďte čip každému závodníkovi.",
+          "Process": "Zpracovat",
+          "Reject": "Zamítnout",
+          "Cancel": "Stornovat",
+          "Edit": "Upravit",
+          "EditUnavailable": "Úprava přihlášek zatím není dostupná.",
+          "ExpandItems": "Zobrazit položky",
+          "CollapseItems": "Skrýt položky"
+        },
+        "RejectDialog": {
+          "ConfirmTitle": "Zamítnout tuto přihlášku?",
+          "ConfirmDescription": "Tuto akci nelze vrátit zpět. Po zamítnutí již nebude možné na přihlášce provádět žádné další změny.",
+          "ConfirmButton": "Zamítnout"
+        },
+        "CancelDialog": {
+          "ConfirmTitle": "Stornovat tuto přihlášku?",
+          "ConfirmDescription": "Tuto akci nelze vrátit zpět. Po stornování již nebude možné na přihlášce provádět žádné další změny.",
+          "ConfirmButton": "Stornovat přihlášku"
+        },
+        "ItemsTable": {
+          "Columns": {
+            "Type": "Typ",
+            "Name": "Jméno",
+            "Class": "Kategorie",
+            "Registration": "Registrace",
+            "BirthYear": "Rok narození",
+            "CardRental": "Půjčit čip",
+            "Card": "Čip",
+            "Start": "Start",
+            "Fee": "Poplatek"
+          },
+          "CardRentalYes": "Ano",
+          "CardRentalNo": "Ne",
+          "ActionLabels": {
+            "NEW_ENTRY": "Nová přihláška",
+            "CARD_CHANGE": "Změna čipu",
+            "NAME_CHANGE": "Změna jména",
+            "CLASS_CHANGE": "Změna kategorie",
+            "START_TIME_CHANGE": "Změna startovního času"
+          },
+          "RentalCard": {
+            "Placeholder": "Přiřadit čip",
+            "NoneAvailable": "Nejsou k dispozici žádné volné čipy k zapůjčení.",
+            "AssignError": "Čip k zapůjčení se nepodařilo přiřadit."
+          }
+        },
+        "Detail": {
+          "RegistrationTitle": "Registrace na event",
+          "Contact": {
+            "Title": "Kontaktní údaje",
+            "Email": "E-mail"
+          },
+          "PaymentMethod": {
+            "Label": "Způsob platby",
+            "NotSpecified": "Neuveden"
+          },
+          "Payment": {
+            "Title": "Platba",
+            "Method": "Způsob platby",
+            "Account": "Číslo účtu",
+            "VariableSymbol": "Variabilní symbol",
+            "ConstantSymbol": "Konstantní symbol",
+            "RecipientMessage": "Zpráva pro příjemce",
+            "Amount": "Částka",
+            "Print": "Vytisknout platební údaje",
+            "Share": "Sdílet platební údaje",
+            "Copied": "Platební údaje byly zkopírovány do schránky.",
+            "ShareError": "Platební údaje se nepodařilo sdílet.",
+            "QrCodeAriaLabel": "QR kód pro platbu",
+            "QrDetailsUnavailable": "Platební údaje pro QR kód nejsou pro tuto objednávku k dispozici.",
+            "ReferenceOnly": "Řiďte se platebními pokyny zvoleného poskytovatele platby."
+          },
+          "QrCode": {
+            "AriaLabel": "QR kód s odkazem na detail přihlášky"
+          },
+          "Items": {
+            "Title": "Položky objednávky"
+          },
+          "AddOns": {
+            "Title": "Doplňkové služby",
+            "Empty": "Žádné doplňkové služby.",
+            "Columns": {
+              "Service": "Služba",
+              "Quantity": "Počet",
+              "UnitPrice": "Cena za kus",
+              "Total": "Celkem"
+            }
+          },
+          "Totals": {
+            "Title": "Souhrn",
+            "ItemsSubtotal": "Přihlášky",
+            "AddOnsSubtotal": "Doplňkové služby",
+            "GrandTotal": "Celkem k úhradě",
+            "VatPayer": "Plátce DPH, sazba {{rate}} %",
+            "VatNotPayer": "Neplátce DPH"
+          },
+          "StatusHistory": {
+            "Title": "Historie plateb a stavů",
+            "Empty": "Zatím žádná historie.",
+            "ChangedBy": "Změnil: {{name}}",
+            "PaymentMarked": "Označeno jako zaplacené",
+            "PaymentUnmarked": "Platba označena jako nezaplacená"
+          },
+          "NotFound": "Tato objednávka nebyla nalezena nebo k ní nemáte přístup."
+        },
+        "Toast": {
+          "StatusUpdated": "Stav přihlášky byl změněn.",
+          "StatusUpdateError": "Nepodařilo se změnit stav přihlášky.",
+          "PaidUpdated": "Příznak zaplacení byl změněn.",
+          "PaidUpdateError": "Nepodařilo se změnit příznak zaplacení.",
+          "Processed": "Přihláška byla zpracována.",
+          "ProcessError": "Nepodařilo se zpracovat přihlášku."
+        }
+      },
       "Settings": {
         "Loading": "Načítám nastavení akce",
         "Tabs": {
@@ -531,6 +752,93 @@
         "Services": {
           "Title": "Služby",
           "Description": "Nastav služby nabízené u této akce, sazby a navýšení startovného pro pozdní přihlášky.",
+          "PaymentMethods": {
+            "Title": "Platební metody",
+            "Description": "Vyberte platební metody dostupné pro tuto akci a nastavte pořadí jejich zobrazení.",
+            "Loading": "Načítám platební metody…",
+            "LoadError": "Platební metody se nepodařilo načíst.",
+            "Save": "Uložit platební metody",
+            "Saving": "Ukládám…",
+            "Status": {
+              "DISABLED": "Vypnuto",
+              "CONFIGURATION_REQUIRED": "Vyžaduje nastavení",
+              "READY": "Připraveno",
+              "UNAVAILABLE": "Nedostupné"
+            },
+            "Methods": {
+              "OFeedPayment": {
+                "Title": "OFeed Platba",
+                "Description": "Přijímejte online platby přímo prostřednictvím OFeed. Zpracování a potvrzení platby probíhá automaticky.",
+                "Unavailable": "OFeed Platba není pro tuto organizaci dostupná.",
+                "Availability": {
+                  "Label": "Dostupnost",
+                  "Available": "Dostupné",
+                  "NotAvailable": "Nedostupné"
+                }
+              },
+              "CustomPaymentLink": {
+                "Title": "Vlastní platební odkaz",
+                "Description": "Přesměrujte zákazníky na externí platební stránku nastavenou pořadatelem."
+              },
+              "QRPayment": {
+                "Title": "QR platba",
+                "Description": "Umožněte zákazníkům zaplatit naskenováním bankovního platebního QR kódu.",
+                "BankAccount": "Bankovní účet použitý pro QR platby",
+                "BankAccountName": "Název účtu",
+                "BankAccountNamePlaceholder": "Bankovní účet pořadatele",
+                "BankAccountIban": "IBAN / bankovní účet",
+                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountMissing": "Před aktivací QR plateb nastavte bankovní účet pořadatele."
+              },
+              "Cash": {
+                "Title": "Hotovost",
+                "Description": "Umožněte platby v hotovosti v kanceláři závodu."
+              }
+            },
+            "Actions": {
+              "MoveUp": "Posunout nahoru",
+              "MoveDown": "Posunout dolů",
+              "Toggle": "Přepnout {{name}}"
+            },
+            "CustomPaymentLink": {
+              "DefaultDisplayName": "Online platba",
+              "Fields": {
+                "DisplayName": "Název platební metody",
+                "DisplayNamePlaceholder": "Online payment",
+                "DisplayNameHelper": "Tento název se zobrazí uživateli při výběru platební metody.",
+                "PaymentLink": "Platební odkaz"
+              },
+              "Variables": {
+                "Help": "Uveďte úplnou adresu platebního odkazu včetně https://.\n\nV adrese lze použít následující proměnné. Před otevřením platebního odkazu budou nahrazeny hodnotami z OFeed:",
+                "amount": "částka v základní měnové jednotce",
+                "currency": "kód měny podle ISO 4217, například CZK nebo EUR",
+                "paymentreference": "jedinečná reference platby nebo variabilní symbol",
+                "email": "e-mailová adresa uživatele",
+                "language": "kód jazyka uživatele, například cs nebo en",
+                "Example": "Příklad:"
+              },
+              "Warning": "Za správné nastavení a otestování platebního odkazu odpovídá pořadatel. OFeed neověřuje, zda externí poskytovatel obdržel správnou částku, měnu, referenci platby nebo údaje zákazníka. OFeed nenese odpovědnost za nesprávně odeslané, neúspěšné, duplicitní nebo nespárované platby."
+            },
+            "Validation": {
+              "AtLeastOne": "Aktivujte alespoň jednu platební metodu.",
+              "OFeedUnavailable": "Nedostupnou OFeed Platbu nelze aktivovat.",
+              "BankAccountRequired": "Je vyžadován bankovní účet",
+              "DisplayNameRequired": "Název platební metody je povinný.",
+              "PaymentLinkRequired": "Platební odkaz je povinný.",
+              "InvalidPaymentLink": "Zadejte absolutní HTTPS adresu s platným názvem hostitele a bez mezer.",
+              "UnknownVariables": "Nepodporovaná proměnná platebního odkazu: {{variables}}."
+            },
+            "Toast": {
+              "Saved": "Platební metody byly uloženy.",
+              "SaveError": "Platební metody se nepodařilo uložit."
+            },
+            "Unsaved": {
+              "Title": "Opustit stránku bez uložení platebních metod?",
+              "Description": "Změny platebních metod zatím nejsou uložené.",
+              "Confirm": "Opustit bez uložení",
+              "Cancel": "Pokračovat v úpravách"
+            }
+          },
           "LateEntry": {
             "Title": "Pozdní přihlášky",
             "Percent": "Procentuální navýšení startovného",
@@ -588,7 +896,50 @@
           "SaveError": "Službu se nepodařilo uložit.",
           "DeleteError": "Službu se nepodařilo odstranit.",
           "ActiveAria": "Aktivovat službu {{name}}",
-          "PriceAria": "Cena služby {{name}}"
+          "PriceAria": "Cena služby {{name}}",
+          "RentalCards": {
+            "Title": "Čipy k zapůjčení",
+            "Description": "Spravujte seznam fyzických SI čipů, které lze zapůjčit závodníkům bez vlastního čipu.",
+            "Add": "Přidat čip",
+            "Import": "Import CSV",
+            "DeleteAll": "Smazat všechny",
+            "Search": "Vyhledat čip",
+            "SearchPlaceholder": "Vyhledat číslo čipu",
+            "Empty": "Zatím nejsou přidané žádné čipy k zapůjčení.",
+            "NoResults": "Žádný čip neodpovídá hledání.",
+            "LentBadge": "Půjčeno",
+            "AvailableBadge": "Volný",
+            "DeleteBlockedByLent": "Tento čip je aktuálně přiřazen závodníkovi nebo čekající přihlášce, a nelze jej smazat.",
+            "SaveError": "Čip k zapůjčení se nepodařilo uložit.",
+            "DeleteError": "Čip k zapůjčení se nepodařilo odstranit.",
+            "DeleteAllError": "Čipy k zapůjčení se nepodařilo odstranit.",
+            "DeleteAllConfirm": {
+              "Title": "Smazat všechny čipy k zapůjčení?",
+              "Description": "Tato akce smaže všechny čipy k zapůjčení u této akce bez ohledu na aktuální filtr. Akci nelze vrátit zpět.",
+              "Confirm": "Smazat všechny"
+            },
+            "Columns": {
+              "CardNumber": "Číslo čipu",
+              "Active": "Aktivní",
+              "Lent": "Stav",
+              "Returned": "Vráceno",
+              "Actions": "Akce"
+            },
+            "Dialog": {
+              "Title": "Přidat čip k zapůjčení",
+              "CardNumber": "Číslo čipu",
+              "CardNumberInvalid": "Zadejte kladné číslo čipu.",
+              "SaveError": "Čip k zapůjčení se nepodařilo přidat."
+            },
+            "ImportDialog": {
+              "Title": "Import čipů k zapůjčení",
+              "Description": "Nahrajte CSV soubor se sloupcem „cardNumber“ a volitelným sloupcem „active“.",
+              "MissingFile": "Vyberte CSV soubor k importu.",
+              "Import": "Importovat",
+              "Importing": "Importuji…",
+              "Success": "Bylo importováno {{count}} čipů."
+            }
+          }
         },
         "Classes": {
           "Title": "Kategorie",
@@ -631,7 +982,27 @@
             "Bib": "Číslo",
             "Empty": "Pro tuto kategorii nejsou volné startovní časy.",
             "Close": "Zavřít",
-            "LoadError": "Startovní časy se nepodařilo načíst."
+            "LoadError": "Startovní časy se nepodařilo načíst.",
+            "Created": "Startovní slot byl přidán.",
+            "Updated": "Startovní slot byl aktualizován.",
+            "Deleted": "Startovní slot byl smazán.",
+            "SaveError": "Startovní slot se nepodařilo uložit.",
+            "DeleteError": "Startovní slot se nepodařilo smazat.",
+            "Form": {
+              "Date": "Datum",
+              "Time": "Čas",
+              "Add": "Přidat slot",
+              "Update": "Uložit slot",
+              "Edit": "Upravit slot",
+              "Delete": "Smazat slot",
+              "UseNext": "Použít další interval",
+              "CancelEdit": "Zrušit úpravu",
+              "Required": "Zadejte datum i čas.",
+              "InvalidTime": "Zadejte platný startovní čas.",
+              "InvalidBib": "Zadejte platné startovní číslo.",
+              "IntervalHint": "Z existujících slotů byl rozpoznán interval {{minutes}} minut.",
+              "ManualHint": "Interval nelze bezpečně určit. Zadejte startovní čas ručně."
+            }
           },
           "LoadDefinitions": {
             "Action": "Načíst definice z {{provider}}",
@@ -697,6 +1068,7 @@
         "EventId": "ID akce",
         "Author": "Autor",
         "Report": "Report",
+        "EntriesManage": "Přihlášky",
         "OpenBoard": "Board",
         "Status": {
           "Primary": {
@@ -1140,6 +1512,69 @@
         "Description": "Vyberte klub pro zobrazení výsledků",
         "NoClubs": "Žádné kluby nenalezeny",
         "Cancel": "Zrušit"
+      },
+      "Entries": {
+        "FreeEntry": "Zdarma",
+        "BirthYearRange": "Ročníky {{from}}–{{to}}",
+        "LoadError": "Nepodařilo se načíst dostupnost přihlášek.",
+        "OpensIn": "Přihlášky se otevřou za",
+        "ClosedDescription": "Přihlášky jsou uzavřeny.",
+        "EntriesCount": "Odeslané přihlášky a změny",
+        "ChangesCount": "Změn provedených přes OFeed",
+        "ClosesAt": "Přihlášky se uzavírají {{date}}",
+        "AllClassesFull": "Všechny kategorie jsou plné.",
+        "Form": {
+          "Firstname": "Jméno",
+          "Lastname": "Příjmení",
+          "Registration": "Registrace",
+          "RegistrationHelper": "např. XXX9901",
+          "RegistrationStep": {
+            "Title": "Začněte registračním číslem.",
+            "Description": "Když závodníka najdeme, jeho údaje doplníme automaticky.",
+            "Found": "Závodník byl nalezen. Údaje ve formuláři jsme doplnili automaticky; před odesláním je můžete upravit.",
+            "Manual": "Zadejte platné registrační číslo. Pokud závodníka nenajdeme, vyplňte údaje níže ručně.",
+            "ManualFields": "Osobní údaje — doplňte je pouze tehdy, pokud se nevyplnily automaticky."
+          },
+          "BirthYear": "Rok narození",
+          "Organisation": "Oddíl",
+          "License": "Licence",
+          "Note": "Poznámka",
+          "NotePlaceholder": "Nepovinná poznámka pro pořadatele",
+          "Card": "Číslo čipu",
+          "StartTime": "Startovní čas",
+          "StartTimePlaceholder": "Vyberte startovní čas",
+          "CardRentalWithPrice": "Půjčit čip ({{price}})",
+          "CardRentalFree": "Půjčit čip (zdarma)",
+          "ClearForm": "Vymazat formulář",
+          "AddToCart": "Přidat do košíku",
+          "AddedToCart": "{{name}} přidán(a) do košíku ({{className}}).",
+          "AddedTitle": "Přihláška je v košíku",
+          "AddedDescription": "{{name}} byl(a) přidán(a) do košíku v kategorii {{className}}.",
+          "ContinueEntries": "Pokračovat v přihláškách",
+          "GoToCheckout": "Přejít do košíku",
+          "Title": "Přihláška — {{className}}",
+          "Description": "Startovné: {{fee}}",
+          "DescriptionFree": "Tato kategorie nemá startovné.",
+          "Warnings": {
+            "CardAlreadyUsed": "Tento čip už je u této akce přiřazen závodníkovi {{competitors}}.",
+            "RegistrationAlreadyUsed": "Toto registrační číslo už je u této akce přihlášeno jako {{competitors}}. Můžete pokračovat, ale před odesláním zkontrolujte registraci."
+          },
+          "Errors": {
+            "FirstnameRequired": "Jméno je povinné",
+            "LastnameRequired": "Příjmení je povinné",
+            "RegistrationOrBirthYearRequired": "Vyplňte registraci, nebo rok narození",
+            "RegistrationInvalid": "Neplatný formát registrace",
+            "BirthYearInvalid": "Neplatný rok narození",
+            "BirthYearNotEligible": "Závodník nemůže v této kategorii startovat (rok narození mimo povolený rozsah)",
+            "CardOrRentalRequired": "Vyplňte číslo čipu, nebo zaškrtněte půjčení čipu",
+            "CardInvalid": "Neplatné číslo čipu",
+            "StartTimeRequired": "Vyberte startovní čas"
+          },
+          "Autocomplete": {
+            "Loading": "Vyhledávání…",
+            "NoMatch": "Nic nenalezeno"
+          }
+        }
       }
     },
     "Home": {
@@ -1290,6 +1725,66 @@
         "Description": "Spravuj fakturační údaje a platební metody.",
         "NoPaymentMethods": "Zatím nemáš přidané žádné platební metody.",
         "AddPaymentMethod": "Přidat platební metodu"
+      }
+    },
+    "Checkout": {
+      "Title": "Košík přihlášek",
+      "CartAriaLabel": "Košík přihlášek ({{count}})",
+      "EmptyCart": "Košík přihlášek je prázdný.",
+      "BackHome": "Zpět na závody",
+      "CardRental": "půjčení čipu",
+      "RemoveItem": "Odebrat přihlášku",
+      "Total": "Celkem",
+      "ContactTitle": "Kontaktní údaje",
+      "SubmitOrder": "Dokončit objednávku",
+      "OrderSuccessToast": "Objednávka přihlášek byla odeslána.",
+      "OrderErrorToast": "Odeslání objednávky se nezdařilo.",
+      "SuccessTitle": "Objednávka přijata",
+      "SuccessDescription": "Pro platbu startovného použijte variabilní symbol uvedený níže.",
+      "PartialSuccessTitle": "Část objednávky byla odeslána",
+      "PartialSuccessDescription": "Níže jsou úspěšně odeslané objednávky. Dokončete prosím odeslání zbývajících položek v košíku.",
+      "PaymentReference": "Variabilní symbol",
+      "EntriesInOrder": "Počet přihlášek",
+      "QrPayment": {
+        "Title": "Zaplatit přes QR kód",
+        "Description": "Naskenujte kód v bankovní aplikaci a platební příkaz se předvyplní.",
+        "QrCodeAriaLabel": "QR kód pro platbu",
+        "OpenInBankApp": "Zaplatit v bankovní aplikaci"
+      },
+      "CashPayment": {
+        "Title": "Platba v hotovosti",
+        "Description": "Dostavte se prosím do event office a uhraďte startovné v hotovosti.",
+        "QrCodeDescription": "Při platbě ukažte obsluze tento QR kód s detailem objednávky.",
+        "QrCodeAriaLabel": "QR kód s odkazem na detail objednávky"
+      },
+      "CustomPayment": {
+        "Title": "Online platba",
+        "Description": "Pro dokončení platby přejděte na platební bránu.",
+        "OpenPaymentLink": "Přejít k platbě"
+      },
+      "PaymentMethods": {
+        "Label": "Způsob platby",
+        "Placeholder": "Vyberte způsob platby",
+        "Loading": "Načítání platebních metod…",
+        "LoadError": "Platební metody se nepodařilo načíst.",
+        "NoneAvailable": "Pro tento závod není dostupný žádný způsob platby.",
+        "Methods": {
+          "OFEED_PAYMENT": "OFeed Platba",
+          "CUSTOM_PAYMENT_LINK": "Online platba",
+          "QR_PAYMENT": "QR platba",
+          "CASH": "Hotovost"
+        }
+      },
+      "Form": {
+        "Email": "E-mail",
+        "Firstname": "Jméno",
+        "Lastname": "Příjmení",
+        "Errors": {
+          "EmailRequired": "E-mail je povinný",
+          "EmailInvalid": "Neplatná e-mailová adresa",
+          "FirstnameRequired": "Jméno je povinné",
+          "LastnameRequired": "Příjmení je povinné"
+        }
       }
     }
   },

@@ -159,6 +159,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().default('onboarding@resend.dev'),
   RESEND_FROM_NAME: z.string().default('OFeed'),
+  CLIENT_APP_URL: z.string().url().default('http://localhost:3000'),
 
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
   CORS_METHODS: z.string().default('GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS'),

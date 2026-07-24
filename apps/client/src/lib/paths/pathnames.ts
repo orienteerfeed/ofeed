@@ -15,6 +15,10 @@ export const PATHNAMES = {
     to: '/admin/ranking/czech',
     params: {} as const,
   }),
+  adminRegistrations: () => ({
+    to: '/admin/registrations',
+    params: {} as const,
+  }),
   eventDetail: (eventId: string) => ({
     to: '/events/$eventId',
     params: { eventId } as const,
@@ -25,6 +29,21 @@ export const PATHNAMES = {
     params: { eventId } as const,
     url: `/events/${eventId}/report`,
   }),
+  eventEntries: (eventId: string) => ({
+    to: '/events/$eventId/entries',
+    params: { eventId } as const,
+    url: `/events/${eventId}/entries`,
+  }),
+  eventEntryDetail: (eventId: string, entryId: string) => ({
+    to: '/events/$eventId/entries/$entryId',
+    params: { eventId, entryId } as const,
+    url: `/events/${eventId}/entries/${entryId}`,
+  }),
+  eventEntryEdit: (eventId: string, entryId: string) => ({
+    to: '/events/$eventId/entries/$entryId/edit',
+    params: { eventId, entryId } as const,
+    url: `/events/${eventId}/entries/${entryId}/edit`,
+  }),
   eventSettings: (eventId: string) => ({
     to: '/events/$eventId/settings',
     params: { eventId } as const,
@@ -33,6 +52,7 @@ export const PATHNAMES = {
     to: '/events/$eventId/class/$classId',
     params: { eventId, classId } as const,
   }),
+  checkout: () => ({ to: '/checkout', params: {} as const }),
   profile: () => ({ to: '/profile', params: {} as const }),
   blog: () => ({ to: '/blog', params: {} as const }),
   settings: () => ({ to: '/settings', params: {} as const }),
