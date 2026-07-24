@@ -20,6 +20,7 @@ api:
   env:
     NODE_ENV: production
     PORT: "3001"
+    CLIENT_APP_URL: "http://localhost:3000"
     CORS_ORIGIN: "http://localhost:3000"
     CORS_METHODS: "GET,HEAD,POST,PUT,DELETE,OPTIONS"
     CORS_HEADERS: "Content-Type,Authorization,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url"

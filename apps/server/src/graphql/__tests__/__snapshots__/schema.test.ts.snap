@@ -71,6 +71,11 @@ type Class {
   teams: [Team!]
 }
 
+type ClassCompetitorStartTime {
+  id: Int!
+  startTime: DateTime!
+}
+
 type ClassStartSlotVacancy {
   bibNumber: Int
   id: Int!
@@ -138,6 +143,18 @@ type Course {
   name: String!
 }
 
+input CreateEventRentalCardInput {
+  active: Boolean
+  cardNumber: Int!
+  eventId: String!
+}
+
+input CreateStartSlotVacancyInput {
+  bibNumber: Int
+  classId: Int!
+  startTime: DateTime!
+}
+
 input CreateUserCardInput {
   cardNumber: cardNumber_String_NotNull_minLength_1_maxLength_64!
   isDefault: Boolean
@@ -160,10 +177,40 @@ Custom DateTime scalar (backed by JS Date, serialized as ISO8601 string)
 """
 scalar DateTime
 
+type Entry {
+  addOnItems: [EntryAddOnItem!]!
+  contactEmail: String!
+  contactFirstname: String!
+  contactLastname: String!
+  createdAt: DateTime!
+  currency: String!
+  event: Event!
+  eventId: String!
+  id: String!
+  items: [EntryItem!]!
+  paid: Boolean!
+  paymentMethod: PaymentMethodType
+  paymentReference: String!
+  qrPayment: QrPaymentInstruction
+  status: EntryStatus!
+  statusHistory: [EntryStatusHistory!]!
+  totalAmount: Float!
+  updatedAt: DateTime!
+  userId: Int
+}
+
 type EntryAction {
   enabled: Boolean!
   key: EventServiceSystemKey!
   price: Float
+}
+
+type EntryAddOnItem {
+  id: Int!
+  price: Float!
+  quantity: Int!
+  serviceDescription: String
+  serviceName: String!
 }
 
 type EntryAvailability {
@@ -208,6 +255,82 @@ type EntryAvailabilitySlot {
   bibNumber: Int
   id: Int!
   startTime: DateTime!
+}
+
+type EntryItem {
+  actionKey: EntryItemActionKey!
+  birthYear: Int
+  card: Int
+  cardRental: Boolean!
+  cardRentalFee: Float
+  class: Class!
+  classId: Int!
+  competitor: Competitor
+  competitorId: Int
+  fee: Float!
+  firstname: String!
+  id: Int!
+  lastname: String!
+  license: String
+  note: String
+  organisation: String
+  previousValue: EntryItemPreviousValue
+  registration: String
+  startTime: DateTime
+}
+
+enum EntryItemActionKey {
+  CARD_CHANGE
+  CLASS_CHANGE
+  NAME_CHANGE
+  NEW_ENTRY
+  START_TIME_CHANGE
+}
+
+type EntryItemPreviousValue {
+  card: Int
+  className: String
+  firstname: String
+  lastname: String
+  startTime: DateTime
+}
+
+input EntryOrderUpdateInput {
+  contactEmail: String!
+  contactFirstname: String!
+  contactLastname: String!
+  items: [EntryOrderUpdateItemInput!]!
+  paymentMethod: PaymentMethodType!
+}
+
+input EntryOrderUpdateItemInput {
+  birthYear: Int
+  card: Int
+  cardRental: Boolean!
+  classId: Int!
+  firstname: String!
+  lastname: String!
+  license: String
+  note: String
+  organisation: String
+  registration: String
+  startTime: DateTime
+}
+
+enum EntryStatus {
+  APPROVED
+  CANCELLED
+  PROCESSED
+  RECEIVED
+  REJECTED
+}
+
+type EntryStatusHistory {
+  changedByName: String
+  createdAt: DateTime!
+  id: Int!
+  paymentState: Boolean
+  status: EntryStatus
 }
 
 type Event {
@@ -385,11 +508,50 @@ type EventPassword {
   updatedAt: DateTime!
 }
 
+type EventPaymentCapabilities {
+  bankAccountDisplay: String
+  bankAccountIban: String
+  bankAccountName: String
+  ofeedPaymentAvailable: Boolean!
+  qrPaymentAvailable: Boolean!
+}
+
+type EventPaymentMethod {
+  displayName: String
+  enabled: Boolean!
+  paymentLinkTemplate: String
+  position: Int!
+  status: PaymentMethodConfigurationStatus!
+  type: PaymentMethodType!
+}
+
+input EventPaymentMethodInput {
+  displayName: String
+  enabled: Boolean!
+  paymentLinkTemplate: String
+  position: Int!
+  type: PaymentMethodType!
+}
+
+type EventPaymentMethodSettings {
+  eventId: String!
+  paymentCapabilities: EventPaymentCapabilities!
+  paymentMethods: [EventPaymentMethod!]!
+}
+
 enum EventPrimaryStatus {
   DONE
   DRAFT
   LIVE
   UPCOMING
+}
+
+type EventRentalCard {
+  active: Boolean!
+  cardNumber: Int!
+  id: Int!
+  isLent: Boolean!
+  returned: Boolean!
 }
 
 type EventResponse {
@@ -472,17 +634,28 @@ input LoginInput {
 
 type Mutation {
   _empty(nothing: String): String
+  assignEntryItemRentalCard(cardNumber: Int!, entryItemId: Int!): Entry!
   changeCurrentUserPassword(input: ChangeCurrentUserPasswordInput!): ResetResponse!
   classFeeUpdate(input: UpdateClassFeeInput!): ResponseMessage!
   classUpdate(input: UpdateClassInput!): ResponseMessage!
   competitorCreate(input: StoreCompetitorInput!): StoreCompetitorResponse!
   competitorStatusChange(input: StatusChange!): ResponseMessage!
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
+  createEventRentalCard(input: CreateEventRentalCardInput!): EventRentalCard!
   createMeosEventBinding(eventId: String!): EventMeosBinding!
+  createStartSlotVacancy(input: CreateStartSlotVacancyInput!): ClassStartSlotVacancy!
   createUserCard(input: CreateUserCardInput!): UserCard!
+  deleteAllEventRentalCards(eventId: String!): ResponseMessage!
+  deleteCurrentAccount(currentPassword: String!, deleteEvents: Boolean): Boolean!
   deleteCustomEventService(eventId: String!, id: Int!): ResponseMessage!
+  deleteEventRentalCard(eventId: String!, id: Int!): ResponseMessage!
   deleteMeosEventBinding(id: Int!): Boolean!
+  deleteStartSlotVacancy(id: Int!): ResponseMessage!
   deleteUserCard(id: Int!): Boolean!
+  entryOrderPaidUpdate(entryId: String!, paid: Boolean!): Entry!
+  entryOrderProcess(entryId: String!): Entry!
+  entryOrderStatusUpdate(entryId: String!, status: EntryStatus!): Entry!
+  entryOrderUpdate(entryId: String!, input: EntryOrderUpdateInput!): Entry!
   loadClassDefinitionsFromExternalSystem(eventId: String!): ResponseMessage!
   markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
   requestPasswordReset(email: String!): ResetResponse!
@@ -494,8 +667,11 @@ type Mutation {
   signup(input: UserInput): ResponseMessage
   updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
+  updateEventPaymentMethods(eventId: String!, input: UpdateEventPaymentMethodsInput!): EventPaymentMethodSettings!
+  updateEventRentalCard(input: UpdateEventRentalCardInput!): EventRentalCard!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
   updateLateEntryFeePercent(eventId: String!, lateEntryFeePercent: Float): ResponseMessage!
+  updateStartSlotVacancy(input: UpdateStartSlotVacancyInput!): ClassStartSlotVacancy!
   updateSystemEventService(input: UpdateSystemEventServiceInput!): ResponseMessage!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
   verifyEmail(token: String!): AuthPayload!
@@ -527,9 +703,34 @@ type PageInfo {
   startCursor: String
 }
 
+enum PaymentMethodConfigurationStatus {
+  CONFIGURATION_REQUIRED
+  DISABLED
+  READY
+  UNAVAILABLE
+}
+
+enum PaymentMethodType {
+  CASH
+  CUSTOM_PAYMENT_LINK
+  OFEED_PAYMENT
+  QR_PAYMENT
+}
+
 enum ProtocolProcessedByType {
   INTEGRATION
   SYSTEM
+}
+
+type QrPaymentInstruction {
+  amount: Float!
+  bankAccountIban: String!
+  bankAccountName: String
+  constantSymbol: String!
+  currency: String!
+  payload: String!
+  paymentReference: String!
+  recipientMessage: String!
 }
 
 type Query {
@@ -537,11 +738,14 @@ type Query {
   activeSystemMessages: [SystemMessage!]!
   changelogByEvent(classId: Int, eventId: String!, origin: String, since: DateTime): [Changelog!]
   classById(id: Int!): Class!
+  classCompetitorStartTimes(classId: Int!): [ClassCompetitorStartTime!]!
   classStartSlotVacancies(classId: Int!): [ClassStartSlotVacancy!]!
   competitorById(id: Int!): Competitor!
   competitorSplits(competitorId: Int!): [Split!]
+  competitorsByCard(card: Int!, eventId: String!): [Competitor!]!
   competitorsByClass(id: Int!): [Competitor!]
   competitorsByOrganisation(eventId: String!, organisation: String, organisationId: Int): [Competitor!]
+  competitorsByRegistration(eventId: String!, registration: String!): [Competitor!]!
   competitorsByTeam(id: Int!): [Competitor!]
   countries: [Country!]!
   courseLeafletPoints(classId: Int!): [LeafletCoursePoint!]!
@@ -549,12 +753,16 @@ type Query {
   currencies: [Currency!]!
   currentUser: User!
   currentUserCards: [UserCard!]!
+  entryOrderById(accessToken: String, entryId: String!): Entry
+  entryOrdersByEvent(eventId: String!): [Entry!]!
   event(id: String!): Event
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
   eventEntryAvailability(eventId: String!): EntryAvailability
   eventFilesStatus(eventId: String!): EventFilesStatus!
   eventImportStates(eventId: String!): [EventImportState!]!
+  eventPaymentMethods(eventId: String!): EventPaymentMethodSettings!
+  eventRentalCards(eventId: String!): [EventRentalCard!]!
   eventServiceSettings(eventId: String!): EventServiceSettings!
   events(input: EventsInput): EventConnection!
   eventsBySport(sportId: Int!): [Event!]
@@ -773,6 +981,25 @@ input UpdateCurrentUserInput {
   firstname: firstname_String_minLength_1_maxLength_255
   lastname: lastname_String_minLength_1_maxLength_255
   organisation: organisation_String_maxLength_191
+}
+
+input UpdateEventPaymentMethodsInput {
+  bankAccountIban: String
+  bankAccountName: String
+  paymentMethods: [EventPaymentMethodInput!]!
+}
+
+input UpdateEventRentalCardInput {
+  active: Boolean
+  eventId: String!
+  id: Int!
+  returned: Boolean
+}
+
+input UpdateStartSlotVacancyInput {
+  bibNumber: Int
+  id: Int!
+  startTime: DateTime!
 }
 
 input UpdateSystemEventServiceInput {

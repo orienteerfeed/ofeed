@@ -1,16 +1,14 @@
-import { createRoute, z } from "@hono/zod-openapi";
-import type { RouteConfig } from "@hono/zod-openapi";
-import type { Context } from "hono";
+import { createRoute, z } from '@hono/zod-openapi';
+import type { RouteConfig } from '@hono/zod-openapi';
+import type { Context } from 'hono';
 
-import { HTTP_STATUS } from "../constants/index.js";
-import { createRouter } from "../lib/create-app.js";
-import type { AppBindings } from "../types/index.js";
-import { success } from "../utils/responseApi.js";
-import packageJson from "../../../../package.json" with { type: "json" };
+import { HTTP_STATUS } from '../constants/index.js';
+import { createRouter } from '../lib/create-app.js';
+import type { AppBindings } from '../types/index.js';
+import { success } from '../utils/responseApi.js';
+import packageJson from '../../../../package.json' with { type: 'json' };
 
 const rootResponseSchema = z.string();
-const readyResponseSchema = z.string();
-
 const versionResponseSchema = z.object({
   message: z.string(),
   error: z.literal(false),
@@ -19,15 +17,15 @@ const versionResponseSchema = z.object({
 });
 
 const rootRouteConfig = {
-  method: "get",
-  path: "/",
-  tags: ["Index"],
-  summary: "Root endpoint",
+  method: 'get',
+  path: '/',
+  tags: ['Index'],
+  summary: 'Root endpoint',
   responses: {
     [HTTP_STATUS.OK]: {
-      description: "Server root response",
+      description: 'Server root response',
       content: {
-        "text/plain": {
+        'text/plain': {
           schema: rootResponseSchema,
         },
       },
@@ -35,33 +33,16 @@ const rootRouteConfig = {
   },
 } satisfies RouteConfig;
 
-const readyRouteConfig = {
-  method: "get",
-  path: "/readyz",
-  tags: ["Health"],
-  summary: "Legacy readiness endpoint",
-  responses: {
-    [HTTP_STATUS.OK]: {
-      description: "Server is ready",
-      content: {
-        "text/plain": {
-          schema: readyResponseSchema,
-        },
-      },
-    },
-  },
-} satisfies RouteConfig;
-
 const versionRouteConfig = {
-  method: "get",
-  path: "/version",
-  tags: ["Index"],
-  summary: "Application version",
+  method: 'get',
+  path: '/version',
+  tags: ['Index'],
+  summary: 'Application version',
   responses: {
     [HTTP_STATUS.OK]: {
-      description: "Application version payload",
+      description: 'Application version payload',
       content: {
-        "application/json": {
+        'application/json': {
           schema: versionResponseSchema,
         },
       },
@@ -70,21 +51,16 @@ const versionRouteConfig = {
 } satisfies RouteConfig;
 
 const rootRoute = createRoute(rootRouteConfig);
-const readyRoute = createRoute(readyRouteConfig);
 const versionRoute = createRoute(versionRouteConfig);
 
 const rootHandler = (c: Context<AppBindings>) => {
-  return c.text("Hello World!", HTTP_STATUS.OK);
-};
-
-const readyHandler = (c: Context<AppBindings>) => {
-  return c.text("OK", HTTP_STATUS.OK);
+  return c.text('Hello World!', HTTP_STATUS.OK);
 };
 
 const versionHandler = (c: Context<AppBindings>) => {
   return c.json(
     success(
-      "OK",
+      'OK',
       {
         version: packageJson.version,
       },
@@ -96,7 +72,6 @@ const versionHandler = (c: Context<AppBindings>) => {
 
 const router = createRouter()
   .openapi(rootRoute, rootHandler as never)
-  .openapi(readyRoute, readyHandler as never)
   .openapi(versionRoute, versionHandler as never);
 
 export default router;

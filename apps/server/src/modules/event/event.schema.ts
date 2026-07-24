@@ -5,6 +5,15 @@ export const eventIdParamsSchema = z.object({
   eventId: z.string().min(1),
 });
 
+export const eventRentalCardParamsSchema = z.object({
+  eventId: z.string().min(1),
+  cardNumber: z.coerce.number().int().positive(),
+});
+
+export const updateEventRentalCardReturnedBodySchema = z.object({
+  returned: z.boolean(),
+});
+
 export const eventSlugMinLength = 6;
 export const eventSlugMaxLength = 64;
 export const eventSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -170,6 +179,10 @@ export const eventConnectionCheckBodySchema = z.object({
 });
 
 export type EventIdParams = z.infer<typeof eventIdParamsSchema>;
+export type EventRentalCardParams = z.infer<typeof eventRentalCardParamsSchema>;
+export type UpdateEventRentalCardReturnedBody = z.infer<
+  typeof updateEventRentalCardReturnedBodySchema
+>;
 export type EventSlugAvailabilityQuery = z.infer<typeof eventSlugAvailabilityQuerySchema>;
 export type UpdateEventSlugBody = z.infer<typeof updateEventSlugBodySchema>;
 export type EventCompetitorParams = z.infer<typeof eventCompetitorParamsSchema>;
