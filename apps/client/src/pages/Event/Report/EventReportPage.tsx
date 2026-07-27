@@ -1202,4 +1202,3 @@ const getSortValue = (item: ChangelogEntry, column: SortColumn) => {
       return item.id;
   }
 };
-

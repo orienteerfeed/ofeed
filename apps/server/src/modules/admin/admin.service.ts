@@ -300,14 +300,27 @@ export async function getAdminDashboard(prisma, referenceDate = new Date()) {
 
 export async function getAdminUsers(
   prisma,
-  { page = 1, limit = 25 }: { page?: number; limit?: number } = {},
+  params: any = {},
 ) {
+  const { page = 1, limit = 25, name, email, organisation, role, active, emailVerified, createdFrom, createdTo, sortBy = 'createdAt', sortDirection = 'desc' } = params;
   const skip = (page - 1) * limit;
+  const where = {
+    ...(name ? { OR: [{ firstname: { contains: name } }, { lastname: { contains: name } }] } : {}),
+    ...(email ? { email: { contains: email } } : {}),
+    ...(organisation ? { organisation: { contains: organisation } } : {}),
+    ...(role?.length ? { role: { in: role } } : {}),
+    ...(active?.length && active.length < 2 ? { active: active[0] } : {}),
+    ...(emailVerified?.length && emailVerified.length < 2 ? { emailVerifiedAt: emailVerified[0] ? { not: null } : null } : {}),
+    ...((createdFrom || createdTo) ? { createdAt: { ...(createdFrom ? { gte: createdFrom } : {}), ...(createdTo ? { lte: createdTo } : {}) } } : {}),
+  };
+  const sortable: Record<string, string> = { name: 'lastname', email: 'email', emailVerified: 'emailVerifiedAt', role: 'role', active: 'active', organisation: 'organisation', createdAt: 'createdAt' };
+  const orderBy = { [sortable[sortBy] ?? 'createdAt']: sortDirection === 'asc' ? 'asc' : 'desc' };
 
   const [total, users] = await Promise.all([
-    prisma.user.count(),
+    prisma.user.count({ where }),
     prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
+      where,
+      orderBy,
       skip,
       take: limit,
       select: {
@@ -526,20 +539,28 @@ export async function requestAdminUserEmailVerification(
 
 export async function getAdminEvents(
   prisma,
-  {
-    page = 1,
-    limit = 25,
-    authorId,
-  }: { page?: number; limit?: number; authorId?: number } = {},
+  params: any = {},
 ) {
+  const { page = 1, limit = 25, authorId, name, organizer, authorName, discipline, published, ranking, dateFrom, dateTo, sortBy = 'date', sortDirection = 'desc' } = params;
   const skip = (page - 1) * limit;
-  const where = authorId ? { authorId } : undefined;
+  const where = {
+    ...(authorId ? { authorId } : {}),
+    ...(name ? { name: { contains: name } } : {}),
+    ...(organizer ? { organizer: { contains: organizer } } : {}),
+    ...(authorName ? { author: { is: { OR: [{ firstname: { contains: authorName } }, { lastname: { contains: authorName } }] } } } : {}),
+    ...(discipline?.length ? { discipline: { in: discipline } } : {}),
+    ...(published?.length && published.length < 2 ? { published: published[0] } : {}),
+    ...(ranking?.length && ranking.length < 2 ? { ranking: ranking[0] } : {}),
+    ...((dateFrom || dateTo) ? { date: { ...(dateFrom ? { gte: dateFrom } : {}), ...(dateTo ? { lte: dateTo } : {}) } } : {}),
+  };
+  const sortable: Record<string, string> = { name: 'name', date: 'date', organizer: 'organizer', discipline: 'discipline', published: 'published', ranking: 'ranking' };
+  const orderBy = { [sortable[sortBy] ?? 'date']: sortDirection === 'asc' ? 'asc' : 'desc' };
 
   const [total, events] = await Promise.all([
     prisma.event.count({ where }),
     prisma.event.findMany({
       where,
-      orderBy: [{ createdAt: 'desc' }, { date: 'desc' }],
+      orderBy,
       skip,
       take: limit,
       select: {

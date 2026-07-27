@@ -60,17 +60,6 @@ export function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const { data, isLoading, error } = useAdminUsersQuery({
-    page,
-    limit: pageSize,
-  });
-
-  useEffect(() => {
-    if (!data) return;
-    const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
-    if (page > totalPages) setPage(totalPages);
-  }, [data, page, pageSize]);
-
   const [userSortConfig, setUserSortConfig] = useState<{
     column: AdminUserSortColumn;
     direction: 'asc' | 'desc';
@@ -88,14 +77,37 @@ export function AdminUsersPage() {
     fromTime: '',
     toTime: '',
   });
+  const { data, isLoading, error } = useAdminUsersQuery({
+    page,
+    limit: pageSize,
+    name: userTextFilters.name || undefined,
+    email: userTextFilters.email || undefined,
+    organisation: userTextFilters.organisation || undefined,
+    role: roleFilters.join(',') || undefined,
+    active: activeFilters.join(',') || undefined,
+    emailVerified: emailVerifiedFilters.join(',') || undefined,
+    createdFrom: createdAtRange.range?.from ? applyTimeToDate(createdAtRange.range.from, createdAtRange.fromTime || '00:00:00').toISOString() : undefined,
+    createdTo: createdAtRange.range?.to ? applyTimeToDate(createdAtRange.range.to, createdAtRange.toTime || '23:59:59').toISOString() : undefined,
+    sortBy: userSortConfig.column,
+    sortDirection: userSortConfig.direction,
+  });
+
+  useEffect(() => {
+    if (!data) return;
+    const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
+    if (page > totalPages) setPage(totalPages);
+  }, [data, page, pageSize]);
 
   const handleUserSort = (column: AdminUserSortColumn) => {
+    setPage(1);
     setUserSortConfig(prev =>
       prev.column === column
         ? { column, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
         : { column, direction: 'asc' }
     );
   };
+
+  useEffect(() => setPage(1), [userTextFilters, emailVerifiedFilters, roleFilters, activeFilters, createdAtRange]);
 
   const updateUserTextFilter = (
     column: AdminUserTextFilterColumn,

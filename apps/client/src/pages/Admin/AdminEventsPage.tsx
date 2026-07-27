@@ -29,10 +29,6 @@ export function AdminEventsPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const { data, isLoading, error } = useAdminEventsQuery({
-    page,
-    limit: pageSize,
-  });
 
   const [sortConfig, setSortConfig] = useState<{
     column: AdminEventSortColumn;
@@ -49,14 +45,31 @@ export function AdminEventsPage() {
   const [disciplineFilters, setDisciplineFilters] = useState<string[]>([]);
   const [publishedFilters, setPublishedFilters] = useState<string[]>([]);
   const [rankingFilters, setRankingFilters] = useState<string[]>([]);
+  const { data, isLoading, error } = useAdminEventsQuery({
+    page,
+    limit: pageSize,
+    name: textFilters.name || undefined,
+    organizer: textFilters.organizer || undefined,
+    authorName: textFilters.authorName || undefined,
+    discipline: disciplineFilters.join(',') || undefined,
+    published: publishedFilters.join(',') || undefined,
+    ranking: rankingFilters.join(',') || undefined,
+    dateFrom: dateRange.range?.from ? applyTimeToDate(dateRange.range.from, dateRange.fromTime || '00:00:00').toISOString() : undefined,
+    dateTo: dateRange.range?.to ? applyTimeToDate(dateRange.range.to, dateRange.toTime || '23:59:59').toISOString() : undefined,
+    sortBy: sortConfig.column,
+    sortDirection: sortConfig.direction,
+  });
 
   const handleSort = (column: AdminEventSortColumn) => {
+    setPage(1);
     setSortConfig(prev =>
       prev.column === column
         ? { column, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
         : { column, direction: 'asc' }
     );
   };
+
+  useEffect(() => setPage(1), [textFilters, dateRange, disciplineFilters, publishedFilters, rankingFilters]);
 
   const updateTextFilter = (
     column: AdminEventTextFilterColumn,

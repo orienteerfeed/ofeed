@@ -17,6 +17,30 @@
         "BackToSignIn": "Retour à la connexion"
       }
     },
+    "Admin": {
+      "Users": {
+        "EventsDialog": {
+          "Title": "Événements de {{name}}",
+          "Description": "Événements créés par cet utilisateur.",
+          "Empty": "Cet utilisateur n'a encore créé aucun événement."
+        }
+      },
+      "Table": {
+        "Filters": {
+          "NamePlaceholder": "Filtrer par nom",
+          "EmailPlaceholder": "Filtrer par e-mail",
+          "OrganizerPlaceholder": "Filtrer par organisateur",
+          "OwnerPlaceholder": "Filtrer par propriétaire",
+          "OrganizationPlaceholder": "Filtrer par organisation",
+          "DisciplinePlaceholder": "Sélectionner une discipline",
+          "PublishedPlaceholder": "Sélectionner le statut de publication",
+          "RankingPlaceholder": "Sélectionner le classement",
+          "RolePlaceholder": "Sélectionner un rôle",
+          "StatusPlaceholder": "Sélectionner un statut",
+          "EmailVerifiedPlaceholder": "Sélectionner le statut de vérification"
+        }
+      }
+    },
     "Profile": {
       "EmailVerification": {
         "Title": "Vérification de l'e-mail",
