@@ -31,7 +31,8 @@ function makeClass(overrides: Record<string, unknown> = {}) {
     fee: null,
     lateEntryFeeDisabled: false,
     startSlotVacancies: [],
-    _count: { competitors: 0 },
+    entryItems: [],
+    _count: { competitors: 0, entryItems: 0 },
     ...overrides,
   };
 }
@@ -39,9 +40,7 @@ function makeClass(overrides: Record<string, unknown> = {}) {
 describe('listEventEntryAvailability', () => {
   it('returns null when event does not exist', async () => {
     const prisma = { event: { findUnique: vi.fn().mockResolvedValue(null) } };
-    await expect(
-      listEventEntryAvailability(prisma as never, 'missing-id'),
-    ).resolves.toBeNull();
+    await expect(listEventEntryAvailability(prisma as never, 'missing-id')).resolves.toBeNull();
   });
 
   it('maps event-level metadata correctly', async () => {
@@ -180,7 +179,7 @@ describe('listEventEntryAvailability', () => {
     expect(result!.classes[0].isFull).toBe(true);
   });
 
-  it('null max: availableCount = 0 and maxNumberOfCompetitors = 0 for StartSlot even if slots exist', async () => {
+  it('null max: falls back to the competitor count and has no availability for StartSlot', async () => {
     const slot = { id: 1, startTime: new Date('2026-06-15T08:00:00.000Z'), bibNumber: null };
     const prisma = {
       event: {
@@ -201,11 +200,11 @@ describe('listEventEntryAvailability', () => {
 
     const result = await listEventEntryAvailability(prisma as never, 'event-1');
     expect(result!.classes[0].availableCount).toBe(0);
-    expect(result!.classes[0].maxNumberOfCompetitors).toBe(0);
+    expect(result!.classes[0].maxNumberOfCompetitors).toBe(10);
     expect(result!.classes[0].isFull).toBe(true);
   });
 
-  it('StartSlot: maxNumberOfCompetitors = min(dbMax, vacancyCount) and caps availableCount', async () => {
+  it('StartSlot: maximum includes existing competitors and caps availableCount', async () => {
     const slots = Array.from({ length: 25 }, (_, i) => ({
       id: i + 1,
       startTime: new Date('2026-06-15T08:00:00.000Z'),
@@ -230,11 +229,11 @@ describe('listEventEntryAvailability', () => {
 
     const result = await listEventEntryAvailability(prisma as never, 'event-1');
     const cls = result!.classes[0];
-    expect(cls.maxNumberOfCompetitors).toBe(25); // min(120, 25 slots)
-    expect(cls.availableCount).toBe(15);          // min(25 slots, 120-105=15 headroom)
+    expect(cls.maxNumberOfCompetitors).toBe(120); // min(120, 105 competitors + 25 slots)
+    expect(cls.availableCount).toBe(15); // min(25 slots, 120-105=15 headroom)
   });
 
-  it('StartSlot: maxNumberOfCompetitors = dbMax when slots exceed dbMax', async () => {
+  it('StartSlot: maximum is limited by all available start-list positions', async () => {
     const slots = Array.from({ length: 5 }, (_, i) => ({
       id: i + 1,
       startTime: new Date('2026-06-15T08:00:00.000Z'),
@@ -259,8 +258,8 @@ describe('listEventEntryAvailability', () => {
 
     const result = await listEventEntryAvailability(prisma as never, 'event-1');
     const cls = result!.classes[0];
-    expect(cls.maxNumberOfCompetitors).toBe(5);  // min(100, 5 slots)
-    expect(cls.availableCount).toBe(5);           // min(5 slots, 100-10=90 headroom)
+    expect(cls.maxNumberOfCompetitors).toBe(15); // min(100, 10 competitors + 5 slots)
+    expect(cls.availableCount).toBe(5); // min(5 slots, 100-10=90 headroom)
   });
 
   it('FreeStart: maxNumberOfCompetitors = dbMax (slots ignored)', async () => {
@@ -283,6 +282,67 @@ describe('listEventEntryAvailability', () => {
 
     const result = await listEventEntryAvailability(prisma as never, 'event-1');
     expect(result!.classes[0].maxNumberOfCompetitors).toBe(50);
+  });
+
+  it('subtracts active, unprocessed entry items from the available count', async () => {
+    const prisma = {
+      event: {
+        findUnique: vi.fn().mockResolvedValue(
+          makeEvent({
+            classes: [
+              makeClass({
+                startMode: 'FreeStart',
+                maxNumberOfCompetitors: 50,
+                _count: { competitors: 17, entryItems: 3 },
+              }),
+            ],
+          }),
+        ),
+      },
+    };
+
+    const result = await listEventEntryAvailability(prisma as never, 'event-1');
+    expect(result!.classes[0].availableCount).toBe(30);
+    expect(result!.classes[0].competitorCount).toBe(20);
+  });
+
+  it('removes a start slot reserved by an active, unprocessed entry item', async () => {
+    const reservedSlot = {
+      id: 1,
+      startTime: new Date('2026-06-15T08:00:00.000Z'),
+      bibNumber: null,
+    };
+    const availableSlot = {
+      id: 2,
+      startTime: new Date('2026-06-15T08:02:00.000Z'),
+      bibNumber: null,
+    };
+    const prisma = {
+      event: {
+        findUnique: vi.fn().mockResolvedValue(
+          makeEvent({
+            classes: [
+              makeClass({
+                maxNumberOfCompetitors: 27,
+                startSlotVacancies: [reservedSlot, availableSlot],
+                entryItems: [{ startTime: reservedSlot.startTime }],
+                _count: { competitors: 25, entryItems: 1 },
+              }),
+            ],
+          }),
+        ),
+      },
+    };
+
+    const result = await listEventEntryAvailability(prisma as never, 'event-1');
+
+    expect(result!.classes[0]).toMatchObject({
+      maxNumberOfCompetitors: 27,
+      competitorCount: 26,
+      availableCount: 1,
+      isFull: false,
+      slots: [availableSlot],
+    });
   });
 
   it('class inherits event defaultStartMode when startMode is null', async () => {
@@ -309,7 +369,7 @@ describe('listEventEntryAvailability', () => {
             entriesCloseAt: DEADLINE,
             vatPayer: true,
             vatRate: { toNumber: () => 21 },
-            lateEntryFeePercent: null,
+            lateEntryFeePercent: { toNumber: () => 50 },
             classes: [
               makeClass({
                 fee: { toNumber: () => 242 },
@@ -322,7 +382,7 @@ describe('listEventEntryAvailability', () => {
 
     const result = await listEventEntryAvailability(prisma as never, 'event-1');
     const cls = result!.classes[0];
-    expect(cls.fee).toEqual({ amount: 242, net: 200, vat: 42 });
+    expect(cls.fee).toEqual({ amount: 363, net: 300, vat: 63 });
   });
 
   it('fee is null when no fee is configured on the class', async () => {
@@ -350,6 +410,13 @@ describe('listEventEntryAvailability', () => {
     const select = prisma.event.findUnique.mock.calls[0][0].select;
     expect(select.services).toBeDefined();
     expect(select.classes.select).toHaveProperty('startSlotVacancies');
+    expect(select.classes.select.entryItems).toMatchObject({
+      where: {
+        competitorId: null,
+        entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
+      },
+      select: { startTime: true },
+    });
     expect(select.classes.select).toHaveProperty('_count');
     expect(select.currency).toBeDefined();
   });

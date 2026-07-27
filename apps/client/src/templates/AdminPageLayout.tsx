@@ -8,7 +8,13 @@ import {
 } from '@/components/ui/sidebar';
 
 type AdminPageLayoutProps = {
-  activeItem: 'dashboard' | 'users' | 'events' | 'systemMessages' | 'ranking';
+  activeItem:
+    | 'dashboard'
+    | 'users'
+    | 'events'
+    | 'systemMessages'
+    | 'ranking'
+    | 'registrations';
   breadcrumbs: Array<{
     label: string;
     to?: string;

@@ -46,7 +46,8 @@ Default local API URL: `http://localhost:3001`.
 - GraphQL: `http://localhost:3001/graphql`
 - OpenAPI JSON: `http://localhost:3001/doc`
 - API Reference UI: `http://localhost:3001/reference`
-- Health: `http://localhost:3001/health`
+- Liveness: `http://localhost:3001/healthz`
+- Readiness: `http://localhost:3001/readyz`
 - Metrics: `http://localhost:3001/metrics`
 
 ## Environment
@@ -64,6 +65,8 @@ Important variables:
   through Resend.
 - `RESEND_FROM_EMAIL` / `RESEND_FROM_NAME`: sender identity for transactional
   emails.
+- `CLIENT_APP_URL`: public client URL used to create links in transactional
+  emails. It defaults to `http://localhost:3000` for local development.
 
 Keep `apps/server/.env.example` in sync when adding or changing server
 configuration.
