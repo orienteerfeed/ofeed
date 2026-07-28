@@ -21,6 +21,8 @@ import {
 import { flattenOrganisation, organisationSelect } from '../event/organisation.helpers.js';
 import type {
   CompetitorsByOrganisationInput,
+  CompetitorsByCardInput,
+  CompetitorsByRegistrationInput,
   OrganisationNamesInput,
   OrganisationsInput,
   SearchOrganisationNamesInput,
@@ -175,6 +177,36 @@ export function findCompetitorsByOrganisation(
     ...query,
     where,
     orderBy: [{ lastname: 'asc' }, { firstname: 'asc' }],
+  });
+}
+
+export function findCompetitorsByCard(
+  prisma: AppPrismaClient,
+  input: CompetitorsByCardInput,
+  query: CompetitorFindManySelection = {},
+) {
+  return prisma.competitor.findMany({
+    ...query,
+    where: {
+      card: input.card,
+      class: { is: { eventId: input.eventId } },
+    },
+    orderBy: [{ lastname: 'asc' }, { firstname: 'asc' }, { id: 'asc' }],
+  });
+}
+
+export function findCompetitorsByRegistration(
+  prisma: AppPrismaClient,
+  input: CompetitorsByRegistrationInput,
+  query: CompetitorFindManySelection = {},
+) {
+  return prisma.competitor.findMany({
+    ...query,
+    where: {
+      registration: input.registration,
+      class: { is: { eventId: input.eventId } },
+    },
+    orderBy: [{ lastname: 'asc' }, { firstname: 'asc' }, { id: 'asc' }],
   });
 }
 

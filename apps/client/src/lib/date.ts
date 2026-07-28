@@ -281,6 +281,22 @@ export function formatDateTimeForInput(date: Date | string | number): string {
   return format(d, "yyyy-MM-dd'T'HH:mm");
 }
 
+/** Apply an "HH:mm" or "HH:mm:ss" time string to a Date, returning a new Date */
+export function applyTimeToDate(date: Date, time: string): Date {
+  const [hoursRaw, minutesRaw, secondsRaw] = time.split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+  const seconds = Number(secondsRaw);
+  const result = new Date(date);
+  result.setHours(
+    Number.isFinite(hours) ? hours : 0,
+    Number.isFinite(minutes) ? minutes : 0,
+    Number.isFinite(seconds) ? seconds : 0,
+    0
+  );
+  return result;
+}
+
 function pad2(n: number): string {
   return n.toString().padStart(2, '0');
 }

@@ -12,15 +12,13 @@ export type CommonTranslationKeys =
   | 'Private'
   | 'And'
   | 'Loading'
+  | 'OpenMenu'
   | 'ErrorMessage'
   | 'UploadFail'
-  | 'Operations.Submit'
-  ;
+  | 'Operations.Submit';
 
 // Pro různé namespaces
 export type AuthTranslationKeys =
-  | 'Auth.Login'
-  | 'Auth.Logout'
-  | 'Auth.Register';
+  'Auth.Login' | 'Auth.Logout' | 'Auth.Register';
 
 export type AllTranslationKeys = CommonTranslationKeys | AuthTranslationKeys;

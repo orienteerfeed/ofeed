@@ -11,7 +11,8 @@
         "Events": "Eventos",
         "SystemMessages": "Mensajes del sistema",
         "CzechRanking": "Ranking checo",
-        "BackToSite": "Volver al sitio"
+        "BackToSite": "Volver al sitio",
+        "Registrations": "Registros"
       },
       "Dashboard": {
         "Title": "Resumen de administración",
@@ -67,6 +68,11 @@
           "RequestVerificationSuccessTitle": "Correo de verificación enviado",
           "RequestVerificationSuccessDescription": "Se envió un correo de verificación a {{name}}.",
           "RequestVerificationErrorTitle": "No se pudo enviar el correo de verificación"
+        },
+        "EventsDialog": {
+          "Title": "Eventos de {{name}}",
+          "Description": "Eventos creados por este usuario.",
+          "Empty": "Este usuario aún no ha creado ningún evento."
         }
       },
       "Events": {
@@ -268,7 +274,70 @@
         "Actions": "Acciones",
         "Yes": "Sí",
         "No": "No",
-        "Discipline": "Disciplina"
+        "Discipline": "Disciplina",
+        "Filters": {
+          "NamePlaceholder": "Filtrar nombre",
+          "EmailPlaceholder": "Filtrar correo electrónico",
+          "OrganizerPlaceholder": "Filtrar organizador",
+          "OwnerPlaceholder": "Filtrar propietario",
+          "OrganizationPlaceholder": "Filtrar organización",
+          "DisciplinePlaceholder": "Seleccionar disciplina",
+          "PublishedPlaceholder": "Seleccionar publicado",
+          "RankingPlaceholder": "Seleccionar ranking",
+          "RolePlaceholder": "Seleccionar rol",
+          "StatusPlaceholder": "Seleccionar estado",
+          "EmailVerifiedPlaceholder": "Seleccionar verificación"
+        }
+      },
+      "Registrations": {
+        "Title": "Registros y clubes",
+        "Description": "Resumen de los registros de deportistas y clubes importados de sistemas federativos externos (ORIS).",
+        "RegistrationsCard": "Registros",
+        "ClubsCard": "Clubes",
+        "LastSuccess": "Última sincronización correcta: {{date}}",
+        "NeverSynced": "Nunca sincronizado",
+        "RecordCount": "{{count}} registros",
+        "SyncErrorTitle": "La última sincronización falló",
+        "SearchPlaceholder": "Buscar por registro, nombre o apellidos…",
+        "ClubSearchPlaceholder": "Buscar por nombre o abreviatura del club…",
+        "Status": {
+          "PENDING": "Pendiente",
+          "SUCCESS": "Correcto",
+          "ERROR": "Error"
+        },
+        "Tabs": {
+          "Registrations": "Registros",
+          "Clubs": "Clubes"
+        },
+        "Table": {
+          "Registration": "Registro",
+          "Name": "Nombre",
+          "Organisation": "Club",
+          "BirthYear": "Año de nacimiento",
+          "Source": "Origen",
+          "SyncedAt": "Sincronizado",
+          "ClubName": "Nombre",
+          "ClubAbbr": "Abreviatura"
+        },
+        "Actions": {
+          "ForceSync": "Forzar sincronización",
+          "Cancel": "Cancelar",
+          "Syncing": "Sincronizando…"
+        },
+        "SyncDialog": {
+          "Title": "Forzar sincronización ORIS de registros",
+          "Description": "Descarga inmediatamente la caché de registros/clubes desde ORIS, sin tener en cuenta la actualización habitual.",
+          "Scope": "Alcance",
+          "ScopeAll": "Registros y clubes",
+          "ScopeRegistrations": "Solo registros",
+          "ScopeClubs": "Solo clubes"
+        },
+        "Toast": {
+          "SyncSuccessTitle": "Sincronización completada",
+          "SyncSuccessDescription": "Se sincronizaron {{registrations}} registros y {{clubs}} clubes.",
+          "SyncErrorTitle": "Error de sincronización",
+          "UnknownError": "Se produjo un error desconocido."
+        }
       }
     },
     "Auth": {
@@ -392,7 +461,8 @@
         "Map": "Mapa",
         "Cat": "Cat",
         "Club": "Club",
-        "Live": "En vivo"
+        "Live": "En vivo",
+        "Entries": "Inscripciones"
       },
       "Overview": {
         "NoEventsToday": "No hay eventos hoy",
@@ -520,6 +590,173 @@
           "Unknown": "Procesado"
         }
       },
+      "EntriesManage": {
+        "Title": "Inscripciones",
+        "Description": "Revisa las inscripciones enviadas, su estado de pago y procesa las inscripciones aprobadas como participantes.",
+        "Export": {
+          "Button": "Exportar",
+          "CsosUnifiedFormat": "Formato unificado ČSOS",
+          "ProcessedItemsCsv": "Elementos procesados (CSV)",
+          "PrintAll": "Imprimir todas las inscripciones"
+        },
+        "Print": {
+          "Description": "Resumen de todas las inscripciones actuales ({{count}})",
+          "Footer": "Generado por OFeed",
+          "Page": "Página",
+          "Of": "de"
+        },
+        "Empty": "Todavía no hay inscripciones.",
+        "Filters": {
+          "SearchLabel": "Buscar",
+          "SearchPlaceholder": "Buscar por referencia de pago, contacto o participante…",
+          "StatusVisibility": "Mostrar estados",
+          "ShowStatus": "Mostrar: {{status}}"
+        },
+        "Sort": {
+          "By": "Ordenar por: {{column}}"
+        },
+        "Columns": {
+          "PaymentReference": "Ref. de pago",
+          "Contact": "Contacto",
+          "Items": "Elementos",
+          "Total": "Total",
+          "Paid": "Pagado",
+          "Created": "Creado",
+          "Status": "Estado",
+          "Actions": "Acciones"
+        },
+        "ItemsCount_one": "{{count}} elemento",
+        "ItemsCount_other": "{{count}} elementos",
+        "Status": {
+          "RECEIVED": "Recibido",
+          "APPROVED": "Aprobado",
+          "PROCESSED": "Procesado",
+          "REJECTED": "Rejected",
+          "CANCELLED": "Cancelled"
+        },
+        "Paid": {
+          "Yes": "Sí",
+          "No": "No"
+        },
+        "Actions": {
+          "Menu": "Acciones",
+          "MarkPaid": "Marcar como pagado",
+          "UnmarkPaid": "Quitar pago",
+          "Approve": "Aprobar",
+          "ApproveBlockedByMissingCard": "Assign a card to every competitor first.",
+          "Process": "Procesar",
+          "Reject": "Reject",
+          "Cancel": "Cancel",
+          "Edit": "Editar",
+          "EditUnavailable": "La edición de inscripciones todavía no está disponible.",
+          "ExpandItems": "Mostrar elementos",
+          "CollapseItems": "Ocultar elementos"
+        },
+        "RejectDialog": {
+          "ConfirmTitle": "Reject this entry order?",
+          "ConfirmDescription": "This cannot be undone. Once rejected, no further changes can be made to this entry order.",
+          "ConfirmButton": "Reject"
+        },
+        "CancelDialog": {
+          "ConfirmTitle": "Cancel this entry order?",
+          "ConfirmDescription": "This cannot be undone. Once cancelled, no further changes can be made to this entry order.",
+          "ConfirmButton": "Cancel entry"
+        },
+        "ItemsTable": {
+          "Columns": {
+            "Type": "Tipo",
+            "Name": "Nombre",
+            "Class": "Categoría",
+            "Registration": "Registro",
+            "BirthYear": "Birth year",
+            "CardRental": "Rent chip",
+            "Card": "Chip",
+            "Start": "Salida",
+            "Fee": "Tarifa"
+          },
+          "CardRentalYes": "Yes",
+          "CardRentalNo": "No",
+          "ActionLabels": {
+            "NEW_ENTRY": "Nueva inscripción",
+            "CARD_CHANGE": "Cambio de chip",
+            "NAME_CHANGE": "Cambio de nombre",
+            "CLASS_CHANGE": "Cambio de categoría",
+            "START_TIME_CHANGE": "Cambio de hora de salida"
+          },
+          "RentalCard": {
+            "Placeholder": "Assign chip",
+            "NoneAvailable": "No free rental chips available.",
+            "AssignError": "Could not assign the rental chip."
+          }
+        },
+        "Detail": {
+          "RegistrationTitle": "Inscripción al evento",
+          "Contact": {
+            "Title": "Datos de contacto",
+            "Email": "Correo electrónico"
+          },
+          "PaymentMethod": {
+            "Label": "Método de pago",
+            "NotSpecified": "No especificado"
+          },
+          "Payment": {
+            "Title": "Pago",
+            "Method": "Método de pago",
+            "Account": "Número de cuenta",
+            "VariableSymbol": "Símbolo variable",
+            "ConstantSymbol": "Símbolo constante",
+            "RecipientMessage": "Mensaje para el destinatario",
+            "Amount": "Importe",
+            "Print": "Imprimir datos de pago",
+            "Share": "Compartir datos de pago",
+            "Copied": "Los datos de pago se copiaron al portapapeles.",
+            "ShareError": "No se pudieron compartir los datos de pago.",
+            "QrCodeAriaLabel": "Código QR de pago",
+            "QrDetailsUnavailable": "Los datos del QR de pago no están disponibles para este pedido.",
+            "ReferenceOnly": "Sigue las instrucciones de pago del proveedor seleccionado."
+          },
+          "QrCode": {
+            "AriaLabel": "Código QR con enlace al detalle de la inscripción"
+          },
+          "Items": {
+            "Title": "Elementos del pedido"
+          },
+          "AddOns": {
+            "Title": "Servicios adicionales",
+            "Empty": "Sin servicios adicionales.",
+            "Columns": {
+              "Service": "Servicio",
+              "Quantity": "Cant.",
+              "UnitPrice": "Precio unitario",
+              "Total": "Total"
+            }
+          },
+          "Totals": {
+            "Title": "Resumen",
+            "ItemsSubtotal": "Inscripciones",
+            "AddOnsSubtotal": "Servicios adicionales",
+            "GrandTotal": "Total a pagar",
+            "VatPayer": "Sujeto a IVA, tasa {{rate}}%",
+            "VatNotPayer": "No sujeto a IVA"
+          },
+          "StatusHistory": {
+            "Title": "Historial de pagos y estados",
+            "Empty": "Todavía no hay historial.",
+            "ChangedBy": "Cambiado por {{name}}",
+            "PaymentMarked": "Marcado como pagado",
+            "PaymentUnmarked": "Pago marcado como no pagado"
+          },
+          "NotFound": "Este pedido no se encontró o no tiene acceso a él."
+        },
+        "Toast": {
+          "StatusUpdated": "Se actualizó el estado de la inscripción.",
+          "StatusUpdateError": "No se pudo actualizar el estado de la inscripción.",
+          "PaidUpdated": "Marca de pago de la inscripción actualizada.",
+          "PaidUpdateError": "No se pudo actualizar la marca de pago de la inscripción.",
+          "Processed": "La inscripción se procesó.",
+          "ProcessError": "No se pudo procesar la inscripción."
+        }
+      },
       "Settings": {
         "Loading": "Cargando ajustes del evento",
         "Tabs": {
@@ -531,6 +768,93 @@
         "Services": {
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
+          "PaymentMethods": {
+            "Title": "Payment methods",
+            "Description": "Choose which payment methods customers can use for this event and set their display order.",
+            "Loading": "Loading payment methods…",
+            "LoadError": "Payment methods could not be loaded.",
+            "Save": "Save payment methods",
+            "Saving": "Saving…",
+            "Status": {
+              "DISABLED": "Disabled",
+              "CONFIGURATION_REQUIRED": "Configuration required",
+              "READY": "Ready",
+              "UNAVAILABLE": "Unavailable"
+            },
+            "Methods": {
+              "OFeedPayment": {
+                "Title": "OFeed Payment",
+                "Description": "Accept online payments directly through OFeed. Payment processing and payment confirmation are handled automatically.",
+                "Unavailable": "OFeed Payment is not available for this organization.",
+                "Availability": {
+                  "Label": "Availability",
+                  "Available": "Available",
+                  "NotAvailable": "Not available"
+                }
+              },
+              "CustomPaymentLink": {
+                "Title": "Custom Payment Link",
+                "Description": "Redirect customers to an external payment page configured by the event organizer."
+              },
+              "QRPayment": {
+                "Title": "QR Payment",
+                "Description": "Allow customers to pay by scanning a bank payment QR code.",
+                "BankAccount": "Bank account used for QR payments",
+                "BankAccountName": "Account name",
+                "BankAccountNamePlaceholder": "Organizer bank account",
+                "BankAccountIban": "IBAN / bank account",
+                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
+              },
+              "Cash": {
+                "Title": "Cash",
+                "Description": "Allow cash payments at the event office."
+              }
+            },
+            "Actions": {
+              "MoveUp": "Move up",
+              "MoveDown": "Move down",
+              "Toggle": "Toggle {{name}}"
+            },
+            "CustomPaymentLink": {
+              "DefaultDisplayName": "Online payment",
+              "Fields": {
+                "DisplayName": "Payment method name",
+                "DisplayNamePlaceholder": "Online payment",
+                "DisplayNameHelper": "This name is shown to the user when choosing a payment method.",
+                "PaymentLink": "Payment link"
+              },
+              "Variables": {
+                "Help": "Enter the full payment URL, including https://.\\n\\nThe following variables can be used in the URL. They will be replaced with values from OFeed before the payment link is opened:",
+                "amount": "payment amount in the main currency unit",
+                "currency": "ISO 4217 currency code, for example CZK or EUR",
+                "paymentreference": "unique payment reference or variable symbol",
+                "email": "user’s e-mail address",
+                "language": "user’s language code, for example cs or en",
+                "Example": "Example:"
+              },
+              "Warning": "The organizer is responsible for configuring and testing the payment link correctly. OFeed does not verify whether the external payment provider received the correct amount, currency, payment reference, or customer information. OFeed is not responsible for incorrectly submitted, failed, duplicated, or unmatched payments."
+            },
+            "Validation": {
+              "AtLeastOne": "Enable at least one payment method.",
+              "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
+              "BankAccountRequired": "Bank account required",
+              "DisplayNameRequired": "Payment method name is required.",
+              "PaymentLinkRequired": "Payment link is required.",
+              "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
+              "UnknownVariables": "Unsupported payment link variable: {{variables}}."
+            },
+            "Toast": {
+              "Saved": "Payment methods have been saved.",
+              "SaveError": "Payment methods could not be saved."
+            },
+            "Unsaved": {
+              "Title": "Leave without saving payment methods?",
+              "Description": "Your payment method changes have not been saved.",
+              "Confirm": "Leave without saving",
+              "Cancel": "Keep editing"
+            }
+          },
           "LateEntry": {
             "Title": "Late entries",
             "Percent": "Entry fee increase percentage",
@@ -588,7 +912,50 @@
           "SaveError": "Could not save the service.",
           "DeleteError": "Could not delete the service.",
           "ActiveAria": "Activate service {{name}}",
-          "PriceAria": "Price for service {{name}}"
+          "PriceAria": "Price for service {{name}}",
+          "RentalCards": {
+            "Title": "Rental SI chips",
+            "Description": "Manage the pool of physical SI chips available to lend to competitors without their own.",
+            "Add": "Add chip",
+            "Import": "Import CSV",
+            "DeleteAll": "Delete all",
+            "Search": "Search chip",
+            "SearchPlaceholder": "Search card number",
+            "Empty": "No rental chips have been added yet.",
+            "NoResults": "No rental chips match the search.",
+            "LentBadge": "Lent",
+            "AvailableBadge": "Available",
+            "DeleteBlockedByLent": "This chip is currently assigned to a competitor or a pending entry and cannot be deleted.",
+            "SaveError": "Could not save the rental chip.",
+            "DeleteError": "Could not delete the rental chip.",
+            "DeleteAllError": "Could not delete rental chips.",
+            "DeleteAllConfirm": {
+              "Title": "Delete all rental chips?",
+              "Description": "This action deletes all rental chips for this event regardless of the current filter. It cannot be undone.",
+              "Confirm": "Delete all"
+            },
+            "Columns": {
+              "CardNumber": "Card number",
+              "Active": "Active",
+              "Lent": "Status",
+              "Returned": "Returned",
+              "Actions": "Actions"
+            },
+            "Dialog": {
+              "Title": "Add rental chip",
+              "CardNumber": "Card number",
+              "CardNumberInvalid": "Enter a positive card number.",
+              "SaveError": "Could not add the rental chip."
+            },
+            "ImportDialog": {
+              "Title": "Import rental chips",
+              "Description": "Upload a CSV file with a \"cardNumber\" column and an optional \"active\" column.",
+              "MissingFile": "Select a CSV file to import.",
+              "Import": "Import",
+              "Importing": "Importing…",
+              "Success": "{{count}} rental chip(s) imported."
+            }
+          }
         },
         "Classes": {
           "Title": "Classes",
@@ -631,7 +998,27 @@
             "Bib": "Bib",
             "Empty": "No free start times for this class.",
             "Close": "Close",
-            "LoadError": "Could not load start times."
+            "LoadError": "Could not load start times.",
+            "Created": "Start time slot was added.",
+            "Updated": "Start time slot was updated.",
+            "Deleted": "Start time slot was deleted.",
+            "SaveError": "Could not save the start time slot.",
+            "DeleteError": "Could not delete the start time slot.",
+            "Form": {
+              "Date": "Date",
+              "Time": "Time",
+              "Add": "Add slot",
+              "Update": "Update slot",
+              "Edit": "Edit slot",
+              "Delete": "Delete slot",
+              "UseNext": "Use next interval",
+              "CancelEdit": "Cancel editing",
+              "Required": "Enter both date and time.",
+              "InvalidTime": "Enter a valid start time.",
+              "InvalidBib": "Enter a valid bib number.",
+              "IntervalHint": "A {{minutes}} minute interval was detected from existing slots.",
+              "ManualHint": "No reliable interval could be detected. Enter the start time manually."
+            }
           },
           "LoadDefinitions": {
             "Action": "Cargar definiciones desde {{provider}}",
@@ -697,6 +1084,7 @@
         "EventId": "ID del evento",
         "Author": "Autor",
         "Report": "Reporte",
+        "EntriesManage": "Inscripciones",
         "OpenBoard": "Board",
         "Status": {
           "Primary": {
@@ -772,6 +1160,7 @@
         "CompareTo": "Comparar con",
         "CompareToFastest": "Mejor tiempo",
         "CompareToLeader": "Líder",
+        "Competitor": "Competidor",
         "ErrorLoadingChart": "Error al cargar el gráfico de parciales",
         "Finish": "Meta",
         "LegLabel": "Tramo {{legIndex}} ({{controlCode}})",
@@ -800,6 +1189,16 @@
         "SortSummary": "{{field}} ({{direction}})",
         "Start": "Salida",
         "SelectClass": "Selecciona una categoría para ver los parciales.",
+        "TooltipCriticalDeviation": "Desviación crítica: +{{time}} ({{deviation}}σ)",
+        "TooltipCumulativeTimeAt": "Tiempo acumulado en {{controlCode}}",
+        "TooltipFastestLeg": "¡Tramo más rápido!",
+        "TooltipLeadingAtPoint": "¡Liderando en este punto!",
+        "TooltipLegTimeTo": "Tiempo de tramo hasta {{controlCode}}",
+        "TooltipLossToBest": "Pérdida respecto al mejor: +{{time}}",
+        "TooltipMajorDeviation": "Desviación grave: +{{time}} ({{deviation}}σ)",
+        "TooltipSignificantDeviation": "Significativamente por encima del promedio: +{{time}} ({{deviation}}σ)",
+        "TooltipTimeLoss": "Pérdida de tiempo: +{{time}}",
+        "TooltipTimeLossDeviation": "Pérdida de tiempo: +{{time}} ({{deviation}}σ)",
         "Publication": {
           "ErrorTitle": "No se pudo cargar la configuración de publicación de parciales",
           "DisabledTitle": "La publicación de parciales está desactivada",
@@ -830,6 +1229,10 @@
         "FeaturedImageHint": "JPEG, PNG o WEBP, máx. 2 MB.",
         "FeaturedImageButton": "Añadir imagen",
         "FeaturedImageRemove": "Quitar",
+        "FeaturedImageReplace": "Sustituir imagen",
+        "FeaturedImageRemoveExisting": "Eliminar imagen",
+        "FeaturedImagePendingRemoval": "La imagen se eliminará al guardar.",
+        "FeaturedImageUndoRemoval": "Deshacer",
         "Ranking": "Ranking",
         "CoefRanking": "Coeficiente de ranking",
         "Relay": "Relevo",
@@ -928,7 +1331,9 @@
           "CreateSuccess": "¡El evento se ha creado correctamente!",
           "EditSuccess": "¡El evento se ha actualizado correctamente!",
           "FeaturedImageUploadSuccess": "La imagen destacada se subió correctamente.",
-          "FeaturedImageUploadError": "No se pudo subir la imagen destacada."
+          "FeaturedImageUploadError": "No se pudo subir la imagen destacada.",
+          "FeaturedImageRemoveSuccess": "La imagen destacada se eliminó correctamente.",
+          "FeaturedImageRemoveError": "No se pudo eliminar la imagen destacada."
         }
       },
       "Card": {
@@ -1139,6 +1544,69 @@
         "Description": "Elige un club para ver los resultados",
         "NoClubs": "No se encontraron clubes",
         "Cancel": "Cancelar"
+      },
+      "Entries": {
+        "FreeEntry": "Inscripción gratuita",
+        "BirthYearRange": "Años de nacimiento {{from}}–{{to}}",
+        "LoadError": "No se pudo cargar la disponibilidad de inscripciones.",
+        "OpensIn": "Las inscripciones abren en",
+        "ClosedDescription": "Las inscripciones están cerradas.",
+        "EntriesCount": "Inscripciones y cambios enviados",
+        "ChangesCount": "Cambios realizados a través de OFeed",
+        "ClosesAt": "Las inscripciones cierran el {{date}}",
+        "AllClassesFull": "Todas las categorías están completas.",
+        "Form": {
+          "Firstname": "Nombre",
+          "Lastname": "Apellidos",
+          "Registration": "Registro",
+          "RegistrationHelper": "p. ej. XXX9901",
+          "RegistrationStep": {
+            "Title": "Empieza con el número de registro.",
+            "Description": "Si encontramos al corredor, completaremos sus datos automáticamente.",
+            "Found": "Corredor encontrado. Hemos completado el formulario automáticamente; aún puedes editar los datos antes de enviarlo.",
+            "Manual": "Introduce un número de registro válido. Si no encontramos al corredor, completa manualmente los datos de abajo.",
+            "ManualFields": "Datos personales: complétalos solo si no se han rellenado automáticamente."
+          },
+          "BirthYear": "Año de nacimiento",
+          "Organisation": "Club",
+          "License": "Licencia",
+          "Note": "Nota",
+          "NotePlaceholder": "Nota opcional para el organizador",
+          "Card": "Número de tarjeta SI",
+          "StartTime": "Hora de salida",
+          "StartTimePlaceholder": "Selecciona una hora de salida",
+          "CardRentalWithPrice": "Alquilar un chip ({{price}})",
+          "CardRentalFree": "Alquilar un chip (gratis)",
+          "ClearForm": "Limpiar formulario",
+          "AddToCart": "Añadir al carrito",
+          "AddedToCart": "{{name}} añadido al carrito ({{className}}).",
+          "AddedTitle": "Inscripción en el carrito",
+          "AddedDescription": "{{name}} se añadió al carrito en {{className}}.",
+          "ContinueEntries": "Continuar inscribiendo",
+          "GoToCheckout": "Ir al carrito",
+          "Title": "Inscripción — {{className}}",
+          "Description": "Cuota de inscripción: {{fee}}",
+          "DescriptionFree": "Esta categoría no tiene cuota de inscripción.",
+          "Warnings": {
+            "CardAlreadyUsed": "This SI card is already assigned to {{competitors}} in this event.",
+            "RegistrationAlreadyUsed": "This registration number is already entered as {{competitors}} in this event. You can continue, but check the registration before submitting."
+          },
+          "Errors": {
+            "FirstnameRequired": "El nombre es obligatorio",
+            "LastnameRequired": "Los apellidos son obligatorios",
+            "RegistrationOrBirthYearRequired": "Rellena el registro o el año de nacimiento",
+            "RegistrationInvalid": "Formato de registro no válido",
+            "BirthYearInvalid": "Año de nacimiento no válido",
+            "BirthYearNotEligible": "El corredor no puede salir en esta categoría (año de nacimiento fuera del rango permitido)",
+            "CardOrRentalRequired": "Rellena el número de tarjeta SI o marca el alquiler de chip",
+            "CardInvalid": "Número de tarjeta SI no válido",
+            "StartTimeRequired": "Selecciona una hora de salida"
+          },
+          "Autocomplete": {
+            "Loading": "Buscando…",
+            "NoMatch": "No se encontraron resultados"
+          }
+        }
       }
     },
     "Home": {
@@ -1289,6 +1757,66 @@
         "Description": "Gestiona tu facturación y métodos de pago.",
         "NoPaymentMethods": "Aún no hay métodos de pago añadidos.",
         "AddPaymentMethod": "Añadir método de pago"
+      }
+    },
+    "Checkout": {
+      "Title": "Carrito de inscripciones",
+      "CartAriaLabel": "Carrito de inscripciones ({{count}})",
+      "EmptyCart": "Tu carrito de inscripciones está vacío.",
+      "BackHome": "Volver a los eventos",
+      "CardRental": "alquiler de chip",
+      "RemoveItem": "Eliminar inscripción",
+      "Total": "Total",
+      "ContactTitle": "Datos de contacto",
+      "SubmitOrder": "Completar pedido",
+      "OrderSuccessToast": "Pedido de inscripciones enviado.",
+      "OrderErrorToast": "No se pudo enviar el pedido.",
+      "SuccessTitle": "Pedido recibido",
+      "SuccessDescription": "Utiliza la referencia de pago (símbolo variable) indicada abajo para pagar las cuotas.",
+      "PartialSuccessTitle": "Se envió parte del pedido",
+      "PartialSuccessDescription": "Los pedidos mostrados abajo se enviaron correctamente. Completa el envío de los elementos restantes del carrito.",
+      "PaymentReference": "Referencia de pago (VS)",
+      "EntriesInOrder": "Inscripciones",
+      "QrPayment": {
+        "Title": "Pagar mediante código QR",
+        "Description": "Escanea este código en tu aplicación bancaria para rellenar el pago.",
+        "QrCodeAriaLabel": "Código QR de pago",
+        "OpenInBankApp": "Pagar en la aplicación bancaria"
+      },
+      "CashPayment": {
+        "Title": "Pagar en efectivo",
+        "Description": "Acude a la oficina del evento para pagar las cuotas de inscripción en efectivo.",
+        "QrCodeDescription": "Muestra este código QR con los datos de tu pedido en la oficina del evento.",
+        "QrCodeAriaLabel": "Código QR con enlace al detalle del pedido"
+      },
+      "CustomPayment": {
+        "Title": "Pago en línea",
+        "Description": "Continúa a la pasarela de pago para completar el pago.",
+        "OpenPaymentLink": "Ir al pago"
+      },
+      "PaymentMethods": {
+        "Label": "Método de pago",
+        "Placeholder": "Selecciona un método de pago",
+        "Loading": "Cargando métodos de pago…",
+        "LoadError": "No se pudieron cargar los métodos de pago.",
+        "NoneAvailable": "No hay ningún método de pago disponible para este evento.",
+        "Methods": {
+          "OFEED_PAYMENT": "Pago OFeed",
+          "CUSTOM_PAYMENT_LINK": "Pago en línea",
+          "QR_PAYMENT": "Pago QR",
+          "CASH": "Efectivo"
+        }
+      },
+      "Form": {
+        "Email": "Correo electrónico",
+        "Firstname": "Nombre",
+        "Lastname": "Apellidos",
+        "Errors": {
+          "EmailRequired": "El correo electrónico es obligatorio",
+          "EmailInvalid": "Dirección de correo no válida",
+          "FirstnameRequired": "El nombre es obligatorio",
+          "LastnameRequired": "Los apellidos son obligatorios"
+        }
       }
     }
   },

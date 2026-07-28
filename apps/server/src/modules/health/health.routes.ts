@@ -1,49 +1,45 @@
-import { createRoute } from "@hono/zod-openapi";
-import type { RouteConfig } from "@hono/zod-openapi";
+import { createRoute } from '@hono/zod-openapi';
+import type { RouteConfig } from '@hono/zod-openapi';
 
-import {
-  healthResponseSchema,
-  liveResponseSchema,
-  readyResponseSchema,
-} from "./health.schema.js";
+import { healthzResponseSchema, readyResponseSchema } from './health.schema.js';
 
-const tags = ["Health"];
+const tags = ['Health'];
 
-const liveRouteConfig = {
-  path: "/health/live",
-  method: "get",
+const healthzRouteConfig = {
+  path: '/healthz',
+  method: 'get',
   tags,
-  summary: "Liveness probe",
+  summary: 'Liveness probe',
   responses: {
     200: {
-      description: "Process is alive",
+      description: 'Process is alive',
       content: {
-        "application/json": {
-          schema: liveResponseSchema,
+        'application/json': {
+          schema: healthzResponseSchema,
         },
       },
     },
   },
 } satisfies RouteConfig;
 
-const readyRouteConfig = {
-  path: "/health/ready",
-  method: "get",
+const readyzRouteConfig = {
+  path: '/readyz',
+  method: 'get',
   tags,
-  summary: "Readiness probe",
+  summary: 'Readiness probe',
   responses: {
     200: {
-      description: "Service is ready",
+      description: 'Service is ready',
       content: {
-        "application/json": {
+        'application/json': {
           schema: readyResponseSchema,
         },
       },
     },
     503: {
-      description: "Service is not ready",
+      description: 'Service is not ready',
       content: {
-        "application/json": {
+        'application/json': {
           schema: readyResponseSchema,
         },
       },
@@ -51,35 +47,8 @@ const readyRouteConfig = {
   },
 } satisfies RouteConfig;
 
-const healthRouteConfig = {
-  path: "/health",
-  method: "get",
-  tags,
-  summary: "Full health check",
-  responses: {
-    200: {
-      description: "Service is healthy",
-      content: {
-        "application/json": {
-          schema: healthResponseSchema,
-        },
-      },
-    },
-    503: {
-      description: "Service is unhealthy",
-      content: {
-        "application/json": {
-          schema: healthResponseSchema,
-        },
-      },
-    },
-  },
-} satisfies RouteConfig;
+export const healthz = createRoute(healthzRouteConfig);
+export const readyz = createRoute(readyzRouteConfig);
 
-export const live = createRoute(liveRouteConfig);
-export const ready = createRoute(readyRouteConfig);
-export const health = createRoute(healthRouteConfig);
-
-export type LiveRoute = typeof live;
-export type ReadyRoute = typeof ready;
-export type HealthRoute = typeof health;
+export type HealthzRoute = typeof healthz;
+export type ReadyzRoute = typeof readyz;
