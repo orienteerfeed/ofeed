@@ -44,7 +44,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",
-    "@hono/node-server": "^2.0.6",
+    "@hono/node-server": "^2.0.10",
     "@hono/zod-openapi": "^1.4.0",
     "@node-oauth/oauth2-server": "^5.3.0",
     "@pothos/core": "^4.13.0",
@@ -70,22 +70,22 @@
     "resend": "^6.16.0",
     "rotating-file-stream": "^3.2.9",
     "sharp": "^0.35.2",
-    "ws": "^8.21.0",
+    "ws": "^8.21.1",
     "xml2js": "^0.6.2",
     "xmllint-wasm": "^5.2.0"
   },
   "devDependencies": {
-    "@types/node": "^24.13.2",
+    "@types/node": "^24.13.3",
     "@types/qrcode": "^1.5.6",
     "@types/ws": "^8.18.1",
     "@types/xml2js": "^0.4.14",
-    "eslint": "^9.39.4",
+    "eslint": "^9.39.5",
     "prettier": "^2.8.8",
-    "prisma": "^7.8.0",
-    "tsx": "^4.22.4",
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.62.0",
-    "vitest": "^3.2.6"
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^3.2.7"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

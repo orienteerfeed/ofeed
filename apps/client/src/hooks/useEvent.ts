@@ -9,6 +9,7 @@ const GET_EVENT = gql`
       sportId
       slug
       name
+      featuredImage
       organizer
       location
       country {

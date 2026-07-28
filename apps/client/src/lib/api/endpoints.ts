@@ -94,6 +94,8 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}`,
   uploadEventImage: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}/image`,
+  deleteEventImage: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/image`,
   eventRentalCardsImport: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}/rental-cards/import`,
   eventEntryAvailability: (eventId: string | number): string =>
