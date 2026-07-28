@@ -1,4 +1,4 @@
-import { config } from '@/config';
+import { resolveFeaturedImageUrl } from '@/lib/images';
 import {
   createProxiedMapyProvider,
   MAP_TILE_SESSION_URL,
@@ -153,18 +153,6 @@ const toMappableEvent = (event: HomeEventListItem): MappableEvent | null => {
     latitude: event.latitude,
     longitude: event.longitude,
   };
-};
-
-const resolveFeaturedImageUrl = (featuredImage?: string): string | null => {
-  if (!featuredImage) {
-    return null;
-  }
-
-  if (featuredImage.startsWith('/')) {
-    return `${config.BASE_API_URL.replace(/\/+$/, '')}${featuredImage}`;
-  }
-
-  return featuredImage;
 };
 
 const buildEventTooltipHtml = (event: MappableEvent): string => {

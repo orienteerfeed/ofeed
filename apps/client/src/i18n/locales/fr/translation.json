@@ -461,6 +461,14 @@
       "Form": {
         "DefaultStartMode": "Mode de départ par défaut",
         "Currency": "Devise",
+        "FeaturedImage": "Image principale",
+        "FeaturedImageHint": "JPEG, PNG ou WEBP, 2 Mo max.",
+        "FeaturedImageButton": "Ajouter une image",
+        "FeaturedImageRemove": "Supprimer",
+        "FeaturedImageReplace": "Remplacer l’image",
+        "FeaturedImageRemoveExisting": "Supprimer l’image",
+        "FeaturedImagePendingRemoval": "L’image sera supprimée lors de l’enregistrement.",
+        "FeaturedImageUndoRemoval": "Annuler",
         "StartModeOptions": {
           "StartList": "Liste de départ",
           "MassStart": "Départ groupé",
@@ -470,6 +478,12 @@
         },
         "Placeholders": {
           "Currency": "Sélectionner une devise"
+        },
+        "Toast": {
+          "FeaturedImageUploadSuccess": "L’image principale a été téléversée avec succès.",
+          "FeaturedImageUploadError": "Impossible de téléverser l’image principale.",
+          "FeaturedImageRemoveSuccess": "L’image principale a été supprimée avec succès.",
+          "FeaturedImageRemoveError": "Impossible de supprimer l’image principale."
         }
       },
       "Tabs": {

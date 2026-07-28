@@ -6462,6 +6462,104 @@
               }
             }
           ]
+        },
+        {
+          "name": "[DELETE] /rest/v1/events/{{eventId}}/image - Remove event image (optional)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/image",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "image"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runEventImageScenario') || 'false').toLowerCase() === 'true';",
+                  "if (!shouldRun) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function assertStatus(expected) {",
+                  "  pm.test(`Status is ${expected}`, function () {",
+                  "    pm.response.to.have.status(expected);",
+                  "  });",
+                  "}",
+                  "",
+                  "function getJson() {",
+                  "  pm.test('Response is JSON', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "  });",
+                  "  return pm.response.json();",
+                  "}",
+                  "",
+                  "function assertObject(value, label) {",
+                  "  pm.expect(value, `${label} should be object`).to.be.an('object');",
+                  "  pm.expect(Array.isArray(value), `${label} should not be array`).to.eql(false);",
+                  "  pm.expect(value, `${label} should not be null`).to.not.eql(null);",
+                  "}",
+                  "",
+                  "function assertString(value, label) {",
+                  "  pm.expect(value, `${label} should be string`).to.be.a('string');",
+                  "}",
+                  "",
+                  "function assertHasKeys(obj, keys, label) {",
+                  "  assertObject(obj, label);",
+                  "  keys.forEach(key => {",
+                  "    pm.expect(obj, `${label} should have key ${key}`).to.have.property(key);",
+                  "  });",
+                  "}",
+                  "",
+                  "function assertLegacySuccess(body, expectedMessage) {",
+                  "  assertObject(body, 'body');",
+                  "  assertHasKeys(body, ['message', 'error', 'code', 'results'], 'body');",
+                  "  pm.expect(body.error, 'body.error').to.eql(false);",
+                  "  pm.expect(body.code, 'body.code').to.eql(200);",
+                  "  if (expectedMessage) {",
+                  "    pm.expect(body.message, 'body.message').to.eql(expectedMessage);",
+                  "  } else {",
+                  "    assertString(body.message, 'body.message');",
+                  "  }",
+                  "  assertObject(body.results, 'body.results');",
+                  "}",
+                  "",
+                  "assertStatus(200);",
+                  "const body = getJson();",
+                  "assertLegacySuccess(body, 'OK');",
+                  "pm.test('body.results.featuredImageKey is null', function () {",
+                  "  pm.expect(body.results.featuredImageKey).to.eql(null);",
+                  "});",
+                  ""
+                ]
+              }
+            }
+          ]
         }
       ]
     },
