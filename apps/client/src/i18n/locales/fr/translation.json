@@ -17,6 +17,30 @@
         "BackToSignIn": "Retour à la connexion"
       }
     },
+    "Admin": {
+      "Users": {
+        "EventsDialog": {
+          "Title": "Événements de {{name}}",
+          "Description": "Événements créés par cet utilisateur.",
+          "Empty": "Cet utilisateur n'a encore créé aucun événement."
+        }
+      },
+      "Table": {
+        "Filters": {
+          "NamePlaceholder": "Filtrer par nom",
+          "EmailPlaceholder": "Filtrer par e-mail",
+          "OrganizerPlaceholder": "Filtrer par organisateur",
+          "OwnerPlaceholder": "Filtrer par propriétaire",
+          "OrganizationPlaceholder": "Filtrer par organisation",
+          "DisciplinePlaceholder": "Sélectionner une discipline",
+          "PublishedPlaceholder": "Sélectionner le statut de publication",
+          "RankingPlaceholder": "Sélectionner le classement",
+          "RolePlaceholder": "Sélectionner un rôle",
+          "StatusPlaceholder": "Sélectionner un statut",
+          "EmailVerifiedPlaceholder": "Sélectionner le statut de vérification"
+        }
+      }
+    },
     "Profile": {
       "EmailVerification": {
         "Title": "Vérification de l'e-mail",
@@ -437,6 +461,14 @@
       "Form": {
         "DefaultStartMode": "Mode de départ par défaut",
         "Currency": "Devise",
+        "FeaturedImage": "Image principale",
+        "FeaturedImageHint": "JPEG, PNG ou WEBP, 2 Mo max.",
+        "FeaturedImageButton": "Ajouter une image",
+        "FeaturedImageRemove": "Supprimer",
+        "FeaturedImageReplace": "Remplacer l’image",
+        "FeaturedImageRemoveExisting": "Supprimer l’image",
+        "FeaturedImagePendingRemoval": "L’image sera supprimée lors de l’enregistrement.",
+        "FeaturedImageUndoRemoval": "Annuler",
         "StartModeOptions": {
           "StartList": "Liste de départ",
           "MassStart": "Départ groupé",
@@ -446,6 +478,12 @@
         },
         "Placeholders": {
           "Currency": "Sélectionner une devise"
+        },
+        "Toast": {
+          "FeaturedImageUploadSuccess": "L’image principale a été téléversée avec succès.",
+          "FeaturedImageUploadError": "Impossible de téléverser l’image principale.",
+          "FeaturedImageRemoveSuccess": "L’image principale a été supprimée avec succès.",
+          "FeaturedImageRemoveError": "Impossible de supprimer l’image principale."
         }
       },
       "Tabs": {

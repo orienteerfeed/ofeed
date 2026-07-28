@@ -68,6 +68,11 @@
           "RequestVerificationSuccessTitle": "Bestätigungs-E-Mail gesendet",
           "RequestVerificationSuccessDescription": "Eine Bestätigungs-E-Mail wurde an {{name}} gesendet.",
           "RequestVerificationErrorTitle": "Bestätigungs-E-Mail konnte nicht gesendet werden"
+        },
+        "EventsDialog": {
+          "Title": "Veranstaltungen von {{name}}",
+          "Description": "Von diesem Benutzer erstellte Veranstaltungen.",
+          "Empty": "Dieser Benutzer hat noch keine Veranstaltung erstellt."
         }
       },
       "Events": {
@@ -269,7 +274,20 @@
         "Actions": "Aktionen",
         "Yes": "Ja",
         "No": "Nein",
-        "Discipline": "Disziplin"
+        "Discipline": "Disziplin",
+        "Filters": {
+          "NamePlaceholder": "Name filtern",
+          "EmailPlaceholder": "E-Mail filtern",
+          "OrganizerPlaceholder": "Veranstalter filtern",
+          "OwnerPlaceholder": "Eigentümer filtern",
+          "OrganizationPlaceholder": "Organisation filtern",
+          "DisciplinePlaceholder": "Disziplin auswählen",
+          "PublishedPlaceholder": "Veröffentlicht auswählen",
+          "RankingPlaceholder": "Ranking auswählen",
+          "RolePlaceholder": "Rolle auswählen",
+          "StatusPlaceholder": "Status auswählen",
+          "EmailVerifiedPlaceholder": "Verifizierung auswählen"
+        }
       },
       "Registrations": {
         "Title": "Registrierungen und Vereine",
@@ -549,6 +567,14 @@
       "Form": {
         "DefaultStartMode": "Standard-Startmodus",
         "Currency": "Währung",
+        "FeaturedImage": "Titelbild",
+        "FeaturedImageHint": "JPEG, PNG oder WEBP, max. 2 MB.",
+        "FeaturedImageButton": "Bild hinzufügen",
+        "FeaturedImageRemove": "Entfernen",
+        "FeaturedImageReplace": "Bild ersetzen",
+        "FeaturedImageRemoveExisting": "Bild entfernen",
+        "FeaturedImagePendingRemoval": "Das Bild wird beim Speichern entfernt.",
+        "FeaturedImageUndoRemoval": "Rückgängig",
         "StartModeOptions": {
           "StartList": "Startliste",
           "MassStart": "Massenstart",
@@ -571,6 +597,12 @@
         },
         "Validation": {
           "SplitPublicationAtRequired": "Für die geplante Veröffentlichung der Zwischenzeiten ist ein Veröffentlichungszeitpunkt erforderlich."
+        },
+        "Toast": {
+          "FeaturedImageUploadSuccess": "Titelbild wurde erfolgreich hochgeladen.",
+          "FeaturedImageUploadError": "Titelbild konnte nicht hochgeladen werden.",
+          "FeaturedImageRemoveSuccess": "Titelbild wurde erfolgreich entfernt.",
+          "FeaturedImageRemoveError": "Titelbild konnte nicht entfernt werden."
         }
       },
       "Integration": {

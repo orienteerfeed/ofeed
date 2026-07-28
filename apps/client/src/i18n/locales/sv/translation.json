@@ -68,6 +68,11 @@
           "RequestVerificationSuccessTitle": "Verifieringsmejl skickat",
           "RequestVerificationSuccessDescription": "Ett verifieringsmejl skickades till {{name}}.",
           "RequestVerificationErrorTitle": "Det gick inte att skicka verifieringsmejlet"
+        },
+        "EventsDialog": {
+          "Title": "Tävlingar av {{name}}",
+          "Description": "Tävlingar skapade av denna användare.",
+          "Empty": "Den här användaren har inte skapat några tävlingar än."
         }
       },
       "Events": {
@@ -269,7 +274,20 @@
         "Actions": "Åtgärder",
         "Yes": "Ja",
         "No": "Nej",
-        "Discipline": "Disciplin"
+        "Discipline": "Disciplin",
+        "Filters": {
+          "NamePlaceholder": "Filtrera namn",
+          "EmailPlaceholder": "Filtrera e-post",
+          "OrganizerPlaceholder": "Filtrera arrangör",
+          "OwnerPlaceholder": "Filtrera ägare",
+          "OrganizationPlaceholder": "Filtrera organisation",
+          "DisciplinePlaceholder": "Välj disciplin",
+          "PublishedPlaceholder": "Välj publicerad",
+          "RankingPlaceholder": "Välj ranking",
+          "RolePlaceholder": "Välj roll",
+          "StatusPlaceholder": "Välj status",
+          "EmailVerifiedPlaceholder": "Välj verifiering"
+        }
       },
       "Registrations": {
         "Title": "Registreringar och klubbar",
@@ -1211,6 +1229,10 @@
         "FeaturedImageHint": "JPEG, PNG eller WEBP, max 2 MB.",
         "FeaturedImageButton": "Lägg till bild",
         "FeaturedImageRemove": "Ta bort",
+        "FeaturedImageReplace": "Byt bild",
+        "FeaturedImageRemoveExisting": "Ta bort bild",
+        "FeaturedImagePendingRemoval": "Bilden tas bort när du sparar.",
+        "FeaturedImageUndoRemoval": "Ångra",
         "Ranking": "Rankning",
         "CoefRanking": "Rankningskoefficient",
         "Relay": "Stafett",
@@ -1309,7 +1331,9 @@
           "CreateSuccess": "Tävlingen har skapats!",
           "EditSuccess": "Tävlingen har uppdaterats!",
           "FeaturedImageUploadSuccess": "Presentationsbilden har laddats upp.",
-          "FeaturedImageUploadError": "Kunde inte ladda upp presentationsbilden."
+          "FeaturedImageUploadError": "Kunde inte ladda upp presentationsbilden.",
+          "FeaturedImageRemoveSuccess": "Presentationsbilden har tagits bort.",
+          "FeaturedImageRemoveError": "Kunde inte ta bort presentationsbilden."
         }
       },
       "Card": {
