@@ -100,17 +100,14 @@ export function useAdminDashboardQuery() {
   });
 }
 
-export function useAdminUsersQuery({
-  page = 1,
-  limit = 25,
-}: { page?: number; limit?: number } = {}) {
+export function useAdminUsersQuery(params: Record<string, string | number | boolean | undefined | null> = {}) {
   const api = useApi();
 
   return useQuery({
-    queryKey: ['admin', 'users', page, limit],
+    queryKey: ['admin', 'users', params],
     queryFn: async () =>
       adminUserListSchema.parse(
-        await api.get(ENDPOINTS.adminUsers({ page, limit }))
+        await api.get(ENDPOINTS.adminUsers(params))
       ),
   });
 }
@@ -159,18 +156,16 @@ export function useAdminUserRequestVerificationMutation() {
   });
 }
 
-export function useAdminEventsQuery({
-  page = 1,
-  limit = 25,
-}: { page?: number; limit?: number } = {}) {
+export function useAdminEventsQuery({ enabled = true, ...params }: Record<string, string | number | boolean | undefined | null> & { enabled?: boolean } = {}) {
   const api = useApi();
 
   return useQuery({
-    queryKey: ['admin', 'events', page, limit],
+    queryKey: ['admin', 'events', params],
     queryFn: async () =>
       adminEventListSchema.parse(
-        await api.get(ENDPOINTS.adminEvents({ page, limit }))
+        await api.get(ENDPOINTS.adminEvents(params))
       ),
+    enabled,
   });
 }
 

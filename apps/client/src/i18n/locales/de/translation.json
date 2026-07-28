@@ -68,6 +68,11 @@
           "RequestVerificationSuccessTitle": "Bestätigungs-E-Mail gesendet",
           "RequestVerificationSuccessDescription": "Eine Bestätigungs-E-Mail wurde an {{name}} gesendet.",
           "RequestVerificationErrorTitle": "Bestätigungs-E-Mail konnte nicht gesendet werden"
+        },
+        "EventsDialog": {
+          "Title": "Veranstaltungen von {{name}}",
+          "Description": "Von diesem Benutzer erstellte Veranstaltungen.",
+          "Empty": "Dieser Benutzer hat noch keine Veranstaltung erstellt."
         }
       },
       "Events": {
@@ -269,7 +274,20 @@
         "Actions": "Aktionen",
         "Yes": "Ja",
         "No": "Nein",
-        "Discipline": "Disziplin"
+        "Discipline": "Disziplin",
+        "Filters": {
+          "NamePlaceholder": "Name filtern",
+          "EmailPlaceholder": "E-Mail filtern",
+          "OrganizerPlaceholder": "Veranstalter filtern",
+          "OwnerPlaceholder": "Eigentümer filtern",
+          "OrganizationPlaceholder": "Organisation filtern",
+          "DisciplinePlaceholder": "Disziplin auswählen",
+          "PublishedPlaceholder": "Veröffentlicht auswählen",
+          "RankingPlaceholder": "Ranking auswählen",
+          "RolePlaceholder": "Rolle auswählen",
+          "StatusPlaceholder": "Status auswählen",
+          "EmailVerifiedPlaceholder": "Verifizierung auswählen"
+        }
       },
       "Registrations": {
         "Title": "Registrierungen und Vereine",
@@ -549,6 +567,14 @@
       "Form": {
         "DefaultStartMode": "Standard-Startmodus",
         "Currency": "Währung",
+        "FeaturedImage": "Titelbild",
+        "FeaturedImageHint": "JPEG, PNG oder WEBP, max. 2 MB.",
+        "FeaturedImageButton": "Bild hinzufügen",
+        "FeaturedImageRemove": "Entfernen",
+        "FeaturedImageReplace": "Bild ersetzen",
+        "FeaturedImageRemoveExisting": "Bild entfernen",
+        "FeaturedImagePendingRemoval": "Das Bild wird beim Speichern entfernt.",
+        "FeaturedImageUndoRemoval": "Rückgängig",
         "StartModeOptions": {
           "StartList": "Startliste",
           "MassStart": "Massenstart",
@@ -571,6 +597,12 @@
         },
         "Validation": {
           "SplitPublicationAtRequired": "Für die geplante Veröffentlichung der Zwischenzeiten ist ein Veröffentlichungszeitpunkt erforderlich."
+        },
+        "Toast": {
+          "FeaturedImageUploadSuccess": "Titelbild wurde erfolgreich hochgeladen.",
+          "FeaturedImageUploadError": "Titelbild konnte nicht hochgeladen werden.",
+          "FeaturedImageRemoveSuccess": "Titelbild wurde erfolgreich entfernt.",
+          "FeaturedImageRemoveError": "Titelbild konnte nicht entfernt werden."
         }
       },
       "Integration": {
@@ -896,6 +928,7 @@
         "CompareTo": "Vergleichen mit",
         "CompareToFastest": "Schnellste Zeit",
         "CompareToLeader": "Führender",
+        "Competitor": "Teilnehmer",
         "ErrorLoadingChart": "Fehler beim Laden des Zwischenzeiten-Diagramms",
         "Finish": "Ziel",
         "LegLabel": "Abschnitt {{legIndex}} ({{controlCode}})",
@@ -924,6 +957,16 @@
         "SortSummary": "{{field}} ({{direction}})",
         "Start": "Start",
         "SelectClass": "Bitte wähle eine Klasse aus, um Zwischenzeiten anzuzeigen.",
+        "TooltipCriticalDeviation": "Kritische Abweichung: +{{time}} ({{deviation}}σ)",
+        "TooltipCumulativeTimeAt": "Kumulative Zeit bei {{controlCode}}",
+        "TooltipFastestLeg": "Schnellster Abschnitt!",
+        "TooltipLeadingAtPoint": "Führend an diesem Punkt!",
+        "TooltipLegTimeTo": "Abschnittszeit bis {{controlCode}}",
+        "TooltipLossToBest": "Rückstand auf Bestzeit: +{{time}}",
+        "TooltipMajorDeviation": "Große Abweichung: +{{time}} ({{deviation}}σ)",
+        "TooltipSignificantDeviation": "Deutlich über dem Durchschnitt: +{{time}} ({{deviation}}σ)",
+        "TooltipTimeLoss": "Zeitverlust: +{{time}}",
+        "TooltipTimeLossDeviation": "Zeitverlust: +{{time}} ({{deviation}}σ)",
         "Publication": {
           "ErrorTitle": "Die Einstellungen für die Veröffentlichung der Zwischenzeiten konnten nicht geladen werden",
           "DisabledTitle": "Die Veröffentlichung der Zwischenzeiten ist deaktiviert",

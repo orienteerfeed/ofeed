@@ -962,6 +962,7 @@ export function registerSecureEventRoutes(router) {
 
           const baseImage = sharp(uploadedFile.buffer)
             .rotate()
+            .trim()
             .resize({ width: 640, height: 640, fit: 'inside', withoutEnlargement: true });
 
           const resizedBuffer =
@@ -1012,19 +1013,14 @@ export function registerSecureEventRoutes(router) {
         const uploadedFile = req.file as SecureFile | undefined;
 
         if (!uploadedFile) {
-          return res
-            .status(422)
-            .json(validationResponse('No file uploaded', res.statusCode));
+          return res.status(422).json(validationResponse('No file uploaded', res.statusCode));
         }
 
         if (uploadedFile.size > 200_000) {
           return res
             .status(422)
             .json(
-              validationResponse(
-                'File is too large. Allowed size is up to 200KB',
-                res.statusCode,
-              ),
+              validationResponse('File is too large. Allowed size is up to 200KB', res.statusCode),
             );
         }
 
@@ -1105,6 +1101,74 @@ export function registerSecureEventRoutes(router) {
         }
       },
     ),
+  );
+
+  /**
+   * @swagger
+   * /rest/v1/events/{eventId}/image:
+   *  delete:
+   *    summary: Delete event featured image
+   *    description: Remove the event's featured image and delete it from storage.
+   *    tags:
+   *      - Events
+   *    security:
+   *      - bearerAuth: []
+   *    parameters:
+   *      - in: path
+   *        name: eventId
+   *        required: true
+   *        description: The ID of the event to update.
+   *        schema:
+   *          type: string
+   *    responses:
+   *      200:
+   *        description: Image removed successfully
+   *      401:
+   *        description: Not authenticated
+   *      403:
+   *        description: Not authorized
+   *      404:
+   *        description: Event not found
+   *      500:
+   *        description: Internal Server Error
+   */
+  router.delete(
+    '/:eventId/image',
+    routeWithValidation({ paramsSchema: eventIdParamsSchema }, async ({ req, res }) => {
+      const { eventId } = req.params;
+
+      try {
+        const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId);
+
+        if (!ownership.ok) {
+          return ownership.response;
+        }
+
+        const existingEvent = await appPrisma.event.findUnique({
+          where: { id: eventId },
+          select: { featuredImageKey: true },
+        });
+
+        await prisma.event.update({
+          where: { id: eventId },
+          data: { featuredImageKey: null, updatedAt: new Date() },
+        });
+
+        if (existingEvent?.featuredImageKey) {
+          await deletePublicObject(existingEvent.featuredImageKey);
+        }
+
+        return res
+          .status(200)
+          .json(successResponse('OK', { featuredImageKey: null }, res.statusCode));
+      } catch (error) {
+        logEndpoint(req.c, 'error', 'Delete event featured image failed', {
+          eventId,
+          ...getErrorDetails(error),
+        });
+        return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+      }
+    }),
   );
 
   router.patch(

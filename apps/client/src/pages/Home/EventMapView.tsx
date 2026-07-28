@@ -1,4 +1,4 @@
-import { config } from '@/config';
+import { resolveFeaturedImageUrl } from '@/lib/images';
 import {
   createProxiedMapyProvider,
   MAP_TILE_SESSION_URL,
@@ -153,18 +153,6 @@ const toMappableEvent = (event: HomeEventListItem): MappableEvent | null => {
     latitude: event.latitude,
     longitude: event.longitude,
   };
-};
-
-const resolveFeaturedImageUrl = (featuredImage?: string): string | null => {
-  if (!featuredImage) {
-    return null;
-  }
-
-  if (featuredImage.startsWith('/')) {
-    return `${config.BASE_API_URL.replace(/\/+$/, '')}${featuredImage}`;
-  }
-
-  return featuredImage;
 };
 
 const buildEventTooltipHtml = (event: MappableEvent): string => {
@@ -564,7 +552,7 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
 
   return (
     <div className="event-map-view space-y-3">
-      <div className="relative h-[520px] w-full overflow-hidden rounded-lg border bg-muted/20">
+      <div className="relative isolate h-[520px] w-full overflow-hidden rounded-lg border bg-muted/20">
         <LeafletMap
           key={mapInstanceKey}
           center={mapCenter}

@@ -68,6 +68,11 @@
           "RequestVerificationSuccessTitle": "Verification email sent",
           "RequestVerificationSuccessDescription": "A verification email was sent to {{name}}.",
           "RequestVerificationErrorTitle": "Failed to send verification email"
+        },
+        "EventsDialog": {
+          "Title": "Events by {{name}}",
+          "Description": "Events authored by this user.",
+          "Empty": "This user has not authored any events yet."
         }
       },
       "Events": {
@@ -269,7 +274,20 @@
         "Actions": "Actions",
         "Yes": "Yes",
         "No": "No",
-        "Discipline": "Discipline"
+        "Discipline": "Discipline",
+        "Filters": {
+          "NamePlaceholder": "Filter name",
+          "EmailPlaceholder": "Filter email",
+          "OrganizerPlaceholder": "Filter organizer",
+          "OwnerPlaceholder": "Filter owner",
+          "OrganizationPlaceholder": "Filter organization",
+          "DisciplinePlaceholder": "Select discipline",
+          "PublishedPlaceholder": "Select published",
+          "RankingPlaceholder": "Select ranking",
+          "RolePlaceholder": "Select role",
+          "StatusPlaceholder": "Select status",
+          "EmailVerifiedPlaceholder": "Select verification"
+        }
       },
       "Registrations": {
         "Title": "Registrations and clubs",
@@ -1142,6 +1160,7 @@
         "CompareTo": "Compare to",
         "CompareToFastest": "Fastest time",
         "CompareToLeader": "Leader",
+        "Competitor": "Competitor",
         "ErrorLoadingChart": "Error loading split chart",
         "Finish": "Finish",
         "LegLabel": "Leg {{legIndex}} ({{controlCode}})",
@@ -1170,6 +1189,16 @@
         "SortSummary": "{{field}} ({{direction}})",
         "Start": "Start",
         "SelectClass": "Please select a class to view split times.",
+        "TooltipCriticalDeviation": "Critical deviation: +{{time}} ({{deviation}}σ)",
+        "TooltipCumulativeTimeAt": "Cumulative time at {{controlCode}}",
+        "TooltipFastestLeg": "Fastest leg!",
+        "TooltipLeadingAtPoint": "Leading at this point!",
+        "TooltipLegTimeTo": "Leg time to {{controlCode}}",
+        "TooltipLossToBest": "Loss to best: +{{time}}",
+        "TooltipMajorDeviation": "Major deviation: +{{time}} ({{deviation}}σ)",
+        "TooltipSignificantDeviation": "Significantly above average: +{{time}} ({{deviation}}σ)",
+        "TooltipTimeLoss": "Time loss: +{{time}}",
+        "TooltipTimeLossDeviation": "Time loss: +{{time}} ({{deviation}}σ)",
         "Publication": {
           "ErrorTitle": "Split publication settings could not be loaded",
           "DisabledTitle": "Split publication is disabled",
@@ -1200,6 +1229,10 @@
         "FeaturedImageHint": "JPEG, PNG or WEBP, max 2 MB.",
         "FeaturedImageButton": "Add image",
         "FeaturedImageRemove": "Remove",
+        "FeaturedImageReplace": "Replace image",
+        "FeaturedImageRemoveExisting": "Remove image",
+        "FeaturedImagePendingRemoval": "Image will be removed when you save.",
+        "FeaturedImageUndoRemoval": "Undo",
         "Ranking": "Ranking",
         "CoefRanking": "Ranking coeficient",
         "Relay": "Relay",
@@ -1298,7 +1331,9 @@
           "CreateSuccess": "The event as created successfully!",
           "EditSuccess": "The event was updated successfully!",
           "FeaturedImageUploadSuccess": "Featured image uploaded successfully.",
-          "FeaturedImageUploadError": "Failed to upload featured image."
+          "FeaturedImageUploadError": "Failed to upload featured image.",
+          "FeaturedImageRemoveSuccess": "Featured image removed successfully.",
+          "FeaturedImageRemoveError": "Failed to remove featured image."
         }
       },
       "Card": {

@@ -25,6 +25,7 @@ export const GET_EVENT = gql`
       id
       slug
       name
+      featuredImage
       organizer
       location
       latitude
@@ -126,6 +127,7 @@ export const EventSettingsPage = () => {
     ? {
         id: data.event.id,
         name: data.event.name,
+        featuredImage: data.event.featuredImage,
         sportId: data.event.sportId,
         date: data.event.date ? data.event.date.slice(0, 10) : '',
         timezone: data.event.timezone || 'Europe/Prague',
