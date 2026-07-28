@@ -14,7 +14,9 @@ import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UtilsIndexRouteImport } from './routes/utils/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as UtilsQrCodesRouteImport } from './routes/utils/qr-codes'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
@@ -58,9 +60,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UtilsIndexRoute = UtilsIndexRouteImport.update({
+  id: '/utils/',
+  path: '/utils/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UtilsQrCodesRoute = UtilsQrCodesRouteImport.update({
+  id: '/utils/qr-codes',
+  path: '/utils/qr-codes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
@@ -164,7 +176,9 @@ export interface FileRoutesByFullPath {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/utils/qr-codes': typeof UtilsQrCodesRoute
   '/admin/': typeof AdminIndexRoute
+  '/utils/': typeof UtilsIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
@@ -189,7 +203,9 @@ export interface FileRoutesByTo {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/utils/qr-codes': typeof UtilsQrCodesRoute
   '/admin': typeof AdminIndexRoute
+  '/utils': typeof UtilsIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
@@ -215,7 +231,9 @@ export interface FileRoutesById {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/utils/qr-codes': typeof UtilsQrCodesRoute
   '/admin/': typeof AdminIndexRoute
+  '/utils/': typeof UtilsIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
@@ -242,7 +260,9 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/utils/qr-codes'
     | '/admin/'
+    | '/utils/'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
@@ -267,7 +287,9 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/utils/qr-codes'
     | '/admin'
+    | '/utils'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
@@ -292,7 +314,9 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/utils/qr-codes'
     | '/admin/'
+    | '/utils/'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
@@ -318,7 +342,9 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  UtilsQrCodesRoute: typeof UtilsQrCodesRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  UtilsIndexRoute: typeof UtilsIndexRoute
   AdminRankingCzechRoute: typeof AdminRankingCzechRoute
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
   AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
@@ -368,11 +394,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/utils/': {
+      id: '/utils/'
+      path: '/utils'
+      fullPath: '/utils/'
+      preLoaderRoute: typeof UtilsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/utils/qr-codes': {
+      id: '/utils/qr-codes'
+      path: '/utils/qr-codes'
+      fullPath: '/utils/qr-codes'
+      preLoaderRoute: typeof UtilsQrCodesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/signup': {
@@ -510,7 +550,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
+  UtilsQrCodesRoute: UtilsQrCodesRoute,
   AdminIndexRoute: AdminIndexRoute,
+  UtilsIndexRoute: UtilsIndexRoute,
   AdminRankingCzechRoute: AdminRankingCzechRoute,
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
   AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,

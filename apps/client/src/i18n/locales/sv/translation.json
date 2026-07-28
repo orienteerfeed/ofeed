@@ -1726,6 +1726,39 @@
         "billing": "Fakturering"
       }
     },
+    "Utils": {
+      "Title": "Arrangörsverktyg",
+      "Description": "Små verktyg som hjälper dig att organisera och driva dina tävlingar.",
+      "QrCodes": {
+        "TileTitle": "QR-kodgenerator",
+        "TileDescription": "Generera utskrivbara QR-kodetiketter för stafettlagens nummerlappar.",
+        "Title": "QR-kodgenerator för stafettnummerlappar",
+        "Description": "Ange lag- och sträckintervall för din stafett och ladda ner en utskriftsklar PDF med QR-kodetiketter.",
+        "PrintGuidance": "För bäst avläsningssäkerhet, skriv ut på matt papper i 40-50 mm, använd hög kontrast (svart på vitt) och placera etiketten i den övre delen av nummerlappen, borta från veck.",
+        "LabelText": "Lag {{team}} · Sträcka {{leg}}",
+        "Form": {
+          "TeamFrom": "Lag från",
+          "TeamTo": "Lag till",
+          "LegFrom": "Sträcka från",
+          "LegTo": "Sträcka till",
+          "Size": "QR-kodstorlek",
+          "Submit": "Generera PDF",
+          "Generating": "Genererar PDF..."
+        },
+        "Validation": {
+          "TeamRangeOrder": "\"Lag från\" måste vara mindre än eller lika med \"Lag till\"",
+          "LegRangeOrder": "\"Sträcka från\" måste vara mindre än eller lika med \"Sträcka till\"",
+          "TooManyCodes": "Detta intervall skulle generera fler än {{max}} QR-koder. Begränsa intervallen."
+        },
+        "Preview": {
+          "Count": "Detta genererar {{count}} QR-koder.",
+          "Title": "Förhandsgranskning"
+        },
+        "Errors": {
+          "PdfGenerationFailed": "Det gick inte att generera PDF:en. Försök igen."
+        }
+      }
+    },
     "Home": {
       "Hero": {
         "Subtitle": "Liveöversikt över sportevenemang. Löparspårning, kontinuerliga uppdateringar och ett stadigt informationsflöde på ett ställe.",
@@ -1935,6 +1968,7 @@
       "Home": "Hem",
       "Events": "Tävlingar",
       "About": "Om",
+      "Utils": "Verktyg",
       "Docs": "Dok",
       "Contact": "Kontakt",
       "MRB": "Mina resultat",

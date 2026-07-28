@@ -1815,6 +1815,39 @@
           "LastnameRequired": "Příjmení je povinné"
         }
       }
+    },
+    "Utils": {
+      "Title": "Pomocné nástroje",
+      "Description": "Drobné nástroje, které ti pomohou s organizací a průběhem akce.",
+      "QrCodes": {
+        "TileTitle": "Generátor QR kódů",
+        "TileDescription": "Vygeneruj tiskové QR kódy pro startovní čísla štafetových závodů.",
+        "Title": "Generátor QR kódů pro štafetová startovní čísla",
+        "Description": "Zadej rozsah týmů a úseků štafety a stáhni PDF s QR kódy připravené k tisku.",
+        "PrintGuidance": "Pro nejlepší spolehlivost snímání tiskni na matný papír ve velikosti 40–50 mm, použij vysoký kontrast (černá na bílém) a umísti štítek do horní části čísla, mimo záhyby.",
+        "LabelText": "Tým {{team}} · úsek {{leg}}",
+        "Form": {
+          "TeamFrom": "Tým od",
+          "TeamTo": "Tým do",
+          "LegFrom": "Úsek od",
+          "LegTo": "Úsek do",
+          "Size": "Velikost QR kódu",
+          "Submit": "Vygenerovat PDF",
+          "Generating": "Generuji PDF..."
+        },
+        "Validation": {
+          "TeamRangeOrder": "Hodnota „Tým od“ musí být menší nebo rovna hodnotě „Tým do“",
+          "LegRangeOrder": "Hodnota „Úsek od“ musí být menší nebo rovna hodnotě „Úsek do“",
+          "TooManyCodes": "Tento rozsah by vygeneroval více než {{max}} QR kódů. Zúžete prosím rozsahy."
+        },
+        "Preview": {
+          "Count": "Tímto vygeneruješ {{count}} QR kódů.",
+          "Title": "Náhled"
+        },
+        "Errors": {
+          "PdfGenerationFailed": "Generování PDF se nepodařilo. Zkus to znovu."
+        }
+      }
     }
   },
   "Organisms": {
@@ -1916,6 +1949,7 @@
       "Home": "Domů",
       "Events": "Akce",
       "About": "O nás",
+      "Utils": "Pomocné nástroje",
       "Docs": "Dokumentace",
       "Contact": "Kontakty",
       "Board": "Board",

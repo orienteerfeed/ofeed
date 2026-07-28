@@ -508,6 +508,39 @@
         "billing": "Abrechnung"
       }
     },
+    "Utils": {
+      "Title": "Organisator-Werkzeuge",
+      "Description": "Kleine Werkzeuge, die dir helfen, deine Veranstaltungen zu organisieren und durchzuführen.",
+      "QrCodes": {
+        "TileTitle": "QR-Code-Generator",
+        "TileDescription": "Erstelle druckbare QR-Code-Etiketten für Startnummern von Staffelteams.",
+        "Title": "QR-Code-Generator für Staffel-Startnummern",
+        "Description": "Gib die Team- und Streckenabschnitts-Bereiche deiner Staffel ein und lade ein druckfertiges PDF mit QR-Code-Etiketten herunter.",
+        "PrintGuidance": "Für beste Scan-Zuverlässigkeit auf mattem Papier in 40-50 mm drucken, hohen Kontrast (schwarz auf weiß) verwenden und das Etikett im oberen Bereich der Startnummer, abseits von Falzen, platzieren.",
+        "LabelText": "Team {{team}} · Abschnitt {{leg}}",
+        "Form": {
+          "TeamFrom": "Team von",
+          "TeamTo": "Team bis",
+          "LegFrom": "Abschnitt von",
+          "LegTo": "Abschnitt bis",
+          "Size": "QR-Code-Größe",
+          "Submit": "PDF erstellen",
+          "Generating": "PDF wird erstellt..."
+        },
+        "Validation": {
+          "TeamRangeOrder": "„Team von“ muss kleiner oder gleich „Team bis“ sein",
+          "LegRangeOrder": "„Abschnitt von“ muss kleiner oder gleich „Abschnitt bis“ sein",
+          "TooManyCodes": "Dieser Bereich würde mehr als {{max}} QR-Codes erzeugen. Bitte den Bereich einschränken."
+        },
+        "Preview": {
+          "Count": "Dies erzeugt {{count}} QR-Codes.",
+          "Title": "Vorschau"
+        },
+        "Errors": {
+          "PdfGenerationFailed": "Die PDF-Erstellung ist fehlgeschlagen. Bitte versuche es erneut."
+        }
+      }
+    },
     "Home": {
       "Hero": {
         "Subtitle": "Live-Überblick über Sportevents. Läufer-Tracking, kontinuierliche Updates und ein stetiger Informationsfluss an einem Ort.",
@@ -1478,7 +1511,8 @@
   },
   "Templates": {
     "Routes": {
-      "Board": "Board"
+      "Board": "Board",
+      "Utils": "Werkzeuge"
     }
   }
 }

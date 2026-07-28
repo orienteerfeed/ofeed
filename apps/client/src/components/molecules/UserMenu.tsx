@@ -15,6 +15,7 @@ import {
   LogOut,
   Settings,
   Shield,
+  Toolbox,
   UserIcon,
 } from 'lucide-react';
 import { useAuth } from '../../hooks';
@@ -80,6 +81,15 @@ export const UserMenu = ({ user, t }: UserMenuProps) => {
           >
             <CalendarCheck className="mr-2 h-4 w-4" />
             <span>{t('Pages.Event.MyEvents')}</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            {...PATHNAMES.utils()}
+            className="flex w-full cursor-pointer items-center"
+          >
+            <Toolbox className="mr-2 h-4 w-4" />
+            <span>{t('Templates.Routes.Utils')}</span>
           </Link>
         </DropdownMenuItem>
         {user.role === 'ADMIN' && (
