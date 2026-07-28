@@ -55,4 +55,14 @@ describe('admin handlers pagination validation', () => {
       code: HTTP_STATUS.UNPROCESSABLE_CONTENT,
     });
   });
+
+  it('rejects a non-numeric events authorId query parameter', async () => {
+    const response = await getAdminEventsHandler(createContext({ authorId: 'abc' }));
+
+    expect(response.status).toBe(HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    expect(response.body).toMatchObject({
+      error: true,
+      code: HTTP_STATUS.UNPROCESSABLE_CONTENT,
+    });
+  });
 });

@@ -3,7 +3,13 @@ import { z } from '@hono/zod-openapi';
 import type { Context, Handler } from 'hono';
 import sharp from 'sharp';
 
-import { AuthenticationError, ConflictError, DatabaseError, ValidationError } from '../../exceptions/index.js';
+import {
+  AuthenticationError,
+  ConflictError,
+  DatabaseError,
+  NotFoundError,
+  ValidationError,
+} from '../../exceptions/index.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import {
   parseJsonObjectSafe,
@@ -57,6 +63,10 @@ import {
   searchExternalEvents,
 } from './event.import.service.js';
 import { syncOfficialResultsForEvent } from './event.external-results-sync.service.js';
+import {
+  importEventRentalCardsFromCsv,
+  updateEventRentalCardReturned,
+} from './event-rental-cards.service.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { AppBindings } from '../../types/index.js';
 import {
@@ -68,12 +78,20 @@ import {
   eventCompetitorExternalParamsSchema,
   eventCompetitorParamsSchema,
   eventIdParamsSchema,
+  eventRentalCardParamsSchema,
   eventProtocolParamsSchema,
   generatePasswordBodySchema,
   markProtocolProcessedBodySchema,
   stateChangeBodySchema,
   updateEventSlugBodySchema,
+  updateEventRentalCardReturnedBodySchema,
 } from './event.schema.js';
+import { entryOrderParamsSchema, updateEntryOrderStatusBodySchema } from '../entry/entry.schema.js';
+import {
+  listEventEntryOrders,
+  processEntryOrder,
+  updateEntryOrderStatus,
+} from '../entry/entry.service.js';
 
 const appPrisma = prisma as AppPrismaClient;
 
@@ -812,7 +830,9 @@ export function registerSecureEventRoutes(router) {
             externalEventId,
             entriesOpenAt: parsedEntriesOpenAt,
             entriesCloseAt: parsedEntriesCloseAt,
-            ...(typeof resolvedCurrencyId !== 'undefined' ? { currencyId: resolvedCurrencyId } : {}),
+            ...(typeof resolvedCurrencyId !== 'undefined'
+              ? { currencyId: resolvedCurrencyId }
+              : {}),
             ...(typeof vatPayer !== 'undefined' ? { vatPayer } : {}),
             ...(typeof vatRate !== 'undefined' ? { vatRate } : {}),
             ...(typeof lateEntryFeePercent !== 'undefined' ? { lateEntryFeePercent } : {}),
@@ -942,6 +962,7 @@ export function registerSecureEventRoutes(router) {
 
           const baseImage = sharp(uploadedFile.buffer)
             .rotate()
+            .trim()
             .resize({ width: 640, height: 640, fit: 'inside', withoutEnlargement: true });
 
           const resizedBuffer =
@@ -981,6 +1002,173 @@ export function registerSecureEventRoutes(router) {
         }
       },
     ),
+  );
+
+  router.post(
+    '/:eventId/rental-cards/import',
+    routeWithValidation(
+      { paramsSchema: eventIdParamsSchema, bodyMode: 'form' },
+      async ({ req, res }) => {
+        const { eventId } = req.params;
+        const uploadedFile = req.file as SecureFile | undefined;
+
+        if (!uploadedFile) {
+          return res.status(422).json(validationResponse('No file uploaded', res.statusCode));
+        }
+
+        if (uploadedFile.size > 200_000) {
+          return res
+            .status(422)
+            .json(
+              validationResponse('File is too large. Allowed size is up to 200KB', res.statusCode),
+            );
+        }
+
+        try {
+          const result = await importEventRentalCardsFromCsv(
+            appPrisma,
+            req.auth,
+            eventId,
+            uploadedFile.buffer.toString('utf-8'),
+          );
+
+          return res.status(200).json(successResponse('OK', result, res.statusCode));
+        } catch (error) {
+          if (error instanceof ValidationError) {
+            return res.status(422).json(validationResponse(error.message, res.statusCode));
+          }
+          const message = error instanceof Error ? error.message : 'Internal Server Error';
+          if (message === 'Event not found') {
+            return res.status(404).json(errorResponse(message, res.statusCode));
+          }
+          if (message.startsWith('Unauthorized') || message === 'Not authorized for this event') {
+            return res.status(403).json(errorResponse(message, res.statusCode));
+          }
+          return res.status(500).json(errorResponse(message, res.statusCode));
+        }
+      },
+    ),
+  );
+
+  router.patch(
+    '/:eventId/rental-cards/:cardNumber/returned',
+    routeWithValidation(
+      {
+        paramsSchema: eventRentalCardParamsSchema,
+        bodySchema: updateEventRentalCardReturnedBodySchema,
+      },
+      async ({ req, res }) => {
+        const errors = getValidationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(422).json(validationResponse(errors.array(), res.statusCode));
+        }
+
+        const { eventId, cardNumber } = req.params;
+
+        try {
+          const rentalCard = await updateEventRentalCardReturned(appPrisma, req.auth, {
+            eventId,
+            cardNumber,
+            returned: req.body.returned,
+          });
+          return res
+            .status(200)
+            .json(
+              successResponse(
+                'Rental card returned status updated',
+                { data: rentalCard },
+                res.statusCode,
+              ),
+            );
+        } catch (error) {
+          if (error instanceof NotFoundError) {
+            return res.status(404).json(errorResponse(error.message, res.statusCode));
+          }
+          if (error instanceof ValidationError) {
+            return res.status(422).json(validationResponse(error.message, res.statusCode));
+          }
+          if (isAuthzError(error)) {
+            return res.status(error.statusCode).json(errorResponse(error.message, res.statusCode));
+          }
+          logEndpoint(req.c, 'error', 'Rental card returned status update failed', {
+            eventId,
+            cardNumber,
+            ...getErrorDetails(error),
+          });
+          return res
+            .status(500)
+            .json(errorResponse('Failed to update rental card returned status', res.statusCode));
+        }
+      },
+    ),
+  );
+
+  /**
+   * @swagger
+   * /rest/v1/events/{eventId}/image:
+   *  delete:
+   *    summary: Delete event featured image
+   *    description: Remove the event's featured image and delete it from storage.
+   *    tags:
+   *      - Events
+   *    security:
+   *      - bearerAuth: []
+   *    parameters:
+   *      - in: path
+   *        name: eventId
+   *        required: true
+   *        description: The ID of the event to update.
+   *        schema:
+   *          type: string
+   *    responses:
+   *      200:
+   *        description: Image removed successfully
+   *      401:
+   *        description: Not authenticated
+   *      403:
+   *        description: Not authorized
+   *      404:
+   *        description: Event not found
+   *      500:
+   *        description: Internal Server Error
+   */
+  router.delete(
+    '/:eventId/image',
+    routeWithValidation({ paramsSchema: eventIdParamsSchema }, async ({ req, res }) => {
+      const { eventId } = req.params;
+
+      try {
+        const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId);
+
+        if (!ownership.ok) {
+          return ownership.response;
+        }
+
+        const existingEvent = await appPrisma.event.findUnique({
+          where: { id: eventId },
+          select: { featuredImageKey: true },
+        });
+
+        await prisma.event.update({
+          where: { id: eventId },
+          data: { featuredImageKey: null, updatedAt: new Date() },
+        });
+
+        if (existingEvent?.featuredImageKey) {
+          await deletePublicObject(existingEvent.featuredImageKey);
+        }
+
+        return res
+          .status(200)
+          .json(successResponse('OK', { featuredImageKey: null }, res.statusCode));
+      } catch (error) {
+        logEndpoint(req.c, 'error', 'Delete event featured image failed', {
+          eventId,
+          ...getErrorDetails(error),
+        });
+        return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+      }
+    }),
   );
 
   router.patch(
@@ -1257,7 +1445,9 @@ export function registerSecureEventRoutes(router) {
               externalEventId,
               entriesOpenAt: parsedEntriesOpenAt,
               entriesCloseAt: parsedEntriesCloseAt,
-              ...(typeof resolvedCurrencyId !== 'undefined' ? { currencyId: resolvedCurrencyId } : {}),
+              ...(typeof resolvedCurrencyId !== 'undefined'
+                ? { currencyId: resolvedCurrencyId }
+                : {}),
               ...(typeof vatPayer !== 'undefined' ? { vatPayer } : {}),
               ...(typeof vatRate !== 'undefined' ? { vatRate } : {}),
               ...(typeof lateEntryFeePercent !== 'undefined' ? { lateEntryFeePercent } : {}),
@@ -3278,6 +3468,133 @@ export function registerSecureEventRoutes(router) {
           return res.status(500).json(errorResponse(error.message, res.statusCode));
         }
         return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+      }
+    }),
+  );
+
+  router.get(
+    '/:eventId/entries',
+    routeWithValidation({ paramsSchema: eventIdParamsSchema }, async ({ req, res }) => {
+      const errors = getValidationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json(validationResponse(errors.array()));
+      }
+
+      const { eventId } = req.params;
+
+      const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId);
+      if (!ownership.ok) {
+        return ownership.response;
+      }
+
+      try {
+        const entryOrders = await listEventEntryOrders(appPrisma, eventId);
+        return res.status(200).json(successResponse('OK', { data: entryOrders }, res.statusCode));
+      } catch (error) {
+        logEndpoint(req.c, 'error', 'Entry orders query failed', {
+          eventId,
+          ...getErrorDetails(error),
+        });
+        return res.status(500).json(errorResponse('Failed to load entry orders', res.statusCode));
+      }
+    }),
+  );
+
+  router.patch(
+    '/:eventId/entries/:entryId/status',
+    routeWithValidation(
+      {
+        paramsSchema: entryOrderParamsSchema,
+        bodySchema: updateEntryOrderStatusBodySchema,
+      },
+      async ({ req, res }) => {
+        const errors = getValidationResult(req);
+        if (!errors.isEmpty()) {
+          return res.status(422).json(validationResponse(errors.array()));
+        }
+
+        const { eventId, entryId } = req.params;
+
+        const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId);
+        if (!ownership.ok) {
+          return ownership.response;
+        }
+
+        try {
+          const entryOrder = await updateEntryOrderStatus(appPrisma, {
+            eventId,
+            entryId,
+            status: req.body.status,
+            changedById: ownership.userId,
+          });
+          return res
+            .status(200)
+            .json(
+              successResponse('Entry order status updated', { data: entryOrder }, res.statusCode),
+            );
+        } catch (error) {
+          if (error instanceof NotFoundError) {
+            return res.status(404).json(errorResponse(error.message, res.statusCode));
+          }
+          if (error instanceof ConflictError) {
+            return res.status(409).json(errorResponse(error.message, res.statusCode));
+          }
+          if (error instanceof ValidationError) {
+            return res.status(422).json(validationResponse(error.message, res.statusCode));
+          }
+          logEndpoint(req.c, 'error', 'Entry order status update failed', {
+            eventId,
+            entryId,
+            ...getErrorDetails(error),
+          });
+          return res
+            .status(500)
+            .json(errorResponse('Failed to update entry order status', res.statusCode));
+        }
+      },
+    ),
+  );
+
+  router.post(
+    '/:eventId/entries/:entryId/process',
+    routeWithValidation({ paramsSchema: entryOrderParamsSchema }, async ({ req, res }) => {
+      const errors = getValidationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json(validationResponse(errors.array()));
+      }
+
+      const { eventId, entryId } = req.params;
+
+      const ownership = await authorizeEventOwnerOrAdmin(req, res, eventId);
+      if (!ownership.ok) {
+        return ownership.response;
+      }
+
+      try {
+        const entryOrder = await processEntryOrder(appPrisma, {
+          eventId,
+          entryId,
+          userId: ownership.userId,
+        });
+        return res
+          .status(200)
+          .json(successResponse('Entry order processed', { data: entryOrder }, res.statusCode));
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          return res.status(404).json(errorResponse(error.message, res.statusCode));
+        }
+        if (error instanceof ConflictError) {
+          return res.status(409).json(errorResponse(error.message, res.statusCode));
+        }
+        if (error instanceof ValidationError) {
+          return res.status(422).json(validationResponse(error.message));
+        }
+        logEndpoint(req.c, 'error', 'Entry order processing failed', {
+          eventId,
+          entryId,
+          ...getErrorDetails(error),
+        });
+        return res.status(500).json(errorResponse('Failed to process entry order', res.statusCode));
       }
     }),
   );

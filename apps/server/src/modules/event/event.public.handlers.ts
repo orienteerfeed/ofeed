@@ -13,8 +13,14 @@ import {
   toValidationMessage,
 } from '../../lib/validation/zod.js';
 
+import { ConflictError, NotFoundError, ValidationError } from '../../exceptions/index.js';
+import { getJwtNumericUserId } from '../../middlewares/require-jwt.js';
+
 import { validateEventConnection } from './event.connection.service.js';
 import { listEventEntryAvailability } from '../start-slot-vacancy/start-slot-vacancy.service.js';
+import { createEntryOrder, getEventEntryStats } from '../entry/entry.service.js';
+import { createEntryOrderBodySchema } from '../entry/entry.schema.js';
+import { listAvailableEventPaymentMethods } from './event-payment-methods.service.js';
 import { getEventCompetitorDetail, getEventSlugAvailability } from './event.service.js';
 import { flattenOrganisation, organisationSelect } from './organisation.helpers.js';
 import {
@@ -627,6 +633,91 @@ export function registerPublicEventRoutes(router) {
         ...getErrorDetails(err),
       });
       return c.json(error('Failed to load entry availability', 500), 500);
+    }
+  });
+
+  router.get('/:eventId/entry-stats', async (c) => {
+    const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
+    if (!parsedParams.success) {
+      return c.json(responseValidationIssues(parsedParams.error.issues), 422);
+    }
+
+    const { eventId } = parsedParams.data;
+
+    try {
+      const stats = await getEventEntryStats(prisma as never, eventId);
+      return c.json(success('OK', { data: stats }, 200), 200);
+    } catch (err) {
+      logEndpoint(c, 'error', 'Entry stats query failed', {
+        eventId,
+        ...getErrorDetails(err),
+      });
+      return c.json(error('Failed to load entry stats', 500), 500);
+    }
+  });
+
+  router.get('/:eventId/entry-payment-methods', async (c) => {
+    const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
+    if (!parsedParams.success) {
+      return c.json(responseValidationIssues(parsedParams.error.issues), 422);
+    }
+
+    const { eventId } = parsedParams.data;
+    try {
+      const paymentMethods = await listAvailableEventPaymentMethods(prisma as never, eventId);
+      if (!paymentMethods) {
+        return c.json(error('Event not found', 404), 404);
+      }
+      return c.json(success('OK', { data: paymentMethods }, 200), 200);
+    } catch (err) {
+      logEndpoint(c, 'error', 'Entry payment methods query failed', {
+        eventId,
+        ...getErrorDetails(err),
+      });
+      return c.json(error('Failed to load entry payment methods', 500), 500);
+    }
+  });
+
+  router.post('/:eventId/entries', async (c) => {
+    const parsedParams = eventIdParamsSchema.safeParse(c.req.param());
+    if (!parsedParams.success) {
+      return c.json(responseValidationIssues(parsedParams.error.issues), 422);
+    }
+
+    const body = await parseJsonObjectSafe(c);
+    const parsedBody = createEntryOrderBodySchema.safeParse(body);
+    if (!parsedBody.success) {
+      return c.json(responseValidationIssues(parsedBody.error.issues), 422);
+    }
+
+    const { eventId } = parsedParams.data;
+
+    try {
+      const entryOrder = await createEntryOrder(
+        prisma as never,
+        {
+          eventId,
+          userId: getJwtNumericUserId(c) ?? null,
+          paymentLinkLanguage: c.req.header('accept-language'),
+        },
+        parsedBody.data,
+      );
+      return c.json(success('Entry order created', { data: entryOrder }, 201), 201);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        return c.json(validation(err.message, 422), 422);
+      }
+      if (err instanceof ConflictError) {
+        return c.json(error(err.message, 409), 409);
+      }
+      if (err instanceof NotFoundError) {
+        return c.json(error(err.message, 404), 404);
+      }
+      logEndpoint(c, 'error', 'Entry order creation failed', {
+        eventId,
+        ...getErrorDetails(err),
+      });
+      return c.json(error('Failed to create entry order', 500), 500);
     }
   });
 
