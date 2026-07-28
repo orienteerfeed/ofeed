@@ -52,6 +52,26 @@ function parsePositiveIntegerQueryParam(value: string | undefined, defaultValue:
   return Number.isSafeInteger(parsed) && parsed >= 1 ? parsed : null;
 }
 
+function parseOptionalBooleanList(value: string | undefined) {
+  if (value === undefined || value === '') return undefined;
+  const values = value.split(',');
+  return values.every(item => item === 'true' || item === 'false')
+    ? values.map(item => item === 'true')
+    : null;
+}
+
+function parseOptionalEnumList(value: string | undefined, allowed: readonly string[]) {
+  if (value === undefined || value === '') return undefined;
+  const values = value.split(',');
+  return values.every(item => allowed.includes(item)) ? values : null;
+}
+
+function parseOptionalDate(value: string | undefined) {
+  if (value === undefined || value === '') return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export async function getAdminDashboardHandler(c) {
   const adminUserId = getAdminUserId(c);
   const logContext = buildAdminLogContext(c, adminUserId);
@@ -91,6 +111,11 @@ export async function getAdminUsersHandler(c) {
   try {
     const rawPage = c.req.query('page');
     const rawLimit = c.req.query('limit');
+    const role = parseOptionalEnumList(c.req.query('role'), ['USER', 'ADMIN']);
+    const active = parseOptionalBooleanList(c.req.query('active'));
+    const emailVerified = parseOptionalBooleanList(c.req.query('emailVerified'));
+    const createdFrom = parseOptionalDate(c.req.query('createdFrom'));
+    const createdTo = parseOptionalDate(c.req.query('createdTo'));
     const parsedPage = parsePositiveIntegerQueryParam(rawPage, 1);
     const parsedLimit = parsePositiveIntegerQueryParam(rawLimit, 25);
 
@@ -100,7 +125,7 @@ export async function getAdminUsersHandler(c) {
         HTTP_STATUS.UNPROCESSABLE_CONTENT,
       );
     }
-    if (parsedLimit === null) {
+    if (parsedLimit === null || role === null || active === null || emailVerified === null || createdFrom === null || createdTo === null) {
       return c.json(
         validationResponse('Invalid limit parameter'),
         HTTP_STATUS.UNPROCESSABLE_CONTENT,
@@ -110,7 +135,7 @@ export async function getAdminUsersHandler(c) {
     const page = parsedPage;
     const limit = Math.min(200, parsedLimit);
 
-    const users = await getAdminUsers(prisma, { page, limit });
+    const users = await getAdminUsers(prisma, { page, limit, name: c.req.query('name'), email: c.req.query('email'), organisation: c.req.query('organisation'), role, active, emailVerified, createdFrom, createdTo, sortBy: c.req.query('sortBy'), sortDirection: c.req.query('sortDirection') });
 
     logger.info('Admin users list loaded', {
       ...logContext,
@@ -141,8 +166,16 @@ export async function getAdminEventsHandler(c) {
   try {
     const rawPage = c.req.query('page');
     const rawLimit = c.req.query('limit');
+    const rawAuthorId = c.req.query('authorId');
+    const discipline = parseOptionalEnumList(c.req.query('discipline'), ['SPRINT', 'MIDDLE', 'LONG', 'ULTRALONG', 'NIGHT', 'KNOCKOUT_SPRINT', 'RELAY', 'SPRINT_RELAY', 'TEAMS', 'OTHER']);
+    const published = parseOptionalBooleanList(c.req.query('published'));
+    const ranking = parseOptionalBooleanList(c.req.query('ranking'));
+    const dateFrom = parseOptionalDate(c.req.query('dateFrom'));
+    const dateTo = parseOptionalDate(c.req.query('dateTo'));
     const parsedPage = parsePositiveIntegerQueryParam(rawPage, 1);
     const parsedLimit = parsePositiveIntegerQueryParam(rawLimit, 25);
+    const parsedAuthorId =
+      rawAuthorId === undefined ? undefined : parsePositiveIntegerQueryParam(rawAuthorId, 1);
 
     if (parsedPage === null) {
       return c.json(
@@ -156,17 +189,25 @@ export async function getAdminEventsHandler(c) {
         HTTP_STATUS.UNPROCESSABLE_CONTENT,
       );
     }
+    if (parsedAuthorId === null || discipline === null || published === null || ranking === null || dateFrom === null || dateTo === null) {
+      return c.json(
+        validationResponse('Invalid authorId parameter'),
+        HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      );
+    }
 
     const page = parsedPage;
     const limit = Math.min(200, parsedLimit);
+    const authorId = parsedAuthorId ?? undefined;
 
-    const events = await getAdminEvents(prisma, { page, limit });
+    const events = await getAdminEvents(prisma, { page, limit, authorId, name: c.req.query('name'), organizer: c.req.query('organizer'), authorName: c.req.query('authorName'), discipline, published, ranking, dateFrom, dateTo, sortBy: c.req.query('sortBy'), sortDirection: c.req.query('sortDirection') });
 
     logger.info('Admin events list loaded', {
       ...logContext,
       results: {
         total: events.total,
         returned: events.items.length,
+        authorId,
       },
     });
 
