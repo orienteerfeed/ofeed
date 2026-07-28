@@ -752,6 +752,7 @@ export const EventForm: React.FC<EventFormProps> = ({
         value.timezone || userTimezone
       );
       let savedEventId: string | undefined;
+      let eventSaveSucceeded = false;
 
       if (!normalizedZeroTime) {
         toast({
@@ -795,6 +796,7 @@ export const EventForm: React.FC<EventFormProps> = ({
             externalEventId: externalEventIdPayload,
           }),
           onSuccess: (response: unknown) => {
+            eventSaveSucceeded = true;
             toast({
               title: t('Operations.Success', { ns: 'common' }),
               description: initialData?.id
@@ -839,7 +841,9 @@ export const EventForm: React.FC<EventFormProps> = ({
           },
         });
 
-        const uploadTargetId = savedEventId ?? initialData?.id;
+        const uploadTargetId = eventSaveSucceeded
+          ? (savedEventId ?? initialData?.id)
+          : undefined;
 
         if (uploadTargetId && featuredImage) {
           const uploadedFile = featuredImage;

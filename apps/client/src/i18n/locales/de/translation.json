@@ -567,6 +567,14 @@
       "Form": {
         "DefaultStartMode": "Standard-Startmodus",
         "Currency": "Währung",
+        "FeaturedImage": "Titelbild",
+        "FeaturedImageHint": "JPEG, PNG oder WEBP, max. 2 MB.",
+        "FeaturedImageButton": "Bild hinzufügen",
+        "FeaturedImageRemove": "Entfernen",
+        "FeaturedImageReplace": "Bild ersetzen",
+        "FeaturedImageRemoveExisting": "Bild entfernen",
+        "FeaturedImagePendingRemoval": "Das Bild wird beim Speichern entfernt.",
+        "FeaturedImageUndoRemoval": "Rückgängig",
         "StartModeOptions": {
           "StartList": "Startliste",
           "MassStart": "Massenstart",
@@ -589,6 +597,12 @@
         },
         "Validation": {
           "SplitPublicationAtRequired": "Für die geplante Veröffentlichung der Zwischenzeiten ist ein Veröffentlichungszeitpunkt erforderlich."
+        },
+        "Toast": {
+          "FeaturedImageUploadSuccess": "Titelbild wurde erfolgreich hochgeladen.",
+          "FeaturedImageUploadError": "Titelbild konnte nicht hochgeladen werden.",
+          "FeaturedImageRemoveSuccess": "Titelbild wurde erfolgreich entfernt.",
+          "FeaturedImageRemoveError": "Titelbild konnte nicht entfernt werden."
         }
       },
       "Integration": {

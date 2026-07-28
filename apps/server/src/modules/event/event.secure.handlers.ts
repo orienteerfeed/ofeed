@@ -1149,14 +1149,14 @@ export function registerSecureEventRoutes(router) {
           select: { featuredImageKey: true },
         });
 
-        if (existingEvent?.featuredImageKey) {
-          await deletePublicObject(existingEvent.featuredImageKey);
-        }
-
         await prisma.event.update({
           where: { id: eventId },
           data: { featuredImageKey: null, updatedAt: new Date() },
         });
+
+        if (existingEvent?.featuredImageKey) {
+          await deletePublicObject(existingEvent.featuredImageKey);
+        }
 
         return res
           .status(200)
