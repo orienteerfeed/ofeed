@@ -70,7 +70,7 @@
     "resend": "^6.16.0",
     "rotating-file-stream": "^3.2.9",
     "sharp": "^0.35.2",
-    "ws": "^8.21.0",
+    "ws": "^8.21.1",
     "xml2js": "^0.6.2",
     "xmllint-wasm": "^5.2.0"
   },
