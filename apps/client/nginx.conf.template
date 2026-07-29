@@ -10,7 +10,7 @@ server {
     return 200 "ok";
   }
 
-  location /rest/v1/ {
+  location ^~ /rest/v1/ {
     proxy_pass ${API_UPSTREAM}/rest/v1/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
@@ -19,7 +19,7 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 
-  location /api/ {
+  location ^~ /api/ {
     proxy_pass ${API_UPSTREAM}/api/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
@@ -39,12 +39,28 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 
-  location / {
-    try_files $uri $uri/ /index.html;
+  location = /index.html {
+    try_files $uri =404;
+    add_header Cache-Control "no-cache" always;
   }
 
-  location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|webp|avif|woff|woff2|ttf|eot)$ {
-    expires 7d;
-    add_header Cache-Control "public, max-age=604800";
+  # Vite emits content-hashed build artifacts under /assets/. They can be
+  # retained indefinitely because a changed file is published under a new URL.
+  location ^~ /assets/ {
+    try_files $uri =404;
+    expires 1y;
+    add_header Cache-Control "public, max-age=31536000, immutable" always;
+  }
+
+  # Public files, the web app manifest, and service-worker files keep stable
+  # URLs. Revalidate them so a deployment can update the application shell.
+  location ~* \.(?:html|js|mjs|css|map|json|webmanifest|txt|xml|ico|png|jpe?g|gif|svg|webp|avif|woff2?|ttf|eot|mp3|mp4|webm|ogg)$ {
+    try_files $uri =404;
+    add_header Cache-Control "no-cache" always;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+    add_header Cache-Control "no-cache" always;
   }
 }

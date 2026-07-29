@@ -23,12 +23,21 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}', '**/pwa-*.png'],
-        globIgnores: ['**/images/placeholders/**'],
+        // Only Vite's content-hashed build artifacts are safe to precache.
+        // index.html and public files use stable URLs and must be revalidated.
+        globPatterns: ['assets/**/*'],
+        navigateFallback: null,
         runtimeCaching: [
           {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages',
+            },
+          },
+          {
             urlPattern: ({ request }) => request.destination === 'image',
-            handler: 'CacheFirst',
+            handler: 'NetworkFirst',
             options: {
               cacheName: 'images',
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 24 * 60 * 60 }, // 60 days
