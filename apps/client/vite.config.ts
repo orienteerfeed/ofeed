@@ -26,6 +26,9 @@ export default defineConfig({
         // Only Vite's content-hashed build artifacts are safe to precache.
         // index.html and public files use stable URLs and must be revalidated.
         globPatterns: ['assets/**/*'],
+        // Source maps are useful to error-reporting and debugging tools, but
+        // must never be downloaded into every user's offline cache.
+        globIgnores: ['**/*.map'],
         navigateFallback: null,
         runtimeCaching: [
           {

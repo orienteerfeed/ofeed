@@ -21,8 +21,7 @@ The `board` app is excluded from root `pnpm dev` — start it separately with
 
 - Node.js 24.15.0 (`nvm install && nvm use`)
 - pnpm 11.4.0 (`corepack enable && corepack use pnpm@11.4.0`)
-- Docker for local MariaDB:
-  `docker compose -f docker-compose.mysql.yaml up -d mysql`
+- Docker for local MariaDB: `docker compose -f compose.mysql.yaml up -d mysql`
 
 Bootstrap: `pnpm setup:dev && pnpm db:generate && pnpm db:migrate`.
 

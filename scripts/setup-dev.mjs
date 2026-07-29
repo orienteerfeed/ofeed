@@ -47,7 +47,7 @@ for (const [src, dest] of envFiles) {
 }
 
 console.log("\nNext steps:");
-console.log("1) docker compose -f docker-compose.mysql.yaml up -d mysql");
+console.log("1) docker compose -f compose.mysql.yaml up -d mysql");
 console.log("2) pnpm db:generate");
 console.log("3) pnpm db:migrate");
 console.log("4) pnpm dev");

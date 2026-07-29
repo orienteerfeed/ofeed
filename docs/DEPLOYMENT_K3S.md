@@ -1,129 +1,23 @@
-# Deployment Manual: k3s + Helm + HashiCorp Vault
+# k3s deployment reference
 
-Tento postup nasadí OFeed aplikaci do k3s:
-- frontend (`web`) + backend (`api`) + migration job přes Helm
-- externí MariaDB/MySQL (mimo tento chart)
-- `DATABASE_URL` a `JWT_TOKEN_SECRET_KEY` z HashiCorp Vault
-- backend image startuje built server přes `node dist/index.js`; Vault env soubor
-  se načítá v image entrypointu
+The supported production delivery model is Argo CD with the OFeed Helm chart.
+See [DEPLOYMENT_ARGOCD.md](./DEPLOYMENT_ARGOCD.md) for the release-tag, GHCR,
+Vault, Secret and migration contract.
 
-## 1. Předpoklady
-
-- funkční k3s cluster
-- `kubectl` a `helm` nastavené na daný cluster
-- HashiCorp Vault s povolenou Kubernetes auth metodou
-- dostupné image backendu a frontendu (např. v GHCR)
-
-## 2. Namespace
-
-```bash
-kubectl create namespace ofeed --dry-run=client -o yaml | kubectl apply -f -
-```
-
-## 3. Vault secret
-
-Do Vault path ulož:
-- `DATABASE_URL` (např. `mysql://ofeed:***@mariadb.database.svc.cluster.local:3306/ofeed`)
-- `JWT_TOKEN_SECRET_KEY` (min. 32 znaků)
-- `MAPY_API_KEY` (volitelné, pro mapový podklad Mapy.cz bez zveřejnění klíče ve frontendu)
-- `MAP_TILE_COOKIE_SECRET` (volitelné, doporučené, dedikovaný signing secret pro krátkodobou tile session cookie; když chybí, použije se `JWT_TOKEN_SECRET_KEY`)
-
-Příklad (KV v2):
-
-```bash
-vault kv put kv/ofeed/api \
-  DATABASE_URL='mysql://ofeed:password@mariadb.database.svc.cluster.local:3306/ofeed' \
-  JWT_TOKEN_SECRET_KEY='replace-with-long-random-secret-min-32-chars' \
-  MAPY_API_KEY='replace-with-mapy-api-key' \
-  MAP_TILE_COOKIE_SECRET='replace-with-dedicated-map-tile-cookie-secret'
-```
-
-## 4. Vault policy a role
-
-Policy:
-
-```hcl
-path "kv/data/ofeed/api" {
-  capabilities = ["read"]
-}
-```
-
-Vytvoření policy:
-
-```bash
-vault policy write ofeed-api-policy /path/to/policy.hcl
-```
-
-Role (mapovaná na service account z Helm chartu):
-
-```bash
-vault write auth/kubernetes/role/ofeed-api \
-  bound_service_account_names='ofeed-ofeed-vault' \
-  bound_service_account_namespaces='ofeed' \
-  policies='ofeed-api-policy' \
-  ttl='24h'
-```
-
-Poznámka: pokud změníš `release name` nebo `fullnameOverride`, uprav i `bound_service_account_names`.
-
-## 5. Helm deploy
-
-Výchozí deploy:
+For a local k3s validation, render the chart with a single immutable version:
 
 ```bash
 helm upgrade --install ofeed ./deploy/helm/ofeed \
   --namespace ofeed \
   --create-namespace \
   -f ./deploy/helm/ofeed/values-production.yaml \
-  --set vault.enabled=true \
-  --set vault.role=ofeed-api \
-  --set vault.authPath=auth/kubernetes \
-  --set vault.secretPath=kv/data/ofeed/api \
-  --set ingress.hosts[0].host=ofeed.example.com
+  --set api.image.tag=1.2.3 \
+  --set web.image.tag=1.2.3 \
+  --set ops.image.tag=1.2.3 \
+  --set board.image.tag=1.2.3
 ```
 
-Pro private GHCR vytvoř image pull secret:
-
-```bash
-kubectl -n ofeed create secret docker-registry regcred \
-  --docker-server=ghcr.io \
-  --docker-username='<github-username>' \
-  --docker-password='<github-token-read-packages>'
-```
-
-a při Helm deploy přidej:
-
-```bash
---set imagePullSecrets[0].name=regcred
-```
-
-## 6. Kontrola
-
-```bash
-kubectl -n ofeed get pods
-kubectl -n ofeed get svc
-kubectl -n ofeed get ingress
-kubectl -n ofeed logs deploy/api
-```
-
-Health endpoint API:
-
-```bash
-kubectl -n ofeed port-forward svc/api 3001:3001
-curl http://localhost:3001/healthz
-curl http://localhost:3001/readyz
-```
-
-OpenAPI:
-
-```bash
-curl http://localhost:3001/doc
-curl http://localhost:3001/reference
-```
-
-## 7. Upgrade / rollback
-
-```bash
-helm upgrade ofeed ./deploy/helm/ofeed -n ofeed -f ./deploy/helm/ofeed/values-production.yaml
-helm rollback ofeed 1 -n ofeed
-```
+Use either `api.envFrom` and `ops.envFrom` with a Kubernetes Secret or enable
+the Vault Agent Injector. The `ops` Job must have the same database connection
+configuration as the API. Do not add secrets to `web.env` or `board.env`; those
+variables become browser-visible runtime configuration.

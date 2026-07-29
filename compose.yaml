@@ -2,17 +2,17 @@ name: ofeed
 
 services:
   api-bootstrap:
-    image: ofeed-server
+    image: ofeed-ops
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
+      target: ops
       args:
         NODE_VERSION: 24.15.0
         PNPM_VERSION: 11.4.0
     env_file: ./apps/server/.env
     environment:
       - NODE_ENV=production
-    command: ["sh", "-lc", "pnpm exec prisma migrate deploy && pnpm run db:seed"]
     restart: "no"
     networks:
       - app-network
@@ -22,6 +22,7 @@ services:
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
+      target: production
       args:
         NODE_VERSION: 24.15.0
         PNPM_VERSION: 11.4.0
@@ -51,11 +52,9 @@ services:
       args:
         NODE_VERSION: 24.15.0
         PNPM_VERSION: 11.4.0
-      secrets:
-        - client_env
     env_file: ./apps/client/.env
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${FRONTEND_PORT:-3000}:8080"
     restart: unless-stopped
     networks:
       - app-network
@@ -63,7 +62,7 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/healthz >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz >/dev/null || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -77,13 +76,11 @@ services:
       args:
         NODE_VERSION: 24.15.0
         PNPM_VERSION: 11.4.0
-      secrets:
-        - board_env
     env_file: ./apps/board/.env
     ports:
-      - "${BOARD_PORT:-3002}:80"
+      - "${BOARD_PORT:-3002}:8080"
     environment:
-      - PORT=80
+      - PORT=8080
       - BOARD_API_UPSTREAM=http://api:3001
     restart: unless-stopped
     networks:
@@ -92,17 +89,11 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/healthz >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz >/dev/null || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 10
       start_period: 10s
-
-secrets:
-  client_env:
-    file: ./apps/client/.env
-  board_env:
-    file: ./apps/board/.env
 
 networks:
   app-network:

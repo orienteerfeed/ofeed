@@ -11,8 +11,8 @@ serviceAccount:
 api:
   replicaCount: 1
   image:
-    repository: ofeed-server
-    tag: local
+    repository: ghcr.io/orienteerfeed/ofeed/server
+    tag: ""
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -31,6 +31,7 @@ api:
     LOG_LEVEL: info
     OPENAPI_DOC_PATH: "/doc"
     OPENAPI_REFERENCE_PATH: "/reference"
+  envFrom: []
   podAnnotations: {}
   resources: {}
   nodeSelector: {}
@@ -40,9 +41,10 @@ api:
 web:
   replicaCount: 1
   image:
-    repository: ofeed-client
-    tag: local
+    repository: ghcr.io/orienteerfeed/ofeed/client
+    tag: ""
     pullPolicy: IfNotPresent
+  containerPort: 8080
   service:
     type: ClusterIP
     port: 80
@@ -52,6 +54,39 @@ web:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+board:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/orienteerfeed/ofeed/board
+    tag: ""
+    pullPolicy: IfNotPresent
+  containerPort: 8080
+  service:
+    type: ClusterIP
+    port: 80
+  env: {}
+  podAnnotations: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  ingress:
+    enabled: false
+    className: traefik
+    annotations: {}
+    hosts: []
+    tls: []
+
+ops:
+  image:
+    repository: ghcr.io/orienteerfeed/ofeed/ops
+    tag: ""
+    pullPolicy: IfNotPresent
+  env: {}
+  envFrom: []
+  resources: {}
 
 ingress:
   enabled: true
@@ -65,20 +100,17 @@ ingress:
   tls: []
 
 vault:
-  enabled: true
-  role: ofeed-api
+  enabled: false
+  role: ""
   authPath: auth/kubernetes
-  secretPath: kv/data/ofeed/api
+  secretPath: ""
   kvVersion: v2
   injectFileName: api-env
-  databaseUrlKey: DATABASE_URL
-  jwtTokenSecretKey: JWT_TOKEN_SECRET_KEY
+  secretKeys:
+    - DATABASE_URL
+    - JWT_TOKEN_SECRET_KEY
 
 migrations:
   enabled: true
-  backoffLimit: 6
+  backoffLimit: 3
   activeDeadlineSeconds: 600
-  hook:
-    enabled: true
-    events: post-install,post-upgrade
-    deletePolicy: before-hook-creation,hook-succeeded

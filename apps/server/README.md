@@ -26,7 +26,7 @@ corepack enable
 corepack use pnpm@11.4.0
 pnpm install
 cp apps/server/.env.example apps/server/.env
-docker compose -f docker-compose.mysql.yaml up -d mysql
+docker compose -f ../../compose.mysql.yaml up -d mysql
 pnpm --filter ./apps/server db:generate
 pnpm --filter ./apps/server db:migrate
 pnpm --filter ./apps/server dev

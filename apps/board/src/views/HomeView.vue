@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'
 import DataProvider from '@/components/DataProvider.vue'
 import CompetitionList from '@/components/CompetitionList.vue'
 import type { DataProviders } from '@/composables/providers/useDataProvider'
+import { boardRuntimeValue } from '@/runtime-config'
 
 type CompetitionProvider = {
   name: string
@@ -15,10 +16,7 @@ const COMPETITION_PROVIDERS: CompetitionProvider[] = [
   { name: 'LiveResultat', value: 'liveResultat' },
 ]
 const allowedProviders = (
-  (import.meta.env.VITE_PROVIDERS as string | undefined)?.split(',') ?? [
-    'ofeed',
-    'liveResultat',
-  ]
+  boardRuntimeValue('VITE_PROVIDERS')?.split(',') ?? ['ofeed', 'liveResultat']
 ).filter((provider): provider is DataProviders =>
   ['ofeed', 'liveResultat', 'test'].includes(provider)
 )

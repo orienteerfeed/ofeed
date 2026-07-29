@@ -78,7 +78,7 @@ pnpm setup:dev
 Then run:
 
 ```bash
-docker compose -f docker-compose.mysql.yaml up -d mysql
+docker compose -f compose.mysql.yaml up -d mysql
 pnpm db:generate
 pnpm db:migrate
 pnpm dev
@@ -231,12 +231,12 @@ docker compose up -d --build
 
 Available compose overlays:
 
-- `docker-compose.mysql.yaml` - local MySQL/MariaDB-compatible DB
-- `docker-compose.minio.yaml` - local MinIO + init
-- `docker-compose.traefik.yaml` - Traefik labels/integration
-- `docker-compose.scaled.yaml` - static replicas for api/frontend
-- `docker-compose.infra.yaml` - attach shared external network
-- `docker-compose.remote.yaml` - host networking variant (API)
+- `compose.mysql.yaml` - local MySQL/MariaDB-compatible DB
+- `compose.minio.yaml` - local MinIO + init
+- `compose.traefik.yaml` - Traefik labels/integration
+- `compose.scaled.yaml` - static replicas for api/frontend
+- `compose.infra.yaml` - attach shared external network
+- `compose.remote.yaml` - host networking variant (API)
 
 Docker Compose can also use a root `.env` only for Compose interpolation, for example:
 
@@ -302,12 +302,25 @@ git push origin main
 
 ### Docker image publishing
 
-Docker images are published by `.github/workflows/publish-images-ghcr.yaml` on tag `v*` to GHCR:
+Docker images are published by `.github/workflows/publish-images-ghcr.yaml` only
+for a release tag in the exact form `vX.Y.Z`. Each published image is a
+multi-platform manifest for `linux/amd64` and `linux/arm64`, and has exactly
+one release tag without the `v` prefix:
 
-- `ghcr.io/orienteerfeed/ofeed-server`
-- `ghcr.io/orienteerfeed/ofeed-client`
+- `ghcr.io/orienteerfeed/ofeed/server:X.Y.Z`
+- `ghcr.io/orienteerfeed/ofeed/ops:X.Y.Z` for `prisma migrate deploy`
+- `ghcr.io/orienteerfeed/ofeed/client:X.Y.Z`
+- `ghcr.io/orienteerfeed/ofeed/board:X.Y.Z`
 
-Packages are published as private by default.
+The packages are public. Each image carries OCI source/version labels, an SBOM,
+and a build provenance attestation. Set the package visibility to **Public** in
+GitHub Packages after its first publication.
+
+Client and board images are environment-neutral: public browser configuration
+is generated as `/runtime-config.js` when the container starts. Set only the
+documented `OFEED_*` variables in Docker Compose or Kubernetes; never expose
+server secrets through those variables. Deployment guidance is in
+[`docs/DEPLOYMENT_ARGOCD.md`](./docs/DEPLOYMENT_ARGOCD.md).
 
 ## Contributing
 

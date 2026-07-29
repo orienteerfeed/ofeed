@@ -3,6 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: apps/server/Dockerfile
+      target: production
       args:
         NODE_VERSION: 24.15.0
         PNPM_VERSION: 11.4.0

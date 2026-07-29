@@ -10,6 +10,10 @@ server {
     return 200 "ok";
   }
 
+  location = /runtime-config.js {
+    add_header Cache-Control "no-store" always;
+  }
+
   location ^~ /rest/v1/ {
     proxy_pass ${API_UPSTREAM}/rest/v1/;
     proxy_http_version 1.1;

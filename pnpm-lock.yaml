@@ -249,9 +249,6 @@ importers:
       '@tanstack/react-router':
         specifier: ^1.170.18
         version: 1.170.18(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@tanstack/react-router-devtools':
-        specifier: ^1.167.0
-        version: 1.167.0(@tanstack/react-router@1.170.18(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/router-core@1.171.15)(csstype@3.2.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -358,6 +355,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.101.4
         version: 5.101.4(@tanstack/react-query@5.101.4(react@19.2.8))(react@19.2.8)
+      '@tanstack/react-router-devtools':
+        specifier: ^1.167.0
+        version: 1.167.0(@tanstack/react-router@1.170.18(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/router-core@1.171.15)(csstype@3.2.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/router-plugin':
         specifier: ^1.168.23
         version: 1.168.23(@tanstack/react-router@1.170.18(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(esbuild@0.28.1)(rollup@4.60.3)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.23.1)(yaml@2.9.0))

@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Release-only GHCR publishing for immutable multi-architecture client, server,
+  board, and database-migration images.
+- Runtime frontend configuration, Argo CD PreSync migrations, and optional
+  Kubernetes Secret or Vault Agent secret delivery.
+
 ### Changed
+
+- Standardized production Node images on Node 24.15.0 Bookworm slim and moved
+  client router devtools to development-only dependencies.
 
 ### Removed
 
