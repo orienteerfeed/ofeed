@@ -21,7 +21,7 @@ COPY apps/client apps/client
 COPY packages/shared packages/shared
 RUN pnpm --filter ./apps/client... run build
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine AS runner
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runner
 COPY apps/client/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY apps/client/docker-entrypoint-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
 COPY --from=builder /workspace/apps/client/dist /usr/share/nginx/html
