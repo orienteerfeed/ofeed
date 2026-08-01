@@ -24,7 +24,7 @@
     "@tanstack/vue-query": "^5.101.4",
     "@unocss/reset": "^66.7.5",
     "@vueuse/core": "^13.0.0",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "date-fns": "^2.29.3",
     "flag-icons": "^7.5.0",
     "graphql-ws": "^6.2.0",
