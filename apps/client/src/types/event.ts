@@ -77,7 +77,6 @@ export interface Event {
   slug?: string | null;
   name: string;
   date: string;
-  zeroTime?: string;
   description?: string;
   featuredImage?: string;
 

@@ -1,10 +1,5 @@
 import { config } from '@/config';
-import {
-  formatDateWithDay,
-  formatTimeToHms,
-  getLocaleKey,
-  type LocaleKey,
-} from '@/lib/date';
+import { formatTimeToHms } from '@/lib/date';
 import {
   createProxiedMapyProvider,
   MAP_TILE_SESSION_URL,
@@ -184,10 +179,7 @@ const resolveFeaturedImageUrl = (featuredImage?: string): string | null => {
   return featuredImage;
 };
 
-const buildEventTooltipHtml = (
-  event: MappableEvent,
-  localeKey: LocaleKey
-): string => {
+const buildEventTooltipHtml = (event: MappableEvent): string => {
   const imageUrl = resolveFeaturedImageUrl(event.featuredImage);
   const imageMarkup = imageUrl
     ? `<img alt="${escapeHtml(event.name)}" class="event-map-tooltip-card__image" loading="lazy" src="${escapeHtml(imageUrl)}" />`
@@ -197,14 +189,12 @@ const buildEventTooltipHtml = (
     ? `<span class="event-map-tooltip-card__meta-sep">·</span>${ICON_CLOCK}<span>${escapeHtml(formatTimeToHms(event.zeroTime, { dropZeroSeconds: true }))}</span>`
     : '';
 
-  const formattedDate = escapeHtml(formatDateWithDay(event.date, localeKey));
-
   return `
     <div class="event-map-tooltip-card">
       ${imageMarkup}
       <div class="event-map-tooltip-card__body">
         <div class="event-map-tooltip-card__title">${escapeHtml(event.name)}</div>
-        <div class="event-map-tooltip-card__meta">${ICON_CALENDAR}<span>${formattedDate}</span>${zeroTimeMarkup}</div>
+        <div class="event-map-tooltip-card__meta">${ICON_CALENDAR}<span>${escapeHtml(event.date)}</span>${zeroTimeMarkup}</div>
         <div class="event-map-tooltip-card__meta">${ICON_MAP_PIN}<span>${escapeHtml(event.location)}</span></div>
       </div>
     </div>
@@ -377,12 +367,10 @@ function InitializeMapViewport({
 function EventMarkersLayer({
   clusteringEnabled,
   events,
-  localeKey,
   markerColorScheme,
 }: {
   clusteringEnabled: boolean;
   events: readonly MappableEvent[];
-  localeKey: LocaleKey;
   markerColorScheme: EventMarkerColorScheme;
 }) {
   const map = useLeafletMap();
@@ -404,7 +392,7 @@ function EventMarkersLayer({
             }
       );
 
-      markerLayer.bindTooltip(buildEventTooltipHtml(event, localeKey), {
+      markerLayer.bindTooltip(buildEventTooltipHtml(event), {
         className: 'event-map-tooltip',
         direction: 'top',
         offset: [0, -16],
@@ -458,15 +446,7 @@ function EventMarkersLayer({
     }
 
     return addMarkerLayersToMap(map, markerLayers);
-  }, [
-    clusteringEnabled,
-    events,
-    localeKey,
-    map,
-    markerColorScheme,
-    navigate,
-    zoom,
-  ]);
+  }, [clusteringEnabled, events, map, markerColorScheme, navigate, zoom]);
 
   return null;
 }
@@ -476,7 +456,6 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
   const tileLanguage = normalizeTileLanguage(
     i18n.resolvedLanguage ?? i18n.language
   );
-  const localeKey = getLocaleKey(i18n.resolvedLanguage ?? i18n.language);
   const mapTheme = resolvedTheme === 'dark' ? 'dark' : 'neutral';
   const markerColorScheme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
@@ -623,7 +602,6 @@ export const EventMapView = ({ events, t }: EventMapViewProps) => {
             <EventMarkersLayer
               clusteringEnabled={clusterPluginReady}
               events={mapEvents}
-              localeKey={localeKey}
               markerColorScheme={markerColorScheme}
             />
           ) : null}

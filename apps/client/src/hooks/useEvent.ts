@@ -19,7 +19,6 @@ const GET_EVENT = gql`
         name
       }
       date
-      zeroTime
       timezone
       discipline
       externalSource
