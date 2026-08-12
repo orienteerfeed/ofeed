@@ -1,4 +1,29 @@
 {
+  "Molecules": {
+    "DragDrop": {
+      "ClickToUpload": "Cliquez pour téléverser",
+      "Delete": "Supprimer",
+      "OrDragAndDrop": "ou glissez-déposez",
+      "SupportedFormats": "Format pris en charge :",
+      "Done": "Terminé",
+      "Processing": "Traitement en cours...",
+      "Toast": {
+        "MaximumFiles": {
+          "Title": "Nombre maximal de fichiers",
+          "Description": "Seuls {{count}} fichiers peuvent être téléversés"
+        },
+        "InvalidFileFormat": {
+          "Title": "Format de fichier non valide",
+          "Description": "Veuillez téléverser uniquement"
+        },
+        "Error": {
+          "DescriptionSingle": "Un seul fichier ({{count}}) peut être téléversé à la fois",
+          "DescriptionPlural": "Seuls {{count}} fichiers peuvent être téléversés à la fois"
+        },
+        "ProcessingError": "Erreur de traitement du fichier"
+      }
+    }
+  },
   "Pages": {
     "Auth": {
       "VerifyEmailPage": {
@@ -82,6 +107,45 @@
         },
         "Errors": {
           "PdfGenerationFailed": "Impossible de générer le PDF. Veuillez réessayer."
+        }
+      },
+      "ControlDescriptions": {
+        "TileTitle": "Définitions de postes pour imprimante thermique",
+        "TileDescription": "Transformez un fichier .ppen en PDF de définitions de postes, coupé à la longueur exacte de chaque circuit.",
+        "Title": "Définitions de postes pour imprimante thermique",
+        "Description": "Chargez un fichier Purple Pen (.ppen), choisissez les circuits et le nombre de copies, puis téléchargez un PDF prêt pour une imprimante thermique.",
+        "PrintGuidance": "Réglez le pilote d'imprimante pour couper après chaque page, et non à la fin du document, sinon les hauteurs de page exactes ne servent à rien. Chaque page fait exactement la hauteur nécessaire à son circuit, pour que la lame coupe juste sous le dernier poste.",
+        "Loaded": "{{fileName}} · {{count}} circuits",
+        "Form": {
+          "File": "Fichier Purple Pen (.ppen)",
+          "FileHint": "Le fichier est lu dans votre navigateur et n'est jamais envoyé.",
+          "SelectAll": "Sélectionner tous les circuits",
+          "Course": "Circuit",
+          "Controls": "Postes",
+          "Length": "Longueur",
+          "Climb": "Dénivelé",
+          "Filter": "Filtrer les circuits",
+          "Copies": "Copies",
+          "PaperWidth": "Largeur du papier",
+          "Submit": "Générer le PDF",
+          "Generating": "Génération du PDF… {{done}}/{{total}}"
+        },
+        "Pdf": {
+          "Length": "{{length}} km",
+          "Climb": "{{climb}} m"
+        },
+        "Preview": {
+          "Total": "{{count}} pages."
+        },
+        "Warnings": {
+          "UnmappedSymbols": "{{count}} références de symboles n'ont pas pu être associées à une image et s'imprimeront en cases vides : {{refs}}. Vérifiez ces postes avant d'imprimer."
+        },
+        "Validation": {
+          "TooManyPages": "Cela représente plus de {{max}} pages. Réduisez le nombre de copies ou de circuits."
+        },
+        "Errors": {
+          "ParseFailed": "Ce fichier n'a pas pu être lu comme une course Purple Pen (.ppen). Les fichiers OCAD ne sont pas pris en charge.",
+          "PdfGenerationFailed": "Le PDF n'a pas pu être généré. Veuillez réessayer."
         }
       }
     },

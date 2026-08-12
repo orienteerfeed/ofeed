@@ -35,5 +35,3 @@ export const QrCodeGeneratorPage = () => {
     </MainPageLayout>
   );
 };
-
-export default QrCodeGeneratorPage;

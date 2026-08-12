@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from '@/utils';
+import { downloadBlob, toast } from '@/utils';
 import { useForm } from '@tanstack/react-form';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useMemo, useState } from 'react';
@@ -32,7 +32,7 @@ const fieldError = (errors: unknown[]) =>
     .map(error =>
       typeof error === 'string'
         ? error
-        : (error as { message?: string } | undefined)?.message,
+        : (error as { message?: string } | undefined)?.message
     )
     .filter(Boolean)
     .join(', ');
@@ -63,14 +63,10 @@ export const QrCodeGeneratorForm = () => {
               leg: label.leg,
             }),
         });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `bib-qr-codes-${value.teamFrom}-${value.teamTo}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
+        downloadBlob(
+          blob,
+          `bib-qr-codes-${value.teamFrom}-${value.teamTo}.pdf`
+        );
       } catch (error) {
         console.error('Failed to generate QR code PDF:', error);
         toast({
@@ -199,7 +195,7 @@ export const QrCodeGeneratorForm = () => {
               value={String(field.state.value)}
               onValueChange={value =>
                 field.handleChange(
-                  Number(value) as (typeof QR_SIZES_MM)[number],
+                  Number(value) as (typeof QR_SIZES_MM)[number]
                 )
               }
             >

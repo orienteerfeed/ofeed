@@ -38,7 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { MainPageLayout } from '@/templates/MainPageLayout';
-import { toast } from '@/utils';
+import { downloadBlob, toast } from '@/utils';
 import { useEvent } from '@/hooks';
 import { formatDate, formatDateTime, getLocaleKey } from '@/lib/date';
 import type { EntryStatus } from '@repo/shared';
@@ -371,14 +371,10 @@ export function EventEntriesManagePage() {
         cardRental: item.cardRental,
       }))
     );
-    const downloadUrl = URL.createObjectURL(
-      new Blob([text], { type: 'text/plain;charset=utf-8' })
+    downloadBlob(
+      new Blob([text], { type: 'text/plain;charset=utf-8' }),
+      `csos-prihlasky-${eventId}.txt`
     );
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = `csos-prihlasky-${eventId}.txt`;
-    link.click();
-    URL.revokeObjectURL(downloadUrl);
   };
 
   const exportProcessedEntryItemsCsv = () => {
@@ -405,14 +401,10 @@ export function EventEntriesManagePage() {
           }))
         )
     );
-    const downloadUrl = URL.createObjectURL(
-      new Blob(['\uFEFF', text], { type: 'text/csv;charset=utf-8' })
+    downloadBlob(
+      new Blob(['\uFEFF', text], { type: 'text/csv;charset=utf-8' }),
+      `zpracovane-polozky-${eventId}.csv`
     );
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = `zpracovane-polozky-${eventId}.csv`;
-    link.click();
-    URL.revokeObjectURL(downloadUrl);
   };
 
   const printAllEntries = () => {

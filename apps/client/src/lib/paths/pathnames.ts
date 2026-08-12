@@ -56,6 +56,10 @@ export const PATHNAMES = {
   profile: () => ({ to: '/profile', params: {} as const }),
   utils: () => ({ to: '/utils', params: {} as const }),
   utilsQrCodes: () => ({ to: '/utils/qr-codes', params: {} as const }),
+  utilsControlDescriptions: () => ({
+    to: '/utils/control-descriptions',
+    params: {} as const,
+  }),
   blog: () => ({ to: '/blog', params: {} as const }),
   settings: () => ({ to: '/settings', params: {} as const }),
   signIn: () => ({ to: '/auth/signin', params: {} as const }),

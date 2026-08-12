@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UtilsIndexRouteImport } from './routes/utils/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as UtilsQrCodesRouteImport } from './routes/utils/qr-codes'
+import { Route as UtilsControlDescriptionsRouteImport } from './routes/utils/control-descriptions'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
@@ -75,6 +76,12 @@ const UtilsQrCodesRoute = UtilsQrCodesRouteImport.update({
   path: '/utils/qr-codes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UtilsControlDescriptionsRoute =
+  UtilsControlDescriptionsRouteImport.update({
+    id: '/utils/control-descriptions',
+    path: '/utils/control-descriptions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
   path: '/auth/signup',
@@ -176,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/utils/control-descriptions': typeof UtilsControlDescriptionsRoute
   '/utils/qr-codes': typeof UtilsQrCodesRoute
   '/admin/': typeof AdminIndexRoute
   '/utils/': typeof UtilsIndexRoute
@@ -203,6 +211,7 @@ export interface FileRoutesByTo {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/utils/control-descriptions': typeof UtilsControlDescriptionsRoute
   '/utils/qr-codes': typeof UtilsQrCodesRoute
   '/admin': typeof AdminIndexRoute
   '/utils': typeof UtilsIndexRoute
@@ -231,6 +240,7 @@ export interface FileRoutesById {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signin': typeof AuthSigninRoute
   '/auth/signup': typeof AuthSignupRoute
+  '/utils/control-descriptions': typeof UtilsControlDescriptionsRoute
   '/utils/qr-codes': typeof UtilsQrCodesRoute
   '/admin/': typeof AdminIndexRoute
   '/utils/': typeof UtilsIndexRoute
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/utils/control-descriptions'
     | '/utils/qr-codes'
     | '/admin/'
     | '/utils/'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/utils/control-descriptions'
     | '/utils/qr-codes'
     | '/admin'
     | '/utils'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/signin'
     | '/auth/signup'
+    | '/utils/control-descriptions'
     | '/utils/qr-codes'
     | '/admin/'
     | '/utils/'
@@ -342,6 +355,7 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  UtilsControlDescriptionsRoute: typeof UtilsControlDescriptionsRoute
   UtilsQrCodesRoute: typeof UtilsQrCodesRoute
   AdminIndexRoute: typeof AdminIndexRoute
   UtilsIndexRoute: typeof UtilsIndexRoute
@@ -413,6 +427,13 @@ declare module '@tanstack/react-router' {
       path: '/utils/qr-codes'
       fullPath: '/utils/qr-codes'
       preLoaderRoute: typeof UtilsQrCodesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/utils/control-descriptions': {
+      id: '/utils/control-descriptions'
+      path: '/utils/control-descriptions'
+      fullPath: '/utils/control-descriptions'
+      preLoaderRoute: typeof UtilsControlDescriptionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/signup': {
@@ -550,6 +571,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
+  UtilsControlDescriptionsRoute: UtilsControlDescriptionsRoute,
   UtilsQrCodesRoute: UtilsQrCodesRoute,
   AdminIndexRoute: AdminIndexRoute,
   UtilsIndexRoute: UtilsIndexRoute,

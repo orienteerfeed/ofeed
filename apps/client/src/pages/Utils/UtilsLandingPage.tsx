@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/card';
 import PATHNAMES from '@/lib/paths/pathnames';
 import { Link } from '@tanstack/react-router';
-import { QrCode } from 'lucide-react';
+import { Printer, QrCode } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { MainPageLayout } from '../../templates/MainPageLayout';
 
@@ -18,6 +18,13 @@ const UTILS = [
     titleKey: 'Pages.Utils.QrCodes.TileTitle',
     descriptionKey: 'Pages.Utils.QrCodes.TileDescription',
     to: PATHNAMES.utilsQrCodes(),
+  },
+  {
+    key: 'control-descriptions',
+    icon: Printer,
+    titleKey: 'Pages.Utils.ControlDescriptions.TileTitle',
+    descriptionKey: 'Pages.Utils.ControlDescriptions.TileDescription',
+    to: PATHNAMES.utilsControlDescriptions(),
   },
 ] as const;
 

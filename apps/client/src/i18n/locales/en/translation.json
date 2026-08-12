@@ -601,7 +601,7 @@
           "PaymentReference": "Payment ref.",
           "Contact": "Contact",
           "Items": "Items",
-          "Total": "Total",
+          "Total": "{{count}} pages.",
           "Paid": "Paid",
           "Created": "Created",
           "Status": "Status",
@@ -1813,6 +1813,45 @@
           "Title": "Preview"
         },
         "Errors": {
+          "PdfGenerationFailed": "Failed to generate the PDF. Please try again."
+        }
+      },
+      "ControlDescriptions": {
+        "TileTitle": "Control descriptions for thermal printers",
+        "TileDescription": "Turn a .ppen file into a PDF of control descriptions, cut to the exact length of each course.",
+        "Title": "Control descriptions for thermal printers",
+        "Description": "Upload a Purple Pen (.ppen) file, choose the courses and how many copies of each, and download a PDF ready for a thermal printer.",
+        "PrintGuidance": "Set your printer driver to cut after every page, not after the whole document — otherwise the exact page heights are wasted. Each page is only as tall as its course needs, so the knife cuts just below the last control.",
+        "Loaded": "{{fileName}} · {{count}} courses",
+        "Form": {
+          "File": "Purple Pen file (.ppen)",
+          "FileHint": "The file is read in your browser and never uploaded.",
+          "SelectAll": "Select all courses",
+          "Course": "Course",
+          "Controls": "Controls",
+          "Length": "Length",
+          "Climb": "Climb",
+          "Filter": "Filter courses",
+          "Copies": "Copies",
+          "PaperWidth": "Paper width",
+          "Submit": "Generate PDF",
+          "Generating": "Generating PDF… {{done}}/{{total}}"
+        },
+        "Pdf": {
+          "Length": "{{length}} km",
+          "Climb": "{{climb}} m"
+        },
+        "Preview": {
+          "Total": "{{count}} pages, about {{paper}} cm of paper."
+        },
+        "Warnings": {
+          "UnmappedSymbols": "{{count}} symbol references could not be matched to a picture and will print as empty cells: {{refs}}. Check those controls before printing."
+        },
+        "Validation": {
+          "TooManyPages": "That is more than {{max}} pages. Reduce the number of copies or courses."
+        },
+        "Errors": {
+          "ParseFailed": "This file could not be read as a Purple Pen (.ppen) event. OCAD files are not supported.",
           "PdfGenerationFailed": "Failed to generate the PDF. Please try again."
         }
       }

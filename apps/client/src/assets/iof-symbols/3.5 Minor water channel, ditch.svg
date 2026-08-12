@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" width="200" height="200" viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">
+  <path d="M -48,-64 C -52,-60 -52,-60 -56,-56 -72,-40 -56,-24 -40,-40 -24,-56 -8,-40 -24,-24 -40,-8 -24,8 -8,-8 8,-24 24,-8 8,8 -8,24 8,40 24,24 40,8 56,24 40,40 24,56 40,72 56,56 60,52 60,52 64,48" fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="miter" />
+  <polyline points="-32,-80 -5,-53 " fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="10,-38 38,-10 " fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="53,5 80,32 " fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="-80,-32 -53,-5 " fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="-38,10 -10,38 " fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="5,53 32,80 " fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

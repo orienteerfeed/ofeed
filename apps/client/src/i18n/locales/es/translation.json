@@ -601,7 +601,7 @@
           "PaymentReference": "Ref. de pago",
           "Contact": "Contacto",
           "Items": "Elementos",
-          "Total": "Total",
+          "Total": "{{count}} páginas.",
           "Paid": "Pagado",
           "Created": "Creado",
           "Status": "Estado",
@@ -1814,6 +1814,45 @@
         },
         "Errors": {
           "PdfGenerationFailed": "No se pudo generar el PDF. Inténtalo de nuevo."
+        }
+      },
+      "ControlDescriptions": {
+        "TileTitle": "Descripciones de controles para impresora térmica",
+        "TileDescription": "Convierte un archivo .ppen en un PDF de descripciones de controles, cortado al largo exacto de cada recorrido.",
+        "Title": "Descripciones de controles para impresora térmica",
+        "Description": "Sube un archivo de Purple Pen (.ppen), elige los recorridos y cuántas copias de cada uno, y descarga un PDF listo para una impresora térmica.",
+        "PrintGuidance": "Configura el controlador de la impresora para cortar después de cada página, no al final del documento; de lo contrario, las alturas exactas no sirven de nada. Cada página mide justo lo que necesita su recorrido, así la cuchilla corta debajo del último control.",
+        "Loaded": "{{fileName}} · {{count}} recorridos",
+        "Form": {
+          "File": "Archivo de Purple Pen (.ppen)",
+          "FileHint": "El archivo se lee en tu navegador y no se sube a ningún servidor.",
+          "SelectAll": "Seleccionar todos los recorridos",
+          "Course": "Recorrido",
+          "Controls": "Controles",
+          "Length": "Longitud",
+          "Climb": "Desnivel",
+          "Filter": "Filtrar recorridos",
+          "Copies": "Copias",
+          "PaperWidth": "Ancho del papel",
+          "Submit": "Generar PDF",
+          "Generating": "Generando PDF… {{done}}/{{total}}"
+        },
+        "Pdf": {
+          "Length": "{{length}} km",
+          "Climb": "{{climb}} m"
+        },
+        "Preview": {
+          "Total": "{{count}} páginas, unos {{paper}} cm de papel."
+        },
+        "Warnings": {
+          "UnmappedSymbols": "No se han podido asociar {{count}} referencias de símbolos a una imagen y se imprimirán como celdas vacías: {{refs}}. Revisa esos controles antes de imprimir."
+        },
+        "Validation": {
+          "TooManyPages": "Son más de {{max}} páginas. Reduce el número de copias o de recorridos."
+        },
+        "Errors": {
+          "ParseFailed": "No se ha podido leer el archivo como una carrera de Purple Pen (.ppen). Los archivos de OCAD no son compatibles.",
+          "PdfGenerationFailed": "No se ha podido generar el PDF. Inténtalo de nuevo."
         }
       }
     }

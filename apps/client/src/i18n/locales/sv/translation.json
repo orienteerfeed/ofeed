@@ -601,7 +601,7 @@
           "PaymentReference": "Betalningsref.",
           "Contact": "Kontakt",
           "Items": "Rader",
-          "Total": "Totalt",
+          "Total": "{{count}} sidor.",
           "Paid": "Betald",
           "Created": "Skapad",
           "Status": "Status",
@@ -1727,6 +1727,45 @@
         },
         "Errors": {
           "PdfGenerationFailed": "Det gick inte att generera PDF:en. Försök igen."
+        }
+      },
+      "ControlDescriptions": {
+        "TileTitle": "Kontrollbeskrivningar för termoskrivare",
+        "TileDescription": "Gör en .ppen-fil till en PDF med kontrollbeskrivningar, skuren till exakt längd för varje bana.",
+        "Title": "Kontrollbeskrivningar för termoskrivare",
+        "Description": "Ladda upp en Purple Pen-fil (.ppen), välj banor och antal kopior av varje, och ladda ner en PDF färdig för termoskrivare.",
+        "PrintGuidance": "Ställ in skrivardrivrutinen på att skära efter varje sida, inte efter hela dokumentet – annars är de exakta sidhöjderna till ingen nytta. Varje sida är bara så hög som banan kräver, så att kniven skär strax under sista kontrollen.",
+        "Loaded": "{{fileName}} · {{count}} banor",
+        "Form": {
+          "File": "Purple Pen-fil (.ppen)",
+          "FileHint": "Filen läses i din webbläsare och skickas aldrig vidare.",
+          "SelectAll": "Välj alla banor",
+          "Course": "Bana",
+          "Controls": "Kontroller",
+          "Length": "Längd",
+          "Climb": "Stigning",
+          "Filter": "Filtrera banor",
+          "Copies": "Kopior",
+          "PaperWidth": "Pappersbredd",
+          "Submit": "Skapa PDF",
+          "Generating": "Skapar PDF… {{done}}/{{total}}"
+        },
+        "Pdf": {
+          "Length": "{{length}} km",
+          "Climb": "{{climb}} m"
+        },
+        "Preview": {
+          "Total": "{{count}} sidor, cirka {{paper}} cm papper."
+        },
+        "Warnings": {
+          "UnmappedSymbols": "{{count}} symbolreferenser kunde inte kopplas till en bild och skrivs ut som tomma rutor: {{refs}}. Kontrollera de kontrollerna före utskrift."
+        },
+        "Validation": {
+          "TooManyPages": "Det är mer än {{max}} sidor. Minska antalet kopior eller banor."
+        },
+        "Errors": {
+          "ParseFailed": "Filen kunde inte läsas som en Purple Pen-tävling (.ppen). OCAD-filer stöds inte.",
+          "PdfGenerationFailed": "PDF:en kunde inte skapas. Försök igen."
         }
       }
     },

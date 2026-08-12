@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" width="200" height="200" viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg">
+  <path d="M -39,60 C -39,55 -39,55 -39,50 -39,30 -13,30 -13,50 -13,70 13,70 13,50 13,30 39,30 39,50 39,55 39,55 39,60" fill="none" stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="miter" />
+  <circle cx="0" cy="-25" r="44" fill="none" stroke="black" stroke-width="12.5" />
+</svg>

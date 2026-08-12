@@ -15,11 +15,9 @@ interface BuildPdfOptions {
   onProgress?: (done: number, total: number) => void;
 }
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export async function buildBibQrCodesPdf(
   labels: BibLabel[],
-  { sizeMm, labelText, onProgress }: BuildPdfOptions,
+  { sizeMm, labelText, onProgress }: BuildPdfOptions
 ): Promise<Blob> {
   const cellWidth = sizeMm + LABEL_GAP_MM;
   const cellHeight = sizeMm + TEXT_ROW_HEIGHT_MM + LABEL_GAP_MM;
@@ -27,11 +25,11 @@ export async function buildBibQrCodesPdf(
   const usableHeight = PAGE_HEIGHT_MM - 2 * MARGIN_MM;
   const columns = Math.max(
     1,
-    Math.floor((usableWidth + LABEL_GAP_MM) / cellWidth),
+    Math.floor((usableWidth + LABEL_GAP_MM) / cellWidth)
   );
   const rows = Math.max(
     1,
-    Math.floor((usableHeight + LABEL_GAP_MM) / cellHeight),
+    Math.floor((usableHeight + LABEL_GAP_MM) / cellHeight)
   );
   const codesPerPage = columns * rows;
 
@@ -50,8 +48,8 @@ export async function buildBibQrCodesPdf(
           errorCorrectionLevel: 'H',
           margin: 1,
           width: 240,
-        }),
-      ),
+        })
+      )
     );
 
     chunk.forEach((label, indexInChunk) => {
@@ -75,9 +73,10 @@ export async function buildBibQrCodesPdf(
 
     onProgress?.(
       Math.min(chunkStart + CHUNK_SIZE, labels.length),
-      labels.length,
+      labels.length
     );
-    await wait(0);
+    // Yield to the browser between chunks so the UI stays responsive.
+    await new Promise(resolve => setTimeout(resolve));
   }
 
   return doc.output('blob');
