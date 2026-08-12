@@ -1,6 +1,7 @@
 import { Alert } from '@/components/organisms';
 import { Card } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
+import { BackLink } from '../../../components/molecules';
 import { MainPageLayout } from '../../../templates/MainPageLayout';
 import { QrCodeGeneratorForm } from './QrCodeGeneratorForm';
 
@@ -11,6 +12,8 @@ export const QrCodeGeneratorPage = () => {
     <MainPageLayout t={t} pageName={t('Pages.Utils.QrCodes.Title')}>
       <section className="container mx-auto px-4 py-12 md:py-20">
         <div className="mx-auto max-w-3xl space-y-8">
+          <BackLink to="/utils" />
+
           <div className="space-y-4">
             <h1 className="text-3xl font-bold md:text-4xl">
               {t('Pages.Utils.QrCodes.Title')}
