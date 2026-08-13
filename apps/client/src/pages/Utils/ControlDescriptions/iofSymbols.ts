@@ -8,7 +8,7 @@ import { DESCRIPTION_BOXES, type Course, type DescriptionRow } from './ppen';
  * none of them is fetched until `symbolToPng` resolves one, which only happens on
  * the control-descriptions utility page.
  */
-const SYMBOL_LOADERS: Record<string, () => Promise<string>> = Object.fromEntries(
+export const SYMBOL_LOADERS: Record<string, () => Promise<string>> = Object.fromEntries(
   Object.entries(
     import.meta.glob('@/assets/iof-symbols/*.svg', {
       query: '?url',

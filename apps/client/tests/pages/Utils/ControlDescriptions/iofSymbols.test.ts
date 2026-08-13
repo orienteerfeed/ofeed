@@ -5,7 +5,7 @@ import {
   IOF_2004_TO_2018,
   resolve2018Ref,
   START_SYMBOL,
-  SYMBOL_URLS,
+  SYMBOL_LOADERS,
 } from '../../../../src/pages/Utils/ControlDescriptions/iofSymbols';
 import type { Course } from '../../../../src/pages/Utils/ControlDescriptions/ppen';
 
@@ -71,13 +71,13 @@ describe('resolve2018Ref', () => {
 
 describe('symbol assets', () => {
   it('bundles the start triangle and the full symbol set', () => {
-    expect(Object.keys(SYMBOL_URLS)).toContain(START_SYMBOL);
-    expect(Object.keys(SYMBOL_URLS).length).toBeGreaterThan(170);
+    expect(Object.keys(SYMBOL_LOADERS)).toContain(START_SYMBOL);
+    expect(Object.keys(SYMBOL_LOADERS).length).toBeGreaterThan(170);
   });
 
   it('has an asset behind every mapping table target', () => {
     // Guards the table against typos and against the asset set changing underneath it.
-    const keys = Object.keys(SYMBOL_URLS);
+    const keys = Object.keys(SYMBOL_LOADERS);
     const directional = /^(\d+\.\d+)$/;
 
     for (const target of Object.values(IOF_2004_TO_2018)) {
