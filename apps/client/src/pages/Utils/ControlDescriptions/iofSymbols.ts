@@ -4,17 +4,17 @@ import { DESCRIPTION_BOXES, type Course, type DescriptionRow } from './ppen';
 /**
  * Lookup for the bundled IOF 2018 control description symbols.
  *
- * `?url` keeps the 180 SVGs as separate hashed assets, so they cost nothing in the
- * bundle and only the handful a given event uses is ever fetched.
+ * `?url` keeps the 180 SVGs as separate hashed assets; lazy (non-eager) glob means
+ * none of them is fetched until `symbolToPng` resolves one, which only happens on
+ * the control-descriptions utility page.
  */
-export const SYMBOL_URLS: Record<string, string> = Object.fromEntries(
+const SYMBOL_LOADERS: Record<string, () => Promise<string>> = Object.fromEntries(
   Object.entries(
     import.meta.glob('@/assets/iof-symbols/*.svg', {
       query: '?url',
       import: 'default',
-      eager: true,
-    }) as Record<string, string>
-  ).map(([path, url]) => [symbolKeyFromPath(path), url])
+    }) as Record<string, () => Promise<string>>
+  ).map(([path, load]) => [symbolKeyFromPath(path), load])
 );
 
 /**
@@ -76,7 +76,7 @@ export const IOF_2004_TO_2018: Record<string, string> = {
 
 const DIRECTIONAL_REF = /^(\d+\.\d+)([NSEW]{1,2})?$/;
 
-const hasSymbol = (key: string) => key in SYMBOL_URLS;
+const hasSymbol = (key: string) => key in SYMBOL_LOADERS;
 
 /**
  * Resolves an IOF 2004 reference from a `.ppen` file to a bundled 2018 symbol key, or
@@ -146,10 +146,10 @@ export const symbolToPng = (
   const cached = pngCache.get(cacheKey);
   if (cached) return cached;
 
-  const url = SYMBOL_URLS[key];
-  if (!url) return Promise.reject(new Error(`Unknown IOF symbol: ${key}`));
+  const load = SYMBOL_LOADERS[key];
+  if (!load) return Promise.reject(new Error(`Unknown IOF symbol: ${key}`));
 
-  const png = svgUrlToPng(url, widthMm, heightMm);
+  const png = load().then(url => svgUrlToPng(url, widthMm, heightMm));
   pngCache.set(cacheKey, png);
   return png;
 };
