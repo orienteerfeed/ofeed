@@ -78,7 +78,7 @@ pnpm setup:dev
 Then run:
 
 ```bash
-docker compose -f docker-compose.mysql.yaml up -d mysql
+docker compose -f docker-compose.yaml -f docker-compose.mysql.yaml up -d mysql
 pnpm db:generate
 pnpm db:migrate
 pnpm dev
