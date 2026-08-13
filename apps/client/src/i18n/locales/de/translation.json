@@ -523,10 +523,10 @@
         }
       },
       "ControlDescriptions": {
-        "TileTitle": "Postenbeschreibungen für Thermodrucker",
-        "TileDescription": "Erzeuge aus einer .ppen-Datei ein PDF mit Postenbeschreibungen, genau auf die Länge jeder Bahn geschnitten.",
-        "Title": "Postenbeschreibungen für Thermodrucker",
-        "Description": "Lade eine Purple-Pen-Datei (.ppen) hoch, wähle die Bahnen und die Anzahl der Kopien und lade ein druckfertiges PDF für den Thermodrucker herunter.",
+        "TileTitle": "Postenbeschreibungen drucken",
+        "TileDescription": "Erstelle aus einer .ppen-Datei ein PDF mit Postenbeschreibungen, formatiert zum Drucken.",
+        "Title": "Postenbeschreibungen drucken",
+        "Description": "Lade eine Purple-Pen-Datei (.ppen) hoch, wähle die Bahnen und die Anzahl der Kopien und lade ein formatiertes PDF herunter.",
         "PrintGuidance": "Stelle im Druckertreiber das Abschneiden nach jeder Seite ein, nicht nach dem gesamten Dokument – sonst sind die exakten Seitenhöhen wirkungslos. Jede Seite ist nur so hoch, wie ihre Bahn es braucht, damit das Messer direkt unter dem letzten Posten schneidet.",
         "Loaded": "{{fileName}} · {{count}} Bahnen",
         "Form": {
@@ -539,6 +539,10 @@
           "Climb": "Steigung",
           "Filter": "Bahnen filtern",
           "Copies": "Kopien",
+          "Format": "Ausgabeformat",
+          "FormatThermal": "Thermodrucker",
+          "FormatA4": "A4-Papier",
+          "BoxSize": "Feldgröße (IOF-Spez: 5–7 mm)",
           "PaperWidth": "Papierbreite",
           "Submit": "PDF erstellen",
           "Generating": "PDF wird erstellt… {{done}}/{{total}}"
@@ -548,7 +552,8 @@
           "Climb": "{{climb}} m"
         },
         "Preview": {
-          "Total": "{{count}} Seiten."
+          "Total": "{{count}} Seiten, etwa {{paper}} cm Papier.",
+          "TotalPages": "{{count}} Seiten"
         },
         "Warnings": {
           "UnmappedSymbols": "{{count}} Symbolverweise konnten keinem Bild zugeordnet werden und werden als leere Felder gedruckt: {{refs}}. Prüfe diese Posten vor dem Druck."

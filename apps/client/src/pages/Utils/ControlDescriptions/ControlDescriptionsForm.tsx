@@ -26,9 +26,18 @@ import {
   buildControlDescriptionsPdf,
   MAX_PAGES,
   PAPER_WIDTHS_MM,
+  BOX_SIZES_MM,
   type CourseSelection,
   type PaperWidthMm,
+  type BoxSizeMm,
+  type PdfFormat,
 } from './controlDescriptionPdf';
+import {
+  A4_PAGE_HEIGHT_MM,
+  A4_PAGE_MARGIN_MM,
+  A4_ROW_SPACING_MM,
+  getColumnsPerPage,
+} from './controlDescriptionLayout';
 import { collectUnmappedSymbols } from './iofSymbols';
 import { parsePpen, type PpenData } from './ppen';
 
@@ -47,6 +56,8 @@ export const ControlDescriptionsForm = () => {
   const [data, setData] = useState<PpenData | null>(null);
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [choices, setChoices] = useState<Record<number, CourseChoice>>({});
+  const [format, setFormat] = useState<PdfFormat>('thermal');
+  const [boxSizeMm, setBoxSizeMm] = useState<BoxSizeMm>(6);
   const [widthMm, setWidthMm] = useState<PaperWidthMm>(PAPER_WIDTHS_MM[0]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -89,10 +100,64 @@ export const ControlDescriptionsForm = () => {
     [courses, choices]
   );
 
-  const totalPages = selections.reduce(
-    (sum, selection) => sum + selection.copies,
-    0
-  );
+  const totalPages = useMemo(() => {
+    if (format === 'a4') {
+      // A4: simulate multi-column layout to count actual pages
+      const columnsPerPage = getColumnsPerPage(boxSizeMm * 8);
+
+      // Flatten selections into array of courses
+      const allCourses = selections.flatMap(({ course, copies }) =>
+        Array.from({ length: copies }, () => course)
+      );
+
+      let pages = 1;
+      let columnIndex = 0;
+      let currentRowY = A4_PAGE_MARGIN_MM;
+      let rowHeights: number[] = [];
+
+      for (const course of allCourses) {
+        const cHeight = (2 + course.rows.length) * boxSizeMm;
+
+        if (columnIndex === 0) {
+          rowHeights = [];
+        }
+
+        // Check if course fits on current page
+        if (currentRowY + cHeight > A4_PAGE_HEIGHT_MM - A4_PAGE_MARGIN_MM && columnIndex === 0) {
+          pages += 1;
+          currentRowY = A4_PAGE_MARGIN_MM;
+        }
+
+        rowHeights[columnIndex] = currentRowY + cHeight;
+
+        columnIndex += 1;
+        if (columnIndex >= columnsPerPage) {
+          currentRowY = Math.max(...rowHeights) + A4_ROW_SPACING_MM;
+          columnIndex = 0;
+        }
+      }
+
+      return pages;
+    }
+
+    // Thermal printer: one page per course copy
+    return selections.reduce((sum, selection) => sum + selection.copies, 0);
+  }, [selections, format, boxSizeMm]);
+
+  const paperCm = useMemo(() => {
+    if (format === 'a4') {
+      // A4: each page is 297mm tall
+      const a4PageHeightMm = 297;
+      return ((totalPages * a4PageHeightMm) / 10).toFixed(1);
+    }
+    // Thermal printer: sum of all course heights
+    const totalHeightMm = selections.reduce((sum, selection) => {
+      const courseHeight = (2 + selection.course.rows.length) * boxSizeMm;
+      return sum + courseHeight * selection.copies;
+    }, 0);
+    return (totalHeightMm / 10).toFixed(1);
+  }, [selections, format, boxSizeMm, totalPages]);
+
   const allSelected =
     visibleCourses.length > 0 &&
     visibleCourses.every(course => choices[course.id]?.selected);
@@ -150,6 +215,8 @@ export const ControlDescriptionsForm = () => {
     try {
       const blob = await buildControlDescriptionsPdf({
         eventTitle: data.eventTitle,
+        format,
+        boxSizeMm,
         widthMm,
         selections,
         formatLength: km =>
@@ -312,32 +379,78 @@ export const ControlDescriptionsForm = () => {
             </TableBody>
           </Table>
 
-          <div className="max-w-[200px] space-y-2">
-            <Label htmlFor="paperWidth">
-              {t('Pages.Utils.ControlDescriptions.Form.PaperWidth')}
-            </Label>
-            <Select
-              value={String(widthMm)}
-              onValueChange={value => setWidthMm(Number(value) as PaperWidthMm)}
-            >
-              <SelectTrigger id="paperWidth">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAPER_WIDTHS_MM.map(width => (
-                  <SelectItem key={width} value={String(width)}>
-                    {width} mm
+          <div className="flex gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="format">
+                {t('Pages.Utils.ControlDescriptions.Form.Format')}
+              </Label>
+              <Select value={format} onValueChange={value => setFormat(value as PdfFormat)}>
+                <SelectTrigger id="format" className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="thermal">
+                    {t('Pages.Utils.ControlDescriptions.Form.FormatThermal')}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  <SelectItem value="a4">
+                    {t('Pages.Utils.ControlDescriptions.Form.FormatA4')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="boxSize">
+                {t('Pages.Utils.ControlDescriptions.Form.BoxSize')}
+              </Label>
+              <Select value={String(boxSizeMm)} onValueChange={value => setBoxSizeMm(Number(value) as BoxSizeMm)}>
+                <SelectTrigger id="boxSize" className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BOX_SIZES_MM.map(size => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size} mm
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {format === 'thermal' && (
+            <div className="max-w-[200px] space-y-2">
+              <Label htmlFor="paperWidth">
+                {t('Pages.Utils.ControlDescriptions.Form.PaperWidth')}
+              </Label>
+              <Select
+                value={String(widthMm)}
+                onValueChange={value => setWidthMm(Number(value) as PaperWidthMm)}
+              >
+                <SelectTrigger id="paperWidth">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAPER_WIDTHS_MM.map(width => (
+                    <SelectItem key={width} value={String(width)}>
+                      {width} mm
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              {t('Pages.Utils.ControlDescriptions.Preview.Total', {
-                count: totalPages,
-              })}
+              {format === 'a4'
+                ? t('Pages.Utils.ControlDescriptions.Preview.TotalPages', {
+                    count: totalPages,
+                  })
+                : t('Pages.Utils.ControlDescriptions.Preview.Total', {
+                    count: totalPages,
+                    paper: paperCm,
+                  })}
             </p>
             {tooManyPages && (
               <Alert severity="error" variant="outlined">

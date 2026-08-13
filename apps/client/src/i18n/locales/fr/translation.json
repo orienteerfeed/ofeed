@@ -110,10 +110,10 @@
         }
       },
       "ControlDescriptions": {
-        "TileTitle": "Définitions de postes pour imprimante thermique",
-        "TileDescription": "Transformez un fichier .ppen en PDF de définitions de postes, coupé à la longueur exacte de chaque circuit.",
-        "Title": "Définitions de postes pour imprimante thermique",
-        "Description": "Chargez un fichier Purple Pen (.ppen), choisissez les circuits et le nombre de copies, puis téléchargez un PDF prêt pour une imprimante thermique.",
+        "TileTitle": "Imprimer les définitions de postes",
+        "TileDescription": "Transformez un fichier .ppen en PDF de définitions de postes, formaté pour l'impression.",
+        "Title": "Imprimer les définitions de postes",
+        "Description": "Chargez un fichier Purple Pen (.ppen), choisissez les circuits et le nombre de copies, puis téléchargez un PDF formaté.",
         "PrintGuidance": "Réglez le pilote d'imprimante pour couper après chaque page, et non à la fin du document, sinon les hauteurs de page exactes ne servent à rien. Chaque page fait exactement la hauteur nécessaire à son circuit, pour que la lame coupe juste sous le dernier poste.",
         "Loaded": "{{fileName}} · {{count}} circuits",
         "Form": {
@@ -126,6 +126,10 @@
           "Climb": "Dénivelé",
           "Filter": "Filtrer les circuits",
           "Copies": "Copies",
+          "Format": "Format de sortie",
+          "FormatThermal": "Imprimante thermique",
+          "FormatA4": "Papier A4",
+          "BoxSize": "Taille des cases (Spéc IOF : 5–7 mm)",
           "PaperWidth": "Largeur du papier",
           "Submit": "Générer le PDF",
           "Generating": "Génération du PDF… {{done}}/{{total}}"
@@ -135,7 +139,8 @@
           "Climb": "{{climb}} m"
         },
         "Preview": {
-          "Total": "{{count}} pages."
+          "Total": "{{count}} pages, environ {{paper}} cm de papier.",
+          "TotalPages": "{{count}} pages"
         },
         "Warnings": {
           "UnmappedSymbols": "{{count}} références de symboles n'ont pas pu être associées à une image et s'imprimeront en cases vides : {{refs}}. Vérifiez ces postes avant d'imprimer."

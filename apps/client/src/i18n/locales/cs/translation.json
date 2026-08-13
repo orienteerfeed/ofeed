@@ -1820,10 +1820,10 @@
         }
       },
       "ControlDescriptions": {
-        "TileTitle": "Popisy kontrol pro termotiskárnu",
-        "TileDescription": "Vytvoř ze souboru .ppen PDF s popisy kontrol, odříznuté přesně na délku každé tratě.",
-        "Title": "Popisy kontrol pro termotiskárnu",
-        "Description": "Nahraj soubor z Purple Pen (.ppen), vyber tratě a počet kopií a stáhni PDF připravené pro termotiskárnu.",
+        "TileTitle": "Tisk popisů kontrol",
+        "TileDescription": "Vytvoř ze souboru .ppen PDF s popisy kontrol, formátované pro tisk.",
+        "Title": "Tisk popisů kontrol",
+        "Description": "Nahraj soubor z Purple Pen (.ppen), vyber tratě a počet kopií a stáhni formátované PDF.",
         "PrintGuidance": "Nastav v ovladači tiskárny odříznutí po každé straně, ne po celém dokumentu – jinak jsou přesné výšky stran k ničemu. Každá strana je vysoká právě tak, jak potřebuje její trať, takže nůž řeže hned pod poslední kontrolou.",
         "Loaded": "{{fileName}} · {{count}} tratí",
         "Form": {
@@ -1836,6 +1836,10 @@
           "Climb": "Převýšení",
           "Filter": "Filtrovat tratě",
           "Copies": "Kopie",
+          "Format": "Výstupní formát",
+          "FormatThermal": "Termotiskárna",
+          "FormatA4": "Papír A4",
+          "BoxSize": "Velikost políčka (IOF spec: 5–7 mm)",
           "PaperWidth": "Šířka papíru",
           "Submit": "Vytvořit PDF",
           "Generating": "Vytvářím PDF… {{done}}/{{total}}"
@@ -1845,7 +1849,8 @@
           "Climb": "{{climb}} m"
         },
         "Preview": {
-          "Total": "{{count}} stran, přibližně {{paper}} cm papíru."
+          "Total": "{{count}} stran, přibližně {{paper}} cm papíru.",
+          "TotalPages": "{{count}} stran"
         },
         "Warnings": {
           "UnmappedSymbols": "{{count}} symbolů se nepodařilo přiřadit k obrázku a vytisknou se jako prázdné buňky: {{refs}}. Před tiskem tyto kontroly zkontroluj."

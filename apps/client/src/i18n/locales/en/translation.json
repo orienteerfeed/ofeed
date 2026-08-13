@@ -1817,10 +1817,10 @@
         }
       },
       "ControlDescriptions": {
-        "TileTitle": "Control descriptions for thermal printers",
-        "TileDescription": "Turn a .ppen file into a PDF of control descriptions, cut to the exact length of each course.",
-        "Title": "Control descriptions for thermal printers",
-        "Description": "Upload a Purple Pen (.ppen) file, choose the courses and how many copies of each, and download a PDF ready for a thermal printer.",
+        "TileTitle": "Print control descriptions",
+        "TileDescription": "Turn a .ppen file into a PDF of control descriptions, formatted for printing.",
+        "Title": "Print control descriptions",
+        "Description": "Upload a Purple Pen (.ppen) file, choose the courses and how many copies of each, and download a formatted PDF.",
         "PrintGuidance": "Set your printer driver to cut after every page, not after the whole document — otherwise the exact page heights are wasted. Each page is only as tall as its course needs, so the knife cuts just below the last control.",
         "Loaded": "{{fileName}} · {{count}} courses",
         "Form": {
@@ -1833,6 +1833,10 @@
           "Climb": "Climb",
           "Filter": "Filter courses",
           "Copies": "Copies",
+          "Format": "Output format",
+          "FormatThermal": "Thermal printer",
+          "FormatA4": "A4 paper",
+          "BoxSize": "Box size (IOF spec: 5–7 mm)",
           "PaperWidth": "Paper width",
           "Submit": "Generate PDF",
           "Generating": "Generating PDF… {{done}}/{{total}}"
@@ -1842,7 +1846,8 @@
           "Climb": "{{climb}} m"
         },
         "Preview": {
-          "Total": "{{count}} pages, about {{paper}} cm of paper."
+          "Total": "{{count}} pages, about {{paper}} cm of paper.",
+          "TotalPages": "{{count}} pages"
         },
         "Warnings": {
           "UnmappedSymbols": "{{count}} symbol references could not be matched to a picture and will print as empty cells: {{refs}}. Check those controls before printing."

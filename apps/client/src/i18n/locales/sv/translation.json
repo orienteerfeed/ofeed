@@ -1730,10 +1730,10 @@
         }
       },
       "ControlDescriptions": {
-        "TileTitle": "Kontrollbeskrivningar för termoskrivare",
-        "TileDescription": "Gör en .ppen-fil till en PDF med kontrollbeskrivningar, skuren till exakt längd för varje bana.",
-        "Title": "Kontrollbeskrivningar för termoskrivare",
-        "Description": "Ladda upp en Purple Pen-fil (.ppen), välj banor och antal kopior av varje, och ladda ner en PDF färdig för termoskrivare.",
+        "TileTitle": "Skriv ut kontrollbeskrivningar",
+        "TileDescription": "Gör en .ppen-fil till en PDF med kontrollbeskrivningar, formaterad för utskrift.",
+        "Title": "Skriv ut kontrollbeskrivningar",
+        "Description": "Ladda upp en Purple Pen-fil (.ppen), välj banor och antal kopior av varje, och ladda ner en formaterad PDF.",
         "PrintGuidance": "Ställ in skrivardrivrutinen på att skära efter varje sida, inte efter hela dokumentet – annars är de exakta sidhöjderna till ingen nytta. Varje sida är bara så hög som banan kräver, så att kniven skär strax under sista kontrollen.",
         "Loaded": "{{fileName}} · {{count}} banor",
         "Form": {
@@ -1746,6 +1746,10 @@
           "Climb": "Stigning",
           "Filter": "Filtrera banor",
           "Copies": "Kopior",
+          "Format": "Utdataformat",
+          "FormatThermal": "Termoskrivare",
+          "FormatA4": "A4-papper",
+          "BoxSize": "Rutornas storlek (IOF-spec: 5–7 mm)",
           "PaperWidth": "Pappersbredd",
           "Submit": "Skapa PDF",
           "Generating": "Skapar PDF… {{done}}/{{total}}"
@@ -1755,7 +1759,8 @@
           "Climb": "{{climb}} m"
         },
         "Preview": {
-          "Total": "{{count}} sidor, cirka {{paper}} cm papper."
+          "Total": "{{count}} sidor, cirka {{paper}} cm papper.",
+          "TotalPages": "{{count}} sidor"
         },
         "Warnings": {
           "UnmappedSymbols": "{{count}} symbolreferenser kunde inte kopplas till en bild och skrivs ut som tomma rutor: {{refs}}. Kontrollera de kontrollerna före utskrift."

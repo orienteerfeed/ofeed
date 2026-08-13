@@ -1817,10 +1817,10 @@
         }
       },
       "ControlDescriptions": {
-        "TileTitle": "Descripciones de controles para impresora térmica",
-        "TileDescription": "Convierte un archivo .ppen en un PDF de descripciones de controles, cortado al largo exacto de cada recorrido.",
-        "Title": "Descripciones de controles para impresora térmica",
-        "Description": "Sube un archivo de Purple Pen (.ppen), elige los recorridos y cuántas copias de cada uno, y descarga un PDF listo para una impresora térmica.",
+        "TileTitle": "Imprimir descripciones de controles",
+        "TileDescription": "Convierte un archivo .ppen en un PDF de descripciones de controles, formateado para imprimir.",
+        "Title": "Imprimir descripciones de controles",
+        "Description": "Sube un archivo de Purple Pen (.ppen), elige los recorridos y cuántas copias de cada uno, y descarga un PDF formateado.",
         "PrintGuidance": "Configura el controlador de la impresora para cortar después de cada página, no al final del documento; de lo contrario, las alturas exactas no sirven de nada. Cada página mide justo lo que necesita su recorrido, así la cuchilla corta debajo del último control.",
         "Loaded": "{{fileName}} · {{count}} recorridos",
         "Form": {
@@ -1833,6 +1833,10 @@
           "Climb": "Desnivel",
           "Filter": "Filtrar recorridos",
           "Copies": "Copias",
+          "Format": "Formato de salida",
+          "FormatThermal": "Impresora térmica",
+          "FormatA4": "Papel A4",
+          "BoxSize": "Tamaño de casilla (Spec IOF: 5–7 mm)",
           "PaperWidth": "Ancho del papel",
           "Submit": "Generar PDF",
           "Generating": "Generando PDF… {{done}}/{{total}}"
@@ -1842,7 +1846,8 @@
           "Climb": "{{climb}} m"
         },
         "Preview": {
-          "Total": "{{count}} páginas, unos {{paper}} cm de papel."
+          "Total": "{{count}} páginas, unos {{paper}} cm de papel.",
+          "TotalPages": "{{count}} páginas"
         },
         "Warnings": {
           "UnmappedSymbols": "No se han podido asociar {{count}} referencias de símbolos a una imagen y se imprimirán como celdas vacías: {{refs}}. Revisa esos controles antes de imprimir."
