@@ -5,8 +5,13 @@ import type { BibLabel } from './qrCodeGenerator.utils';
 const PAGE_WIDTH_MM = 210;
 const PAGE_HEIGHT_MM = 297;
 const MARGIN_MM = 10;
-const LABEL_GAP_MM = 4;
-const TEXT_ROW_HEIGHT_MM = 6;
+const ROW_GAP_MM = 10;
+const COLUMN_GAP_MM = 20;
+const LABEL_TEXT_OFFSET_MM = 5;
+const CODE_TEXT_OFFSET_MM = 9;
+const TEXT_ROW_HEIGHT_MM = 11;
+const CODE_FONT_SIZE = 7;
+const LABEL_FONT_SIZE = 10;
 const CHUNK_SIZE = 50;
 
 interface BuildPdfOptions {
@@ -19,22 +24,22 @@ export async function buildBibQrCodesPdf(
   labels: BibLabel[],
   { sizeMm, labelText, onProgress }: BuildPdfOptions
 ): Promise<Blob> {
-  const cellWidth = sizeMm + LABEL_GAP_MM;
-  const cellHeight = sizeMm + TEXT_ROW_HEIGHT_MM + LABEL_GAP_MM;
+  const cellWidth = sizeMm + COLUMN_GAP_MM;
+  const cellHeight = sizeMm + TEXT_ROW_HEIGHT_MM + ROW_GAP_MM;
   const usableWidth = PAGE_WIDTH_MM - 2 * MARGIN_MM;
   const usableHeight = PAGE_HEIGHT_MM - 2 * MARGIN_MM;
   const columns = Math.max(
     1,
-    Math.floor((usableWidth + LABEL_GAP_MM) / cellWidth)
+    Math.floor((usableWidth + COLUMN_GAP_MM) / cellWidth)
   );
   const rows = Math.max(
     1,
-    Math.floor((usableHeight + LABEL_GAP_MM) / cellHeight)
+    Math.floor((usableHeight + ROW_GAP_MM) / cellHeight)
   );
   const codesPerPage = columns * rows;
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-  doc.setFontSize(10);
+  doc.setFontSize(LABEL_FONT_SIZE);
 
   for (
     let chunkStart = 0;
@@ -66,9 +71,23 @@ export async function buildBibQrCodesPdf(
       const y = MARGIN_MM + row * cellHeight;
 
       doc.addImage(dataUrl, 'PNG', x, y, sizeMm, sizeMm);
-      doc.text(labelText(label), x + sizeMm / 2, y + sizeMm + 4, {
-        align: 'center',
-      });
+
+      doc.setFontSize(LABEL_FONT_SIZE);
+      doc.text(
+        labelText(label),
+        x + sizeMm / 2,
+        y + sizeMm + LABEL_TEXT_OFFSET_MM,
+        { align: 'center' }
+      );
+
+      // Printed as a fallback so bibs stay identifiable if the QR code fails to scan.
+      doc.setFontSize(CODE_FONT_SIZE);
+      doc.text(
+        label.code,
+        x + sizeMm / 2,
+        y + sizeMm + CODE_TEXT_OFFSET_MM,
+        { align: 'center' }
+      );
     });
 
     onProgress?.(

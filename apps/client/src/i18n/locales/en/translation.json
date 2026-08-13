@@ -1792,7 +1792,7 @@
         "TileDescription": "Generate printable QR code labels for relay team bibs.",
         "Title": "QR code generator for relay bibs",
         "Description": "Enter the team and leg ranges for your relay and download a print-ready PDF of QR code labels.",
-        "PrintGuidance": "For best scanning reliability, print on matte paper at 40-50 mm, use high contrast (black on white), and place the label in the upper area of the bib, away from folds.",
+        "PrintGuidance": "For best scanning reliability, print on matte paper at 40-50 mm, use high contrast (black on white), and place the label in the upper area of the bib, away from folds. The label will be exposed to abrasion during the race, so laminate it or cover it with transparent foil.",
         "LabelText": "Team {{team}} · Leg {{leg}}",
         "Form": {
           "TeamFrom": "Team from",

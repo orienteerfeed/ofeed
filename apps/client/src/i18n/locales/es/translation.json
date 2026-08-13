@@ -1792,7 +1792,7 @@
         "TileDescription": "Genera etiquetas de códigos QR imprimibles para los dorsales de equipos de relevos.",
         "Title": "Generador de códigos QR para dorsales de relevos",
         "Description": "Introduce los rangos de equipo y de tramo de tu relevo y descarga un PDF listo para imprimir con las etiquetas de códigos QR.",
-        "PrintGuidance": "Para mayor fiabilidad de escaneo, imprime en papel mate a 40-50 mm, usa alto contraste (negro sobre blanco) y coloca la etiqueta en la parte superior del dorsal, lejos de los pliegues.",
+        "PrintGuidance": "Para mayor fiabilidad de escaneo, imprime en papel mate a 40-50 mm, usa alto contraste (negro sobre blanco) y coloca la etiqueta en la parte superior del dorsal, lejos de los pliegues. La etiqueta estará expuesta a la abrasión durante la carrera, así que lamínala o cúbrela con lámina transparente.",
         "LabelText": "Equipo {{team}} · Tramo {{leg}}",
         "Form": {
           "TeamFrom": "Equipo desde",

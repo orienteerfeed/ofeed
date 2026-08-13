@@ -85,7 +85,7 @@
         "TileDescription": "Générez des étiquettes de codes QR imprimables pour les dossards des équipes de relais.",
         "Title": "Générateur de codes QR pour les dossards de relais",
         "Description": "Saisissez les plages d'équipes et de relais, puis téléchargez un PDF prêt à imprimer avec les étiquettes de codes QR.",
-        "PrintGuidance": "Pour une meilleure fiabilité de lecture, imprimez sur papier mat à 40-50 mm, utilisez un contraste élevé (noir sur blanc) et placez l'étiquette dans la partie supérieure du dossard, loin des plis.",
+        "PrintGuidance": "Pour une meilleure fiabilité de lecture, imprimez sur papier mat à 40-50 mm, utilisez un contraste élevé (noir sur blanc) et placez l'étiquette dans la partie supérieure du dossard, loin des plis. L'étiquette sera exposée à l'abrasion pendant la course, pensez donc à la laminer ou à la recouvrir d'un film transparent.",
         "LabelText": "Équipe {{team}} · Relais {{leg}}",
         "Form": {
           "TeamFrom": "Équipe de",

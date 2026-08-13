@@ -228,11 +228,11 @@ export const QrCodeGeneratorForm = () => {
                 {t('Pages.Utils.QrCodes.Preview.Count', { count })}
               </p>
               {previewLabels.length > 0 && (
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-y-6 gap-x-10">
                   {previewLabels.map(label => (
                     <div
                       key={label.code}
-                      className="flex flex-col items-center gap-1 rounded-lg border bg-white p-3"
+                      className="flex flex-col items-center gap-1 rounded-lg border bg-white p-5"
                     >
                       <QRCodeCanvas
                         value={label.code}
@@ -245,6 +245,9 @@ export const QrCodeGeneratorForm = () => {
                           team: label.team,
                           leg: label.leg,
                         })}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/70">
+                        {label.code}
                       </span>
                     </div>
                   ))}

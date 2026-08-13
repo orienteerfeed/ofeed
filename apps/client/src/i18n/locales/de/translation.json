@@ -498,7 +498,7 @@
         "TileDescription": "Erstelle druckbare QR-Code-Etiketten für Startnummern von Staffelteams.",
         "Title": "QR-Code-Generator für Staffel-Startnummern",
         "Description": "Gib die Team- und Streckenabschnitts-Bereiche deiner Staffel ein und lade ein druckfertiges PDF mit QR-Code-Etiketten herunter.",
-        "PrintGuidance": "Für beste Scan-Zuverlässigkeit auf mattem Papier in 40-50 mm drucken, hohen Kontrast (schwarz auf weiß) verwenden und das Etikett im oberen Bereich der Startnummer, abseits von Falzen, platzieren.",
+        "PrintGuidance": "Für beste Scan-Zuverlässigkeit auf mattem Papier in 40-50 mm drucken, hohen Kontrast (schwarz auf weiß) verwenden und das Etikett im oberen Bereich der Startnummer, abseits von Falzen, platzieren. Das Etikett ist beim Lauf Abrieb ausgesetzt, daher laminieren oder mit transparenter Folie abdecken.",
         "LabelText": "Team {{team}} · Abschnitt {{leg}}",
         "Form": {
           "TeamFrom": "Team von",

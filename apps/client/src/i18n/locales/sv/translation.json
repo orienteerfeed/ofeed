@@ -1705,7 +1705,7 @@
         "TileDescription": "Generera utskrivbara QR-kodetiketter för stafettlagens nummerlappar.",
         "Title": "QR-kodgenerator för stafettnummerlappar",
         "Description": "Ange lag- och sträckintervall för din stafett och ladda ner en utskriftsklar PDF med QR-kodetiketter.",
-        "PrintGuidance": "För bäst avläsningssäkerhet, skriv ut på matt papper i 40-50 mm, använd hög kontrast (svart på vitt) och placera etiketten i den övre delen av nummerlappen, borta från veck.",
+        "PrintGuidance": "För bäst avläsningssäkerhet, skriv ut på matt papper i 40-50 mm, använd hög kontrast (svart på vitt) och placera etiketten i den övre delen av nummerlappen, borta från veck. Etiketten utsätts för nötning under loppet, så laminera den eller täck den med genomskinlig folie.",
         "LabelText": "Lag {{team}} · Sträcka {{leg}}",
         "Form": {
           "TeamFrom": "Lag från",
