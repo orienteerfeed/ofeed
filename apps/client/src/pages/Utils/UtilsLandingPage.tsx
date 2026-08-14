@@ -5,9 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { externalLinks } from '@/lib/paths/externalLinks';
 import PATHNAMES from '@/lib/paths/pathnames';
 import { Link } from '@tanstack/react-router';
-import { Printer, QrCode } from 'lucide-react';
+import { Code2, MessageCircle, Printer, QrCode } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { MainPageLayout } from '../../templates/MainPageLayout';
 
@@ -67,6 +68,32 @@ export const UtilsLandingPage = () => {
                 </Link>
               );
             })}
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {t('Pages.Utils.IdeasNote')}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={externalLinks.discord}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-[#5865F2] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[#4752C4]"
+              >
+                <MessageCircle className="h-3 w-3" />
+                {t('Pages.Utils.IdeasDiscord')}
+              </a>
+              <a
+                href={`${externalLinks.github}/issues/new`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-800 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
+              >
+                <Code2 className="h-3 w-3" />
+                {t('Pages.Utils.IdeasGithub')}
+              </a>
+            </div>
           </div>
         </div>
       </section>

@@ -1699,7 +1699,10 @@
     },
     "Utils": {
       "Title": "Arrangörsverktyg",
-      "Description": "Små verktyg som hjälper dig att organisera och driva dina tävlingar.",
+      "Description": "Små verktyg som hjälper dig att organisera och driva dina tävlingar. Allt körs direkt i din webbläsare — vi lagrar inte dina data och skickar dem inte någonstans, så de är säkra.",
+      "IdeasNote": "Saknar du ett verktyg eller har du en idé till ett nytt? Berätta för oss på Discord eller skapa ett GitHub-ärende — förslag från communityn styr vad som byggs härnäst.",
+      "IdeasDiscord": "Gå med i Discord",
+      "IdeasGithub": "Skapa GitHub-ärende",
       "QrCodes": {
         "TileTitle": "QR-kodgenerator",
         "TileDescription": "Generera utskrivbara QR-kodetiketter för stafettlagens nummerlappar.",

@@ -1786,7 +1786,10 @@
     },
     "Utils": {
       "Title": "Organizer utilities",
-      "Description": "Small tools that help you organize and run your events.",
+      "Description": "Small tools that help you organize and run your events. Everything runs directly in your browser — we don't store or send your data anywhere, so it stays safe.",
+      "IdeasNote": "Missing a tool, or have an idea for a new one? Tell us on Discord or open a GitHub issue — community suggestions drive what gets built next.",
+      "IdeasDiscord": "Join Discord",
+      "IdeasGithub": "Open GitHub issue",
       "QrCodes": {
         "TileTitle": "QR code generator",
         "TileDescription": "Generate printable QR code labels for relay team bibs.",

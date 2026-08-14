@@ -1786,7 +1786,10 @@
     },
     "Utils": {
       "Title": "Herramientas para organizadores",
-      "Description": "Pequeñas herramientas que te ayudan a organizar y gestionar tus eventos.",
+      "Description": "Pequeñas herramientas que te ayudan a organizar y gestionar tus eventos. Todo funciona directamente en tu navegador: no guardamos tus datos ni los enviamos a ningún sitio, así que están seguros.",
+      "IdeasNote": "¿Te falta alguna herramienta o tienes una idea para una nueva? Cuéntanoslo en Discord o abre un issue en GitHub: las sugerencias de la comunidad deciden qué se desarrolla a continuación.",
+      "IdeasDiscord": "Unirse a Discord",
+      "IdeasGithub": "Abrir un issue en GitHub",
       "QrCodes": {
         "TileTitle": "Generador de códigos QR",
         "TileDescription": "Genera etiquetas de códigos QR imprimibles para los dorsales de equipos de relevos.",

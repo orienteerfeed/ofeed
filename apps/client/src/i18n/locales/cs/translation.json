@@ -1789,7 +1789,10 @@
     },
     "Utils": {
       "Title": "Pomocné nástroje",
-      "Description": "Drobné nástroje, které ti pomohou s organizací a průběhem akce.",
+      "Description": "Drobné nástroje, které ti pomohou s organizací a průběhem akce. Vše běží přímo v tvém prohlížeči, data neukládáme a nikam neposíláme, takže jsou v bezpečí.",
+      "IdeasNote": "Chybí ti nějaký nástroj nebo máš nápad na nový? Napiš nám na Discord nebo založ issue na GitHubu — nápady od komunity určují, co vznikne dál.",
+      "IdeasDiscord": "Připojit se na Discord",
+      "IdeasGithub": "Založit issue na GitHubu",
       "QrCodes": {
         "TileTitle": "Generátor QR kódů",
         "TileDescription": "Vygeneruj tiskové QR kódy pro startovní čísla štafetových závodů.",

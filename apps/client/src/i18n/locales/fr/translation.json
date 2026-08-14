@@ -79,7 +79,10 @@
     },
     "Utils": {
       "Title": "Outils pour organisateurs",
-      "Description": "De petits outils pour vous aider à organiser et gérer vos événements.",
+      "Description": "De petits outils pour vous aider à organiser et gérer vos événements. Tout fonctionne directement dans votre navigateur : nous ne conservons pas vos données et ne les envoyons nulle part, elles restent donc en sécurité.",
+      "IdeasNote": "Un outil vous manque ou vous avez une idée pour un nouveau ? Dites-le nous sur Discord ou ouvrez une issue GitHub — les suggestions de la communauté déterminent ce qui sera développé ensuite.",
+      "IdeasDiscord": "Rejoindre Discord",
+      "IdeasGithub": "Ouvrir une issue GitHub",
       "QrCodes": {
         "TileTitle": "Générateur de codes QR",
         "TileDescription": "Générez des étiquettes de codes QR imprimables pour les dossards des équipes de relais.",

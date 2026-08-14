@@ -492,7 +492,10 @@
     },
     "Utils": {
       "Title": "Organisator-Werkzeuge",
-      "Description": "Kleine Werkzeuge, die dir helfen, deine Veranstaltungen zu organisieren und durchzuführen.",
+      "Description": "Kleine Werkzeuge, die dir helfen, deine Veranstaltungen zu organisieren und durchzuführen. Alles läuft direkt in deinem Browser — wir speichern deine Daten nicht und senden sie nirgendwohin, sie bleiben also sicher.",
+      "IdeasNote": "Fehlt dir ein Werkzeug oder hast du eine Idee für ein neues? Schreib uns auf Discord oder erstelle ein GitHub-Issue — Vorschläge aus der Community bestimmen, was als Nächstes entsteht.",
+      "IdeasDiscord": "Discord beitreten",
+      "IdeasGithub": "GitHub-Issue erstellen",
       "QrCodes": {
         "TileTitle": "QR-Code-Generator",
         "TileDescription": "Erstelle druckbare QR-Code-Etiketten für Startnummern von Staffelteams.",
