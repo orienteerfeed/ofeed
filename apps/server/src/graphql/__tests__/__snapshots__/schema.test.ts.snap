@@ -480,6 +480,7 @@ type Mutation {
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
   createMeosEventBinding(eventId: String!): EventMeosBinding!
   createUserCard(input: CreateUserCardInput!): UserCard!
+  deleteCurrentAccount(currentPassword: String!, deleteEvents: Boolean): Boolean!
   deleteCustomEventService(eventId: String!, id: Int!): ResponseMessage!
   deleteMeosEventBinding(id: Int!): Boolean!
   deleteUserCard(id: Int!): Boolean!
