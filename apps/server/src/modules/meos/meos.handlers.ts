@@ -260,7 +260,9 @@ export function registerMeosHandler(router: AppOpenAPI): void {
       return meosStatusXml('ERROR');
     }
 
-    const rawHash = computeRawHash(rawBuffer);
+    // Hash the extracted XML, not the container: a ZIP local header carries the
+    // entry mtime, so re-zipping identical MOP content would never dedupe.
+    const rawHash = computeRawHash(Buffer.from(xmlBody));
 
     const isDuplicateSuccessfulImport = await findImportStateByHash(
       eventId,

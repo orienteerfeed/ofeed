@@ -5,8 +5,16 @@ import prisma from '../../utils/context.js';
 
 export { ImportSourceType };
 
+// Exporters re-stamp the root createTime on every export; drop it so unchanged
+// re-exports hash the same. Non-global: the root attribute only, not payload.
+const VOLATILE_ROOT_ATTR = /\screateTime="[^"]*"/;
+
 export function computeRawHash(buffer: Buffer): string {
-  return createHash('sha256').update(buffer).digest('hex');
+  // latin1 round-trips bytes 1:1, so the hash stays byte-exact even for binary
+  // (zipped) payloads. utf8 would fold invalid bytes into U+FFFD and collide.
+  return createHash('sha256')
+    .update(buffer.toString('latin1').replace(VOLATILE_ROOT_ATTR, ''), 'latin1')
+    .digest('hex');
 }
 
 export function detectXmlRootElement(xmlBuffer: Buffer): string | null {
