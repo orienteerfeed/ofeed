@@ -1,7 +1,7 @@
 import type { Locale } from 'date-fns';
 import { format, formatDuration, isValid, parse, parseISO } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
-import { cs, de, enGB, es, sv } from 'date-fns/locale';
+import { cs, de, enGB, es, fr, sv } from 'date-fns/locale';
 
 export const DATE_FORMATS = {
   date: 'd. M. yyyy',
@@ -12,8 +12,8 @@ export const DATE_FORMATS = {
   timeHhMm: 'HH:mm',
 } as const;
 
-export type LocaleKey = 'cs' | 'enGB' | 'es' | 'de' | 'sv';
-const LOCALES: Record<LocaleKey, Locale> = { cs, enGB, es, de, sv };
+export type LocaleKey = 'cs' | 'enGB' | 'es' | 'de' | 'fr' | 'sv';
+const LOCALES: Record<LocaleKey, Locale> = { cs, enGB, es, de, fr, sv };
 const TIME_HH_MM_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const TIME_HH_MM_SS_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
 const ISO_DATE_PREFIX_PATTERN = /^(\d{4}-\d{2}-\d{2})/;
@@ -24,6 +24,7 @@ export function getLocaleKey(language?: string): LocaleKey {
   if (normalized.startsWith('cs')) return 'cs';
   if (normalized.startsWith('de')) return 'de';
   if (normalized.startsWith('es')) return 'es';
+  if (normalized.startsWith('fr')) return 'fr';
   if (normalized.startsWith('sv')) return 'sv';
   return 'enGB';
 }

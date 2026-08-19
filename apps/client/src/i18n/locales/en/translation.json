@@ -1333,7 +1333,8 @@
           "FeaturedImageUploadSuccess": "Featured image uploaded successfully.",
           "FeaturedImageUploadError": "Failed to upload featured image.",
           "FeaturedImageRemoveSuccess": "Featured image removed successfully.",
-          "FeaturedImageRemoveError": "Failed to remove featured image."
+          "FeaturedImageRemoveError": "Failed to remove featured image.",
+          "InvalidZeroTime": "Unable to parse start time. Use HH:mm or HH:mm:ss format."
         }
       },
       "Card": {
@@ -1501,7 +1502,7 @@
         "DeleteCompetitors": {
           "Title": "Delete competitors",
           "Description": "If you uploaded Start list or Results for a wrong event, you can delete all competitors and start over. This button deletes all runners (Start list & Results).",
-          "Button": "Delete competitors",
+          "Button": "Delete",
           "ConfirmTitle": "Delete All Competitors",
           "ConfirmDescription": "Are you sure you want to delete all competitors? This action cannot be undone!",
           "ConfirmButton": "Delete Competitors"
@@ -1509,7 +1510,7 @@
         "DeleteAllEventData": {
           "Title": "Delete all event data",
           "Description": "If you need to completely remove all event data, including runners, classes, relays, and results, use this button. Be cautious, as this action is irreversible!",
-          "Button": "Delete all event data",
+          "Button": "Delete",
           "ConfirmTitle": "Delete All Event Data",
           "ConfirmDescription": "Are you sure you want to delete all event data? This will remove all results and cannot be undone!",
           "ConfirmButton": "Delete All Data"
@@ -1517,7 +1518,7 @@
         "DeleteEvent": {
           "Title": "Delete event",
           "Description": "The event will be deleted. You have to delete all event data first. This action cannot be undone!",
-          "Button": "Delete event",
+          "Button": "Delete",
           "ConfirmTitle": "Delete Event",
           "ConfirmDescription": "Are you sure you want to delete this entire event? This action cannot be undone!",
           "ConfirmButton": "Delete Event"
@@ -1530,10 +1531,10 @@
       "TroublesShooting": {
         "Title": "Need Help or Have Questions?",
         "Description": "If you encounter an error or need assistance, please do not hesitate to contact us.",
-        "Description1": "Our support team is ready to assist you with any issues or questions. Reach out to us at",
-        "Description2": "please include any relevant files.",
+        "FeedbackDescription": "Check out the documentation to get started, join our Discord community for quick help, or open a GitHub issue to report a bug, share feedback, or suggest a new feature.",
         "Discord": "Join Discord",
-        "GitHubIssues": "Open GitHub Issues"
+        "GitHubIssues": "Open GitHub Issues",
+        "Docs": "Getting Started"
       },
       "ClassSelect": {
         "Title": "Select Class",
@@ -1969,6 +1970,18 @@
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 8 characters",
     "confirmPasswordRequired": "Please confirm your new password",
-    "passwordsDoNotMatch": "Passwords do not match"
+    "passwordsDoNotMatch": "Passwords do not match",
+    "eventNameRequired": "Event name is required",
+    "eventNameMinLength": "Event name must be at least 2 characters",
+    "sportRequired": "Sport is required",
+    "countryRequired": "Country is required",
+    "dateRequired": "Date is required",
+    "timezoneRequired": "Timezone is required",
+    "organizerRequired": "Organizer is required",
+    "locationRequired": "Location is required",
+    "latitudeRange": "Latitude must be between -90 and 90",
+    "longitudeRange": "Longitude must be between -180 and 180",
+    "zeroTimeRequired": "Zero time is required",
+    "zeroTimeFormat": "Time must be in HH:mm or HH:mm:ss format"
   }
 }

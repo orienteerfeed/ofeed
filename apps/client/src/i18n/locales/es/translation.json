@@ -1333,7 +1333,8 @@
           "FeaturedImageUploadSuccess": "La imagen destacada se subió correctamente.",
           "FeaturedImageUploadError": "No se pudo subir la imagen destacada.",
           "FeaturedImageRemoveSuccess": "La imagen destacada se eliminó correctamente.",
-          "FeaturedImageRemoveError": "No se pudo eliminar la imagen destacada."
+          "FeaturedImageRemoveError": "No se pudo eliminar la imagen destacada.",
+          "InvalidZeroTime": "No se pudo procesar la hora de inicio. Usa el formato HH:mm o HH:mm:ss."
         }
       },
       "Card": {
@@ -1501,7 +1502,7 @@
         "DeleteCompetitors": {
           "Title": "Eliminar competidores",
           "Description": "Si ha subido la lista de salida o resultados para un evento incorrecto, puede eliminar todos los competidores y comenzar de nuevo. Este botón elimina todos los corredores (lista de salida y resultados).",
-          "Button": "Eliminar competidores",
+          "Button": "Eliminar",
           "ConfirmTitle": "Eliminar todos los competidores",
           "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los competidores? Esta acción no se puede deshacer!",
           "ConfirmButton": "Eliminar competidores"
@@ -1509,7 +1510,7 @@
         "DeleteAllEventData": {
           "Title": "Eliminar todos los datos del evento",
           "Description": "Si necesita eliminar completamente todos los datos del evento, incluidos corredores, clases y resultados, utilice este botón. Tenga precaución, ya que esta acción es irreversible!",
-          "Button": "Eliminar todos los datos del evento",
+          "Button": "Eliminar",
           "ConfirmTitle": "Eliminar todos los datos del evento",
           "ConfirmDescription": "¿Estás seguro de que quieres eliminar todos los datos del evento? Esto eliminará todos los resultados y no se puede deshacer!",
           "ConfirmButton": "Eliminar todos los datos"
@@ -1517,7 +1518,7 @@
         "DeleteEvent": {
           "Title": "Eliminar evento",
           "Description": "Todos los datos del evento serán eliminados. Esta acción no se puede deshacer!",
-          "Button": "Eliminar evento",
+          "Button": "Eliminar",
           "ConfirmTitle": "Eliminar evento",
           "ConfirmDescription": "¿Estás seguro de que quieres eliminar este evento completo? Esta acción no se puede deshacer!",
           "ConfirmButton": "Eliminar evento"
@@ -1530,10 +1531,10 @@
       "TroublesShooting": {
         "Title": "¿Necesita ayuda o tiene alguna pregunta?",
         "Description": "Si encuentra un error o necesita ayuda, no dude en ponerse en contacto con nosotros.",
-        "Description1": "Nuestro equipo de asistencia está listo para ayudarle con cualquier problema o pregunta. Póngase en contacto con nosotros en",
-        "Description2": "por favor incluya cualquier archivo relevante.",
+        "FeedbackDescription": "Consulte la documentación para empezar, únase a nuestra comunidad de Discord para obtener ayuda rápida, o abra un issue en GitHub para reportar un error, enviar comentarios o sugerir una nueva función.",
         "Discord": "Join Discord",
-        "GitHubIssues": "Open GitHub Issues"
+        "GitHubIssues": "Open GitHub Issues",
+        "Docs": "Primeros pasos"
       },
       "ClassSelect": {
         "Title": "Seleccionar categoría",
@@ -1968,6 +1969,18 @@
     "passwordRequired": "La contraseña es obligatoria",
     "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
     "confirmPasswordRequired": "Confirma tu nueva contraseña",
-    "passwordsDoNotMatch": "Las contraseñas no coinciden"
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "eventNameRequired": "El nombre del evento es obligatorio",
+    "eventNameMinLength": "El nombre del evento debe tener al menos 2 caracteres",
+    "sportRequired": "El deporte es obligatorio",
+    "countryRequired": "El país es obligatorio",
+    "dateRequired": "La fecha es obligatoria",
+    "timezoneRequired": "La zona horaria es obligatoria",
+    "organizerRequired": "El organizador es obligatorio",
+    "locationRequired": "La ubicación es obligatoria",
+    "latitudeRange": "La latitud debe estar entre -90 y 90",
+    "longitudeRange": "La longitud debe estar entre -180 y 180",
+    "zeroTimeRequired": "La hora cero es obligatoria",
+    "zeroTimeFormat": "La hora debe tener el formato HH:mm o HH:mm:ss"
   }
 }
