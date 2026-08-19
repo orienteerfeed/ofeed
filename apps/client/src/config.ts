@@ -57,10 +57,6 @@ export const config = {
     browserOrigin() ??
     import.meta.env.BASE_URL,
   DEFAULT_LANGUAGE: optional(runtimeValue('VITE_DEFAULT_LANGUAGE'), 'en'),
-  SUPPORT_EMAIL: optional(
-    runtimeValue('VITE_SUPPORT_EMAIL'),
-    'support@orienteerfeed.com'
-  ),
   DOCS_URL: optional(
     runtimeValue('VITE_DOCS_URL'),
     'https://docs.orienteerfeed.com'
