@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card';
+import { TroubleShootingCard } from '@/pages/Event/Settings/TroubleShootingCard';
 import { useTranslation } from 'react-i18next';
 import { MainPageLayout } from '../../templates/MainPageLayout';
 
@@ -22,7 +23,7 @@ export const AboutPage = () => {
             <h2 className="text-2xl font-bold mb-4">What is OrienteerFeed?</h2>
             <div className="space-y-4 text-muted-foreground">
               <p>
-                OrienteerFeed (OFEED) is a comprehensive results and event
+                OrienteerFeed (OFeed) is a comprehensive results and event
                 platform for orienteering. It synchronizes data during the race
                 so organizers have a second-by-second overview of what’s
                 happening on the course and in the arena.
@@ -100,13 +101,7 @@ export const AboutPage = () => {
             </ul>
           </Card>
 
-          <Card className="p-6 md:p-8 border-border">
-            <h2 className="text-2xl font-bold mb-4">Contact</h2>
-            <p className="text-muted-foreground">
-              Questions or feedback? Get in touch via our GitHub repository or
-              check the documentation for more details.
-            </p>
-          </Card>
+          <TroubleShootingCard t={t} />
         </div>
       </section>
     </MainPageLayout>

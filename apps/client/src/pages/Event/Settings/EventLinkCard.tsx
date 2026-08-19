@@ -766,7 +766,7 @@ ${t('Pages.Event.Link.Card.Navigator.UrlDescription')}`,
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={handleShareLink}
             variant="outline"
