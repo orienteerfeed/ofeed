@@ -72,9 +72,9 @@ export function buildLocalizedDocsUrl(
     normalizedLanguage !== null &&
     normalizedLanguage !== normalizedDefaultLanguage &&
     localizedLanguages.has(normalizedLanguage) &&
-    pathnameSegments.at(-1) !== normalizedLanguage
+    pathnameSegments[0] !== normalizedLanguage
   ) {
-    pathnameSegments.push(normalizedLanguage);
+    pathnameSegments.unshift(normalizedLanguage);
   }
 
   url.pathname =
