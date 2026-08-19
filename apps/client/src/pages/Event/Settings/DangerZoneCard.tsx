@@ -245,7 +245,7 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
                 key={index}
                 className={`p-4 border-2 rounded-lg transition-all duration-200 hover:shadow-sm ${getSeverityStyles(action.severity)}`}
               >
-                <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className={`flex-shrink-0 ${getIconColor(action.severity)}`}>
                       <action.icon className="h-5 w-5" />
@@ -272,7 +272,7 @@ export const DangerZoneCard: React.FC<DangerZoneCardProps> = ({
                     {action.request.isLoading ? (
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        <span>Deleting...</span>
+                        <span>{t('Operations.Deleting', { ns: 'common' })}</span>
                       </div>
                     ) : (
                       action.buttonText

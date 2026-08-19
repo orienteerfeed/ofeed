@@ -21,7 +21,6 @@ window.__OFEED_RUNTIME_CONFIG__ = Object.freeze({
   VITE_BASE_API_URL: "$(escape_json "$api_url")",
   VITE_PUBLIC_URL: "$(escape_json "$public_url")",
   VITE_DEFAULT_LANGUAGE: "$(escape_json "${OFEED_DEFAULT_LANGUAGE:-en}")",
-  VITE_SUPPORT_EMAIL: "$(escape_json "${OFEED_SUPPORT_EMAIL:-support@orienteerfeed.com}")",
   VITE_DOCS_URL: "$(escape_json "${OFEED_DOCS_URL:-https://docs.orienteerfeed.com}")",
   VITE_BOARD_APP_URL: "$(escape_json "$board_url")",
   VITE_DISCORD_INVITE_URL: "$(escape_json "${OFEED_DISCORD_INVITE_URL:-https://discord.gg/QMvnurgKzU}")",

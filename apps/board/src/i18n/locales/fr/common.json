@@ -1,0 +1,49 @@
+{
+  "language": {
+    "label": "Langue"
+  },
+  "noData": {
+    "title": "Données de l'événement non disponibles",
+    "description": "Aucune donnée n'est actuellement disponible pour les résultats. Veuillez réessayer plus tard ou contacter l'organisateur de l'événement pour plus d'informations."
+  },
+  "loading": "Chargement des données",
+  "error": "Une erreur s'est produite lors du chargement des données, veuillez réessayer plus tard",
+  "settings": {
+    "title": "Paramètres du tableau des résultats",
+    "close": "Fermer les paramètres",
+    "columnNumber": "Nombre de colonnes",
+    "scrolling": {
+      "label": "Défilement (auto)",
+      "byPage": "Défiler par page",
+      "byRow": "Défiler par ligne",
+      "continuous": "Défilement continu",
+      "manual": "Défilement manuel",
+      "speed": "Vitesse de défilement (temps par ligne de résultat)"
+    },
+    "tableContent": {
+      "label": "Contenu du tableau",
+      "pinnedLeaders": "Nombre de leaders épinglés",
+      "showUnfinished": "Afficher les non terminés (liste de départ, en course)",
+      "compactMode": "Mode compact (sans club, ni puce)",
+      "showEmojis": "Afficher les emojis dans le tableau"
+    },
+    "classes": {
+      "label": "Catégories affichées",
+      "colorHint": "La couleur de l'en-tête de catégorie est déterminée par le sexe défini pour la catégorie dans la source de données (M = bleu, F = rose, autre = gris).",
+      "filterPlaceholder": "Filtrer par nom…",
+      "selectAll": "Toutes",
+      "colHeaders": {
+        "name": "Nom",
+        "col": "Col.",
+        "color": "Couleur",
+        "order": "Ordre"
+      }
+    },
+    "colorOverride": {
+      "auto": "Auto (depuis la source de données)",
+      "male": "M – bleu (masculin)",
+      "female": "F – rose (féminin)",
+      "neutral": "X – gris (neutre)"
+    }
+  }
+}

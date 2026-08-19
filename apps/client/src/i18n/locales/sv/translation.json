@@ -1333,7 +1333,8 @@
           "FeaturedImageUploadSuccess": "Presentationsbilden har laddats upp.",
           "FeaturedImageUploadError": "Kunde inte ladda upp presentationsbilden.",
           "FeaturedImageRemoveSuccess": "Presentationsbilden har tagits bort.",
-          "FeaturedImageRemoveError": "Kunde inte ta bort presentationsbilden."
+          "FeaturedImageRemoveError": "Kunde inte ta bort presentationsbilden.",
+          "InvalidZeroTime": "Kunde inte tolka starttiden. Använd formatet HH:mm eller HH:mm:ss."
         }
       },
       "Card": {
@@ -1501,7 +1502,7 @@
         "DeleteCompetitors": {
           "Title": "Radera deltagare",
           "Description": "Om du har laddat upp en startlista eller resultat för fel tävling kan du ta bort alla deltagare och börja om. Den här knappen tar bort alla löpare (startlista och resultat).",
-          "Button": "Radera deltagare",
+          "Button": "Radera",
           "ConfirmTitle": "Radera alla deltagare",
           "ConfirmDescription": "Är du säker på att du vill ta bort alla deltagare? Den här åtgärden går inte att ångra!",
           "ConfirmButton": "Radera deltagare"
@@ -1509,7 +1510,7 @@
         "DeleteAllEventData": {
           "Title": "Radera all tävlingsdata",
           "Description": "Om du vill radera all tävlingsdata, inklusive deltagare, klasser, stafetter och resultat, använder du den här knappen. Var försiktig, eftersom denna åtgärd inte går att ångra!",
-          "Button": "Radera all tävlingsdata",
+          "Button": "Radera",
           "ConfirmTitle": "Radera all tävlingsdata",
           "ConfirmDescription": "Är du säker på att du vill radera all tävlingsdata? Detta kommer att ta bort alla resultat och kan inte ångras!",
           "ConfirmButton": "Radera all data"
@@ -1517,7 +1518,7 @@
         "DeleteEvent": {
           "Title": "Radera tävling",
           "Description": "Tävlingen kommer att raderas. Du måste först radera all tävlingsdata. Denna åtgärd går inte att ångra!",
-          "Button": "Radera tävling",
+          "Button": "Radera",
           "ConfirmTitle": "Radera tävling",
           "ConfirmDescription": "Är du säker på att du vill ta bort hela tävlingen? Den här åtgärden går inte att ångra!",
           "ConfirmButton": "Radera tävling"
@@ -1530,10 +1531,10 @@
       "TroublesShooting": {
         "Title": "Behöver du hjälp eller har du frågor?",
         "Description": "Om du stöter på ett fel eller behöver hjälp är du välkommen att kontakta oss.",
-        "Description1": "Vårt supportteam står redo att hjälpa dig med eventuella problem eller frågor. Kontakta oss på",
-        "Description2": "Bifoga alla relevanta filer.",
+        "FeedbackDescription": "Kolla in dokumentationen för att komma igång, gå med i vår Discord-community för snabb hjälp, eller öppna ett GitHub-ärende för att rapportera en bugg, ge feedback eller föreslå en ny funktion.",
         "Discord": "Gå med i Discord",
-        "GitHubIssues": "Öppna GitHub-ärenden"
+        "GitHubIssues": "Öppna GitHub-ärenden",
+        "Docs": "Kom igång"
       },
       "ClassSelect": {
         "Title": "Välj klass",
@@ -1881,7 +1882,19 @@
     "passwordRequired": "Lösenord är obligatoriskt",
     "passwordMinLength": "Lösenordet måste vara minst 8 tecken",
     "confirmPasswordRequired": "Bekräfta ditt nya lösenord",
-    "passwordsDoNotMatch": "Lösenorden stämmer inte överens"
+    "passwordsDoNotMatch": "Lösenorden stämmer inte överens",
+    "eventNameRequired": "Tävlingsnamn är obligatoriskt",
+    "eventNameMinLength": "Tävlingsnamnet måste vara minst 2 tecken",
+    "sportRequired": "Sport är obligatoriskt",
+    "countryRequired": "Land är obligatoriskt",
+    "dateRequired": "Datum är obligatoriskt",
+    "timezoneRequired": "Tidszon är obligatoriskt",
+    "organizerRequired": "Arrangör är obligatoriskt",
+    "locationRequired": "Plats är obligatoriskt",
+    "latitudeRange": "Latitud måste vara mellan -90 och 90",
+    "longitudeRange": "Longitud måste vara mellan -180 och 180",
+    "zeroTimeRequired": "Nolltid är obligatoriskt",
+    "zeroTimeFormat": "Tiden måste anges i formatet HH:mm eller HH:mm:ss"
   },
   "Molecules": {
     "DragDrop": {

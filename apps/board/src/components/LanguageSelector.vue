@@ -11,6 +11,7 @@ const LANGUAGES: { key: Locale; country: string; label: string; nativeName: stri
   { key: 'en', country: 'gb', label: 'English',  nativeName: 'English' },
   { key: 'de', country: 'de', label: 'German',   nativeName: 'Deutsch' },
   { key: 'es', country: 'es', label: 'Spanish',  nativeName: 'Español' },
+  { key: 'fr', country: 'fr', label: 'French',   nativeName: 'Français' },
   { key: 'sv', country: 'se', label: 'Swedish',  nativeName: 'Svenska' },
 ]
 

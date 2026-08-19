@@ -1336,7 +1336,8 @@
           "FeaturedImageUploadSuccess": "Obrázek byl úspěšně nahrán.",
           "FeaturedImageUploadError": "Nahrání obrázku se nezdařilo.",
           "FeaturedImageRemoveSuccess": "Obrázek byl úspěšně odebrán.",
-          "FeaturedImageRemoveError": "Odebrání obrázku se nezdařilo."
+          "FeaturedImageRemoveError": "Odebrání obrázku se nezdařilo.",
+          "InvalidZeroTime": "Nepodařilo se zpracovat čas startu. Použij formát HH:mm nebo HH:mm:ss."
         }
       },
       "Card": {
@@ -1533,10 +1534,10 @@
       "TroublesShooting": {
         "Title": "Potřebuješ pomoc nebo máš dotazy?",
         "Description": "Pokud narazíš na chybu nebo potřebuješ pomoc, neváhej nás kontaktovat.",
-        "Description1": "Pokusíme se poradit při problémech s používáním nebo zodpovědět dotazy. Kontaktuj nás na adrese",
-        "Description2": "prosíme přilož případně problémové soubory.",
+        "FeedbackDescription": "Podívej se do dokumentace, kde najdeš úvodní návod, připoj se na Discord pro rychlou pomoc, nebo otevři GitHub Issue, pokud chceš nahlásit chybu, napsat zpětnou vazbu nebo navrhnout novou funkci.",
         "Discord": "Připojit se na Discord",
-        "GitHubIssues": "Otevřít GitHub Issues"
+        "GitHubIssues": "Otevřít GitHub Issues",
+        "Docs": "Úvodní návod"
       },
       "ClassSelect": {
         "Title": "Vybrat kategorii",
@@ -1971,6 +1972,18 @@
     "passwordRequired": "Heslo je povinné",
     "passwordMinLength": "Heslo musí mít alespoň 8 znaků",
     "confirmPasswordRequired": "Potvrď prosím nové heslo",
-    "passwordsDoNotMatch": "Hesla se neshodují"
+    "passwordsDoNotMatch": "Hesla se neshodují",
+    "eventNameRequired": "Název akce je povinný",
+    "eventNameMinLength": "Název akce musí mít alespoň 2 znaky",
+    "sportRequired": "Sport je povinný",
+    "countryRequired": "Země je povinná",
+    "dateRequired": "Datum je povinné",
+    "timezoneRequired": "Časové pásmo je povinné",
+    "organizerRequired": "Pořadatel je povinný",
+    "locationRequired": "Místo konání je povinné",
+    "latitudeRange": "Zeměpisná šířka musí být mezi -90 a 90",
+    "longitudeRange": "Zeměpisná délka musí být mezi -180 a 180",
+    "zeroTimeRequired": "Nulový čas je povinný",
+    "zeroTimeFormat": "Čas musí být ve formátu HH:mm nebo HH:mm:ss"
   }
 }

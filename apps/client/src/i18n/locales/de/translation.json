@@ -583,7 +583,16 @@
           "FreeStart": "Freier Start"
         },
         "Placeholders": {
-          "Currency": "Währung auswählen"
+          "Currency": "Währung auswählen",
+          "EventName": "Mein erstes Event",
+          "Sport": "Sportart auswählen",
+          "Timezone": "Zeitzone auswählen",
+          "Organizer": "Name des Veranstalters",
+          "Location": "Austragungsort",
+          "Latitude": "Breitengrad eingeben (z. B. 50.0755)",
+          "Longitude": "Längengrad eingeben (z. B. 14.4378)",
+          "Country": "Land auswählen",
+          "CoefRanking": "1.02"
         },
         "Import": {
           "SyncOfficialResults": "Offizielle Ergebnisse synchronisieren",
@@ -592,17 +601,93 @@
             "OfficialResultsFound": "Offizielle Ergebnisse wurden gefunden und synchronisiert.",
             "OfficialResultsNotFound": "Offizielle Ergebnisse sind noch nicht verfügbar.",
             "OfficialResultsSyncFailedTitle": "Synchronisierung offizieller Ergebnisse fehlgeschlagen",
-            "OfficialResultsSyncFailedDescription": "Die offiziellen Ergebnisse konnten nicht aus dem externen System synchronisiert werden."
+            "OfficialResultsSyncFailedDescription": "Die offiziellen Ergebnisse konnten nicht aus dem externen System synchronisiert werden.",
+            "ExternalIdRequired": "Die externe Event-ID ist erforderlich.",
+            "EventorApiKeyRequired": "Für den Anbieter Eventor ist ein API-Schlüssel erforderlich.",
+            "InvalidResponse": "Die importierten Eventdaten konnten nicht verarbeitet werden.",
+            "PrefillSuccess": "Das Eventformular wurde aus dem externen System vorbefüllt.",
+            "PrefillFailedTitle": "Import fehlgeschlagen",
+            "PrefillFailedDescription": "Die Eventdaten konnten nicht vom externen Anbieter geladen werden.",
+            "LinkSaved": "Die externe Event-Verknüpfung wurde erfolgreich gespeichert.",
+            "LinkRemoved": "Die externe Event-Verknüpfung wurde erfolgreich entfernt.",
+            "LinkRemovedPendingSave": "Die externe Event-Verknüpfung wird nach dem Speichern des Events entfernt.",
+            "SearchFailedTitle": "Suche fehlgeschlagen",
+            "SearchFailedDescription": "Die Events konnten beim externen Anbieter nicht durchsucht werden."
+          },
+          "Title": "Import aus externem System",
+          "Description": "Suche ein Event nach Namen oder lade es über die externe Event-ID, um dieses Formular vorzubefüllen.",
+          "CurrentLink": "Aktuelle Verknüpfung",
+          "NoLink": "Dieses Event ist mit keinem externen System verknüpft.",
+          "Unlink": "Verknüpfung entfernen",
+          "Provider": "Anbieter",
+          "ExternalEventId": "Externe Event-ID",
+          "ApiKey": "Eventor-API-Schlüssel",
+          "ApiKeyHelper": "Für den Eventor-Import und die Suche ist ein API-Schlüssel erforderlich.",
+          "SearchByName": "Externe Events nach Namen suchen",
+          "MinCharacters": "Gib mindestens 2 Zeichen ein, um zu suchen.",
+          "Searching": "Suche läuft...",
+          "NoResults": "Keine passenden Events gefunden.",
+          "Open": "Import aus externem System",
+          "Hide": "Import ausblenden",
+          "SaveLink": "Verknüpfung speichern",
+          "LoadPreview": "Laden und Formular vorbefüllen",
+          "Placeholders": {
+            "ExternalEventId": "z. B. 8300",
+            "ApiKey": "Eventor-API-Schlüssel eingeben",
+            "SearchByName": "Mindestens 2 Zeichen eingeben..."
+          },
+          "Providers": {
+            "ORIS": "ORIS",
+            "EVENTOR": "Eventor"
           }
         },
         "Validation": {
-          "SplitPublicationAtRequired": "Für die geplante Veröffentlichung der Zwischenzeiten ist ein Veröffentlichungszeitpunkt erforderlich."
+          "SplitPublicationAtRequired": "Für die geplante Veröffentlichung der Zwischenzeiten ist ein Veröffentlichungszeitpunkt erforderlich.",
+          "EntriesCloseAtAfterOpen": "Das Ende der Anmeldung muss nach dem Anmeldebeginn liegen."
         },
         "Toast": {
           "FeaturedImageUploadSuccess": "Titelbild wurde erfolgreich hochgeladen.",
           "FeaturedImageUploadError": "Titelbild konnte nicht hochgeladen werden.",
           "FeaturedImageRemoveSuccess": "Titelbild wurde erfolgreich entfernt.",
-          "FeaturedImageRemoveError": "Titelbild konnte nicht entfernt werden."
+          "FeaturedImageRemoveError": "Titelbild konnte nicht entfernt werden.",
+          "CreateSuccess": "Das Event wurde erfolgreich erstellt!",
+          "EditSuccess": "Das Event wurde erfolgreich aktualisiert!",
+          "InvalidZeroTime": "Die Startzeit konnte nicht gelesen werden. Verwende das Format HH:mm oder HH:mm:ss."
+        },
+        "EventName": "Eventname",
+        "Sport": "Sport",
+        "Date": "Datum",
+        "Timezone": "Zeitzone",
+        "Organizer": "Veranstalter",
+        "Location": "Ort",
+        "Latitude": "GPS-Breitengrad",
+        "Longitude": "GPS-Längengrad",
+        "Country": "Land",
+        "ZeroTime": "Nullzeit",
+        "Discipline": "Disziplin",
+        "Ranking": "Rangliste",
+        "CoefRanking": "Ranglisten-Koeffizient",
+        "Relay": "Staffel",
+        "HundredthPrecision": "Hundertstelgenauigkeit",
+        "Published": "Veröffentlicht",
+        "EntriesOpenAt": "Anmeldung offen ab",
+        "EntriesOpenAtHelper": "Leer lassen, um die Anmeldung geschlossen zu halten, bis du dich anders entscheidest.",
+        "EntriesCloseAt": "Anmeldung offen bis",
+        "EntriesCloseAtHelper": "Leer lassen, um das Anmeldefenster ohne festen Termin offen zu halten.",
+        "ResultsOfficialManuallySetAt": "Endergebnisse bestätigt am",
+        "ResultsOfficialManuallySetAtHelper": "Nutze dies nur für lokale Events ohne ORIS- oder Eventor-Integration.",
+        "ResultsOfficialManagedExternally": "Die Bestätigung offizieller Ergebnisse wird vom verknüpften externen System verwaltet.",
+        "DisciplineOptions": {
+          "SPRINT": "Sprint",
+          "MIDDLE": "Mittel",
+          "LONG": "Lang",
+          "ULTRALONG": "Ultralang",
+          "NIGHT": "Nacht",
+          "KNOCKOUT_SPRINT": "Knockout-Sprint",
+          "RELAY": "Staffel",
+          "SPRINT_RELAY": "Sprintstaffel",
+          "TEAMS": "Teams",
+          "OTHER": "Sonstiges"
         }
       },
       "Integration": {
@@ -613,7 +698,9 @@
           "OpenApp": "{{appName}} öffnen",
           "Tabs": {
             "QuickEvent": {
-              "CopyLink": "Zugangsdaten kopieren"
+              "CopyLink": "Zugangsdaten kopieren",
+              "Description": "Kopiere diese Zugangsdaten und füge sie in die OFeed-Service-Einrichtung ein.",
+              "ExportInterval": "Export-Intervall"
             },
             "MeOS": {
               "Description": "Verknüpfe dieses Event mit MeOS. Klicke auf den Button, um eine Verknüpfung zu erstellen — OFeed weist automatisch eine Wettkampf-ID zu. Konfiguriere MeOS, Ergebnisse über die unten stehende URL mit dieser ID an OFeed zu senden.",
@@ -626,9 +713,37 @@
               "DeleteBinding": "Verknüpfung entfernen",
               "CreateSuccess": "MeOS-Verknüpfung erfolgreich erstellt.",
               "DeleteSuccess": "MeOS-Verknüpfung entfernt."
+            },
+            "OChecklist": {
+              "Description": "Scanne den QR-Code, um URL, Event-ID und Passwort in den Einstellungen der OFeed-Verbindung zu setzen. Klicke in den Einstellungen der App auf das QR-Code-Symbol, um die Kamera zu starten. Über den Button mit dem App-Symbol kannst du einen Link zum Teilen der Zugangsdaten auf einem einzelnen Gerät abrufen."
+            },
+            "SIDroidConenctor": {
+              "Description": "Scanne den QR-Code, um URL, Event-ID und Passwort in den Einstellungen der OFeed-Verbindung zu setzen. Klicke in den Einstellungen der App auf das QR-Code-Symbol, um die Kamera zu starten. Über den Button mit dem App-Symbol kannst du einen Link zum Teilen der Zugangsdaten auf einem einzelnen Gerät abrufen."
             }
           },
-          "ViewProject": "Projekt ansehen"
+          "ViewProject": "Projekt ansehen",
+          "Title": "Konfiguration der Apps",
+          "Description": "So richtest du die Apps für die Verbindung mit OFeed ein.",
+          "ApiBaseUrl": "Url",
+          "EventId": "Event-ID",
+          "EventPassword": "Event-Passwort",
+          "EventName": "Name",
+          "EventDate": "Datum",
+          "ShareQrCode": "QR-Code teilen",
+          "PrintQrCode": "QR-Code drucken",
+          "Navigator": {
+            "Title": "OFeed-QR-Code",
+            "Text": "Hier ist der QR-Code für das OFeed-Event, um deine mobile App O Checklist zu koppeln!"
+          }
+        },
+        "PrintWindow": {
+          "Header": "OFeed",
+          "Subheader": "Scanne diesen QR-Code, um deine mobile App {{appName}} mit dem Event zu koppeln.",
+          "Footer": "Bitte behandle diese Informationen vertraulich. Bei Problemen wende dich an den Support."
+        },
+        "Toast": {
+          "CopyBaseUrl": "Hop! Die Basis-URL ist jetzt in deiner Zwischenablage, teile sie!",
+          "CopyEventId": "Hop! Die Event-ID ist jetzt in deiner Zwischenablage, teile sie!"
         }
       },
       "PublishingStatus": {
@@ -978,6 +1093,47 @@
           "ScheduledDescription": "Die Zwischenzeiten werden um {{datetime}} veröffentlicht.",
           "CountdownLabel": "Countdown bis zur Veröffentlichung"
         }
+      },
+      "DangerZone": {
+        "Title": "Gefahrenzone",
+        "Description": "Irreversible Aktionen, die Daten dauerhaft löschen. Gehen Sie mit äußerster Vorsicht vor.",
+        "Footer": "Diese Aktionen können nicht widerrufen werden. Stellen Sie sicher, dass Sie über entsprechende Backups verfügen.",
+        "DeleteCompetitors": {
+          "Title": "Teilnehmer löschen",
+          "Description": "Wenn Sie die Startliste oder Ergebnisse für ein falsches Event hochgeladen haben, können Sie alle Teilnehmer löschen und neu beginnen. Dieser Button entfernt alle Läufer (Startliste & Ergebnisse).",
+          "Button": "Löschen",
+          "ConfirmTitle": "Alle Teilnehmer löschen",
+          "ConfirmDescription": "Sind Sie sicher, dass Sie alle Teilnehmer löschen möchten? Diese Aktion kann nicht widerrufen werden!",
+          "ConfirmButton": "Teilnehmer löschen"
+        },
+        "DeleteAllEventData": {
+          "Title": "Alle Eventdaten löschen",
+          "Description": "Wenn Sie alle Eventdaten, einschließlich Läufer, Kategorien, Staffeln und Ergebnisse, vollständig entfernen müssen, nutzen Sie diesen Button. Vorsicht, diese Aktion ist unwiderruflich!",
+          "Button": "Löschen",
+          "ConfirmTitle": "Alle Eventdaten löschen",
+          "ConfirmDescription": "Sind Sie sicher, dass Sie alle Eventdaten löschen möchten? Dadurch werden alle Ergebnisse entfernt und dies kann nicht widerrufen werden!",
+          "ConfirmButton": "Alle Daten löschen"
+        },
+        "DeleteEvent": {
+          "Title": "Event löschen",
+          "Description": "Das Event wird gelöscht. Zuvor müssen alle Eventdaten gelöscht werden. Diese Aktion kann nicht widerrufen werden!",
+          "Button": "Löschen",
+          "ConfirmTitle": "Event löschen",
+          "ConfirmDescription": "Sind Sie sicher, dass Sie dieses gesamte Event löschen möchten? Diese Aktion kann nicht widerrufen werden!",
+          "ConfirmButton": "Event löschen"
+        },
+        "Toast": {
+          "DeleteFailTitle": "Fehler beim Löschen der Daten",
+          "DeleteSuccessDescription": "Daten erfolgreich gelöscht"
+        }
+      },
+      "TroublesShooting": {
+        "Title": "Benötigen Sie Hilfe oder haben Sie Fragen?",
+        "Description": "Wenn ein Fehler auftritt oder Sie Unterstützung brauchen, zögern Sie nicht, uns zu kontaktieren.",
+        "FeedbackDescription": "Schauen Sie in die Dokumentation, um zu starten, treten Sie unserer Discord-Community für schnelle Hilfe bei, oder öffnen Sie ein GitHub-Issue, um einen Fehler zu melden, Feedback zu geben oder eine neue Funktion vorzuschlagen.",
+        "Discord": "Discord beitreten",
+        "GitHubIssues": "GitHub Issues öffnen",
+        "Docs": "Erste Schritte"
       },
       "ClassSelect": {
         "Title": "Kategorie wählen",
@@ -1374,6 +1530,69 @@
             "NoMatch": "Keine Treffer gefunden"
           }
         }
+      },
+      "Card": {
+        "Title": "Eventinformationen",
+        "Description": "Bitte fülle das folgende Formular aus, um die Eventdetails zu aktualisieren."
+      },
+      "Password": {
+        "GeneratePassword": "Passwort generieren",
+        "RegeneratePassword": "Passwort neu generieren",
+        "PassportExpiration": "Passwortablauf",
+        "NoExpirationSet": "Kein Ablaufdatum festgelegt",
+        "Copy": "Kopieren",
+        "Revoke": "Widerrufen",
+        "Card": {
+          "Title": "Event-Passwort",
+          "Description": "Gib das Event-Passwort ein, das die über die API angeforderten Eventdetails schützt."
+        },
+        "Field": {
+          "Name": "Event-Passwort",
+          "Placeholders": {
+            "Name": "Event-Passwort"
+          }
+        },
+        "Toast": {
+          "UpdateSuccessDescription": "Das Passwort wurde erfolgreich aktualisiert!",
+          "UpdateFailTitle": "Etwas ist schiefgelaufen, bitte versuche es erneut.",
+          "RevokeSuccessDescription": "Das Passwort wurde erfolgreich widerrufen!",
+          "RevokeFailTitle": "Etwas ist schiefgelaufen, bitte versuche es erneut.",
+          "CopySuccessDescription": "Passwort kopiert! Bewahre es sicher auf."
+        }
+      },
+      "Link": {
+        "Card": {
+          "Title": "Event-Link",
+          "Description": "Teile den Event-Link schnell mit deinen Zuschauern - du kannst den QR-Code kopieren, teilen oder ausdrucken, um einfachen Zugriff auf die Live-Ergebnisse zu ermöglichen.",
+          "Slug": {
+            "Label": "Link-Slug",
+            "Placeholder": "woc-mittel-{{year}}",
+            "Help": "Optional. Leer lassen, um den ursprünglichen Link mit der Event-ID zu behalten.",
+            "Checking": "Verfügbarkeit des Slugs wird geprüft...",
+            "Saving": "Link-Slug wird gespeichert...",
+            "Available": "Der Slug ist verfügbar und wurde gespeichert.",
+            "Invalid": "Der Slug muss 6 bis 64 Zeichen lang sein, darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten und darf nicht wie eine Event-ID aussehen.",
+            "Unavailable": "Dieser Slug ist bereits vergeben. Versuche einen anderen.",
+            "Error": "Der Slug konnte nicht geprüft oder gespeichert werden."
+          },
+          "Navigator": {
+            "Title": "OFeed",
+            "Event": "Event",
+            "Location": "Ort",
+            "Date": "Datum",
+            "EventUri": "Eventdetails ansehen",
+            "UrlDescription": "Scanne den QR-Code, um sofort auf die Live-Ergebnisse zuzugreifen!"
+          }
+        },
+        "PrintWindow": {
+          "Title": "QR-Code - OFeed Live-Ergebnisse",
+          "Header": "OFeed",
+          "EventQR": "Event-QR-Code",
+          "Info": "Scanne diesen QR-Code, um die Live-Ergebnisse online anzusehen."
+        },
+        "Toast": {
+          "CopySuccessDescription": "Boom! Der Link ist jetzt in deiner Zwischenablage, teile ihn!"
+        }
       }
     },
     "Checkout": {
@@ -1453,6 +1672,23 @@
       "Empty": "Es gibt keine Daten.",
       "Loading": "Wid geladen...",
       "Error": "Dateiupload fehlgeschlagen."
+    },
+    "DragDrop": {
+      "UploadIofXml": {
+        "Title": "IOF-XML hochladen",
+        "Description": "Lade IOF-XML-Dateien mit Startlisten und Ergebnissen hoch."
+      },
+      "Toast": {
+        "UploadSuccess": "Dateien erfolgreich hochgeladen!",
+        "UploadFail": "Beim Datei-Upload ist etwas schiefgelaufen. Bitte versuche es erneut.",
+        "UploadInProgress": "Datei-Upload läuft",
+        "InvalidFormat": "Nicht unterstütztes Format",
+        "AllowedFormats": "Erlaubte Formate sind: {{formats}}",
+        "FileTooLarge": "Datei ist zu groß",
+        "MaxSize": "Maximale Größe ist {{size}} MB",
+        "ProcessingError": "Fehler bei der Dateiverarbeitung",
+        "TryAgain": "Bitte versuche es erneut"
+      }
     }
   },
   "Molecules": {
@@ -1488,7 +1724,19 @@
     "passwordRequired": "Passwort ist erforderlich",
     "passwordMinLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
     "confirmPasswordRequired": "Bitte bestätige dein neues Passwort",
-    "passwordsDoNotMatch": "Passwörter stimmen nicht überein"
+    "passwordsDoNotMatch": "Passwörter stimmen nicht überein",
+    "eventNameRequired": "Eventname ist erforderlich",
+    "eventNameMinLength": "Der Eventname muss mindestens 2 Zeichen lang sein",
+    "sportRequired": "Sport ist erforderlich",
+    "countryRequired": "Land ist erforderlich",
+    "dateRequired": "Datum ist erforderlich",
+    "timezoneRequired": "Zeitzone ist erforderlich",
+    "organizerRequired": "Veranstalter ist erforderlich",
+    "locationRequired": "Ort ist erforderlich",
+    "latitudeRange": "Der Breitengrad muss zwischen -90 und 90 liegen",
+    "longitudeRange": "Der Längengrad muss zwischen -180 und 180 liegen",
+    "zeroTimeRequired": "Nullzeit ist erforderlich",
+    "zeroTimeFormat": "Die Zeit muss im Format HH:mm oder HH:mm:ss angegeben werden"
   },
   "Templates": {
     "Routes": {
