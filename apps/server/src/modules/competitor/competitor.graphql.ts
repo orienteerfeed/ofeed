@@ -13,6 +13,7 @@ import {
   findCompetitorsByClass,
   findCompetitorsByOrganisation,
   findCompetitorsByTeam,
+  findResultFeedByEvent,
   findOrganisationNamesByEvent,
   findOrganisationsByEvent,
   searchOrganisationNamesByEvent,
@@ -216,6 +217,14 @@ builder.queryFields((t) => ({
         }),
         query,
       ),
+  }),
+  resultFeedByEvent: t.prismaField({
+    type: [CompetitorRef],
+    args: {
+      eventId: t.arg.string({ required: true }),
+    },
+    resolve: (query, _root, args, context) =>
+      findResultFeedByEvent(context.prisma, args.eventId, query),
   }),
   competitorsByOrganisation: t.prismaField({
     type: [CompetitorRef],

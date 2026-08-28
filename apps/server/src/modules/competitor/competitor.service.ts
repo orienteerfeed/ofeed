@@ -1,3 +1,5 @@
+import { RESULT_DATA_STATUSES } from '@repo/shared';
+
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
@@ -177,6 +179,38 @@ export function findCompetitorsByOrganisation(
     ...query,
     where,
     orderBy: [{ lastname: 'asc' }, { firstname: 'asc' }],
+  });
+}
+
+/**
+ * Live result feed for a whole event: every competitor that already carries result
+ * data, newest readout first.
+ *
+ * Ordered by `updatedAt` — the moment the result landed in OFeed — because
+ * `finishTime` is frequently absent (IOF result files may omit `<FinishTime>`,
+ * manual adjudications never set it). Both import paths skip the write when
+ * nothing changed (`upload.competitor.ts`, `meos.service.ts`), so `updatedAt`
+ * only moves on a real data change and the order stays stable across re-imports.
+ *
+ * `RESULT_FEED_MAX_ROWS` is an abuse guard, not paging: the client derives
+ * per-class ranks from this list, so a truncated result would silently produce
+ * wrong ranks.
+ */
+const RESULT_FEED_MAX_ROWS = 2500;
+
+export function findResultFeedByEvent(
+  prisma: AppPrismaClient,
+  eventId: string,
+  query: CompetitorFindManySelection = {},
+) {
+  return prisma.competitor.findMany({
+    ...query,
+    where: {
+      class: { is: { eventId } },
+      status: { in: [...RESULT_DATA_STATUSES] },
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: RESULT_FEED_MAX_ROWS,
   });
 }
 

@@ -472,7 +472,24 @@
       },
       "Live": {
         "Title": "Live Feed",
-        "Description": "Real-time updates will appear here during the event"
+        "Description": "Real-time updates will appear here during the event",
+        "ErrorTitle": "Error loading the live feed",
+        "SearchPlaceholder": "Search by name, club or registration (e.g. KAM9403)",
+        "NoMatchesTitle": "Nothing found",
+        "NoMatches": "No competitor matches \"{{query}}\".",
+        "ShowMore": "Show {{next}} more ({{shown}} of {{total}})",
+        "Leg": "leg {{leg}}",
+        "RelayRankHint": "Team's overall standing after leg {{leg}}",
+        "ReadoutTimeHint": "Finish time unknown - showing when the result reached OFeed",
+        "Columns": {
+          "Finish": "Finish",
+          "Name": "Name",
+          "Class": "Class",
+          "Rank": "#",
+          "Club": "Club",
+          "Time": "Time",
+          "Status": "Status"
+        }
       },
       "Alert": {
         "DemoTitle": "This is a demo app",

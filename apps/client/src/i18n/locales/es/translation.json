@@ -472,7 +472,24 @@
       },
       "Live": {
         "Title": "Feed en vivo",
-        "Description": "Las actualizaciones en tiempo real aparecerán aquí durante el evento"
+        "Description": "Las actualizaciones en tiempo real aparecerán aquí durante el evento",
+        "ErrorTitle": "Error al cargar el feed en vivo",
+        "SearchPlaceholder": "Buscar por nombre, club o licencia (p. ej. KAM9403)",
+        "NoMatchesTitle": "No se encontró nada",
+        "NoMatches": "Ningún competidor coincide con «{{query}}».",
+        "ShowMore": "Mostrar {{next}} más ({{shown}} de {{total}})",
+        "Leg": "tramo {{leg}}",
+        "RelayRankHint": "Clasificación general del equipo tras el tramo {{leg}}",
+        "ReadoutTimeHint": "Hora de llegada desconocida: se muestra cuándo llegó el resultado a OFeed",
+        "Columns": {
+          "Finish": "Llegada",
+          "Name": "Nombre",
+          "Class": "Categoría",
+          "Rank": "#",
+          "Club": "Club",
+          "Time": "Tiempo",
+          "Status": "Estado"
+        }
       },
       "Alert": {
         "DemoTitle": "Esta es una aplicación de demostración",

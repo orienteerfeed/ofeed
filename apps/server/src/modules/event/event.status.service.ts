@@ -1,3 +1,5 @@
+import { RESULT_DATA_STATUSES } from '@repo/shared';
+
 import type { ExternalSource } from '../../generated/prisma/client.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 
@@ -46,20 +48,6 @@ type StatusSummaryEvent = {
   externalSource: ExternalSource | null;
   externalEventId: string | null;
 };
-
-const RESULT_DATA_STATUSES = [
-  'OK',
-  'Finished',
-  'MissingPunch',
-  'Disqualified',
-  'DidNotFinish',
-  'OverTime',
-  'SportingWithdrawal',
-  'NotCompeting',
-  'Moved',
-  'MovedUp',
-  'Cancelled',
-] as const;
 
 function getDateKeyInTimeZone(date: Date, timeZone: string): string | null {
   try {

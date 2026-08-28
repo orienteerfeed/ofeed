@@ -472,7 +472,24 @@
       },
       "Live": {
         "Title": "Živé přenosy",
-        "Description": "Aktuální aktualizace se zde zobrazí během závodu"
+        "Description": "Aktuální aktualizace se zde zobrazí během závodu",
+        "ErrorTitle": "Živý přenos se nepodařilo načíst",
+        "SearchPlaceholder": "Hledat podle jména, klubu nebo registrace (např. KAM9403)",
+        "NoMatchesTitle": "Nic nenalezeno",
+        "NoMatches": "Dotazu „{{query}}“ neodpovídá žádný závodník.",
+        "ShowMore": "Zobrazit dalších {{next}} ({{shown}} z {{total}})",
+        "Leg": "{{leg}}. úsek",
+        "RelayRankHint": "Průběžné pořadí štafety po {{leg}}. úseku",
+        "ReadoutTimeHint": "Cílový čas není známý – zobrazen čas vyčtení do OFeedu",
+        "Columns": {
+          "Finish": "Doběh",
+          "Name": "Jméno",
+          "Class": "Kategorie",
+          "Rank": "#",
+          "Club": "Klub",
+          "Time": "Čas",
+          "Status": "Stav"
+        }
       },
       "Alert": {
         "DemoTitle": "Zkušební provoz",
