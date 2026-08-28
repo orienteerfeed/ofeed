@@ -770,7 +770,7 @@ type Query {
   myEvents: [Event!]
   organisationNames(eventId: String!): [OrganisationName!]!
   organisations(eventId: String!): [Organisation!]!
-  resultFeedByEvent(eventId: String!, limit: Int): [Competitor!]!
+  resultFeedByEvent(eventId: String!): [Competitor!]!
   searchEvents(query: String!): [Event]!
   searchOrganisationNames(eventId: String!, q: String!): [OrganisationName!]!
   splitPublicationStatus(classId: Int!): SplitPublicationStatus!

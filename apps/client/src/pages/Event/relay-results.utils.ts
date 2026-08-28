@@ -43,7 +43,7 @@ export interface RelayCumulativeStandings {
  */
 export function computeRelayCumulativeStandings(
   competitors: readonly RelayLegRunner[],
-  maxLeg: number,
+  maxLeg: number
 ): RelayCumulativeStandings {
   const cumulativeTimeByTeam = new Map<number, Map<number, number>>();
   const rankingByLeg = new Map<number, TimeRanking>();
@@ -53,13 +53,13 @@ export function computeRelayCumulativeStandings(
     return { cumulativeTimeByTeam, rankingByLeg, brokenTeamIds };
   }
 
-  const teamMap = new Map<number, RelayLegRunner[]>();
-  for (const competitor of competitors) {
-    if (competitor.teamId == null) continue;
-    const runners = teamMap.get(competitor.teamId);
-    if (runners) runners.push(competitor);
-    else teamMap.set(competitor.teamId, [competitor]);
-  }
+  const teamMap = Map.groupBy(
+    competitors.filter(
+      (competitor): competitor is RelayLegRunner & { teamId: number } =>
+        competitor.teamId != null
+    ),
+    competitor => competitor.teamId
+  );
 
   for (const [teamId, runners] of teamMap) {
     const byLeg = new Map<number, RelayLegRunner>();

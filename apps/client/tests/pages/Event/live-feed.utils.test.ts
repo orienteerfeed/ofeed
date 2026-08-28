@@ -6,7 +6,9 @@ import {
   type LiveFeedRow,
 } from '@/pages/Event/live-feed.utils';
 
-const row = (overrides: Partial<LiveFeedRow> & { id: number }): LiveFeedRow => ({
+const row = (
+  overrides: Partial<LiveFeedRow> & { id: number }
+): LiveFeedRow => ({
   firstname: 'Jan',
   lastname: 'Novák',
   registration: 'KAM9403',
@@ -23,36 +25,25 @@ const row = (overrides: Partial<LiveFeedRow> & { id: number }): LiveFeedRow => (
 });
 
 describe('matchesLiveFeedQuery', () => {
-  it('matches every row on an empty query', () => {
-    expect(matchesLiveFeedQuery(row({ id: 1 }), '')).toBe(true);
-    expect(matchesLiveFeedQuery(row({ id: 1 }), '   ')).toBe(true);
-  });
+  const competitor = row({ id: 1, firstname: 'Martin', lastname: 'Křivda' });
 
-  it('ignores diacritics in both the query and the data', () => {
-    const competitor = row({ id: 1, lastname: 'Křivda', firstname: 'Martin' });
-    expect(matchesLiveFeedQuery(competitor, 'krivda')).toBe(true);
-    expect(matchesLiveFeedQuery(competitor, 'KŘIVDA')).toBe(true);
-  });
-
-  it('matches on the registration number', () => {
-    expect(matchesLiveFeedQuery(row({ id: 1 }), 'kam9403')).toBe(true);
-    expect(matchesLiveFeedQuery(row({ id: 1 }), 'KAM9403')).toBe(true);
-  });
-
-  it('matches on the club name', () => {
-    expect(matchesLiveFeedQuery(row({ id: 1 }), 'kamenice')).toBe(true);
-  });
-
-  it('requires every token to hit, so extra tokens narrow the result', () => {
-    const competitor = row({ id: 1, lastname: 'Křivda' });
-    expect(matchesLiveFeedQuery(competitor, 'krivda kam')).toBe(true);
-    expect(matchesLiveFeedQuery(competitor, 'krivda praha')).toBe(false);
+  it.each([
+    ['', true], // empty query keeps every row
+    ['   ', true],
+    ['krivda', true], // diacritics stripped on both sides
+    ['KŘIVDA', true],
+    ['kam9403', true], // registration
+    ['kamenice', true], // club
+    ['krivda kam', true], // every token has to hit, so extra tokens narrow
+    ['krivda praha', false],
+  ])('query %j matches: %s', (query, expected) => {
+    expect(matchesLiveFeedQuery(competitor, query)).toBe(expected);
   });
 
   it('tolerates a missing club and registration', () => {
-    const competitor = row({ id: 1, organisation: null, registration: null });
-    expect(matchesLiveFeedQuery(competitor, 'novak')).toBe(true);
-    expect(matchesLiveFeedQuery(competitor, 'kamenice')).toBe(false);
+    const bare = row({ id: 1, organisation: null, registration: null });
+    expect(matchesLiveFeedQuery(bare, 'novak')).toBe(true);
+    expect(matchesLiveFeedQuery(bare, 'kamenice')).toBe(false);
   });
 });
 

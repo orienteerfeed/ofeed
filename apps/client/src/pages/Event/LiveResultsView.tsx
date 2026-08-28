@@ -13,14 +13,14 @@ import { useQuery, useSubscription } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import { Loader2, Radio, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Badge, Button, Tooltip } from '../../components/atoms';
+import { Badge, Button } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import {
   compareByFinishDesc,
+  hasResultData,
   matchesLiveFeedQuery,
   rankFeedRows,
-  RESULT_DATA_STATUSES,
   type LiveFeedRow,
 } from './live-feed.utils';
 import { MobileClubName } from './MobileClubName';
@@ -105,7 +105,9 @@ export const LiveResultsView = ({
   onSelectClub,
 }: LiveResultsViewProps) => {
   const [rows, setRows] = useState<ReadonlyMap<number, LiveFeedRow>>(new Map());
-  const [highlighted, setHighlighted] = useState<ReadonlySet<number>>(new Set());
+  const [highlighted, setHighlighted] = useState<ReadonlySet<number>>(
+    new Set()
+  );
   const [search, setSearch] = useState('');
   const [revealed, setRevealed] = useState(PAGE_SIZE);
 
@@ -134,7 +136,7 @@ export const LiveResultsView = ({
 
   useEffect(() => {
     const row = liveData?.competitorUpdated;
-    if (!row || !RESULT_DATA_STATUSES.has(row.status)) return;
+    if (!row || !hasResultData(row.status)) return;
 
     merge([row]);
     setHighlighted(previous => new Set(previous).add(row.id));
@@ -153,7 +155,10 @@ export const LiveResultsView = ({
   useEffect(() => setRevealed(PAGE_SIZE), [search]);
 
   const allRows = useMemo(() => [...rows.values()], [rows]);
-  const ranks = useMemo(() => rankFeedRows(allRows, isRelay), [allRows, isRelay]);
+  const ranks = useMemo(
+    () => rankFeedRows(allRows, isRelay),
+    [allRows, isRelay]
+  );
   const matched = useMemo(
     () =>
       allRows
@@ -264,10 +269,14 @@ export const LiveResultsView = ({
                   // No rank yet (non-OK status, or a relay team still missing an
                   // earlier leg) falls back to the status marker used elsewhere.
                   const statusDisplay = getResultStatusDisplay(row.status);
-                  const rankDisplay =
-                    rank != null
-                      ? { value: rank as number | string, tooltip: '' }
-                      : { value: statusDisplay.emoji, tooltip: statusDisplay.tooltip };
+                  const rankValue: number | string =
+                    rank ?? statusDisplay.emoji;
+                  const rankTooltip =
+                    rank == null
+                      ? statusDisplay.tooltip
+                      : isRelay && row.leg != null
+                        ? t('Pages.Event.Live.RelayRankHint', { leg: row.leg })
+                        : '';
 
                   return (
                     <TableRow
@@ -328,29 +337,15 @@ export const LiveResultsView = ({
                         </div>
                       </TableCell>
                       <TableCell className="px-2 py-1 text-sm font-bold">
-                        {rank != null && isRelay && row.leg != null ? (
-                          <Tooltip
-                            content={t('Pages.Event.Live.RelayRankHint', {
-                              leg: row.leg,
-                            })}
-                            side="top"
-                            align="center"
-                          >
-                            <span className="cursor-help">
-                              {formatResultListRank(
-                                rank,
-                                row.class.resultListMode
-                              )}
-                            </span>
-                          </Tooltip>
-                        ) : (
-                          <span title={rankDisplay.tooltip}>
-                            {formatResultListRank(
-                              rankDisplay.value,
-                              row.class.resultListMode
-                            )}
-                          </span>
-                        )}
+                        <span
+                          title={rankTooltip}
+                          className={rankTooltip ? 'cursor-help' : ''}
+                        >
+                          {formatResultListRank(
+                            rankValue,
+                            row.class.resultListMode
+                          )}
+                        </span>
                       </TableCell>
                       <TableCell className="px-2 py-1 text-xs text-muted-foreground hidden lg:table-cell">
                         {row.organisation && row.organisationId ? (

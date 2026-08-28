@@ -28,7 +28,6 @@ import {
   competitorsByRegistrationInputSchema,
   organisationNamesInputSchema,
   organisationsInputSchema,
-  resultFeedInputSchema,
   searchOrganisationNamesInputSchema,
   statusChangeInputSchema,
   storeCompetitorInputSchema,
@@ -223,17 +222,9 @@ builder.queryFields((t) => ({
     type: [CompetitorRef],
     args: {
       eventId: t.arg.string({ required: true }),
-      limit: t.arg.int(),
     },
     resolve: (query, _root, args, context) =>
-      findResultFeedByEvent(
-        context.prisma,
-        resultFeedInputSchema.parse({
-          eventId: args.eventId,
-          limit: args.limit ?? undefined,
-        }),
-        query,
-      ),
+      findResultFeedByEvent(context.prisma, args.eventId, query),
   }),
   competitorsByOrganisation: t.prismaField({
     type: [CompetitorRef],

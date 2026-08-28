@@ -63,51 +63,54 @@ export function getResultStatusPriority(status: string): number {
 export interface StatusDisplay {
   emoji: string;
   tooltip: string;
+  /** Short label for the status column of the result tables. */
+  label: string;
 }
 
 /**
  * Emoji/tooltip shown in place of a numeric rank for a competitor who never
- * got a ranked result (running, waiting for readout, DSQ/DNF/DNS/…).
+ * got a ranked result (running, waiting for readout, DSQ/DNF/DNS/…), plus the
+ * short label of the status column.
  */
 export const RESULT_STATUS_DISPLAY: Readonly<Record<string, StatusDisplay>> = {
-  Active: { emoji: '🏃', tooltip: 'Giving it their all right now' },
-  DidNotFinish: { emoji: '🏳️', tooltip: 'Did Not Finish' },
-  DidNotStart: { emoji: '🚷', tooltip: 'Did Not Start' },
-  Disqualified: { emoji: '🟥', tooltip: 'Disqualified' },
-  Finished: { emoji: '🏁', tooltip: 'Waiting for readout' },
-  Inactive: { emoji: '🛏️', tooltip: 'Waiting for start time' },
-  MissingPunch: { emoji: '🙈', tooltip: 'Missing Punch' },
-  NotCompeting: { emoji: '🦄', tooltip: 'Not competing' },
-  OverTime: { emoji: '⌛', tooltip: 'Over Time' },
-};
-
-/** Short status labels for the status column of the result tables. */
-const RESULT_STATUS_LABELS: Readonly<Record<string, string>> = {
-  OK: 'OK',
-  Active: 'Active',
-  Finished: 'Finished',
-  Inactive: 'Inactive',
-  MissingPunch: 'MP',
-  Disqualified: 'DSQ',
-  DidNotFinish: 'DNF',
-  DidNotStart: 'DNS',
-  NotCompeting: 'NC',
-  OverTime: 'OT',
-  SportingWithdrawal: 'SW',
+  OK: { emoji: '✅', tooltip: 'OK', label: 'OK' },
+  Active: {
+    emoji: '🏃',
+    tooltip: 'Giving it their all right now',
+    label: 'Active',
+  },
+  DidNotFinish: { emoji: '🏳️', tooltip: 'Did Not Finish', label: 'DNF' },
+  DidNotStart: { emoji: '🚷', tooltip: 'Did Not Start', label: 'DNS' },
+  Disqualified: { emoji: '🟥', tooltip: 'Disqualified', label: 'DSQ' },
+  Finished: { emoji: '🏁', tooltip: 'Waiting for readout', label: 'Finished' },
+  Inactive: {
+    emoji: '🛏️',
+    tooltip: 'Waiting for start time',
+    label: 'Inactive',
+  },
+  MissingPunch: { emoji: '🙈', tooltip: 'Missing Punch', label: 'MP' },
+  NotCompeting: { emoji: '🦄', tooltip: 'Not competing', label: 'NC' },
+  OverTime: { emoji: '⌛', tooltip: 'Over Time', label: 'OT' },
+  SportingWithdrawal: {
+    emoji: '🛑',
+    tooltip: 'Sporting Withdrawal',
+    label: 'SW',
+  },
 };
 
 /** Short label of a result status; unknown statuses pass through unchanged. */
 export function getResultStatusLabel(status: string): string {
-  return RESULT_STATUS_LABELS[status] ?? status;
+  return RESULT_STATUS_DISPLAY[status]?.label ?? status;
 }
 
 export function getResultStatusDisplay(
-  status: string | null | undefined,
+  status: string | null | undefined
 ): StatusDisplay {
   return (
     RESULT_STATUS_DISPLAY[status ?? ''] ?? {
       emoji: '❓',
       tooltip: 'Unknown status',
+      label: status ?? '',
     }
   );
 }
@@ -131,11 +134,15 @@ type NamedCompetitor = {
 /** Alphabetical comparator: by lastname, then firstname, locale-aware and case-insensitive. */
 export function compareCompetitorsByName(
   a: NamedCompetitor,
-  b: NamedCompetitor,
+  b: NamedCompetitor
 ): number {
-  const lastName = (a.lastname ?? '').localeCompare(b.lastname ?? '', undefined, {
-    sensitivity: 'base',
-  });
+  const lastName = (a.lastname ?? '').localeCompare(
+    b.lastname ?? '',
+    undefined,
+    {
+      sensitivity: 'base',
+    }
+  );
   if (lastName !== 0) {
     return lastName;
   }
@@ -151,9 +158,10 @@ export function compareCompetitorsByName(
  */
 export function compareByStatusPriorityThenName(
   a: NamedCompetitor & { status: string },
-  b: NamedCompetitor & { status: string },
+  b: NamedCompetitor & { status: string }
 ): number {
-  const priority = getResultStatusPriority(a.status) - getResultStatusPriority(b.status);
+  const priority =
+    getResultStatusPriority(a.status) - getResultStatusPriority(b.status);
   if (priority !== 0) {
     return priority;
   }
@@ -167,7 +175,7 @@ export function compareByStatusPriorityThenName(
  */
 export function formatResultListRank(
   position: number | string | undefined | null,
-  mode?: string | null,
+  mode?: string | null
 ): string {
   if (position === undefined || position === null) {
     return '';

@@ -8,30 +8,19 @@
  * taken at the moment of finishing.
  */
 import { formatTimeToHms } from '@/lib/date';
+import { RESULT_DATA_STATUSES } from '@repo/shared';
 import { computeRelayCumulativeStandings } from './relay-results.utils';
 import { hasValidRaceTime, rankByTime } from './result-ranking.utils';
 
+const resultDataStatuses: ReadonlySet<string> = new Set(RESULT_DATA_STATUSES);
+
 /**
- * Statuses that put a competitor into the feed. Mirrors `RESULT_DATA_STATUSES` in
- * `apps/server/src/modules/event/event.status.service.ts`, which drives the
- * backfill query — the client needs the same set to decide whether an incoming
- * subscription row belongs in the feed.
- *
- * ponytail: 11 duplicated strings; move to @repo/shared if a third consumer needs them.
+ * Whether a competitor carries result data and therefore belongs in the feed.
+ * Same set that drives the server-side backfill query, so an incoming
+ * subscription row is judged exactly like a backfilled one.
  */
-export const RESULT_DATA_STATUSES: ReadonlySet<string> = new Set([
-  'OK',
-  'Finished',
-  'MissingPunch',
-  'Disqualified',
-  'DidNotFinish',
-  'OverTime',
-  'SportingWithdrawal',
-  'NotCompeting',
-  'Moved',
-  'MovedUp',
-  'Cancelled',
-]);
+export const hasResultData = (status: string): boolean =>
+  resultDataStatuses.has(status);
 
 export interface LiveFeedRow {
   id: number;
@@ -95,18 +84,6 @@ export function compareByFinishDesc(a: LiveFeedRow, b: LiveFeedRow): number {
   return bt.localeCompare(at);
 }
 
-function groupByClassId(
-  rows: readonly LiveFeedRow[]
-): Map<number, LiveFeedRow[]> {
-  const groups = new Map<number, LiveFeedRow[]>();
-  for (const row of rows) {
-    const group = groups.get(row.class.id);
-    if (group) group.push(row);
-    else groups.set(row.class.id, [row]);
-  }
-  return groups;
-}
-
 /**
  * Rank shown next to each competitor, keyed by competitor id:
  *
@@ -133,7 +110,7 @@ export function rankFeedRows(
 ): Map<number, number> {
   const ranks = new Map<number, number>();
 
-  for (const group of groupByClassId(rows).values()) {
+  for (const group of Map.groupBy(rows, row => row.class.id).values()) {
     if (!isRelay) {
       const entries = group
         .filter(row => row.status === 'OK' && hasValidRaceTime(row.time))

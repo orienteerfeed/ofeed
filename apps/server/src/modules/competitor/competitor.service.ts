@@ -1,3 +1,5 @@
+import { RESULT_DATA_STATUSES } from '@repo/shared';
+
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
@@ -14,7 +16,6 @@ import {
   storeCompetitor,
   updateCompetitor,
 } from '../event/event.service.js';
-import { RESULT_DATA_STATUSES } from '../event/event.status.service.js';
 import {
   assertSplitPublicationAccessible,
   assertSplitPublicationAccessibleForCompetitor,
@@ -25,7 +26,6 @@ import type {
   CompetitorsByCardInput,
   CompetitorsByRegistrationInput,
   OrganisationNamesInput,
-  ResultFeedInput,
   OrganisationsInput,
   SearchOrganisationNamesInput,
   StatusChangeInput,
@@ -192,22 +192,25 @@ export function findCompetitorsByOrganisation(
  * nothing changed (`upload.competitor.ts`, `meos.service.ts`), so `updatedAt`
  * only moves on a real data change and the order stays stable across re-imports.
  *
- * The limit is an abuse guard, not paging: the client derives per-class ranks
- * from this list, so a truncated result would silently produce wrong ranks.
+ * `RESULT_FEED_MAX_ROWS` is an abuse guard, not paging: the client derives
+ * per-class ranks from this list, so a truncated result would silently produce
+ * wrong ranks.
  */
+const RESULT_FEED_MAX_ROWS = 2500;
+
 export function findResultFeedByEvent(
   prisma: AppPrismaClient,
-  input: ResultFeedInput,
+  eventId: string,
   query: CompetitorFindManySelection = {},
 ) {
   return prisma.competitor.findMany({
     ...query,
     where: {
-      class: { is: { eventId: input.eventId } },
+      class: { is: { eventId } },
       status: { in: [...RESULT_DATA_STATUSES] },
     },
     orderBy: { updatedAt: 'desc' },
-    take: input.limit,
+    take: RESULT_FEED_MAX_ROWS,
   });
 }
 
