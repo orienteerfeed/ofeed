@@ -472,7 +472,24 @@
       },
       "Live": {
         "Title": "Direktsändning",
-        "Description": "Realtidsuppdateringar kommer att visas här under tävlingen"
+        "Description": "Realtidsuppdateringar kommer att visas här under tävlingen",
+        "ErrorTitle": "Kunde inte ladda direktsändningen",
+        "SearchPlaceholder": "Sök på namn, klubb eller licensnummer (t.ex. KAM9403)",
+        "NoMatchesTitle": "Inget hittades",
+        "NoMatches": "Ingen deltagare matchar ”{{query}}”.",
+        "ShowMore": "Visa {{next}} fler ({{shown}} av {{total}})",
+        "Leg": "sträcka {{leg}}",
+        "RelayRankHint": "Lagets totalplacering efter sträcka {{leg}}",
+        "ReadoutTimeHint": "Måltiden är okänd – visar när resultatet nådde OFeed",
+        "Columns": {
+          "Finish": "Mål",
+          "Name": "Namn",
+          "Class": "Klass",
+          "Rank": "#",
+          "Club": "Klubb",
+          "Time": "Tid",
+          "Status": "Status"
+        }
       },
       "Alert": {
         "DemoTitle": "Detta är en demoapp",

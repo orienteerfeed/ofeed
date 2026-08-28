@@ -540,6 +540,27 @@
         "NoRecent": "Keine aktuellen Veranstaltungen",
         "SeeAll": "Alle anzeigen"
       },
+      "Live": {
+        "Title": "Live-Ticker",
+        "Description": "Aktuelle Aktualisierungen erscheinen hier während des Wettkampfs",
+        "ErrorTitle": "Live-Ticker konnte nicht geladen werden",
+        "SearchPlaceholder": "Suche nach Name, Verein oder Registrierung (z. B. KAM9403)",
+        "NoMatchesTitle": "Nichts gefunden",
+        "NoMatches": "Kein Teilnehmer passt zu „{{query}}“.",
+        "ShowMore": "{{next}} weitere anzeigen ({{shown}} von {{total}})",
+        "Leg": "{{leg}}. Abschnitt",
+        "RelayRankHint": "Gesamtplatzierung der Staffel nach Abschnitt {{leg}}",
+        "ReadoutTimeHint": "Zielzeit unbekannt – angezeigt wird, wann das Ergebnis in OFeed eintraf",
+        "Columns": {
+          "Finish": "Ziel",
+          "Name": "Name",
+          "Class": "Kategorie",
+          "Rank": "#",
+          "Club": "Verein",
+          "Time": "Zeit",
+          "Status": "Status"
+        }
+      },
       "EntriesResults": {
         "Card": {
           "Title": "Veröffentlichung",

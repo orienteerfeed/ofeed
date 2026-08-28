@@ -489,6 +489,27 @@
       "Tabs": {
         "Entries": "Inscriptions"
       },
+      "Live": {
+        "Title": "Suivi en direct",
+        "Description": "Les mises à jour en temps réel apparaîtront ici pendant la course",
+        "ErrorTitle": "Impossible de charger le suivi en direct",
+        "SearchPlaceholder": "Rechercher par nom, club ou licence (ex. KAM9403)",
+        "NoMatchesTitle": "Aucun résultat",
+        "NoMatches": "Aucun concurrent ne correspond à « {{query}} ».",
+        "ShowMore": "Afficher {{next}} de plus ({{shown}} sur {{total}})",
+        "Leg": "relais {{leg}}",
+        "RelayRankHint": "Classement général de l’équipe après le relais {{leg}}",
+        "ReadoutTimeHint": "Heure d’arrivée inconnue – affichage de l’heure de réception du résultat dans OFeed",
+        "Columns": {
+          "Finish": "Arrivée",
+          "Name": "Nom",
+          "Class": "Catégorie",
+          "Rank": "#",
+          "Club": "Club",
+          "Time": "Temps",
+          "Status": "Statut"
+        }
+      },
       "Entries": {
         "FreeEntry": "Inscription gratuite",
         "BirthYearRange": "Années de naissance {{from}}–{{to}}",
