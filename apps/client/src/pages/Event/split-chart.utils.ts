@@ -164,7 +164,7 @@ export function createSplitChartDistances(
 
     const matchIndex = courseControls.findIndex(
       (control, index) =>
-        index >= cursor && String(control.controlCode) === String(checkpoint.controlCode),
+        index >= cursor && control.controlCode === checkpoint.controlCode,
     );
     if (matchIndex === -1) {
       return null;

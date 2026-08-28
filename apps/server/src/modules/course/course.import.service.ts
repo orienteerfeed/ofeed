@@ -224,27 +224,6 @@ async function importParsedCourseData(
     }
   }
 
-  // Plenty of course-setting exports omit <ClassCourseAssignment> entirely and
-  // instead rely on the course being named exactly like the class it belongs to.
-  // `resetCourseData` cleared every courseId, so a class still holding null here
-  // got no explicit assignment and can safely take an exact name match.
-  if (courseIdByName.size > 0) {
-    const unassignedClasses = await tx.class.findMany({
-      where: { eventId, courseId: null },
-      select: { id: true, name: true },
-    });
-
-    for (const cls of unassignedClasses) {
-      const courseId = courseIdByName.get(cls.name);
-      if (courseId === undefined) {
-        continue;
-      }
-
-      await tx.class.update({ where: { id: cls.id }, data: { courseId } });
-      classesAssigned += 1;
-    }
-  }
-
   return {
     mapsImported,
     controlsImported: controlIdByCode.size,

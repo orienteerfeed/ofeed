@@ -154,22 +154,14 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
       : null;
 
   // Course distances only scale the split chart's x axis, so a failure here must
-  // not break the split view — it just falls back to evenly-spaced legs. Surface
-  // the reason instead of failing silently.
-  const { data: courseDistancesData, error: courseDistancesError } =
-    useQuery<SplitCourseDistancesData>(SPLIT_COURSE_DISTANCES, {
+  // not break the split view — it just falls back to evenly-spaced legs.
+  const { data: courseDistancesData } = useQuery<SplitCourseDistancesData>(
+    SPLIT_COURSE_DISTANCES,
+    {
       variables: { classId: selectedClass || 0 },
       skip: !selectedClass || !splitPublicationStatus?.isAccessible,
-    });
-
-  useEffect(() => {
-    if (courseDistancesError) {
-      console.warn(
-        'Split chart: course distances unavailable, falling back to evenly-spaced legs.',
-        courseDistancesError
-      );
     }
-  }, [courseDistancesError]);
+  );
 
   const { loading, error, data } = useSubscription<SubscriptionData>(
     SPLIT_COMPETITORS_BY_CLASS_UPDATED,

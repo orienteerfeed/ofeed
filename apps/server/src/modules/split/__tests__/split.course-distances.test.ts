@@ -54,18 +54,13 @@ describe('computeSplitCourseDistances', () => {
     });
   });
 
-  it('prefers the resolved control code and type over the raw XML code', () => {
+  it('falls back to the resolved control type when the course control has none', () => {
     expect(
       computeSplitCourseDistances(
         [
-          { type: null, legLength: null, controlCode: 'S1', control: { code: 'S1', type: 'START' } },
-          {
-            type: null,
-            legLength: 147,
-            controlCode: '112',
-            control: { code: '112', type: 'CONTROL' },
-          },
-          { type: null, legLength: 179, controlCode: 'F1', control: { code: 'F1', type: 'FINISH' } },
+          { type: null, legLength: null, controlCode: 'S1', control: { type: 'START' } },
+          { type: null, legLength: 147, controlCode: '112', control: { type: 'CONTROL' } },
+          { type: null, legLength: 179, controlCode: 'F1', control: { type: 'FINISH' } },
         ],
         2860,
       ),

@@ -24,7 +24,7 @@ type SplitCourseControlInput = {
   type: ControlType | null;
   legLength: number | null;
   controlCode: string;
-  control: { code: string; type: ControlType } | null;
+  control: { type: ControlType } | null;
 };
 
 /**
@@ -66,8 +66,8 @@ export function computeSplitCourseDistances(
       continue;
     }
 
-    const controlCode = courseControl.control?.code ?? courseControl.controlCode;
-    controls.push({ controlCode, distance: cumulative });
+    // `controlCode` is always stored, even when the Control relation is unresolved.
+    controls.push({ controlCode: courseControl.controlCode, distance: cumulative });
   }
 
   const totalLength = finishLength ?? courseLength ?? 0;

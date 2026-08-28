@@ -284,9 +284,8 @@ export const SplitChart: React.FC<SplitChartProps> = ({
         point.legIndex = checkpoint.legIndex;
       }
 
-      const checkpointDistance = checkpointDistances?.[checkpointIndex];
-      if (typeof checkpointDistance === 'number') {
-        point.distance = checkpointDistance;
+      if (checkpointDistances) {
+        point.distance = checkpointDistances[checkpointIndex]!;
       }
 
       allResults.forEach(res => {
@@ -308,18 +307,9 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     validReferenceCompetitors,
   ]);
 
-  // Distance axis is only usable when every plotted point carries a distance.
-  const useDistanceAxis =
-    checkpointDistances !== null &&
-    chartData.every(point => typeof point.distance === 'number');
-
-  const distanceTickLabels = useMemo(
-    () =>
-      new Map(
-        chartData.map(point => [point.distance as number, point.axisLabel]),
-      ),
-    [chartData],
-  );
+  // Non-null already means every checkpoint got a finite, strictly increasing
+  // distance, so every plotted point carries one.
+  const useDistanceAxis = checkpointDistances !== null;
 
   // Predefined colors for chart lines
   const lineColors = [
@@ -456,29 +446,24 @@ export const SplitChart: React.FC<SplitChartProps> = ({
               margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              {useDistanceAxis ? (
-                <XAxis
-                  dataKey="distance"
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                  ticks={chartData.map(point => point.distance as number)}
-                  tickFormatter={value =>
-                    distanceTickLabels.get(value as number) ?? ''
-                  }
-                  tick={{ fontSize: 10 }}
-                  angle={-35}
-                  textAnchor="end"
-                  height={50}
-                />
-              ) : (
-                <XAxis
-                  dataKey="axisLabel"
-                  tick={{ fontSize: 10 }}
-                  angle={-35}
-                  textAnchor="end"
-                  height={50}
-                />
-              )}
+              <XAxis
+                {...(useDistanceAxis
+                  ? {
+                      dataKey: 'distance',
+                      type: 'number' as const,
+                      domain: ['dataMin', 'dataMax'] as const,
+                      ticks: chartData.map(point => point.distance as number),
+                      // Recharts passes the tick index, which indexes `ticks`
+                      // and therefore `chartData`.
+                      tickFormatter: (_value: unknown, index: number) =>
+                        chartData[index]?.axisLabel ?? '',
+                    }
+                  : { dataKey: 'axisLabel' })}
+                tick={{ fontSize: 10 }}
+                angle={-35}
+                textAnchor="end"
+                height={50}
+              />
               <YAxis
                 reversed
                 allowDecimals={false}
