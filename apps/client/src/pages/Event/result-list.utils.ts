@@ -81,6 +81,26 @@ export const RESULT_STATUS_DISPLAY: Readonly<Record<string, StatusDisplay>> = {
   OverTime: { emoji: '⌛', tooltip: 'Over Time' },
 };
 
+/** Short status labels for the status column of the result tables. */
+const RESULT_STATUS_LABELS: Readonly<Record<string, string>> = {
+  OK: 'OK',
+  Active: 'Active',
+  Finished: 'Finished',
+  Inactive: 'Inactive',
+  MissingPunch: 'MP',
+  Disqualified: 'DSQ',
+  DidNotFinish: 'DNF',
+  DidNotStart: 'DNS',
+  NotCompeting: 'NC',
+  OverTime: 'OT',
+  SportingWithdrawal: 'SW',
+};
+
+/** Short label of a result status; unknown statuses pass through unchanged. */
+export function getResultStatusLabel(status: string): string {
+  return RESULT_STATUS_LABELS[status] ?? status;
+}
+
 export function getResultStatusDisplay(
   status: string | null | undefined,
 ): StatusDisplay {

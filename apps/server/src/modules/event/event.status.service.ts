@@ -47,7 +47,7 @@ type StatusSummaryEvent = {
   externalEventId: string | null;
 };
 
-const RESULT_DATA_STATUSES = [
+export const RESULT_DATA_STATUSES = [
   'OK',
   'Finished',
   'MissingPunch',

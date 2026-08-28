@@ -13,6 +13,7 @@ import {
   findCompetitorsByClass,
   findCompetitorsByOrganisation,
   findCompetitorsByTeam,
+  findResultFeedByEvent,
   findOrganisationNamesByEvent,
   findOrganisationsByEvent,
   searchOrganisationNamesByEvent,
@@ -27,6 +28,7 @@ import {
   competitorsByRegistrationInputSchema,
   organisationNamesInputSchema,
   organisationsInputSchema,
+  resultFeedInputSchema,
   searchOrganisationNamesInputSchema,
   statusChangeInputSchema,
   storeCompetitorInputSchema,
@@ -213,6 +215,22 @@ builder.queryFields((t) => ({
         competitorsByRegistrationInputSchema.parse({
           eventId: args.eventId,
           registration: args.registration,
+        }),
+        query,
+      ),
+  }),
+  resultFeedByEvent: t.prismaField({
+    type: [CompetitorRef],
+    args: {
+      eventId: t.arg.string({ required: true }),
+      limit: t.arg.int(),
+    },
+    resolve: (query, _root, args, context) =>
+      findResultFeedByEvent(
+        context.prisma,
+        resultFeedInputSchema.parse({
+          eventId: args.eventId,
+          limit: args.limit ?? undefined,
         }),
         query,
       ),
