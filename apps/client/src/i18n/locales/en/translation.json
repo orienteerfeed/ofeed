@@ -1056,6 +1056,7 @@
           "ImportState": {
             "Creator": "Creator",
             "ExternalStatus": "Status",
+            "Source": "Source",
             "LastSuccessfulImport": "Last import",
             "SuccessCount": "Successful",
             "SkippedCount": "Skipped",

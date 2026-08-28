@@ -1058,6 +1058,7 @@
           "ImportState": {
             "Creator": "Tvůrce",
             "ExternalStatus": "Status",
+            "Source": "Zdroj",
             "LastSuccessfulImport": "Poslední import",
             "SuccessCount": "Úspěšných",
             "SkippedCount": "Přeskočených",
