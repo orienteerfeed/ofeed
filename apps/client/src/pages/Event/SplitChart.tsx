@@ -22,13 +22,17 @@ import {
   createFastestSplitChartReferenceTimes,
   createInitialSplitChartVisibility,
   createSplitChartCheckpoints,
+  createSplitChartDistances,
 } from './split-chart.utils';
 import { getResultStatusPriority } from './result-list.utils';
 import { rankByTime } from './result-ranking.utils';
 import {
   filterValidSplitResultCompetitors,
 } from './split-results.utils';
-import type { SplitChartCheckpoint } from './split-chart.utils';
+import type {
+  SplitChartCheckpoint,
+  SplitCourseDistances,
+} from './split-chart.utils';
 
 // TODO: Refactor type definitions - move to shared types file
 interface Split {
@@ -53,6 +57,7 @@ interface SplitChartProps {
   competitors: Competitor[];
   isLoading?: boolean;
   error?: unknown;
+  courseDistances?: SplitCourseDistances | null;
 }
 
 interface ChartPoint {
@@ -60,6 +65,7 @@ interface ChartPoint {
   checkpointIndex: number;
   checkpointKind: SplitChartCheckpoint['kind'];
   controlCode: string;
+  distance?: number;
   legIndex?: number;
   [key: string]: number | string | undefined;
 }
@@ -152,6 +158,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   competitors,
   isLoading = false,
   error,
+  courseDistances,
 }) => {
   const { t } = useTranslation();
   const [comparisonMode, setComparisonMode] =
@@ -169,6 +176,12 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   const checkpoints = useMemo(() => {
     return createSplitChartCheckpoints(sortedCompetitors);
   }, [sortedCompetitors]);
+
+  // Non-null only when the uploaded course fully covers the recorded splits.
+  const checkpointDistances = useMemo(
+    () => createSplitChartDistances(checkpoints, courseDistances),
+    [checkpoints, courseDistances],
+  );
 
   const validReferenceCompetitors = useMemo(
     () => filterValidSplitResultCompetitors(sortedCompetitors),
@@ -271,6 +284,11 @@ export const SplitChart: React.FC<SplitChartProps> = ({
         point.legIndex = checkpoint.legIndex;
       }
 
+      const checkpointDistance = checkpointDistances?.[checkpointIndex];
+      if (typeof checkpointDistance === 'number') {
+        point.distance = checkpointDistance;
+      }
+
       allResults.forEach(res => {
         if (referenceTime !== null) {
           point[res.id] = res.time - referenceTime;
@@ -283,11 +301,25 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     return { chartData, positionsByLeg, competitorsById };
   }, [
     checkpoints,
+    checkpointDistances,
     comparisonMode,
     sortedCompetitors,
     t,
     validReferenceCompetitors,
   ]);
+
+  // Distance axis is only usable when every plotted point carries a distance.
+  const useDistanceAxis =
+    checkpointDistances !== null &&
+    chartData.every(point => typeof point.distance === 'number');
+
+  const distanceTickLabels = useMemo(
+    () =>
+      new Map(
+        chartData.map(point => [point.distance as number, point.axisLabel]),
+      ),
+    [chartData],
+  );
 
   // Predefined colors for chart lines
   const lineColors = [
@@ -424,13 +456,29 @@ export const SplitChart: React.FC<SplitChartProps> = ({
               margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="axisLabel"
-                tick={{ fontSize: 10 }}
-                angle={-35}
-                textAnchor="end"
-                height={50}
-              />
+              {useDistanceAxis ? (
+                <XAxis
+                  dataKey="distance"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  ticks={chartData.map(point => point.distance as number)}
+                  tickFormatter={value =>
+                    distanceTickLabels.get(value as number) ?? ''
+                  }
+                  tick={{ fontSize: 10 }}
+                  angle={-35}
+                  textAnchor="end"
+                  height={50}
+                />
+              ) : (
+                <XAxis
+                  dataKey="axisLabel"
+                  tick={{ fontSize: 10 }}
+                  angle={-35}
+                  textAnchor="end"
+                  height={50}
+                />
+              )}
               <YAxis
                 reversed
                 allowDecimals={false}

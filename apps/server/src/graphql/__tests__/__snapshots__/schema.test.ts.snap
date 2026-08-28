@@ -772,6 +772,7 @@ type Query {
   organisations(eventId: String!): [Organisation!]!
   searchEvents(query: String!): [Event]!
   searchOrganisationNames(eventId: String!, q: String!): [OrganisationName!]!
+  splitCourseDistances(classId: Int!): SplitCourseDistances
   splitPublicationStatus(classId: Int!): SplitPublicationStatus!
   sport(id: Int!): Sport
   sports: [Sport!]!
@@ -813,6 +814,16 @@ type Split {
   controlCode: Int!
   id: Int!
   time: Int
+}
+
+type SplitCourseControlDistance {
+  controlCode: String!
+  distance: Float!
+}
+
+type SplitCourseDistances {
+  controls: [SplitCourseControlDistance!]!
+  totalLength: Float!
 }
 
 enum SplitPublicationMode {

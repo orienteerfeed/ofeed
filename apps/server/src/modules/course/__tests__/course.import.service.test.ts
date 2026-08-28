@@ -136,6 +136,39 @@ describe('importCourseDataXml', () => {
     expect(classA?.courseId).toBe(courseA?.id);
   });
 
+  it('assigns Class.courseId by exact name match when the XML has no ClassCourseAssignment', async () => {
+    // Common in course-setting exports: courses named like the classes, no
+    // <ClassCourseAssignment> block at all.
+    const xml = `<?xml version="1.0"?>
+      <CourseData>
+        <Event><Name>e</Name></Event>
+        <RaceCourseData>
+          <Course>
+            <Name>A</Name>
+            <Length>2240</Length>
+            <CourseControl type="Start"><Control>S1</Control></CourseControl>
+            <CourseControl type="Control"><Control>100</Control><LegLength>79</LegLength></CourseControl>
+            <CourseControl type="Finish"><Control>F1</Control><LegLength>179</LegLength></CourseControl>
+          </Course>
+          <Course>
+            <Name>Unmatched</Name>
+            <CourseControl type="Start"><Control>S1</Control></CourseControl>
+          </Course>
+        </RaceCourseData>
+      </CourseData>`;
+
+    const result = await importCourseDataXml('evt1', xml);
+    const { store } = holder.prisma;
+    const classA = store.classes.find((cls) => cls.name === 'A');
+    const classB = store.classes.find((cls) => cls.name === 'B');
+    const courseA = store.courses.find((co) => co.name === 'A');
+
+    expect(result.classesAssigned).toBe(1);
+    expect(classA?.courseId).toBe(courseA?.id);
+    // Class B has no course of the same name, so it stays unlinked.
+    expect(classB?.courseId).toBeNull();
+  });
+
   it('is idempotent: re-importing the same XML creates no duplicates', async () => {
     await importCourseDataXml('evt1', fixtureXml);
     await importCourseDataXml('evt1', fixtureXml);

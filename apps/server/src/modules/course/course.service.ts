@@ -77,24 +77,39 @@ export async function assertClassCourseAccess(
   await requireEventOwnerOrAdmin(prisma, auth, cls.eventId);
 }
 
+const courseControlsInclude = {
+  courseControls: {
+    orderBy: { sequence: 'asc' },
+    include: { control: true },
+  },
+} as const;
+
 /**
  * Loads a class together with its course and ordered course controls (each with
  * the resolved control). Returns null when the class does not exist.
+ *
+ * When `Class.courseId` is unset, falls back to the event's course with the exact
+ * same name as the class. Plenty of course-setting exports omit the IOF
+ * <ClassCourseAssignment> block entirely and rely on that naming convention, so
+ * without this fallback every course feature (map, radio controls, split
+ * distances) silently sees "no course" for such events.
  */
-export function getCourseByClassId(prisma: AppPrismaClient, classId: number) {
-  return prisma.class.findUnique({
+export async function getCourseByClassId(prisma: AppPrismaClient, classId: number) {
+  const cls = await prisma.class.findUnique({
     where: { id: classId },
-    include: {
-      course: {
-        include: {
-          courseControls: {
-            orderBy: { sequence: 'asc' },
-            include: { control: true },
-          },
-        },
-      },
-    },
+    include: { course: { include: courseControlsInclude } },
   });
+
+  if (!cls || cls.course) {
+    return cls;
+  }
+
+  const course = await prisma.course.findFirst({
+    where: { eventId: cls.eventId, name: cls.name },
+    include: courseControlsInclude,
+  });
+
+  return { ...cls, course };
 }
 
 /**

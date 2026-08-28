@@ -4,6 +4,7 @@ import {
   createFastestSplitChartReferenceTimes,
   createSplitChartCheckpoints,
   createInitialSplitChartVisibility,
+  createSplitChartDistances,
   DEFAULT_VISIBLE_SPLIT_CHART_RUNNERS,
   hasSplitChartData,
 } from '../../../src/pages/Event/split-chart.utils';
@@ -105,6 +106,78 @@ describe('split chart utils', () => {
         },
       ])
     ).toEqual([0, 100, 195, 275]);
+  });
+
+  describe('createSplitChartDistances', () => {
+    const checkpoints = createSplitChartCheckpoints([
+      {
+        id: 'a',
+        time: 300,
+        splits: [
+          { controlCode: '31', time: 100 },
+          { controlCode: '32', time: 220 },
+        ],
+      },
+    ]);
+
+    it('maps checkpoints onto cumulative course distances', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '32', distance: 3800 },
+          ],
+        })
+      ).toEqual([0, 900, 3800, 4200]);
+    });
+
+    it('falls back to even spacing without course data', () => {
+      expect(createSplitChartDistances(checkpoints, null)).toBeNull();
+    });
+
+    it('skips course controls that produced no split', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '45', distance: 2100 },
+            { controlCode: '32', distance: 3800 },
+          ],
+        })
+      ).toEqual([0, 900, 3800, 4200]);
+    });
+
+    it('falls back when a split control is missing from the course', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [{ controlCode: '31', distance: 900 }],
+        })
+      ).toBeNull();
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '32', distance: 900 },
+            { controlCode: '31', distance: 3800 },
+          ],
+        })
+      ).toBeNull();
+    });
+
+    it('falls back when distances are not strictly increasing', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 3800,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '32', distance: 3800 },
+          ],
+        })
+      ).toBeNull();
+    });
   });
 
   it('shows only the top runners with split data by default', () => {

@@ -5,9 +5,11 @@ import { SplitPublicationModeRef } from '../event/event.graphql-types.js';
 
 import { SplitRef } from './split.graphql-types.js';
 import {
+  findSplitCourseDistances,
   findSplitPublicationStatus,
   findSplitsByCompetitor,
   subscribeSplitCompetitorsByClassUpdated,
+  type SplitCourseDistances,
 } from './split.service.js';
 import { competitorSplitsInputSchema, splitPublicationStatusInputSchema } from './split.schema.js';
 
@@ -43,7 +45,41 @@ const SplitPublicationStatusRef = builder
     }),
   });
 
+const SplitCourseControlDistanceRef = builder
+  .objectRef<SplitCourseDistances['controls'][number]>('SplitCourseControlDistance')
+  .implement({
+    fields: (t) => ({
+      controlCode: t.exposeString('controlCode'),
+      distance: t.exposeFloat('distance'),
+    }),
+  });
+
+const SplitCourseDistancesRef = builder
+  .objectRef<SplitCourseDistances>('SplitCourseDistances')
+  .implement({
+    fields: (t) => ({
+      totalLength: t.exposeFloat('totalLength'),
+      controls: t.field({
+        type: [SplitCourseControlDistanceRef],
+        resolve: (distances) => distances.controls,
+      }),
+    }),
+  });
+
 builder.queryFields((t) => ({
+  splitCourseDistances: t.field({
+    type: SplitCourseDistancesRef,
+    nullable: true,
+    args: {
+      classId: t.arg.int({ required: true }),
+    },
+    resolve: (_root, args, context) =>
+      findSplitCourseDistances(
+        context.prisma,
+        context.auth,
+        splitPublicationStatusInputSchema.parse({ classId: args.classId }).classId,
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to fetch split course distances')),
+  }),
   competitorSplits: t.field({
     type: [SplitRef],
     nullable: { list: true, items: false },
