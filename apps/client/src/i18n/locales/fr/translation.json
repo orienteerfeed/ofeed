@@ -428,6 +428,7 @@
           "ImportState": {
             "Creator": "Créateur",
             "ExternalStatus": "Statut",
+            "Source": "Source",
             "LastSuccessfulImport": "Dernière importation",
             "SuccessCount": "Réussis",
             "SkippedCount": "Ignorés",

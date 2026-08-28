@@ -18,6 +18,11 @@ import { toast } from '@/utils';
 
 const IOF_XML_V3 = 'IOF XML v3';
 
+const SOURCE_LABELS: Record<string, string> = {
+  IOF_XML: 'IOF XML',
+  MEOS: 'MeOS MOP',
+};
+
 export type RadioControl = {
   id: number;
   code: string;
@@ -145,6 +150,10 @@ const ImportStateMeta = ({
     <>
       <Separator className="my-2" />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <span>
+          {t('Pages.Event.Settings.Files.ImportState.Source')}:{' '}
+          {SOURCE_LABELS[importState.sourceType] ?? importState.sourceType}
+        </span>
         {importState.lastSuccessfulImportAt ? (
           <span>
             {t('Pages.Event.Settings.Files.ImportState.LastSuccessfulImport')}:{' '}
@@ -295,10 +304,21 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
 
   const importStates = importStatesData?.eventImportStates ?? [];
 
+  // MOP payloads (MOPComplete/MOPDiff) carry start times and results in one
+  // document, so a MeOS upload is the last import for both of those sections.
+  // MOP has no course data, so courses stay IOF XML only.
   const findImportState = (payloadType: string): EventImportStateEntry | null =>
-    importStates.find(
-      s => s.sourceType === 'IOF_XML' && s.payloadType === payloadType
-    ) ?? null;
+    importStates
+      .filter(
+        s =>
+          (s.sourceType === 'IOF_XML' && s.payloadType === payloadType) ||
+          (s.sourceType === 'MEOS' && payloadType !== 'CourseData')
+      )
+      .sort(
+        (a, b) =>
+          (Date.parse(b.lastSuccessfulImportAt ?? '') || 0) -
+          (Date.parse(a.lastSuccessfulImportAt ?? '') || 0)
+      )[0] ?? null;
 
   const handleUploaded = () => {
     void refetch();
