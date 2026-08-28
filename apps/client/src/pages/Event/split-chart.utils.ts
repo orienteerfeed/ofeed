@@ -132,6 +132,62 @@ export function createSplitChartCheckpoints(
   return checkpoints;
 }
 
+export type SplitCourseDistances = {
+  totalLength: number;
+  controls: ReadonlyArray<{ controlCode: string; distance: number }>;
+};
+
+/**
+ * Cumulative course distance (metres from the start) for every checkpoint, so the
+ * chart can space legs by real distance. Returns null whenever the uploaded course
+ * does not line up with the recorded splits or the distances are not strictly
+ * increasing — the chart then keeps its evenly-spaced axis.
+ *
+ * Splits usually cover only a subset of the course (radio controls), and a control
+ * code can repeat on a course, so checkpoints are matched by walking the course
+ * forward from the previously matched control rather than pairing index by index.
+ */
+export function createSplitChartDistances(
+  checkpoints: readonly SplitChartCheckpoint[],
+  courseDistances: SplitCourseDistances | null | undefined,
+): number[] | null {
+  if (!courseDistances || checkpoints.length === 0) {
+    return null;
+  }
+
+  const courseControls = courseDistances.controls;
+  const distanceByKey = new Map<string, number>();
+  let cursor = 0;
+
+  for (const checkpoint of checkpoints) {
+    if (checkpoint.kind !== 'control') continue;
+
+    const matchIndex = courseControls.findIndex(
+      (control, index) =>
+        index >= cursor && control.controlCode === checkpoint.controlCode,
+    );
+    if (matchIndex === -1) {
+      return null;
+    }
+
+    distanceByKey.set(checkpoint.key, courseControls[matchIndex]!.distance);
+    cursor = matchIndex + 1;
+  }
+
+  const distances = checkpoints.map(checkpoint => {
+    if (checkpoint.kind === 'start') return 0;
+    if (checkpoint.kind === 'finish') return courseDistances.totalLength;
+    return distanceByKey.get(checkpoint.key) ?? Number.NaN;
+  });
+
+  const isStrictlyIncreasing = distances.every(
+    (distance, index) =>
+      Number.isFinite(distance) && (index === 0 || distance > (distances[index - 1] as number)),
+  );
+
+  return isStrictlyIncreasing ? distances : null;
+}
+
 export function createFastestSplitChartReferenceTimes(
   checkpoints: readonly SplitChartCheckpoint[],
   competitors: readonly CompetitorLike[],
