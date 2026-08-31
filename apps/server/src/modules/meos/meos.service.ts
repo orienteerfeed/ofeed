@@ -92,6 +92,7 @@ async function findExistingMeosCompetitor(
   const nameWhere = {
     firstname: cmp.firstname,
     lastname: cmp.lastname,
+    externalId: null,
   };
 
   const sameClassByName = await tx.competitor.findFirst({
