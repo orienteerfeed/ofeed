@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { useSubscription } from '@apollo/client/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { getNotificationSettings } from '../../lib/notificationSettings';
 
 // Types
@@ -46,34 +46,6 @@ export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
     skip: !eventId,
   });
 
-  const [isMainTab, setIsMainTab] = useState<boolean>(false);
-
-  // Handle tab storage for sound notifications
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'mainTab') {
-        setIsMainTab(
-          localStorage.getItem('mainTab') === sessionStorage.getItem('myTab')
-        );
-      }
-    };
-
-    // Each tab gets a unique ID
-    sessionStorage.setItem('myTab', Date.now().toString());
-
-    // First tab that sets "mainTab" becomes the main tab
-    if (!localStorage.getItem('mainTab')) {
-      localStorage.setItem('mainTab', sessionStorage.getItem('myTab')!);
-      setIsMainTab(true);
-    }
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
   // Handle winner updates
   useEffect(() => {
     if (data?.winnerUpdated) {
@@ -83,11 +55,12 @@ export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
       if (settings.general.push) {
         sendNotification(data.winnerUpdated);
       }
-      if (settings.general.sound && isMainTab) {
+      // Only the visible tab announces, so background tabs don't talk over it
+      if (settings.general.sound && !document.hidden) {
         playGongAndSpeak(data.winnerUpdated);
       }
     }
-  }, [data, isMainTab]);
+  }, [data]);
 
   if (error) {
     console.error('Subscription error:', error);
@@ -131,13 +104,12 @@ const playGongAndSpeak = (winner: Winner): void => {
     return;
   }
 
-  // Play gong sound
+  // Play gong sound; announce even if autoplay blocks it
   const gongSound = new Audio('/sounds/chime.mp3');
   gongSound
     .play()
-    .then(() => {
-      console.log('🔔 Gong played');
-
+    .catch(error => console.warn('⚠️ Error playing gong:', error))
+    .finally(() => {
       // After short delay, start voice announcement
       setTimeout(() => {
         const message = new SpeechSynthesisUtterance(
@@ -147,8 +119,6 @@ const playGongAndSpeak = (winner: Winner): void => {
         message.rate = 1; // Speech rate
         message.pitch = 1; // Voice pitch
         speechSynthesis.speak(message);
-        console.log('🔊 Winner announcement played');
       }, 1000); // 1 second delay after gong
-    })
-    .catch(error => console.error('⚠️ Error playing gong:', error));
+    });
 };
