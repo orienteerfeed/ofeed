@@ -4,7 +4,7 @@ import { buildAnnouncement } from '../../../src/pages/Event/WinnerNotifications'
 const winner = (
   className: string,
   name = 'Nováková Jana',
-  classSex?: 'B' | 'M' | 'F' | null
+  classSex: 'B' | 'M' | 'F' | null = null
 ) => ({
   eventId: 'e1',
   classId: 1,

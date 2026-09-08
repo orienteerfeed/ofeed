@@ -9,7 +9,7 @@ interface Winner {
   classId: number;
   className: string;
   /** Class-level gender config: 'M' men, 'F' women, 'B' both */
-  classSex?: 'B' | 'M' | 'F' | null;
+  classSex?: 'B' | 'M' | 'F' | null | undefined;
   name: string;
 }
 
