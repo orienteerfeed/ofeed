@@ -121,6 +121,21 @@ describe('parseClassStartExtension', () => {
     expect(result.startWindowTo).toBeNull();
   });
 
+  it('reads namespace-prefixed extension children', () => {
+    const result = parseClassStartExtension(
+      [
+        {
+          'qe:StartMode': ['WaveStart'],
+          'qe:StartWindow': [{ StartTime: ['2026-05-01T10:00:00+02:00'] }],
+        },
+      ],
+      'Europe/Prague',
+    );
+
+    expect(result.startMode).toBe('WaveStart');
+    expect(result.startWindowFrom?.toISOString()).toBe('2026-05-01T08:00:00.000Z');
+  });
+
   it('ignores an unknown StartMode value', () => {
     const result = parseClassStartExtension([{ StartMode: ['Bogus'] }], 'Europe/Prague');
 
