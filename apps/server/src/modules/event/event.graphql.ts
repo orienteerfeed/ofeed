@@ -42,6 +42,7 @@ const WinnerNotificationRef = builder
       eventId: t.exposeString('eventId'),
       classId: t.exposeInt('classId'),
       className: t.exposeString('className'),
+      classSex: t.exposeString('classSex'),
       name: t.exposeString('name'),
     }),
   });
