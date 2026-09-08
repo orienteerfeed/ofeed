@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { useSubscription } from '@apollo/client/react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { getNotificationSettings } from '../../lib/notificationSettings';
 
 // Types
@@ -8,6 +8,8 @@ interface Winner {
   eventId: string;
   classId: number;
   className: string;
+  /** Class-level gender config: 'M' men, 'F' women, 'B' both */
+  classSex?: 'B' | 'M' | 'F' | null | undefined;
   name: string;
 }
 
@@ -33,6 +35,7 @@ const WINNER_UPDATED = gql`
       eventId
       classId
       className
+      classSex
       name
     }
   }
@@ -46,34 +49,6 @@ export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
     skip: !eventId,
   });
 
-  const [isMainTab, setIsMainTab] = useState<boolean>(false);
-
-  // Handle tab storage for sound notifications
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'mainTab') {
-        setIsMainTab(
-          localStorage.getItem('mainTab') === sessionStorage.getItem('myTab')
-        );
-      }
-    };
-
-    // Each tab gets a unique ID
-    sessionStorage.setItem('myTab', Date.now().toString());
-
-    // First tab that sets "mainTab" becomes the main tab
-    if (!localStorage.getItem('mainTab')) {
-      localStorage.setItem('mainTab', sessionStorage.getItem('myTab')!);
-      setIsMainTab(true);
-    }
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
   // Handle winner updates
   useEffect(() => {
     if (data?.winnerUpdated) {
@@ -83,11 +58,12 @@ export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
       if (settings.general.push) {
         sendNotification(data.winnerUpdated);
       }
-      if (settings.general.sound && isMainTab) {
+      // Only the visible tab announces, so background tabs don't talk over it
+      if (settings.general.sound && !document.hidden) {
         playGongAndSpeak(data.winnerUpdated);
       }
     }
-  }, [data, isMainTab]);
+  }, [data]);
 
   if (error) {
     console.error('Subscription error:', error);
@@ -123,6 +99,35 @@ const sendNotification = (winner: Winner): void => {
 };
 
 /**
+ * Resolves the winner's gender for Czech verb inflection, best signal first:
+ * 1. the class `sex` attribute (configurable per class)
+ * 2. the class name prefix (D/W = women, H/M = men)
+ * 3. the surname ending (Czech/Slovak feminine -ová/-á), for mixed classes
+ * Unknown falls back to masculine.
+ */
+export const isFemaleWinner = (winner: Winner): boolean => {
+  if (winner.classSex === 'F') return true;
+  if (winner.classSex === 'M') return false;
+
+  const className = winner.className.trim();
+  if (/^[DW]/i.test(className)) return true;
+  if (/^[HM]/i.test(className)) return false;
+
+  // Mixed/unconfigured class - name is the only remaining signal.
+  // Server sends "lastname firstname".
+  const lastname = winner.name.trim().split(/\s+/)[0] ?? '';
+  return /(ová|ova|á)$/i.test(lastname);
+};
+
+/**
+ * Builds the Czech announcement, inflected by the winner's gender.
+ */
+export const buildAnnouncement = (winner: Winner): string =>
+  `Změna pořadí v kategorii ${winner.className}, do vedení se dostal${
+    isFemaleWinner(winner) ? 'a' : ''
+  } ${winner.name}`;
+
+/**
  * Plays gong sound and speaks winner announcement
  */
 const playGongAndSpeak = (winner: Winner): void => {
@@ -131,24 +136,19 @@ const playGongAndSpeak = (winner: Winner): void => {
     return;
   }
 
-  // Play gong sound
+  // Play gong sound; announce even if autoplay blocks it
   const gongSound = new Audio('/sounds/chime.mp3');
   gongSound
     .play()
-    .then(() => {
-      console.log('🔔 Gong played');
-
+    .catch(error => console.warn('⚠️ Error playing gong:', error))
+    .finally(() => {
       // After short delay, start voice announcement
       setTimeout(() => {
-        const message = new SpeechSynthesisUtterance(
-          `Změna pořadí v kategorii ${winner.className}, do vedení se dostal ${winner.name}`
-        );
+        const message = new SpeechSynthesisUtterance(buildAnnouncement(winner));
         message.lang = 'cs-CZ'; // Czech language setting
         message.rate = 1; // Speech rate
         message.pitch = 1; // Voice pitch
         speechSynthesis.speak(message);
-        console.log('🔊 Winner announcement played');
       }, 1000); // 1 second delay after gong
-    })
-    .catch(error => console.error('⚠️ Error playing gong:', error));
+    });
 };

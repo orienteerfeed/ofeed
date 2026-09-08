@@ -5,6 +5,7 @@ import {
   dateLikeSchema,
   eventDisciplineSchema,
   eventFilterSchema,
+  sexSchema,
   startModeSchema,
 } from './common.js';
 
@@ -84,6 +85,7 @@ export const winnerNotificationSchema = z.object({
   eventId: z.string(),
   classId: z.number().int(),
   className: z.string(),
+  classSex: sexSchema,
   name: z.string(),
 });
 

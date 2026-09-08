@@ -304,9 +304,21 @@ function hasOwnProperty(record: object | null | undefined, property: string): bo
   return Object.prototype.hasOwnProperty.call(record ?? {}, property);
 }
 
+/**
+ * Extensions children live in a non-IOF namespace (the IOF XSD requires it), so
+ * producers may either declare it inline (`<StartMode xmlns="...">`) or bind a
+ * prefix on the root and use it here (`<qe:StartMode>`). xml2js keeps the raw
+ * qualified name as the key, so strip the prefix to read both forms.
+ */
 function getClassStartExtensionRecord(extensions: unknown): Record<string, unknown> | null {
   const ext = Array.isArray(extensions) ? extensions[0] : extensions;
-  return ext && typeof ext === 'object' ? (ext as Record<string, unknown>) : null;
+  if (!ext || typeof ext !== 'object') return null;
+  return Object.fromEntries(
+    Object.entries(ext as Record<string, unknown>).map(([key, value]) => [
+      key.replace(/^[^:]+:/, ''),
+      value,
+    ]),
+  );
 }
 
 /**
