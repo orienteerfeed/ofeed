@@ -75,16 +75,16 @@
     "xmllint-wasm": "^5.2.0"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.13.4",
     "@types/qrcode": "^1.5.6",
     "@types/ws": "^8.18.1",
     "@types/xml2js": "^0.4.14",
     "eslint": "^9.39.5",
     "prettier": "^2.8.8",
     "prisma": "^7.9.1",
-    "tsx": "^4.23.1",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.65.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^3.2.7"
   },
   "prisma": {
