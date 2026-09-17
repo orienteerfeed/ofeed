@@ -353,6 +353,46 @@ describe('upsertMeosCompetitor', () => {
     expect(mockTx.protocol.createMany).toHaveBeenCalled();
   });
 
+  it('creates a new competitor instead of overwriting a same-named one already linked to another MOP id', async () => {
+    // Simulate a real DB row: "Jan Novák" already linked to MOP id 999.
+    // The name-fallback queries must exclude it (externalId: null filter) so
+    // the mock only returns it if that filter is missing from the where clause.
+    const linkedNamesake = existingCompetitor({
+      id: 555,
+      externalId: '999',
+      firstname: 'Jan',
+      lastname: 'Novák',
+    });
+    mockTx.competitor.findFirst.mockImplementation(async ({ where }) => {
+      if (where.externalId === '102') return null; // byExternalId lookup miss
+      const matchesName = where.firstname === 'Jan' && where.lastname === 'Novák';
+      if (!matchesName || where.externalId === null) return null;
+      return linkedNamesake;
+    });
+    mockTx.competitor.create.mockResolvedValueOnce({ id: 102, classId: 7 });
+
+    const cmp = {
+      id: 102,
+      card: 999999,
+      competing: false,
+      firstname: 'Jan',
+      lastname: 'Novák',
+      classId: 1,
+      orgId: undefined,
+      bibNumber: 27,
+      stat: 0,
+      startTenths: 0,
+      runTimeTenths: 0,
+      splits: [],
+      delete: false,
+    };
+
+    await upsertMeosCompetitor(mockTx as never, EVENT_ID, cmp, new Map(), new Map([[1, 7]]), EVENT);
+
+    expect(mockTx.competitor.update).not.toHaveBeenCalled();
+    expect(mockTx.competitor.create).toHaveBeenCalledOnce();
+  });
+
   it('skips competitor if classId not in classIdMap', async () => {
     const cmp = {
       id: 200,
