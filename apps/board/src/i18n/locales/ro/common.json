@@ -1,1 +1,49 @@
-{}
+{
+    "language": {
+        "label": "Limbă"
+    },
+    "noData": {
+        "title": "Datele evenimentului nu sunt disponibile",
+        "description": "În prezent nu există date disponibile pentru rezultate. Vă rugăm să reveniți mai târziu sau să contactați organizatorul evenimentului pentru mai multe informații."
+    },
+    "loading": "Încărcare date",
+    "error": "A apărut o eroare la încărcarea datelor, încercați din nou mai târziu",
+    "settings": {
+        "title": "Setări tabel rezultate",
+        "close": "Închide setările",
+        "columnNumber": "Număr coloană",
+        "scrolling": {
+            "label": "Derulare (automată)",
+            "byPage": "Derulare pe pagini",
+            "byRow": "Derulare pe rânduri",
+            "continuous": "Derulare continuă",
+            "manual": "Derulare manuală",
+            "speed": "Viteza de derulare (timp per rând de rezultat)"
+        },
+        "tableContent": {
+            "label": "Conținut tabel",
+            "pinnedLeaders": "Număr lideri fixați",
+            "compactMode": "Mod compact (fără club, card)",
+            "showEmojis": "Afișează emoji-uri în tabel",
+            "showUnfinished": "Afișează nefinalizați (listă de start, în curs)"
+        },
+        "classes": {
+            "label": "Categorii afișate",
+            "colorHint": "Culoarea antetului de categorie este determinată de genul setat pentru categoria respectivă în sursa de date (M = albastru, F = roz, altele = gri).",
+            "filterPlaceholder": "Filtrează după nume…",
+            "colHeaders": {
+                "name": "Nume",
+                "col": "Col",
+                "color": "Culoare",
+                "order": "Ordine"
+            },
+            "selectAll": "Toate"
+        },
+        "colorOverride": {
+            "auto": "Auto (din sursa de date)",
+            "male": "M – albastru (masculin)",
+            "female": "F - roz (feminin)",
+            "neutral": "X - gri (neutru)"
+        }
+    }
+}
