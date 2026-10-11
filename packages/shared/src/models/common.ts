@@ -91,6 +91,26 @@ export const czechRankingCountReasonSchema = z.enum([
 ]);
 export const eventFilterSchema = z.enum(['ALL', 'TODAY', 'UPCOMING', 'RECENT']);
 
+/**
+ * Statuses that mean a competitor already carries result data. Drives the
+ * server-side "has results" checks and the result feed query, and the client-side
+ * filter that decides whether an incoming subscription row belongs in the feed —
+ * both sides must agree, so the list lives here.
+ */
+export const RESULT_DATA_STATUSES = [
+  'OK',
+  'Finished',
+  'MissingPunch',
+  'Disqualified',
+  'DidNotFinish',
+  'OverTime',
+  'SportingWithdrawal',
+  'NotCompeting',
+  'Moved',
+  'MovedUp',
+  'Cancelled',
+] as const satisfies readonly ResultStatus[];
+
 export type Sex = z.infer<typeof sexSchema>;
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type ClassStatus = z.infer<typeof classStatusSchema>;

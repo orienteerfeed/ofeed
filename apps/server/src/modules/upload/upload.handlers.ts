@@ -304,9 +304,22 @@ function hasOwnProperty(record: object | null | undefined, property: string): bo
   return Object.prototype.hasOwnProperty.call(record ?? {}, property);
 }
 
+/**
+ * Extensions children live in a non-IOF namespace (the IOF XSD requires it), so
+ * producers may either declare it inline (`<StartMode xmlns="...">`) or bind a
+ * prefix on the root and use it here (`<qe:StartMode>`). xml2js keeps the raw
+ * qualified name as the key, so strip the prefix to read both forms. Use the
+ * same normalization for StartWindow children and field-presence checks.
+ */
 function getClassStartExtensionRecord(extensions: unknown): Record<string, unknown> | null {
   const ext = Array.isArray(extensions) ? extensions[0] : extensions;
-  return ext && typeof ext === 'object' ? (ext as Record<string, unknown>) : null;
+  if (!ext || typeof ext !== 'object') return null;
+  return Object.fromEntries(
+    Object.entries(ext as Record<string, unknown>).map(([key, value]) => [
+      key.replace(/^[^:]+:/, ''),
+      value,
+    ]),
+  );
 }
 
 /**
@@ -327,15 +340,11 @@ export function parseClassStartExtension(
     return { startMode: null, startWindowFrom: null, startWindowTo: null };
   }
   const startMode = toStartMode(getIofTextValue(record.StartMode));
-  const windowRaw = Array.isArray(record.StartWindow) ? record.StartWindow[0] : record.StartWindow;
-  const window = (windowRaw && typeof windowRaw === 'object' ? windowRaw : {}) as Record<
-    string,
-    unknown
-  >;
+  const window = getClassStartExtensionRecord(record.StartWindow);
   return {
     startMode,
-    startWindowFrom: getIofDateTime(window.StartTime, timeZone) ?? null,
-    startWindowTo: getIofDateTime(window.EndTime, timeZone) ?? null,
+    startWindowFrom: getIofDateTime(window?.StartTime, timeZone) ?? null,
+    startWindowTo: getIofDateTime(window?.EndTime, timeZone) ?? null,
   };
 }
 
@@ -442,14 +451,7 @@ async function upsertClass(
     : (existingClass?.resultListMode ?? null);
 
   const extensionRecord = getClassStartExtensionRecord(classDetails.Extensions);
-  const startWindowRaw =
-    extensionRecord && Array.isArray(extensionRecord.StartWindow)
-      ? extensionRecord.StartWindow[0]
-      : extensionRecord?.StartWindow;
-  const startWindowRecord =
-    startWindowRaw && typeof startWindowRaw === 'object'
-      ? (startWindowRaw as Record<string, unknown>)
-      : null;
+  const startWindowRecord = getClassStartExtensionRecord(extensionRecord?.StartWindow);
   const hasStartModeExtension = hasOwnProperty(extensionRecord, 'StartMode');
   const hasStartWindowFrom = hasOwnProperty(startWindowRecord, 'StartTime');
   const hasStartWindowTo = hasOwnProperty(startWindowRecord, 'EndTime');

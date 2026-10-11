@@ -21,7 +21,7 @@ COPY apps/client apps/client
 COPY packages/shared packages/shared
 RUN pnpm --filter ./apps/client... run build
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine AS runner
+FROM nginxinc/nginx-unprivileged:1.30-alpine AS runner
 COPY apps/client/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY apps/client/docker-entrypoint-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
 COPY --from=builder /workspace/apps/client/dist /usr/share/nginx/html
@@ -33,7 +33,6 @@ ENV PORT=8080 \
     OFEED_PUBLIC_API_URL= \
     OFEED_PUBLIC_URL= \
     OFEED_DEFAULT_LANGUAGE=en \
-    OFEED_SUPPORT_EMAIL=support@orienteerfeed.com \
     OFEED_DOCS_URL=https://docs.orienteerfeed.com \
     OFEED_BOARD_APP_URL= \
     OFEED_DISCORD_INVITE_URL=https://discord.gg/QMvnurgKzU \
