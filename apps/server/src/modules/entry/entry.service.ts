@@ -17,17 +17,17 @@ import {
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { ConflictError, NotFoundError, ValidationError } from '../../exceptions/index.js';
-import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import type { EntryStatus } from '../../generated/prisma/enums.js';
+import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import { computeClassCapacity } from '../class/class.capacity.js';
 import { computeClassFee } from '../class/class.fee.js';
-import { storeCompetitor } from '../event/event.service.js';
-import { loadLockedCardNumbers } from '../event/event-rental-cards.service.js';
 import { availablePaymentMethodsForEvent } from '../event/event-payment-methods.service.js';
-import { notifyEntryOrderProcessed, notifyEntryOrderReceived } from './entry.email.js';
+import { loadLockedCardNumbers } from '../event/event-rental-cards.service.js';
+import { storeCompetitor } from '../event/event.service.js';
 import { createEntryOrderAccessToken } from './entry-public-access.js';
+import { notifyEntryOrderProcessed, notifyEntryOrderReceived } from './entry.email.js';
 
 const ACTIVE_UNPROCESSED_ENTRY_STATUSES: EntryStatus[] = ['RECEIVED', 'APPROVED'];
 
@@ -912,7 +912,7 @@ export async function processEntryOrder(
         startTime: item.startTime ?? undefined,
       },
       input.userId,
-      'IT',
+      'OFFICE',
     );
 
     await prisma.entryItem.update({
