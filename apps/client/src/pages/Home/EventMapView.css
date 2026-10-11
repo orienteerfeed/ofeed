@@ -93,7 +93,19 @@
 }
 
 .event-map-view .event-map-tooltip-card__meta {
+  align-items: center;
   color: var(--muted-foreground);
+  display: flex;
   font-size: 0.75rem;
+  gap: 4px;
   line-height: 1.35;
+}
+
+.event-map-view .event-map-tooltip-card__meta svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.event-map-view .event-map-tooltip-card__meta-sep {
+  opacity: 0.5;
 }

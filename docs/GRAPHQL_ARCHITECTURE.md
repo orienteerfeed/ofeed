@@ -178,6 +178,23 @@ Subscriptions should preserve existing public topics and payload shapes.
 - For guarded split/live-result subscriptions, re-check authorization before
   yielding initial data and again before yielding later updates.
 
+## Event Result Feed
+
+`resultFeedByEvent(eventId)` returns a complete snapshot of competitors with
+result data, ordered by `updatedAt` and then `id` descending. Do not truncate
+this response: the client calculates category ranks and cumulative relay
+standings from the entire snapshot. Future server pagination must supply
+authoritative standings separately before limiting these rows.
+
+The client combines this snapshot with `competitorUpdated` messages and polls
+every 60 seconds to reconcile deletions and IOF batch imports. A snapshot replaces
+the previous rows, including when it is empty. Subscription changes received
+during a request are replayed over its response; changes to a status without
+result data remove the competitor. These operations bypass Apollo's normalized
+cache so a snapshot remains independent of concurrent subscription writes.
+Highlights expire independently ten seconds after each competitor's last live
+update. Changing events resets the feed and disposes its polling and timers.
+
 ## Generated Files
 
 Do not hand-edit generated files:
