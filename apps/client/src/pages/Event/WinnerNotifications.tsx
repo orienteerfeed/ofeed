@@ -1,7 +1,8 @@
 import { gql } from '@apollo/client';
 import { useSubscription } from '@apollo/client/react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { getNotificationSettings } from '../../lib/notificationSettings';
+import { coordinateWinnerAnnouncements } from '../../lib/winner-announcement-leader';
 
 // Types
 interface Winner {
@@ -44,6 +45,15 @@ const WINNER_UPDATED = gql`
 export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
   eventId,
 }) => {
+  const isAnnouncer = useRef(false);
+  useEffect(
+    () =>
+      coordinateWinnerAnnouncements(eventId, active => {
+        isAnnouncer.current = active;
+      }),
+    [eventId]
+  );
+
   const { data, error } = useSubscription<WinnerUpdatedData>(WINNER_UPDATED, {
     variables: { eventId },
     skip: !eventId,
@@ -58,8 +68,8 @@ export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
       if (settings.general.push) {
         sendNotification(data.winnerUpdated);
       }
-      // Only the visible tab announces, so background tabs don't talk over it
-      if (settings.general.sound && !document.hidden) {
+      // One tab per event announces, including while it is in the background.
+      if (settings.general.sound && isAnnouncer.current) {
         playGongAndSpeak(data.winnerUpdated);
       }
     }
@@ -110,8 +120,10 @@ export const isFemaleWinner = (winner: Winner): boolean => {
   if (winner.classSex === 'M') return false;
 
   const className = winner.className.trim();
-  if (/^[DW]/i.test(className)) return true;
-  if (/^[HM]/i.test(className)) return false;
+  if (!/^HDR/i.test(className)) {
+    if (/^D|^[FW]\d/i.test(className)) return true;
+    if (/^H|^M\d/i.test(className)) return false;
+  }
 
   // Mixed/unconfigured class - name is the only remaining signal.
   // Server sends "lastname firstname".

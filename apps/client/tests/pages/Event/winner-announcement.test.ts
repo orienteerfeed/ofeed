@@ -55,6 +55,18 @@ describe('buildAnnouncement', () => {
     male(buildAnnouncement(winner('T2', 'Novák Jan', null)));
   });
 
+  it.each(['HDR', 'hdr', 'HDR příchozí', 'MIX', 'Family'])(
+    'uses the surname for the mixed class %s',
+    className => {
+      female(buildAnnouncement(winner(className, 'Nováková Jana', 'B')));
+      male(buildAnnouncement(winner(className, 'Novák Jan', 'B')));
+    }
+  );
+
+  it('recognizes international female age classes', () => {
+    female(buildAnnouncement(winner('F21', 'Smith Jane', 'B')));
+  });
+
   it('includes the class name', () => {
     expect(buildAnnouncement(winner('D21'))).toContain('v kategorii D21');
   });

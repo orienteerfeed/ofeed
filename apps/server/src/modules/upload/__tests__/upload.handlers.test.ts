@@ -142,6 +142,32 @@ describe('parseClassStartExtension', () => {
     expect(result.startMode).toBeNull();
   });
 
+  it.each(['qe', 'ofeed'])(
+    'reads nested times from real XML with the %s prefix',
+    async (prefix) => {
+      const parsed = await parseXml(
+        Buffer.from(`
+      <Class xmlns="http://www.orienteering.org/datastandard/3.0"
+             xmlns:${prefix}="https://example.com/extensions">
+        <Extensions>
+          <${prefix}:StartMode>FreeStart</${prefix}:StartMode>
+          <${prefix}:StartWindow>
+            <${prefix}:StartTime>2026-05-01T10:00:00+02:00</${prefix}:StartTime>
+            <${prefix}:EndTime>2026-05-01T11:30:00+02:00</${prefix}:EndTime>
+          </${prefix}:StartWindow>
+        </Extensions>
+      </Class>`),
+      );
+      const classRecord = parsed.Class as { Extensions: unknown };
+
+      expect(parseClassStartExtension(classRecord.Extensions, 'Europe/Prague')).toEqual({
+        startMode: 'FreeStart',
+        startWindowFrom: new Date('2026-05-01T08:00:00.000Z'),
+        startWindowTo: new Date('2026-05-01T09:30:00.000Z'),
+      });
+    },
+  );
+
   it('returns nulls when the extension is absent', () => {
     expect(parseClassStartExtension(undefined, 'Europe/Prague')).toEqual({
       startMode: null,
@@ -843,7 +869,7 @@ describe('processClassStarts — updated class deduplication', () => {
     );
   });
 
-  it('updates result and start settings when XML values are present', async () => {
+  it.each(['', 'qe:'])('updates result and start settings with XML prefix "%s"', async (prefix) => {
     await processClassStarts(
       'event-1',
       [
@@ -855,11 +881,11 @@ describe('processClassStarts — updated class deduplication', () => {
               ATTR: { resultListMode: 'Unordered' },
               Extensions: [
                 {
-                  StartMode: ['MassStart'],
-                  StartWindow: [
+                  [`${prefix}StartMode`]: ['MassStart'],
+                  [`${prefix}StartWindow`]: [
                     {
-                      StartTime: ['2026-05-08T10:00:00+02:00'],
-                      EndTime: ['2026-05-08T11:30:00+02:00'],
+                      [`${prefix}StartTime`]: ['2026-05-08T10:00:00+02:00'],
+                      [`${prefix}EndTime`]: ['2026-05-08T11:30:00+02:00'],
                     },
                   ],
                 },
@@ -869,7 +895,11 @@ describe('processClassStarts — updated class deduplication', () => {
           PersonStart: [],
         },
       ],
-      dbClassLists,
+      dbClassLists.map((cls) => ({
+        ...cls,
+        startWindowFrom: new Date('2026-05-08T06:00:00.000Z'),
+        startWindowTo: new Date('2026-05-08T07:00:00.000Z'),
+      })),
       { discipline: 'SPRINT', timezone: 'Europe/Prague' },
       1,
     );
