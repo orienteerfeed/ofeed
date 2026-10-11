@@ -192,12 +192,10 @@ export function findCompetitorsByOrganisation(
  * nothing changed (`upload.competitor.ts`, `meos.service.ts`), so `updatedAt`
  * only moves on a real data change and the order stays stable across re-imports.
  *
- * `RESULT_FEED_MAX_ROWS` is an abuse guard, not paging: the client derives
- * per-class ranks from this list, so a truncated result would silently produce
- * wrong ranks.
+ * Return the complete event snapshot: the client derives per-class and relay
+ * ranks from it, so limiting rows would silently produce incorrect standings.
+ * Any future pagination must provide authoritative ranks independently.
  */
-const RESULT_FEED_MAX_ROWS = 2500;
-
 export function findResultFeedByEvent(
   prisma: AppPrismaClient,
   eventId: string,
@@ -209,8 +207,7 @@ export function findResultFeedByEvent(
       class: { is: { eventId } },
       status: { in: [...RESULT_DATA_STATUSES] },
     },
-    orderBy: { updatedAt: 'desc' },
-    take: RESULT_FEED_MAX_ROWS,
+    orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
   });
 }
 

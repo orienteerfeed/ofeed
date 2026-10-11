@@ -8,20 +8,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatSecondsToTime, formatTimeToHms } from '@/lib/date';
-import { gql } from '@apollo/client';
-import { useQuery, useSubscription } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import { Loader2, Radio, Search } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import {
   compareByFinishDesc,
-  hasResultData,
   matchesLiveFeedQuery,
   rankFeedRows,
-  type LiveFeedRow,
 } from './live-feed.utils';
 import { MobileClubName } from './MobileClubName';
 import {
@@ -30,63 +26,10 @@ import {
   getResultStatusLabel,
   shouldDisplayResultTimes,
 } from './result-list.utils';
+import { useLiveResultFeed } from './useLiveResultFeed';
 
 /** How many rows are revealed at a time; the rest waits behind a button. */
 const PAGE_SIZE = 50;
-
-/** Safety net for events fed only by IOF batch imports, which publish class-level
- *  events instead of the per-competitor stream the subscription listens to. */
-const POLL_INTERVAL_MS = 60000;
-
-const HIGHLIGHT_DURATION_MS = 10000;
-
-const LIVE_FEED_FIELDS = gql`
-  fragment LiveFeedFields on Competitor {
-    id
-    firstname
-    lastname
-    registration
-    organisation
-    organisationId
-    status
-    time
-    finishTime
-    updatedAt
-    leg
-    teamId
-    class {
-      id
-      name
-      resultListMode
-    }
-  }
-`;
-
-const RESULT_FEED = gql`
-  query ResultFeedByEvent($eventId: String!) {
-    resultFeedByEvent(eventId: $eventId) {
-      ...LiveFeedFields
-    }
-  }
-  ${LIVE_FEED_FIELDS}
-`;
-
-const COMPETITOR_UPDATED = gql`
-  subscription CompetitorUpdatedFeed($eventId: String!) {
-    competitorUpdated(eventId: $eventId) {
-      ...LiveFeedFields
-    }
-  }
-  ${LIVE_FEED_FIELDS}
-`;
-
-interface ResultFeedResponse {
-  resultFeedByEvent: LiveFeedRow[];
-}
-
-interface CompetitorUpdatedResponse {
-  competitorUpdated: LiveFeedRow | null;
-}
 
 interface LiveResultsViewProps {
   t: TFunction;
@@ -97,59 +40,20 @@ interface LiveResultsViewProps {
   onSelectClub: (clubId: number | null) => void;
 }
 
-export const LiveResultsView = ({
+export const LiveResultsView = (props: LiveResultsViewProps) => (
+  <EventLiveResultsView key={props.eventId} {...props} />
+);
+
+const EventLiveResultsView = ({
   t,
   eventId,
   isRelay,
   onSelectClass,
   onSelectClub,
 }: LiveResultsViewProps) => {
-  const [rows, setRows] = useState<ReadonlyMap<number, LiveFeedRow>>(new Map());
-  const [highlighted, setHighlighted] = useState<ReadonlySet<number>>(
-    new Set()
-  );
+  const { rows, highlighted, loading, error } = useLiveResultFeed(eventId);
   const [search, setSearch] = useState('');
   const [revealed, setRevealed] = useState(PAGE_SIZE);
-
-  const merge = useCallback((incoming: readonly LiveFeedRow[]) => {
-    if (incoming.length === 0) return;
-    setRows(previous => {
-      const next = new Map(previous);
-      for (const row of incoming) next.set(row.id, row);
-      return next;
-    });
-  }, []);
-
-  const { data, loading, error } = useQuery<ResultFeedResponse>(RESULT_FEED, {
-    variables: { eventId },
-    pollInterval: POLL_INTERVAL_MS,
-  });
-
-  useEffect(() => {
-    if (data?.resultFeedByEvent) merge(data.resultFeedByEvent);
-  }, [data, merge]);
-
-  const { data: liveData } = useSubscription<CompetitorUpdatedResponse>(
-    COMPETITOR_UPDATED,
-    { variables: { eventId }, skip: !eventId }
-  );
-
-  useEffect(() => {
-    const row = liveData?.competitorUpdated;
-    if (!row || !hasResultData(row.status)) return;
-
-    merge([row]);
-    setHighlighted(previous => new Set(previous).add(row.id));
-    const timer = setTimeout(() => {
-      setHighlighted(previous => {
-        const next = new Set(previous);
-        next.delete(row.id);
-        return next;
-      });
-    }, HIGHLIGHT_DURATION_MS);
-
-    return () => clearTimeout(timer);
-  }, [liveData, merge]);
 
   // A narrower query should start from the top of its own result set.
   useEffect(() => setRevealed(PAGE_SIZE), [search]);
