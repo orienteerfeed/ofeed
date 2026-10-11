@@ -51,6 +51,7 @@ describe('Pothos GraphQL schema', () => {
         'myEvents',
         'organisationNames',
         'organisations',
+        'resultFeedByEvent',
         'searchEvents',
         'searchOrganisationNames',
         'sport',
