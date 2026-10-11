@@ -1,3 +1,4 @@
+import { formatStoredUtcTimeForTimezone } from '@/lib/date';
 import { formatDate } from '@/lib/utils';
 import type { Country } from '@/types/country';
 import type {
@@ -14,6 +15,7 @@ export interface GraphQLEvent {
   name: string;
   organizer?: string | null;
   date: string;
+  timezone: string;
   zeroTime?: string | null;
   location?: string | null;
   latitude?: number | null;
@@ -61,6 +63,7 @@ export const EVENTS_QUERY = gql`
           name
           organizer
           date
+          timezone
           zeroTime
           location
           latitude
@@ -114,13 +117,20 @@ export const convertGraphQLEventToHomeEvent = (
 
   const formattedDate = formatDate(graphqlEvent.date);
   const country = toOptionalCountry(graphqlEvent.country);
+  const zeroTime = graphqlEvent.zeroTime
+    ? formatStoredUtcTimeForTimezone(
+        graphqlEvent.zeroTime,
+        graphqlEvent.date,
+        graphqlEvent.timezone || 'UTC'
+      )
+    : '';
 
   return {
     id: graphqlEvent.id,
     slug,
     name: graphqlEvent.name,
     date: formattedDate,
-    ...(graphqlEvent.zeroTime ? { zeroTime: graphqlEvent.zeroTime } : {}),
+    ...(zeroTime ? { zeroTime } : {}),
     ...(graphqlEvent.organizer ? { organizer: graphqlEvent.organizer } : {}),
     ...(graphqlEvent.location ? { location: graphqlEvent.location } : {}),
     ...(graphqlEvent.featuredImage

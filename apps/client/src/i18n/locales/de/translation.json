@@ -524,6 +524,9 @@
       }
     },
     "Event": {
+      "Tables": {
+        "ZeroTime": "Startzeit"
+      },
       "Tabs": {
         "All": "Alle",
         "Overview": "Übersicht",
