@@ -62,6 +62,14 @@ export const ENDPOINTS = {
     `${apiPrefix}/admin/ranking/czech/event-results${qs(params)}`,
   adminCzechRankingOrisSync: (): string =>
     `${apiPrefix}/admin/ranking/czech/oris-sync`,
+  adminRegistrationSyncStatus: (): string =>
+    `${apiPrefix}/admin/registrations/sync-status`,
+  adminRegistrations: (params?: PaginationParams): string =>
+    `${apiPrefix}/admin/registrations${qs(params)}`,
+  adminRegistrationClubs: (params?: PaginationParams): string =>
+    `${apiPrefix}/admin/registrations/clubs${qs(params)}`,
+  adminRegistrationOrisSync: (): string =>
+    `${apiPrefix}/admin/registrations/oris-sync`,
 
   // Event endpoints
   events: (params?: PaginationParams): string =>
@@ -86,6 +94,18 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}`,
   uploadEventImage: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}/image`,
+  deleteEventImage: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/image`,
+  eventRentalCardsImport: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/rental-cards/import`,
+  eventEntryAvailability: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/entry-availability`,
+  eventEntryStats: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/entry-stats`,
+  eventEntryPaymentMethods: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/entry-payment-methods`,
+  eventEntries: (eventId: string | number): string =>
+    `${apiPrefix}/events/${eventId}/entries`,
   eventChangelog: (eventId: string | number, params?: QueryParams): string =>
     `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
   markChangelogProcessed: (
@@ -93,6 +113,10 @@ export const ENDPOINTS = {
     protocolId: number
   ): string =>
     `${apiPrefix}/events/${eventId}/changelog/${protocolId}/processed`,
+  registrationLookup: (params?: QueryParams): string =>
+    `${apiPrefix}/registration/lookup${qs(params)}`,
+  registrationClubs: (params?: QueryParams): string =>
+    `${apiPrefix}/registration/clubs${qs(params)}`,
   mapTile: (
     mapset: string,
     tileSize: string,

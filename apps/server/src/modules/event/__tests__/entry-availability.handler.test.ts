@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({}));
 const mockListEventEntryAvailability = vi.hoisted(() => vi.fn());
+const mockListAvailableEventPaymentMethods = vi.hoisted(() => vi.fn());
 const s3Mock = vi.hoisted(() => ({ getPublicObject: vi.fn() }));
 
 vi.mock('../../../utils/context.js', () => ({ default: prismaMock }));
@@ -11,6 +12,9 @@ vi.mock('../../../lib/storage/s3.js', () => ({
 }));
 vi.mock('../../../modules/start-slot-vacancy/start-slot-vacancy.service.js', () => ({
   listEventEntryAvailability: mockListEventEntryAvailability,
+}));
+vi.mock('../../../modules/event/event-payment-methods.service.js', () => ({
+  listAvailableEventPaymentMethods: mockListAvailableEventPaymentMethods,
 }));
 
 import publicEventRoutes from '../event.public.routes.js';
@@ -56,6 +60,7 @@ describe('GET /:eventId/entry-availability', () => {
 
   beforeEach(() => {
     mockListEventEntryAvailability.mockReset();
+    mockListAvailableEventPaymentMethods.mockReset();
     app = new Hono();
     app.route('/', publicEventRoutes as any);
   });
@@ -94,5 +99,27 @@ describe('GET /:eventId/entry-availability', () => {
     const response = await app.request('http://localhost/event-1/entry-availability');
 
     expect(response.status).toBe(500);
+  });
+});
+
+describe('GET /:eventId/entry-payment-methods', () => {
+  let app: Hono;
+
+  beforeEach(() => {
+    mockListAvailableEventPaymentMethods.mockReset();
+    app = new Hono();
+    app.route('/', publicEventRoutes as any);
+  });
+
+  it('returns only payment methods available to entrants', async () => {
+    mockListAvailableEventPaymentMethods.mockResolvedValue([
+      { type: 'CASH', displayName: null },
+    ]);
+
+    const response = await app.request('http://localhost/event-1/entry-payment-methods');
+
+    expect(response.status).toBe(200);
+    const json = await response.json();
+    expect(json.results.data).toEqual([{ type: 'CASH', displayName: null }]);
   });
 });

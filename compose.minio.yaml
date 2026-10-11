@@ -1,6 +1,6 @@
 services:
   minio:
-    image: minio/minio:RELEASE.2025-01-20T00-00-00Z
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: ofeed-minio
     restart: unless-stopped
     env_file: ./apps/server/.env
@@ -30,23 +30,7 @@ services:
       mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
       mc mb -p local/$$S3_BUCKET_PUBLIC || true;
       mc anonymous set download local/$$S3_BUCKET_PUBLIC || true;
-      cat > /tmp/ofeed-policy.json << 'EOF'
-      {
-        \"Version\": \"2012-10-17\",
-        \"Statement\": [
-          {
-            \"Action\": [\"s3:GetObject\", \"s3:PutObject\", \"s3:DeleteObject\"],
-            \"Effect\": \"Allow\",
-            \"Resource\": [\"arn:aws:s3:::$$S3_BUCKET_PUBLIC/*\"]
-          },
-          {
-            \"Action\": [\"s3:ListBucket\"],
-            \"Effect\": \"Allow\",
-            \"Resource\": [\"arn:aws:s3:::$$S3_BUCKET_PUBLIC\"]
-          }
-        ]
-      }
-      EOF
+      printf '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:DeleteObject\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::%s/*\"]},{\"Action\":[\"s3:ListBucket\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::%s\"]}]}' \"$$S3_BUCKET_PUBLIC\" \"$$S3_BUCKET_PUBLIC\" > /tmp/ofeed-policy.json;
       mc admin policy create local ofeed-policy /tmp/ofeed-policy.json || true;
       if [ -n \"$$S3_ACCESS_KEY\" ] && [ -n \"$$S3_SECRET_KEY\" ]; then
         mc admin user add local $$S3_ACCESS_KEY $$S3_SECRET_KEY || true;

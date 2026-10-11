@@ -7,6 +7,8 @@ import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 import {
   changeCompetitorStatusForGraphQL,
   createCompetitorForGraphQL,
+  findCompetitorsByCard,
+  findCompetitorsByRegistration,
   findCompetitorById,
   findCompetitorsByClass,
   findCompetitorsByOrganisation,
@@ -21,6 +23,8 @@ import {
 import { CompetitorRef, OrganisationRef } from './competitor.graphql-types.js';
 import {
   competitorsByOrganisationInputSchema,
+  competitorsByCardInputSchema,
+  competitorsByRegistrationInputSchema,
   organisationNamesInputSchema,
   organisationsInputSchema,
   searchOrganisationNamesInputSchema,
@@ -183,6 +187,35 @@ builder.queryFields((t) => ({
       id: t.arg.int({ required: true }),
     },
     resolve: (query, _root, args, context) => findCompetitorsByTeam(context.prisma, args.id, query),
+  }),
+  competitorsByCard: t.prismaField({
+    type: [CompetitorRef],
+    args: {
+      eventId: t.arg.string({ required: true }),
+      card: t.arg.int({ required: true }),
+    },
+    resolve: (query, _root, args, context) =>
+      findCompetitorsByCard(
+        context.prisma,
+        competitorsByCardInputSchema.parse({ eventId: args.eventId, card: args.card }),
+        query,
+      ),
+  }),
+  competitorsByRegistration: t.prismaField({
+    type: [CompetitorRef],
+    args: {
+      eventId: t.arg.string({ required: true }),
+      registration: t.arg.string({ required: true }),
+    },
+    resolve: (query, _root, args, context) =>
+      findCompetitorsByRegistration(
+        context.prisma,
+        competitorsByRegistrationInputSchema.parse({
+          eventId: args.eventId,
+          registration: args.registration,
+        }),
+        query,
+      ),
   }),
   competitorsByOrganisation: t.prismaField({
     type: [CompetitorRef],

@@ -10,6 +10,45 @@ import {
   updateAdminUserActive,
 } from '../admin.service.js';
 
+const EVENTS = [
+  {
+    id: 'evt-1',
+    name: 'Spring race',
+    organizer: 'Alpha Club',
+    date: new Date('2026-04-12T00:00:00.000Z'),
+    discipline: 'MIDDLE' as const,
+    published: true,
+    ranking: true,
+    createdAt: new Date('2026-03-06T08:00:00.000Z'),
+    authorId: 1,
+    author: { firstname: 'Ada', lastname: 'Admin' },
+  },
+  {
+    id: 'evt-2',
+    name: 'Night challenge',
+    organizer: 'Beta Club',
+    date: new Date('2026-05-18T00:00:00.000Z'),
+    discipline: 'NIGHT' as const,
+    published: false,
+    ranking: true,
+    createdAt: new Date('2026-02-03T08:00:00.000Z'),
+    authorId: 2,
+    author: { firstname: 'Uma', lastname: 'User' },
+  },
+  {
+    id: 'evt-3',
+    name: 'City sprint',
+    organizer: 'Gamma Club',
+    date: new Date('2025-12-20T00:00:00.000Z'),
+    discipline: 'SPRINT' as const,
+    published: false,
+    ranking: false,
+    createdAt: new Date('2025-12-15T08:00:00.000Z'),
+    authorId: null,
+    author: null,
+  },
+];
+
 function createPrismaMock() {
   return {
     user: {
@@ -73,7 +112,17 @@ function createPrismaMock() {
     event: {
       count: async ({
         where,
-      }: { where?: { published?: boolean; ranking?: boolean; date?: { gte: Date } } } = {}) => {
+      }: {
+        where?: {
+          published?: boolean;
+          ranking?: boolean;
+          date?: { gte: Date };
+          authorId?: number;
+        };
+      } = {}) => {
+        if (where?.authorId !== undefined) {
+          return EVENTS.filter((event) => event.authorId === where.authorId).length;
+        }
         if (where?.published) return 1;
         if (where?.ranking) return 2;
         if (where?.date?.gte) return 2;
@@ -84,54 +133,23 @@ function createPrismaMock() {
         skip,
         take,
       }: {
-        where?: { createdAt?: { gte: Date } };
+        where?: { createdAt?: { gte: Date }; authorId?: number };
         skip?: number;
         take?: number;
       }) => {
-        const events = [
-          {
-            id: 'evt-1',
-            name: 'Spring race',
-            organizer: 'Alpha Club',
-            date: new Date('2026-04-12T00:00:00.000Z'),
-            discipline: 'MIDDLE' as const,
-            published: true,
-            ranking: true,
-            createdAt: new Date('2026-03-06T08:00:00.000Z'),
-            author: { firstname: 'Ada', lastname: 'Admin' },
-          },
-          {
-            id: 'evt-2',
-            name: 'Night challenge',
-            organizer: 'Beta Club',
-            date: new Date('2026-05-18T00:00:00.000Z'),
-            discipline: 'NIGHT' as const,
-            published: false,
-            ranking: true,
-            createdAt: new Date('2026-02-03T08:00:00.000Z'),
-            author: { firstname: 'Uma', lastname: 'User' },
-          },
-          {
-            id: 'evt-3',
-            name: 'City sprint',
-            organizer: 'Gamma Club',
-            date: new Date('2025-12-20T00:00:00.000Z'),
-            discipline: 'SPRINT' as const,
-            published: false,
-            ranking: false,
-            createdAt: new Date('2025-12-15T08:00:00.000Z'),
-            author: null,
-          },
-        ];
-
         if (where?.createdAt?.gte) {
-          return events
-            .filter((event) => event.createdAt >= where.createdAt!.gte)
-            .map((event) => ({ createdAt: event.createdAt }));
+          return EVENTS.filter((event) => event.createdAt >= where.createdAt!.gte).map(
+            (event) => ({ createdAt: event.createdAt }),
+          );
         }
 
+        const filtered =
+          where?.authorId !== undefined
+            ? EVENTS.filter((event) => event.authorId === where.authorId)
+            : EVENTS;
+
         const offset = skip ?? 0;
-        return events.slice(offset, take !== undefined ? offset + take : undefined);
+        return filtered.slice(offset, take !== undefined ? offset + take : undefined);
       },
     },
   };
@@ -382,6 +400,23 @@ describe('admin service', () => {
 
     expect(users.items).toHaveLength(3);
     expect(events.items).toHaveLength(3);
+  });
+
+  it('filters events by authorId', async () => {
+    const prisma = createPrismaMock();
+    const result = await getAdminEvents(prisma, { authorId: 2 });
+
+    expect(result.total).toBe(1);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.id).toBe('evt-2');
+  });
+
+  it('returns no events for an authorId with no events', async () => {
+    const prisma = createPrismaMock();
+    const result = await getAdminEvents(prisma, { authorId: 999 });
+
+    expect(result.total).toBe(0);
+    expect(result.items).toHaveLength(0);
   });
 
   it('updates admin user active state', async () => {

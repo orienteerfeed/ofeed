@@ -11,16 +11,11 @@ services:
     networks:
       - app-network
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent",
-        ]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 10s
       timeout: 5s
       retries: 10
 
-  api:
-    depends_on:
-      mysql:
-        condition: service_healthy
+networks:
+  app-network:
+    driver: bridge

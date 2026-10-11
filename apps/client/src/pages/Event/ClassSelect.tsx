@@ -64,12 +64,26 @@ export const ClassSelect: React.FC<ClassSelectProps> = ({
   const [isDragging, setIsDragging] = useState(false);
 
   const dragState = useRef<{ startY: number; startHeight: number } | null>(null);
+  const selectedButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Reset to a sensible default each time the sheet opens.
   useEffect(() => {
     if (isSheetOpen) {
       setSheetHeight(getDefaultHeight());
     }
+  }, [isSheetOpen]);
+
+  // Scroll the selected class into view each time the sheet opens, so it's
+  // visible without the user having to scroll and search for it.
+  useEffect(() => {
+    if (!isSheetOpen) return;
+    const frame = requestAnimationFrame(() => {
+      selectedButtonRef.current?.scrollIntoView({
+        block: 'center',
+        inline: 'center',
+      });
+    });
+    return () => cancelAnimationFrame(frame);
   }, [isSheetOpen]);
 
   const handleDragStart = useCallback(
@@ -169,6 +183,9 @@ export const ClassSelect: React.FC<ClassSelectProps> = ({
               {sortedClasses.map(classItem => (
                 <ClassButton
                   key={classItem.id}
+                  ref={
+                    selectedClass === classItem.id ? selectedButtonRef : undefined
+                  }
                   classItem={classItem}
                   isSelected={selectedClass === classItem.id}
                   onSelect={() => {
@@ -202,35 +219,37 @@ interface ClassButtonProps {
   onSelect: () => void;
 }
 
-const ClassButton: React.FC<ClassButtonProps> = ({
-  classItem,
-  isSelected,
-  onSelect,
-}) => {
-  const hasCourseInfo = hasDisplayableCourseInfo(classItem);
-  const showLength = hasDisplayableCourseLength(classItem.length);
-  const showClimb = hasDisplayableCourseClimb(classItem);
-  const lengthLabel = showLength ? `${((classItem.length ?? 0) / 1000).toFixed(1)}km` : null;
-  const climbLabel = showClimb ? `${classItem.climb ?? 0}m` : null;
+const ClassButton = React.forwardRef<HTMLButtonElement, ClassButtonProps>(
+  ({ classItem, isSelected, onSelect }, ref) => {
+    const hasCourseInfo = hasDisplayableCourseInfo(classItem);
+    const showLength = hasDisplayableCourseLength(classItem.length);
+    const showClimb = hasDisplayableCourseClimb(classItem);
+    const lengthLabel = showLength
+      ? `${((classItem.length ?? 0) / 1000).toFixed(1)}km`
+      : null;
+    const climbLabel = showClimb ? `${classItem.climb ?? 0}m` : null;
 
-  return (
-    <Button
-      variant={isSelected ? 'default' : 'outline'}
-      className="h-16 text-base font-semibold"
-      onClick={onSelect}
-    >
-      <div className="flex flex-col items-center gap-1">
-        <span>{classItem.name}</span>
-        {hasCourseInfo && (
-          <div className="flex gap-2 text-xs font-normal opacity-80">
-            {lengthLabel && <span>{lengthLabel}</span>}
-            {showClimb && showLength && (
-              <span className="text-muted-foreground">•</span>
-            )}
-            {climbLabel && <span>{climbLabel}</span>}
-          </div>
-        )}
-      </div>
-    </Button>
-  );
-};
+    return (
+      <Button
+        ref={ref}
+        variant={isSelected ? 'default' : 'outline'}
+        className="h-16 text-base font-semibold"
+        onClick={onSelect}
+      >
+        <div className="flex flex-col items-center gap-1">
+          <span>{classItem.name}</span>
+          {hasCourseInfo && (
+            <div className="flex gap-2 text-xs font-normal opacity-80">
+              {lengthLabel && <span>{lengthLabel}</span>}
+              {showClimb && showLength && (
+                <span className="text-muted-foreground">•</span>
+              )}
+              {climbLabel && <span>{climbLabel}</span>}
+            </div>
+          )}
+        </div>
+      </Button>
+    );
+  },
+);
+ClassButton.displayName = 'ClassButton';

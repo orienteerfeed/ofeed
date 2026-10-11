@@ -14,6 +14,14 @@ On Windows shells that do not support POSIX-style environment assignments, use:
 pnpm dev:win
 ```
 
+## Production cache policy
+
+The production Nginx configuration revalidates `index.html`, the PWA manifest,
+service-worker files, and other stable public URLs on every use. Only Vite
+build artifacts under `/assets/` receive long-lived immutable caching, because
+their filenames include a content hash. Missing static files return `404`; they
+are never replaced by the SPA HTML fallback.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

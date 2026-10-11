@@ -60,6 +60,38 @@ export function getResultStatusPriority(status: string): number {
   return RESULT_STATUS_PRIORITY[status] ?? 10;
 }
 
+export interface StatusDisplay {
+  emoji: string;
+  tooltip: string;
+}
+
+/**
+ * Emoji/tooltip shown in place of a numeric rank for a competitor who never
+ * got a ranked result (running, waiting for readout, DSQ/DNF/DNS/…).
+ */
+export const RESULT_STATUS_DISPLAY: Readonly<Record<string, StatusDisplay>> = {
+  Active: { emoji: '🏃', tooltip: 'Giving it their all right now' },
+  DidNotFinish: { emoji: '🏳️', tooltip: 'Did Not Finish' },
+  DidNotStart: { emoji: '🚷', tooltip: 'Did Not Start' },
+  Disqualified: { emoji: '🟥', tooltip: 'Disqualified' },
+  Finished: { emoji: '🏁', tooltip: 'Waiting for readout' },
+  Inactive: { emoji: '🛏️', tooltip: 'Waiting for start time' },
+  MissingPunch: { emoji: '🙈', tooltip: 'Missing Punch' },
+  NotCompeting: { emoji: '🦄', tooltip: 'Not competing' },
+  OverTime: { emoji: '⌛', tooltip: 'Over Time' },
+};
+
+export function getResultStatusDisplay(
+  status: string | null | undefined,
+): StatusDisplay {
+  return (
+    RESULT_STATUS_DISPLAY[status ?? ''] ?? {
+      emoji: '❓',
+      tooltip: 'Unknown status',
+    }
+  );
+}
+
 /**
  * A competitor counts as "finished" once they hold a final, ranked result (`OK`).
  * Everyone else (running, waiting for readout, not started, DNF/DSQ/...) is grouped

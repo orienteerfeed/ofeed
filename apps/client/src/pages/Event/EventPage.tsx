@@ -2,6 +2,7 @@ import { notFound, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import {
   Calendar,
+  ClipboardList,
   FileText,
   Loader2,
   MapPin,
@@ -21,6 +22,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useEvent } from '../../hooks/useEvent';
 import { formatDateWithDay, getLocaleKey } from '../../lib/date';
+import { resolveFeaturedImageUrl } from '../../lib/images';
 import { buildBoardEventUrl } from '../../lib/paths/externalLinks';
 import PATHNAMES from '../../lib/paths/pathnames';
 import { MainPageLayout } from '../../templates/MainPageLayout';
@@ -56,7 +58,15 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
       navigate(PATHNAMES.eventReport(event.id));
     }
   };
+  const handleEntriesClick = () => {
+    if (event) {
+      navigate(PATHNAMES.eventEntries(event.id));
+    }
+  };
   const boardEventUrl = event ? buildBoardEventUrl(event.id) : null;
+  const featuredImageUrl = event
+    ? resolveFeaturedImageUrl(event.featuredImage)
+    : null;
   const handleBoardClick = () => {
     if (!boardEventUrl) {
       return;
@@ -172,6 +182,17 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={handleEntriesClick}
+                  className="flex items-center gap-2"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  <span className="hidden sm:block">
+                    {t('Pages.Event.Detail.EntriesManage')}
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleSettingsClick}
                   className="flex items-center gap-2"
                 >
@@ -190,7 +211,8 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                   variant="outline"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  aria-label={t('Common.OpenMenu', {
+                  aria-label={t('OpenMenu', {
+                    ns: 'common',
                     defaultValue: 'Open menu',
                   })}
                 >
@@ -216,6 +238,10 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                       <FileText className="h-4 w-4" />
                       {t('Pages.Event.Detail.Report')}
                     </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleEntriesClick}>
+                      <ClipboardList className="h-4 w-4" />
+                      {t('Pages.Event.Detail.EntriesManage')}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={handleSettingsClick}>
                       <Settings className="h-4 w-4" />
                       {t('Settings', { ns: 'common' })}
@@ -228,7 +254,7 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
         </div>
 
         {/* Event title and organizer */}
-        <div className="mb-6 sm:mb-8">
+        <div className={featuredImageUrl ? 'mb-4 sm:mb-6' : 'mb-6 sm:mb-8'}>
           <h1 className="mb-2 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
             {event.name}
           </h1>
@@ -238,6 +264,15 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
             </p>
           )}
         </div>
+
+        {/* Featured Image */}
+        {featuredImageUrl && (
+          <img
+            src={featuredImageUrl}
+            alt={event.name}
+            className="max-h-40 w-auto max-w-full rounded-xl object-contain"
+          />
+        )}
 
         {/* Event Stats */}
         {/* TODO: refactor needed

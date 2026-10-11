@@ -1,9 +1,16 @@
 import { builder } from '../../graphql/builder.js';
+import { rethrowAuthzOrError } from '../../graphql/errors.js';
+import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 import { EventServiceSystemKeyRef } from '../event/event-services.graphql-types.js';
 import { StartModeRef } from '../event/event.graphql-types.js';
 import {
+  createStartSlotVacancyForGraphQL,
+  deleteStartSlotVacancyForGraphQL,
   listEventEntryAvailability,
+  listClassCompetitorStartTimesForGraphQL,
   listStartSlotVacanciesByClass,
+  updateStartSlotVacancyForGraphQL,
+  type ClassCompetitorStartTime,
   type EntryAvailabilityAddOn,
   type EntryAvailabilityFee,
   type EntryAvailabilitySlot,
@@ -137,6 +144,31 @@ const ClassStartSlotVacancyRef = builder
     }),
   });
 
+const ClassCompetitorStartTimeRef = builder
+  .objectRef<ClassCompetitorStartTime>('ClassCompetitorStartTime')
+  .implement({
+    fields: (t) => ({
+      id: t.exposeInt('id'),
+      startTime: t.expose('startTime', { type: 'DateTime' }),
+    }),
+  });
+
+const CreateStartSlotVacancyInputRef = builder.inputType('CreateStartSlotVacancyInput', {
+  fields: (t) => ({
+    classId: t.int({ required: true }),
+    startTime: t.field({ type: 'DateTime', required: true }),
+    bibNumber: t.int(),
+  }),
+});
+
+const UpdateStartSlotVacancyInputRef = builder.inputType('UpdateStartSlotVacancyInput', {
+  fields: (t) => ({
+    id: t.int({ required: true }),
+    startTime: t.field({ type: 'DateTime', required: true }),
+    bibNumber: t.int(),
+  }),
+});
+
 builder.queryFields((t) => ({
   eventEntryAvailability: t.field({
     type: EntryAvailabilityRef,
@@ -154,5 +186,54 @@ builder.queryFields((t) => ({
     },
     resolve: (_root, args, context) =>
       listStartSlotVacanciesByClass(context.prisma, args.classId),
+  }),
+  classCompetitorStartTimes: t.field({
+    type: [ClassCompetitorStartTimeRef],
+    args: {
+      classId: t.arg.int({ required: true }),
+    },
+    resolve: (_root, args, context) =>
+      listClassCompetitorStartTimesForGraphQL(context.prisma, context.auth, args.classId),
+  }),
+}));
+
+builder.mutationFields((t) => ({
+  createStartSlotVacancy: t.field({
+    type: ClassStartSlotVacancyRef,
+    args: {
+      input: t.arg({ type: CreateStartSlotVacancyInputRef, required: true }),
+    },
+    resolve: (_root, args, context) =>
+      createStartSlotVacancyForGraphQL(context.prisma, context.auth, {
+        classId: args.input.classId,
+        startTime: args.input.startTime,
+        bibNumber: args.input.bibNumber,
+      }).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to create start slot vacancy'),
+      ),
+  }),
+  updateStartSlotVacancy: t.field({
+    type: ClassStartSlotVacancyRef,
+    args: {
+      input: t.arg({ type: UpdateStartSlotVacancyInputRef, required: true }),
+    },
+    resolve: (_root, args, context) =>
+      updateStartSlotVacancyForGraphQL(context.prisma, context.auth, {
+        id: args.input.id,
+        startTime: args.input.startTime,
+        bibNumber: args.input.bibNumber,
+      }).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to update start slot vacancy'),
+      ),
+  }),
+  deleteStartSlotVacancy: t.field({
+    type: ResponseMessageRef,
+    args: {
+      id: t.arg.int({ required: true }),
+    },
+    resolve: (_root, args, context) =>
+      deleteStartSlotVacancyForGraphQL(context.prisma, context.auth, args.id).catch(
+        (err: unknown) => rethrowAuthzOrError(err, 'Failed to delete start slot vacancy'),
+      ),
   }),
 }));

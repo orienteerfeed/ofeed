@@ -1,4 +1,5 @@
 import {
+  adminClubListSchema,
   adminCzechRankingClearResultSchema,
   adminCzechRankingEventDetailSchema,
   adminCzechRankingOverviewSchema,
@@ -7,10 +8,14 @@ import {
   adminCzechRankingUploadResultSchema,
   adminDashboardSchema,
   adminEventListSchema,
+  adminRegistrationListSchema,
+  adminRegistrationSyncStatusSchema,
+  adminRegistrationSyncTriggerResultSchema,
   adminSystemMessageListSchema,
   adminSystemMessageMutationResultSchema,
   adminUserMutationResultSchema,
   adminUserListSchema,
+  type AdminRegistrationSyncTriggerInput,
   type AdminSystemMessageUpdateInput,
   type AdminSystemMessageUpsertInput,
   type CzechRankingCategory,
@@ -95,17 +100,14 @@ export function useAdminDashboardQuery() {
   });
 }
 
-export function useAdminUsersQuery({
-  page = 1,
-  limit = 25,
-}: { page?: number; limit?: number } = {}) {
+export function useAdminUsersQuery(params: Record<string, string | number | boolean | undefined | null> = {}) {
   const api = useApi();
 
   return useQuery({
-    queryKey: ['admin', 'users', page, limit],
+    queryKey: ['admin', 'users', params],
     queryFn: async () =>
       adminUserListSchema.parse(
-        await api.get(ENDPOINTS.adminUsers({ page, limit }))
+        await api.get(ENDPOINTS.adminUsers(params))
       ),
   });
 }
@@ -154,18 +156,16 @@ export function useAdminUserRequestVerificationMutation() {
   });
 }
 
-export function useAdminEventsQuery({
-  page = 1,
-  limit = 25,
-}: { page?: number; limit?: number } = {}) {
+export function useAdminEventsQuery({ enabled = true, ...params }: Record<string, string | number | boolean | undefined | null> & { enabled?: boolean } = {}) {
   const api = useApi();
 
   return useQuery({
-    queryKey: ['admin', 'events', page, limit],
+    queryKey: ['admin', 'events', params],
     queryFn: async () =>
       adminEventListSchema.parse(
-        await api.get(ENDPOINTS.adminEvents({ page, limit }))
+        await api.get(ENDPOINTS.adminEvents(params))
       ),
+    enabled,
   });
 }
 
@@ -342,6 +342,65 @@ export function useAdminCzechRankingClearSnapshotsMutation() {
             validForMonth: filters?.validForMonth,
           })
         )
+      ),
+  });
+}
+
+export function useAdminRegistrationSyncStatusQuery() {
+  const api = useApi();
+
+  return useQuery({
+    queryKey: ['admin', 'registrations', 'sync-status'],
+    queryFn: async () =>
+      adminRegistrationSyncStatusSchema.parse(
+        await api.get(ENDPOINTS.adminRegistrationSyncStatus())
+      ),
+  });
+}
+
+export function useAdminRegistrationsQuery({
+  page = 1,
+  limit = 25,
+  q,
+}: { page?: number; limit?: number; q?: string } = {}) {
+  const api = useApi();
+
+  return useQuery({
+    queryKey: ['admin', 'registrations', 'list', page, limit, q],
+    queryFn: async () =>
+      adminRegistrationListSchema.parse(
+        await api.get(
+          ENDPOINTS.adminRegistrations({ page, limit, ...(q ? { q } : {}) })
+        )
+      ),
+  });
+}
+
+export function useAdminRegistrationClubsQuery({
+  page = 1,
+  limit = 25,
+  q,
+}: { page?: number; limit?: number; q?: string } = {}) {
+  const api = useApi();
+
+  return useQuery({
+    queryKey: ['admin', 'registrations', 'clubs', page, limit, q],
+    queryFn: async () =>
+      adminClubListSchema.parse(
+        await api.get(
+          ENDPOINTS.adminRegistrationClubs({ page, limit, ...(q ? { q } : {}) })
+        )
+      ),
+  });
+}
+
+export function useAdminRegistrationOrisSyncMutation() {
+  const api = useApi();
+
+  return useMutation({
+    mutationFn: async (input: AdminRegistrationSyncTriggerInput) =>
+      adminRegistrationSyncTriggerResultSchema.parse(
+        await api.post(ENDPOINTS.adminRegistrationOrisSync(), input)
       ),
   });
 }

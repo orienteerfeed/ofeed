@@ -1,34 +1,41 @@
 # OFeed Helm Chart
 
-Tento chart nasazuje OFeed aplikaci do k3s:
+Chart nasazuje `web`, `api`, volitelný `board` a Argo CD `PreSync` migrační Job
+z image `ops`. MariaDB/MySQL je externí služba.
 
-- frontend (`web`) + backend (`api`) + migrační job
-- databáze se nenasazuje z chartu (očekává se externí MariaDB/MySQL)
-- `DATABASE_URL` a `JWT_TOKEN_SECRET_KEY` se načítají z HashiCorp Vault přes
-  Vault Agent Injector
-- API image používá built runtime `node dist/index.js`; Vault env se načítá v
-  image entrypointu, takže deployment nemusí přepisovat command
-- produkční map tiles používají same-origin proxy `/rest/v1/maps/tiles/...` a
-  krátkodobou same-site cookie session
+## Image a GitOps
 
-## Install
+Každý workload používá explicitní immutable tag `X.Y.Z` z GHCR. GitOps values v
+samostatném repozitáři musí změnit všechny čtyři tagy společně. Chart tagy
+vyžaduje, aby Argo CD nikdy omylem nenasadil neoznačený image.
 
 ```bash
-helm upgrade --install ofeed ./deploy/helm/ofeed \
-  --namespace ofeed \
-  --create-namespace
+helm template ofeed ./deploy/helm/ofeed \
+  --set api.image.tag=1.2.3 \
+  --set web.image.tag=1.2.3 \
+  --set ops.image.tag=1.2.3 \
+  --set board.image.tag=1.2.3
 ```
 
-## Required Vault values
+## Runtime configuration
 
-```bash
-helm upgrade --install ofeed ./deploy/helm/ofeed \
-  --namespace ofeed \
-  --create-namespace \
-  --set vault.role=ofeed-api \
-  --set vault.authPath=auth/kubernetes \
-  --set vault.secretPath=kv/data/ofeed/api
-```
+`api.env` obsahuje běžnou serverovou konfiguraci. Citlivé hodnoty poskytni
+jednou z těchto cest:
 
-Podrobné nasazení je v
-`/Users/martinkrivda/Workspace/orienteerfeed/docs/DEPLOYMENT_K3S.md`.
+- `api.envFrom` a `ops.envFrom` s Kubernetes SecretRef;
+- volitelný Vault Agent Injector (`vault.enabled=true`).
+
+Explicitní proměnné podu mají přednost před hodnotou se stejným názvem z Vault
+souboru. Pro migrace nastav stejný zdroj databázového připojení také pro `ops`.
+
+`web.env` a `board.env` jsou veřejné hodnoty, ze kterých Nginx vytvoří
+`/runtime-config.js`; nepřidávej do nich hesla ani klíče.
+
+## Vault
+
+Při `vault.enabled=true` chart vyžaduje `vault.role` a `vault.secretPath`.
+`vault.secretKeys` určuje přesné klíče exportované do souboru Vault Agentu,
+například `DATABASE_URL`, `JWT_TOKEN_SECRET_KEY` a `MAPY_API_KEY`.
+
+Podrobný Argo CD a Vault postup je v
+[`docs/DEPLOYMENT_ARGOCD.md`](../../../docs/DEPLOYMENT_ARGOCD.md).

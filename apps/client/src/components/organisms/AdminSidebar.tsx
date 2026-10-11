@@ -18,6 +18,7 @@ import { Link, useLocation } from '@tanstack/react-router';
 import {
   CalendarDays,
   ExternalLink,
+  IdCard,
   LayoutDashboard,
   Medal,
   Megaphone,
@@ -33,7 +34,8 @@ type AdminNavItemKey =
   | 'users'
   | 'events'
   | 'systemMessages'
-  | 'ranking';
+  | 'ranking'
+  | 'registrations';
 
 type AdminSidebarProps = {
   activeItem: AdminNavItemKey;
@@ -89,6 +91,13 @@ export function AdminSidebar({ activeItem }: AdminSidebarProps) {
       label: t('Pages.Admin.Navigation.CzechRanking'),
       icon: Medal,
       active: activeItem === 'ranking',
+    },
+    {
+      key: 'registrations' as const,
+      to: PATHNAMES.adminRegistrations().to,
+      label: t('Pages.Admin.Navigation.Registrations'),
+      icon: IdCard,
+      active: activeItem === 'registrations',
     },
   ];
 

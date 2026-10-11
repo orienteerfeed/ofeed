@@ -2,6 +2,7 @@ export * from './AlertDescription';
 export * from './AlertTitle';
 export * from './BackLink';
 export * from './ButtonWithSpinner';
+export * from './CartButton';
 export * from './ConfirmDialog';
 export * from './DragDropContainer';
 export * from './Dropdown';

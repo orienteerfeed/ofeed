@@ -46,6 +46,18 @@ describe('computeClassCapacity — FreeStart mode', () => {
     expect(result.isFull).toBe(true);
     expect(result.availableCount).toBe(0);
   });
+
+  it('subtracts pending entries that have not yet become competitors', () => {
+    expect(
+      computeClassCapacity({
+        effectiveStartMode: 'FreeStart',
+        maxNumberOfCompetitors: 20,
+        competitorCount: 12,
+        pendingEntryCount: 3,
+        vacancyCount: 0,
+      }),
+    ).toEqual({ availableCount: 5, capacityMode: 'FreeStart', isFull: false });
+  });
 });
 
 describe('computeClassCapacity — StartSlot mode', () => {

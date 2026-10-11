@@ -26,6 +26,8 @@ const baseClass = {
   lateEntryFeeDisabled: false,
   awardedPlaces: 3,
   startMode: null,
+  startWindowFrom: null,
+  startWindowTo: null,
   __typename: 'Class',
 };
 

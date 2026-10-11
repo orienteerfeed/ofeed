@@ -25,8 +25,8 @@ Before running the full collection:
 - Put Czech ranking CSV exports under `fixtures/czech-ranking`.
 - The image upload scenario uses `fixtures/images/ofeed-event-image.png`.
 - In Postman Desktop, set your Working Directory to `apps/server/postman`.
-- The setup folder now also smoke-tests `/`, `/health/*`, `/metrics`, `/doc`,
-  `/reference`, `/graphql`, and the map tile session/raster endpoints.
+- The setup folder now also smoke-tests `/`, `/healthz`, `/readyz`, `/metrics`,
+  `/doc`, `/reference`, `/graphql`, and the map tile session/raster endpoints.
 - Live external-provider testing happens in `03 - External Import` through
   `/rest/v1/events/import/search` and `/rest/v1/events/import/preview`. The
   collection now picks a random search result, previews it, and uses the

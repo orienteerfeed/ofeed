@@ -4,6 +4,7 @@ import {
   createFastestSplitChartReferenceTimes,
   createSplitChartCheckpoints,
   createInitialSplitChartVisibility,
+  createSplitChartDistances,
   DEFAULT_VISIBLE_SPLIT_CHART_RUNNERS,
   hasSplitChartData,
 } from '../../../src/pages/Event/split-chart.utils';
@@ -14,7 +15,7 @@ describe('split chart utils', () => {
       hasSplitChartData({
         id: '1',
         splits: [{ controlCode: '31', time: 120 }],
-      }),
+      })
     ).toBe(true);
     expect(hasSplitChartData({ id: '2', time: 900, splits: [] })).toBe(true);
     expect(hasSplitChartData({ id: '3', splits: [] })).toBe(false);
@@ -103,8 +104,113 @@ describe('split chart utils', () => {
             { controlCode: '32', time: 205 },
           ],
         },
-      ]),
+      ])
     ).toEqual([0, 100, 195, 275]);
+  });
+
+  describe('createSplitChartDistances', () => {
+    const checkpoints = createSplitChartCheckpoints([
+      {
+        id: 'a',
+        time: 300,
+        splits: [
+          { controlCode: '31', time: 100 },
+          { controlCode: '32', time: 220 },
+        ],
+      },
+    ]);
+
+    it('maps checkpoints onto cumulative course distances', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '32', distance: 3800 },
+          ],
+        })
+      ).toEqual([0, 900, 3800, 4200]);
+    });
+
+    it('matches numeric split API codes to string course codes, including repeated controls', () => {
+      const apiCheckpoints = createSplitChartCheckpoints([
+        {
+          id: 'a',
+          time: 300,
+          splits: [
+            { controlCode: 31, time: 100 },
+            { controlCode: 32, time: 180 },
+            { controlCode: 31, time: 250 },
+          ],
+        },
+      ]);
+
+      expect(apiCheckpoints.map(checkpoint => checkpoint.controlCode)).toEqual([
+        'START',
+        '31',
+        '32',
+        '31',
+        'FINISH',
+      ]);
+      expect(
+        createSplitChartDistances(apiCheckpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '45', distance: 1500 },
+            { controlCode: '32', distance: 2100 },
+            { controlCode: '31', distance: 3800 },
+          ],
+        }),
+      ).toEqual([0, 900, 2100, 3800, 4200]);
+    });
+
+    it('falls back to even spacing without course data', () => {
+      expect(createSplitChartDistances(checkpoints, null)).toBeNull();
+    });
+
+    it('skips course controls that produced no split', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '45', distance: 2100 },
+            { controlCode: '32', distance: 3800 },
+          ],
+        })
+      ).toEqual([0, 900, 3800, 4200]);
+    });
+
+    it('falls back when a split control is missing from the course', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [{ controlCode: '31', distance: 900 }],
+        })
+      ).toBeNull();
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '32', distance: 900 },
+            { controlCode: '31', distance: 3800 },
+          ],
+        })
+      ).toBeNull();
+    });
+
+    it('falls back when distances are not strictly increasing', () => {
+      expect(
+        createSplitChartDistances(checkpoints, {
+          totalLength: 3800,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '32', distance: 3800 },
+          ],
+        })
+      ).toBeNull();
+    });
   });
 
   it('shows only the top runners with split data by default', () => {
@@ -116,7 +222,7 @@ describe('split chart utils', () => {
     ]);
 
     expect(Object.values(visibility).filter(Boolean)).toHaveLength(
-      DEFAULT_VISIBLE_SPLIT_CHART_RUNNERS,
+      DEFAULT_VISIBLE_SPLIT_CHART_RUNNERS
     );
     expect(visibility).toEqual({
       a: true,
@@ -137,7 +243,7 @@ describe('split chart utils', () => {
         a: false,
         b: true,
         c: false,
-      },
+      }
     );
 
     expect(visibility).toEqual({

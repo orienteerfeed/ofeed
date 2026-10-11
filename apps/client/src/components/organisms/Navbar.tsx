@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { NavLink } from '../../templates/MainPageLayout';
 import { ExternalLink } from '../atoms';
 import {
+  CartButton,
   EventSearchDialog,
   LanguageSelector,
   NotificationBell,
@@ -91,6 +92,7 @@ export function Navbar({ navLinks, t }: NavbarProps) {
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-1 sm:flex">
             <EventSearchDialog />
+            <CartButton />
             {isLoggedIn && <NotificationBell />}
             <LanguageSelector />
             <ThemeToggleButton />
@@ -125,6 +127,7 @@ export function Navbar({ navLinks, t }: NavbarProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <EventSearchDialog />
+                    <CartButton />
                     {isLoggedIn && <NotificationBell />}
                     <LanguageSelector />
                     <ThemeToggleButton />
@@ -144,9 +147,7 @@ export function Navbar({ navLinks, t }: NavbarProps) {
                         rel="noopener noreferrer"
                       >
                         {link.label}
-                        <span className="text-xs text-muted-foreground">
-                          ↗
-                        </span>
+                        <span className="text-xs text-muted-foreground">↗</span>
                       </a>
                     ) : (
                       <Link

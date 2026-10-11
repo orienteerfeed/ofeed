@@ -6,6 +6,7 @@
     "PORT",
     "API_BASE_URL",
     "DATABASE_URL",
+    "CLIENT_APP_URL",
     "CORS_ORIGIN",
     "CORS_METHODS",
     "CORS_HEADERS",
@@ -42,7 +43,7 @@
       "dependsOn": ["^type-check"]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^build", "^test"]
     },
     "test:watch": {
       "cache": false,

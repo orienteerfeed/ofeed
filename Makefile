@@ -19,19 +19,19 @@ set-compose-file:
 	@mv $(ENV_FILE).tmp $(ENV_FILE)
 
 use-mysql:
-	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.mysql.yaml
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=compose.yaml:compose.mysql.yaml
 
 use-minio:
-	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.minio.yaml
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=compose.yaml:compose.minio.yaml
 
 use-traefik:
-	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.traefik.yaml
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=compose.yaml:compose.traefik.yaml
 
 use-infra-traefik:
-	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.infra.yaml:docker-compose.traefik.yaml
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=compose.yaml:compose.infra.yaml:compose.traefik.yaml
 
 use-scaled:
-	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.scaled.yaml
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=compose.yaml:compose.scaled.yaml
 
 use-traefik-scaled:
-	$(MAKE) set-compose-file COMPOSE_FILE_VAL=docker-compose.yaml:docker-compose.scaled.yaml:docker-compose.traefik.yaml
+	$(MAKE) set-compose-file COMPOSE_FILE_VAL=compose.yaml:compose.scaled.yaml:compose.traefik.yaml

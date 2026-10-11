@@ -1,6 +1,7 @@
 export * from './About';
 export * from './Admin';
 export * from './Auth';
+export * from './Checkout';
 export * from './Event';
 export * from './Home';
 export * from './MyEvents';

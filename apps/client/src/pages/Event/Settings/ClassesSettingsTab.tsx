@@ -47,6 +47,8 @@ export const EVENT_CLASSES = gql`
       lateEntryFeeDisabled
       awardedPlaces
       startMode
+      startWindowFrom
+      startWindowTo
     }
   }
 `;
@@ -84,6 +86,8 @@ export type ClassRow = {
   lateEntryFeeDisabled: boolean;
   awardedPlaces: number | null;
   startMode: string | null;
+  startWindowFrom: string | null;
+  startWindowTo: string | null;
 };
 
 type EventClassesData = { eventClasses: ClassRow[] | null };
@@ -779,6 +783,8 @@ export const ClassesSettingsTab = ({
         classId={startTimesClass?.id ?? null}
         className={startTimesClass?.name ?? ''}
         timezone={timezone}
+        startWindowFrom={startTimesClass?.startWindowFrom ?? null}
+        startWindowTo={startTimesClass?.startWindowTo ?? null}
         open={startTimesClass !== null}
         onOpenChange={open => {
           if (!open) setStartTimesClass(null);

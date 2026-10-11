@@ -1,4 +1,4 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -29,6 +29,43 @@ spec:
           {{- end }}
     {{- end }}
   {{- with .Values.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- if and .Values.board.enabled .Values.board.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ofeed.boardServiceName" . }}
+  labels:
+    {{- include "ofeed.labels" . | nindent 4 }}
+    app.kubernetes.io/component: board
+  {{- with .Values.board.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.board.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    {{- range .Values.board.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "ofeed.boardServiceName" $ }}
+                port:
+                  number: {{ $.Values.board.service.port }}
+          {{- end }}
+    {{- end }}
+  {{- with .Values.board.ingress.tls }}
   tls:
     {{- toYaml . | nindent 4 }}
   {{- end }}

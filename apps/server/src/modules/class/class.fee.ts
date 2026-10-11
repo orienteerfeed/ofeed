@@ -2,21 +2,21 @@
  * Pure entry-fee computation for a class. No DB access, no side effects —
  * directly unit-testable.
  *
- * The stored `Class.fee` is the gross price (incl. VAT) a competitor pays. After
- * the event's entry deadline (`entriesCloseAt`) an optional global percentage
- * surcharge (`lateEntryFeePercent`) is applied. The VAT breakdown is derived
- * from the gross price only when the event is a VAT payer; otherwise net equals
- * gross and VAT is zero.
+ * The stored `Class.fee` is the base gross price (incl. VAT). When configured,
+ * the event-wide percentage surcharge (`lateEntryFeePercent`) is applied to
+ * every class except those explicitly opting out. The VAT breakdown is derived
+ * from the effective gross price only when the event is a VAT payer; otherwise
+ * net equals gross and VAT is zero.
  */
 
 export interface ComputeClassFeeInput {
   /** Base gross fee stored on the class, or null when no fee is set. */
   baseFee: number | null;
-  /** Current time, compared against the deadline. */
+  /** Current time, retained as part of the shared entry-pricing context. */
   now: Date;
-  /** Event entry deadline; the surcharge applies only after it. */
+  /** Event entry deadline, retained as part of the shared entry-pricing context. */
   entriesCloseAt: Date | null;
-  /** Global percentage surcharge after the deadline (e.g. 50 for +50 %). */
+  /** Global percentage surcharge over the base fee (e.g. 50 for +50 %). */
   lateEntryFeePercent: number | null;
   /** Whether this class opts out of the late-entry surcharge. */
   lateEntryFeeDisabled?: boolean;
@@ -27,7 +27,7 @@ export interface ComputeClassFeeInput {
 }
 
 export interface ComputedClassFee {
-  /** Effective gross price after any late-entry surcharge. */
+  /** Effective gross price after the configured surcharge. */
   currentFee: number | null;
   /** Net price (excl. VAT). Equals `currentFee` for non-payers. */
   feeNet: number | null;
@@ -40,23 +40,13 @@ function round2(value: number): number {
 }
 
 export function computeClassFee(input: ComputeClassFeeInput): ComputedClassFee {
-  const {
-    baseFee,
-    now,
-    entriesCloseAt,
-    lateEntryFeePercent,
-    lateEntryFeeDisabled = false,
-    vatPayer,
-    vatRate,
-  } = input;
+  const { baseFee, lateEntryFeePercent, lateEntryFeeDisabled = false, vatPayer, vatRate } = input;
 
   if (baseFee === null) {
     return { currentFee: null, feeNet: null, feeVat: null };
   }
 
-  const afterDeadline = entriesCloseAt !== null && now.getTime() > entriesCloseAt.getTime();
-  const surchargePercent =
-    afterDeadline && !lateEntryFeeDisabled && lateEntryFeePercent ? lateEntryFeePercent : 0;
+  const surchargePercent = !lateEntryFeeDisabled && lateEntryFeePercent ? lateEntryFeePercent : 0;
   const currentFee = round2(baseFee * (1 + surchargePercent / 100));
 
   if (vatPayer && vatRate) {

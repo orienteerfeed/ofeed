@@ -91,4 +91,15 @@ describe('event routes (hono)', () => {
 
     expect(response.status).toBe(401);
   });
+
+  it('returns 401 for DELETE /:eventId/image without jwt auth context', async () => {
+    const app = new Hono();
+    app.route('/', eventRouter as any);
+
+    const response = await app.request('http://localhost/event_123/image', {
+      method: 'DELETE',
+    });
+
+    expect(response.status).toBe(401);
+  });
 });
