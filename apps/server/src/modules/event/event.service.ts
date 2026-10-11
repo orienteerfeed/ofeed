@@ -21,7 +21,10 @@ import {
   organisationSelect,
   upsertOrganisation,
 } from './organisation.helpers.js';
-import { deleteMatchingStartSlotVacancy, restoreStartSlotVacancy } from '../start-slot-vacancy/start-slot-vacancy.service.js';
+import {
+  deleteMatchingStartSlotVacancy,
+  restoreStartSlotVacancy,
+} from '../start-slot-vacancy/start-slot-vacancy.service.js';
 import { resolveEffectiveStartMode } from '@repo/shared';
 import {
   eventSlugMaxLength,
@@ -820,8 +823,7 @@ export const updateCompetitor = async (
   const incomingClassId = Object.prototype.hasOwnProperty.call(updateData, 'classId')
     ? (updateData.classId as number | null | undefined)
     : undefined;
-  const targetClassId =
-    incomingClassId != null ? incomingClassId : dbResponseCompetitor.classId;
+  const targetClassId = incomingClassId != null ? incomingClassId : dbResponseCompetitor.classId;
   const classIsChanging = targetClassId !== dbResponseCompetitor.classId;
 
   let targetEffectiveStartMode = oldEffectiveStartMode;
@@ -848,7 +850,10 @@ export const updateCompetitor = async (
     );
   }
 
-  if (Object.prototype.hasOwnProperty.call(updateData, 'bibNumber') && updateData.bibNumber != null) {
+  if (
+    Object.prototype.hasOwnProperty.call(updateData, 'bibNumber') &&
+    updateData.bibNumber != null
+  ) {
     const bibNumber = toIntegerId(updateData.bibNumber as string | number);
     let bibConflict;
     try {
@@ -865,7 +870,9 @@ export const updateCompetitor = async (
       throw new DatabaseError('Error checking bib number uniqueness.');
     }
     if (bibConflict) {
-      throw new ConflictError(`Bib number ${bibNumber} is already assigned to another competitor in this event.`);
+      throw new ConflictError(
+        `Bib number ${bibNumber} is already assigned to another competitor in this event.`,
+      );
     }
   }
 
@@ -1096,7 +1103,7 @@ export const storeCompetitor = async (
         eventId: true,
         startMode: true,
         maxNumberOfCompetitors: true,
-        event: { select: { defaultStartMode: true } },
+        event: { select: { defaultStartMode: true, date: true } },
         _count: { select: { competitors: true, startSlotVacancies: true } },
       },
     });
@@ -1114,7 +1121,16 @@ export const storeCompetitor = async (
     existingClass.event.defaultStartMode,
   );
 
-  if (effectiveStartMode !== 'FreeStart' && !competitorData.startTime) {
+  // Free-start competitors do not choose a slot. Keep their start timestamp
+  // anchored to the event's full date-time so downstream result and split
+  // processing has a stable event reference.
+  const freeStartTime =
+    effectiveStartMode === 'FreeStart' && existingClass.event.date
+      ? new Date(existingClass.event.date)
+      : undefined;
+  const resolvedStartTime = competitorData.startTime ?? freeStartTime;
+
+  if (effectiveStartMode !== 'FreeStart' && !resolvedStartTime) {
     throw new ValidationError('startTime is required for this start mode.');
   }
 
@@ -1154,7 +1170,9 @@ export const storeCompetitor = async (
       throw new DatabaseError('Error checking bib number uniqueness.');
     }
     if (bibConflict) {
-      throw new ConflictError(`Bib number ${bibNumber} is already assigned to another competitor in this event.`);
+      throw new ConflictError(
+        `Bib number ${bibNumber} is already assigned to another competitor in this event.`,
+      );
     }
   }
 
@@ -1197,7 +1215,7 @@ export const storeCompetitor = async (
           organisationId: organisationId,
           card: card ? toIntegerId(card) : null,
           bibNumber: competitorData.bibNumber ? toIntegerId(competitorData.bibNumber) : null,
-          startTime: competitorData.startTime ? new Date(competitorData.startTime) : null,
+          startTime: resolvedStartTime ? new Date(resolvedStartTime) : null,
           finishTime: competitorData.finishTime ? new Date(competitorData.finishTime) : null,
           time: competitorData.time || null,
           teamId:

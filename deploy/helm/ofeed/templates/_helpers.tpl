@@ -32,6 +32,10 @@ api
 {{ include "ofeed.fullname" . }}-web
 {{- end -}}
 
+{{- define "ofeed.boardServiceName" -}}
+{{ include "ofeed.fullname" . }}-board
+{{- end -}}
+
 {{- define "ofeed.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
 {{- if .Values.serviceAccount.name -}}
@@ -46,11 +50,18 @@ api
 
 {{- define "ofeed.vaultTemplate" -}}
 {{- $path := .path -}}
-{{- $dbKey := .databaseUrlKey -}}
-{{- $jwtKey := .jwtTokenSecretKey -}}
+{{- $keys := .secretKeys -}}
 {{- if eq .kvVersion "v1" -}}
-{{ printf "{{- with secret %q -}}\nexport DATABASE_URL=\"{{ index .Data %q }}\"\nexport JWT_TOKEN_SECRET_KEY=\"{{ index .Data %q }}\"\n{{- end -}}" $path $dbKey $jwtKey }}
+{{ printf "{{- with secret %q -}}\n" $path }}
+{{- range $key := $keys }}
+{{ printf "export %s=\"{{ index .Data %q }}\"\n" $key $key }}
+{{- end }}
+{{ printf "{{- end -}}" }}
 {{- else -}}
-{{ printf "{{- with secret %q -}}\nexport DATABASE_URL=\"{{ index .Data.data %q }}\"\nexport JWT_TOKEN_SECRET_KEY=\"{{ index .Data.data %q }}\"\n{{- end -}}" $path $dbKey $jwtKey }}
+{{ printf "{{- with secret %q -}}\n" $path }}
+{{- range $key := $keys }}
+{{ printf "export %s=\"{{ index .Data.data %q }}\"\n" $key $key }}
+{{- end }}
+{{ printf "{{- end -}}" }}
 {{- end -}}
 {{- end -}}

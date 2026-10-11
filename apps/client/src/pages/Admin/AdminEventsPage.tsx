@@ -1,24 +1,25 @@
 import { Link } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/atoms';
 import {
+  AdminEventsTableHeader,
   AppDataTable,
   AppPagination,
   AppRowsPerPage,
+  type AdminEventSortColumn,
+  type AdminEventTextFilterColumn,
+  type DateRangeValue,
 } from '@/components/organisms';
-import {
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { TableCell, TableRow } from '@/components/ui/table';
+import { applyTimeToDate } from '@/lib/date';
 import { PATHNAMES } from '@/lib/paths/pathnames';
 import { AdminPageLayout } from '@/templates';
 
 import { useAdminEventsQuery } from './admin.hooks';
+import { getEventSortValue } from './admin.tableHelpers';
 
 function formatDate(value: string | Date) {
   return format(new Date(value), 'dd.MM.yyyy');
@@ -28,10 +29,141 @@ export function AdminEventsPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+
+  const [sortConfig, setSortConfig] = useState<{
+    column: AdminEventSortColumn;
+    direction: 'asc' | 'desc';
+  }>({ column: 'date', direction: 'desc' });
+  const [textFilters, setTextFilters] = useState<
+    Record<AdminEventTextFilterColumn, string>
+  >({ name: '', organizer: '', authorName: '' });
+  const [dateRange, setDateRange] = useState<DateRangeValue>({
+    range: undefined,
+    fromTime: '',
+    toTime: '',
+  });
+  const [disciplineFilters, setDisciplineFilters] = useState<string[]>([]);
+  const [publishedFilters, setPublishedFilters] = useState<string[]>([]);
+  const [rankingFilters, setRankingFilters] = useState<string[]>([]);
   const { data, isLoading, error } = useAdminEventsQuery({
     page,
     limit: pageSize,
+    name: textFilters.name || undefined,
+    organizer: textFilters.organizer || undefined,
+    authorName: textFilters.authorName || undefined,
+    discipline: disciplineFilters.join(',') || undefined,
+    published: publishedFilters.join(',') || undefined,
+    ranking: rankingFilters.join(',') || undefined,
+    dateFrom: dateRange.range?.from ? applyTimeToDate(dateRange.range.from, dateRange.fromTime || '00:00:00').toISOString() : undefined,
+    dateTo: dateRange.range?.to ? applyTimeToDate(dateRange.range.to, dateRange.toTime || '23:59:59').toISOString() : undefined,
+    sortBy: sortConfig.column,
+    sortDirection: sortConfig.direction,
   });
+
+  const handleSort = (column: AdminEventSortColumn) => {
+    setPage(1);
+    setSortConfig(prev =>
+      prev.column === column
+        ? { column, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+        : { column, direction: 'asc' }
+    );
+  };
+
+  useEffect(() => setPage(1), [textFilters, dateRange, disciplineFilters, publishedFilters, rankingFilters]);
+
+  const updateTextFilter = (
+    column: AdminEventTextFilterColumn,
+    value: string
+  ) => {
+    setTextFilters(prev => ({ ...prev, [column]: value.toLowerCase() }));
+  };
+
+  const visibleEvents = useMemo(() => {
+    const items = data?.items ?? [];
+
+    const filtered = items.filter(event => {
+      if (
+        textFilters.name &&
+        !event.name.toLowerCase().includes(textFilters.name)
+      ) {
+        return false;
+      }
+      if (
+        textFilters.organizer &&
+        !(event.organizer ?? '').toLowerCase().includes(textFilters.organizer)
+      ) {
+        return false;
+      }
+      if (
+        textFilters.authorName &&
+        !(event.authorName ?? '')
+          .toLowerCase()
+          .includes(textFilters.authorName)
+      ) {
+        return false;
+      }
+      if (
+        disciplineFilters.length > 0 &&
+        !disciplineFilters.includes(event.discipline)
+      ) {
+        return false;
+      }
+      if (
+        publishedFilters.length > 0 &&
+        !publishedFilters.includes(String(event.published))
+      ) {
+        return false;
+      }
+      if (
+        rankingFilters.length > 0 &&
+        !rankingFilters.includes(String(event.ranking))
+      ) {
+        return false;
+      }
+      if (dateRange.range?.from || dateRange.range?.to) {
+        const itemTime = new Date(event.date).getTime();
+        const fromTime = dateRange.range?.from
+          ? applyTimeToDate(
+              dateRange.range.from,
+              dateRange.fromTime || '00:00:00'
+            ).getTime()
+          : null;
+        const toTime = dateRange.range?.to
+          ? applyTimeToDate(
+              dateRange.range.to,
+              dateRange.toTime || '23:59:59'
+            ).getTime()
+          : null;
+        if (fromTime && itemTime < fromTime) return false;
+        if (toTime && itemTime > toTime) return false;
+      }
+
+      return true;
+    });
+
+    return [...filtered].sort((a, b) => {
+      const aValue = getEventSortValue(a, sortConfig.column);
+      const bValue = getEventSortValue(b, sortConfig.column);
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortConfig.direction === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [
+    data,
+    textFilters,
+    disciplineFilters,
+    publishedFilters,
+    rankingFilters,
+    dateRange,
+    sortConfig,
+  ]);
 
   useEffect(() => {
     if (!data) return;
@@ -62,7 +194,7 @@ export function AdminEventsPage() {
 
         <section className="px-4 lg:px-6">
           <AppDataTable
-            data={data?.items ?? []}
+            data={visibleEvents}
             isLoading={isLoading}
             error={error}
             columnCount={7}
@@ -85,17 +217,20 @@ export function AdminEventsPage() {
               />
             }
             renderHeader={
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('Pages.Admin.Table.Event')}</TableHead>
-                  <TableHead>{t('Pages.Admin.Table.Date')}</TableHead>
-                  <TableHead>{t('Pages.Admin.Table.Organizer')}</TableHead>
-                  <TableHead>{t('Pages.Admin.Table.Discipline')}</TableHead>
-                  <TableHead>{t('Pages.Admin.Table.Owner')}</TableHead>
-                  <TableHead>{t('Pages.Admin.Table.Published')}</TableHead>
-                  <TableHead>{t('Pages.Admin.Table.Ranking')}</TableHead>
-                </TableRow>
-              </TableHeader>
+              <AdminEventsTableHeader
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                textFilters={textFilters}
+                onTextFilterChange={updateTextFilter}
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                disciplineFilters={disciplineFilters}
+                onDisciplineFiltersChange={setDisciplineFilters}
+                publishedFilters={publishedFilters}
+                onPublishedFiltersChange={setPublishedFilters}
+                rankingFilters={rankingFilters}
+                onRankingFiltersChange={setRankingFilters}
+              />
             }
             renderRow={event => (
               <TableRow key={event.id}>

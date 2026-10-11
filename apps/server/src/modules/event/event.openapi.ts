@@ -14,7 +14,12 @@ import {
   externalCompetitorUpdateBodySchema,
   generatePasswordBodySchema,
   stateChangeBodySchema,
+  updateEventRentalCardReturnedBodySchema,
 } from './event.schema.js';
+import {
+  createEntryOrderBodySchema,
+  updateEntryOrderStatusBodySchema,
+} from '../entry/entry.schema.js';
 import { createCompetitorSchema, updateCompetitorSchema } from '../../utils/validateCompetitor.js';
 import eventWriteSchema from '../../utils/validateEvent.js';
 
@@ -59,6 +64,25 @@ const eventOfficialResultsSyncRequestBodySchema = zodToOpenApiSchema(
   eventOfficialResultsSyncBodySchema,
 );
 const competitorUpdateBodySchema = zodToOpenApiSchema(updateCompetitorSchema);
+const createEntryOrderRequestBodySchema = zodToOpenApiSchema(createEntryOrderBodySchema);
+const updateEntryOrderStatusRequestBodySchema = zodToOpenApiSchema(
+  updateEntryOrderStatusBodySchema,
+);
+const updateEventRentalCardReturnedRequestBodySchema = zodToOpenApiSchema(
+  updateEventRentalCardReturnedBodySchema,
+);
+const entryIdParam = {
+  name: 'entryId',
+  in: 'path',
+  required: true,
+  schema: { type: 'string' },
+} as const;
+const cardNumberParam = {
+  name: 'cardNumber',
+  in: 'path',
+  required: true,
+  schema: { type: 'integer', minimum: 1 },
+} as const;
 const competitorExternalUpdateRequestBodySchema = zodToOpenApiSchema(
   externalCompetitorUpdateBodySchema,
 );
@@ -226,7 +250,15 @@ const connectionCheck200Schema = {
                   type: 'array',
                   items: {
                     type: 'object',
-                    required: ['ref', 'requested', 'valid', 'status', 'reason', 'resolved', 'class'],
+                    required: [
+                      'ref',
+                      'requested',
+                      'valid',
+                      'status',
+                      'reason',
+                      'resolved',
+                      'class',
+                    ],
                     properties: {
                       ref: {
                         type: 'string',
@@ -302,8 +334,7 @@ const connectionCheck422Schema = {
           msg: { type: 'string', description: 'Human-readable validation message' },
           param: {
             type: 'string',
-            description:
-              'Dot-separated path to the invalid field, or "body" for top-level errors',
+            description: 'Dot-separated path to the invalid field, or "body" for top-level errors',
           },
           location: { type: 'string', enum: ['all'] },
         },
@@ -487,6 +518,46 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       },
     },
   },
+  [`${eventsBase}/{eventId}/rental-cards/import`]: {
+    post: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventRentalCardsImport',
+      summary: 'Bulk import event rental SI chip inventory from CSV',
+      security: bearerOrBasicSecurity,
+      parameters: [eventIdParam],
+      requestBody: multipartBody({
+        type: 'object',
+        required: ['file'],
+        properties: {
+          file: { type: 'string', format: 'binary' },
+        },
+      }),
+      responses: {
+        200: okJson('Rental cards imported'),
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        404: okJson('Event not found'),
+        422: okJson('Validation error'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/rental-cards/{cardNumber}/returned`]: {
+    patch: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventUpdateRentalCardReturned',
+      summary: 'Update a rental SI chip returned status',
+      security: bearerOrBasicSecurity,
+      parameters: [eventIdParam, cardNumberParam],
+      requestBody: jsonBody(updateEventRentalCardReturnedRequestBodySchema),
+      responses: {
+        200: okJson('Rental card returned status updated'),
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        404: okJson('Rental card not found'),
+        422: okJson('Validation error'),
+      },
+    },
+  },
   [`${eventsBase}/{eventId}/connection-check`]: {
     post: {
       tags: [EVENT_OPENAPI.tag],
@@ -615,6 +686,119 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         200: okJson('Entry availability'),
         422: okJson('Event not found'),
         500: okJson('Internal server error'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/entry-stats`]: {
+    get: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventEntryStats',
+      summary: 'Public entry statistics',
+      description:
+        'Number of entered competitors and changes recorded through OFeed. Shown on the ' +
+        'event page once entries are closed. No authentication required.',
+      security: [],
+      parameters: [eventIdParam],
+      responses: {
+        200: okJson('Entry statistics'),
+        422: okJson('Validation error'),
+        500: okJson('Internal server error'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/entry-payment-methods`]: {
+    get: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventEntryPaymentMethods',
+      summary: 'Payment methods available for event entry checkout',
+      description:
+        'Returns only enabled and fully configured payment methods in the organizer-defined order. ' +
+        'No authentication required.',
+      security: [],
+      parameters: [eventIdParam],
+      responses: {
+        200: okJson('Available payment methods'),
+        404: okJson('Event not found'),
+        500: okJson('Internal server error'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/entries`]: {
+    post: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventCreateEntryOrder',
+      summary: 'Create entry order',
+      description:
+        'Creates an entry order (Entry + EntryItems) for a non-relay event. Prices are ' +
+        'computed server-side from current class fees; competitors are propagated into the ' +
+        'start list only after the order is approved and processed. Authentication is optional — ' +
+        'a valid bearer token links the order to the user account. When QR Payment is selected, ' +
+        'the immediate response includes a SPAYD/QR Platba payload for the generated order. When ' +
+        'Cash is selected, it includes a time-limited signed token for the order detail link.',
+      security: [],
+      parameters: [eventIdParam],
+      requestBody: jsonBody(createEntryOrderRequestBodySchema),
+      responses: {
+        201: okJson('Entry order created'),
+        404: okJson('Event not found'),
+        409: okJson('Entries closed, class full, or start slot unavailable'),
+        422: okJson('Validation error'),
+        500: okJson('Internal server error'),
+      },
+    },
+    get: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventListEntryOrders',
+      summary: 'List entry orders',
+      security: bearerOrBasicSecurity,
+      parameters: [eventIdParam],
+      responses: {
+        200: okJson('Entry orders'),
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        422: okJson('Validation error'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/entries/{entryId}/status`]: {
+    patch: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventUpdateEntryOrderStatus',
+      summary: 'Update entry order status',
+      description:
+        'Moves an entry order between RECEIVED, APPROVED, REJECTED, and CANCELLED. ' +
+        'PROCESSED is set only by the process endpoint. REJECTED and CANCELLED are terminal, ' +
+        'same as PROCESSED.',
+      security: bearerOrBasicSecurity,
+      parameters: [eventIdParam, entryIdParam],
+      requestBody: jsonBody(updateEntryOrderStatusRequestBodySchema),
+      responses: {
+        200: okJson('Entry order status updated'),
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        404: okJson('Entry order not found'),
+        409: okJson('Entry order already in a terminal status'),
+        422: okJson('Validation error'),
+      },
+    },
+  },
+  [`${eventsBase}/{eventId}/entries/{entryId}/process`]: {
+    post: {
+      tags: [EVENT_OPENAPI.tag],
+      operationId: 'eventProcessEntryOrder',
+      summary: 'Process entry order into competitors',
+      description:
+        'Propagates an APPROVED entry order into Competitor rows (capacity re-check, start ' +
+        'slot consumption, organisation upsert, protocol records) and marks it PROCESSED.',
+      security: bearerOrBasicSecurity,
+      parameters: [eventIdParam, entryIdParam],
+      responses: {
+        200: okJson('Entry order processed'),
+        401: okJson('Unauthorized'),
+        403: okJson('Forbidden'),
+        404: okJson('Entry order not found'),
+        409: okJson('Entry order not approved or already processed'),
+        422: okJson('Validation error'),
       },
     },
   },

@@ -51,6 +51,16 @@ export const competitorsByOrganisationInputSchema = z.object({
   organisationId: z.number().int().nullable().optional(),
 });
 
+export const competitorsByCardInputSchema = z.object({
+  eventId: z.string().min(1),
+  card: z.number().int().positive().max(999_999_999),
+});
+
+export const competitorsByRegistrationInputSchema = z.object({
+  eventId: z.string().min(1),
+  registration: z.string().trim().min(1).max(32).transform(value => value.toUpperCase()),
+});
+
 export const organisationNamesInputSchema = z.object({
   eventId: z.string(),
 });
@@ -68,6 +78,8 @@ export type StatusChangeInput = z.infer<typeof statusChangeInputSchema>;
 export type UpdateCompetitorInput = z.infer<typeof updateCompetitorInputSchema>;
 export type StoreCompetitorInput = z.infer<typeof storeCompetitorInputSchema>;
 export type CompetitorsByOrganisationInput = z.infer<typeof competitorsByOrganisationInputSchema>;
+export type CompetitorsByCardInput = z.infer<typeof competitorsByCardInputSchema>;
+export type CompetitorsByRegistrationInput = z.infer<typeof competitorsByRegistrationInputSchema>;
 export type OrganisationNamesInput = z.infer<typeof organisationNamesInputSchema>;
 export type SearchOrganisationNamesInput = z.infer<typeof searchOrganisationNamesInputSchema>;
 export type OrganisationsInput = z.infer<typeof organisationsInputSchema>;

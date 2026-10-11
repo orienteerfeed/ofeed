@@ -23,24 +23,23 @@ export const sendEmail = async ({
 }: SendEmailOptions) => {
   const msg = getMailOptions({ html, text, subject, emailTo });
 
-  (async () => {
-    try {
-      if (!resend) {
-        throw new Error('RESEND_API_KEY is not configured');
-      }
-
-      const { error } = await resend.emails.send(msg);
-
-      if (error) {
-        throw error;
-      }
-
-      onSuccess();
-    } catch (error) {
-      console.error(error);
-      onError(error);
+  try {
+    if (!resend) {
+      throw new Error('RESEND_API_KEY is not configured');
     }
-  })();
+
+    // Resend reports ordinary delivery failures through the returned `error`
+    // field; network-level failures are caught below.
+    const { error } = await resend.emails.send(msg);
+    if (error) {
+      throw error;
+    }
+
+    onSuccess();
+  } catch (error) {
+    console.error(error);
+    onError(error);
+  }
 };
 
 const getMailOptions = ({ html, text, subject, emailTo }: SendEmailOptions) => ({

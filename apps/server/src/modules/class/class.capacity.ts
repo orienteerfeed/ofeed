@@ -4,6 +4,8 @@ export interface ComputeClassCapacityInput {
   effectiveStartMode: string;
   maxNumberOfCompetitors: number | null;
   competitorCount: number;
+  /** Active entry items that have not yet been propagated into Competitor. */
+  pendingEntryCount?: number;
   vacancyCount: number;
 }
 
@@ -14,7 +16,13 @@ export interface ComputedClassCapacity {
 }
 
 export function computeClassCapacity(input: ComputeClassCapacityInput): ComputedClassCapacity {
-  const { effectiveStartMode, maxNumberOfCompetitors, competitorCount, vacancyCount } = input;
+  const {
+    effectiveStartMode,
+    maxNumberOfCompetitors,
+    competitorCount,
+    pendingEntryCount = 0,
+    vacancyCount,
+  } = input;
 
   // maxNumberOfCompetitors is always the hard cap — null means unconfigured → no capacity.
   if (maxNumberOfCompetitors === null) {
@@ -22,7 +30,7 @@ export function computeClassCapacity(input: ComputeClassCapacityInput): Computed
     return { availableCount: 0, capacityMode, isFull: true };
   }
 
-  const headroom = Math.max(0, maxNumberOfCompetitors - competitorCount);
+  const headroom = Math.max(0, maxNumberOfCompetitors - competitorCount - pendingEntryCount);
 
   if (effectiveStartMode === 'FreeStart') {
     return { availableCount: headroom, capacityMode: 'FreeStart', isFull: headroom === 0 };

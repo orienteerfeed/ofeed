@@ -165,6 +165,7 @@ export type StartMode =
 export interface EventFormData {
   id?: string;
   name: string;
+  featuredImage?: string | undefined;
   sportId: number;
   date: string;
   timezone: string;

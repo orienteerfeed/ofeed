@@ -87,13 +87,23 @@ export function formatDateWithDay(
   return format(d, DATE_FORMATS.dateWithDay, { locale: LOCALES[locale] });
 }
 
-export function formatTimeToHms(value: Date | string | number): string {
+export function formatTimeToHms(
+  value: Date | string | number,
+  options?: { dropZeroSeconds?: boolean }
+): string {
   const d = parseDate(value);
+  let result: string;
   if (!d && typeof value === 'string') {
-    return normalizeTimeInput(value) ?? '';
+    result = normalizeTimeInput(value) ?? '';
+  } else if (!d) {
+    return '';
+  } else {
+    result = format(d, DATE_FORMATS.timeHms);
   }
-  if (!d) return '';
-  return format(d, DATE_FORMATS.timeHms);
+
+  return options?.dropZeroSeconds && result.endsWith(':00')
+    ? result.slice(0, -3)
+    : result;
 }
 
 export function normalizeTimeInput(value?: string): string | undefined {
@@ -279,6 +289,22 @@ export function formatDateTimeForInput(date: Date | string | number): string {
   const d = parseDate(date);
   if (!d) return '';
   return format(d, "yyyy-MM-dd'T'HH:mm");
+}
+
+/** Apply an "HH:mm" or "HH:mm:ss" time string to a Date, returning a new Date */
+export function applyTimeToDate(date: Date, time: string): Date {
+  const [hoursRaw, minutesRaw, secondsRaw] = time.split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+  const seconds = Number(secondsRaw);
+  const result = new Date(date);
+  result.setHours(
+    Number.isFinite(hours) ? hours : 0,
+    Number.isFinite(minutes) ? minutes : 0,
+    Number.isFinite(seconds) ? seconds : 0,
+    0
+  );
+  return result;
 }
 
 function pad2(n: number): string {

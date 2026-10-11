@@ -6,15 +6,13 @@ services:
       args:
         NODE_VERSION: 24.15.0
         PNPM_VERSION: 11.4.0
-      secrets:
-        - board_env
     env_file:
       - ./.env
     environment:
-      PORT: 80
+      PORT: 8080
       BOARD_API_UPSTREAM: http://host.docker.internal:3001
     ports:
-      - '8080:80'
+      - '8080:8080'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     restart: unless-stopped
@@ -22,13 +20,9 @@ services:
       test:
         [
           'CMD-SHELL',
-          'wget -qO- http://127.0.0.1:80/healthz >/dev/null || exit 1',
+          'wget -qO- http://127.0.0.1:8080/healthz >/dev/null || exit 1',
         ]
       interval: 10s
       timeout: 3s
       retries: 10
       start_period: 10s
-
-secrets:
-  board_env:
-    file: ./.env

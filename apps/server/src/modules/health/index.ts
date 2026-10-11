@@ -1,12 +1,11 @@
 import { createRouter } from '../../lib/create-app.js';
 
-import { healthHandler, liveHandler, readyHandler } from './health.handlers.js';
-import { health, live, ready } from './health.routes.js';
+import { healthzHandler, readyzHandler } from './health.handlers.js';
+import { healthz, readyz } from './health.routes.js';
 
 const router = createRouter()
-  .openapi(live, liveHandler as never)
-  .openapi(ready, readyHandler as never)
-  .openapi(health, healthHandler as never);
+  .openapi(healthz, healthzHandler as never)
+  .openapi(readyz, readyzHandler as never);
 
 export default router;
 export * from './health.handlers.js';

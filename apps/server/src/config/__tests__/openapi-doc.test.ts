@@ -1,14 +1,29 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from 'vitest';
 
-import app from "../../app.js";
-import { OPENAPI_PATHS } from "../openapi.paths.js";
-import { AUTH_OPENAPI } from "../../modules/auth/auth.openapi.js";
-import { EVENT_OPENAPI } from "../../modules/event/event.openapi.js";
-import { UPLOAD_OPENAPI } from "../../modules/upload/upload.openapi.js";
+import app from '../../app.js';
+import { OPENAPI_PATHS } from '../openapi.paths.js';
+import { AUTH_OPENAPI } from '../../modules/auth/auth.openapi.js';
+import { EVENT_OPENAPI } from '../../modules/event/event.openapi.js';
+import { HEALTH_OPENAPI } from '../../modules/health/health.openapi.js';
+import { UPLOAD_OPENAPI } from '../../modules/upload/upload.openapi.js';
 
-describe("openapi doc", () => {
-  it("documents all registered API endpoint groups", async () => {
-    const response = await app.request("/doc");
+describe('openapi doc', () => {
+  it('exposes only the standard liveness and readiness probes', async () => {
+    const response = await app.request('/doc');
+    expect(response.status).toBe(200);
+
+    const document = await response.json();
+    const paths = document?.paths ?? {};
+
+    expect(paths[HEALTH_OPENAPI.healthzPath]?.get).toBeDefined();
+    expect(paths[HEALTH_OPENAPI.readyzPath]?.get).toBeDefined();
+    expect(paths['/health']).toBeUndefined();
+    expect(paths['/health/live']).toBeUndefined();
+    expect(paths['/health/ready']).toBeUndefined();
+  });
+
+  it('documents all registered API endpoint groups', async () => {
+    const response = await app.request('/doc');
 
     expect(response.status).toBe(200);
 
@@ -24,8 +39,8 @@ describe("openapi doc", () => {
     }
   });
 
-  it("documents request body schemas for write endpoints", async () => {
-    const response = await app.request("/doc");
+  it('documents request body schemas for write endpoints', async () => {
+    const response = await app.request('/doc');
     expect(response.status).toBe(200);
 
     const document = await response.json();
@@ -33,137 +48,137 @@ describe("openapi doc", () => {
 
     const checks = [
       {
-        method: "post",
+        method: 'post',
         path: `${AUTH_OPENAPI.basePath}/signin`,
-        contentType: "application/json",
-        properties: ["username", "password"],
-        required: ["username", "password"],
+        contentType: 'application/json',
+        properties: ['username', 'password'],
+        required: ['username', 'password'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${AUTH_OPENAPI.basePath}/signup`,
-        contentType: "application/json",
-        properties: ["email", "password", "firstname", "lastname"],
-        required: ["email", "password", "firstname", "lastname"],
+        contentType: 'application/json',
+        properties: ['email', 'password', 'firstname', 'lastname'],
+        required: ['email', 'password', 'firstname', 'lastname'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${AUTH_OPENAPI.basePath}/request-password-reset`,
-        contentType: "application/json",
-        properties: ["email"],
-        required: ["email"],
+        contentType: 'application/json',
+        properties: ['email'],
+        required: ['email'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${AUTH_OPENAPI.basePath}/reset-password`,
-        contentType: "application/json",
-        properties: ["token", "newPassword"],
-        required: ["token", "newPassword"],
+        contentType: 'application/json',
+        properties: ['token', 'newPassword'],
+        required: ['token', 'newPassword'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${AUTH_OPENAPI.basePath}/oauth2/token`,
-        contentType: "application/x-www-form-urlencoded",
-        properties: ["grant_type", "scope"],
-        required: ["grant_type"],
+        contentType: 'application/x-www-form-urlencoded',
+        properties: ['grant_type', 'scope'],
+        required: ['grant_type'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${AUTH_OPENAPI.basePath}/generate-oauth2-credentials`,
-        contentType: "application/json",
-        properties: ["grants", "scopes", "redirectUris"],
-        required: ["grants"],
+        contentType: 'application/json',
+        properties: ['grants', 'scopes', 'redirectUris'],
+        required: ['grants'],
       },
       {
-        method: "post",
+        method: 'post',
         path: EVENT_OPENAPI.basePath,
-        contentType: "application/json",
-        properties: ["sportId", "name", "date", "timezone", "organizer", "location", "zeroTime"],
-        required: ["sportId", "name", "date", "timezone", "organizer", "location", "zeroTime"],
+        contentType: 'application/json',
+        properties: ['sportId', 'name', 'date', 'timezone', 'organizer', 'location', 'zeroTime'],
+        required: ['sportId', 'name', 'date', 'timezone', 'organizer', 'location', 'zeroTime'],
       },
       {
-        method: "put",
+        method: 'put',
         path: `${EVENT_OPENAPI.basePath}/{eventId}`,
-        contentType: "application/json",
-        properties: ["sportId", "name", "date", "timezone", "organizer", "location", "zeroTime"],
-        required: ["sportId", "name", "date", "timezone", "organizer", "location", "zeroTime"],
+        contentType: 'application/json',
+        properties: ['sportId', 'name', 'date', 'timezone', 'organizer', 'location', 'zeroTime'],
+        required: ['sportId', 'name', 'date', 'timezone', 'organizer', 'location', 'zeroTime'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${EVENT_OPENAPI.basePath}/{eventId}/image`,
-        contentType: "multipart/form-data",
-        properties: ["file"],
-        required: ["file"],
+        contentType: 'multipart/form-data',
+        properties: ['file'],
+        required: ['file'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${EVENT_OPENAPI.basePath}/generate-password`,
-        contentType: "application/json",
-        properties: ["eventId"],
-        required: ["eventId"],
+        contentType: 'application/json',
+        properties: ['eventId'],
+        required: ['eventId'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${EVENT_OPENAPI.basePath}/import/search`,
-        contentType: "application/json",
-        properties: ["provider", "query", "apiKey", "limit"],
-        required: ["provider", "query"],
+        contentType: 'application/json',
+        properties: ['provider', 'query', 'apiKey', 'limit'],
+        required: ['provider', 'query'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${EVENT_OPENAPI.basePath}/import/preview`,
-        contentType: "application/json",
-        properties: ["provider", "externalEventId", "apiKey"],
-        required: ["provider", "externalEventId"],
+        contentType: 'application/json',
+        properties: ['provider', 'externalEventId', 'apiKey'],
+        required: ['provider', 'externalEventId'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${EVENT_OPENAPI.basePath}/revoke-password`,
-        contentType: "application/json",
-        properties: ["eventId"],
-        required: ["eventId"],
+        contentType: 'application/json',
+        properties: ['eventId'],
+        required: ['eventId'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${EVENT_OPENAPI.basePath}/{eventId}/competitors`,
-        contentType: "application/json",
-        properties: ["origin", "classId", "classExternalId", "firstname", "lastname"],
-        required: ["origin", "firstname", "lastname"],
+        contentType: 'application/json',
+        properties: ['origin', 'classId', 'classExternalId', 'firstname', 'lastname'],
+        required: ['origin', 'firstname', 'lastname'],
       },
       {
-        method: "put",
+        method: 'put',
         path: `${EVENT_OPENAPI.basePath}/{eventId}/competitors/{competitorId}`,
-        contentType: "application/json",
-        properties: ["origin", "firstname", "lastname", "status", "splits"],
-        required: ["origin"],
+        contentType: 'application/json',
+        properties: ['origin', 'firstname', 'lastname', 'status', 'splits'],
+        required: ['origin'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${EVENT_OPENAPI.basePath}/{eventId}/competitors/{competitorId}/status-change`,
-        contentType: "application/json",
-        properties: ["origin", "status"],
-        required: ["origin", "status"],
+        contentType: 'application/json',
+        properties: ['origin', 'status'],
+        required: ['origin', 'status'],
       },
       {
-        method: "put",
+        method: 'put',
         path: `${EVENT_OPENAPI.basePath}/{eventId}/competitors/{competitorExternalId}/external-id`,
-        contentType: "application/json",
-        properties: ["origin", "useExternalId", "firstname", "lastname", "status", "splits"],
-        required: ["origin", "useExternalId"],
+        contentType: 'application/json',
+        properties: ['origin', 'useExternalId', 'firstname', 'lastname', 'status', 'splits'],
+        required: ['origin', 'useExternalId'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${UPLOAD_OPENAPI.basePath}/iof`,
-        contentType: "multipart/form-data",
-        properties: ["eventId", "validateXml", "file"],
-        required: ["eventId", "file"],
+        contentType: 'multipart/form-data',
+        properties: ['eventId', 'validateXml', 'file'],
+        required: ['eventId', 'file'],
       },
       {
-        method: "post",
+        method: 'post',
         path: `${UPLOAD_OPENAPI.basePath}/czech-ranking`,
-        contentType: "multipart/form-data",
-        properties: ["file"],
-        required: ["file"],
+        contentType: 'multipart/form-data',
+        properties: ['file'],
+        required: ['file'],
       },
     ] as const;
 
@@ -173,7 +188,7 @@ describe("openapi doc", () => {
 
       const schema = operation?.requestBody?.content?.[check.contentType]?.schema;
       expect(schema).toBeDefined();
-      expect(schema?.type).toBe("object");
+      expect(schema?.type).toBe('object');
       const schemaPropertyKeys = Object.keys(schema?.properties ?? {});
       expect(
         schemaPropertyKeys.length,

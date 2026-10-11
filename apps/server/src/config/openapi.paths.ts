@@ -5,6 +5,10 @@ import { MAP_OPENAPI, MAP_OPENAPI_PATHS } from '../modules/map/map.openapi.js';
 import { GRAPHQL_OPENAPI, GRAPHQL_OPENAPI_PATHS } from '../modules/graphql/graphql.openapi.js';
 import { UPLOAD_OPENAPI, UPLOAD_OPENAPI_PATHS } from '../modules/upload/upload.openapi.js';
 import { MEOS_OPENAPI, MEOS_OPENAPI_PATHS } from '../modules/meos/meos.openapi.js';
+import {
+  REGISTRATION_OPENAPI,
+  REGISTRATION_OPENAPI_PATHS,
+} from '../modules/registration/registration.openapi.js';
 import { USER_OPENAPI, USER_OPENAPI_PATHS } from '../modules/user/user.openapi.js';
 import { okJson, okText } from './openapi.helpers.js';
 import type { OpenApiPathItem } from './openapi.types.js';
@@ -22,6 +26,10 @@ export const OPENAPI_TAGS = [
   },
   { name: MAP_OPENAPI.tag, description: 'Map tile proxy endpoints' },
   { name: MEOS_OPENAPI.tag, description: 'MeOS MOP and MIP protocol endpoints' },
+  {
+    name: REGISTRATION_OPENAPI.tag,
+    description: 'Public registration and club directory lookup endpoints',
+  },
   { name: UPLOAD_OPENAPI.tag, description: 'Upload and import endpoints' },
   { name: USER_OPENAPI.tag, description: 'User scoped endpoints' },
 ] as const;
@@ -56,5 +64,6 @@ export const OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   ...MAP_OPENAPI_PATHS,
   ...UPLOAD_OPENAPI_PATHS,
   ...MEOS_OPENAPI_PATHS,
+  ...REGISTRATION_OPENAPI_PATHS,
   ...USER_OPENAPI_PATHS,
 };

@@ -18,11 +18,12 @@ import {
 } from '@/lib/course-info';
 import { Event } from '@/types/event';
 import { Link } from '@tanstack/react-router';
-import { Calendar, Clock, MapPin, Trophy, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Trophy, UserPlus, Users } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CountryFlag } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
+import { EventEntriesView } from './Entries';
 
 interface EventInfoViewProps {
   event: Event;
@@ -31,6 +32,10 @@ interface EventInfoViewProps {
 export function EventInfoView({ event }: EventInfoViewProps) {
   const { t, i18n } = useTranslation();
   const localeKey = getLocaleKey(i18n.language);
+
+  // Entries are shown only for non-relay events with configured entries.
+  const entriesEnabled =
+    !event.relay && Boolean(event.statusSummary?.entriesConfigured);
 
   const sortedClasses = React.useMemo(() => {
     if (!event.classes) return [];
@@ -338,6 +343,20 @@ export function EventInfoView({ event }: EventInfoViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {entriesEnabled && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-primary" />
+              {t('Pages.Event.Tabs.Entries')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EventEntriesView event={event} />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

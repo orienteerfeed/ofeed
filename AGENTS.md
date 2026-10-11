@@ -73,8 +73,8 @@ Run from the repository root unless noted otherwise.
 - `pnpm test:server`: run server tests only.
 - `pnpm db:generate`: run Prisma generate through Turbo.
 - `pnpm db:migrate`: run Prisma migrations through Turbo.
-- `docker compose -f docker-compose.mysql.yaml up -d mysql`: start local
-  MariaDB/MySQL for backend work.
+- `docker compose -f compose.mysql.yaml up -d mysql`: start local MariaDB/MySQL
+  for backend work.
 
 Prefer `pnpm --filter ./apps/client ...` or `pnpm --filter ./apps/server ...`
 when validating a single workspace. Use the `:win` script variants on Windows

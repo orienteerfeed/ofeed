@@ -100,9 +100,8 @@ architecture:
     openapi_json: /doc
     graphql_http_ws: /graphql
     health:
-      - /health/live
-      - /health/ready
-      - /health
+      - /healthz
+      - /readyz
     metrics: /metrics
 
 coding_conventions:

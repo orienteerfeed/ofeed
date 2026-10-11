@@ -173,14 +173,14 @@
           ]
         },
         {
-          "name": "[GET] /readyz - Service ready",
+          "name": "[GET] /healthz - Liveness probe",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/readyz",
+              "raw": "{{baseUrl}}/healthz",
               "host": ["{{baseUrl}}"],
-              "path": ["readyz"]
+              "path": ["healthz"]
             }
           },
           "response": [],
@@ -280,9 +280,9 @@
                   "}",
                   "",
                   "assertStatus(200);",
-                  "pm.test('Ready response is OK', function () {",
-                  "  pm.expect(pm.response.text()).to.eql('OK');",
-                  "});",
+                  "const body = getJson();",
+                  "pm.test('Status is alive', function () { pm.expect(body.status).to.eql('alive'); });",
+                  "pm.test('Timestamp is present', function () { pm.expect(body.timestamp).to.be.a('string').and.not.empty; });",
                   ""
                 ]
               }
@@ -317,43 +317,14 @@
           ]
         },
         {
-          "name": "[GET] /health/live - Liveness probe",
+          "name": "[GET] /readyz - Readiness probe",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/health/live",
+              "raw": "{{baseUrl}}/readyz",
               "host": ["{{baseUrl}}"],
-              "path": ["health", "live"]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
-                  "const body = pm.response.json();",
-                  "pm.test('Status is alive', function () { pm.expect(body.status).to.eql('alive'); });",
-                  "pm.test('Timestamp is present', function () { pm.expect(body.timestamp).to.be.a('string').and.not.empty; });",
-                  ""
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "[GET] /health/ready - Readiness probe",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/health/ready",
-              "host": ["{{baseUrl}}"],
-              "path": ["health", "ready"]
+              "path": ["readyz"]
             }
           },
           "response": [],
@@ -369,38 +340,6 @@
                   "const body = pm.response.json();",
                   "pm.test('Ready payload has status', function () { pm.expect(['ready', 'not_ready']).to.include(body.status); });",
                   "pm.test('Ready payload has checks array', function () { pm.expect(body.checks).to.be.an('array'); });",
-                  ""
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "[GET] /health - Full health check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const status = pm.response.code;",
-                  "pm.test('Status is 200 or 503', function () { pm.expect([200, 503]).to.include(status); });",
-                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
-                  "const body = pm.response.json();",
-                  "pm.test('Health payload has status', function () { pm.expect(['UP', 'DEGRADED', 'DOWN']).to.include(body.status); });",
-                  "pm.test('Health payload has version', function () { pm.expect(body.version).to.be.a('string').and.not.empty; });",
-                  "pm.test('Health payload has uptime', function () { pm.expect(body.uptime).to.be.a('number'); });",
-                  "pm.test('Health payload has checks array', function () { pm.expect(body.checks).to.be.an('array'); });",
                   ""
                 ]
               }
@@ -2122,6 +2061,120 @@
               }
             }
           ]
+        },
+        {
+          "name": "[GET] /rest/v1/registration/lookup - Look up by registration code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/registration/lookup?registration=CHC9501",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "registration", "lookup"],
+              "query": [
+                {
+                  "key": "registration",
+                  "value": "CHC9501"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.test('results.data is an array', function () {",
+                  "  pm.expect(json.results.data).to.be.an('array');",
+                  "});",
+                  "pm.test('items never expose an SI card field', function () {",
+                  "  json.results.data.forEach(function (item) {",
+                  "    pm.expect(item).to.not.have.property('siCard');",
+                  "    pm.expect(item.registration, 'item.registration').to.be.a('string');",
+                  "    pm.expect(item.firstname, 'item.firstname').to.be.a('string');",
+                  "    pm.expect(item.lastname, 'item.lastname').to.be.a('string');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/registration/lookup - Look up by SI card number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/registration/lookup?card=207849",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "registration", "lookup"],
+              "query": [
+                {
+                  "key": "card",
+                  "value": "207849"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.test('results.data is an array', function () {",
+                  "  pm.expect(json.results.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/registration/clubs - Search club directory",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/registration/clubs?q=Brno",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "registration", "clubs"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Brno"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.test('results.data is an array of clubs', function () {",
+                  "  pm.expect(json.results.data).to.be.an('array');",
+                  "  json.results.data.forEach(function (club) {",
+                  "    pm.expect(club.name, 'club.name').to.be.a('string');",
+                  "    pm.expect(club.abbr, 'club.abbr').to.be.a('string');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -2852,6 +2905,99 @@
                   "pm.test('Missing file validation is reported', function () { pm.expect(JSON.stringify(body)).to.include('No file uploaded'); });",
                   ""
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/events/{{eventId}}/entries - Reject invalid entry order payload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"contactEmail\":\"not-an-email\",\"items\":[]}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/entries",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "entries"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Response is validation error envelope', function () {",
+                  "  pm.expect(json.error).to.eql(true);",
+                  "  pm.expect(json.code).to.eql(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/registration/lookup - Reject when both registration and card are given",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/registration/lookup?registration=CHC9501&card=207849",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "registration", "lookup"],
+              "query": [
+                {
+                  "key": "registration",
+                  "value": "CHC9501"
+                },
+                {
+                  "key": "card",
+                  "value": "207849"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status is 422', function () { pm.response.to.have.status(422); });"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/registration/lookup - Reject when neither registration nor card is given",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/registration/lookup",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "registration", "lookup"],
+              "query": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status is 422', function () { pm.response.to.have.status(422); });"]
               }
             }
           ]
@@ -6316,6 +6462,200 @@
               }
             }
           ]
+        },
+        {
+          "name": "[DELETE] /rest/v1/events/{{eventId}}/image - Remove event image (optional)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/image",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "image"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runEventImageScenario') || 'false').toLowerCase() === 'true';",
+                  "if (!shouldRun) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function assertStatus(expected) {",
+                  "  pm.test(`Status is ${expected}`, function () {",
+                  "    pm.response.to.have.status(expected);",
+                  "  });",
+                  "}",
+                  "",
+                  "function getJson() {",
+                  "  pm.test('Response is JSON', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "  });",
+                  "  return pm.response.json();",
+                  "}",
+                  "",
+                  "function assertObject(value, label) {",
+                  "  pm.expect(value, `${label} should be object`).to.be.an('object');",
+                  "  pm.expect(Array.isArray(value), `${label} should not be array`).to.eql(false);",
+                  "  pm.expect(value, `${label} should not be null`).to.not.eql(null);",
+                  "}",
+                  "",
+                  "function assertString(value, label) {",
+                  "  pm.expect(value, `${label} should be string`).to.be.a('string');",
+                  "}",
+                  "",
+                  "function assertHasKeys(obj, keys, label) {",
+                  "  assertObject(obj, label);",
+                  "  keys.forEach(key => {",
+                  "    pm.expect(obj, `${label} should have key ${key}`).to.have.property(key);",
+                  "  });",
+                  "}",
+                  "",
+                  "function assertLegacySuccess(body, expectedMessage) {",
+                  "  assertObject(body, 'body');",
+                  "  assertHasKeys(body, ['message', 'error', 'code', 'results'], 'body');",
+                  "  pm.expect(body.error, 'body.error').to.eql(false);",
+                  "  pm.expect(body.code, 'body.code').to.eql(200);",
+                  "  if (expectedMessage) {",
+                  "    pm.expect(body.message, 'body.message').to.eql(expectedMessage);",
+                  "  } else {",
+                  "    assertString(body.message, 'body.message');",
+                  "  }",
+                  "  assertObject(body.results, 'body.results');",
+                  "}",
+                  "",
+                  "assertStatus(200);",
+                  "const body = getJson();",
+                  "assertLegacySuccess(body, 'OK');",
+                  "pm.test('body.results.featuredImageKey is null', function () {",
+                  "  pm.expect(body.results.featuredImageKey).to.eql(null);",
+                  "});",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08b - Event Rental Cards Import",
+      "description": "Bulk CSV import of the event's rental SI chip inventory.",
+      "item": [
+        {
+          "name": "[POST] /rest/v1/events/{{eventId}}/rental-cards/import - Import rental cards CSV",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/rental-cards/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "rental-cards", "import"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": "fixtures/rental-cards/rental-cards.csv",
+                  "type": "file"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Rental cards import reports imported count', function () { pm.expect(body.results && body.results.imported).to.eql(3); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/events/{{eventId}}/rental-cards/import - Reject missing file",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/rental-cards/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "rental-cards", "import"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('Response is JSON', function () { pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json'); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Reports missing file error', function () { pm.expect(body.errors || body.message).to.include('No file uploaded'); });",
+                  ""
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -7577,6 +7917,52 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status is 422 for unknown event', function () { pm.response.to.have.status(422); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/events/{{eventId}}/entries - Owner lists entry orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/events/{{eventId}}/entries",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "events", "{{eventId}}", "entries"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.test('results.data is an array of entry orders', function () {",
+                  "  pm.expect(json.results.data).to.be.an('array');",
+                  "  json.results.data.forEach(function (order) {",
+                  "    pm.expect(order.id, 'order.id').to.be.a('string');",
+                  "    pm.expect(order.status, 'order.status').to.be.a('string');",
+                  "    pm.expect(order.paymentReference, 'order.paymentReference').to.be.a('string');",
+                  "    pm.expect(order.totalAmount, 'order.totalAmount').to.be.a('number');",
+                  "    pm.expect(order.currency, 'order.currency').to.be.a('string');",
+                  "    pm.expect(order.items, 'order.items').to.be.an('array');",
+                  "  });",
+                  "});"
                 ]
               }
             }
@@ -10460,7 +10846,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/rest/v1/admin/events?page=1&limit=25",
+              "raw": "{{baseUrl}}/rest/v1/admin/events?page=1&limit=25&authorId={{authorId}}",
               "host": ["{{baseUrl}}"],
               "path": ["rest", "v1", "admin", "events"],
               "query": [
@@ -10473,6 +10859,11 @@
                   "key": "limit",
                   "value": "25",
                   "description": "Items per page (max 200)"
+                },
+                {
+                  "key": "authorId",
+                  "value": "{{authorId}}",
+                  "description": "Filter events to those authored by this user id (optional)"
                 }
               ]
             },
@@ -10883,6 +11274,256 @@
                   "const body = pm.response.json();",
                   "pm.test('ORIS sync validation rejects invalid scope', function () { pm.expect(JSON.stringify(body)).to.include('Invalid option'); });",
                   ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/registrations/sync-status - Load registration sync status (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/registrations/sync-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "registrations", "sync-status"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Sync status has registrations and clubs', function () {",
+                  "  pm.expect(body.results.registrations).to.be.an('array');",
+                  "  pm.expect(body.results).to.have.property('clubs');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/registrations - Load cached registrations list (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/registrations?page=1&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "registrations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Registrations list has total and items', function () {",
+                  "  pm.expect(body.results.total).to.be.a('number');",
+                  "  pm.expect(body.results.items).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/admin/registrations/clubs - Load cached club directory list (optional)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/registrations/clubs?page=1&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "registrations", "clubs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Club list has total and items', function () {",
+                  "  pm.expect(body.results.total).to.be.a('number');",
+                  "  pm.expect(body.results.items).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/admin/registrations/oris-sync - Reject invalid sync scope (optional)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/admin/registrations/oris-sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "admin", "registrations", "oris-sync"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminBearerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope\": \"INVALID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shouldRun = (pm.environment.get('runAdminScenarios') || 'false').toLowerCase() === 'true';",
+                  "const token = (pm.environment.get('adminBearerToken') || '').trim();",
+                  "if (!shouldRun || !token) {",
+                  "  if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "    pm.execution.skipRequest();",
+                  "  }",
+                  "}",
+                  "",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Sync validation rejects invalid scope', function () { pm.expect(JSON.stringify(body)).to.include('Invalid option'); });"
                 ]
               }
             }
