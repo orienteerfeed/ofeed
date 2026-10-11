@@ -699,7 +699,7 @@ describe('processEntryOrder', () => {
         card: 8123456,
       }),
       42,
-      'IT',
+      'OFFICE',
     );
     expect(prisma.entryItem.update).toHaveBeenCalledWith({
       where: { id: 1 },
