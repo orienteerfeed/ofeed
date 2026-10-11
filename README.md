@@ -47,6 +47,11 @@ packages/
 - Node.js version pinned in `.nvmrc` (`24.15.0`)
 - pnpm `>=11.0.0` (pinned via `packageManager` to `11.4.0`)
 
+Keep Zod dependency versions aligned in `packages/shared`, `apps/client`, and
+`apps/server` so shared schemas and the server's OpenAPI integration use compatible
+types. Update all three manifests and regenerate `pnpm-lock.yaml` together when
+upgrading Zod.
+
 Use nvm to install and activate the exact Node.js version from `.nvmrc`:
 
 ```bash
