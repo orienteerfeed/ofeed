@@ -128,6 +128,9 @@ function EventTable({
             <TableHead className="w-[120px]">
               {t('Pages.Event.Tables.Date')}
             </TableHead>
+            <TableHead className="w-[100px]">
+              {t('Pages.Event.Tables.ZeroTime')}
+            </TableHead>
             <TableHead className="w-[150px]">
               {t('Pages.Event.Tables.Location')}
             </TableHead>

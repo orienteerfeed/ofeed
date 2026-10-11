@@ -18,6 +18,8 @@ This application is like a digital hub for all things related to orienteering ev
 ## Localization
 We are using [Weblate](https://hosted.weblate.org/projects/ofeed/) free localization hosting, thanks to [weblate.org](https://weblate.org/) and Michal Čihař.
 
+[![Translation status](https://hosted.weblate.org/widget/ofeed/multi-auto.svg)](https://hosted.weblate.org/engage/ofeed/)
+
 ## Tech Stack
 
 - Client: Vite + React + TypeScript
