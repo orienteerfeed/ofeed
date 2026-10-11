@@ -33,7 +33,6 @@ ENV PORT=8080 \
     OFEED_PUBLIC_API_URL= \
     OFEED_PUBLIC_URL= \
     OFEED_DEFAULT_LANGUAGE=en \
-    OFEED_SUPPORT_EMAIL=support@orienteerfeed.com \
     OFEED_DOCS_URL=https://docs.orienteerfeed.com \
     OFEED_BOARD_APP_URL= \
     OFEED_DISCORD_INVITE_URL=https://discord.gg/QMvnurgKzU \
