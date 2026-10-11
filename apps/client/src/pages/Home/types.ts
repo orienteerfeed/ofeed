@@ -11,6 +11,8 @@ export interface HomeEventListItem {
   slug: string;
   name: string;
   date: string;
+  /** Local time in the event's timezone, formatted as HH:mm:ss. */
+  zeroTime?: string;
   organizer?: string;
   location?: string;
   latitude?: number;
