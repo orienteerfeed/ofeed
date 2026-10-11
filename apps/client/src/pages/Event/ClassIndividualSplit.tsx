@@ -31,6 +31,18 @@ const SPLIT_PUBLICATION_STATUS = gql`
   }
 `;
 
+const SPLIT_COURSE_DISTANCES = gql`
+  query SplitCourseDistances($classId: Int!) {
+    splitCourseDistances(classId: $classId) {
+      totalLength
+      controls {
+        controlCode
+        distance
+      }
+    }
+  }
+`;
+
 const SPLIT_COMPETITORS_BY_CLASS_UPDATED = gql`
   subscription SplitCompetitorsByClassUpdated($classId: Int!) {
     splitCompetitorsByClassUpdated(classId: $classId) {
@@ -92,6 +104,13 @@ interface SplitPublicationStatusData {
   splitPublicationStatus: SplitPublicationStatus;
 }
 
+interface SplitCourseDistancesData {
+  splitCourseDistances: {
+    totalLength: number;
+    controls: { controlCode: string; distance: number }[];
+  } | null;
+}
+
 interface ClassIndividualSplitProps {
   t: TFunction;
   event: {
@@ -133,6 +152,16 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
     splitPublicationData?.splitPublicationStatus?.classId === selectedClass
       ? splitPublicationData.splitPublicationStatus
       : null;
+
+  // Course distances only scale the split chart's x axis, so a failure here must
+  // not break the split view — it just falls back to evenly-spaced legs.
+  const { data: courseDistancesData } = useQuery<SplitCourseDistancesData>(
+    SPLIT_COURSE_DISTANCES,
+    {
+      variables: { classId: selectedClass || 0 },
+      skip: !selectedClass || !splitPublicationStatus?.isAccessible,
+    }
+  );
 
   const { loading, error, data } = useSubscription<SubscriptionData>(
     SPLIT_COMPETITORS_BY_CLASS_UPDATED,
@@ -388,6 +417,9 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
                 competitors={competitors}
                 isLoading={splitDataLoading}
                 error={splitDataError}
+                courseDistances={
+                  courseDistancesData?.splitCourseDistances ?? null
+                }
               />
             </TabsContent>
           </>
