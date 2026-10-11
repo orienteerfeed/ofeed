@@ -44,6 +44,24 @@ describe('computeRawHash', () => {
   it('returns different hashes for different content', () => {
     expect(computeRawHash(Buffer.from('aaa'))).not.toBe(computeRawHash(Buffer.from('bbb')));
   });
+
+  it('ignores a changed root createTime attribute', () => {
+    const xml = (createTime: string) =>
+      Buffer.from(
+        `<?xml version="1.0"?><ResultList iofVersion="3.0" createTime="${createTime}" creator="OS">` +
+          `<PersonResult><Time>1234</Time></PersonResult></ResultList>`,
+      );
+    expect(computeRawHash(xml('2026-08-14T10:00:00Z'))).toBe(
+      computeRawHash(xml('2026-08-14T10:05:00Z')),
+    );
+  });
+
+  it('keeps distinct binary (zipped) payloads distinct', () => {
+    // utf8 decoding would fold both byte pairs into U+FFFD and collide
+    expect(computeRawHash(Buffer.from([0x80, 0x81, 0x41]))).not.toBe(
+      computeRawHash(Buffer.from([0x9f, 0x92, 0x41])),
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
