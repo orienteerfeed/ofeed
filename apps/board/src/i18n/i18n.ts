@@ -4,9 +4,10 @@ import en from './locales/en/common.json'
 import cs from './locales/cs/common.json'
 import de from './locales/de/common.json'
 import es from './locales/es/common.json'
+import fr from './locales/fr/common.json'
 import sv from './locales/sv/common.json'
 
-export const SUPPORTED = ['en', 'cs', 'de', 'es', 'sv'] as const
+export const SUPPORTED = ['en', 'cs', 'de', 'es', 'fr', 'sv'] as const
 export type Locale = (typeof SUPPORTED)[number]
 
 const STORAGE_KEY = 'i18nextLng'
@@ -45,7 +46,7 @@ export const i18n = createI18n({
   legacy: false,
   locale: detectLocale(),
   fallbackLocale: 'en',
-  messages: { en, cs, de, es, sv },
+  messages: { en, cs, de, es, fr, sv },
 })
 
 export function setLocale(lang: Locale) {

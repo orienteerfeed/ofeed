@@ -248,6 +248,51 @@ describe('FilesSettingsTab', () => {
     expect(metaRow).toHaveTextContent('42');
   });
 
+  it('shows a MeOS MOP import state on the start list and results sections, not on courses', async () => {
+    const states = [
+      {
+        sourceType: 'IOF_XML',
+        payloadType: 'StartList',
+        rawHash: 'a'.repeat(64),
+        lastSuccessfulImportAt: '2026-06-11T10:00:00.000Z',
+        successCount: 1,
+        skippedCount: 0,
+      },
+      {
+        sourceType: 'MEOS',
+        payloadType: 'MOPDiff',
+        rawHash: 'b'.repeat(64),
+        lastSuccessfulImportAt: '2026-06-11T12:00:00.000Z',
+        successCount: 7,
+        skippedCount: 2,
+      },
+    ];
+
+    render(
+      <MockedProvider
+        mocks={[
+          statusMock({ startListAvailable: true }),
+          importStatesMock(states),
+        ]}
+      >
+        <FilesSettingsTab t={t} eventId="event-1" />
+      </MockedProvider>
+    );
+
+    await screen.findByText('Pages.Event.Settings.Files.StartList');
+
+    const hashButtons = await screen.findAllByTitle(
+      'Pages.Event.Settings.Files.ImportState.CopyHash'
+    );
+    // Start list + results show the newer MOP state; courses show nothing.
+    expect(hashButtons).toHaveLength(2);
+    hashButtons.forEach(btn => {
+      expect(btn).toHaveTextContent('bbbbbbbb…');
+      expect(btn.parentElement).toHaveTextContent('MeOS MOP');
+      expect(btn.parentElement).toHaveTextContent('2026-06-11T12:00:00.000Z');
+    });
+  });
+
   it('hides import state metadata when no state exists for a section', async () => {
     render(
       <MockedProvider mocks={[statusMock(), importStatesMock()]}>
