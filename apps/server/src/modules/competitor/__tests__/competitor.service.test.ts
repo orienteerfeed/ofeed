@@ -4,7 +4,35 @@ import {
   findCompetitorsByCard,
   findCompetitorsByRegistration,
   findOrganisationNamesByEvent,
+  findResultFeedByEvent,
 } from '../competitor.service.js';
+
+describe('findResultFeedByEvent', () => {
+  it('returns a complete snapshot even above 2500 results, preserving the GraphQL selection', async () => {
+    const results = Array.from({ length: 2501 }, (_, id) => ({ id, status: 'OK' }));
+    const prisma = {
+      competitor: {
+        findMany: vi.fn(async (args: { take?: number }) =>
+          results.slice(0, args.take ?? results.length),
+        ),
+      },
+    };
+    const query = { include: { class: true } };
+
+    const feed = await findResultFeedByEvent(prisma as never, 'event-1', query);
+
+    expect(feed).toHaveLength(2501);
+    expect(feed).toContainEqual(results[2500]);
+    expect(prisma.competitor.findMany).toHaveBeenCalledWith({
+      ...query,
+      where: {
+        class: { is: { eventId: 'event-1' } },
+        status: { in: expect.arrayContaining(['OK', 'Finished', 'Disqualified']) },
+      },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+    });
+  });
+});
 
 describe('findOrganisationNamesByEvent', () => {
   it('returns organisation country fields normalized to alpha-2 codes', async () => {
