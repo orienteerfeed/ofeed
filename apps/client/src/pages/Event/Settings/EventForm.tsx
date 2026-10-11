@@ -554,10 +554,9 @@ export const EventForm: React.FC<EventFormProps> = ({
   } = useQuery<{ countries: Country[] }>(GET_COUNTRIES);
 
   // Fetch currencies data using Apollo Client
-  const {
-    data: currenciesData,
-    loading: currenciesLoading,
-  } = useQuery<{ currencies: { iso4217Alpha3: string }[] }>(GET_CURRENCIES);
+  const { data: currenciesData, loading: currenciesLoading } = useQuery<{
+    currencies: { iso4217Alpha3: string }[];
+  }>(GET_CURRENCIES);
 
   useEffect(() => {
     if (sportsError) {
@@ -590,11 +589,11 @@ export const EventForm: React.FC<EventFormProps> = ({
   // Validation functions
   const validateEventName = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Event name is required');
+      return t('validation.eventNameRequired', 'Event name is required');
     }
     if (value.length < 2) {
       return t(
-        'validation.minLength',
+        'validation.eventNameMinLength',
         'Event name must be at least 2 characters'
       );
     }
@@ -603,49 +602,52 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   const validateSport = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Sport is required');
+      return t('validation.sportRequired', 'Sport is required');
     }
     return undefined;
   };
 
   const validateCountry = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Country is required');
+      return t('validation.countryRequired', 'Country is required');
     }
     return undefined;
   };
 
   const validateDate = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Date is required');
+      return t('validation.dateRequired', 'Date is required');
     }
     return undefined;
   };
 
   const validateTimezone = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Timezone is required');
+      return t('validation.timezoneRequired', 'Timezone is required');
     }
     return undefined;
   };
 
   const validateOrganizer = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Organizer is required');
+      return t('validation.organizerRequired', 'Organizer is required');
     }
     return undefined;
   };
 
   const validateLocation = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Location is required');
+      return t('validation.locationRequired', 'Location is required');
     }
     return undefined;
   };
 
   const validateLatitude = (value: string): string | undefined => {
     if (value && (parseFloat(value) < -90 || parseFloat(value) > 90)) {
-      return t('validation.latitude', 'Latitude must be between -90 and 90');
+      return t(
+        'validation.latitudeRange',
+        'Latitude must be between -90 and 90'
+      );
     }
     return undefined;
   };
@@ -653,7 +655,7 @@ export const EventForm: React.FC<EventFormProps> = ({
   const validateLongitude = (value: string): string | undefined => {
     if (value && (parseFloat(value) < -180 || parseFloat(value) > 180)) {
       return t(
-        'validation.longitude',
+        'validation.longitudeRange',
         'Longitude must be between -180 and 180'
       );
     }
@@ -662,11 +664,14 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   const validateZeroTime = (value: string): string | undefined => {
     if (!value) {
-      return t('validation.required', 'Zero time is required');
+      return t('validation.zeroTimeRequired', 'Zero time is required');
     }
 
     if (!normalizeTimeInput(value)) {
-      return t('validation.time', 'Time must be in HH:mm or HH:mm:ss format');
+      return t(
+        'validation.zeroTimeFormat',
+        'Time must be in HH:mm or HH:mm:ss format'
+      );
     }
 
     return undefined;
@@ -882,7 +887,11 @@ export const EventForm: React.FC<EventFormProps> = ({
               },
             }
           );
-        } else if (uploadTargetId && isImageRemovalPending && persistedImageUrl) {
+        } else if (
+          uploadTargetId &&
+          isImageRemovalPending &&
+          persistedImageUrl
+        ) {
           await imageRequest.request(
             ENDPOINTS.deleteEventImage(uploadTargetId),
             {
@@ -1735,9 +1744,7 @@ export const EventForm: React.FC<EventFormProps> = ({
               },
               {
                 value: 'KNOCKOUT_SPRINT',
-                label: t(
-                  'Pages.Event.Form.DisciplineOptions.KNOCKOUT_SPRINT'
-                ),
+                label: t('Pages.Event.Form.DisciplineOptions.KNOCKOUT_SPRINT'),
               },
               {
                 value: 'RELAY',
