@@ -28,6 +28,15 @@ If you do not agree to those terms, do not submit a contribution.
 
 ## Git Conventions
 
+### Branch prefixes
+
+| Prefix     | Usage                                                   |
+| ---------- | ------------------------------------------------------- |
+| `bugfix/`  | Used for work fixing product bugs                       |
+| `feature/` | Used for work on new features                           |
+| `hotfix/`  | Used for fixing urgent production bugs with high impact |
+| `release/` | Used for preparing and testing work for release         |
+
 ### Conventional Commit Prefixes
 
 | Prefix      | Description                                                         |
@@ -43,15 +52,6 @@ If you do not agree to those terms, do not submit a contribution.
 | `ci:`       | CI/CD configuration changes                                         |
 
 Reference: [conventionalcommits.org](https://www.conventionalcommits.org/)
-
-### Branch prefixes
-
-| Prefix     | Usage                                                   |
-| ---------- | ------------------------------------------------------- |
-| `bugfix/`  | Used for work fixing product bugs                       |
-| `feature/` | Used for work on new features                           |
-| `hotfix/`  | Used for fixing urgent production bugs with high impact |
-| `release/` | Used for preparing and testing work for release         |
 
 ### Examples
 
