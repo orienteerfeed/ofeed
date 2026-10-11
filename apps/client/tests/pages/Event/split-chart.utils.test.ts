@@ -132,6 +132,39 @@ describe('split chart utils', () => {
       ).toEqual([0, 900, 3800, 4200]);
     });
 
+    it('matches numeric split API codes to string course codes, including repeated controls', () => {
+      const apiCheckpoints = createSplitChartCheckpoints([
+        {
+          id: 'a',
+          time: 300,
+          splits: [
+            { controlCode: 31, time: 100 },
+            { controlCode: 32, time: 180 },
+            { controlCode: 31, time: 250 },
+          ],
+        },
+      ]);
+
+      expect(apiCheckpoints.map(checkpoint => checkpoint.controlCode)).toEqual([
+        'START',
+        '31',
+        '32',
+        '31',
+        'FINISH',
+      ]);
+      expect(
+        createSplitChartDistances(apiCheckpoints, {
+          totalLength: 4200,
+          controls: [
+            { controlCode: '31', distance: 900 },
+            { controlCode: '45', distance: 1500 },
+            { controlCode: '32', distance: 2100 },
+            { controlCode: '31', distance: 3800 },
+          ],
+        }),
+      ).toEqual([0, 900, 2100, 3800, 4200]);
+    });
+
     it('falls back to even spacing without course data', () => {
       expect(createSplitChartDistances(checkpoints, null)).toBeNull();
     });

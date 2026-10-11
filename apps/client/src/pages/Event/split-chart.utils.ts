@@ -1,5 +1,5 @@
 type SplitLike = {
-  controlCode: string;
+  controlCode: string | number;
   time: number;
 };
 
@@ -113,7 +113,8 @@ export function createSplitChartCheckpoints(
 
   splitSource?.splits.forEach((split, splitIndex) => {
     checkpoints.push({
-      controlCode: split.controlCode,
+      // Split GraphQL fields use Int, while CourseData codes use String.
+      controlCode: String(split.controlCode),
       key: `control-${splitIndex}-${split.controlCode}`,
       kind: 'control',
       legIndex: splitIndex + 1,
