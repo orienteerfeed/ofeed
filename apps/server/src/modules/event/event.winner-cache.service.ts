@@ -10,7 +10,7 @@ export const notifyWinnerChanges = async eventId => {
       where: { class: { eventId }, time: { not: null }, status: 'OK' },
       select: {
         classId: true,
-        class: { select: { name: true } },
+        class: { select: { name: true, sex: true } },
         id: true,
         firstname: true,
         lastname: true,
@@ -42,6 +42,7 @@ export const notifyWinnerChanges = async eventId => {
         winnerChanges.push({
           classId: newWinner.classId,
           className: newWinner.class.name,
+          classSex: newWinner.class.sex,
           competitorId: newWinner.id,
           name: `${newWinner.lastname} ${newWinner.firstname}`,
         });
@@ -63,6 +64,7 @@ export const notifyWinnerChanges = async eventId => {
             eventId,
             classId: winner.classId,
             className: winner.className,
+            classSex: winner.classSex,
             name: winner.name,
           },
         });

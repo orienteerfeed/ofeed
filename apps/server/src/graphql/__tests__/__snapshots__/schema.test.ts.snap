@@ -770,8 +770,10 @@ type Query {
   myEvents: [Event!]
   organisationNames(eventId: String!): [OrganisationName!]!
   organisations(eventId: String!): [Organisation!]!
+  resultFeedByEvent(eventId: String!): [Competitor!]!
   searchEvents(query: String!): [Event]!
   searchOrganisationNames(eventId: String!, q: String!): [OrganisationName!]!
+  splitCourseDistances(classId: Int!): SplitCourseDistances
   splitPublicationStatus(classId: Int!): SplitPublicationStatus!
   sport(id: Int!): Sport
   sports: [Sport!]!
@@ -813,6 +815,16 @@ type Split {
   controlCode: Int!
   id: Int!
   time: Int
+}
+
+type SplitCourseControlDistance {
+  controlCode: String!
+  distance: Float!
+}
+
+type SplitCourseDistances {
+  controls: [SplitCourseControlDistance!]!
+  totalLength: Float!
 }
 
 enum SplitPublicationMode {
@@ -1063,6 +1075,7 @@ enum UserRole {
 type WinnerNotification {
   classId: Int!
   className: String!
+  classSex: String!
   eventId: String!
   name: String!
 }
