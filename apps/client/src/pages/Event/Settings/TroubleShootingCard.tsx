@@ -7,17 +7,19 @@ import {
 } from '@/components/ui/card';
 import { config } from '@/config';
 import { TFunction } from 'i18next';
-import { Code2, Mail, MessageCircle } from 'lucide-react';
+import { BookOpen, Code2, LifeBuoy, MessageCircle } from 'lucide-react';
 import React from 'react';
 
 interface TroubleShootingCardProps {
   t: TFunction;
   title?: string;
   description?: string;
-  /** Přepíše implicitní Discord URL z configu (pokud existuje) */
+  /** Overrides the default Discord URL from the config (if present)*/
   discordUrl?: string;
   /** Přepíše implicitní GitHub issues URL z configu (pokud existuje) */
   githubIssuesUrl?: string;
+  /** Overrides the default documentation URL (Getting Started) */
+  docsUrl?: string;
 }
 
 export const TroubleShootingCard: React.FC<TroubleShootingCardProps> = ({
@@ -26,17 +28,19 @@ export const TroubleShootingCard: React.FC<TroubleShootingCardProps> = ({
   description,
   discordUrl,
   githubIssuesUrl,
+  docsUrl,
 }) => {
   const resolvedDiscordUrl = discordUrl || config.DISCORD_INVITE_URL || undefined;
   const resolvedGithubIssuesUrl =
     githubIssuesUrl || `${config.GITHUB_REPO_URL}/issues` || undefined;
+  const resolvedDocsUrl = docsUrl || `${config.DOCS_URL}/getting-started`;
 
   return (
     <Card className="w-full border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 backdrop-blur-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-            <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <LifeBuoy className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-blue-700 dark:text-blue-300 text-lg">
@@ -54,19 +58,23 @@ export const TroubleShootingCard: React.FC<TroubleShootingCardProps> = ({
 
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          {t('Pages.Event.TroublesShooting.Description1')}{' '}
-          <a
-            href={`mailto:${config.SUPPORT_EMAIL}`}
-            className="text-blue-600 hover:underline dark:text-blue-400 font-medium"
-          >
-            {config.SUPPORT_EMAIL}
-          </a>
-          {'. '}
-          {t('Pages.Event.TroublesShooting.Description2')}
+          {t('Pages.Event.TroublesShooting.FeedbackDescription')}
         </p>
 
-        {/* Badge / tlačítka na komunitu */}
+        {/* Badge / community and documentation buttons */}
         <div className="flex flex-wrap gap-2 pt-1">
+          {resolvedDocsUrl && (
+            <a
+              href={resolvedDocsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <BookOpen className="h-3 w-3" />
+              {t('Pages.Event.TroublesShooting.Docs')}
+            </a>
+          )}
+
           {resolvedDiscordUrl && (
             <a
               href={resolvedDiscordUrl}

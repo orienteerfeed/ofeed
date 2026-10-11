@@ -38,4 +38,13 @@ describe('external link helpers', () => {
       }),
     ).toBe('https://docs.orienteerfeed.com/cs/');
   });
+
+  it('prefixes the language before a nested path, Docusaurus-style', () => {
+    expect(
+      buildLocalizedDocsUrl('cs', {
+        baseUrl: 'https://docs.orienteerfeed.com/getting-started',
+        defaultLanguage: 'en',
+      }),
+    ).toBe('https://docs.orienteerfeed.com/cs/getting-started/');
+  });
 });
