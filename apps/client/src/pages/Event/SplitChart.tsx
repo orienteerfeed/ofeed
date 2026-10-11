@@ -22,13 +22,17 @@ import {
   createFastestSplitChartReferenceTimes,
   createInitialSplitChartVisibility,
   createSplitChartCheckpoints,
+  createSplitChartDistances,
 } from './split-chart.utils';
 import { getResultStatusPriority } from './result-list.utils';
 import { rankByTime } from './result-ranking.utils';
 import {
   filterValidSplitResultCompetitors,
 } from './split-results.utils';
-import type { SplitChartCheckpoint } from './split-chart.utils';
+import type {
+  SplitChartCheckpoint,
+  SplitCourseDistances,
+} from './split-chart.utils';
 
 // TODO: Refactor type definitions - move to shared types file
 interface Split {
@@ -53,6 +57,7 @@ interface SplitChartProps {
   competitors: Competitor[];
   isLoading?: boolean;
   error?: unknown;
+  courseDistances?: SplitCourseDistances | null;
 }
 
 interface ChartPoint {
@@ -60,6 +65,7 @@ interface ChartPoint {
   checkpointIndex: number;
   checkpointKind: SplitChartCheckpoint['kind'];
   controlCode: string;
+  distance?: number;
   legIndex?: number;
   [key: string]: number | string | undefined;
 }
@@ -152,6 +158,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   competitors,
   isLoading = false,
   error,
+  courseDistances,
 }) => {
   const { t } = useTranslation();
   const [comparisonMode, setComparisonMode] =
@@ -169,6 +176,12 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   const checkpoints = useMemo(() => {
     return createSplitChartCheckpoints(sortedCompetitors);
   }, [sortedCompetitors]);
+
+  // Non-null only when the uploaded course fully covers the recorded splits.
+  const checkpointDistances = useMemo(
+    () => createSplitChartDistances(checkpoints, courseDistances),
+    [checkpoints, courseDistances],
+  );
 
   const validReferenceCompetitors = useMemo(
     () => filterValidSplitResultCompetitors(sortedCompetitors),
@@ -271,6 +284,10 @@ export const SplitChart: React.FC<SplitChartProps> = ({
         point.legIndex = checkpoint.legIndex;
       }
 
+      if (checkpointDistances) {
+        point.distance = checkpointDistances[checkpointIndex]!;
+      }
+
       allResults.forEach(res => {
         if (referenceTime !== null) {
           point[res.id] = res.time - referenceTime;
@@ -283,11 +300,16 @@ export const SplitChart: React.FC<SplitChartProps> = ({
     return { chartData, positionsByLeg, competitorsById };
   }, [
     checkpoints,
+    checkpointDistances,
     comparisonMode,
     sortedCompetitors,
     t,
     validReferenceCompetitors,
   ]);
+
+  // Non-null already means every checkpoint got a finite, strictly increasing
+  // distance, so every plotted point carries one.
+  const useDistanceAxis = checkpointDistances !== null;
 
   // Predefined colors for chart lines
   const lineColors = [
@@ -425,7 +447,18 @@ export const SplitChart: React.FC<SplitChartProps> = ({
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
-                dataKey="axisLabel"
+                {...(useDistanceAxis
+                  ? {
+                      dataKey: 'distance',
+                      type: 'number' as const,
+                      domain: ['dataMin', 'dataMax'] as const,
+                      ticks: chartData.map(point => point.distance as number),
+                      // Recharts passes the tick index, which indexes `ticks`
+                      // and therefore `chartData`.
+                      tickFormatter: (_value: unknown, index: number) =>
+                        chartData[index]?.axisLabel ?? '',
+                    }
+                  : { dataKey: 'axisLabel' })}
                 tick={{ fontSize: 10 }}
                 angle={-35}
                 textAnchor="end"

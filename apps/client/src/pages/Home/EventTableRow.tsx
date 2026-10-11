@@ -1,9 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { formatTimeToHms } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Link } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 import { Button, CountryFlag } from '../../components/atoms';
 import {
   getEventLocationLabel,
@@ -52,6 +53,19 @@ export function EventTableRow({
           <Calendar className="w-4 h-4 text-muted-foreground" />
           <span className="font-mono text-sm">{event.date}</span>
         </div>
+      </TableCell>
+
+      <TableCell>
+        {event.zeroTime ? (
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <span className="font-mono text-sm">
+              {formatTimeToHms(event.zeroTime, { dropZeroSeconds: true })}
+            </span>
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        )}
       </TableCell>
 
       <TableCell>

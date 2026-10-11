@@ -45,6 +45,12 @@ const LANGUAGES: Language[] = [
     nativeName: 'Español',
   },
   {
+    key: 'fr',
+    country: 'fr',
+    label: 'French',
+    nativeName: 'Français',
+  },
+  {
     key: 'sv',
     country: 'se',
     label: 'Swedish',
