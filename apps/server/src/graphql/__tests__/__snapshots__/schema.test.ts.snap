@@ -1074,6 +1074,7 @@ enum UserRole {
 type WinnerNotification {
   classId: Int!
   className: String!
+  classSex: String!
   eventId: String!
   name: String!
 }
