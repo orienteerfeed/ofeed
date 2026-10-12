@@ -6644,8 +6644,8 @@ packages:
     resolution: {integrity: sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A==}
     engines: {node: '>=18'}
 
-  mime@4.1.0:
-    resolution: {integrity: sha512-X5ju04+cAzsojXKes0B/S4tcYtFAJ6tTMuSPBEn9CPGlrWr8Fiw7qYeLT0XyH80HSoAoqWCaz+MWKh22P7G1cw==}
+  mime@4.1.1:
+    resolution: {integrity: sha512-YAApRsTpM2+gnUFHhRNGfkX8NK0V5xj1nyQLufGlwEI+eX4xRsTcel2IXDuMEGSGjBvzykNW4VuoEACgwYe7BQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -11702,7 +11702,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       issue-parser: 7.0.2
       lodash-es: 4.18.1
-      mime: 4.1.0
+      mime: 4.1.1
       p-filter: 4.1.0
       semantic-release: 25.0.9(typescript@5.9.3)
       tinyglobby: 0.2.17
@@ -11724,7 +11724,7 @@ snapshots:
       https-proxy-agent: 9.1.0
       issue-parser: 7.0.2
       lodash-es: 4.18.1
-      mime: 4.1.0
+      mime: 4.1.1
       p-filter: 4.1.0
       semantic-release: 25.0.9(typescript@5.9.3)
       tinyglobby: 0.2.17
@@ -15402,7 +15402,7 @@ snapshots:
     dependencies:
       mime-db: 1.54.0
 
-  mime@4.1.0: {}
+  mime@4.1.1: {}
 
   mimic-fn@2.1.0: {}
 
