@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@pothos/plugin-prisma@4.17.0': 1943b9215e3043ae9b84102a562acab9d8327276a5a944dcb8702bca86fb779b
+
 importers:
 
   .:
@@ -462,7 +465,7 @@ importers:
         version: 4.15.1(graphql@16.14.2)
       '@pothos/plugin-prisma':
         specifier: ^4.17.0
-        version: 4.17.0(@pothos/core@4.15.1(graphql@16.14.2))(@prisma/client@7.10.0(prisma@7.10.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.3.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(typescript@5.9.3))(graphql@16.14.2)
+        version: 4.17.0(patch_hash=1943b9215e3043ae9b84102a562acab9d8327276a5a944dcb8702bca86fb779b)(@pothos/core@4.15.1(graphql@16.14.2))(@prisma/client@7.10.0(prisma@7.10.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.3.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(typescript@5.9.3))(graphql@16.14.2)
       '@prisma/adapter-mariadb':
         specifier: ^7.10.0
         version: 7.10.0
@@ -10763,7 +10766,7 @@ snapshots:
     dependencies:
       graphql: 16.14.2
 
-  '@pothos/plugin-prisma@4.17.0(@pothos/core@4.15.1(graphql@16.14.2))(@prisma/client@7.10.0(prisma@7.10.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.3.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(typescript@5.9.3))(graphql@16.14.2)':
+  '@pothos/plugin-prisma@4.17.0(patch_hash=1943b9215e3043ae9b84102a562acab9d8327276a5a944dcb8702bca86fb779b)(@pothos/core@4.15.1(graphql@16.14.2))(@prisma/client@7.10.0(prisma@7.10.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.3.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(typescript@5.9.3))(graphql@16.14.2)':
     dependencies:
       '@pothos/core': 4.15.1(graphql@16.14.2)
       '@pothos/selection-mapper': 0.1.0(@pothos/core@4.15.1(graphql@16.14.2))(graphql@16.14.2)

@@ -111,6 +111,13 @@ shared Pothos refs in `src/modules/*/*.graphql-types.ts`.
 GraphQL/Pothos profile in strict TypeScript mode. There is no separate
 `tsconfig.graphql.strict-small.json` profile.
 
+The workspace applies `patches/@pothos__plugin-prisma@4.17.0.patch` to keep
+Pothos count-selection inference compatible with the main server profile's
+`strictNullChecks: false`. Without it, absent `_count` selections incorrectly
+require relation counts on resolver results. The patch changes types only;
+remove it when upgrading to a Pothos version that fixes this inference, and
+verify both `pnpm type-check` and `pnpm type-check:graphql`.
+
 ## Validation
 
 Use Zod schemas as the main validation source of truth. When the same payload is
