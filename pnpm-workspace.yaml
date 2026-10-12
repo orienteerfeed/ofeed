@@ -13,3 +13,6 @@ allowBuilds:
   prisma: false
   sharp: true
   vue-demi: true
+
+patchedDependencies:
+  "@pothos/plugin-prisma@4.17.0": patches/@pothos__plugin-prisma@4.17.0.patch

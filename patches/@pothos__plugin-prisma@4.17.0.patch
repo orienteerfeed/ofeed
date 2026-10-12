@@ -1,0 +1,49 @@
+diff --git a/dts/types.d.ts b/dts/types.d.ts
+index 02d90ecb875764b278eccb18f2f11f75317ba5a7..cda4263539e82d39e17a0743abfb857a31e618ed 100644
+--- a/dts/types.d.ts
++++ b/dts/types.d.ts
+@@ -107,10 +107,10 @@ export type SelectedKeys<T> = {
+  */
+ type HasNoSelect<Select, Model extends PrismaModelTypes> = unknown extends Select ? true : [NonNullable<Select>] extends [never] ? true : keyof Model['Select'] extends keyof NonNullable<Select> ? Model['Select'] extends NonNullable<Select> ? true : false : false;
+ export type ShapeFromSelection<Types extends SchemaTypes, Model extends PrismaModelTypes, Selection> = Normalize<Selection extends BaseSelection ? HasNoSelect<Selection['select'], Model> extends true ? Model['Shape'] & RelationShapeFromInclude<Types, Model, Selection['include']> & ShapeFromCount<CountSelection<Selection['include']>, Model> : Pick<Model['Shape'], SelectedKeys<NonNullable<Selection['select']>> & keyof Model['Shape']> & RelationShapeFromInclude<Types, Model, NonNullable<Selection['select']>> & ShapeFromCount<CountSelection<NonNullable<Selection['select']>>, Model> : Model['Shape']>;
+-/** The `_count` entry of a `select` or `include` map, or `undefined` when there is none. */
++/** Use an empty map for absent counts so non-strict null checking cannot infer `_count: true`. */
+ type CountSelection<Map> = Map extends {
+     _count: infer Count;
+-} ? Count : undefined;
++} ? Count : {};
+ /**
+  * What a `_count` selection adds to a row, as prisma returns it: `_count: true` counts every list
+  * relation of `Model`, `_count: { select }` the selected ones, and each count is a number.
+diff --git a/esm/types.d.ts b/esm/types.d.ts
+index 02d90ecb875764b278eccb18f2f11f75317ba5a7..cda4263539e82d39e17a0743abfb857a31e618ed 100644
+--- a/esm/types.d.ts
++++ b/esm/types.d.ts
+@@ -107,10 +107,10 @@ export type SelectedKeys<T> = {
+  */
+ type HasNoSelect<Select, Model extends PrismaModelTypes> = unknown extends Select ? true : [NonNullable<Select>] extends [never] ? true : keyof Model['Select'] extends keyof NonNullable<Select> ? Model['Select'] extends NonNullable<Select> ? true : false : false;
+ export type ShapeFromSelection<Types extends SchemaTypes, Model extends PrismaModelTypes, Selection> = Normalize<Selection extends BaseSelection ? HasNoSelect<Selection['select'], Model> extends true ? Model['Shape'] & RelationShapeFromInclude<Types, Model, Selection['include']> & ShapeFromCount<CountSelection<Selection['include']>, Model> : Pick<Model['Shape'], SelectedKeys<NonNullable<Selection['select']>> & keyof Model['Shape']> & RelationShapeFromInclude<Types, Model, NonNullable<Selection['select']>> & ShapeFromCount<CountSelection<NonNullable<Selection['select']>>, Model> : Model['Shape']>;
+-/** The `_count` entry of a `select` or `include` map, or `undefined` when there is none. */
++/** Use an empty map for absent counts so non-strict null checking cannot infer `_count: true`. */
+ type CountSelection<Map> = Map extends {
+     _count: infer Count;
+-} ? Count : undefined;
++} ? Count : {};
+ /**
+  * What a `_count` selection adds to a row, as prisma returns it: `_count: true` counts every list
+  * relation of `Model`, `_count: { select }` the selected ones, and each count is a number.
+diff --git a/src/types.ts b/src/types.ts
+index 03ee49cc19daadee378235e47248534ec23e9d4c..e7059520cc18c10486a52e87b0c198a74420b648 100644
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -262,8 +262,8 @@ export type ShapeFromSelection<
+     : Model['Shape']
+ >;
+ 
+-/** The `_count` entry of a `select` or `include` map, or `undefined` when there is none. */
+-type CountSelection<Map> = Map extends { _count: infer Count } ? Count : undefined;
++/** Use an empty map for absent counts so non-strict null checking cannot infer `_count: true`. */
++type CountSelection<Map> = Map extends { _count: infer Count } ? Count : {};
+ 
+ /**
+  * What a `_count` selection adds to a row, as prisma returns it: `_count: true` counts every list
