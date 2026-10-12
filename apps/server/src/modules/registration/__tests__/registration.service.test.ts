@@ -248,18 +248,18 @@ describe('registration.service', () => {
     });
 
     it('applies a cooldown after a sync failure and skips retrying within it', async () => {
-      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'));
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'));
 
       await expect(ensureClubsSynchronized({ now: new Date() })).rejects.toThrow('network down');
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
       expect(loggerMock.warn).toHaveBeenCalledWith(
         'Club ORIS sync failed and cooldown was applied',
         expect.objectContaining({ failureReason: 'network down' }),
       );
 
-      const fetchSpy = vi.spyOn(globalThis, 'fetch');
       const didSync = await ensureClubsSynchronized({ now: new Date() });
       expect(didSync).toBe(false);
-      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
 
     it('deduplicates concurrent callers onto a single in-flight sync', async () => {
