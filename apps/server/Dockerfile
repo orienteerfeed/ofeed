@@ -17,6 +17,7 @@ RUN apt-get update \
 
 FROM base AS deps
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY patches ./patches
 COPY apps/server/package.json apps/server/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
@@ -31,6 +32,7 @@ RUN DATABASE_URL=mysql://user:password@localhost:3306/ofeed pnpm exec prisma gen
 
 FROM base AS production-deps
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY patches ./patches
 COPY apps/server/package.json apps/server/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \

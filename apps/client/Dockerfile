@@ -12,6 +12,7 @@ ENV PNPM_HOME=/pnpm \
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY patches ./patches
 COPY apps/client/package.json apps/client/package.json
 COPY packages/shared/package.json packages/shared/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \

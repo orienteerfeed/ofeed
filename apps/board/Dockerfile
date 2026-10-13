@@ -12,6 +12,7 @@ ENV PNPM_HOME=/pnpm \
 RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY patches ./patches
 COPY apps/board/package.json apps/board/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
   pnpm install --frozen-lockfile --ignore-scripts --filter ./apps/board...

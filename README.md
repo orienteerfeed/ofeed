@@ -236,6 +236,10 @@ Start full app stack:
 docker compose up -d --build
 ```
 
+All app images use the repository root as their build context. Keep `patches/`
+in that context: each dependency-install stage copies it before running pnpm,
+because `pnpm-workspace.yaml` declares patched dependencies even for filtered installs.
+
 Available compose overlays:
 
 - `compose.mysql.yaml` - local MySQL/MariaDB-compatible DB
