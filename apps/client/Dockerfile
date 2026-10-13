@@ -36,13 +36,13 @@ ENV PORT=8080 \
     API_UPSTREAM=http://api:3001 \
     OFEED_PUBLIC_API_URL= \
     OFEED_PUBLIC_URL= \
-    OFEED_DEFAULT_LANGUAGE=en \
-    OFEED_DOCS_URL=https://docs.orienteerfeed.com \
+    OFEED_DEFAULT_LANGUAGE= \
+    OFEED_DOCS_URL= \
     OFEED_BOARD_APP_URL= \
-    OFEED_DISCORD_INVITE_URL=https://discord.gg/QMvnurgKzU \
-    OFEED_GITHUB_REPO_URL=https://github.com/orienteerfeed/orienteerfeed \
-    OFEED_ENABLE_MAP_VIEW=true \
-    OFEED_DEBUG_LOGGING=false
+    OFEED_DISCORD_INVITE_URL= \
+    OFEED_GITHUB_REPO_URL= \
+    OFEED_ENABLE_MAP_VIEW= \
+    OFEED_DEBUG_LOGGING=
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 \
   CMD wget -qO- http://127.0.0.1:${PORT}/healthz >/dev/null || exit 1

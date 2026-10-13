@@ -14,6 +14,12 @@ On Windows shells that do not support POSIX-style environment assignments, use:
 pnpm dev:win
 ```
 
+Use `VITE_*` in `apps/client/.env` for local Vite development. Containers accept
+public `OFEED_*` runtime settings and legacy `VITE_*` aliases, with non-empty
+`OFEED_*` values taking precedence. See
+[`Frontend configuration`](../../docs/FRONTEND_CONFIGURATION.md) for Compose,
+Kubernetes, and migration instructions.
+
 ## Production cache policy
 
 The production Nginx configuration revalidates `index.html`, the PWA manifest,

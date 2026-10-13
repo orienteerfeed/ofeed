@@ -333,6 +333,11 @@ documented `OFEED_*` variables in Docker Compose or Kubernetes; never expose
 server secrets through those variables. Deployment guidance is in
 [`docs/DEPLOYMENT_ARGOCD.md`](./docs/DEPLOYMENT_ARGOCD.md).
 
+Existing Compose app-local `.env` files using `VITE_*` remain supported at
+container startup. Non-empty `OFEED_*` values take precedence over their legacy
+`VITE_*` equivalents. For naming, migration, and production verification, see
+[`docs/FRONTEND_CONFIGURATION.md`](./docs/FRONTEND_CONFIGURATION.md).
+
 The client and board images run as UID 101, which owns a pre-created
 `runtime-config.js` so startup scripts can write it. The API image includes `wget`
 for the Docker Compose `/healthz` check. When updating these Dockerfiles in a
