@@ -333,6 +333,12 @@ documented `OFEED_*` variables in Docker Compose or Kubernetes; never expose
 server secrets through those variables. Deployment guidance is in
 [`docs/DEPLOYMENT_ARGOCD.md`](./docs/DEPLOYMENT_ARGOCD.md).
 
+The client and board images run as UID 101, which owns a pre-created
+`runtime-config.js` so startup scripts can write it. The API image includes `wget`
+for the Docker Compose `/healthz` check. When updating these Dockerfiles in a
+source-based Compose deployment, rebuild the images with `docker compose build`
+before running `docker compose up -d --remove-orphans`.
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution process and standards.

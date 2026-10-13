@@ -10,7 +10,7 @@ ENV PNPM_HOME=/pnpm \
     PNPM_STORE_DIR=/pnpm/store \
     PATH=/pnpm:$PATH
 RUN apt-get update \
-  && apt-get install --yes --no-install-recommends tini \
+  && apt-get install --yes --no-install-recommends tini wget \
   && rm -rf /var/lib/apt/lists/* \
   && corepack enable \
   && corepack prepare pnpm@${PNPM_VERSION} --activate
