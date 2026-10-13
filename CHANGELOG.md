@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+### Fixed
+
+- Installed `wget` in the API image so Docker Compose healthchecks can run.
+- Pre-created client and board `runtime-config.js` files owned by the Nginx
+  runtime user so startup scripts can write them without permission errors.
+
 ## [1.3.1] - 2026-05-05
 
 ### Fixed

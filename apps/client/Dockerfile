@@ -27,7 +27,10 @@ COPY apps/client/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY apps/client/docker-entrypoint-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
 COPY --from=builder /workspace/apps/client/dist /usr/share/nginx/html
 USER root
-RUN chmod 0555 /docker-entrypoint.d/40-runtime-config.sh
+RUN chmod 0555 /docker-entrypoint.d/40-runtime-config.sh \
+  && touch /usr/share/nginx/html/runtime-config.js \
+  && chown 101:101 /usr/share/nginx/html/runtime-config.js \
+  && chmod 0644 /usr/share/nginx/html/runtime-config.js
 USER 101
 ENV PORT=8080 \
     API_UPSTREAM=http://api:3001 \
