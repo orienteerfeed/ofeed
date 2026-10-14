@@ -1517,6 +1517,13 @@ export const deleteAllEventData = async (
     // Step 1: Delete competitors, protocols, splits
     await deleteEventCompetitorsAndProtocols(eventId, db);
 
+    // Step 1b: Delete entry orders (items, add-ons and status history cascade from Entry).
+    // EntryItem -> Class and EntryAddOnItem -> EventService are RESTRICT, so they must go
+    // before classes and services.
+    await db.entry.deleteMany({
+      where: { eventId: eventId },
+    });
+
     // Step 2: Delete Classes linked to event
     await db.class.deleteMany({
       where: { eventId: eventId },
