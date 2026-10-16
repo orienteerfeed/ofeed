@@ -8,6 +8,7 @@ import CompetitionSettings from '@/components/CompetitionSettings.vue'
 
 import { useSettingStore } from '@/stores/settings'
 import type { DataProviders } from '@/composables/providers/useDataProvider'
+import { useDisplaySettingsUrlSync } from '@/composables/useDisplaySettingsUrlSync'
 
 const route = useRoute()
 const competitionId = computed(() => String(route.params.competitionId ?? '1'))
@@ -16,6 +17,7 @@ const dataProvider = computed(
 )
 
 const settingsStore = useSettingStore()
+useDisplaySettingsUrlSync()
 </script>
 
 <template>
