@@ -639,6 +639,7 @@
           "Items": "Rader",
           "Total": "Totalt",
           "Paid": "Betald",
+          "PaymentMethod": "Betalningssätt",
           "Created": "Skapad",
           "Status": "Status",
           "Actions": "Åtgärder"
