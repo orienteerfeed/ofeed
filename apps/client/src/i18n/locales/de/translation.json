@@ -818,6 +818,7 @@
           "Items": "Positionen",
           "Total": "Gesamt",
           "Paid": "Bezahlt",
+          "PaymentMethod": "Zahlungsart",
           "Created": "Erstellt",
           "Status": "Status",
           "Actions": "Aktionen"

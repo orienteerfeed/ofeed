@@ -639,6 +639,7 @@
           "Items": "Položky",
           "Total": "Celkem",
           "Paid": "Zaplaceno",
+          "PaymentMethod": "Způsob platby",
           "Created": "Vytvořeno",
           "Status": "Stav",
           "Actions": "Akce"

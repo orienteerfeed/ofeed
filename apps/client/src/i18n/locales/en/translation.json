@@ -639,6 +639,7 @@
           "Items": "Items",
           "Total": "Total",
           "Paid": "Paid",
+          "PaymentMethod": "Payment method",
           "Created": "Created",
           "Status": "Status",
           "Actions": "Actions"

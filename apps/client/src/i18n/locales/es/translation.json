@@ -639,6 +639,7 @@
           "Items": "Elementos",
           "Total": "Total",
           "Paid": "Pagado",
+          "PaymentMethod": "Método de pago",
           "Created": "Creado",
           "Status": "Estado",
           "Actions": "Acciones"
