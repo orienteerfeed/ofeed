@@ -7,7 +7,7 @@ export class HomePage {
     await this.page.goto('/');
   }
 
-  getTab(name: 'ALL' | 'TODAY' | 'UPCOMING' | 'RECENT') {
+  getTab(name: 'ALL' | 'OVERVIEW' | 'UPCOMING' | 'RECENT') {
     return this.page.getByRole('tab', { name: new RegExp(name, 'i') });
   }
 
@@ -16,10 +16,12 @@ export class HomePage {
   }
 
   getEventList() {
-    return this.page.locator('table, [role="table"], ul[class*="event"]').first();
+    return this.page
+      .locator('table, [role="table"], ul[class*="event"]')
+      .first();
   }
 
-  async switchTab(name: 'ALL' | 'TODAY' | 'UPCOMING' | 'RECENT') {
+  async switchTab(name: 'ALL' | 'OVERVIEW' | 'UPCOMING' | 'RECENT') {
     await this.getTab(name).click();
   }
 

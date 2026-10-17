@@ -49,6 +49,7 @@ const TEST_COMPETITIONS_PARSED: CompetitionList = [
   {
     ...testBasicCompetition,
     timediff: 0,
+    timezone: 'Europe/Stockholm',
   },
 ]
 
@@ -177,7 +178,9 @@ describe('useLiveResultat', () => {
       },
     })
 
-    await waitFor(() => expect(competitionsComposable.status.value).toEqual('success'))
+    await waitFor(() =>
+      expect(competitionsComposable.status.value).toEqual('success')
+    )
     expect(competitionsComposable.competitions.value?.length).toEqual(3)
     expect(competitionsComposable.competitions.value?.[0]).toEqual(
       TEST_COMPETITIONS_PARSED[0]
@@ -202,7 +205,9 @@ describe('useLiveResultat', () => {
       }
     )
 
-    await waitFor(() => expect(athletesComposable.status.value).toEqual('success'))
+    await waitFor(() =>
+      expect(athletesComposable.status.value).toEqual('success')
+    )
     expect(athletesComposable.rawAthletes.value?.length).toEqual(3)
     expect(athletesComposable.rawAthletes.value?.[0]).toEqual({
       id: 'TestAthlete1OK Club',

@@ -19,17 +19,17 @@ export class AuthPage {
     await this.gotoSignIn();
 
     // Email field is always visible
-    await this.page.getByPlaceholder(/email/i).fill(email);
+    await this.getEmailField().fill(email);
 
     // Password field appears after email is filled (progressive disclosure)
-    await this.page.getByPlaceholder(/password/i).fill(password);
+    await this.getPasswordField().fill(password);
 
     await this.page.getByRole('button', { name: /sign in/i }).click();
   }
 
   async submitForgotPassword(email: string) {
     await this.gotoForgotPassword();
-    await this.page.getByPlaceholder(/email/i).fill(email);
+    await this.getEmailField().fill(email);
     await this.page.getByRole('button', { name: /reset password/i }).click();
   }
 
@@ -38,11 +38,11 @@ export class AuthPage {
   }
 
   getPasswordField() {
-    return this.page.getByPlaceholder(/password/i);
+    return this.page.locator('input[type="password"]');
   }
 
   getEmailField() {
-    return this.page.getByPlaceholder(/email/i);
+    return this.page.locator('input[type="email"]');
   }
 
   getForgotPasswordLink() {
@@ -58,6 +58,8 @@ export class AuthPage {
   }
 
   getSuccessCheckIcon() {
-    return this.page.locator('svg.text-green-500, [class*="text-green"]').first();
+    return this.page
+      .locator('svg.text-green-500, [class*="text-green"]')
+      .first();
   }
 }

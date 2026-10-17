@@ -41,7 +41,7 @@ spec:
       {{- end }}
       containers:
         - name: api
-          image: "{{ .Values.api.image.repository }}:{{ required "api.image.tag is required" .Values.api.image.tag }}"
+          image: {{ include "ofeed.image" (dict "image" .Values.api.image "requireDigest" .Values.requireImageDigests) | quote }}
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false

@@ -67,12 +67,19 @@ this repository.
 
 - Releases run from pushes to `main`.
 - Tags use the `vX.Y.Z` format.
-- Release level is derived from explicit release intent and passed to
-  `semantic-release` via `SEMANTIC_RELEASE_FORCE_LEVEL`.
+- Conventional Commits determine the semantic-release level automatically.
+  `Release-Type:` and manual overrides are fallback mechanisms, never permission
+  to skip qualification or downgrade the inferred release level.
+- PRs to develop only verify. Pushes to develop build all four immutable
+  multi-architecture images and a versioned chart, then atomically update dev
+  GitOps. Release/hotfix branches also publish candidates for qualification.
+- Before tagging main, promote the exact qualified digests without rebuilding.
+  Production deployment requires a separately reviewed GitOps PR.
 - Release automation must not push generated commits directly to protected
   `main`.
-- A follow-up PR syncs the root `package.json` version to the latest release
-  tag.
+- The root package version is not a deployment identifier; immutable delivery
+  records, Git tags, and GitHub Releases are authoritative. Do not generate
+  version-sync commits that diverge from the qualified source tree.
 - GitHub Releases are the automated release notes. Update `CHANGELOG.md`
   deliberately when you want repository-local release notes or release-process
   documentation.

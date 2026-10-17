@@ -1,13 +1,17 @@
 # OFeed Helm Chart
 
-Chart nasazuje `web`, `api`, volitelný `board` a Argo CD `PreSync` migrační Job
-z image `ops`. MariaDB/MySQL je externí služba.
+Deploys the web client, API, optional board and an ordered Argo CD migration Job
+using the `ops` image. MariaDB/MySQL is external; this chart does not create a
+database server.
 
-## Image a GitOps
+## Images and GitOps
 
-Každý workload používá explicitní immutable tag `X.Y.Z` z GHCR. GitOps values v
-samostatném repozitáři musí změnit všechny čtyři tagy společně. Chart tagy
-vyžaduje, aby Argo CD nikdy omylem nenasadil neoznačený image.
+Every component requires an explicit immutable candidate or stable tag. Managed
+GitOps also sets `requireImageDigests: true` and supplies all four SHA-256
+digest pins. The rendered reference is `repository:tag@sha256:...`; the digest
+is the deployment identity. `latest`, `main` and `develop` tags are rejected.
+
+For a local render without remote registry access:
 
 ```bash
 helm template ofeed ./deploy/helm/ofeed \
@@ -17,25 +21,30 @@ helm template ofeed ./deploy/helm/ofeed \
   --set board.image.tag=1.2.3
 ```
 
-## Runtime configuration
+This non-enforcing local example is not a production values file. The delivery
+pipeline pins the chart version and vendors the exact qualified package into the
+GitOps environment wrapper; all image/chart changes form one atomic bump.
 
-`api.env` obsahuje běžnou serverovou konfiguraci. Citlivé hodnoty poskytni
-jednou z těchto cest:
+## Runtime configuration and secrets
 
-- `api.envFrom` a `ops.envFrom` s Kubernetes SecretRef;
-- volitelný Vault Agent Injector (`vault.enabled=true`).
+`api.env` contains non-secret server settings. Supply credentials through
+`api.envFrom` and `ops.envFrom` Kubernetes SecretRefs, or the optional Vault
+Agent Injector (`vault.enabled=true`). Explicit pod variables override Vault
+values. Migrations and API must receive the same database connection settings.
 
-Explicitní proměnné podu mají přednost před hodnotou se stejným názvem z Vault
-souboru. Pro migrace nastav stejný zdroj databázového připojení také pro `ops`.
+For the injector, set `vault.role`, `vault.secretPath`, `vault.authPath`,
+`vault.kvVersion` and the exact `vault.secretKeys` list. Dev's GitOps bootstrap
+instead uses External Secrets Operator and the existing shared MariaDB.
 
-`web.env` a `board.env` jsou veřejné hodnoty, ze kterých Nginx vytvoří
-`/runtime-config.js`; nepřidávej do nich hesla ani klíče.
+`web.env` and `board.env` are public values used to generate
+`/runtime-config.js` at container startup; never include passwords or API keys.
 
-## Vault
+## Migration ordering
 
-Při `vault.enabled=true` chart vyžaduje `vault.role` a `vault.secretPath`.
-`vault.secretKeys` určuje přesné klíče exportované do souboru Vault Agentu,
-například `DATABASE_URL`, `JWT_TOKEN_SECRET_KEY` a `MAPY_API_KEY`.
+The ServiceAccount is wave -20; the migration Job is a Sync hook at wave -10;
+workloads are wave 0. Use a full Argo CD sync so hooks run. A failed migration
+blocks rollout. Rollback reverts image/chart state, not database schema: use
+backward-compatible expand/contract changes.
 
-Podrobný Argo CD a Vault postup je v
-[`docs/DEPLOYMENT_ARGOCD.md`](../../../docs/DEPLOYMENT_ARGOCD.md).
+See [deployment operations](../../../docs/DEPLOYMENT_ARGOCD.md) and the
+[delivery/activation guide](../../../docs/DELIVERY_MODEL.md).

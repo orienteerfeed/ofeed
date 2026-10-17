@@ -7,9 +7,9 @@ metadata:
     {{- include "ofeed.labels" . | nindent 4 }}
     app.kubernetes.io/component: migrate
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "-10"
 spec:
   backoffLimit: {{ .Values.migrations.backoffLimit }}
   activeDeadlineSeconds: {{ .Values.migrations.activeDeadlineSeconds }}
@@ -43,7 +43,7 @@ spec:
       {{- end }}
       containers:
         - name: migrate
-          image: "{{ .Values.ops.image.repository }}:{{ required "ops.image.tag is required" .Values.ops.image.tag }}"
+          image: {{ include "ofeed.image" (dict "image" .Values.ops.image "requireDigest" .Values.requireImageDigests) | quote }}
           imagePullPolicy: {{ .Values.ops.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false

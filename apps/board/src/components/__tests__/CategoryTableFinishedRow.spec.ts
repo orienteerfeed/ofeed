@@ -16,13 +16,18 @@ const TEST_RUNNER: AthleteWithStats = {
   timeSeconds: 12 * 60 + 34,
 }
 
-describe('CategoryTableHeader', () => {
+describe('CategoryTableFinishedRow', () => {
   it('renders properly', async () => {
     const { container, getByText } = render(CategoryTableFinishedRow, {
-      props: { isEven: false, data: TEST_RUNNER, isCompact: false, showEmojis: true },
+      props: {
+        isEven: false,
+        data: TEST_RUNNER,
+        isCompact: false,
+        showEmojis: true,
+      },
     })
 
-    getByText(TEST_RUNNER.rank + '.')
+    getByText('🥉')
     getByText(TEST_RUNNER.surname)
     getByText(TEST_RUNNER.club)
     getByText(TEST_RUNNER.time!)
@@ -31,9 +36,22 @@ describe('CategoryTableHeader', () => {
     expect(container.firstChild).not.toHaveClass('bg-even')
   })
 
+  it('renders a numeric rank when medal emojis are disabled', () => {
+    const { getByText, queryByText } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: TEST_RUNNER, showEmojis: false },
+    })
+    getByText('3.')
+    expect(queryByText('🥉')).toBeNull()
+  })
+
   it('renders properly for even rows', async () => {
     const { container } = render(CategoryTableFinishedRow, {
-      props: { isEven: true, data: TEST_RUNNER, isCompact: false, showEmojis: true },
+      props: {
+        isEven: true,
+        data: TEST_RUNNER,
+        isCompact: false,
+        showEmojis: true,
+      },
     })
     expect(container.firstChild).toHaveClass('bg-even')
   })
@@ -45,7 +63,12 @@ describe('CategoryTableHeader', () => {
     }
 
     const { queryByText } = render(CategoryTableFinishedRow, {
-      props: { isEven: false, data: athlete, isCompact: false, showEmojis: true },
+      props: {
+        isEven: false,
+        data: athlete,
+        isCompact: false,
+        showEmojis: true,
+      },
     })
     expect(queryByText('+ ' + TEST_RUNNER.loss)).toBeFalsy()
   })
@@ -58,7 +81,12 @@ describe('CategoryTableHeader', () => {
     }
 
     const { getByText } = render(CategoryTableFinishedRow, {
-      props: { isEven: false, data: athlete, isCompact: false, showEmojis: true },
+      props: {
+        isEven: false,
+        data: athlete,
+        isCompact: false,
+        showEmojis: true,
+      },
     })
     expect(() => getByText(athlete.rank + '.')).toThrow()
     getByText('DISK')
@@ -74,7 +102,12 @@ describe('CategoryTableHeader', () => {
     }
 
     const { getByText } = render(CategoryTableFinishedRow, {
-      props: { isEven: false, data: athlete, isCompact: false, showEmojis: true },
+      props: {
+        isEven: false,
+        data: athlete,
+        isCompact: false,
+        showEmojis: true,
+      },
     })
     expect(() => getByText(athlete.rank + '.')).toThrow()
     expect(() => getByText(AthleteStatus[athlete.status])).toThrow()
@@ -89,7 +122,12 @@ describe('CategoryTableHeader', () => {
     }
 
     const { container, rerender } = render(CategoryTableFinishedRow, {
-      props: { isEven: false, data: athlete, isCompact: false, showEmojis: true },
+      props: {
+        isEven: false,
+        data: athlete,
+        isCompact: false,
+        showEmojis: true,
+      },
     })
     expect(container.firstChild).toHaveClass('bg-highlight')
 

@@ -1,0 +1,128 @@
+name: Qualify release
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Release or hotfix PR to qualify
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: read
+
+concurrency:
+  group: qualify-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  select:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      (startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'hotfix/')))
+    runs-on: ubuntu-24.04
+    outputs:
+      head: ${{ steps.pr.outputs.head }}
+    steps:
+      - uses: actions/github-script@v7
+        id: pr
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        with:
+          script: |
+            const number = Number(process.env.PR_NUMBER);
+            if (!Number.isSafeInteger(number) || number < 1) throw new Error('Invalid PR number');
+            const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
+            if (pr.base.ref !== 'main' || pr.head.repo.full_name !== context.payload.repository.full_name ||
+                !/^(release|hotfix)\//.test(pr.head.ref)) throw new Error('Not a trusted release PR');
+            core.setOutput('head', pr.head.sha);
+            core.setOutput('number', String(number));
+      - uses: actions/checkout@v4
+        with: { ref: main, path: control, persist-credentials: false }
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.head }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with: { package_json_file: control/package.json }
+      - uses: actions/setup-node@v4
+        with:
+          {
+            node-version-file: control/.nvmrc,
+            cache: pnpm,
+            cache-dependency-path: control/pnpm-lock.yaml,
+          }
+      - run: pnpm --dir control install --frozen-lockfile --ignore-scripts --filter ofeed-monorepo
+      - name: Resolve source, chart, digests and production baseline with trusted control code
+        working-directory: source
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: node ../control/scripts/release/qualification.mjs select "$PR_NUMBER"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qualification-input
+          path: |
+            source/candidate.json
+            source/baseline.json
+            source/qualification.json
+          retention-days: 30
+
+  qualify:
+    needs: select
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.select.outputs.head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with: { name: qualification-input }
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: azure/setup-helm@v4.3.1
+        with: { version: v3.18.6 }
+      - name: Start exact candidate and test migration compatibility
+        run: node scripts/release/stack.mjs start candidate.json baseline.json
+      - run: pnpm --filter ./apps/client exec playwright install --with-deps chromium
+      - name: Browser E2E against published containers
+        run: pnpm --filter ./apps/client exec playwright test --config playwright.release.config.ts
+      - name: Validate contract compatibility and the recorded chart package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release/stack.mjs contracts candidate.json baseline.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-qualification
+          path: qualification.json
+          retention-days: 90
+      - name: Collect logs and remove ephemeral containers
+        if: always()
+        run: node scripts/release/stack.mjs cleanup
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qualification-reports
+          path: |
+            apps/client/playwright-report/
+            apps/client/test-results/
+            .delivery/logs/
+          retention-days: 30

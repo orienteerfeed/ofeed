@@ -78,6 +78,18 @@ This file applies to `apps/server`.
 - Prefer lower-case or kebab-case file names for new server files; preserve the
   existing naming of touched legacy files instead of renaming broadly.
 - Write strict-friendly TypeScript and avoid new `any` usage where possible.
+- JSX uses `hono/jsx` through `jsxImportSource`; preserve that server setting.
+- Use the existing Pino logging helpers with structured context. Never log
+  secrets, tokens, cookies, authorization headers, or sensitive payloads.
+
+## Integration References
+
+- Consult [GraphQL architecture](../../docs/GRAPHQL_ARCHITECTURE.md) before
+  changing GraphQL module ownership or runtime integration.
+- Keep REST OpenAPI definitions aligned with endpoint parameters, response
+  envelopes, and error responses.
+- Update affected requests and assertions in `postman/collection.json` when
+  changing API behavior. See the [collection guide](./postman/README.md).
 
 ## Commands
 

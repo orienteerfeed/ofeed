@@ -2,262 +2,89 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - package.json
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_type:
-        description: Release type to publish
+        description: Optional emergency override; auto uses Conventional Commits
         required: true
+        default: auto
         type: choice
-        options:
-          - patch
-          - minor
-          - major
+        options: [auto, patch, minor, major]
+      resume_version:
+        description: Resume an already prepared release after a partial failure
+        required: false
+        type: string
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: true
+  group: ofeed-stable-release
+  cancel-in-progress: false
 
 jobs:
-  resolve-release-intent:
-    runs-on: ubuntu-latest
-    outputs:
-      should_release: ${{ steps.resolve.outputs.should_release }}
-      release_level: ${{ steps.resolve.outputs.release_level }}
-      release_reason: ${{ steps.resolve.outputs.release_reason }}
-
-    steps:
-      - name: Resolve release intent
-        id: resolve
-        uses: actions/github-script@v7
-        env:
-          WORKFLOW_RELEASE_TYPE: ${{ github.event.inputs.release_type || '' }}
-        with:
-          script: |
-            const priority = { patch: 1, minor: 2, major: 3 };
-            const reasons = [];
-            let releaseLevel = "";
-
-            const pickReleaseLevel = (candidate, reason) => {
-              if (!candidate) {
-                return;
-              }
-
-              const normalized = candidate.trim().toLowerCase();
-
-              if (!priority[normalized]) {
-                core.setFailed(`Unsupported release level: ${candidate}`);
-                return;
-              }
-
-              if (!releaseLevel || priority[normalized] > priority[releaseLevel]) {
-                releaseLevel = normalized;
-              }
-
-              reasons.push(reason);
-            };
-
-            const extractLevels = (text) => {
-              const levels = [];
-              const markerRegex = /\[(?:release|version):\s*(patch|minor|major)\]/gim;
-              const trailerRegex = /(?:^|\n)Release-Type:\s*(patch|minor|major)\s*$/gim;
-
-              for (const regex of [markerRegex, trailerRegex]) {
-                let match;
-
-                while ((match = regex.exec(text)) !== null) {
-                  levels.push(match[1].toLowerCase());
-                }
-              }
-
-              return levels;
-            };
-
-            const workflowReleaseType = process.env.WORKFLOW_RELEASE_TYPE?.trim();
-            pickReleaseLevel(workflowReleaseType, `workflow_dispatch requested ${workflowReleaseType}`);
-
-            if (context.eventName === "push") {
-              const commits = context.payload.commits ?? [];
-
-              for (const commit of commits) {
-                const commitSha = commit.id?.slice(0, 7) ?? "unknown";
-                const commitMessage = commit.message ?? "";
-
-                for (const level of extractLevels(commitMessage)) {
-                  pickReleaseLevel(level, `commit ${commitSha} requested ${level}`);
-                }
-              }
-
-              const prNumbers = new Set();
-
-              for (const commit of commits) {
-                try {
-                  const pullRequests = await github.paginate(
-                    "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
-                    {
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      commit_sha: commit.id,
-                      mediaType: {
-                        previews: ["groot"],
-                      },
-                    },
-                  );
-
-                  for (const pullRequest of pullRequests) {
-                    prNumbers.add(pullRequest.number);
-                  }
-                } catch (error) {
-                  core.warning(
-                    `Unable to resolve pull requests for commit ${commit.id?.slice(0, 7) ?? "unknown"}: ${error.message}`,
-                  );
-                }
-              }
-
-              for (const pullRequestNumber of prNumbers) {
-                try {
-                  const { data: pullRequest } = await github.rest.pulls.get({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: pullRequestNumber,
-                  });
-
-                  const labels = pullRequest.labels
-                    .map((label) => typeof label === "string" ? label : label.name)
-                    .filter(Boolean);
-
-                  for (const label of labels) {
-                    const match = /^release:(patch|minor|major)$/i.exec(label);
-
-                    if (match) {
-                      pickReleaseLevel(
-                        match[1],
-                        `pull request #${pullRequestNumber} has label ${label}`,
-                      );
-                    }
-                  }
-                } catch (error) {
-                  core.warning(`Unable to load pull request #${pullRequestNumber}: ${error.message}`);
-                }
-              }
-            }
-
-            const shouldRelease = releaseLevel ? "true" : "false";
-            const releaseReason = reasons[0] ?? "no explicit release intent found";
-
-            core.info(
-              shouldRelease === "true"
-                ? `Release requested: ${releaseLevel} (${releaseReason})`
-                : "No explicit release intent found. Skipping release.",
-            );
-
-            core.setOutput("should_release", shouldRelease);
-            core.setOutput("release_level", releaseLevel);
-            core.setOutput("release_reason", releaseReason);
+  verify:
+    uses: ./.github/workflows/ci.yaml
 
   release:
-    needs: resolve-release-intent
-    if: ${{ needs.resolve-release-intent.outputs.should_release == 'true' }}
-    runs-on: ubuntu-latest
-
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    permissions:
+      contents: write
+      packages: write
+      actions: read
+      pull-requests: read
+      issues: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Announce release
-        run: |
-          echo "Release level: ${{ needs.resolve-release-intent.outputs.release_level }}"
-          echo "Reason: ${{ needs.resolve-release-intent.outputs.release_reason }}"
-
-      - name: Run semantic-release
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter ofeed-monorepo
+      - name: Release from Conventional Commits after exact candidate qualification
+        id: release
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          SEMANTIC_RELEASE_FORCE_LEVEL: ${{ needs.resolve-release-intent.outputs.release_level }}
-        run: pnpm exec semantic-release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_WRITE: "true"
+          RELEASE_OVERRIDE: ${{ inputs.release_type }}
+          RESUME_VERSION: ${{ inputs.resume_version }}
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: node scripts/release/release.mjs
 
+  # Keeps package.json and the source Helm chart (version/appVersion) on the released X.Y.Z.
   sync-version-pr:
     needs: release
-    if: ${{ needs.release.result == 'success' && github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-
+    if: ${{ needs.release.outputs.version != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - name: Resolve release version and update package.json
-        id: sync
-        shell: bash
-        run: |
-          git fetch --tags --force
-
-          latest_tag="$(git tag --list 'v*' --sort=-version:refname | head -n 1)"
-
-          if [ -z "$latest_tag" ]; then
-            echo "No v* tag found; skipping."
-            echo "needs_pr=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          release_version="${latest_tag#v}"
-          current_version="$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).version")"
-
-          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
-
-          if [ "$current_version" = "$release_version" ]; then
-            echo "package.json is already on $release_version; skipping."
-            echo "needs_pr=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          node ./scripts/release/update-package-version.mjs "$release_version"
-          echo "needs_pr=true" >> "$GITHUB_OUTPUT"
-
-      - name: Create version sync PR
-        if: steps.sync.outputs.needs_pr == 'true'
-        uses: peter-evans/create-pull-request@v7
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc }
+      - run: npm install --no-save --no-audit --no-fund yaml@2.9.1
+      - run: node scripts/release/update-package-version.mjs "$VERSION"
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+      - uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           base: main
-          branch: chore/version-sync-package-json
+          branch: chore/version-sync
           delete-branch: true
-          title: "chore(version): sync package.json to v${{ steps.sync.outputs.release_version }}"
-          commit-message: "chore(version): sync package.json to v${{ steps.sync.outputs.release_version }} [skip release]"
-          body: |
-            Automated PR created after release.
-
-            Syncs root `package.json` version with released tag `v${{ steps.sync.outputs.release_version }}`.
+          title: "chore(version): sync package.json and Helm chart to v${{ needs.release.outputs.version }}"
+          commit-message: "chore(version): sync package.json and Helm chart to v${{ needs.release.outputs.version }} [skip release]"
+          body: Syncs root `package.json` and `deploy/helm/ofeed/Chart.yaml` (`version`, `appVersion`) with release `v${{ needs.release.outputs.version }}`.
           labels: |
             release
             automated
           add-paths: |
             package.json
+            deploy/helm/ofeed/Chart.yaml

@@ -15,7 +15,7 @@ test.describe('Home page', () => {
     await home.goto();
 
     await expect(home.getTab('ALL')).toBeVisible();
-    await expect(home.getTab('TODAY')).toBeVisible();
+    await expect(home.getTab('OVERVIEW')).toBeVisible();
     await expect(home.getTab('UPCOMING')).toBeVisible();
     await expect(home.getTab('RECENT')).toBeVisible();
   });
@@ -24,7 +24,7 @@ test.describe('Home page', () => {
     const home = new HomePage(page);
     await home.goto();
 
-    for (const tab of ['TODAY', 'UPCOMING', 'RECENT', 'ALL'] as const) {
+    for (const tab of ['OVERVIEW', 'UPCOMING', 'RECENT', 'ALL'] as const) {
       await home.switchTab(tab);
       await expect(page).not.toHaveURL(/error/);
     }

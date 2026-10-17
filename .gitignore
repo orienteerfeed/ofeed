@@ -271,6 +271,7 @@ mysql-data/
 
 # Keep these directories (empty placeholder files)
 !.gitkeep
+.delivery/
 !.keep
 
 # Keep configuration files

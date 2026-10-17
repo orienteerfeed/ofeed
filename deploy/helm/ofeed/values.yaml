@@ -1,5 +1,7 @@
 nameOverride: ""
 fullnameOverride: ""
+requireImageDigests: false
+releaseVersion: ""
 
 imagePullSecrets: []
 
@@ -13,6 +15,7 @@ api:
   image:
     repository: ghcr.io/orienteerfeed/ofeed/server
     tag: ""
+    digest: ""
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -43,6 +46,7 @@ web:
   image:
     repository: ghcr.io/orienteerfeed/ofeed/client
     tag: ""
+    digest: ""
     pullPolicy: IfNotPresent
   containerPort: 8080
   service:
@@ -61,6 +65,7 @@ board:
   image:
     repository: ghcr.io/orienteerfeed/ofeed/board
     tag: ""
+    digest: ""
     pullPolicy: IfNotPresent
   containerPort: 8080
   service:
@@ -83,6 +88,7 @@ ops:
   image:
     repository: ghcr.io/orienteerfeed/ofeed/ops
     tag: ""
+    digest: ""
     pullPolicy: IfNotPresent
   env: {}
   envFrom: []

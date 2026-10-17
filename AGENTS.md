@@ -1,17 +1,40 @@
 # Repository Guidelines
 
+## Start Here
+
+This is the canonical entry point for all coding agents working in this
+repository. `CLAUDE.md` files import the corresponding `AGENTS.md` instead of
+maintaining a second set of rules.
+
+1. Read this file, then the scoped guidelines for every directory you will
+   change (linked below).
+2. Use [README.md](./README.md) for the project overview and local setup,
+   [CONTRIBUTING.md](./CONTRIBUTING.md) for branching, commits, and review, and
+   [CHANGELOG.md](./CHANGELOG.md) for the human-readable change history.
+3. Consult the [documentation index](./docs/README.md) for architecture,
+   configuration, deployment, and feature references relevant to the task.
+4. Inspect the working tree before editing, preserve unrelated changes, and run
+   the narrowest meaningful checks before handing off the result. Report the
+   changes, checks run, and any remaining limitations.
+
 ## Scope
 
-This file applies to the whole monorepo. More specific instructions in
-`apps/client/AGENTS.md`, `apps/server/AGENTS.md`, and
-`packages/shared/AGENTS.md` override these rules inside their directories.
+This file applies to the whole monorepo. Read the following additional rules
+when working in their scope; more specific instructions take precedence:
+
+- [Client guidelines](./apps/client/AGENTS.md)
+- [Server guidelines](./apps/server/AGENTS.md)
+- [Board guidelines](./apps/board/AGENTS.md)
+- [Shared package guidelines](./packages/shared/AGENTS.md)
+- [GitHub automation and template guidelines](./.github/AGENTS.md)
 
 ## Repository Overview
 
 This repository is a `pnpm` workspace orchestrated by Turborepo.
 
 - `apps/client`: Vite + React frontend.
-- `apps/server`: Hono + GraphQL Yoga + Prisma backend.
+- `apps/server`: Hono + GraphQL Yoga + Pothos + Prisma (MariaDB) backend.
+- `apps/board`: Vite + Vue 3 event board with Pinia and UnoCSS.
 - `packages/shared`: shared TypeScript/Zod contracts consumed via
   `@repo/shared`.
 - `docs/`: project, deployment, and environment references.
@@ -30,7 +53,9 @@ Important generated paths:
 - Runtime env files are app-local only:
   - `apps/client/.env`
   - `apps/server/.env`
-- Do not introduce a root runtime `.env` for application behavior.
+  - `apps/board/.env`
+- Do not introduce a root runtime `.env` for application behavior. A root `.env`
+  is optional for Docker Compose / Traefik interpolation only.
 - `turbo.json` uses strict env handling. When adding a new env var that affects
   Turbo tasks, update `turbo.json` and the relevant `.env.example` file.
 
@@ -50,7 +75,8 @@ Important generated paths:
 - Preserve contributor-facing references to `CLA.md` when changing contribution,
   licensing, or pull request workflows.
 - Never commit secrets. Only client-safe `VITE_*` variables may reach browser
-  code.
+  code at build time. Container startup also exposes documented public `OFEED_*`
+  settings; see [frontend configuration](./docs/FRONTEND_CONFIGURATION.md).
 
 ## Build, Test, and Development Commands
 
@@ -58,19 +84,23 @@ Run from the repository root unless noted otherwise.
 
 - `pnpm install`: install all workspace dependencies.
 - `pnpm setup:dev`: bootstrap local development.
-- `pnpm dev`: run workspace dev tasks in parallel.
+- `pnpm dev`: run the client and server in parallel; the board is excluded.
 - `pnpm dev:win`: Windows-friendly variant of `pnpm dev`.
+- `pnpm dev:board` / `pnpm dev:board:win`: run the optional board separately.
 - `pnpm build`: build all workspaces.
 - `pnpm lint`: lint all workspaces.
 - `pnpm format`: format the repo with Prettier.
 - `pnpm format:check`: verify formatting.
 - `pnpm type-check`: run TypeScript checks across workspaces.
+- `pnpm type-check:graphql`: run the server GraphQL/Pothos type-check profile.
 - `pnpm --filter @repo/shared build`: rebuild shared contracts after changing
   `packages/shared`.
 - `pnpm test`: run workspace tests.
 - `pnpm test:watch`: run watch-mode tests in parallel.
 - `pnpm test:client`: run client tests only.
 - `pnpm test:server`: run server tests only.
+- `pnpm --filter ./apps/board test:unit`: run board unit tests; the board has no
+  `test` script and is not covered by root `pnpm test`.
 - `pnpm db:generate`: run Prisma generate through Turbo.
 - `pnpm db:migrate`: run Prisma migrations through Turbo.
 - `docker compose -f compose.mysql.yaml up -d mysql`: start local MariaDB/MySQL
@@ -129,10 +159,17 @@ shells that do not support POSIX-style environment assignments such as
   `Refs #123`, `Closes #123`, or `Fixes #123` in commits or pull requests.
 - Prefer pull requests that map cleanly to a single issue or a tightly related
   set of acceptance criteria.
-- Keep `CHANGELOG.md` in sync with notable product-facing or operational changes
-  when the release process or documentation requires a human-readable summary.
+- Record notable product-facing or operational changes under `[Unreleased]` in
+  [CHANGELOG.md](./CHANGELOG.md), using Keep a Changelog categories. Preserve
+  historical entries. The file is maintained manually; release automation
+  publishes separate GitHub Release notes.
 - This repository uses `semantic-release` on `main` and tags releases as
-  `vX.Y.Z`.
+  `vX.Y.Z`. Conventional Commits determine the version automatically; a
+  `Release-Type:` commit trailer or manual override is an emergency fallback and
+  must not downgrade the inferred level. Labels do not control versioning.
+  Release/hotfix PRs require a merge commit and successful qualification of the
+  exact candidate image digests, chart package, and production baseline. Follow
+  the [release request process](./CONTRIBUTING.md#release-requests).
 - Desired semver discipline is:
   - `fix` for patch-level changes
   - `feat` for minor-level changes

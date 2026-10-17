@@ -1,4 +1,5 @@
 .git
+.delivery
 .github
 .husky
 .pnpm-store

@@ -1,0 +1,6 @@
+/.github/workflows/ @martinkrivda
+/.github/CODEOWNERS @martinkrivda
+/.releaserc.json @martinkrivda
+/scripts/release/ @martinkrivda
+/scripts/tests/delivery.test.mjs @martinkrivda
+/deploy/helm/ @martinkrivda

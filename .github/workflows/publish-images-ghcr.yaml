@@ -1,102 +1,236 @@
-name: Publish release images to GHCR
+name: Build candidate images
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [develop, "release/**", "hotfix/**"]
+  workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write
-  attestations: write
-  id-token: write
 
 concurrency:
-  group: ghcr-publish-${{ github.ref }}
+  group: candidate-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  validate-release-tag:
+  verify:
+    uses: ./.github/workflows/ci.yaml
+
+  plan:
+    needs: verify
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     outputs:
-      version: ${{ steps.tag.outputs.version }}
+      reused: ${{ steps.plan.outputs.reused }}
+      tag: ${{ steps.plan.outputs.tag }}
     steps:
-      - name: Validate semantic release tag
-        id: tag
-        shell: bash
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter ofeed-monorepo
+      - name: Resolve immutable candidate
+        id: plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_WRITE: "true"
         run: |
-          set -euo pipefail
-          tag_name="${GITHUB_REF_NAME}"
-          if [[ ! "$tag_name" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "Refusing non-release tag: $tag_name"
-            exit 1
-          fi
+          case "$GITHUB_REF_NAME" in develop|release/*|hotfix/*) ;; *) exit 1 ;; esac
+          node scripts/release/candidate.mjs probe
 
-          echo "version=${tag_name#v}" >> "$GITHUB_OUTPUT"
-
-  publish:
-    needs: validate-release-tag
-    name: Build and push ${{ matrix.component }}
+  images:
+    needs: plan
+    if: needs.plan.outputs.reused != 'true'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - component: server
-            image: ghcr.io/orienteerfeed/ofeed/server
-            dockerfile: apps/server/Dockerfile
-            target: production
-          - component: ops
-            image: ghcr.io/orienteerfeed/ofeed/ops
-            dockerfile: apps/server/Dockerfile
-            target: ops
-          - component: client
-            image: ghcr.io/orienteerfeed/ofeed/client
-            dockerfile: apps/client/Dockerfile
-            target: runner
-          - component: board
-            image: ghcr.io/orienteerfeed/ofeed/board
-            dockerfile: apps/board/Dockerfile
-            target: runner
-
+          - { component: api, image: server, file: apps/server/Dockerfile, target: production }
+          - { component: web, image: client, file: apps/client/Dockerfile, target: runner }
+          - { component: board, image: board, file: apps/board/Dockerfile, target: runner }
+          - { component: ops, image: ops, file: apps/server/Dockerfile, target: ops }
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GHCR_WRITE: "true"
+      CANDIDATE_TAG: ${{ needs.plan.outputs.tag }}
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter ofeed-monorepo
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push multi-platform image
-        uses: docker/build-push-action@v6
+      - name: Reuse an image from a partially completed run
+        id: existing
+        env:
+          COMPONENT: ${{ matrix.component }}
+        run: node scripts/release/candidate.mjs probe-image "$COMPONENT" "$CANDIDATE_TAG"
+      - uses: docker/build-push-action@v6
+        if: steps.existing.outputs.exists != 'true'
+        id: build
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: ${{ matrix.file }}
           target: ${{ matrix.target }}
-          push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ matrix.image }}:${{ needs.validate-release-tag.outputs.version }}
+          push: true
+          tags: ghcr.io/orienteerfeed/ofeed/${{ matrix.image }}:${{ needs.plan.outputs.tag }}
           labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.source=https://github.com/orienteerfeed/ofeed
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ needs.validate-release-tag.outputs.version }}
           provenance: mode=max
           sbom: true
-          cache-from: type=gha,scope=ghcr-${{ matrix.component }}
-          cache-to: type=gha,mode=max,scope=ghcr-${{ matrix.component }}
-
-      - name: Verify published manifest
-        shell: bash
+          cache-from: type=gha,scope=${{ matrix.component }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component }}
+      - name: Verify source and both architecture manifests
+        env:
+          COMPONENT: ${{ matrix.component }}
+          IMAGE_DIGEST: ${{ steps.existing.outputs.digest || steps.build.outputs.digest }}
+        run: node scripts/release/candidate.mjs image "$COMPONENT" "$IMAGE_DIGEST" "$COMPONENT.json"
+      - name: Exercise native binaries on both architectures
+        env:
+          IMAGE: ghcr.io/orienteerfeed/ofeed/${{ matrix.image }}
+          COMPONENT: ${{ matrix.component }}
+          IMAGE_DIGEST: ${{ steps.existing.outputs.digest || steps.build.outputs.digest }}
         run: |
-          set -euo pipefail
-          image="${{ matrix.image }}:${{ needs.validate-release-tag.outputs.version }}"
-          docker buildx imagetools inspect "$image"
+          for arch in amd64 arm64; do
+            case "$COMPONENT" in
+              api) docker run --rm --platform "linux/$arch" --entrypoint node "$IMAGE@$IMAGE_DIGEST" --input-type=module -e "await import('argon2'); await import('sharp');" ;;
+              ops) docker run --rm --platform "linux/$arch" --entrypoint node "$IMAGE@$IMAGE_DIGEST" --input-type=module -e "await import('prisma/config');" ;;
+              *) docker run --rm --platform "linux/$arch" --entrypoint nginx "$IMAGE@$IMAGE_DIGEST" -v ;;
+            esac
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ matrix.component }}
+          path: ${{ matrix.component }}.json
+          overwrite: true
+          retention-days: 30
+
+  chart:
+    needs: plan
+    if: needs.plan.outputs.reused != 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - uses: azure/setup-helm@v4.3.1
+        with: { version: v3.18.6 }
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter ofeed-monorepo
+      - name: Publish the exact qualification chart
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_WRITE: "true"
+        run: |
+          printf '%s' "$GITHUB_TOKEN" | helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          node scripts/release/candidate.mjs chart chart-package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate-chart
+          path: chart-package/chart.json
+          overwrite: true
+          retention-days: 30
+
+  bundle:
+    needs: [plan, images, chart]
+    if: >-
+      always() && needs.plan.result == 'success' &&
+      (needs.plan.outputs.reused == 'true' ||
+      (needs.images.result == 'success' && needs.chart.result == 'success'))
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter ofeed-monorepo
+      - uses: actions/download-artifact@v4
+        if: needs.plan.outputs.reused != 'true'
+        with: { path: candidate-input, merge-multiple: true }
+      - name: Publish or reuse the complete candidate record
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_WRITE: "true"
+          REUSED: ${{ needs.plan.outputs.reused }}
+          CANDIDATE_TAG: ${{ needs.plan.outputs.tag }}
+        run: |
+          if [ "$REUSED" = true ]; then
+            node scripts/release/candidate.mjs fetch "$GITHUB_SHA"
+          else
+            node scripts/release/candidate.mjs assemble candidate-input "$CANDIDATE_TAG"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: complete-candidate
+          path: candidate.json
+          overwrite: true
+          retention-days: 30
+
+  update-dev:
+    needs: bundle
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter ofeed-monorepo
+      - uses: actions/download-artifact@v4
+        with: { name: complete-candidate }
+      - name: Atomically advance dev GitOps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: node scripts/release/gitops.mjs dev candidate.json
+
+  notify-release:
+    needs: bundle
+    if: startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/hotfix/')
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      pull-requests: read
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              ...context.repo, state: 'open', base: 'main',
+              head: context.repo.owner + ':' + context.ref.replace('refs/heads/', '')
+            });
+            for (const pr of prs) {
+              if (pr.head.sha !== context.sha) continue;
+              await github.rest.actions.createWorkflowDispatch({
+                ...context.repo, workflow_id: 'qualify-release.yaml',
+                ref: pr.head.ref, inputs: { pr_number: String(pr.number) }
+              });
+            }

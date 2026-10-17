@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## Scope
+
+This file supplements the root [AGENTS.md](../../AGENTS.md) for `apps/board`.
+
 ## Project Structure & Module Organization
 
 `apps/board` is a standalone Vue 3 board application integrated into the main `pnpm` workspace. App code lives in `src/`, browser tests in `e2e/`, and static assets in `public/`.
@@ -11,6 +15,10 @@ Important directories:
 - `src/stores`: Pinia state
 - `src/views`: route-level screens
 - `tsconfig.base.json`: shared local TypeScript base for board-specific configs
+
+Keep route-level views thin and delegate data loading to composables and state
+to stores. The board consumes the OFeed REST API directly and does not depend on
+`@repo/shared`.
 
 TypeScript config notes:
 
@@ -32,7 +40,8 @@ Run all commands from `apps/board` unless you are using the root workspace comma
 - `pnpm test:e2e`: run Playwright tests
 - `pnpm exec tsc -p e2e/tsconfig.json --showConfig`: verify the standalone E2E tsconfig chain when editor diagnostics look stale
 - `pnpm lint`: run ESLint with the flat config
-- `docker build -t ofeed-board .`: build the production container image
+- `docker build -f apps/board/Dockerfile -t ofeed-board .` from the repository
+  root: build the production container image using the workspace build context
 
 ## Coding Style & Naming Conventions
 
@@ -43,6 +52,10 @@ Use TypeScript in strict mode. Prefer explicit types on public composable APIs a
 - Tests: `*.spec.ts`
 - Env vars exposed to the client: `VITE_*`
 
+Custom theme colors (`header`, `male`, `female`, `highlight`) live in
+`vite.config.ts`. Reuse them through UnoCSS utilities or CSS variables.
+Use the existing vue-i18n locale resources for user-facing copy.
+
 ## Testing Guidelines
 
 Keep unit tests close to the code under `src/**/__tests__`. Favor focused tests around provider transforms, route-dependent rendering, and table behavior. When changing result-provider behavior, add coverage for both happy-path parsing and failure-prone edge cases.
@@ -51,6 +64,13 @@ Keep unit tests close to the code under `src/**/__tests__`. Favor focused tests 
 
 Copy `.env.example` to `.env` for local overrides. By default the board talks to the local OFeed server via `/api/ofeed`, with Vite proxying to `http://localhost:3001` in development and Nginx proxying to `http://api:3001` in Docker.
 
+Use the configured API base URL rather than hard-coding one. Development proxy
+targets can be overridden with `VITE_OFEED_PROXY_TARGET`. For public container
+runtime settings, see [frontend configuration](../../docs/FRONTEND_CONFIGURATION.md).
+
 ## Commit & Pull Request Guidelines
 
-Use short imperative commits, for example `rename oriCloud provider to ofeed` or `tighten strict types in competition loaders`. Pull requests should include a concise summary, test evidence, and screenshots for visible UI changes.
+Follow the root [contribution guide](../../CONTRIBUTING.md): use Conventional
+Commits such as `refactor(board): rename result provider` or
+`fix(board): handle invalid competition data`. Pull requests should include a
+concise summary, test evidence, and screenshots for visible UI changes.

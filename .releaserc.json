@@ -2,12 +2,7 @@
   "branches": ["main"],
   "tagFormat": "v${version}",
   "plugins": [
-    [
-      "@semantic-release/exec",
-      {
-        "analyzeCommitsCmd": "node ./scripts/release/analyze-commits.mjs"
-      }
-    ],
+    "./scripts/release/analyzer.mjs",
     [
       "@semantic-release/release-notes-generator",
       {
@@ -20,6 +15,7 @@
         "successComment": false,
         "failComment": false
       }
-    ]
+    ],
+    "./scripts/release/delivery-plugin.mjs"
   ]
 }

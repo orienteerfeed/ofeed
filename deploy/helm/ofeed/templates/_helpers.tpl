@@ -15,8 +15,26 @@
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 app.kubernetes.io/name: {{ include "ofeed.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: {{ default .Chart.AppVersion .Values.releaseVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{- define "ofeed.image" -}}
+{{- $repository := required "image.repository is required" .image.repository -}}
+{{- $tag := required "image.tag is required" .image.tag -}}
+{{- if or (eq $tag "latest") (eq $tag "main") (eq $tag "develop") -}}
+{{- fail "Moving image tags are not allowed" -}}
+{{- end -}}
+{{- if .image.digest -}}
+{{- if not (regexMatch "^sha256:[a-f0-9]{64}$" .image.digest) -}}
+{{- fail "image.digest must be a SHA-256 OCI digest" -}}
+{{- end -}}
+{{- printf "%s:%s@%s" $repository $tag .image.digest -}}
+{{- else if .requireDigest -}}
+{{- fail "image.digest is required for managed GitOps delivery" -}}
+{{- else -}}
+{{- printf "%s:%s" $repository $tag -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "ofeed.selectorLabels" -}}

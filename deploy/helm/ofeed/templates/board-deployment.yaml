@@ -32,7 +32,7 @@ spec:
       {{- end }}
       containers:
         - name: board
-          image: "{{ .Values.board.image.repository }}:{{ required "board.image.tag is required" .Values.board.image.tag }}"
+          image: {{ include "ofeed.image" (dict "image" .Values.board.image "requireDigest" .Values.requireImageDigests) | quote }}
           imagePullPolicy: {{ .Values.board.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false

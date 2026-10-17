@@ -31,7 +31,7 @@ spec:
       {{- end }}
       containers:
         - name: web
-          image: "{{ .Values.web.image.repository }}:{{ required "web.image.tag is required" .Values.web.image.tag }}"
+          image: {{ include "ofeed.image" (dict "image" .Values.web.image "requireDigest" .Values.requireImageDigests) | quote }}
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false

@@ -1,37 +1,46 @@
 # Deployment: Argo CD, Helm, GHCR and Vault
 
-## Release contract
+See the [delivery pipeline](./DELIVERY_MODEL.md) for workflows, credentials,
+qualification, automatic versioning and one-time activation. Environment state
+lives in `martinkrivda/officelab-argocd-apps`; CI never connects to the cluster.
 
-GitHub Actions publikuje pouze při tagu `vX.Y.Z`. V GitOps repozitáři nastav
-pro `api`, `web`, `ops` a `board` stejný explicitní tag `X.Y.Z`; nepoužívej
-`latest` ani tag větve. Argo CD sleduje GitOps repozitář a provádí standardní
-sync, publish workflow do něj necommituje.
+## Artifact contract
 
-```yaml
-api:
-  image: { repository: ghcr.io/orienteerfeed/ofeed/server, tag: '1.2.3' }
-web:
-  image: { repository: ghcr.io/orienteerfeed/ofeed/client, tag: '1.2.3' }
-ops:
-  image: { repository: ghcr.io/orienteerfeed/ofeed/ops, tag: '1.2.3' }
-board:
-  image: { repository: ghcr.io/orienteerfeed/ofeed/board, tag: '1.2.3' }
-```
+Dev and production pin all four GHCR image repositories with explicit aliases
+and SHA-256 digests. Production promotes qualified manifests without rebuilding.
+The same GitOps commit pins and vendors the qualified chart package. Never use
+`latest`, floating branch chart sources or fabricated digests.
 
-GHCR packages jsou veřejné, takže imagePullSecret není nutný. Pokud se
-viditelnost změní na privátní, nastav `imagePullSecrets` na read-only GHCR
-Secret.
+Make application image packages public after initial publication, or supply
+an environment-specific read-only `imagePullSecret`. Chart and delivery-record
+packages may remain private; Argo CD reads the chart from GitOps.
 
-## Argo CD migration
+## Migration ordering
 
-Chart vytváří `ops` Job s anotací `argocd.argoproj.io/hook: PreSync` a sync-wave
-`-1`. Job dokončí `prisma migrate deploy` před rolloutem API, webu a boardu.
-Jeho selhání zastaví synchronizaci. Migrace musí být zpětně kompatibilní s
-právě běžící aplikací, protože rollback schématu se automaticky neprovádí.
+The chart creates an `ops` migration Job as an Argo CD **Sync** hook at wave -10,
+after prerequisites at -20 and before application workloads at wave 0. A failed
+`prisma migrate deploy` stops rollout. Do not use selective sync, which skips
+hooks. ExternalSecret reconciliation must complete before the Job can start.
 
-## Secrets
+Use expand/contract schema changes compatible with the currently running API.
+Reverting a GitOps bump does not reverse the database schema. Keep a tested
+rollback window and backup/recovery plan, especially for the first managed
+production deployment where the legacy baseline is not recorded yet.
 
-Pro cluster bez Vaultu předej stejný Secret API a migracím:
+## Existing MariaDB and test isolation
+
+The shared MariaDB instance remains in namespace `database`. Dev uses a separate
+`ofeed_test` database and a dedicated user restricted to that database. GitOps
+provides an idempotent bootstrap Job using the existing root Secret; it works
+with the current persistent volume and does not rely on first-start init SQL.
+Production's database/user are not modified. Password mismatches on an existing
+test user fail verification rather than silently rotating credentials.
+
+## Secret delivery
+
+Dev uses External Secrets Operator to create `ofeed-runtime` from Vault. The
+same password creates the test database user and the URL-encoded `DATABASE_URL`.
+Both API and migrations consume the same runtime Secret:
 
 ```yaml
 api:
@@ -44,24 +53,17 @@ vault:
   enabled: false
 ```
 
-Pro Vault nastav Kubernetes auth roli, path a seznam klíčů, které má Agent
-exportovat. Explicitní `env` a `envFrom` mají přednost před Vault hodnotou.
-
-```yaml
-vault:
-  enabled: true
-  role: ofeed-api
-  authPath: auth/kubernetes
-  secretPath: kv/data/ofeed/api
-  kvVersion: v2
-  secretKeys: [DATABASE_URL, JWT_TOKEN_SECRET_KEY, MAPY_API_KEY]
-```
+Production's existing Vault Agent configuration is preserved. If using the
+injector, configure `vault.enabled`, `role`, `authPath`, `secretPath`, `kvVersion`
+and `secretKeys`. Explicit pod `env`/`envFrom` values take precedence. Never
+commit Secret data, database URLs containing passwords or Vault tokens.
 
 ## Public runtime configuration
 
-Stejný client nebo board image lze spustit na jiné doméně bez rebuildu. Nastav
-pouze veřejné hodnoty (`OFEED_PUBLIC_URL`, `OFEED_PUBLIC_API_URL`,
-`OFEED_BOARD_APP_URL`, případně `OFEED_BOARD_API_URL`) přes `web.env`,
-`board.env` nebo Docker `environment`. Pokud URL není nastavená, client používá
-aktuální origin a Nginx proxy směruje API uvnitř stejné domény. Nasazení je
-podporováno z root cesty `/`, nikoli pod URL prefixem.
+The same client/board image runs on another hostname without rebuilding.
+Configure only public `OFEED_PUBLIC_URL`, `OFEED_PUBLIC_API_URL`,
+`OFEED_BOARD_APP_URL` and optional `OFEED_BOARD_API_URL` through `web.env` or
+`board.env`. Never put server credentials into public runtime configuration.
+Unset API URLs use the current origin and Nginx's same-origin API proxy.
+Deployments are supported at `/`, not under a URL path prefix. See
+[frontend configuration](./FRONTEND_CONFIGURATION.md) for the complete contract.

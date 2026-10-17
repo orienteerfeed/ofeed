@@ -30,6 +30,7 @@ Frontend work should follow the existing Atomic Design structure:
 - `src/pages`: page-level feature composition.
 - `src/routes`: TanStack Router file-based route entries.
 - `src/providers`: app-wide providers.
+- `src/stores`: global application state (Zustand).
 - `src/hooks`: reusable hooks.
 - `src/lib`: shared helpers, API helpers, and local validation helpers.
 - `src/i18n`: localization bootstrapping and locale files.
@@ -98,6 +99,9 @@ Run from `apps/client` or from the repo root with `pnpm --filter ./apps/client`.
 ## Testing Expectations
 
 - Use Vitest for unit and component tests.
+- Follow `vitest.config.ts` discovery: use `tests/**` or matching
+  `__tests__/**` paths outside `src/`; the current configuration excludes
+  `src/**`.
 - Use Playwright for route-level and end-to-end behavior.
 - For UI, routing, form, or i18n changes, prefer at least `pnpm test` and the
   most relevant focused check (`pnpm test:coverage` or `pnpm e2e`) before
