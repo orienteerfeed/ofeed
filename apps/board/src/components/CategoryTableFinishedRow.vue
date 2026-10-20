@@ -13,10 +13,12 @@ const props = withDefaults(
     isEven: boolean
     isCompact?: boolean
     showEmojis?: boolean
+    awardedPlaces?: number
   }>(),
   {
     isCompact: false,
     showEmojis: true,
+    awardedPlaces: 3,
   }
 )
 const { now } = useTimeHelpers()
@@ -51,6 +53,12 @@ const emojisMapping: Record<AthleteStatus, string> = {
 }
 
 const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
+const isAwarded = computed(
+  () => props.data.rank !== undefined && props.data.rank <= props.awardedPlaces
+)
+const medal = computed(() =>
+  props.showEmojis && isAwarded.value ? medalEmojis[props.data.rank!] : undefined
+)
 </script>
 
 <template>
@@ -59,10 +67,14 @@ const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
     class="grid gap-2 px-3 py-1.5 rounded-lg"
   >
     <span v-if="data.status === AthleteStatus.Ok">
-      <template v-if="showEmojis && data.rank !== undefined && medalEmojis[data.rank]">{{
-        medalEmojis[data.rank]
-      }}</template>
-      <span v-else class="tabular-nums">{{ data.rank }}.</span>
+      <template v-if="medal">{{ medal }}</template>
+      <span
+        v-else-if="data.rank !== undefined"
+        class="tabular-nums"
+        :class="{ 'rounded bg-amber-300 text-black': isAwarded }"
+        :data-awarded="isAwarded || undefined"
+        >{{ data.rank }}.</span
+      >
     </span>
     <span v-else-if="data.status === AthleteStatus.NotCompeting">MS</span>
     <span v-else-if="showEmojis && emojisMapping[data.status]">{{

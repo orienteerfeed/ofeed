@@ -40,14 +40,25 @@
         "name": "Name",
         "col": "Col",
         "color": "Color",
-        "order": "Order"
-      }
+        "order": "Order",
+        "mode": "Mode",
+        "places": "Places"
+      },
+      "sourceHint": "Settings defined by the data source (e.g. in OFeed) take precedence and are locked here.",
+      "fromSource": "Set by the data source"
     },
     "colorOverride": {
       "auto": "Auto (from data source)",
       "male": "M – blue (male)",
       "female": "F – pink (female)",
       "neutral": "X – grey (neutral)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Ranked",
+      "Unordered": "A–Z",
+      "UnorderedNoTimes": "A–Z, no times"
+    },
+    "awardedPlaces": "Awarded places (highlighted)"
   }
 }

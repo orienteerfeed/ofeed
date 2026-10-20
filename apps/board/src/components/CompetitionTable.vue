@@ -46,8 +46,10 @@ const categoryColumns = computed(() =>
       .map((displayCategory) => {
         const category = categoriesHashByName.value[displayCategory.name]
         if (!category) return null
-        const override = displayCategory.colorOverride ?? undefined
-        return override ? { ...category, colorOverride: override } : category
+        return {
+          ...category,
+          ...settingStore.resolveCategorySettings(category.name, category.source),
+        }
       })
       .filter((category): category is NonNullable<typeof category> => Boolean(category))
   )
@@ -69,6 +71,7 @@ watchEffect(() => {
     if (count !== undefined) {
       settingStore.updateCategoryCount(category.name, count)
     }
+    settingStore.updateCategorySource(category.name, category.source ?? {})
   }
 })
 

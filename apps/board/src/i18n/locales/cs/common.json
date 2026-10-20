@@ -40,14 +40,25 @@
         "name": "Název",
         "col": "Sloupec",
         "color": "Barva",
-        "order": "Pořadí"
-      }
+        "order": "Pořadí",
+        "mode": "Režim",
+        "places": "Místa"
+      },
+      "sourceHint": "Nastavení definované zdrojem dat (např. v OFeedu) má přednost a zde je zamčené.",
+      "fromSource": "Nastaveno ve zdroji dat"
     },
     "colorOverride": {
       "auto": "Auto (z datového zdroje)",
       "male": "M – modrá (muži)",
       "female": "F – růžová (ženy)",
       "neutral": "X – šedá (neutrální)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Pořadí",
+      "Unordered": "A–Z",
+      "UnorderedNoTimes": "A–Z, bez časů"
+    },
+    "awardedPlaces": "Oceňovaná místa (zvýrazněná)"
   }
 }

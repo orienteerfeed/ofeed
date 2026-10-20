@@ -6,7 +6,7 @@ import { AthleteStatus } from '@/types/category'
 
 const TEST_RUNNER: AthleteWithStats = {
   id: '1',
-  rank: 3,
+  rank: 4,
   surname: 'Test',
   firstName: '',
   club: 'Test Club',
@@ -29,6 +29,28 @@ describe('CategoryTableHeader', () => {
     getByText('+ ' + TEST_RUNNER.loss)
     expect(container.firstChild).toHaveClass('bg-white')
     expect(container.firstChild).not.toHaveClass('bg-even')
+  })
+
+  it('highlights awarded places without a medal beyond the podium', () => {
+    const { getByText } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: { ...TEST_RUNNER, rank: 5 }, showEmojis: true, awardedPlaces: 6 },
+    })
+    expect(getByText('5.')).toHaveAttribute('data-awarded', 'true')
+  })
+
+  it('does not highlight or award a medal past awarded places', () => {
+    const { getByText, queryByText } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: { ...TEST_RUNNER, rank: 2 }, showEmojis: true, awardedPlaces: 1 },
+    })
+    expect(queryByText('🥈')).toBeNull()
+    expect(getByText('2.')).not.toHaveAttribute('data-awarded')
+  })
+
+  it('renders no rank for unordered results', () => {
+    const { queryByText } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: { ...TEST_RUNNER, rank: undefined }, showEmojis: true },
+    })
+    expect(queryByText(/undefined/)).toBeNull()
   })
 
   it('renders properly for even rows', async () => {

@@ -5,6 +5,7 @@ import {
   type Winner,
 } from '@repo/commentator'
 import { getWsClient } from '@/composables/providers/useOfeed'
+import { useSettingStore } from '@/stores/settings'
 
 const RESUBSCRIBE_DELAY_MS = 5000
 
@@ -13,6 +14,7 @@ export function useWinnerCommentator(
   eventId: Ref<string>,
   enabled: Ref<boolean>
 ) {
+  const settingsStore = useSettingStore()
   const resubscribeTick = ref(0)
 
   watchEffect((onCleanup) => {
@@ -26,7 +28,14 @@ export function useWinnerCommentator(
       { query: WINNER_UPDATED_SUBSCRIPTION, variables: { eventId: id } },
       {
         next({ data }) {
-          if (data?.winnerUpdated) commentator.announce(data.winnerUpdated)
+          const winner = data?.winnerUpdated
+          // Unordered classes are not a ranking; nobody leads them.
+          if (
+            winner &&
+            settingsStore.resolveCategorySettings(winner.className).resultMode ===
+              'Default'
+          )
+            commentator.announce(winner)
         },
         error() {
           retryTimer = setTimeout(

@@ -9,6 +9,7 @@ import {
   type RawAthlete,
   type RelayTeam,
   AthleteStatus,
+  RESULT_MODES,
 } from '@/types/category'
 
 const DEFAULT_OFEED_API_URL = '/api/ofeed'
@@ -68,6 +69,12 @@ const athletesCache = new Map<
 >()
 const RESUBSCRIBE_DELAY_MS = 5000
 
+const CLASSES_UPDATED_SUBSCRIPTION = `
+  subscription ClassesUpdated($eventId: String!) {
+    classesUpdated(eventId: $eventId)
+  }
+`
+
 const COMPETITORS_BY_CLASS_SUBSCRIPTION = `
   subscription CompetitorsByClassUpdated($classId: Int!) {
     competitorsByClassUpdated(classId: $classId) {
@@ -103,6 +110,8 @@ type OfeedCategory = Pick<Category, 'id' | 'name' | 'length' | 'climb'> & {
   competitorsCount?: number | null
   teamsCount?: number | null
   sex: 'M' | 'F' | 'B'
+  resultListMode?: string | null
+  awardedPlaces?: number | null
 }
 
 type OfeedCompetitionResponse = OfeedCompetition & {
@@ -259,7 +268,7 @@ export function useOfeed() {
   }
 
   const getCompetitionLoader = (competitionId: Ref<string>) => {
-    const { data: competitionData, status } = useQuery({
+    const { data: competitionData, status, refetch } = useQuery({
       queryKey: ['competitionData', key, competitionId],
       queryFn: async () => {
         const id = competitionId.value
@@ -273,7 +282,36 @@ export function useOfeed() {
         return formatOfeedCompetition(unwrapResults(json))
       },
       retry: true,
+      // Fallback for missed pushes (e.g. while the socket was down).
       refetchInterval: 5 * 60 * 1000,
+    })
+
+    // Class settings edited in OFeed apply immediately.
+    const resubscribeTick = ref(0)
+    watchEffect((onCleanup) => {
+      void resubscribeTick.value
+      const eventId = competitionId.value
+      if (!eventId) return
+
+      let retryTimer: ReturnType<typeof setTimeout> | undefined
+      const unsubscribe = getWsClient().subscribe(
+        { query: CLASSES_UPDATED_SUBSCRIPTION, variables: { eventId } },
+        {
+          next: () => void refetch(),
+          error() {
+            retryTimer = setTimeout(
+              () => resubscribeTick.value++,
+              RESUBSCRIBE_DELAY_MS
+            )
+          },
+          complete() {},
+        }
+      )
+
+      onCleanup(() => {
+        clearTimeout(retryTimer)
+        unsubscribe()
+      })
     })
 
     const competition = computed(() => competitionData.value)
@@ -408,13 +446,21 @@ function formatOfeedCompetition(
     date: new Date(response.date),
     zeroTime: new Date(response.zeroTime),
     isRelay: response.relay,
-    categories: (response.classes ?? []).map((category) => ({
-      ...category,
-      controls: category.controlsCount,
-      competitorsCount: category.competitorsCount ?? undefined,
-      teamsCount: category.teamsCount ?? undefined,
-      gender: transformGender(category.sex, category.name),
-    })),
+    categories: (response.classes ?? []).map(
+      ({ resultListMode, awardedPlaces, ...category }) => ({
+        ...category,
+        controls: category.controlsCount,
+        competitorsCount: category.competitorsCount ?? undefined,
+        teamsCount: category.teamsCount ?? undefined,
+        gender: transformGender(category.sex, category.name),
+        // Values set in OFeed win over board settings.
+        source: {
+          gender: category.sex === 'B' ? undefined : category.sex,
+          resultMode: RESULT_MODES.find((m) => m === resultListMode),
+          awardedPlaces: awardedPlaces ?? undefined,
+        },
+      })
+    ),
   }
 }
 

@@ -40,14 +40,25 @@
         "name": "Name",
         "col": "Sp.",
         "color": "Farbe",
-        "order": "Reihenfolge"
-      }
+        "order": "Reihenfolge",
+        "mode": "Modus",
+        "places": "Plätze"
+      },
+      "sourceHint": "Von der Datenquelle (z. B. OFeed) festgelegte Einstellungen haben Vorrang und sind hier gesperrt.",
+      "fromSource": "Von der Datenquelle festgelegt"
     },
     "colorOverride": {
       "auto": "Auto (aus Datenquelle)",
       "male": "M – blau (männlich)",
       "female": "F – pink (weiblich)",
       "neutral": "X – grau (neutral)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Rangliste",
+      "Unordered": "A–Z",
+      "UnorderedNoTimes": "A–Z, ohne Zeiten"
+    },
+    "awardedPlaces": "Prämierte Plätze (hervorgehoben)"
   }
 }

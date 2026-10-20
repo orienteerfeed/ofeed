@@ -2,7 +2,12 @@ import { ref, reactive, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { ScrollType } from '@/types/layout'
-import type { CategoryGender } from '@/types/category'
+import {
+  DEFAULT_AWARDED_PLACES,
+  type CategoryGender,
+  type CategorySourceSettings,
+  type ResultMode,
+} from '@/types/category'
 
 type CategoryDisplay = {
   name: string
@@ -10,7 +15,14 @@ type CategoryDisplay = {
   column: null | number
   order: number
   colorOverride?: CategoryGender | null
+  resultModeOverride?: ResultMode | null
+  awardedPlacesOverride?: number | null
 }
+
+type CategoryOverrides = Pick<
+  CategoryDisplay,
+  'colorOverride' | 'resultModeOverride' | 'awardedPlacesOverride'
+>
 
 type CategoryDisplaySelected = Omit<CategoryDisplay, 'column'> & {
   column: number
@@ -60,9 +72,40 @@ export const useSettingStore = defineStore(
       )
         return // Bugfix skip rewrite update
       availableCategories.value = categories
-      categoriesDisplayRaw.value = categories.map(createSelectedCategoryItem)
-      if (scrollColumnsCount.value > 1) {
+      // Keep persisted per-class settings; only add new classes and drop gone ones.
+      const known = new Map(categoriesDisplayRaw.value.map((c) => [c.name, c]))
+      const merged = categories.map(
+        (name, index) =>
+          known.get(name) ??
+          createSelectedCategoryItem(name, categoriesDisplayRaw.value.length + index)
+      )
+      categoriesDisplayRaw.value = merged
+        .sort((a, b) => a.order - b.order)
+        .map((c, order) => ({ ...c, order }))
+      const hasNew = categories.some((name) => !known.has(name))
+      if (hasNew && scrollColumnsCount.value > 1) {
         autoUpdateCategoryDisplayColumns()
+      }
+    }
+
+    // Class settings defined by the data source (not persisted, they win).
+    const categorySources = reactive<Record<string, CategorySourceSettings>>({})
+    function updateCategorySource(name: string, source: CategorySourceSettings) {
+      categorySources[name] = source
+    }
+
+    function resolveCategorySettings(
+      name: string,
+      source: CategorySourceSettings = categorySources[name] ?? {}
+    ) {
+      const display = categoriesDisplayRaw.value.find((c) => c.name === name)
+      return {
+        colorOverride: source.gender ?? display?.colorOverride ?? undefined,
+        resultMode: source.resultMode ?? display?.resultModeOverride ?? 'Default',
+        awardedPlaces:
+          source.awardedPlaces ??
+          display?.awardedPlacesOverride ??
+          DEFAULT_AWARDED_PLACES,
       }
     }
 
@@ -107,6 +150,19 @@ export const useSettingStore = defineStore(
         column: 1,
         order: index,
         colorOverride: null,
+        resultModeOverride: null,
+        awardedPlacesOverride: null,
+      }
+    }
+
+    function setCategoryOverride(
+      category: CategoryDisplay,
+      overrides: CategoryOverrides
+    ) {
+      const idx = categoriesDisplayRaw.value.findIndex((c) => c.name === category.name)
+      const existing = categoriesDisplayRaw.value[idx]
+      if (idx !== -1 && existing) {
+        categoriesDisplayRaw.value[idx] = { ...existing, ...overrides }
       }
     }
 
@@ -114,11 +170,7 @@ export const useSettingStore = defineStore(
       category: CategoryDisplay,
       color: CategoryGender | null
     ) {
-      const idx = categoriesDisplayRaw.value.findIndex((c) => c.name === category.name)
-      const existing = categoriesDisplayRaw.value[idx]
-      if (idx !== -1 && existing) {
-        categoriesDisplayRaw.value[idx] = { ...existing, colorOverride: color }
-      }
+      setCategoryOverride(category, { colorOverride: color })
     }
 
     function setCategorySelected(
@@ -207,6 +259,9 @@ export const useSettingStore = defineStore(
       availableCategories,
       categoryCounts,
       updateCategoryCount,
+      categorySources,
+      updateCategorySource,
+      resolveCategorySettings,
       categoriesDisplayRaw, // Export for persist to work
       categoriesDisplay,
       categoriesDisplayByColumn,
@@ -216,6 +271,7 @@ export const useSettingStore = defineStore(
       setCategorySelected,
       selectCategories,
       setCategoryColorOverride,
+      setCategoryOverride,
       moveCategoryToIndex,
     }
   },

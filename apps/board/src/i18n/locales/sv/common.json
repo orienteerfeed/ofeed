@@ -40,14 +40,25 @@
         "name": "Namn",
         "col": "Kol.",
         "color": "Färg",
-        "order": "Ordning"
-      }
+        "order": "Ordning",
+        "mode": "Läge",
+        "places": "Platser"
+      },
+      "sourceHint": "Inställningar från datakällan (t.ex. i OFeed) har företräde och är låsta här.",
+      "fromSource": "Angiven av datakällan"
     },
     "colorOverride": {
       "auto": "Auto (från datakälla)",
       "male": "M – blå (herrar)",
       "female": "F – rosa (damer)",
       "neutral": "X – grå (neutral)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Rangordnad",
+      "Unordered": "A–Ö",
+      "UnorderedNoTimes": "A–Ö, utan tider"
+    },
+    "awardedPlaces": "Prisplatser (markerade)"
   }
 }

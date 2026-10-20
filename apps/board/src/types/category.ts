@@ -1,5 +1,21 @@
 export type CategoryGender = 'M' | 'F' | 'X'
 
+/**
+ * - `Default` - ranked by time, with time and loss.
+ * - `Unordered` - alphabetical, with time and loss, no ranks.
+ * - `UnorderedNoTimes` - alphabetical, without time and loss.
+ */
+export type ResultMode = 'Default' | 'Unordered' | 'UnorderedNoTimes'
+export const RESULT_MODES: ResultMode[] = ['Default', 'Unordered', 'UnorderedNoTimes']
+export const DEFAULT_AWARDED_PLACES = 3
+
+/** Per-class settings defined by the data source; they win over board settings. */
+export type CategorySourceSettings = {
+  gender?: CategoryGender
+  resultMode?: ResultMode
+  awardedPlaces?: number
+}
+
 export interface Category {
   id: string
   name: string
@@ -10,6 +26,10 @@ export interface Category {
   teamsCount?: number
   gender: CategoryGender
   colorOverride?: CategoryGender
+  source?: CategorySourceSettings
+  /** Effective values resolved from source and board settings. */
+  resultMode?: ResultMode
+  awardedPlaces?: number
   athletes?: RawAthlete[]
 }
 

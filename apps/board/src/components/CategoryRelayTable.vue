@@ -64,6 +64,7 @@ watchEffect(() => {
           :data="item"
           :leg-count="legCount"
           :show-emojis="settingsStore.showEmojis"
+          :awarded-places="props.category.awardedPlaces"
           :timezone="props.competition.timezone"
         />
       </div>
@@ -80,6 +81,7 @@ watchEffect(() => {
           :data="item"
           :leg-count="legCount"
           :show-emojis="settingsStore.showEmojis"
+          :awarded-places="props.category.awardedPlaces"
           :timezone="props.competition.timezone"
         />
       </div>

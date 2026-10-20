@@ -47,7 +47,11 @@ const athletesCount = computed(() => {
     full: athletes.value.finished.length + athletes.value.unfinished.length,
   }
 })
-const finishedAthletes = useFinishedAthletes(athletes, computed(() => settingsStore.pinnedCount))
+const finishedAthletes = useFinishedAthletes(
+  athletes,
+  computed(() => settingsStore.pinnedCount),
+  computed(() => props.category.resultMode ?? 'Default')
+)
 const unfinishedAthletes = useUnfinishedAthletes(athletes)
 
 watchEffect(() => {
@@ -76,6 +80,7 @@ watchEffect(() => {
           :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
           :show-emojis="settingsStore.showEmojis"
+          :awarded-places="category.awardedPlaces"
         />
       </div>
     </div>
@@ -91,6 +96,7 @@ watchEffect(() => {
           :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
           :show-emojis="settingsStore.showEmojis"
+          :awarded-places="category.awardedPlaces"
         >
         </TableFinishedRow>
         <template v-if="settingsStore.showUnfinishedAthletes">

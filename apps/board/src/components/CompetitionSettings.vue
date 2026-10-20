@@ -2,7 +2,12 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingStore } from '@/stores/settings'
-import type { CategoryGender } from '@/types/category'
+import {
+  DEFAULT_AWARDED_PLACES,
+  RESULT_MODES,
+  type CategoryGender,
+  type ResultMode,
+} from '@/types/category'
 import LanguageSelector from './LanguageSelector.vue'
 
 const { t } = useI18n()
@@ -48,6 +53,20 @@ const colorOptions = computed<{ value: CategoryGender | ''; label: string; bg: s
   { value: 'X', label: t('settings.colorOverride.neutral'), bg: 'bg-neutral',  text: 'text-white'   },
 ])
 
+const resultModeOptions = computed<{ value: ResultMode | ''; label: string }[]>(() => [
+  { value: '', label: t('settings.resultMode.auto') },
+  ...RESULT_MODES.map((value) => ({ value, label: t(`settings.resultMode.${value}`) })),
+])
+
+const sourceOf = (name: string) => settingsStore.categorySources[name] ?? {}
+
+function onAwardedPlacesInput(category: (typeof filteredCategories.value)[number], e: Event) {
+  const value = parseInt((e.target as HTMLInputElement).value, 10)
+  settingsStore.setCategoryOverride(category, {
+    awardedPlacesOverride: Number.isFinite(value) && value >= 0 ? value : null,
+  })
+}
+
 const draggedName = ref<string | null>(null)
 const dragOverName = ref<string | null>(null)
 
@@ -78,7 +97,7 @@ function onDragEnd() {
 
 <template>
   <div
-    class="overflow-auto shadow-lg border-t-4 bg-white mb-4 rounded-l-lg rounded-t border-header w-full md:w-1/4"
+    class="overflow-auto shadow-lg border-t-4 bg-white mb-4 rounded-l-lg rounded-t border-header w-full md:w-1/3 xl:w-1/4"
   >
     <div class="px-6 py-4 mt-4 mb-8">
       <div class="flex justify-between items-center mb-2">
@@ -281,6 +300,7 @@ function onDragEnd() {
           <h5>{{ t('settings.classes.label') }}</h5>
           <p class="text-xs text-gray-500 mb-2">
             {{ t('settings.classes.colorHint') }}
+            {{ t('settings.classes.sourceHint') }}
           </p>
           <div class="flex items-center gap-2 mb-2">
             <input
@@ -312,6 +332,8 @@ function onDragEnd() {
             <span class="flex-1 min-w-0">{{ t('settings.classes.colHeaders.name') }}</span>
             <span class="shrink-0 w-9 text-center">{{ t('settings.classes.colHeaders.col') }}</span>
             <span class="shrink-0 w-22 text-center">{{ t('settings.classes.colHeaders.color') }}</span>
+            <span class="shrink-0 w-20 text-center">{{ t('settings.classes.colHeaders.mode') }}</span>
+            <span class="shrink-0 w-9 text-center" :title="t('settings.awardedPlaces')">{{ t('settings.classes.colHeaders.places') }}</span>
             <span class="shrink-0 w-10 text-center">{{ t('settings.classes.colHeaders.order') }}</span>
           </div>
 
@@ -371,18 +393,47 @@ function onDragEnd() {
                   v-for="opt in colorOptions"
                   :key="opt.value"
                   type="button"
-                  :title="opt.label"
+                  :title="sourceOf(category.name).gender ? t('settings.classes.fromSource') : opt.label"
+                  :disabled="!!sourceOf(category.name).gender"
                   :class="[
                     opt.bg,
                     opt.text,
-                    (category.colorOverride ?? '') === opt.value
+                    (sourceOf(category.name).gender ?? category.colorOverride ?? '') === opt.value
                       ? 'ring-2 ring-gray-700'
-                      : 'opacity-50 hover:opacity-100',
+                      : 'opacity-50 enabled:hover:opacity-100',
                   ]"
-                  class="w-5 h-5 rounded text-xs font-bold leading-none flex items-center justify-center"
+                  class="w-5 h-5 rounded text-xs font-bold leading-none flex items-center justify-center disabled:cursor-not-allowed"
                   @click="settingsStore.setCategoryColorOverride(category, opt.value || null)"
                 >{{ opt.value || 'A' }}</button>
               </div>
+              <select
+                :value="sourceOf(category.name).resultMode ?? category.resultModeOverride ?? ''"
+                :disabled="!!sourceOf(category.name).resultMode"
+                :title="sourceOf(category.name).resultMode ? t('settings.classes.fromSource') : undefined"
+                @change="
+                  (e) =>
+                    settingsStore.setCategoryOverride(category, {
+                      resultModeOverride:
+                        ((e.target as HTMLSelectElement).value as ResultMode) || null,
+                    })
+                "
+                class="shrink-0 w-20 bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded p-1 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <option v-for="opt in resultModeOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+              <input
+                :value="sourceOf(category.name).awardedPlaces ?? category.awardedPlacesOverride ?? ''"
+                :disabled="sourceOf(category.name).awardedPlaces !== undefined"
+                :title="sourceOf(category.name).awardedPlaces !== undefined ? t('settings.classes.fromSource') : t('settings.awardedPlaces')"
+                :placeholder="String(DEFAULT_AWARDED_PLACES)"
+                @input="(e) => onAwardedPlacesInput(category, e)"
+                type="number"
+                min="0"
+                step="1"
+                class="shrink-0 w-9 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-blue-500 focus:border-blue-500 p-1 text-center disabled:opacity-60 disabled:cursor-not-allowed"
+              />
               <button
                 type="button"
                 :class="{ invisible: category.order === 0 }"
