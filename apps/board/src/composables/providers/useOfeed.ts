@@ -45,9 +45,28 @@ function getGraphQLWsUrl(): string {
 
 let _wsClient: Client | null = null
 function getWsClient(): Client {
-  if (!_wsClient) _wsClient = createClient({ url: getGraphQLWsUrl() })
+  if (!_wsClient)
+    _wsClient = createClient({
+      url: getGraphQLWsUrl(),
+      // Never give up reconnecting — a board must survive long outages.
+      retryAttempts: Infinity,
+      shouldRetry: () => true,
+      retryWait: (retries) =>
+        new Promise((resolve) =>
+          setTimeout(resolve, Math.min(1000 * 2 ** retries, 10_000))
+        ),
+    })
   return _wsClient
 }
+
+type CourseInfo = { length?: number; climb?: number; controls?: number }
+// Last received data per class; survives unsubscribe/remount so the board
+// keeps showing (possibly stale) results and only applies updates.
+const athletesCache = new Map<
+  number,
+  { athletes: RawAthlete[]; courseInfo?: CourseInfo }
+>()
+const RESUBSCRIBE_DELAY_MS = 5000
 
 const COMPETITORS_BY_CLASS_SUBSCRIPTION = `
   subscription CompetitorsByClassUpdated($classId: Int!) {
@@ -270,19 +289,21 @@ export function useOfeed() {
     category: Category
     fetchEnabled: Ref<boolean>
   }) => {
-    const status = ref<'loading' | 'success' | 'error'>('loading')
-    const rawAthletes = ref<RawAthlete[] | undefined>(undefined)
-    const courseInfo = ref<
-      { length?: number; climb?: number; controls?: number } | undefined
-    >(undefined)
+    const classId = parseInt(category.id, 10)
+    const cached = athletesCache.get(classId)
+    const status = ref<'loading' | 'success' | 'error'>(
+      cached ? 'success' : 'loading'
+    )
+    const rawAthletes = ref<RawAthlete[] | undefined>(cached?.athletes)
+    const courseInfo = ref<CourseInfo | undefined>(cached?.courseInfo)
+    const resubscribeTick = ref(0)
 
     watchEffect((onCleanup) => {
+      void resubscribeTick.value
       if (!fetchEnabled.value) return
-
-      status.value = 'loading'
-      const classId = parseInt(category.id, 10)
       if (!Number.isFinite(classId)) return
 
+      let retryTimer: ReturnType<typeof setTimeout> | undefined
       const unsubscribe = getWsClient().subscribe<{
         competitorsByClassUpdated: Array<
           OfeedAthlete & {
@@ -307,16 +328,28 @@ export function useOfeed() {
                 controls: cls.controlsCount ?? undefined,
               }
             }
+            athletesCache.set(classId, {
+              athletes: rawAthletes.value,
+              courseInfo: courseInfo.value,
+            })
             status.value = 'success'
           },
           error() {
-            status.value = 'error'
+            // Keep showing last known data; only report error with nothing to show.
+            if (!rawAthletes.value) status.value = 'error'
+            retryTimer = setTimeout(
+              () => resubscribeTick.value++,
+              RESUBSCRIBE_DELAY_MS
+            )
           },
           complete() {},
         }
       )
 
-      onCleanup(unsubscribe)
+      onCleanup(() => {
+        clearTimeout(retryTimer)
+        unsubscribe()
+      })
     })
 
     return { status, rawAthletes, courseInfo }

@@ -299,6 +299,36 @@ describe('useOfeed', () => {
     ])
   })
 
+  it('keeps last athletes across remount and subscription error', async () => {
+    const category = { ...TEST_COMPETITION.categories[0], id: '999' }
+    const renderAthletes = () =>
+      render(getTestAthletesComponent({ competition: TEST_COMPETITION, category }), {
+        global: { provide: { [VUE_QUERY_CLIENT]: createQueryClient() } },
+      })
+
+    const first = renderAthletes()
+    await waitFor(() => expect(capturedSink).not.toBeNull())
+    capturedSink!.next({
+      data: {
+        competitorsByClassUpdated: [
+          { id: 7, lastname: 'Doe', firstname: 'Jane', time: 100, status: 'Finished' },
+        ],
+      },
+    })
+    await waitFor(() => expect(athletesComposable.status.value).toEqual('success'))
+    first.unmount()
+
+    renderAthletes()
+    // Cached data is shown immediately, no loading state
+    expect(athletesComposable.status.value).toEqual('success')
+    expect(athletesComposable.rawAthletes.value?.[0]?.id).toEqual('7')
+
+    await waitFor(() => expect(capturedSink).not.toBeNull())
+    capturedSink!.error(new Error('connection lost'))
+    expect(athletesComposable.status.value).toEqual('success')
+    expect(athletesComposable.rawAthletes.value?.[0]?.id).toEqual('7')
+  })
+
   it.each([
     { name: 'M 16 A', sex: 'B' as const, expected: 'M' },
     { name: 'M  16 A', sex: 'B' as const, expected: 'M' },
