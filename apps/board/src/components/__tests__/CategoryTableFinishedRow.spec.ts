@@ -46,10 +46,11 @@ describe('CategoryTableHeader', () => {
     expect(getByText('2.')).not.toHaveAttribute('data-awarded')
   })
 
-  it('renders no rank for unordered results', () => {
-    const { queryByText } = render(CategoryTableFinishedRow, {
-      props: { isEven: false, data: { ...TEST_RUNNER, rank: undefined }, showEmojis: true },
+  it('renders an OK mark instead of a rank for unordered results', () => {
+    const { getByText, queryByText } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: { ...TEST_RUNNER, rank: undefined }, showEmojis: false },
     })
+    getByText('✅')
     expect(queryByText(/undefined/)).toBeNull()
   })
 

@@ -79,13 +79,14 @@ export function useFinishedAthletes(
     if (resultMode.value === 'Default')
       return formatFinishedAthletes(athletesCopy, pinnedCount.value)
 
-    // Unordered: not a ranking, so no ranks, no pinning, alphabetical.
+    // Unordered: not a ranking, so no ranks, loss or pinning, alphabetical.
     const hideTimes = resultMode.value === 'UnorderedNoTimes'
     const restRows = formatFinishedAthletes(athletesCopy, 0)
       .restRows.map((athlete) => ({
         ...athlete,
         rank: undefined,
-        ...(hideTimes && { time: undefined, loss: undefined }),
+        loss: undefined,
+        ...(hideTimes && { time: undefined }),
       }))
       .sort(unorderedAthleteSortFunction)
     return { pinnedRows: [], restRows }

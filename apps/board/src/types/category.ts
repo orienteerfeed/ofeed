@@ -2,7 +2,7 @@ export type CategoryGender = 'M' | 'F' | 'X'
 
 /**
  * - `Default` - ranked by time, with time and loss.
- * - `Unordered` - alphabetical, with time and loss, no ranks.
+ * - `Unordered` - alphabetical, with time, no ranks and loss.
  * - `UnorderedNoTimes` - alphabetical, without time and loss.
  */
 export type ResultMode = 'Default' | 'Unordered' | 'UnorderedNoTimes'

@@ -372,13 +372,13 @@ describe('useAthletes', () => {
         unfinished: [],
       })
 
-      it('sorts alphabetically within status, keeps times, drops ranks and pinning', () => {
+      it('sorts alphabetically within status, keeps times, drops ranks, losses and pinning', () => {
         const rows = useFinishedAthletes(athletes, ref(3), ref('Unordered'))
         expect(rows.value.pinnedRows).toEqual([])
         expect(rows.value.restRows.map((a) => a.id)).toEqual(['a', 'c', 'z', 'b'])
         expect(rows.value.restRows.every((a) => a.rank === undefined)).toBe(true)
         expect(rows.value.restRows[0].time).toEqual('1:30')
-        expect(rows.value.restRows[0].loss).toEqual('0:29')
+        expect(rows.value.restRows.every((a) => !a.loss)).toBe(true)
       })
 
       it('hides times and losses in UnorderedNoTimes', () => {

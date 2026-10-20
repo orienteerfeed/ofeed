@@ -75,6 +75,8 @@ const medal = computed(() =>
         :data-awarded="isAwarded || undefined"
         >{{ data.rank }}.</span
       >
+      <!-- Unordered result list: just mark a clean finish. -->
+      <template v-else>✅</template>
     </span>
     <span v-else-if="data.status === AthleteStatus.NotCompeting">MS</span>
     <span v-else-if="showEmojis && emojisMapping[data.status]">{{
