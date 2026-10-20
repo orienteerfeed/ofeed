@@ -7,6 +7,7 @@ import zlib from 'zlib';
 import { Prisma } from '../../generated/prisma/client.js';
 import type { Sex } from '../../generated/prisma/enums.js';
 import { parseMultipartPayload, type MultipartFile } from '../../lib/http/body-parser.js';
+import { publishClassesUpdated } from '../../lib/pubsub.js';
 import { toValidationIssues } from '../../lib/validation/zod.js';
 import { requireAuth } from '../../middlewares/require-jwt.js';
 import type { AppBindings, AppOpenAPI } from '../../types/index.js';
@@ -1539,6 +1540,8 @@ async function handleIofXmlUpload(
     });
     return c.json(error(message, 500), 500);
   }
+
+  publishClassesUpdated(eventId);
 
   // Persist or update import state for each processed payload type
   await Promise.all(

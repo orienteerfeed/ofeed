@@ -7,7 +7,12 @@ const winnersCache = new Map(); // Map<eventId, Map<classId, competitorId>>
 export const notifyWinnerChanges = async eventId => {
   try {
     const latestWinners = await prisma.competitor.findMany({
-      where: { class: { eventId }, time: { not: null }, status: 'OK' },
+      where: {
+        // Unordered result lists are not a ranking, so they have no winner to announce.
+        class: { eventId, OR: [{ resultListMode: null }, { resultListMode: 'Default' }] },
+        time: { not: null },
+        status: 'OK',
+      },
       select: {
         classId: true,
         class: { select: { name: true, sex: true } },
