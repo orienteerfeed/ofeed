@@ -27,6 +27,10 @@
       "compactMode": "Compact mode (no club, card)",
       "showEmojis": "Show Emojis in table"
     },
+    "commentator": {
+      "label": "Commentator",
+      "announceWinners": "Announce new class leaders (Czech voice)"
+    },
     "classes": {
       "label": "Displayed classes",
       "colorHint": "Category header color is determined by the gender set for the category in the data source (M = blue, F = pink, other = grey).",

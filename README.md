@@ -40,6 +40,7 @@ apps/
   server/    # Hono + Prisma API
 packages/
   shared/    # shared schemas/types
+  commentator/ # browser winner announcer (gong + voice) shared by client and board
 ```
 
 ## Requirements

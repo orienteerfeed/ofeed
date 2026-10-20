@@ -44,7 +44,7 @@ function getGraphQLWsUrl(): string {
 }
 
 let _wsClient: Client | null = null
-function getWsClient(): Client {
+export function getWsClient(): Client {
   if (!_wsClient)
     _wsClient = createClient({
       url: getGraphQLWsUrl(),

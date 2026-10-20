@@ -263,6 +263,21 @@ function onDragEnd() {
             >
           </div>
 
+          <h4>{{ t('settings.commentator.label') }}</h4>
+          <div class="flex items-center mb-4">
+            <input
+              id="announce-winners-checkbox"
+              type="checkbox"
+              v-model="settingsStore.announceWinners"
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label
+              for="announce-winners-checkbox"
+              class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+              >{{ t('settings.commentator.announceWinners') }}</label
+            >
+          </div>
+
           <h5>{{ t('settings.classes.label') }}</h5>
           <p class="text-xs text-gray-500 mb-2">
             {{ t('settings.classes.colorHint') }}

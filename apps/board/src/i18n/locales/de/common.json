@@ -27,6 +27,10 @@
       "compactMode": "Kompaktmodus (ohne Verein, Chip)",
       "showEmojis": "Emojis in Tabelle anzeigen"
     },
+    "commentator": {
+      "label": "Kommentator",
+      "announceWinners": "Neue Kategorieführende ansagen (tschechische Stimme)"
+    },
     "classes": {
       "label": "Angezeigte Klassen",
       "colorHint": "Die Kopfzeilenfarbe der Kategorie wird durch das im Datensystem eingestellte Geschlecht bestimmt (M = blau, F = pink, andere = grau).",

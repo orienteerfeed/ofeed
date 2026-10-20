@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { coordinateWinnerAnnouncements } from '../../src/lib/winner-announcement-leader';
+import { coordinateWinnerAnnouncements } from '../src/leader';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -11,10 +11,7 @@ describe('winner announcement leadership', () => {
     vi.stubGlobal('navigator', {});
     vi.useFakeTimers();
     const key = 'ofeed:winner-announcer:event';
-    localStorage.setItem(
-      key,
-      JSON.stringify({ owner: 'closed-tab', expires: Date.now() + 10000 })
-    );
+    localStorage.setItem(key, JSON.stringify({ owner: 'closed-tab', expires: Date.now() + 10000 }));
     const active = vi.fn();
     const stop = coordinateWinnerAnnouncements('event', active);
     try {
@@ -36,14 +33,9 @@ describe('winner announcement leadership', () => {
     vi.stubGlobal('navigator', {
       locks: {
         request: vi.fn(
-          (
-            _name: string,
-            options: { signal: AbortSignal },
-            callback: () => Promise<void>
-          ) => {
+          (_name: string, options: { signal: AbortSignal }, callback: () => Promise<void>) => {
             queue = queue.then(async () => {
-              if (options.signal.aborted)
-                throw new DOMException('Aborted', 'AbortError');
+              if (options.signal.aborted) throw new DOMException('Aborted', 'AbortError');
               await callback();
             });
             return queue;
@@ -70,12 +62,8 @@ describe('winner announcement leadership', () => {
   it('releases on pagehide and reacquires on pageshow', async () => {
     vi.stubGlobal('navigator', {
       locks: {
-        request: vi.fn(
-          async (
-            _name: string,
-            _options: unknown,
-            callback: () => Promise<void>
-          ) => callback()
+        request: vi.fn(async (_name: string, _options: unknown, callback: () => Promise<void>) =>
+          callback()
         ),
       },
     });

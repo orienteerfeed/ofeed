@@ -27,6 +27,10 @@
       "compactMode": "Kompakt läge (utan klubb, bricka)",
       "showEmojis": "Visa emojis i tabell"
     },
+    "commentator": {
+      "label": "Kommentator",
+      "announceWinners": "Ropa ut nya klassledare (tjeckisk röst)"
+    },
     "classes": {
       "label": "Visade klasser",
       "colorHint": "Kategorirubrikkens färg bestäms av det kön som är inställt för kategorin i datakällan (M = blå, F = rosa, andra = grå).",

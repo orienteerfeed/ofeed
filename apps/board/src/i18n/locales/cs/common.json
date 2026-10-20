@@ -27,6 +27,10 @@
       "compactMode": "Kompaktní mód (bez oddílu, čipu)",
       "showEmojis": "Zobrazit emoji v tabulce"
     },
+    "commentator": {
+      "label": "Komentátor",
+      "announceWinners": "Hlasem oznamovat nové vedoucí kategorií"
+    },
     "classes": {
       "label": "Zobrazené kategorie",
       "colorHint": "Barva záhlaví kategorie je určena pohlavím nastaveným u kategorie v datovém zdroji (M = modrá, F = růžová, ostatní = šedá).",

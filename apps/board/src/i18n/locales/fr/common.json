@@ -27,6 +27,10 @@
       "compactMode": "Mode compact (sans club, ni puce)",
       "showEmojis": "Afficher les emojis dans le tableau"
     },
+    "commentator": {
+      "label": "Commentateur",
+      "announceWinners": "Annoncer les nouveaux leaders de catégorie (voix tchèque)"
+    },
     "classes": {
       "label": "Catégories affichées",
       "colorHint": "La couleur de l'en-tête de catégorie est déterminée par le sexe défini pour la catégorie dans la source de données (M = bleu, F = rose, autre = gris).",

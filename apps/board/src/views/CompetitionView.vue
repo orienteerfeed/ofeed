@@ -7,6 +7,7 @@ import CompetitionTable from '@/components/CompetitionTable.vue'
 import CompetitionSettings from '@/components/CompetitionSettings.vue'
 
 import { useSettingStore } from '@/stores/settings'
+import { useWinnerCommentator } from '@/composables/useWinnerCommentator'
 import type { DataProviders } from '@/composables/providers/useDataProvider'
 
 const route = useRoute()
@@ -16,6 +17,13 @@ const dataProvider = computed(
 )
 
 const settingsStore = useSettingStore()
+// Only the OFeed provider publishes leader changes.
+useWinnerCommentator(
+  competitionId,
+  computed(
+    () => dataProvider.value === 'ofeed' && settingsStore.announceWinners
+  )
+)
 </script>
 
 <template>

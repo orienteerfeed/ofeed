@@ -20,20 +20,15 @@ export function coordinateWinnerAnnouncements(
         stop = undefined;
       };
       void navigator.locks
-        .request(
-          `ofeed:winner-announcer:${eventId}`,
-          { signal: controller.signal },
-          () => {
-            if (controller.signal.aborted) return;
-            setActive(true);
-            return new Promise<void>(resolve => {
-              release = resolve;
-            });
-          }
-        )
+        .request(`ofeed:winner-announcer:${eventId}`, { signal: controller.signal }, () => {
+          if (controller.signal.aborted) return;
+          setActive(true);
+          return new Promise<void>(resolve => {
+            release = resolve;
+          });
+        })
         .catch((error: unknown) => {
-          if (!controller.signal.aborted)
-            console.warn('Winner announcer election failed:', error);
+          if (!controller.signal.aborted) console.warn('Winner announcer election failed:', error);
         });
       return;
     }
@@ -46,13 +41,9 @@ export function coordinateWinnerAnnouncements(
         const stored: { owner: string; expires: number } | null = JSON.parse(
           localStorage.getItem(key) ?? 'null'
         );
-        const active =
-          !stored || stored.owner === owner || stored.expires <= Date.now();
+        const active = !stored || stored.owner === owner || stored.expires <= Date.now();
         if (active)
-          localStorage.setItem(
-            key,
-            JSON.stringify({ owner, expires: Date.now() + 30000 })
-          );
+          localStorage.setItem(key, JSON.stringify({ owner, expires: Date.now() + 30000 }));
         setActive(active);
       } catch {
         setActive(false);

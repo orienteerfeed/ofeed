@@ -27,6 +27,10 @@
       "compactMode": "Modo compacto (sin club, chip)",
       "showEmojis": "Mostrar emojis en la tabla"
     },
+    "commentator": {
+      "label": "Comentarista",
+      "announceWinners": "Anunciar nuevos líderes de categoría (voz en checo)"
+    },
     "classes": {
       "label": "Clases mostradas",
       "colorHint": "El color del encabezado de categoría está determinado por el género configurado en el origen de datos (M = azul, F = rosa, otro = gris).",

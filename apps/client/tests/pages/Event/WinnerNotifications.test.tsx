@@ -73,4 +73,20 @@ describe('WinnerNotification sound', () => {
       vi.useRealTimers();
     }
   });
+
+  it('keeps a muted tab out of the announcer election', () => {
+    const request = vi.fn(() => new Promise(() => {}));
+    vi.stubGlobal('navigator', { locks: { request } });
+    localStorage.setItem(
+      'notifications',
+      JSON.stringify({ general: { sound: false, push: false } })
+    );
+    subscription.mockReturnValue({ data: undefined });
+    const view = render(<WinnerNotification eventId="event" />);
+    try {
+      expect(request).not.toHaveBeenCalled();
+    } finally {
+      view.unmount();
+    }
+  });
 });

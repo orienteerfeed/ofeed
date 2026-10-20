@@ -45,6 +45,7 @@ export const useSettingStore = defineStore(
     }
 
     const showUnfinishedAthletes = ref(true)
+    const announceWinners = ref(true)
 
     const availableCategories = ref<string[]>([])
     const categoryCounts = reactive<Record<string, number>>({})
@@ -202,6 +203,7 @@ export const useSettingStore = defineStore(
       readLineTimeMS,
 
       showUnfinishedAthletes,
+      announceWinners,
       availableCategories,
       categoryCounts,
       updateCategoryCount,
@@ -222,7 +224,7 @@ export const useSettingStore = defineStore(
       pick: [
         'compactMode', 'showEmojis', 'pinnedCount',
         'scrollType', 'scrollColumnsCount', 'readLineTimeSeconds',
-        'showUnfinishedAthletes', 'categoriesDisplayRaw',
+        'showUnfinishedAthletes', 'announceWinners', 'categoriesDisplayRaw',
       ],
     },
   }
