@@ -42,7 +42,7 @@ export const useSettingStore = defineStore(
     const showEmojis = ref(true)
     const pinnedCount = ref(3)
 
-    const scrollType = ref<ScrollType>('page')
+    const scrollType = ref<ScrollType>('continues')
 
     const scrollColumnsCount = ref(1)
     function setScrollColumnsCount(count: number) {
@@ -50,7 +50,7 @@ export const useSettingStore = defineStore(
       autoUpdateCategoryDisplayColumns()
     }
 
-    const readLineTimeSeconds = ref(import.meta.env.PROD ? 0.3 : 0.1)
+    const readLineTimeSeconds = ref(1)
     const readLineTimeMS = computed(() => readLineTimeSeconds.value * 1000)
     function setScrollType(type: ScrollType) {
       scrollType.value = type
