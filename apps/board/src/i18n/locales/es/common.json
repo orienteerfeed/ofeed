@@ -24,6 +24,7 @@
       "label": "Contenido de la tabla",
       "pinnedLeaders": "Número de líderes fijados",
       "showUnfinished": "Mostrar incompletos (lista de salida, en curso)",
+      "hideEmptyCategories": "Ocultar categorías sin corredores",
       "compactMode": "Modo compacto (sin club, chip)",
       "showClub": "Modo club (mostrar club)",
       "showRegistration": "Modo registro (mostrar número de registro)",

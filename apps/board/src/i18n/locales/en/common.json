@@ -24,6 +24,7 @@
       "label": "Table content",
       "pinnedLeaders": "Number of pinned leaders",
       "showUnfinished": "Show unfinished (startlist, running)",
+      "hideEmptyCategories": "Hide classes with no competitors",
       "compactMode": "Compact mode (no club, card)",
       "showClub": "Club mode (show club)",
       "showRegistration": "Registration mode (show registration number)",

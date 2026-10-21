@@ -59,6 +59,7 @@ export const useSettingStore = defineStore(
     }
 
     const showUnfinishedAthletes = ref(true)
+    const hideEmptyCategories = ref(true)
     const announceWinners = ref(true)
 
     const availableCategories = ref<string[]>([])
@@ -259,6 +260,7 @@ export const useSettingStore = defineStore(
       readLineTimeMS,
 
       showUnfinishedAthletes,
+      hideEmptyCategories,
       announceWinners,
       availableCategories,
       categoryCounts,
@@ -284,7 +286,7 @@ export const useSettingStore = defineStore(
       pick: [
         'compactMode', 'showClub', 'showRegistration', 'showEmojis', 'pinnedCount',
         'scrollType', 'scrollColumnsCount', 'readLineTimeSeconds',
-        'showUnfinishedAthletes', 'announceWinners', 'categoriesDisplayRaw',
+        'showUnfinishedAthletes', 'hideEmptyCategories', 'announceWinners', 'categoriesDisplayRaw',
       ],
     },
   }

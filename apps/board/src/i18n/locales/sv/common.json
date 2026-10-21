@@ -24,6 +24,7 @@
       "label": "Tabellinnehåll",
       "pinnedLeaders": "Antal fästa ledare",
       "showUnfinished": "Visa oavslutade (startlista, springer)",
+      "hideEmptyCategories": "Dölj klasser utan deltagare",
       "compactMode": "Kompakt läge (utan klubb, bricka)",
       "showClub": "Klubbläge (visa klubb)",
       "showRegistration": "Registreringsläge (visa registreringsnummer)",

@@ -2,7 +2,7 @@ import { ConflictError, DatabaseError, ValidationError } from '../../exceptions/
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma, type Event as PrismaEvent } from '../../generated/prisma/client.js';
 import type { Origin, ProtocolType, ResultStatus, Sex } from '../../generated/prisma/enums.js';
-import { WINNER_UPDATED, pubsub as defaultPubsub } from '../../lib/pubsub.js';
+import { WINNER_UPDATED, publishClassesUpdated, pubsub as defaultPubsub } from '../../lib/pubsub.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
@@ -1319,6 +1319,8 @@ export const storeCompetitor = async (
   try {
     await publishUpdatedCompetitor(eventId, updatedCompetitor);
     await publishUpdatedCompetitors(newCompetitor.classId);
+    // Class competitor counts changed (e.g. boards showing a previously empty class).
+    publishClassesUpdated(eventId);
   } catch (err) {
     console.error('Error publishing competitors update:', err);
   }

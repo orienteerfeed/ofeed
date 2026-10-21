@@ -46,6 +46,11 @@ const categoryColumns = computed(() =>
       .map((displayCategory) => {
         const category = categoriesHashByName.value[displayCategory.name]
         if (!category) return null
+        // Server-side count, so the class reappears once a competitor is entered.
+        const count = competition.value?.isRelay
+          ? category.teamsCount
+          : category.competitorsCount
+        if (settingStore.hideEmptyCategories && count === 0) return null
         return {
           ...category,
           ...settingStore.resolveCategorySettings(category.name, category.source),

@@ -24,6 +24,7 @@
       "label": "Contenu du tableau",
       "pinnedLeaders": "Nombre de leaders épinglés",
       "showUnfinished": "Afficher les non terminés (liste de départ, en course)",
+      "hideEmptyCategories": "Masquer les catégories sans concurrents",
       "compactMode": "Mode compact (sans club, ni puce)",
       "showClub": "Mode club (afficher le club)",
       "showRegistration": "Mode licence (afficher le numéro d'inscription)",

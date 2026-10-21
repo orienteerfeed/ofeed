@@ -24,6 +24,7 @@
       "label": "Obsah tabulky",
       "pinnedLeaders": "Počet připnutých vedoucích",
       "showUnfinished": "Zobrazit nedokončené (startovka, běžící)",
+      "hideEmptyCategories": "Skrýt kategorie bez závodníků",
       "compactMode": "Kompaktní mód (bez oddílu, čipu)",
       "showClub": "Oddílový mód (zobrazit oddíl)",
       "showRegistration": "Registrační mód (zobrazit registrační číslo)",

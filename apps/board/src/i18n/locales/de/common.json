@@ -24,6 +24,7 @@
       "label": "Tabelleninhalt",
       "pinnedLeaders": "Anzahl fixierter Führender",
       "showUnfinished": "Unfertige anzeigen (Startliste, laufend)",
+      "hideEmptyCategories": "Kategorien ohne Teilnehmer ausblenden",
       "compactMode": "Kompaktmodus (ohne Verein, Chip)",
       "showClub": "Vereinsmodus (Verein anzeigen)",
       "showRegistration": "Registrierungsmodus (Registrierungsnummer anzeigen)",
