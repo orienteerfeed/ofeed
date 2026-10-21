@@ -54,6 +54,29 @@ describe('CategoryTableHeader', () => {
     expect(queryByText(/undefined/)).toBeNull()
   })
 
+  it('shows club and registration in compact mode when enabled', () => {
+    const { getByText, queryByText } = render(CategoryTableFinishedRow, {
+      props: {
+        isEven: false,
+        data: { ...TEST_RUNNER, registration: 'SKO1234' },
+        isCompact: true,
+        showClub: true,
+        showRegistration: true,
+      },
+    })
+    getByText('SKO1234')
+    getByText(TEST_RUNNER.club)
+    expect(queryByText(String(TEST_RUNNER.card))).toBeNull()
+  })
+
+  it('hides club and registration in compact mode by default', () => {
+    const { queryByText } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: { ...TEST_RUNNER, registration: 'SKO1234' }, isCompact: true },
+    })
+    expect(queryByText('SKO1234')).toBeNull()
+    expect(queryByText(TEST_RUNNER.club)).toBeNull()
+  })
+
   it('renders properly for even rows', async () => {
     const { container } = render(CategoryTableFinishedRow, {
       props: { isEven: true, data: TEST_RUNNER, isCompact: false, showEmojis: true },

@@ -25,6 +25,8 @@
       "pinnedLeaders": "Antal fästa ledare",
       "showUnfinished": "Visa oavslutade (startlista, springer)",
       "compactMode": "Kompakt läge (utan klubb, bricka)",
+      "showClub": "Klubbläge (visa klubb)",
+      "showRegistration": "Registreringsläge (visa registreringsnummer)",
       "showEmojis": "Visa emojis i tabell"
     },
     "commentator": {

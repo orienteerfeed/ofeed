@@ -39,6 +39,8 @@ export const useSettingStore = defineStore(
     }
 
     const compactMode = ref(true)
+    const showClub = ref(false)
+    const showRegistration = ref(false)
     const showEmojis = ref(true)
     const pinnedCount = ref(3)
 
@@ -242,6 +244,8 @@ export const useSettingStore = defineStore(
       setSettingsDisplayed,
 
       compactMode,
+      showClub,
+      showRegistration,
       showEmojis,
       pinnedCount,
 
@@ -278,7 +282,7 @@ export const useSettingStore = defineStore(
   {
     persist: {
       pick: [
-        'compactMode', 'showEmojis', 'pinnedCount',
+        'compactMode', 'showClub', 'showRegistration', 'showEmojis', 'pinnedCount',
         'scrollType', 'scrollColumnsCount', 'readLineTimeSeconds',
         'showUnfinishedAthletes', 'announceWinners', 'categoriesDisplayRaw',
       ],

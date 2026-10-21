@@ -25,6 +25,8 @@
       "pinnedLeaders": "Počet připnutých vedoucích",
       "showUnfinished": "Zobrazit nedokončené (startovka, běžící)",
       "compactMode": "Kompaktní mód (bez oddílu, čipu)",
+      "showClub": "Oddílový mód (zobrazit oddíl)",
+      "showRegistration": "Registrační mód (zobrazit registrační číslo)",
       "showEmojis": "Zobrazit emoji v tabulce"
     },
     "commentator": {

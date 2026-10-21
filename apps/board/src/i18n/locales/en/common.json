@@ -25,6 +25,8 @@
       "pinnedLeaders": "Number of pinned leaders",
       "showUnfinished": "Show unfinished (startlist, running)",
       "compactMode": "Compact mode (no club, card)",
+      "showClub": "Club mode (show club)",
+      "showRegistration": "Registration mode (show registration number)",
       "showEmojis": "Show Emojis in table"
     },
     "commentator": {

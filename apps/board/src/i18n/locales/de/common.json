@@ -25,6 +25,8 @@
       "pinnedLeaders": "Anzahl fixierter Führender",
       "showUnfinished": "Unfertige anzeigen (Startliste, laufend)",
       "compactMode": "Kompaktmodus (ohne Verein, Chip)",
+      "showClub": "Vereinsmodus (Verein anzeigen)",
+      "showRegistration": "Registrierungsmodus (Registrierungsnummer anzeigen)",
       "showEmojis": "Emojis in Tabelle anzeigen"
     },
     "commentator": {

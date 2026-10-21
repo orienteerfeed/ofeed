@@ -84,6 +84,8 @@ watchEffect(() => {
           :data="row"
           :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
+          :show-club="settingsStore.showClub"
+          :show-registration="settingsStore.showRegistration"
           :show-emojis="settingsStore.showEmojis"
           :awarded-places="category.awardedPlaces"
         />
@@ -100,6 +102,8 @@ watchEffect(() => {
           :key="row.id"
           :is-even="index % 2 === 0"
           :is-compact="settingsStore.compactMode"
+          :show-club="settingsStore.showClub"
+          :show-registration="settingsStore.showRegistration"
           :show-emojis="settingsStore.showEmojis"
           :awarded-places="category.awardedPlaces"
         >
@@ -112,6 +116,8 @@ watchEffect(() => {
             :is-even="index % 2 === 0"
             :is-visible="isActive"
             :is-compact="settingsStore.compactMode"
+            :show-club="settingsStore.showClub"
+            :show-registration="settingsStore.showRegistration"
             :show-emojis="settingsStore.showEmojis"
             :timezone="competition.timezone"
           >

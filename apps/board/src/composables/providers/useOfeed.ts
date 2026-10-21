@@ -81,6 +81,7 @@ const COMPETITORS_BY_CLASS_SUBSCRIPTION = `
       id
       firstname
       lastname
+      registration
       organisation
       shortName
       card
@@ -503,6 +504,7 @@ function formatOfeedAthletesToRaw(athletes: OfeedAthlete[]): RawAthlete[] {
     firstName: athlete.firstname,
     club: athlete.organisation,
     clubShort: athlete.shortName,
+    registration: athlete.registration ?? undefined,
     timeSeconds: athlete.time ?? 0,
     status: statusMap[athlete.status],
     startTime: athlete.startTime ? new Date(athlete.startTime) : undefined,

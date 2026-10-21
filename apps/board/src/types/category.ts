@@ -58,6 +58,7 @@ export interface RawAthlete {
   card?: string
   club: string
   clubShort?: string
+  registration?: string
   timeSeconds: number
   status: AthleteStatus
   startTime?: Date

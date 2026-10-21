@@ -25,6 +25,8 @@
       "pinnedLeaders": "Nombre de leaders épinglés",
       "showUnfinished": "Afficher les non terminés (liste de départ, en course)",
       "compactMode": "Mode compact (sans club, ni puce)",
+      "showClub": "Mode club (afficher le club)",
+      "showRegistration": "Mode licence (afficher le numéro d'inscription)",
       "showEmojis": "Afficher les emojis dans le tableau"
     },
     "commentator": {

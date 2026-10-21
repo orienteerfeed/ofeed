@@ -4,6 +4,7 @@ import { differenceInSeconds } from 'date-fns'
 
 import { useTimeHelpers } from '@/composables/useTimeHelpers'
 import { formatStatus } from '@/utils/localize'
+import { rowGridColumns } from '@/utils/tableLayout'
 import { AthleteStatus } from '@/types/category'
 import type { AthleteWithStats } from '@/types/category'
 
@@ -12,11 +13,15 @@ const props = withDefaults(
     data: AthleteWithStats
     isEven: boolean
     isCompact?: boolean
+    showClub?: boolean
+    showRegistration?: boolean
     showEmojis?: boolean
     awardedPlaces?: number
   }>(),
   {
     isCompact: false,
+    showClub: false,
+    showRegistration: false,
     showEmojis: true,
     awardedPlaces: 3,
   }
@@ -34,9 +39,14 @@ const bgColor = computed(() =>
   isRecent.value ? 'bg-highlight' : props.isEven ? 'bg-even' : 'bg-white'
 )
 const textColor = computed(() => (isRecent.value ? 'text-white' : 'text-black'))
-const gridClass = computed(() =>
-  props.isCompact ? 'table-row-grid-compact' : 'table-row-grid'
-)
+const isClubShown = computed(() => !props.isCompact || props.showClub)
+const gridStyle = computed(() => ({
+  gridTemplateColumns: rowGridColumns({
+    compact: props.isCompact,
+    club: isClubShown.value,
+    registration: props.showRegistration,
+  }),
+}))
 const timeDisplay = computed(() => props.data.time?.slice(0, 8) ?? '')
 const lossDisplay = computed(() => props.data.loss?.slice(0, 8) ?? '')
 
@@ -63,7 +73,8 @@ const medal = computed(() =>
 
 <template>
   <div
-    :class="[bgColor, textColor, gridClass]"
+    :class="[bgColor, textColor]"
+    :style="gridStyle"
     class="grid gap-2 px-3 py-1.5 rounded-lg"
   >
     <span v-if="data.status === AthleteStatus.Ok">
@@ -86,8 +97,11 @@ const medal = computed(() =>
     <span class="text-ellipsis overflow-hidden whitespace-nowrap"
       >{{ data.surname }} {{ data.firstName }}</span
     >
+    <span v-if="showRegistration" class="whitespace-nowrap">{{ data.registration }}</span>
     <span v-if="!isCompact">{{ data.card }}</span>
-    <span v-if="!isCompact">{{ data.club }}</span>
+    <span v-if="isClubShown" class="text-ellipsis overflow-hidden whitespace-nowrap">{{
+      data.club
+    }}</span>
     <!-- TODO tabular-nums not nice override, special monospace font? -->
     <span
       class="block min-w-0 overflow-hidden whitespace-nowrap text-right tabular-nums"
@@ -106,12 +120,3 @@ const medal = computed(() =>
     <span v-else></span>
   </div>
 </template>
-
-<style>
-.table-row-grid {
-  grid-template-columns: 2em 3fr 1fr 3fr 7em 5em;
-}
-.table-row-grid-compact {
-  grid-template-columns: 2em 1fr max-content 4em;
-}
-</style>

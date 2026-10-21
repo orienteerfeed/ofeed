@@ -270,6 +270,34 @@ function onDragEnd() {
 
           <div class="flex items-center mb-2">
             <input
+              id="club-checkbox"
+              type="checkbox"
+              v-model="settingsStore.showClub"
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label
+              for="club-checkbox"
+              class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+              >{{ t('settings.tableContent.showClub') }}</label
+            >
+          </div>
+
+          <div class="flex items-center mb-2">
+            <input
+              id="registration-checkbox"
+              type="checkbox"
+              v-model="settingsStore.showRegistration"
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label
+              for="registration-checkbox"
+              class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+              >{{ t('settings.tableContent.showRegistration') }}</label
+            >
+          </div>
+
+          <div class="flex items-center mb-2">
+            <input
               id="compact-checkbox"
               type="checkbox"
               v-model="settingsStore.showEmojis"
