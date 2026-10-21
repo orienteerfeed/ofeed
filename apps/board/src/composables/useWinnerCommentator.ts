@@ -29,9 +29,13 @@ export function useWinnerCommentator(
       {
         next({ data }) {
           const winner = data?.winnerUpdated
-          // Unordered classes are not a ranking; nobody leads them.
+          // Only classes shown on this board; unordered classes are not a
+          // ranking, so nobody leads them.
           if (
             winner &&
+            settingsStore.categoriesDisplayByColumn.some((column) =>
+              column.some((c) => c.name === winner.className)
+            ) &&
             settingsStore.resolveCategorySettings(winner.className).resultMode ===
               'Default'
           )
