@@ -57,6 +57,7 @@ describe('CompetitionSublist', () => {
       exact: false,
     })
     expect(oneEventLink).toHaveAttribute('href', '/events/test/1')
+    expect(oneEventLink).toHaveTextContent(`– ${firstCompetition.organizer}`)
 
     getByText('TEST LIST')
     expect(() => getByText(/\d+. \d+. \d+/)).toThrow()
