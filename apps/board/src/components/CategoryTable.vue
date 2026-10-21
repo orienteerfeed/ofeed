@@ -13,7 +13,7 @@ import {
 import { useSettingStore } from '@/stores/settings'
 import { useScrollColumnItem } from '@/composables/scrollColumn/useScrollColumn'
 
-import type { Category } from '@/types/category'
+import { AthleteStatus, type Category } from '@/types/category'
 import type { Competition } from '@/types/competition'
 
 const props = defineProps<{
@@ -41,10 +41,15 @@ const effectiveCategory = computed(() => ({
 }))
 
 const athletesCount = computed(() => {
+  const { finished, unfinished } = athletes.value
+  // DNS can no longer change the results, so it counts as done (like in relays).
+  const dnsCount = unfinished.filter(
+    (a) => a.status === AthleteStatus.DidNotStart
+  ).length
   return {
-    finished: athletes.value.finished.length,
-    unfinished: athletes.value.unfinished.length,
-    full: athletes.value.finished.length + athletes.value.unfinished.length,
+    finished: finished.length + dnsCount,
+    unfinished: unfinished.length - dnsCount,
+    full: finished.length + unfinished.length,
   }
 })
 const finishedAthletes = useFinishedAthletes(
