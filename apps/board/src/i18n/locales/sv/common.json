@@ -32,7 +32,8 @@
     },
     "commentator": {
       "label": "Kommentator",
-      "announceWinners": "Ropa ut nya klassledare (tjeckisk röst)"
+      "announceWinners": "Ropa ut nya klassledare (tjeckisk röst)",
+      "enableSound": "🔊 Klicka för att aktivera kommentatorns ljud"
     },
     "classes": {
       "label": "Visade klasser",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAnnouncement } from '../src';
+import { buildAnnouncement, speakClassName } from '../src';
 
 const winner = (
   className: string,
@@ -62,6 +62,18 @@ describe('buildAnnouncement', () => {
   });
 
   it('includes the class name', () => {
-    expect(buildAnnouncement(winner('D21'))).toContain('v kategorii D21');
+    expect(buildAnnouncement(winner('D21'))).toContain('v kategorii dé 21,');
+  });
+
+  it.each([
+    ['H45C', 'há 45 cé'],
+    ['D21E', 'dé 21 é'],
+    ['HDR', 'há dé er'],
+    ['w35', 'dvojité vé 35'],
+    ['M21 A', 'em 21 á'],
+    ['Open', 'Open'],
+    ['Příchozí B', 'Příchozí bé'],
+  ])('speaks %s as "%s"', (className, spoken) => {
+    expect(speakClassName(className)).toBe(spoken);
   });
 });

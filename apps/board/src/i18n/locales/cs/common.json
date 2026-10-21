@@ -32,7 +32,8 @@
     },
     "commentator": {
       "label": "Komentátor",
-      "announceWinners": "Hlasem oznamovat nové vedoucí kategorií"
+      "announceWinners": "Hlasem oznamovat nové vedoucí kategorií",
+      "enableSound": "🔊 Klikněte pro zapnutí zvuku komentátora"
     },
     "classes": {
       "label": "Zobrazené kategorie",

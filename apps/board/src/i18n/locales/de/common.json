@@ -32,7 +32,8 @@
     },
     "commentator": {
       "label": "Kommentator",
-      "announceWinners": "Neue Kategorieführende ansagen (tschechische Stimme)"
+      "announceWinners": "Neue Kategorieführende ansagen (tschechische Stimme)",
+      "enableSound": "🔊 Klicken, um den Kommentatorton zu aktivieren"
     },
     "classes": {
       "label": "Angezeigte Klassen",

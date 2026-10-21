@@ -32,7 +32,8 @@
     },
     "commentator": {
       "label": "Commentator",
-      "announceWinners": "Announce new class leaders (Czech voice)"
+      "announceWinners": "Announce new class leaders (Czech voice)",
+      "enableSound": "🔊 Click to enable commentator sound"
     },
     "classes": {
       "label": "Displayed classes",

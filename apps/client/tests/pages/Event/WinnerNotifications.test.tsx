@@ -17,10 +17,10 @@ describe('WinnerNotification sound', () => {
     vi.stubGlobal(
       'Audio',
       vi.fn(function () {
-        return { play };
+        return { play, pause: vi.fn() };
       })
     );
-    vi.stubGlobal('speechSynthesis', { speak: vi.fn() });
+    vi.stubGlobal('speechSynthesis', { speak: vi.fn(), cancel: vi.fn() });
     // The first request owns the lock; the second waits for ownership.
     let owner: (() => Promise<void> | void) | undefined;
     vi.stubGlobal('navigator', {

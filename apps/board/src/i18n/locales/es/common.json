@@ -32,7 +32,8 @@
     },
     "commentator": {
       "label": "Comentarista",
-      "announceWinners": "Anunciar nuevos líderes de categoría (voz en checo)"
+      "announceWinners": "Anunciar nuevos líderes de categoría (voz en checo)",
+      "enableSound": "🔊 Haz clic para activar el sonido del comentarista"
     },
     "classes": {
       "label": "Clases mostradas",

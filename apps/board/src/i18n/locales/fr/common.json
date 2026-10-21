@@ -32,7 +32,8 @@
     },
     "commentator": {
       "label": "Commentateur",
-      "announceWinners": "Annoncer les nouveaux leaders de catégorie (voix tchèque)"
+      "announceWinners": "Annoncer les nouveaux leaders de catégorie (voix tchèque)",
+      "enableSound": "🔊 Cliquez pour activer le son du commentateur"
     },
     "classes": {
       "label": "Catégories affichées",
