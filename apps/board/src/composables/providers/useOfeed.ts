@@ -61,6 +61,37 @@ export function getWsClient(): Client {
   return _wsClient
 }
 
+const RESUBSCRIBE_DELAY_MS = 5000
+
+/**
+ * Subscribes and, when the subscription fails (server-side error; transport
+ * drops are retried by the client itself), subscribes again after a delay.
+ * Returns a cleanup function.
+ */
+export function subscribeWithRetry<T>(
+  payload: { query: string; variables?: Record<string, unknown> },
+  next: (data: T | null | undefined) => void,
+  onError?: () => void
+): () => void {
+  let retryTimer: ReturnType<typeof setTimeout> | undefined
+  let unsubscribe: (() => void) | undefined
+  const start = () => {
+    unsubscribe = getWsClient().subscribe<T>(payload, {
+      next: ({ data }) => next(data),
+      error() {
+        onError?.()
+        retryTimer = setTimeout(start, RESUBSCRIBE_DELAY_MS)
+      },
+      complete() {},
+    })
+  }
+  start()
+  return () => {
+    clearTimeout(retryTimer)
+    unsubscribe?.()
+  }
+}
+
 type CourseInfo = { length?: number; climb?: number; controls?: number }
 // Last received data per class; survives unsubscribe/remount so the board
 // keeps showing (possibly stale) results and only applies updates.
@@ -68,7 +99,6 @@ const athletesCache = new Map<
   number,
   { athletes: RawAthlete[]; courseInfo?: CourseInfo }
 >()
-const RESUBSCRIBE_DELAY_MS = 5000
 const CLASSES_REFETCH_DEBOUNCE_MS = 2000
 
 const CLASSES_UPDATED_SUBSCRIPTION = `
@@ -292,31 +322,15 @@ export function useOfeed() {
     // Class settings edited in OFeed apply almost immediately; bursts (e.g. imports)
     // collapse into one refetch.
     const refetchDebounced = useDebounceFn(() => void refetch(), CLASSES_REFETCH_DEBOUNCE_MS)
-    const resubscribeTick = ref(0)
     watchEffect((onCleanup) => {
-      void resubscribeTick.value
       const eventId = competitionId.value
       if (!eventId) return
-
-      let retryTimer: ReturnType<typeof setTimeout> | undefined
-      const unsubscribe = getWsClient().subscribe(
-        { query: CLASSES_UPDATED_SUBSCRIPTION, variables: { eventId } },
-        {
-          next: () => void refetchDebounced(),
-          error() {
-            retryTimer = setTimeout(
-              () => resubscribeTick.value++,
-              RESUBSCRIBE_DELAY_MS
-            )
-          },
-          complete() {},
-        }
+      onCleanup(
+        subscribeWithRetry(
+          { query: CLASSES_UPDATED_SUBSCRIPTION, variables: { eventId } },
+          () => void refetchDebounced()
+        )
       )
-
-      onCleanup(() => {
-        clearTimeout(retryTimer)
-        unsubscribe()
-      })
     })
 
     const competition = computed(() => competitionData.value)
@@ -339,28 +353,24 @@ export function useOfeed() {
     )
     const rawAthletes = ref<RawAthlete[] | undefined>(cached?.athletes)
     const courseInfo = ref<CourseInfo | undefined>(cached?.courseInfo)
-    const resubscribeTick = ref(0)
-
     watchEffect((onCleanup) => {
-      void resubscribeTick.value
       if (!fetchEnabled.value) return
       if (!Number.isFinite(classId)) return
 
-      let retryTimer: ReturnType<typeof setTimeout> | undefined
-      const unsubscribe = getWsClient().subscribe<{
-        competitorsByClassUpdated: Array<
-          OfeedAthlete & {
-            class?: {
-              length?: number | null
-              climb?: number | null
-              controlsCount?: number | null
+      onCleanup(
+        subscribeWithRetry<{
+          competitorsByClassUpdated: Array<
+            OfeedAthlete & {
+              class?: {
+                length?: number | null
+                climb?: number | null
+                controlsCount?: number | null
+              }
             }
-          }
-        >
-      }>(
-        { query: COMPETITORS_BY_CLASS_SUBSCRIPTION, variables: { classId } },
-        {
-          next({ data }) {
+          >
+        }>(
+          { query: COMPETITORS_BY_CLASS_SUBSCRIPTION, variables: { classId } },
+          (data) => {
             const competitors = data?.competitorsByClassUpdated ?? []
             rawAthletes.value = formatOfeedAthletesToRaw(competitors)
             const cls = competitors[0]?.class
@@ -377,22 +387,12 @@ export function useOfeed() {
             })
             status.value = 'success'
           },
-          error() {
+          () => {
             // Keep showing last known data; only report error with nothing to show.
             if (!rawAthletes.value) status.value = 'error'
-            retryTimer = setTimeout(
-              () => resubscribeTick.value++,
-              RESUBSCRIBE_DELAY_MS
-            )
-          },
-          complete() {},
-        }
+          }
+        )
       )
-
-      onCleanup(() => {
-        clearTimeout(retryTimer)
-        unsubscribe()
-      })
     })
 
     return { status, rawAthletes, courseInfo }
