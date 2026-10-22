@@ -19,6 +19,10 @@ describe('repairLiveResultatJSON', () => {
     expect(parsed.competitions[1].organizer).toBe('Kupa "Kracra", Pernik')
   })
 
+  it('closes a string at end of input', () => {
+    expect(JSON.parse(repairLiveResultatJSON('"a "b" c"  '))).toBe('a "b" c')
+  })
+
   it('strips tabs', () => {
     expect(JSON.parse(repairLiveResultatJSON('{"a": "x\ty"}'))).toEqual({
       a: 'xy',

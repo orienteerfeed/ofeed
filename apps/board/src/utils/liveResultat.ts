@@ -6,10 +6,11 @@ import { AthleteStatus } from '@/types/category'
  * when followed by `:`, `}`, `]`, end of input, or `,` + a new key/item.
  * Any other quote gets escaped.
  */
-const closingQuoteLookahead = /\s*(?:[:}\]]|,\s*[{"[]|$)/y
+const closingQuoteLookahead = /\s*(?:[:}\]]|,\s*[{"[])/y
 
 export const repairLiveResultatJSON = (input: string) => {
   const text = input.replaceAll('\t', '')
+  const lastChar = text.trimEnd().length - 1
   let out = ''
   let inString = false
   for (let i = 0; i < text.length; i++) {
@@ -28,7 +29,7 @@ export const repairLiveResultatJSON = (input: string) => {
       continue
     }
     closingQuoteLookahead.lastIndex = i + 1
-    const closes = closingQuoteLookahead.test(text)
+    const closes = i === lastChar || closingQuoteLookahead.test(text)
     if (closes) inString = false
     out += closes ? char : '\\"'
   }
