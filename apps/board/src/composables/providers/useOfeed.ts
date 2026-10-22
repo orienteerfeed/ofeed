@@ -1,5 +1,6 @@
 import { computed, ref, watchEffect, type Ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
+import { useDebounceFn } from '@vueuse/core'
 import { createClient, type Client } from 'graphql-ws'
 import { boardRuntimeValue } from '@/runtime-config'
 
@@ -68,6 +69,7 @@ const athletesCache = new Map<
   { athletes: RawAthlete[]; courseInfo?: CourseInfo }
 >()
 const RESUBSCRIBE_DELAY_MS = 5000
+const CLASSES_REFETCH_DEBOUNCE_MS = 2000
 
 const CLASSES_UPDATED_SUBSCRIPTION = `
   subscription ClassesUpdated($eventId: String!) {
@@ -287,7 +289,9 @@ export function useOfeed() {
       refetchInterval: 5 * 60 * 1000,
     })
 
-    // Class settings edited in OFeed apply immediately.
+    // Class settings edited in OFeed apply almost immediately; bursts (e.g. imports)
+    // collapse into one refetch.
+    const refetchDebounced = useDebounceFn(() => void refetch(), CLASSES_REFETCH_DEBOUNCE_MS)
     const resubscribeTick = ref(0)
     watchEffect((onCleanup) => {
       void resubscribeTick.value
@@ -298,7 +302,7 @@ export function useOfeed() {
       const unsubscribe = getWsClient().subscribe(
         { query: CLASSES_UPDATED_SUBSCRIPTION, variables: { eventId } },
         {
-          next: () => void refetch(),
+          next: () => void refetchDebounced(),
           error() {
             retryTimer = setTimeout(
               () => resubscribeTick.value++,
