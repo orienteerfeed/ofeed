@@ -1,6 +1,10 @@
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { ControlType } from '../../generated/prisma/client.js';
-import { COMPETITORS_BY_CLASS_UPDATED, pubsub as defaultPubsub } from '../../lib/pubsub.js';
+import {
+  COMPETITORS_BY_CLASS_UPDATED,
+  pubsub as defaultPubsub,
+  subscribeWithInitial,
+} from '../../lib/pubsub.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import {
   assertSplitPublicationAccessible,
@@ -129,7 +133,7 @@ export function findSplitPublicationStatus(
   return getSplitPublicationStatus(prisma, splitPublicationAuth, input.classId);
 }
 
-export async function* subscribeSplitCompetitorsByClassUpdated(
+export function subscribeSplitCompetitorsByClassUpdated(
   prisma: AppPrismaClient,
   auth: GraphQLAuthContext,
   classId: number,
@@ -137,28 +141,17 @@ export async function* subscribeSplitCompetitorsByClassUpdated(
 ): AsyncIterable<SplitCompetitorsByClassUpdatedPayload> {
   const splitPublicationAuth = auth as Parameters<typeof assertSplitPublicationAccessible>[1];
 
-  await assertSplitPublicationAccessible(prisma, splitPublicationAuth, classId);
-
-  yield {
-    splitCompetitorsByClassUpdated: await findCompetitorsByClassWithLegacyShape(
-      prisma,
-      classId,
-      true,
-    ),
-  };
-
-  const topic = `${COMPETITORS_BY_CLASS_UPDATED}_${classId}`;
-  const asyncIterableIterator = pubsub.asyncIterableIterator([topic]) as AsyncIterable<unknown>;
-
-  for await (const _payload of asyncIterableIterator) {
+  const load = async (): Promise<SplitCompetitorsByClassUpdatedPayload> => {
     await assertSplitPublicationAccessible(prisma, splitPublicationAuth, classId);
 
-    yield {
+    return {
       splitCompetitorsByClassUpdated: await findCompetitorsByClassWithLegacyShape(
         prisma,
         classId,
         true,
       ),
     };
-  }
+  };
+
+  return subscribeWithInitial(`${COMPETITORS_BY_CLASS_UPDATED}_${classId}`, load, load, pubsub);
 }

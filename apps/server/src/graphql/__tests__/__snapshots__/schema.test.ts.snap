@@ -904,6 +904,7 @@ type StoreCompetitorResponse {
 
 type Subscription {
   _empty(nothing: String): String
+  classesUpdated(eventId: String!): String!
   competitorUpdated(eventId: String!): Competitor!
   competitorsByClassUpdated(classId: Int!): [Competitor!]
   splitCompetitorsByClassUpdated(classId: Int!): [Competitor!]

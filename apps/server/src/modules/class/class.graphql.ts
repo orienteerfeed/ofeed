@@ -1,6 +1,7 @@
 import { builder } from '../../graphql/builder.js';
 
 import { rethrowAuthzOrError } from '../../graphql/errors.js';
+import { CLASSES_UPDATED } from '../../lib/pubsub.js';
 import { StartModeRef } from '../event/event.graphql-types.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 import { computeClassFee, type ComputedClassFee } from './class.fee.js';
@@ -232,5 +233,19 @@ builder.mutationFields((t) => ({
         message: `Class definitions loaded for ${result.updatedCount} classes`,
       };
     },
+  }),
+}));
+
+builder.subscriptionFields((t) => ({
+  /** Emits the event id whenever class settings of the event change. */
+  classesUpdated: t.string({
+    args: {
+      eventId: t.arg.string({ required: true }),
+    },
+    subscribe: (_root, args, context) =>
+      context.pubsub.asyncIterableIterator(CLASSES_UPDATED(args.eventId)) as AsyncIterable<{
+        classesUpdated: string;
+      }>,
+    resolve: (payload) => payload.classesUpdated,
   }),
 }));

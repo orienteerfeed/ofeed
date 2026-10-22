@@ -7,12 +7,13 @@ Per-app rules live in `apps/*/CLAUDE.md`.
 
 ## Workspaces
 
-| Workspace | Path              | Stack                                                               |
-| --------- | ----------------- | ------------------------------------------------------------------- |
-| client    | `apps/client`     | Vite 7, React 19, TanStack Router/Query, Apollo, Tailwind 4, shadcn |
-| server    | `apps/server`     | Hono, Prisma 7 (MariaDB), GraphQL Yoga + Pothos, Pino, Zod OpenAPI  |
-| board     | `apps/board`      | Vite, Vue 3, Pinia, TanStack Vue Query, UnoCSS                      |
-| shared    | `packages/shared` | Zod schemas + TS types (`@repo/shared`)                             |
+| Workspace   | Path                   | Stack                                                               |
+| ----------- | ---------------------- | ------------------------------------------------------------------- |
+| client      | `apps/client`          | Vite 7, React 19, TanStack Router/Query, Apollo, Tailwind 4, shadcn |
+| server      | `apps/server`          | Hono, Prisma 7 (MariaDB), GraphQL Yoga + Pothos, Pino, Zod OpenAPI  |
+| board       | `apps/board`           | Vite, Vue 3, Pinia, TanStack Vue Query, UnoCSS                      |
+| shared      | `packages/shared`      | Zod schemas + TS types (`@repo/shared`)                             |
+| commentator | `packages/commentator` | Browser winner announcer for client + board (`@repo/commentator`)   |
 
 The `board` app is excluded from root `pnpm dev` — start it separately with
 `pnpm dev:board`.

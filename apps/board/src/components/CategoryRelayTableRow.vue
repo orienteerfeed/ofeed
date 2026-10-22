@@ -12,6 +12,7 @@ const props = defineProps<{
   isEven: boolean
   legCount: number
   showEmojis?: boolean
+  awardedPlaces?: number
   timezone?: string
 }>()
 const { now5s } = useTimeHelpers()
@@ -47,6 +48,7 @@ const additionalLegSpaces = computed(() => {
       class="table-row-grid text-table-large"
       :data="props.data"
       :show-emojis="props.showEmojis"
+      :awarded-places="props.awardedPlaces"
     />
     <CategoryRelayTableRowAthlete
       class="table-row-grid text-table-small"

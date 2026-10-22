@@ -9,7 +9,6 @@ import { useTableSizingStore } from '@/stores/tableSizing'
 
 const settingsStore = useSettingStore()
 const tableSizing = useTableSizingStore()
-const columnContent = ref<HTMLElement | null>(null)
 
 const {
   columnWrapper,
@@ -73,10 +72,9 @@ watch(
 )
 
 function isColumnBottom() {
-  if (!columnContent.value || !columnWrapper.value) return true
-  const contentRect = columnContent.value.getBoundingClientRect()
-  const wrapperRect = columnWrapper.value.getBoundingClientRect()
-  return Math.floor(contentRect.bottom - wrapperRect.bottom) <= 16
+  const wrapper = columnWrapper.value
+  if (!wrapper) return true
+  return wrapper.scrollTop + wrapper.clientHeight >= wrapper.scrollHeight - 16
 }
 
 function isColumnTop() {
@@ -115,12 +113,21 @@ const scrollDownByType = {
   row: scrollDownByRow,
 }
 
+let lastTickScrollTop: number | undefined
 function scrollBy(
   scrollDownByFn: typeof scrollDownByPage | typeof scrollDownByRow
 ) {
   if (isColumnTop()) checkItemsVisibility() // BugFix after scrolltop visibility is sometimes off, Improve in useSC?
-  if (isColumnBottom()) scrollColumnToTop()
-  else scrollDownByFn()
+  const scrollTop = columnWrapper.value?.scrollTop
+  // Restart also when the previous tick could not move the column (no next
+  // item found), otherwise the board stays frozen at the end.
+  if (isColumnBottom() || scrollTop === lastTickScrollTop) {
+    lastTickScrollTop = undefined
+    scrollColumnToTop()
+  } else {
+    lastTickScrollTop = scrollTop
+    scrollDownByFn()
+  }
 }
 
 function setupPageScrollSkeleton(
@@ -157,57 +164,42 @@ function startContinuesScroll(isCancelled: Ref<boolean>) {
   }, visiblePageReadInMS.value / 2)
 }
 
+// Constant speed, end detected live: content height changes while scrolling
+// (tables loading, refetches), so a precomputed end would leave the column
+// parked at the bottom until the stale duration runs out.
 function scrollContinuously(isCancelled: Ref<boolean>) {
-  if (columnWrapper.value === null) return
-  if (columnContent.value === null) return
-  const wrapperRect = columnWrapper.value.getBoundingClientRect()
-  const contentRect = columnContent.value.getBoundingClientRect()
-  const scrollLength =
-    contentRect.bottom - (wrapperRect.height + wrapperRect.top)
-  const scrollDuration =
-    Math.floor(scrollLength / tableSizing.lineHeight) *
-    settingsStore.readLineTimeMS
+  const wrapper = columnWrapper.value
+  if (!wrapper) return
+  // Own position: per-frame steps are sub-pixel and scrollTop would round them away.
+  let position = wrapper.scrollTop
+  let lastTime: number | null = null
 
-  const startPos = wrapperRect.top - contentRect.top
-  const diff = scrollLength
+  const loop = (currentTime: DOMHighResTimeStamp) => {
+    if (isCancelled.value) return
+    if (lastTime !== null)
+      position +=
+        ((currentTime - lastTime) * tableSizing.lineHeight) /
+        settingsStore.readLineTimeMS
+    lastTime = currentTime
+    wrapper.scrollTo(0, position)
 
-  let startTime: number | null = null
-  let requestId: number | null
-
-  const loop = function (currentTime: DOMHighResTimeStamp) {
-    if (isCancelled.value) {
-      if (requestId) window.cancelAnimationFrame(requestId)
+    if (!isColumnBottom()) {
+      window.requestAnimationFrame(loop)
       return
     }
-    if (!startTime) {
-      startTime = currentTime
-    }
-
-    // Elapsed time in miliseconds
-    const time = currentTime - startTime
-
-    const percent = Math.min(time / scrollDuration, 1)
-    columnWrapper.value?.scrollTo(0, startPos + diff * percent)
-
-    if (time < scrollDuration) {
-      // Continue moving
-      requestId = window.requestAnimationFrame(loop)
-    } else if (requestId) {
-      window.cancelAnimationFrame(requestId)
-      window.setTimeout(() => {
-        if (isCancelled.value) return
-        scrollColumnToTop()
-        startContinuesScroll(isCancelled)
-      }, visiblePageReadInMS.value)
-    }
+    window.setTimeout(() => {
+      if (isCancelled.value) return
+      scrollColumnToTop()
+      startContinuesScroll(isCancelled)
+    }, visiblePageReadInMS.value)
   }
-  requestId = window.requestAnimationFrame(loop)
+  window.requestAnimationFrame(loop)
 }
 </script>
 
 <template>
   <div class="flex-1 overflow-y-scroll columnWrapper" ref="columnWrapper">
-    <div ref="columnContent"><slot></slot></div>
+    <div><slot></slot></div>
   </div>
 </template>
 

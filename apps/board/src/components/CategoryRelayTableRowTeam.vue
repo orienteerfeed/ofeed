@@ -2,12 +2,33 @@
 import { computed } from 'vue'
 import { formatStatus } from '@/utils/localize'
 import { formatTimeOrienteering } from '@/utils/dateTime'
-import { AthleteStatus } from '@/types/category'
+import { AthleteStatus, isResultItemOk } from '@/types/category'
 import type { RelayTeamWithStats } from '@/types/category'
 
-const props = defineProps<{ data: RelayTeamWithStats; showEmojis?: boolean }>()
+const props = withDefaults(
+  defineProps<{
+    data: RelayTeamWithStats
+    showEmojis?: boolean
+    awardedPlaces?: number
+  }>(),
+  { awardedPlaces: 3 }
+)
 
 const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
+// Without emojis: gold / silver / bronze badge, lighter for further awarded places.
+const medalBadges: Record<number, string> = { 1: 'bg-amber-300', 2: 'bg-gray-300', 3: 'bg-amber-600' }
+const medalBadge = (rank: number | undefined) =>
+  `rounded text-black ${medalBadges[rank ?? 0] ?? 'bg-amber-100'}`
+const rank = computed(() => {
+  const result = props.data.latestTotalResult
+  return isResultItemOk(result) ? result.rank : undefined
+})
+const isAwarded = computed(
+  () => rank.value !== undefined && rank.value <= props.awardedPlaces
+)
+const medal = computed(() =>
+  props.showEmojis && isAwarded.value ? medalEmojis[rank.value!] : undefined
+)
 
 const timeFormatted = computed(() =>
   props.data.latestTotalResult.status === AthleteStatus.Ok
@@ -36,10 +57,13 @@ const clubNameFormatted = computed(() =>
         data.latestTotalResult.status === AthleteStatus.Ok
       "
     >
-      <template v-if="showEmojis && data.latestTotalResult.rank !== undefined && medalEmojis[data.latestTotalResult.rank]">{{
-        medalEmojis[data.latestTotalResult.rank]
-      }}</template>
-      <span v-else class="tabular-nums">{{ data.latestTotalResult.rank }}.</span>
+      <template v-if="medal">{{ medal }}</template>
+      <span
+        v-else
+        class="tabular-nums"
+        :class="isAwarded && medalBadge(rank)"
+        >{{ rank }}.</span
+      >
     </span>
     <span
       class="tabular-nums"
