@@ -9,7 +9,7 @@ import {
   type ResultMode,
 } from '@/types/category'
 
-type CategoryDisplay = {
+export type CategoryDisplay = {
   name: string
   selected: boolean
   column: null | number
