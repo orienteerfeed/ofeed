@@ -22,13 +22,19 @@ describe('buildAnnouncement', () => {
     male(buildAnnouncement(winner('D21', 'Nováková Jana', 'M')));
   });
 
-  it.each(['D21', 'D10C', 'W21E', 'w35'])('falls back to the class name for %s', className => {
-    female(buildAnnouncement(winner(className, 'Novák Jan', 'B')));
-  });
+  it.each(['D21', 'D10C', 'W21E', 'w35'])(
+    'falls back to the class name for %s',
+    className => {
+      female(buildAnnouncement(winner(className, 'Novák Jan', 'B')));
+    }
+  );
 
-  it.each(['H21', 'H35', 'M21E', 'm40'])('falls back to the class name for %s', className => {
-    male(buildAnnouncement(winner(className, 'Nováková Jana', 'B')));
-  });
+  it.each(['H21', 'H35', 'M21E', 'm40'])(
+    'falls back to the class name for %s',
+    className => {
+      male(buildAnnouncement(winner(className, 'Nováková Jana', 'B')));
+    }
+  );
 
   it.each(['Nováková Jana', 'Krátká Eva', 'Novakova Jana'])(
     'uses the surname for mixed classes: %s',
