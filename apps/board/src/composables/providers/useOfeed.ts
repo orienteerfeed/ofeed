@@ -51,8 +51,8 @@ export function getWsClient(): Client {
     _wsClient = createClient({
       url: getGraphQLWsUrl(),
       // Never give up reconnecting — a board must survive long outages.
+      // Fatal close codes (bad request, unauthorized, ...) still stop retrying.
       retryAttempts: Infinity,
-      shouldRetry: () => true,
       retryWait: (retries) =>
         new Promise((resolve) =>
           setTimeout(resolve, Math.min(1000 * 2 ** retries, 10_000))
