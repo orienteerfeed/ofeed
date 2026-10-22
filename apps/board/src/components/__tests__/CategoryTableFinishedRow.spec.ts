@@ -38,6 +38,18 @@ describe('CategoryTableHeader', () => {
     expect(getByText('5.')).toHaveAttribute('data-awarded', 'true')
   })
 
+  it.each([
+    [1, 'bg-amber-300'],
+    [2, 'bg-gray-300'],
+    [3, 'bg-amber-600'],
+    [4, 'bg-amber-100'],
+  ])('uses a medal colored badge for place %i without emojis', (rank, badge) => {
+    const { getByText } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: { ...TEST_RUNNER, rank }, showEmojis: false, awardedPlaces: 5 },
+    })
+    expect(getByText(`${rank}.`)).toHaveClass(badge)
+  })
+
   it('does not highlight or award a medal past awarded places', () => {
     const { getByText, queryByText } = render(CategoryTableFinishedRow, {
       props: { isEven: false, data: { ...TEST_RUNNER, rank: 2 }, showEmojis: true, awardedPlaces: 1 },

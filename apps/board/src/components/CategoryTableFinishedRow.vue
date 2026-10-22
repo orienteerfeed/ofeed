@@ -63,6 +63,10 @@ const emojisMapping: Record<AthleteStatus, string> = {
 }
 
 const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
+// Without emojis: gold / silver / bronze badge, lighter for further awarded places.
+const medalBadges: Record<number, string> = { 1: 'bg-amber-300', 2: 'bg-gray-300', 3: 'bg-amber-600' }
+const medalBadge = (rank: number | undefined) =>
+  `rounded text-black ${medalBadges[rank ?? 0] ?? 'bg-amber-100'}`
 const isAwarded = computed(
   () => props.data.rank !== undefined && props.data.rank <= props.awardedPlaces
 )
@@ -82,7 +86,7 @@ const medal = computed(() =>
       <span
         v-else-if="data.rank !== undefined"
         class="tabular-nums"
-        :class="{ 'rounded bg-amber-300 text-black': isAwarded }"
+        :class="isAwarded && medalBadge(data.rank)"
         :data-awarded="isAwarded || undefined"
         >{{ data.rank }}.</span
       >

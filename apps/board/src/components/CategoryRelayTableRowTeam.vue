@@ -15,6 +15,10 @@ const props = withDefaults(
 )
 
 const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
+// Without emojis: gold / silver / bronze badge, lighter for further awarded places.
+const medalBadges: Record<number, string> = { 1: 'bg-amber-300', 2: 'bg-gray-300', 3: 'bg-amber-600' }
+const medalBadge = (rank: number | undefined) =>
+  `rounded text-black ${medalBadges[rank ?? 0] ?? 'bg-amber-100'}`
 const rank = computed(() => {
   const result = props.data.latestTotalResult
   return isResultItemOk(result) ? result.rank : undefined
@@ -57,7 +61,7 @@ const clubNameFormatted = computed(() =>
       <span
         v-else
         class="tabular-nums"
-        :class="{ 'rounded bg-amber-300 text-black': isAwarded }"
+        :class="isAwarded && medalBadge(rank)"
         >{{ rank }}.</span
       >
     </span>
