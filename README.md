@@ -11,6 +11,15 @@ OrienteerFeed (OFeed) is a monorepo web platform for orienteering event data, co
 
 [![](https://dcbadge.limes.pink/api/server/https://discord.gg/YWURC23tHZ)](https://discord.gg/YWURC23tHZ)
 
+## Development deployment
+
+Successful pushes to `develop` run CI and deploy the exact build to
+`https://dev.ofeed.live` with API at `https://api.dev.ofeed.live`. Publication
+uses image digests and a versioned Helm chart, then updates the GitOps
+`deploy/dev` branch. See [deployment setup](docs/DEPLOYMENT_ARGOCD.md) for the
+required SSH deploy key, read-only Argo CD token and environment prerequisites.
+Stable releases continue to use `main` and `vX.Y.Z` tags.
+
 ## How It Works
 
 This application is like a digital hub for all things related to orienteering events. It serves as a one-stop platform where you can get details about various events, the classes offered at these events, and the competitors participating in them. It provides these services through a web server and is capable of communicating using both RESTful APIs and GraphQL, which are two ways of fetching data from a server.

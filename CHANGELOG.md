@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Continuous deployment of successful `develop` builds to `dev.ofeed.live` and
+  `api.dev.ofeed.live`, with image digests, versioned charts and GitOps updates.
+- Optional dedicated API ingress, digest-required image rendering and migration
+  sync ordering for environments whose runtime secrets are managed by ESO.
 - Release-only GHCR publishing for immutable multi-architecture client, server,
   board, and database-migration images.
 - Runtime frontend configuration, Argo CD PreSync migrations, and optional
