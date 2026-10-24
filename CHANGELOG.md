@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Seed required countries, currencies and the Orienteering sport after deployment
+  migrations, preserving reference IDs and excluding optional event creation.
 - Installed `wget` in the API image so Docker Compose healthchecks can run.
 - Pre-created client and board `runtime-config.js` files owned by the Nginx
   runtime user so startup scripts can write them without permission errors.

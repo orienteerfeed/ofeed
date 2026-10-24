@@ -73,6 +73,7 @@ jobs:
         with:
           version: v3.18.6
       - run: ruby scripts/delivery/test-chart.rb
+      - run: ruby scripts/delivery/test-db-deploy.rb
       - run: python3 -m unittest discover -s scripts/delivery -p 'test_*.py'
 
   deploy-dev:

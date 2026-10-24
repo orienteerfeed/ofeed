@@ -69,12 +69,14 @@ COPY --from=deps /workspace/apps/server/node_modules ./apps/server/node_modules
 COPY apps/server/package.json ./apps/server/package.json
 COPY --from=builder /workspace/apps/server/prisma ./apps/server/prisma
 COPY --from=builder /workspace/apps/server/prisma.config.ts ./apps/server/prisma.config.ts
+COPY --from=builder /workspace/apps/server/src/generated ./apps/server/src/generated
+COPY apps/server/docker-db-deploy.sh /usr/local/bin/ofeed-db-deploy
 COPY apps/server/docker-entrypoint.sh /usr/local/bin/ofeed-entrypoint
 RUN chmod 0555 /usr/local/bin/ofeed-entrypoint \
   && chown -R node:node /workspace
 WORKDIR /workspace/apps/server
 USER node
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/ofeed-entrypoint"]
-CMD ["/workspace/apps/server/node_modules/.bin/prisma", "migrate", "deploy"]
+CMD ["/bin/sh", "/usr/local/bin/ofeed-db-deploy"]
 
 FROM production AS runner

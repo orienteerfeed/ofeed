@@ -26,8 +26,13 @@ Secret.
 ## Argo CD migration
 
 Chart vytváří `ops` Job s anotací `argocd.argoproj.io/hook: PreSync` a sync-wave
-`-1`. Job dokončí `prisma migrate deploy` před rolloutem API, webu a boardu.
-Jeho selhání zastaví synchronizaci. Migrace musí být zpětně kompatibilní s právě
+`-1`. Job dokončí `prisma migrate deploy` a potom idempotentní seed číselníků
+(země, měny a sport Orienteering) před rolloutem API, webu a boardu. Seed
+používá stejný `DATABASE_URL` jako migrace, zachovává existující identifikátory
+a nevytváří uživatele ani události, ani když je nastavené `EVENT_NAME`.
+Selhání migrace nebo seedu zastaví synchronizaci. Při dalším nasazení se seed
+bezpečně zopakuje. Příkaz `pnpm db:seed` zůstává určený pro lokální přípravu
+včetně volitelné události; deployment používá `seed-reference-data.ts`. Migrace musí být zpětně kompatibilní s právě
 běžící aplikací, protože rollback schématu se automaticky neprovádí.
 
 ## Secrets

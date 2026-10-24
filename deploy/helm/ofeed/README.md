@@ -1,7 +1,9 @@
 # OFeed Helm Chart
 
 Chart nasazuje `web`, `api`, volitelný `board` a Argo CD `PreSync` migrační Job
-z image `ops`. MariaDB/MySQL je externí služba.
+z image `ops`. MariaDB/MySQL je externí služba. Job nejdřív aplikuje migrace a
+potom doplní číselníky zemí, měn a sportu. Seed lze opakovat a nevytváří
+uživatelská ani demonstrační data. Selhání kteréhokoli kroku zablokuje rollout.
 
 ## Image a GitOps
 
