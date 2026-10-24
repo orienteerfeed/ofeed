@@ -40,6 +40,13 @@ We are using [Weblate](https://hosted.weblate.org/projects/ofeed/) free localiza
 - Monorepo: pnpm workspaces + Turborepo
 - Shared: `@repo/shared` (shared schemas/types)
 
+## Documentation
+
+Start with the [documentation index](docs/README.md) for product scope,
+architecture decisions, feature specs, API contracts, development and operations.
+Agents start at [AGENTS.md](AGENTS.md); Claude Code imports the same entry point
+through [CLAUDE.md](CLAUDE.md).
+
 ## Repository Layout
 
 ```text

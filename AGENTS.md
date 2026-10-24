@@ -1,145 +1,124 @@
-# Repository Guidelines
+# Agent entry point
 
-## Scope
+This file applies to the whole monorepo. Start here, then read
+[docs/README.md](docs/README.md) and only the pages relevant to the task. More
+specific instructions override these rules inside their directories:
+[client](apps/client/AGENTS.md), [server](apps/server/AGENTS.md),
+[board](apps/board/AGENTS.md), [shared](packages/shared/AGENTS.md) and
+[GitHub workflows](.github/AGENTS.md).
 
-This file applies to the whole monorepo. More specific instructions in
-`apps/client/AGENTS.md`, `apps/server/AGENTS.md`, and
-`packages/shared/AGENTS.md` override these rules inside their directories.
+## Workflow
 
-## Repository Overview
+1. Read the [glossary](docs/product/glossary.md), affected
+   [spec](docs/specs/README.md) and applicable workspace instructions.
+2. Before changing architecture, read
+   [docs/architecture/adr/](docs/architecture/adr/README.md) and record a new
+   decision as an ADR. Do not reopen accepted decisions without new context and
+   a superseding record.
+3. Write or update a feature spec before implementation and include it with the
+   code change: goal, acceptance criteria, edge cases, API and test plan.
+4. Use GitHub Issues as the source of truth for non-trivial planned work; link
+   the issue in the spec and PR. Do not invent issue numbers.
+5. For longer tasks keep `docs/plans/yyyy-mm-dd-task.md` with steps, status,
+   open questions, checks and the next action. Remove or archive completed
+   plans.
+6. Preserve unrelated working-tree changes. Report what changed, validation and
+   any required checks that could not run.
 
-This repository is a `pnpm` workspace orchestrated by Turborepo.
+## Stack and layout
 
-- `apps/client`: Vite + React frontend.
-- `apps/server`: Hono + GraphQL Yoga + Prisma backend.
-- `packages/shared`: shared TypeScript/Zod contracts consumed via
-  `@repo/shared`.
-- `docs/`: project, deployment, and environment references.
-- `deploy/`: Helm and deployment assets.
+- `apps/client`: Vite + React, TypeScript, TanStack Router/Query, localized UI.
+- `apps/server`: Hono, GraphQL Yoga + Pothos, Prisma 7 with MariaDB adapter.
+- `apps/board`: separate Vite + Vue 3 event board.
+- `packages/shared`: reusable Zod contracts and TypeScript types
+  (`@repo/shared`).
+- `deploy/`: Helm/deployment assets; `docs/`: product, architecture and
+  operations.
+- Workspace tooling: pnpm + Turborepo, TypeScript + ESM.
 
-Do not hand-edit generated artifacts unless the task explicitly requires it.
-Important generated paths:
+See [architecture](docs/architecture/overview.md),
+[data model](docs/architecture/data-model.md) and
+[API sources](docs/api/README.md).
 
-- `apps/client/src/routeTree.gen.ts`
-- `apps/server/src/generated/**`
+## Environment and commands
 
-## Environment
+Run from the repository root. Use Node.js **24.15.0** from `.nvmrc` and pnpm
+**11.4.0** via Corepack (minimum `>=11.0.0`). Full instructions:
+[setup](docs/dev/setup.md).
 
-- Use Node.js `24.15.0` from the root `.nvmrc`.
-- Use `pnpm` `11.4.0` via Corepack. The minimum required version is `>=11.0.0`.
-- Runtime env files are app-local only:
-  - `apps/client/.env`
-  - `apps/server/.env`
-- Do not introduce a root runtime `.env` for application behavior.
-- `turbo.json` uses strict env handling. When adding a new env var that affects
-  Turbo tasks, update `turbo.json` and the relevant `.env.example` file.
-
-## Working Agreements
-
-- TypeScript + ESM is the default across apps and packages.
-- Prefer small, targeted changes over broad refactors.
-- For frontend user-facing text, use the existing i18n locale resources or add
-  new locale entries when needed rather than hard-coded copy.
-- Keep cross-service API contracts and reusable validation schemas in
-  `packages/shared` whenever both client and server depend on them.
-- If a schema is server-only or UI-only, keep it close to the feature that owns
-  it.
-- Update `README.md`, `CONTRIBUTING.md`, or `docs/` when behavior, public API,
-  infrastructure, or configuration changes.
-- Use the `.yaml` extension for YAML files; do not introduce new `.yml` files.
-- Preserve contributor-facing references to `CLA.md` when changing contribution,
-  licensing, or pull request workflows.
-- Never commit secrets. Only client-safe `VITE_*` variables may reach browser
-  code.
-
-## Build, Test, and Development Commands
-
-Run from the repository root unless noted otherwise.
-
-- `pnpm install`: install all workspace dependencies.
-- `pnpm setup:dev`: bootstrap local development.
-- `pnpm dev`: run workspace dev tasks in parallel.
-- `pnpm dev:win`: Windows-friendly variant of `pnpm dev`.
-- `pnpm build`: build all workspaces.
-- `pnpm lint`: lint all workspaces.
-- `pnpm format`: format the repo with Prettier.
-- `pnpm format:check`: verify formatting.
-- `pnpm type-check`: run TypeScript checks across workspaces.
-- `pnpm --filter @repo/shared build`: rebuild shared contracts after changing
-  `packages/shared`.
-- `pnpm test`: run workspace tests.
-- `pnpm test:watch`: run watch-mode tests in parallel.
-- `pnpm test:client`: run client tests only.
-- `pnpm test:server`: run server tests only.
-- `pnpm db:generate`: run Prisma generate through Turbo.
-- `pnpm db:migrate`: run Prisma migrations through Turbo.
-- `docker compose -f compose.mysql.yaml up -d mysql`: start local MariaDB/MySQL
-  for backend work.
+| Purpose                        | Command                                            |
+| ------------------------------ | -------------------------------------------------- |
+| Bootstrap                      | `pnpm setup:dev`                                   |
+| Local database                 | `docker compose -f compose.mysql.yaml up -d mysql` |
+| Client + API development       | `pnpm dev` (`pnpm dev:win` on Windows)             |
+| Board development              | `pnpm dev:board` (`pnpm dev:board:win` on Windows) |
+| Build / lint / types           | `pnpm build` / `pnpm lint` / `pnpm type-check`     |
+| GraphQL types                  | `pnpm type-check:graphql`                          |
+| Formatting                     | `pnpm format:check` (check), `pnpm format` (write) |
+| Workspace tests                | `pnpm test` / `pnpm test:watch`                    |
+| Client / server tests          | `pnpm test:client` / `pnpm test:server`            |
+| Prisma generation / migrations | `pnpm db:generate` / `pnpm db:migrate`             |
+| Rebuild shared contracts       | `pnpm --filter @repo/shared build`                 |
 
 Prefer `pnpm --filter ./apps/client ...` or `pnpm --filter ./apps/server ...`
-when validating a single workspace. Use the `:win` script variants on Windows
-shells that do not support POSIX-style environment assignments such as
-`NODE_ENV=development`.
+for focused checks; use workspace `:win` variants when POSIX env assignments are
+unsupported. `pnpm dev` intentionally excludes the board.
 
-## Style and Naming
+Runtime env files are app-local: `apps/client/.env`, `apps/server/.env`,
+`apps/board/.env`. Never introduce a root runtime `.env`; Compose may use a root
+`.env` only for interpolation. Turbo uses strict env handling: new
+task-affecting variables also need `turbo.json` and relevant `.env.example`
+updates. Only browser-safe `VITE_*` values may reach browser code; container
+configuration must also remain public-safe. Never commit secrets.
 
-- Formatting defaults come from the root `.editorconfig` and `.prettierrc`:
-  UTF-8, LF, 2-space indentation, semicolons, single quotes, `printWidth: 100`.
-- Follow local workspace overrides where they exist.
-- Preserve the current import style and path aliases of the touched workspace.
-- Write clear, typed code. Avoid `any` unless there is a concrete reason.
+## Code and API agreements
 
-## Validation and Contracts
+- Keep changes targeted; preserve local import style and aliases. Use typed
+  code; avoid `any` unless justified. Follow root and workspace formatting
+  settings.
+- Use existing i18n resources for user-facing frontend text.
+- Prefer GraphQL for first-party app communication and REST for external/public
+  integrations. Preserve existing REST response helpers and envelopes.
+- Zod is the validation source of truth. Reuse `packages/shared` schemas when
+  client/server share a payload; keep single-feature schemas close to the
+  feature.
+- Keep REST, GraphQL and form constraints aligned. Services own business rules;
+  handlers/resolvers are transport adapters.
+- Do not hand-edit generated artifacts: `apps/client/src/routeTree.gen.ts` and
+  `apps/server/src/generated/**`. Schema changes require generation/migrations.
+- New documentation filenames use lowercase kebab-case; preserve special root
+  filenames and existing published paths. Use `.yaml`, not `.yml`. Add
+  `.gitkeep` to otherwise empty directories.
 
-- Use Zod-based schemas as the main validation source of truth.
-- Reuse shared schemas between frontend forms and backend handlers when the same
-  payload crosses the network.
-- Prefer GraphQL for first-party internal app communication and REST for
-  external, integration-facing, or public API surfaces.
-- For REST endpoints, keep the existing response API structure consistent with
-  current server response helpers.
-- Keep REST, GraphQL, and form validation behavior aligned.
+Details: [conventions](docs/dev/conventions.md),
+[GraphQL boundaries](docs/GRAPHQL_ARCHITECTURE.md),
+[security](docs/security/threat-model.md),
+[data protection](docs/security/data-protection.md).
 
-## Testing Expectations
+## Validation and review
 
-- Run the narrowest meaningful checks for the area you changed.
-- Prefer focused unit tests for new behavior and regressions; add or update them
-  together with the code change when practical.
-- Frontend changes should usually run relevant client Vitest commands and, for
-  route/form flows, Playwright when practical.
-- Backend changes should run relevant server Vitest commands; schema changes
-  should also run Prisma generation or migration commands as needed.
-- If you cannot run a required check, say so explicitly in the final handoff.
-
-## Commit and Review Guidance
-
-- Follow Conventional Commits such as `feat:`, `fix:`, `chore:`, `docs:`,
-  `refactor:`, and `test:`.
-- Use lowercase branch prefixes such as `feature/`, `bugfix/`, `hotfix/`, or
-  `release/`.
-- Keep commits focused and reviewable.
-- Pull requests should summarize scope, impacted paths, executed checks, and any
-  config or contract changes.
-
-## GitHub and Release Discipline
-
-- Use GitHub Issues as the source of truth for planned work whenever the change
-  is larger than a trivial fix.
-- Link implementation work back to its issue using references such as
-  `Refs #123`, `Closes #123`, or `Fixes #123` in commits or pull requests.
-- Prefer pull requests that map cleanly to a single issue or a tightly related
-  set of acceptance criteria.
-- Keep `CHANGELOG.md` in sync with notable product-facing or operational changes
-  when the release process or documentation requires a human-readable summary.
-- This repository uses `semantic-release` on `main` and tags releases as
-  `vX.Y.Z`.
-- Desired semver discipline is:
-  - `fix` for patch-level changes
-  - `feat` for minor-level changes
-  - `BREAKING CHANGE:` or `type!:` for major-level changes
-- Current release automation is defined in `.releaserc.json` and
-  `.github/workflows/release.yaml`. If release semantics, release notes, or
-  changelog generation changes, update those files together with `README.md`.
+- Run the narrowest meaningful checks. Backend changes need relevant server
+  Vitest tests; Prisma changes also need generation/migrations as applicable.
+- Frontend changes usually need relevant Vitest checks; route/form flows need
+  browser checks when practical. Add meaningful regressions for new behavior.
+- Shared changes require rebuilding shared contracts and checking consumers.
+- Follow [testing strategy](docs/dev/testing.md); report any unrun required
+  check.
+- Update README/docs for behavior, public API, infrastructure or configuration
+  changes. Keep notable changes in `CHANGELOG.md` using Keep a Changelog format.
+- Use Conventional Commits and lowercase `feature/`, `bugfix/`, `hotfix/` or
+  `release/` branches. Reference issues with `Refs`, `Closes` or `Fixes`.
+- Keep PRs focused and include scope, checks and contract/config changes.
+- Preserve contributor-facing [CLA.md](CLA.md) links; follow
+  [CONTRIBUTING.md](CONTRIBUTING.md).
+- Releases on `main` use semantic-release and `vX.Y.Z` tags, with explicit
+  release intent. `fix` means patch, `feat` minor, and `BREAKING CHANGE:` /
+  `type!:` major intent; the workflow requires a release label/trailer/manual
+  request. See [release guidance](CONTRIBUTING.md#release-requests). Changes to
+  release semantics must update `.releaserc.json`,
+  `.github/workflows/release.yaml` and README.
+- Respect tool-specific permission settings, including `.claude/settings.json`.
+  These docs do not authorize git mutation, deployment or external publication.
 
 <!-- BEGIN:turborepo-agent-rules -->
 
