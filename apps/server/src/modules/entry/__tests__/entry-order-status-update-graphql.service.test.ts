@@ -45,6 +45,22 @@ function createPrismaMock() {
 }
 
 describe('entryOrderStatusUpdateForGraphQL', () => {
+  it('rejects unauthenticated payment updates before reading any entry', async () => {
+    const prisma = createPrismaMock();
+    await expect(
+      entryOrderPaidUpdateForGraphQL(
+        prisma as never,
+        { isAuthenticated: false, type: null },
+        {
+          entryId: 'entry-1',
+          paid: true,
+        },
+      ),
+    ).rejects.toMatchObject({ statusCode: 401 });
+    expect(prisma.entry.findUnique).not.toHaveBeenCalled();
+    expect(prisma.entry.update).not.toHaveBeenCalled();
+  });
+
   it("lets the entry's own creator cancel it without an event owner/admin check", async () => {
     const prisma = createPrismaMock();
     prisma.entry.findUnique.mockResolvedValueOnce({ eventId: 'event-1', userId: 42 });

@@ -164,10 +164,7 @@ describe('bulkCreateStartSlotVacancies', () => {
     };
 
     await expect(
-      bulkCreateStartSlotVacancies(prisma as never, 42, [
-        { startTime: t1 },
-        { startTime: t2 },
-      ]),
+      bulkCreateStartSlotVacancies(prisma as never, 42, [{ startTime: t1 }, { startTime: t2 }]),
     ).resolves.toEqual({ count: 2 });
 
     expect(prisma.startSlotVacancy.createMany).toHaveBeenCalledWith({
@@ -455,5 +452,44 @@ describe('deleteMatchingStartSlotVacancy', () => {
     const where = tx.startSlotVacancy.deleteMany.mock.calls[0][0].where;
     expect(where.classId).toBe(99);
     expect(where.startTime).toBe(startTime);
+  });
+});
+
+describe('atomic start-slot claims', () => {
+  it('allows only one concurrent claim of a vacancy', async () => {
+    let available = true;
+    const tx = {
+      competitor: { findFirst: vi.fn().mockResolvedValue(null) },
+      startSlotVacancy: {
+        deleteMany: vi.fn().mockImplementation(async () => {
+          const count = available ? 1 : 0;
+          available = false;
+          return { count };
+        }),
+      },
+    };
+    const claim = () =>
+      deleteMatchingStartSlotVacancy(tx as never, {
+        classId: 42,
+        startTime: new Date('2026-06-01T10:05:00Z'),
+        requireAvailable: true,
+      });
+    const results = await Promise.allSettled([claim(), claim()]);
+    expect(results.map((result) => result.status).sort()).toEqual(['fulfilled', 'rejected']);
+  });
+
+  it('rejects an occupied time even if a stale vacancy exists', async () => {
+    const tx = {
+      competitor: { findFirst: vi.fn().mockResolvedValue({ id: 7 }) },
+      startSlotVacancy: { deleteMany: vi.fn() },
+    };
+    await expect(
+      deleteMatchingStartSlotVacancy(tx as never, {
+        classId: 42,
+        startTime: new Date('2026-06-01T10:05:00Z'),
+        requireAvailable: true,
+      }),
+    ).rejects.toThrow('The requested start time is not available.');
+    expect(tx.startSlotVacancy.deleteMany).not.toHaveBeenCalled();
   });
 });

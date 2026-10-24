@@ -81,11 +81,7 @@ export type EventVisibilityUpdateResult = {
 };
 
 export type EventSlugAvailabilityReason =
-  | 'TOO_SHORT'
-  | 'TOO_LONG'
-  | 'INVALID_FORMAT'
-  | 'RESERVED'
-  | 'TAKEN';
+  'TOO_SHORT' | 'TOO_LONG' | 'INVALID_FORMAT' | 'RESERVED' | 'TAKEN';
 
 export type EventSlugAvailability = {
   slug: string;
@@ -745,6 +741,10 @@ export const updateCompetitor = async (
   updateData: UpdateCompetitorData,
   userId: number,
 ) => {
+  if (typeof updateData.note === 'string' && updateData.note.trim() === '') {
+    updateData = { ...updateData, note: null };
+  }
+
   const competitorIdNumber = toIntegerId(competitorId);
   let dbResponseCompetitor;
   try {
@@ -972,18 +972,29 @@ export const updateCompetitor = async (
     // Update the competitor, refresh splits, and atomically manage start slot
     // vacancies when the start time changes.
     await prisma.$transaction(async (tx) => {
-      // When moving to a new start time in a StartList class, verify the new
-      // slot exists before committing the update.
-      if (startTimeIsChanging && newStartTimeValue && targetEffectiveStartMode !== 'FreeStart') {
-        const vacancy = await tx.startSlotVacancy.findUnique({
+      // Claim a new class/time atomically. Deleting exactly one vacancy prevents
+      // two concurrent moves from booking the same start-list position.
+      const targetStartTime = isStartTimeInPayload ? newStartTimeValue : oldStartTime;
+      if (
+        (startTimeIsChanging || classIsChanging) &&
+        targetStartTime &&
+        targetEffectiveStartMode !== 'FreeStart'
+      ) {
+        const reservation = await tx.entryItem.findFirst({
           where: {
-            classId_startTime: { classId: targetClassId, startTime: newStartTimeValue },
+            classId: targetClassId,
+            startTime: targetStartTime,
+            competitorId: null,
+            entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
           },
           select: { id: true },
         });
-        if (!vacancy) {
-          throw new ConflictError('The requested start time is not available.');
-        }
+        if (reservation) throw new ConflictError('The requested start time is not available.');
+        await deleteMatchingStartSlotVacancy(tx, {
+          classId: targetClassId,
+          startTime: targetStartTime,
+          requireAvailable: true,
+        });
       }
 
       const updated = await tx.competitor.update({
@@ -998,7 +1009,11 @@ export const updateCompetitor = async (
       });
 
       // Free the old start slot vacancy when the start time actually changed.
-      if (startTimeIsChanging && oldStartTime && oldEffectiveStartMode !== 'FreeStart') {
+      if (
+        (startTimeIsChanging || classIsChanging) &&
+        oldStartTime &&
+        oldEffectiveStartMode !== 'FreeStart'
+      ) {
         await restoreStartSlotVacancy(tx, {
           classId: dbResponseCompetitor.classId,
           startTime: oldStartTime,
@@ -1191,16 +1206,11 @@ export const storeCompetitor = async (
     // competitor has a start time) atomically in a single transaction.
     newCompetitor = await prisma.$transaction(async (tx) => {
       if (effectiveStartMode !== 'FreeStart') {
-        const startTimeDate = new Date(competitorData.startTime as string | number | Date);
-        const vacancy = await tx.startSlotVacancy.findUnique({
-          where: {
-            classId_startTime: { classId: classIdNumber, startTime: startTimeDate },
-          },
-          select: { id: true },
+        await deleteMatchingStartSlotVacancy(tx, {
+          classId: classIdNumber,
+          startTime: new Date(resolvedStartTime!),
+          requireAvailable: true,
         });
-        if (!vacancy) {
-          throw new ConflictError('The requested start time is not available.');
-        }
       }
 
       const created = await tx.competitor.create({

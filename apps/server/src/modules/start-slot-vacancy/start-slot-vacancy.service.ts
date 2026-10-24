@@ -1,3 +1,4 @@
+import { ConflictError } from '../../exceptions/index.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { EntryStatus } from '../../generated/prisma/enums.js';
@@ -38,6 +39,7 @@ export interface StartSlotVacancySlot {
 export interface MatchingStartSlotVacancyInput {
   classId: number;
   startTime?: Date | null;
+  requireAvailable?: boolean;
 }
 
 export interface EventStartSlotVacancyGroup {
@@ -270,6 +272,12 @@ export async function restoreStartSlotVacancy(
 ): Promise<void> {
   if (!input.startTime) return;
 
+  const occupant = await tx.competitor.findFirst({
+    where: { classId: input.classId, startTime: input.startTime },
+    select: { id: true },
+  });
+  if (occupant) return;
+
   await tx.startSlotVacancy.createMany({
     data: [
       {
@@ -299,12 +307,23 @@ export async function deleteMatchingStartSlotVacancy(
 ): Promise<void> {
   if (!input.startTime) return;
 
-  await tx.startSlotVacancy.deleteMany({
+  if (input.requireAvailable) {
+    const occupant = await tx.competitor.findFirst({
+      where: { classId: input.classId, startTime: input.startTime },
+      select: { id: true },
+    });
+    if (occupant) throw new ConflictError('The requested start time is not available.');
+  }
+
+  const deleted = await tx.startSlotVacancy.deleteMany({
     where: {
       classId: input.classId,
       startTime: input.startTime,
     },
   });
+  if (input.requireAvailable && deleted.count !== 1) {
+    throw new ConflictError('The requested start time is not available.');
+  }
 }
 
 export interface EntryAvailabilitySlot {
@@ -421,6 +440,7 @@ export async function listEventEntryAvailability(
             select: { id: true, startTime: true, bibNumber: true },
             orderBy: { startTime: 'asc' },
           },
+          competitors: { select: { startTime: true } },
           entryItems: {
             where: {
               competitorId: null,
@@ -470,9 +490,16 @@ export async function listEventEntryAvailability(
         entryItem.startTime === null ? [] : [entryItem.startTime.getTime()],
       ),
     );
-    const availableSlots = eventClass.startSlotVacancies.filter(
-      (slot) => !reservedStartTimes.has(slot.startTime.getTime()),
-    );
+    for (const competitor of eventClass.competitors ?? []) {
+      if (competitor.startTime) reservedStartTimes.add(competitor.startTime.getTime());
+    }
+    const seenStartTimes = new Set<number>();
+    const availableSlots = eventClass.startSlotVacancies.filter((slot) => {
+      const time = slot.startTime.getTime();
+      if (reservedStartTimes.has(time) || seenStartTimes.has(time)) return false;
+      seenStartTimes.add(time);
+      return true;
+    });
     const vacancyCount = availableSlots.length;
 
     const { currentFee, feeNet, feeVat } = computeClassFee({

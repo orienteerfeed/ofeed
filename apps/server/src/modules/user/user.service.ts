@@ -169,6 +169,10 @@ export async function signIn(input: LoginInput) {
         role: loginSuccessPayload.user.role,
         organisation: loginSuccessPayload.user.organisation ?? null,
         emergencyContact: loginSuccessPayload.user.emergencyContact ?? null,
+        active: loginSuccessPayload.user.active,
+        emailVerifiedAt: loginSuccessPayload.user.emailVerifiedAt,
+        createdAt: loginSuccessPayload.user.createdAt,
+        updatedAt: loginSuccessPayload.user.updatedAt,
       },
     };
   } catch (error) {
@@ -220,6 +224,10 @@ export async function verifyUserEmail(token: string) {
         role: verificationPayload.user.role,
         organisation: verificationPayload.user.organisation ?? null,
         emergencyContact: verificationPayload.user.emergencyContact ?? null,
+        active: verificationPayload.user.active,
+        emailVerifiedAt: verificationPayload.user.emailVerifiedAt,
+        createdAt: verificationPayload.user.createdAt,
+        updatedAt: verificationPayload.user.updatedAt,
       },
       message: 'Email verified',
     };

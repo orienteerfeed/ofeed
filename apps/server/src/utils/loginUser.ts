@@ -23,6 +23,10 @@ export const getLoginSuccessPayload = async ({
       role: true,
       organisation: true,
       emergencyContact: true,
+      active: true,
+      emailVerifiedAt: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 
@@ -42,6 +46,10 @@ export const getLoginSuccessPayload = async ({
       role: dbResponse.role,
       organisation: dbResponse.organisation,
       emergencyContact: dbResponse.emergencyContact,
+      active: dbResponse.active,
+      emailVerifiedAt: dbResponse.emailVerifiedAt,
+      createdAt: dbResponse.createdAt,
+      updatedAt: dbResponse.updatedAt,
     },
     privileges,
   };

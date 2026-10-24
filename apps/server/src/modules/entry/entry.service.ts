@@ -19,7 +19,7 @@ import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { ConflictError, NotFoundError, ValidationError } from '../../exceptions/index.js';
 import type { EntryStatus } from '../../generated/prisma/enums.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
-import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
+import { AuthzError, requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import { computeClassCapacity } from '../class/class.capacity.js';
 import { computeClassFee } from '../class/class.fee.js';
@@ -40,8 +40,14 @@ function availableSlotStartTimes(
       entryItem.startTime === null ? [] : [entryItem.startTime.getTime()],
     ),
   );
+  const seen = new Set<number>();
   return slots
-    .filter((slot) => !reservedStartTimes.has(slot.startTime.getTime()))
+    .filter((slot) => {
+      const time = slot.startTime.getTime();
+      if (reservedStartTimes.has(time) || seen.has(time)) return false;
+      seen.add(time);
+      return true;
+    })
     .map((slot) => slot.startTime);
 }
 
@@ -170,7 +176,7 @@ export function priceEntryOrderItems(
     if (item.cardRental && !context.cardRental.enabled) {
       throw new ValidationError('Card rental is not available for this event.');
     }
-    const cardRentalFee = item.cardRental ? context.cardRental.price ?? 0 : null;
+    const cardRentalFee = item.cardRental ? (context.cardRental.price ?? 0) : null;
 
     const { currentFee } = computeClassFee({
       baseFee: cls.fee,
@@ -398,6 +404,7 @@ export async function createEntryOrder(
           fee: true,
           lateEntryFeeDisabled: true,
           startSlotVacancies: { select: { startTime: true } },
+          competitors: { select: { startTime: true } },
           entryItems: {
             where: {
               competitorId: null,
@@ -453,7 +460,10 @@ export async function createEntryOrder(
       lateEntryFeeDisabled: cls.lateEntryFeeDisabled,
       competitorCount: cls._count.competitors,
       pendingEntryCount: cls._count.entryItems,
-      slotStartTimes: availableSlotStartTimes(cls.startSlotVacancies, cls.entryItems ?? []),
+      slotStartTimes: availableSlotStartTimes(cls.startSlotVacancies, [
+        ...(cls.entryItems ?? []),
+        ...(cls.competitors ?? []),
+      ]),
     })),
     {
       now,
@@ -657,6 +667,7 @@ export async function updateEntryOrderForGraphQL(
           fee: true,
           lateEntryFeeDisabled: true,
           startSlotVacancies: { select: { startTime: true } },
+          competitors: { select: { startTime: true } },
           entryItems: {
             where: {
               competitorId: null,
@@ -705,7 +716,10 @@ export async function updateEntryOrderForGraphQL(
       lateEntryFeeDisabled: cls.lateEntryFeeDisabled,
       competitorCount: cls._count.competitors,
       pendingEntryCount: cls._count.entryItems,
-      slotStartTimes: availableSlotStartTimes(cls.startSlotVacancies, cls.entryItems ?? []),
+      slotStartTimes: availableSlotStartTimes(cls.startSlotVacancies, [
+        ...(cls.entryItems ?? []),
+        ...(cls.competitors ?? []),
+      ]),
     })),
     {
       now,
@@ -1021,6 +1035,10 @@ export async function entryOrderPaidUpdateForGraphQL(
   auth: GraphQLAuthContext,
   input: EntryOrderPaidUpdateForGraphQLInput,
 ): Promise<void> {
+  if (!auth?.isAuthenticated || !auth.userId) {
+    throw new AuthzError('Unauthorized: No credentials provided', 401);
+  }
+
   const entry = await prisma.entry.findUnique({
     where: { id: input.entryId },
     select: { eventId: true },

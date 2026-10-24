@@ -46,9 +46,15 @@ type Class {
   competitorsCount: Int!
   controlsCount: Int
   course: Course
+
+  """
+  Current gross fee including lateEntryFeePercent after entriesCloseAt, unless lateEntryFeeDisabled.
+  """
   currentFee: Float
   eventId: String!
   externalId: String
+
+  """Base gross fee, before any late-entry surcharge."""
   fee: Float
   feeNet: Float
   feeVat: Float
@@ -1038,7 +1044,9 @@ type User {
   id: Int!
   lastname: lastname_String_NotNull_maxLength_255!
   organisation: organisation_String_maxLength_191
-  password: password_String_NotNull_maxLength_255!
+
+  """Always null. Passwords are never returned by the API."""
+  password: password_String_NotNull_maxLength_255
   role: UserRole!
   updatedAt: DateTime!
 }

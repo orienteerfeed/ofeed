@@ -89,12 +89,15 @@ export const ClassRef = builder.prismaObject('Class', {
     startWindowFrom: t.expose('startWindowFrom', { type: 'DateTime', nullable: true }),
     startWindowTo: t.expose('startWindowTo', { type: 'DateTime', nullable: true }),
     fee: t.float({
+      description: 'Base gross fee, before any late-entry surcharge.',
       nullable: true,
       select: { fee: true },
       resolve: (eventClass) => eventClass.fee?.toNumber() ?? null,
     }),
     lateEntryFeeDisabled: t.exposeBoolean('lateEntryFeeDisabled'),
     currentFee: t.float({
+      description:
+        'Current gross fee including lateEntryFeePercent after entriesCloseAt, unless lateEntryFeeDisabled.',
       nullable: true,
       select: FEE_SELECT,
       resolve: (eventClass) => resolveComputedFee(eventClass).currentFee,
