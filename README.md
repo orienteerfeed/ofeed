@@ -138,6 +138,22 @@ Default local URLs:
 - Readiness: `http://localhost:3001/readyz`
 - Metrics (Prometheus): `http://localhost:3001/metrics`
 
+### UI testing with Playwright MCP
+
+The root `.mcp.json` configures Playwright MCP to connect to an existing Chromium
+browser at `http://localhost:9222`. Start the application with `pnpm dev` and
+launch Chrome with remote debugging enabled. On macOS:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.ofeed-playwright-chrome"
+```
+
+Reload the MCP configuration in your MCP client, then use the Playwright tools
+to open `http://localhost:3000` and test the UI. The separate Chrome profile
+persists browser state between sessions.
+
 ## Development Commands (Root)
 
 - `pnpm setup:dev` - bootstrap local dev environment
@@ -275,7 +291,7 @@ Docker Compose can also use a root `.env` only for Compose interpolation, for ex
 - `BOARD_HOST=board.orienteerfeed.com`
 - `TRAEFIK_CERT_RESOLVER=le`
 
-An example Compose-only file is provided as [`.env.example`](/Users/martinkrivda/Workspace/orienteerfeed/.env.example). Keep in mind that this root `.env` is optional and is meant for Docker/Traefik interpolation only, not for app runtime configuration.
+An example Compose-only file is provided as [`.env.example`](./.env.example). Keep in mind that this root `.env` is optional and is meant for Docker/Traefik interpolation only, not for app runtime configuration.
 
 ## Helm / k3s Deployment
 
