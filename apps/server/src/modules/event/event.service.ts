@@ -1046,8 +1046,11 @@ const updateCompetitorInTransaction = async (
         });
       }
 
+      await supersedeCompetitorPunches(tx, [competitorIdNumber], {
+        eventId,
+        cards: [dbResponseCompetitor.card, updated.card],
+      });
       if (splits && Array.isArray(splits)) {
-        await supersedeCompetitorPunches(tx, [competitorIdNumber]);
         await tx.split.deleteMany({
           where: { competitorId: competitorIdNumber },
         });

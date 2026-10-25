@@ -460,7 +460,6 @@ export async function upsertCompetitor(
   void cache;
   const written = await eventPunchTransaction(prisma, eventId, async (tx) => {
     const dbCompetitor = await findCompetitorForImport(eventId, classId, externalId, undefined, tx);
-    if (result && dbCompetitor) await supersedeCompetitorPunches(tx, [dbCompetitor.id]);
     const snapshot = buildCompetitorSnapshot({
       classId,
       person,
@@ -477,6 +476,10 @@ export async function upsertCompetitor(
     const value = dbCompetitor
       ? await updateExistingCompetitor(eventId, dbCompetitor, snapshot, authorId, tx)
       : await insertNewCompetitor(eventId, snapshot, authorId, tx);
+    await supersedeCompetitorPunches(tx, [value.id], {
+      eventId,
+      cards: [dbCompetitor?.card, snapshot.competitorData.card as number | null],
+    });
     const changes = await reconcileEventPunches(tx, eventId, new Map(), {
       cards: [dbCompetitor?.card, snapshot.competitorData.card as number | null],
       competitorIds: [value.id],
