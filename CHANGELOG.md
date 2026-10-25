@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Event-scoped SRR/SI readout punch ingestion with durable retry identities,
+  cross-device deduplication, delayed card matching and live result updates.
+
 - Indexed documentation for product, architecture, ADRs, specs, API sources,
   development, operations and security, with one shared agent entry point.
 - Continuous deployment of successful `develop` builds to `dev.ofeed.live` and

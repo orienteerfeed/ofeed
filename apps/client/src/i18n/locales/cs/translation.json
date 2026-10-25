@@ -568,7 +568,8 @@
           "status_change": "Změna stavu",
           "late_start_change": "Zpožděný start",
           "note_change": "Změna poznámky",
-          "external_id_change": "Změna externího ID"
+          "external_id_change": "Změna externího ID",
+          "punch_store": "Uložení průchodu kontrolou"
         },
         "OriginLabels": {
           "START": "Start",

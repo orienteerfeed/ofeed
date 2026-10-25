@@ -7,6 +7,13 @@
  * orchestration and makes the per-row write logic independently testable.
  */
 
+import {
+  eventPunchTransaction,
+  publishPunchChanges,
+  supersedeCompetitorPunches,
+  type PunchTx,
+} from '../punch/punch-write.js';
+import { reconcileEventPunches } from '../punch/punch.service.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import type { ResultStatus } from '../../generated/prisma/enums.js';
 import prisma from '../../utils/context.js';
@@ -18,10 +25,6 @@ import {
   detectCompetitorChanges,
 } from '../competitor/competitor-change.helpers.js';
 import { createCompetitorProtocolEntries } from '../competitor/competitor-change.service.js';
-import {
-  SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
-  SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
-} from './upload.constants.js';
 import { getIofDateTime, toResultStatus } from './upload.iof.helpers.js';
 import type { IofOrganisation, IofPerson, IofResult, IofStart } from './upload.iof.types.js';
 
@@ -133,7 +136,10 @@ export function normalizeOrganisationInput(orgInput: {
  * Cleans up an organisation row that no longer has any competitors or teams
  * pointing at it. Idempotent — safe to call after commit.
  */
-async function deleteOrganisationIfUnused(organisationId: number | null | undefined) {
+async function deleteOrganisationIfUnused(
+  organisationId: number | null | undefined,
+  prisma: PunchTx,
+) {
   if (!organisationId) return;
 
   await prisma.organisation.deleteMany({
@@ -172,7 +178,8 @@ async function findCompetitorForImport(
   eventId: string,
   classId: number,
   externalId: string,
-  cache?: CompetitorCache,
+  cache: CompetitorCache | undefined,
+  prisma: PunchTx,
 ): Promise<DbCompetitor | null> {
   const cached = cache?.get(externalId);
   if (cached) return cached;
@@ -301,18 +308,18 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
       ? (dbCompetitor?.organisation?.shortName ?? null)
       : effectiveShortName,
     bibNumber: result?.BibNumber
-      ? parseInt(result.BibNumber.shift())
+      ? parseInt(result.BibNumber[0])
       : start?.BibNumber
-        ? (parseInt(start.BibNumber.shift()) ?? dbCompetitor?.bibNumber)
+        ? (parseInt(start.BibNumber[0]) ?? dbCompetitor?.bibNumber)
         : null,
     startTime: resolvedStartTime,
     finishTime:
       getIofDateTime(result?.FinishTime, eventTimeZone) ?? (dbCompetitor?.finishTime || null),
     time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitor?.time ?? null),
     card: result?.ControlCard
-      ? parseInt(result.ControlCard.shift())
+      ? parseInt(result.ControlCard[0])
       : start?.ControlCard
-        ? parseInt(start.ControlCard.shift())
+        ? parseInt(start.ControlCard[0])
         : (dbCompetitor?.card ?? null),
     status: normalizedStatus,
     lateStart: dbCompetitor?.lateStart || false,
@@ -344,41 +351,35 @@ async function insertNewCompetitor(
   eventId: string,
   snapshot: CompetitorSnapshot,
   authorId: number,
+  prisma: PunchTx,
 ): Promise<{ id: number; updated: boolean }> {
-  const resolvedOrganisationId = await upsertOrganisation({ eventId, ...snapshot.orgInput });
-  const created = await prisma.$transaction(
-    async (tx) => {
-      const c = await tx.competitor.create({
-        data: {
-          ...snapshot.competitorWriteBase,
-          ...(resolvedOrganisationId
-            ? { organisation: { connect: { id: resolvedOrganisationId } } }
-            : {}),
-        } as Prisma.CompetitorCreateInput,
-        select: { id: true },
-      });
-      await createCompetitorProtocolEntries(tx, {
-        eventId,
-        competitorId: c.id,
-        origin: 'IT',
-        authorId,
-        changes: [
-          {
-            type: 'competitor_create',
-            previousValue: null,
-            newValue: `${snapshot.lastname} ${snapshot.firstname}`,
-          },
-        ],
-      });
-      return c;
-    },
-    {
-      maxWait: SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
-      timeout: SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
-      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-    },
+  const resolvedOrganisationId = await upsertOrganisation(
+    { eventId, ...snapshot.orgInput },
+    prisma,
   );
-  return { id: created.id, updated: true };
+  const c = await prisma.competitor.create({
+    data: {
+      ...snapshot.competitorWriteBase,
+      ...(resolvedOrganisationId
+        ? { organisation: { connect: { id: resolvedOrganisationId } } }
+        : {}),
+    } as Prisma.CompetitorCreateInput,
+    select: { id: true },
+  });
+  await createCompetitorProtocolEntries(prisma, {
+    eventId,
+    competitorId: c.id,
+    origin: 'IT',
+    authorId,
+    changes: [
+      {
+        type: 'competitor_create',
+        previousValue: null,
+        newValue: `${snapshot.lastname} ${snapshot.firstname}`,
+      },
+    ],
+  });
+  return { id: c.id, updated: true };
 }
 
 async function updateExistingCompetitor(
@@ -386,6 +387,7 @@ async function updateExistingCompetitor(
   dbCompetitor: DbCompetitor,
   snapshot: CompetitorSnapshot,
   authorId: number,
+  prisma: PunchTx,
 ): Promise<{ id: number; updated: boolean }> {
   const fieldChanges = detectCompetitorChanges(
     dbCompetitor as unknown as Record<string, unknown>,
@@ -408,68 +410,36 @@ async function updateExistingCompetitor(
     (c) => c.type === 'organisation_change' || c.type === 'short_name_change',
   );
   const resolvedOrganisationId = orgChanged
-    ? await upsertOrganisation({ eventId, ...snapshot.orgInput })
+    ? await upsertOrganisation({ eventId, ...snapshot.orgInput }, prisma)
     : (dbCompetitor.organisationId ?? null);
 
-  await prisma.$transaction(
-    async (tx) => {
-      await tx.competitor.update({
-        where: { id: dbCompetitor.id },
-        data: {
-          ...snapshot.competitorWriteBase,
-          ...(orgChanged
-            ? {
-                organisation: resolvedOrganisationId
-                  ? { connect: { id: resolvedOrganisationId } }
-                  : { disconnect: true },
-              }
-            : {}),
-          updatedAt: new Date(),
-        } as Prisma.CompetitorUpdateInput,
-      });
-      await createCompetitorProtocolEntries(tx, {
-        eventId,
-        competitorId: dbCompetitor.id,
-        origin: 'IT',
-        authorId,
-        changes: fieldChanges,
-      });
-    },
-    {
-      maxWait: SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
-      timeout: SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
-      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-    },
-  );
+  await prisma.competitor.update({
+    where: { id: dbCompetitor.id },
+    data: {
+      ...snapshot.competitorWriteBase,
+      ...(orgChanged
+        ? {
+            organisation: resolvedOrganisationId
+              ? { connect: { id: resolvedOrganisationId } }
+              : { disconnect: true },
+          }
+        : {}),
+      updatedAt: new Date(),
+    } as Prisma.CompetitorUpdateInput,
+  });
+  await createCompetitorProtocolEntries(prisma, {
+    eventId,
+    competitorId: dbCompetitor.id,
+    origin: 'IT',
+    authorId,
+    changes: fieldChanges,
+  });
 
   if (orgChanged && dbCompetitor.organisationId !== resolvedOrganisationId) {
-    await deleteOrganisationIfUnused(dbCompetitor.organisationId);
+    await deleteOrganisationIfUnused(dbCompetitor.organisationId, prisma);
   }
 
   return { id: dbCompetitor.id, updated: true };
-}
-
-const MAX_UPSERT_ATTEMPTS = 3;
-
-/**
- * P2002 (unique violation on classId+externalId) is treated as a benign race —
- * another concurrent worker created the row first. We retry: re-read the
- * racer's row and fall through to the update branch with their data as the
- * preserved-fields baseline.
- */
-function isCompetitorUniqueViolation(error: unknown): boolean {
-  if (typeof error !== 'object' || error === null || !('code' in error)) return false;
-  if ((error as { code: unknown }).code !== 'P2002') return false;
-
-  const target = (error as { meta?: { target?: unknown } }).meta?.target;
-  // Competitor has only one unique constraint (classId + externalId), so any
-  // P2002 from competitor.create must be a classId+externalId race. Treat a
-  // missing target (MariaDB adapter sometimes omits it) as matching.
-  if (target === undefined || target === null) return true;
-  if (Array.isArray(target)) {
-    return target.includes('classId') && target.includes('externalId');
-  }
-  return target.toString().includes('Competitor_class_external_uq');
 }
 
 export async function upsertCompetitor(
@@ -486,20 +456,11 @@ export async function upsertCompetitor(
   cache?: CompetitorCache,
 ): Promise<{ id: number; updated: boolean }> {
   const { registration, system: externalId } = getCompetitorKeys(classId, person);
-
-  for (let attempt = 1; attempt <= MAX_UPSERT_ATTEMPTS; attempt++) {
-    // First attempt: prefer cache to skip one DB round-trip per competitor.
-    // On cache miss, fall back to event-scoped lookup so category changes are
-    // represented as class_change updates instead of duplicate competitors.
-    // Retry attempts always query the DB to pick up the racer's row.
-    const dbCompetitor: DbCompetitor | null =
-      attempt === 1
-        ? await findCompetitorForImport(eventId, classId, externalId, cache)
-        : await prisma.competitor.findUnique({
-            where: { classId_externalId: { classId, externalId } },
-            select: COMPETITOR_DIFF_SELECT,
-          });
-
+  // The preload cache may be stale after another dongle or assignment write.
+  void cache;
+  const written = await eventPunchTransaction(prisma, eventId, async (tx) => {
+    const dbCompetitor = await findCompetitorForImport(eventId, classId, externalId, undefined, tx);
+    if (result && dbCompetitor) await supersedeCompetitorPunches(tx, [dbCompetitor.id]);
     const snapshot = buildCompetitorSnapshot({
       classId,
       person,
@@ -513,25 +474,15 @@ export async function upsertCompetitor(
       externalId,
       dbCompetitor,
     });
-
-    if (!dbCompetitor) {
-      try {
-        return await insertNewCompetitor(eventId, snapshot, authorId);
-      } catch (err) {
-        if (isCompetitorUniqueViolation(err) && attempt < MAX_UPSERT_ATTEMPTS) {
-          // Race lost — another worker inserted between our findUnique and create.
-          // Loop back, this time findUnique will return the racer's row and we'll
-          // go down the update branch.
-          continue;
-        }
-        throw err;
-      }
-    }
-
-    return await updateExistingCompetitor(eventId, dbCompetitor, snapshot, authorId);
-  }
-
-  throw new Error(
-    `upsertCompetitor exhausted ${MAX_UPSERT_ATTEMPTS} attempts for classId=${classId} externalId=${externalId}`,
-  );
+    const value = dbCompetitor
+      ? await updateExistingCompetitor(eventId, dbCompetitor, snapshot, authorId, tx)
+      : await insertNewCompetitor(eventId, snapshot, authorId, tx);
+    const changes = await reconcileEventPunches(tx, eventId, new Map(), {
+      cards: [dbCompetitor?.card, snapshot.competitorData.card as number | null],
+      competitorIds: [value.id],
+    });
+    return { value, changes };
+  });
+  await publishPunchChanges(eventId, written.changes);
+  return written.value;
 }

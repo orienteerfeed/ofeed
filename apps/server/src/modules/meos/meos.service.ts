@@ -1,3 +1,9 @@
+import {
+  eventPunchTransaction,
+  lockPunchEvent,
+  supersedeCompetitorPunches,
+} from '../punch/punch-write.js';
+import { reconcileEventPunches } from '../punch/punch.service.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import prisma from '../../utils/context.js';
 
@@ -144,6 +150,7 @@ async function replaceMeosSplits(
   competitorId: number,
   splits: Array<{ controlCode: number; time: number }>,
 ): Promise<void> {
+  await supersedeCompetitorPunches(tx, [competitorId]);
   await tx.split.deleteMany({ where: { competitorId } });
   for (const split of splits) {
     await tx.split.create({
@@ -157,6 +164,11 @@ async function replaceMeosSplits(
 }
 
 export async function resetEventData(tx: PrismaTx, eventId: string): Promise<void> {
+  await lockPunchEvent(tx, eventId);
+  await tx.punch.updateMany({
+    where: { eventId, competitorId: { not: null } },
+    data: { superseded: true, splitId: null },
+  });
   await tx.split.deleteMany({
     where: { competitor: { class: { eventId } } },
   });
@@ -376,6 +388,7 @@ export async function upsertMeosCompetitor(
     return { updated: true, classId: created.classId, competitorId: created.id };
   }
 
+  await supersedeCompetitorPunches(tx, [existing.id]);
   const fieldChanges = detectCompetitorChanges(
     existing as unknown as Record<string, unknown>,
     incomingData,
@@ -479,6 +492,7 @@ export async function deleteMeosCompetitor(
   });
   if (!existing) return { updated: false };
 
+  await supersedeCompetitorPunches(tx, [existing.id]);
   await tx.split.deleteMany({ where: { competitorId: existing.id } });
   await tx.protocol.deleteMany({ where: { competitorId: existing.id } });
   await tx.competitor.deleteMany({
@@ -518,7 +532,7 @@ export async function processMopDocument(
     throw new Error('MeOS import cannot write protocol records without an event author');
   }
 
-  return prisma.$transaction(async (tx) => {
+  return eventPunchTransaction(prisma, eventId, async (tx) => {
     const orgIdMap = await loadExistingOrgIdMap(tx, eventId);
     const classIdMap = await loadExistingClassIdMap(tx, eventId);
     const updatedClassIds = new Set<number>();
@@ -546,6 +560,18 @@ export async function processMopDocument(
       }
     }
 
+    const affectedCards = doc.competitors.flatMap((cmp) =>
+      cmp.card === undefined ? [] : [cmp.card],
+    );
+    const previousCards = await tx.competitor.findMany({
+      where: {
+        class: { eventId },
+        externalId: { in: doc.competitors.map((cmp) => String(cmp.id)) },
+      },
+      select: { card: true },
+    });
+    affectedCards.push(...previousCards.flatMap((cmp) => (cmp.card === null ? [] : [cmp.card])));
+
     // 3. Competitors
     for (const cmp of doc.competitors) {
       let result: MeosCompetitorMutationResult;
@@ -572,6 +598,14 @@ export async function processMopDocument(
       }
     }
 
+    const punchChanges = await reconcileEventPunches(tx, eventId, new Map(), {
+      cards: affectedCards,
+      competitorIds: [...updatedCompetitorIds],
+    });
+    for (const [id, classId] of punchChanges) {
+      updatedClassIds.add(classId);
+      updatedCompetitorIds.add(id);
+    }
     return {
       updatedClassIds: [...updatedClassIds],
       updatedCompetitorIds: [...updatedCompetitorIds],

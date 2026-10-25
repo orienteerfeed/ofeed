@@ -54,3 +54,21 @@ Use feature specs to name scenarios and gaps rather than claiming a coverage
 percentage proves correctness. For documentation-only changes, check formatting,
 local link targets, filename case and whitespace; app suites are usually
 unnecessary.
+
+## Punch concurrency integration tests
+
+Punch integration tests are opt-in. Prepare a disposable local MariaDB database
+named `ofeed_punch_test` (or `ofeed_punch_test_*`) with the current schema and
+migrations, then run directly, bypassing task caching:
+
+```bash
+PUNCH_TEST_DATABASE_URL='mysql://test-user:test-password@127.0.0.1:3306/ofeed_punch_test' \
+  pnpm --filter ./apps/server exec vitest run src/modules/punch/__tests__/punch.integration.test.ts
+```
+
+The suite refuses non-local databases and other database names, creates synthetic
+fixtures and removes them after each test. It verifies cross-connection locking,
+retry and physical uniqueness, atomic rollback, pending assignment, timing/status
+precedence, snapshots and deletion. Default server tests skip this suite when the
+variable is absent. Never point this suite at a production or shared development
+database. Prisma generation and applying migrations are separate prerequisites.

@@ -1,6 +1,8 @@
 import { createRouter } from '../../lib/create-app.js';
 import { requireAuth } from '../../middlewares/require-jwt.js';
 
+import punchRoutes from '../punch/punch.routes.js';
+
 import publicEventRoutes from './event.public.routes.js';
 import secureEventRoutes from './event.secure.routes.js';
 
@@ -14,5 +16,6 @@ router.route('/', publicEventRoutes);
 router.use('*', requireAuth);
 // Secure routes (behind authentication)
 router.route('/', secureEventRoutes);
+router.route('/', punchRoutes);
 
 export default router;

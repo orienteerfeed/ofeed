@@ -1022,7 +1022,8 @@
           "status_change": "Statusänderung",
           "late_start_change": "Verspäteter Start",
           "note_change": "Notizänderung",
-          "external_id_change": "Externe ID-Änderung"
+          "external_id_change": "Externe ID-Änderung",
+          "punch_store": "Stempel gespeichert"
         },
         "OriginLabels": {
           "START": "Start",

@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
+  $queryRaw: vi.fn().mockResolvedValue([]),
+  $transaction: vi.fn(),
+  punch: { updateMany: vi.fn() },
   competitor: {
     findFirst: vi.fn(),
     findMany: vi.fn(),
@@ -70,6 +73,10 @@ vi.mock('../../../utils/context.js', () => ({
 }));
 
 vi.mock('../../../utils/subscriptionUtils.js', () => subscriptionMocks);
+
+beforeEach(() => {
+  prismaMock.$transaction.mockImplementation(async (callback) => callback({ ...prismaMock }));
+});
 
 import {
   changeCompetitorStatus,

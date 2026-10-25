@@ -64,11 +64,7 @@ type ChangelogResponse = {
 };
 
 type DialogSortColumn =
-  | 'createdAt'
-  | 'type'
-  | 'origin'
-  | 'previousValue'
-  | 'newValue';
+  'createdAt' | 'type' | 'origin' | 'previousValue' | 'newValue';
 
 const REFRESH_INTERVAL_SECONDS = 30;
 
@@ -82,6 +78,7 @@ const DEFAULT_COLUMN_FILTERS: Record<ColumnFilter, string> = {
 };
 
 const TYPE_OPTIONS = [
+  'punch_store',
   'class_change',
   'firstname_change',
   'lastname_change',
@@ -927,7 +924,9 @@ export const EventReportPage = () => {
 
   const selectedCompetitorClass = useMemo(() => {
     if (!selectedCompetitorId) return null;
-    const match = selectedCompetitorChanges.find(item => item.competitor?.class);
+    const match = selectedCompetitorChanges.find(
+      item => item.competitor?.class
+    );
     return match?.competitor?.class?.name ?? null;
   }, [selectedCompetitorChanges, selectedCompetitorId]);
 

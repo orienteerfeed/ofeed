@@ -568,7 +568,8 @@
           "status_change": "Status change",
           "late_start_change": "Late start change",
           "note_change": "Note change",
-          "external_id_change": "External ID change"
+          "external_id_change": "External ID change",
+          "punch_store": "Punch stored"
         },
         "OriginLabels": {
           "START": "Start",
