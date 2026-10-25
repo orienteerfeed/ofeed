@@ -17,6 +17,7 @@ import {
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { ConflictError, NotFoundError, ValidationError } from '../../exceptions/index.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import type { EntryStatus } from '../../generated/prisma/enums.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import { AuthzError, requireEventOwnerOrAdmin } from '../../utils/authz.js';
@@ -26,6 +27,7 @@ import { computeClassFee } from '../class/class.fee.js';
 import { availablePaymentMethodsForEvent } from '../event/event-payment-methods.service.js';
 import { loadLockedCardNumbers } from '../event/event-rental-cards.service.js';
 import { storeCompetitor } from '../event/event.service.js';
+import { entryPaymentTransaction, reconcileEntryPaymentState } from './entry-payment-write.js';
 import { createEntryOrderAccessToken } from './entry-public-access.js';
 import { notifyEntryOrderProcessed, notifyEntryOrderReceived } from './entry.email.js';
 
@@ -615,15 +617,27 @@ export async function updateEntryOrderForGraphQL(
   auth: GraphQLAuthContext,
   input: CreateEntryOrderInput & { entryId: string },
 ): Promise<void> {
+  const eventId = await findEntryEventId(prisma, input.entryId);
+  await requireEventOwnerOrAdmin(prisma, auth, eventId);
+  return entryPaymentTransaction(prisma, eventId, input.entryId, (tx) =>
+    updateEntryOrderInTransaction(tx, auth, input),
+  );
+}
+
+async function updateEntryOrderInTransaction(
+  prisma: Prisma.TransactionClient,
+  auth: GraphQLAuthContext,
+  input: CreateEntryOrderInput & { entryId: string },
+): Promise<void> {
   if (!createEntryOrderInputSchema.safeParse(input).success) {
     throw new ValidationError('The submitted entry order is invalid.');
   }
   const entry = await prisma.entry.findUnique({
     where: { id: input.entryId },
-    select: { id: true, eventId: true, status: true },
+    select: { id: true, eventId: true, status: true, currency: true },
   });
   if (!entry) throw new NotFoundError(`Entry order ${input.entryId} does not exist.`);
-  await requireEventOwnerOrAdmin(prisma, auth, entry.eventId);
+  const { userId } = await requireEventOwnerOrAdmin(prisma, auth, entry.eventId);
   if (TERMINAL_ENTRY_STATUSES.has(entry.status)) {
     throw new ConflictError('A terminal entry order can no longer be edited.');
   }
@@ -734,6 +748,12 @@ export async function updateEntryOrderForGraphQL(
       },
     },
   );
+  const hasPayments = await prisma.entryPayment.count({
+    where: { eventId: entry.eventId, entryId: entry.id },
+  });
+  if (hasPayments && entry.currency !== event.currency.iso4217Alpha3) {
+    throw new ConflictError('Cannot change the currency of an entry with payment receipts.');
+  }
   await prisma.entry.update({
     where: { id: input.entryId },
     data: {
@@ -746,6 +766,7 @@ export async function updateEntryOrderForGraphQL(
       items: { deleteMany: {}, create: items },
     },
   });
+  await reconcileEntryPaymentState(prisma, entry.eventId, entry.id, userId);
 }
 
 /** List all entry orders of an event, newest first. */
@@ -839,29 +860,36 @@ export async function updateEntryOrderPaid(
   prisma: AppPrismaClient,
   input: UpdateEntryOrderPaidInput,
 ): Promise<SerializedEntryOrder> {
-  const entry = await prisma.entry.findFirst({
-    where: { id: input.entryId, eventId: input.eventId },
-    select: { id: true },
-  });
-  if (!entry) {
-    throw new NotFoundError(`Entry order ${input.entryId} does not exist for this event.`);
-  }
+  return entryPaymentTransaction(prisma, input.eventId, input.entryId, async (tx) => {
+    if (
+      await tx.entryPayment.count({ where: { eventId: input.eventId, entryId: input.entryId } })
+    ) {
+      throw new ConflictError('Paid status is managed by payment receipts for this entry.');
+    }
+    const entry = await tx.entry.findFirst({
+      where: { id: input.entryId, eventId: input.eventId },
+      select: { id: true },
+    });
+    if (!entry) {
+      throw new NotFoundError(`Entry order ${input.entryId} does not exist for this event.`);
+    }
 
-  const updated = await prisma.entry.update({
-    where: { id: entry.id },
-    data: {
-      paid: input.paid,
-      statusHistory: {
-        create: {
-          status: null,
-          paymentState: input.paid,
-          changedById: input.changedById ?? null,
+    const updated = await tx.entry.update({
+      where: { id: entry.id },
+      data: {
+        paid: input.paid,
+        statusHistory: {
+          create: {
+            status: null,
+            paymentState: input.paid,
+            changedById: input.changedById ?? null,
+          },
         },
       },
-    },
-    include: entryInclude,
+      include: entryInclude,
+    });
+    return serializeEntryOrder(updated);
   });
-  return serializeEntryOrder(updated);
 }
 
 export interface ProcessEntryOrderInput {

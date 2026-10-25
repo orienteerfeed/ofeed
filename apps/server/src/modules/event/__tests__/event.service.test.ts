@@ -4,6 +4,7 @@ const prismaMock = vi.hoisted(() => ({
   $queryRaw: vi.fn().mockResolvedValue([]),
   $transaction: vi.fn(),
   punch: { updateMany: vi.fn() },
+  entryPayment: { count: vi.fn().mockResolvedValue(0) },
   competitor: {
     findFirst: vi.fn(),
     findMany: vi.fn(),

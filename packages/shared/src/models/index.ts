@@ -5,6 +5,7 @@ export * from './common.js';
 export * from './competitor.js';
 export * from './country.js';
 export * from './entry.js';
+export * from './entry-payment.js';
 export * from './event.js';
 export * from './oauth.js';
 export * from './organisation.js';

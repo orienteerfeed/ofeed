@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Resúmenes",
+      "Description": "Resúmenes de pagos y controles de datos del evento.",
+      "Payments": "Pagos recibidos",
+      "PaymentsDescription": "Pagos recibidos, totales y datos de cierre.",
+      "Open": "Abrir resumen",
+      "From": "Recibido desde",
+      "To": "Recibido hasta",
+      "Method": "Método",
+      "Device": "Caja / dispositivo",
+      "Search": "Buscar",
+      "SearchPlaceholder": "Referencia de pago o nombre de contacto…",
+      "All": "Todos",
+      "Refresh": "Actualizar",
+      "Export": "Exportar CSV",
+      "Print": "Imprimir",
+      "Count": "Número de pagos",
+      "Cash": "Efectivo",
+      "QR": "QR",
+      "Total": "Total",
+      "PaidAt": "Hora de recepción",
+      "Reference": "Referencia de pago",
+      "Contact": "Contacto",
+      "Amount": "Importe",
+      "Currency": "Moneda",
+      "Operator": "ID del operador",
+      "RecordedAt": "Hora de registro",
+      "Empty": "Ningún pago recibido coincide con los filtros.",
+      "Error": "No se pudo cargar el resumen de pagos.",
+      "Retry": "Reintentar",
+      "Generated": "Generado",
+      "Timezone": "Zona horaria",
+      "InvalidRange": "La fecha inicial no debe ser posterior a la final."
+    },
     "Admin": {
       "Common": {
         "Zone": "Zona de administración",
@@ -657,6 +691,26 @@
         "Paid": {
           "Yes": "Sí",
           "No": "No"
+        },
+        "PaymentLedger": {
+          "Title": "Pagos recibidos",
+          "Record": "Registrar pago",
+          "Recorded": "Pago registrado.",
+          "Received": "Recibido",
+          "Balance": "Pendiente",
+          "State": "Estado",
+          "Empty": "No se han registrado pagos.",
+          "Unpaid": "No pagado",
+          "Partial": "Pago parcial",
+          "Paid": "Pagado",
+          "Overpaid": "Pago en exceso",
+          "Methods": { "CASH": "Efectivo", "QR": "Pago QR" },
+          "DialogTitle": "Registrar pago recibido",
+          "Method": "Método",
+          "Amount": "Importe",
+          "PaidAt": "Recibido el",
+          "Device": "Caja / dispositivo",
+          "Confirm": "Registrar pago"
         },
         "Actions": {
           "Menu": "Acciones",

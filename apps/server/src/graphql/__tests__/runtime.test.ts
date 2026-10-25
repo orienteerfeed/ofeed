@@ -141,6 +141,26 @@ describe('GraphQL runtime execution', () => {
     vi.resetAllMocks();
   });
 
+  it('returns CONFLICT for manual paid overrides on receipt-backed entries', async () => {
+    const context = createContext();
+    const tx = {
+      $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry-1' }]),
+      entryPayment: { count: vi.fn().mockResolvedValue(1) },
+    };
+    context.prisma = {
+      entry: { findUnique: vi.fn().mockResolvedValue({ eventId: 'event-1' }) },
+      event: { findUnique: vi.fn().mockResolvedValue({ authorId: 7 }) },
+      user: { findUnique: vi.fn().mockResolvedValue({ role: 'USER' }) },
+      $transaction: vi.fn(async (callback) => callback(tx)),
+    } as unknown as GraphQLContext['prisma'];
+    const result = await execute(
+      'mutation { entryOrderPaidUpdate(entryId: "entry-1", paid: false) { id } }',
+      context,
+    );
+    expect(result.errors?.[0]?.extensions?.code).toBe('CONFLICT');
+    expect(result.errors?.[0]?.message).toContain('managed by payment receipts');
+  });
+
   it('executes events(input) and returns the connection shape', async () => {
     const context = createContext();
     eventServiceMock.findEventsConnection.mockResolvedValue({

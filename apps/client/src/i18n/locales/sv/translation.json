@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Översikter",
+      "Description": "Betalningsöversikter och kontroller av tävlingsdata.",
+      "Payments": "Mottagna betalningar",
+      "PaymentsDescription": "Mottagna betalningar, summor och avstämningsunderlag.",
+      "Open": "Öppna översikt",
+      "From": "Mottaget från",
+      "To": "Mottaget till",
+      "Method": "Metod",
+      "Device": "Kassa / enhet",
+      "Search": "Sök",
+      "SearchPlaceholder": "Betalningsreferens eller kontaktnamn…",
+      "All": "Alla",
+      "Refresh": "Uppdatera",
+      "Export": "Exportera CSV",
+      "Print": "Skriv ut",
+      "Count": "Antal betalningar",
+      "Cash": "Kontant",
+      "QR": "QR",
+      "Total": "Totalt",
+      "PaidAt": "Mottaget",
+      "Reference": "Betalningsreferens",
+      "Contact": "Kontakt",
+      "Amount": "Belopp",
+      "Currency": "Valuta",
+      "Operator": "Operatörs-ID",
+      "RecordedAt": "Registrerat",
+      "Empty": "Inga mottagna betalningar matchar filtren.",
+      "Error": "Kunde inte läsa in betalningsöversikten.",
+      "Retry": "Försök igen",
+      "Generated": "Skapad",
+      "Timezone": "Tidszon",
+      "InvalidRange": "Startdatumet får inte vara senare än slutdatumet."
+    },
     "Admin": {
       "Common": {
         "Zone": "Adminzon",
@@ -657,6 +691,26 @@
         "Paid": {
           "Yes": "Ja",
           "No": "Nej"
+        },
+        "PaymentLedger": {
+          "Title": "Mottagna betalningar",
+          "Record": "Registrera betalning",
+          "Recorded": "Betalning registrerad.",
+          "Received": "Mottaget",
+          "Balance": "Återstår",
+          "State": "Status",
+          "Empty": "Inga betalningar har registrerats.",
+          "Unpaid": "Obetald",
+          "Partial": "Delvis betald",
+          "Paid": "Betald",
+          "Overpaid": "Överbetald",
+          "Methods": { "CASH": "Kontant", "QR": "QR-betalning" },
+          "DialogTitle": "Registrera mottagen betalning",
+          "Method": "Metod",
+          "Amount": "Belopp",
+          "PaidAt": "Mottagen",
+          "Device": "Kassa / enhet",
+          "Confirm": "Registrera betalning"
         },
         "Actions": {
           "Menu": "Åtgärder",

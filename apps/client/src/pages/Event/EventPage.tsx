@@ -2,6 +2,7 @@ import { notFound, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import {
   Calendar,
+  ChartNoAxesCombined,
   ClipboardList,
   FileText,
   Loader2,
@@ -56,6 +57,9 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
     if (event) {
       navigate(PATHNAMES.eventReport(event.id));
     }
+  };
+  const handleInsightsClick = () => {
+    if (event) navigate(PATHNAMES.eventInsights(event.id));
   };
   const handleEntriesClick = () => {
     if (event) {
@@ -178,6 +182,18 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={handleInsightsClick}
+                  className="flex items-center gap-2"
+                  aria-label={t('Pages.Insights.Title')}
+                >
+                  <ChartNoAxesCombined className="h-4 w-4" />
+                  <span className="hidden sm:block">
+                    {t('Pages.Insights.Title')}
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleEntriesClick}
                   className="flex items-center gap-2"
                 >
@@ -233,6 +249,10 @@ export const EventPage = ({ eventId, tab }: EventPageProps) => {
                     <DropdownMenuItem onSelect={handleReportClick}>
                       <FileText className="h-4 w-4" />
                       {t('Pages.Event.Detail.Report')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handleInsightsClick}>
+                      <ChartNoAxesCombined className="h-4 w-4" />
+                      {t('Pages.Insights.Title')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={handleEntriesClick}>
                       <ClipboardList className="h-4 w-4" />

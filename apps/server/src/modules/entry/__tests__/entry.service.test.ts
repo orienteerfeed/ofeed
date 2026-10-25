@@ -607,7 +607,22 @@ describe('updateEntryOrderForGraphQL', () => {
       event: PrismaStub['event'] & { findUniqueOrThrow: ReturnType<typeof vi.fn> };
       entry: PrismaStub['entry'] & { findUnique: ReturnType<typeof vi.fn> };
     };
-    prisma.entry.findUnique = vi.fn().mockResolvedValue({ eventId: 'event-1', status: 'RECEIVED' });
+    Object.assign(prisma, {
+      $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry-1' }]),
+      $transaction: vi.fn(async (callback) => callback(prisma)),
+      entryPayment: {
+        count: vi.fn().mockResolvedValue(0),
+        aggregate: vi.fn().mockResolvedValue({ _sum: { amount: null } }),
+      },
+    });
+    prisma.entry.findUnique = vi
+      .fn()
+      .mockResolvedValue({
+        id: 'entry-1',
+        eventId: 'event-1',
+        status: 'RECEIVED',
+        currency: 'CZK',
+      });
     prisma.event.findUnique.mockResolvedValue({ id: 'event-1', authorId: 7 });
     prisma.user.findUnique.mockResolvedValue({ role: 'USER' });
     prisma.event.findUniqueOrThrow = vi.fn().mockResolvedValue(

@@ -420,10 +420,38 @@ model Entry {
   items            EntryItem[]
   addOnItems       EntryAddOnItem[]
   statusHistory    EntryStatusHistory[]
+  payments         EntryPayment[]
 
+  @@unique([eventId, id], map: "Entry_event_id_uq")
   @@unique([eventId, paymentReference], map: "Entry_event_payment_reference_uq")
   @@index([eventId, status], map: "Entry_event_status_idx")
   @@index([userId], map: "Entry_user_idx")
+}
+
+enum EntryPaymentMethod {
+  CASH
+  QR
+}
+
+model EntryPayment {
+  id              String             @id @default(cuid())
+  entry           Entry              @relation(fields: [eventId, entryId], references: [eventId, id], onDelete: Restrict)
+  eventId         String
+  entryId         String
+  clientPaymentId String             @db.Char(36)
+  method          EntryPaymentMethod
+  amount          Decimal            @db.Decimal(10, 2)
+  currency        String             @db.Char(3)
+  paidAt          DateTime           @db.DateTime(3)
+  deviceId        String             @db.VarChar(191)
+  // Immutable authenticated identity snapshot, independent of user deletion.
+  operatorId      Int                @db.UnsignedInt
+  recordedAt      DateTime           @default(now()) @db.DateTime(3)
+
+  @@unique([eventId, clientPaymentId], map: "EntryPayment_event_client_uq")
+  @@index([eventId, recordedAt, id], map: "EntryPayment_event_recorded_idx")
+  @@index([eventId, deviceId, recordedAt], map: "EntryPayment_event_device_recorded_idx")
+  @@index([eventId, entryId], map: "EntryPayment_event_entry_idx")
 }
 
 // A single competitor entry inside an entry order. Fee amounts are snapshots

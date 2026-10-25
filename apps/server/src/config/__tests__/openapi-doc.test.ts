@@ -54,6 +54,53 @@ describe('openapi doc', () => {
     expect(availability.description).toContain('lateEntryFeePercent');
   });
 
+  it('documents attributed payment receipts, retry behavior and closing filters', async () => {
+    const response = await app.request('/doc');
+    const document = await response.json();
+    const create =
+      document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/entries/{entryId}/payments`].post;
+    expect(create.security).toEqual([{ BearerAuth: [] }]);
+    expect(create.responses['201']).toBeDefined();
+    expect(create.responses['409']).toBeDefined();
+    const input = create.requestBody.content['application/json'].schema;
+    expect(input.required).toEqual(
+      expect.arrayContaining([
+        'clientPaymentId',
+        'method',
+        'amount',
+        'currency',
+        'paidAt',
+        'deviceId',
+      ]),
+    );
+    expect(input.properties.operatorId).toBeUndefined();
+    const receipt =
+      create.responses['201'].content['application/json'].schema.properties.results.properties.data;
+    expect(receipt.required).toEqual(expect.arrayContaining(['operatorId', 'recordedAt']));
+    const list = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/payments`].get;
+    expect(list.parameters.map((p: { name: string }) => p.name)).toEqual([
+      'eventId',
+      'entryId',
+      'since',
+      'deviceId',
+    ]);
+    expect(list.description).toContain('server recordedAt');
+    const insight = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/insights/payments`].get;
+    expect(insight.security).toEqual([{ BearerAuth: [] }]);
+    const row =
+      insight.responses['200'].content['application/json'].schema.properties.results.properties.data
+        .items;
+    expect(row.required).toEqual(
+      expect.arrayContaining([
+        'paymentReference',
+        'contactFirstname',
+        'contactLastname',
+        'amount',
+        'operatorId',
+      ]),
+    );
+  });
+
   it('documents all registered API endpoint groups', async () => {
     const response = await app.request('/doc');
 
