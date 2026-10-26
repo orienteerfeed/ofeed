@@ -25,6 +25,7 @@ export type LegacyErrorEnvelope = {
   message: string;
   error: true;
   code: number;
+  errorCode?: string;
 };
 
 export type LegacyValidationEnvelope = {
@@ -54,11 +55,16 @@ export function legacySuccess<T = unknown>(
   };
 }
 
-export function legacyError(message: string, statusCode: number = 500): LegacyErrorEnvelope {
+export function legacyError(
+  message: string,
+  statusCode: number = 500,
+  errorCode?: string,
+): LegacyErrorEnvelope {
   return {
     message,
     error: true,
     code: normalizeLegacyStatusCode(statusCode, 500),
+    ...(errorCode ? { errorCode } : {}),
   };
 }
 

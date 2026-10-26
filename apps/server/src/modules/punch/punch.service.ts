@@ -1,6 +1,8 @@
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Punch, PunchReceipt, ResultStatus } from '../../generated/prisma/client.js';
+import { resolveEffectiveStartMode } from '@repo/shared';
 import { AuthzError, requireEventOwnerOrAdmin, type AuthzAuthContext } from '../../utils/authz.js';
+import { requiresStartSlot } from '../class/class.capacity.js';
 import { detectCompetitorChanges } from '../competitor/competitor-change.helpers.js';
 import { createCompetitorProtocolEntries } from '../competitor/competitor-change.service.js';
 import {
@@ -125,7 +127,14 @@ async function projectCompetitor(
     }
   }
   if (!changed) return;
-  if (competitor.startTime?.getTime() !== startTime?.getTime()) {
+  const effectiveStartMode = resolveEffectiveStartMode(
+    competitor.class.startMode,
+    competitor.class.event.defaultStartMode,
+  );
+  if (
+    competitor.startTime?.getTime() !== startTime?.getTime() &&
+    requiresStartSlot(effectiveStartMode)
+  ) {
     await deleteMatchingStartSlotVacancy(tx, { classId: competitor.classId, startTime });
   }
   await tx.competitor.update({
@@ -135,7 +144,7 @@ async function projectCompetitor(
   if (
     competitor.startTime?.getTime() !== startTime?.getTime() &&
     competitor.startTime &&
-    (competitor.class.startMode ?? competitor.class.event.defaultStartMode) !== 'FreeStart'
+    requiresStartSlot(effectiveStartMode)
   ) {
     await restoreStartSlotVacancy(tx, {
       classId: competitor.classId,

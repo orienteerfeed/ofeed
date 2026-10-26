@@ -720,7 +720,7 @@ export function registerPublicEventRoutes(router) {
             return c.json(validation(err.message, 422), 422);
           }
           if (err instanceof ConflictError) {
-            return c.json(error(err.message, 409), 409);
+            return c.json(error(err.message, 409, err.errorCode), 409);
           }
           if (err instanceof NotFoundError) {
             return c.json(error(err.message, 404), 404);

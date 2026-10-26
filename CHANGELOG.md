@@ -55,6 +55,10 @@ and this project adheres to
 
 ### Fixed
 
+- Serialize StartList reservations across orders and competitors, atomically
+  transfer reservations during processing, and return 409 SLOT_TAKEN for slot
+  conflicts while preserving PUT semantics. Other modes allow shared times.
+
 - Resolve sign-in user timestamps and activation metadata, return authentication
   errors before reading entry payment updates, and clear empty competitor notes.
 - Consume and restore competitor start slots atomically across time and class

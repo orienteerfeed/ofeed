@@ -13,6 +13,8 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [Start slot integrity](start-slot-integrity.md): exclusive StartList reservations and atomic vacancy exchange.
+
 - [Create idempotency](create-idempotency.md): 24-hour REST create replay.
 
 - [Event insights](event-insights.md): extensible insights catalog and received payments.

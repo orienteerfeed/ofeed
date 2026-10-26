@@ -2210,7 +2210,7 @@ export function registerSecureEventRoutes(router) {
               if (error instanceof ValidationError) {
                 return res.status(422).json(validationResponse(error.message, 422));
               } else if (error instanceof ConflictError) {
-                return res.status(409).json(errorResponse(error.message, 409));
+                return res.status(409).json(errorResponse(error.message, 409, error.errorCode));
               } else if (error instanceof AuthenticationError) {
                 return res.status(401).json(errorResponse(error.message, 401));
               } else if (error instanceof DatabaseError) {
@@ -2321,7 +2321,7 @@ export function registerSecureEventRoutes(router) {
       if (error instanceof ValidationError) {
         return res.status(422).json(validationResponse(error.message, res.statusCode));
       } else if (error instanceof ConflictError) {
-        return res.status(409).json(errorResponse(error.message, 409));
+        return res.status(409).json(errorResponse(error.message, 409, error.errorCode));
       } else if (error instanceof AuthenticationError) {
         return res.status(401).json(errorResponse(error.message, res.statusCode));
       } else if (error instanceof DatabaseError) {

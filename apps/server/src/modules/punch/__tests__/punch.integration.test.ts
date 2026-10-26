@@ -213,6 +213,17 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     await ingestPunches(client, auth, eventId, batch(0, 5));
     expect((await competitor()).startTime).toEqual(at(20));
   });
+  it('preserves configured vacancies when a shared-mode punch projects a start time', async () => {
+    await client.competitor.update({ where: { id: competitorId }, data: { startTime: null } });
+    await client.startSlotVacancy.create({ data: { classId, startTime: at(10) } });
+
+    await ingestPunches(client, auth, eventId, batch(0, 10));
+
+    expect((await competitor()).startTime).toEqual(at(10));
+    expect(
+      await client.startSlotVacancy.count({ where: { classId, startTime: at(10) } }),
+    ).toBe(1);
+  });
   it('rolls back a whole batch when a later retry identity conflicts', async () => {
     const existing = batch();
     await ingestPunches(client, auth, eventId, existing);

@@ -1,3 +1,4 @@
+import { requiresStartSlot } from '../class/class.capacity.js';
 import type { CreateTransaction } from '../idempotency/create-idempotency.js';
 import {
   eventPunchTransaction,
@@ -1007,19 +1008,16 @@ const updateCompetitorInTransaction = async (
       const targetStartTime = isStartTimeInPayload ? newStartTimeValue : oldStartTime;
       if (
         (startTimeIsChanging || classIsChanging) &&
-        targetStartTime &&
-        targetEffectiveStartMode !== 'FreeStart'
+        requiresStartSlot(targetEffectiveStartMode) &&
+        !targetStartTime
       ) {
-        const reservation = await tx.entryItem.findFirst({
-          where: {
-            classId: targetClassId,
-            startTime: targetStartTime,
-            competitorId: null,
-            entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
-          },
-          select: { id: true },
-        });
-        if (reservation) throw new ConflictError('The requested start time is not available.');
+        throw new ConflictError('The requested start time is not available.', 'SLOT_TAKEN');
+      }
+      if (
+        (startTimeIsChanging || classIsChanging) &&
+        targetStartTime &&
+        requiresStartSlot(targetEffectiveStartMode)
+      ) {
         await deleteMatchingStartSlotVacancy(tx, {
           classId: targetClassId,
           startTime: targetStartTime,
@@ -1032,17 +1030,20 @@ const updateCompetitorInTransaction = async (
         data: competitorUpdateData,
       });
 
-      // Consume the new start slot vacancy (no-op when no vacancy exists).
-      await deleteMatchingStartSlotVacancy(tx, {
-        classId: updated.classId,
-        startTime: updated.startTime,
-      });
+      // A vacancy represents an exclusive StartList position only. Shared start
+      // modes may use the same timestamp without consuming configured slots.
+      if (requiresStartSlot(targetEffectiveStartMode)) {
+        await deleteMatchingStartSlotVacancy(tx, {
+          classId: updated.classId,
+          startTime: updated.startTime,
+        });
+      }
 
       // Free the old start slot vacancy when the start time actually changed.
       if (
         (startTimeIsChanging || classIsChanging) &&
         oldStartTime &&
-        oldEffectiveStartMode !== 'FreeStart'
+        requiresStartSlot(oldEffectiveStartMode)
       ) {
         await restoreStartSlotVacancy(tx, {
           classId: dbResponseCompetitor.classId,
@@ -1114,10 +1115,17 @@ export const storeCompetitor = async (
   competitorData: StoreCompetitorData,
   userId: number,
   origin: string,
-  transaction?: CreateTransaction,
+  transaction?: CreateTransaction & { reservationItemId?: number },
 ) => {
   const operation = (tx: Prisma.TransactionClient) =>
-    storeCompetitorInTransaction(tx, eventId, competitorData, userId, origin);
+    storeCompetitorInTransaction(
+      tx,
+      eventId,
+      competitorData,
+      userId,
+      origin,
+      transaction?.reservationItemId,
+    );
   const result = transaction
     ? await operation(transaction.tx)
     : await eventPunchTransaction(prisma, eventId, operation);
@@ -1132,6 +1140,7 @@ const storeCompetitorInTransaction = async (
   competitorData: StoreCompetitorData,
   userId: number,
   origin: string,
+  reservationItemId?: number,
 ) => {
   const { classId, firstname, lastname, registration, status, card, note, splits } = competitorData;
   const classIdNumber = toIntegerId(classId);
@@ -1174,7 +1183,7 @@ const storeCompetitorInTransaction = async (
       : undefined;
   const resolvedStartTime = competitorData.startTime ?? freeStartTime;
 
-  if (effectiveStartMode !== 'FreeStart' && !resolvedStartTime) {
+  if (requiresStartSlot(effectiveStartMode) && !resolvedStartTime) {
     throw new ValidationError('startTime is required for this start mode.');
   }
 
@@ -1194,8 +1203,8 @@ const storeCompetitorInTransaction = async (
     throw new ConflictError('This category is full.');
   }
 
-  if (effectiveStartMode !== 'FreeStart' && vacancyCount === 0) {
-    throw new ConflictError('No start slots are available for this category.');
+  if (requiresStartSlot(effectiveStartMode) && vacancyCount === 0) {
+    throw new ConflictError('No start slots are available for this category.', 'SLOT_TAKEN');
   }
 
   if (competitorData.bibNumber != null) {
@@ -1234,14 +1243,15 @@ const storeCompetitorInTransaction = async (
 
   let newCompetitor;
   try {
-    // Create the competitor and free up the matching start slot vacancy (if the
-    // competitor has a start time) atomically in a single transaction.
+    // Create the competitor and consume the matching exclusive StartList
+    // vacancy atomically in a single transaction.
     newCompetitor = await (async (tx: Prisma.TransactionClient) => {
-      if (effectiveStartMode !== 'FreeStart') {
+      if (requiresStartSlot(effectiveStartMode)) {
         await deleteMatchingStartSlotVacancy(tx, {
           classId: classIdNumber,
           startTime: new Date(resolvedStartTime!),
           requireAvailable: true,
+          reservationItemId,
         });
       }
 
@@ -1276,10 +1286,12 @@ const storeCompetitorInTransaction = async (
         },
       });
 
-      await deleteMatchingStartSlotVacancy(tx, {
-        classId: created.classId,
-        startTime: created.startTime,
-      });
+      if (requiresStartSlot(effectiveStartMode)) {
+        await deleteMatchingStartSlotVacancy(tx, {
+          classId: created.classId,
+          startTime: created.startTime,
+        });
+      }
 
       if (splits && Array.isArray(splits) && splits.length > 0) {
         await tx.split.createMany({
@@ -1454,7 +1466,7 @@ export const deleteEventCompetitorAndProtocols = async (eventId: string, competi
         await tx.split.deleteMany({ where: { competitorId } });
         await tx.competitor.delete({ where: { id: competitorId } });
 
-        if (effectiveStartMode !== 'FreeStart' && competitor.startTime) {
+        if (requiresStartSlot(effectiveStartMode) && competitor.startTime) {
           await restoreStartSlotVacancy(tx, {
             classId: competitor.classId,
             startTime: competitor.startTime,

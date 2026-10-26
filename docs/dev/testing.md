@@ -119,3 +119,20 @@ expiry, device ownership, password changes/reset and account deletion. Browser
 tests establish a fresh session per context: never reuse saved rotating refresh
 cookies across independent or parallel contexts. Native outbox and secure-storage
 checks belong to the external Electron/Expo applications.
+
+
+## Start slot concurrency tests
+
+Use a disposable local MariaDB database named `ofeed_slot_test` or
+`ofeed_slot_test_*`, with existing migrations applied. Other hosts/database names
+are rejected; the suite removes its synthetic fixtures and is skipped by default.
+
+```bash
+SLOT_TEST_DATABASE_URL='mysql://root@127.0.0.1:13383/ofeed_slot_test' \
+  pnpm --filter ./apps/server exec vitest run src/modules/start-slot-vacancy/__tests__/start-slot-integrity.integration.test.ts
+```
+
+Verifies independent connections racing for the same slot through order creation,
+order edits, competitor creation/PUT and processing; also rollback, cancellation,
+class-only PUT semantics and shared times outside StartList. Never use a shared
+or production database.

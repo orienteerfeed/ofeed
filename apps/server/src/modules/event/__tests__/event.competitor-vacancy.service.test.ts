@@ -76,6 +76,17 @@ describe('storeCompetitor start slot vacancy cleanup', () => {
   });
 
   it('deletes the matching vacancy after creating a competitor with a start time', async () => {
+    (prismaMock.class as { findUnique: ReturnType<typeof vi.fn> }).findUnique.mockResolvedValue({
+      id: 42,
+      eventId: 'event-1',
+      startMode: 'StartList',
+      maxNumberOfCompetitors: 100,
+      event: { defaultStartMode: 'FreeStart', date: new Date('2026-07-10T14:30:00.000Z') },
+      _count: { competitors: 0, startSlotVacancies: 1 },
+    });
+    (prismaMock.startSlotVacancy as { deleteMany: ReturnType<typeof vi.fn> }).deleteMany.mockResolvedValue({
+      count: 1,
+    });
     const created = { id: 7, classId: 42, startTime: START_TIME };
     (prismaMock.competitor as { create: ReturnType<typeof vi.fn> }).create.mockResolvedValue(
       created,
@@ -176,6 +187,49 @@ describe('storeCompetitor start slot vacancy cleanup', () => {
       (prismaMock.startSlotVacancy as { deleteMany: ReturnType<typeof vi.fn> }).deleteMany,
     ).not.toHaveBeenCalled();
   });
+
+  it.each(['MassStart', 'WaveStart', 'PursuitStart', 'FreeStart'])(
+    'preserves vacancies for %s competitors with a start time',
+    async (startMode) => {
+      (prismaMock.class as { findUnique: ReturnType<typeof vi.fn> }).findUnique.mockResolvedValue({
+        id: 42,
+        eventId: 'event-1',
+        startMode,
+        maxNumberOfCompetitors: 100,
+        event: { defaultStartMode: 'StartList', date: new Date('2026-07-10T14:30:00.000Z') },
+        _count: { competitors: 0, startSlotVacancies: 1 },
+      });
+      (prismaMock.competitor as { create: ReturnType<typeof vi.fn> }).create.mockResolvedValue({
+        id: 7,
+        classId: 42,
+        startTime: START_TIME,
+      });
+      (prismaMock.competitor as { findUnique: ReturnType<typeof vi.fn> }).findUnique.mockResolvedValue({
+        id: 7,
+        classId: 42,
+        startTime: START_TIME,
+        organisation: null,
+        team: null,
+      });
+
+      await storeCompetitor(
+        'event-1',
+        {
+          classId: 42,
+          firstname: 'Jana',
+          lastname: 'Nova',
+          registration: 'ABC1234567',
+          startTime: START_TIME,
+        } as never,
+        1,
+        'START',
+      );
+
+      expect(
+        (prismaMock.startSlotVacancy as { deleteMany: ReturnType<typeof vi.fn> }).deleteMany,
+      ).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe('updateCompetitor start slot vacancy cleanup', () => {
@@ -198,7 +252,7 @@ describe('updateCompetitor start slot vacancy cleanup', () => {
     });
   });
 
-  it('deletes the matching vacancy for the new class + start time after update', async () => {
+  it('preserves the matching vacancy for a shared-mode start-time update', async () => {
     (prismaMock.competitor as { update: ReturnType<typeof vi.fn> }).update.mockResolvedValue({
       id: 7,
       classId: 42,
@@ -219,7 +273,7 @@ describe('updateCompetitor start slot vacancy cleanup', () => {
     expect(prismaMock.$transaction).toHaveBeenCalled();
     expect(
       (prismaMock.startSlotVacancy as { deleteMany: ReturnType<typeof vi.fn> }).deleteMany,
-    ).toHaveBeenCalledWith({ where: { classId: 42, startTime: START_TIME } });
+    ).not.toHaveBeenCalled();
   });
 
   it('does not delete any vacancy when the updated competitor has no start time', async () => {
