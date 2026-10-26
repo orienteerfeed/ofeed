@@ -2,7 +2,8 @@
 
 exports[`Pothos GraphQL schema > matches the public schema snapshot 1`] = `
 "type AuthPayload {
-  token: String
+  accessToken: String!
+  expiresIn: Int!
   user: User
 }
 
@@ -182,6 +183,17 @@ scalar Date
 Custom DateTime scalar (backed by JS Date, serialized as ISO8601 string)
 """
 scalar DateTime
+
+type DeviceSession {
+  absoluteExpiresAt: DateTime!
+  createdAt: DateTime!
+  current: Boolean!
+  deviceId: String!
+  deviceName: String!
+  expiresAt: DateTime!
+  id: ID!
+  lastRefreshedAt: DateTime!
+}
 
 type Entry {
   addOnItems: [EntryAddOnItem!]!
@@ -634,6 +646,8 @@ type LeafletCoursePoint {
 }
 
 input LoginInput {
+  deviceId: String!
+  deviceName: String!
   password: password_String_NotNull_maxLength_255!
   username: username_String_NotNull_maxLength_255!
 }
@@ -666,11 +680,12 @@ type Mutation {
   markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
   requestPasswordReset(email: String!): ResetResponse!
   resendEmailVerification: ResetResponse!
-  resetPassword(newPassword: String!, token: String!): AuthPayload!
+  resetPassword(newPassword: String!, token: String!): ResetResponse!
+  revokeDevice(deviceId: String!): Boolean!
   saveCustomEventService(input: SaveCustomEventServiceInput!): EventServiceSetting!
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
-  signup(input: UserInput): ResponseMessage
+  signup(input: UserInput): ResetResponse
   updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventPaymentMethods(eventId: String!, input: UpdateEventPaymentMethodsInput!): EventPaymentMethodSettings!
@@ -680,7 +695,7 @@ type Mutation {
   updateStartSlotVacancy(input: UpdateStartSlotVacancyInput!): ClassStartSlotVacancy!
   updateSystemEventService(input: UpdateSystemEventServiceInput!): ResponseMessage!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
-  verifyEmail(token: String!): AuthPayload!
+  verifyEmail(token: String!): ResetResponse!
 }
 
 type Organisation {
@@ -757,6 +772,7 @@ type Query {
   courseLeafletPoints(classId: Int!): [LeafletCoursePoint!]!
   courseRadioControls(classId: Int!): [RadioCoursePoint!]!
   currencies: [Currency!]!
+  currentSessions: [DeviceSession!]!
   currentUser: User!
   currentUserCards: [UserCard!]!
   entryOrderById(accessToken: String, entryId: String!): Entry

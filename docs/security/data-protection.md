@@ -58,3 +58,12 @@ re-copying sensitive values into logs.
 - Provider agreements, processing locations and breach response process.
 
 Track these in owner-approved issues/specs. See [threat model](threat-model.md).
+
+## Device-session retention
+
+Device sessions store installation UUID/name, creation and last-refresh times,
+expiry, revocation reason and SHA-256 refresh-token hashes. Consumed hashes remain
+until the family's 90-day absolute deadline for reuse detection. A bounded
+background job removes expired families and their generations. Raw refresh
+credentials and signing-key bundles must not enter logs or backups of source
+artifacts. Database backup retention remains subject to the operator policy above.

@@ -78,3 +78,15 @@ defaults to `-1`. For an ESO-managed dev environment, use `Sync` in wave `-10`
 and set `serviceAccount.annotations.argocd.argoproj.io/sync-wave: "-20"`. The
 runtime ExternalSecret must also be ready in wave `-20`. Hook Jobs use Argo hook
 deletion policies for cleanup.
+
+## Device-session signing keys
+
+Vault Agent mode also requires `vault.accessKeysSecretPath`, a KV secret whose
+`bundle` field contains the access-signing JSON bundle. The API reads
+`/vault/secrets/access-keys.json` rather than shell-sourcing PEM keys. The Agent
+runs as UID/GID 1000 and renders this file with mode `0400`. Existing ESO/volume
+delivery can instead provide `ACCESS_JWT_KEY_FILE` through API configuration.
+Production will not start without valid ES256 keys. Configure exact same-site
+web/API origins for browser refresh cookies. See the
+[device-session runbook](../../../docs/ops/runbooks/device-sessions.md) for the
+coordinated legacy-token cutover, staged key rotation, and outage behavior.

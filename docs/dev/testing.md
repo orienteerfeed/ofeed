@@ -103,3 +103,19 @@ expired key reuse.
 IDEMPOTENCY_TEST_DATABASE_URL='mysql://root@127.0.0.1:13382/ofeed_idempotency_test' \
   pnpm --filter ./apps/server exec vitest run src/modules/idempotency/__tests__/create-idempotency.integration.test.ts
 ```
+
+## Device-session integration tests
+
+Use an explicitly opted-in disposable local MariaDB database named
+`ofeed_session_test` or `ofeed_session_test_*`, with repository migrations applied:
+
+```sh
+SESSION_TEST_DATABASE_URL='mysql://test-user:test-password@127.0.0.1:3306/ofeed_session_test' \
+  pnpm --filter ./apps/server exec vitest run src/modules/auth/__tests__/session.integration.test.ts
+```
+
+The suite verifies signin, GraphQL cookie delivery, refresh concurrency/replay,
+expiry, device ownership, password changes/reset and account deletion. Browser
+tests establish a fresh session per context: never reuse saved rotating refresh
+cookies across independent or parallel contexts. Native outbox and secure-storage
+checks belong to the external Electron/Expo applications.

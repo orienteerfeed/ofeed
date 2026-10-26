@@ -29,3 +29,5 @@ Existing [designs](../superpowers/specs/) remain at their original paths, with
 [historical plans](../superpowers/plans/) linked separately. They are context,
 not proof every planned step shipped. New specs go in this directory; when
 superseding an old design, link both records and explain the changed behavior.
+
+- [Session longevity](session-longevity.md): rotating device sessions and automatic browser renewal.

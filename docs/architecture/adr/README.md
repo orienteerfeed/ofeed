@@ -19,3 +19,5 @@ with a lowercase kebab-case title. Keep numbers stable. Statuses are `proposed`,
 `accepted`, `deprecated`, or `superseded by NNNN`. A proposal becomes accepted
 through maintainer review; record the actual decision participants rather than
 inventing approvers. Link replacement records in both directions.
+
+- [0006](0006-device-sessions.md): proposed rotating device sessions and Vault-managed access signing keys.

@@ -18,7 +18,6 @@ import {
   PasswordStrengthIndicator,
 } from '../../../components/molecules';
 import { Field } from '../../../components/organisms';
-import { useAuth } from '../../../hooks';
 import { AuthPageLayout } from '../../../templates';
 import { toast } from '../../../utils';
 
@@ -34,16 +33,7 @@ interface SignUpFormValues {
 const SIGNUP_MUTATION = gql`
   mutation Signup($input: UserInput!) {
     signup(input: $input) {
-      token
-      user {
-        id
-        firstname
-        lastname
-        email
-        role
-        organisation
-        emergencyContact
-      }
+      success
       message
     }
   }
@@ -51,16 +41,8 @@ const SIGNUP_MUTATION = gql`
 
 type SignUpResponse = {
   signup: {
-    token: string;
-    user: {
-      id: number;
-      firstname: string;
-      lastname: string;
-      email: string;
-      role: 'USER' | 'ADMIN';
-      organisation?: string | null;
-      emergencyContact?: string | null;
-    };
+    success: boolean;
+    message?: string;
   };
 };
 type SignUpVars = {
@@ -76,7 +58,6 @@ type SignUpVars = {
 export const SignUpPage = () => {
   const { t } = useTranslation(['translation', 'common']);
   const router = useRouter();
-  const { signin } = useAuth();
 
   const [doSignup, { loading: isLoadingMutation }] = useMutation<
     SignUpResponse,
@@ -209,20 +190,11 @@ export const SignUpPage = () => {
         });
 
         const payload = data?.signup;
-        if (!payload?.token || !payload?.user) {
+        if (!payload?.success) {
           throw new Error('Missing signin payload');
         }
 
-        const user = {
-          ...payload.user,
-          club: value.club.trim(),
-        };
-
-        // Save the token and user to the auth store
-        signin({ token: payload.token, user: user });
-
-        // Navigate to home page after successful registration
-        router.navigate({ to: '/' });
+        router.navigate({ to: '/auth/signin' });
       } catch (error: unknown) {
         console.error('Registration error:', error);
         toast({

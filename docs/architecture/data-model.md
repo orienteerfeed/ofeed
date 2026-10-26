@@ -27,7 +27,7 @@ erDiagram
 
 | Group               | Models / rules                                                                                                                    |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Identity            | `User`, `UserCard`, OAuth clients/tokens and password-reset tokens; never expose stored password hashes                           |
+| Identity            | `User`, `UserCard`, `DeviceSession`, `SessionRefreshToken`, OAuth clients/tokens and password-reset tokens; never expose stored password hashes                           |
 | Event setup         | `Event`, `Sport`, `Country`, `Currency`, `Class`; event datetime has an explicit timezone setting                                 |
 | Participation       | `Competitor`, `Team`, `Organisation`, `Split`; user accounts and competitors are separate concepts                                |
 | Checkout            | `Entry`, `EntryItem`, `EntryAddOnItem`, `EntryStatusHistory`; item prices are snapshots, payment reference is unique per event    |
@@ -46,6 +46,15 @@ project into existing splits and competitor timings. Snapshot imports supersede
 previous observations, and competitor deletion retains them without replay.
 Deleting an event cascades its punch ledger. See the
 [punch ingestion spec](../specs/punch-ingestion.md).
+
+## Device sessions
+
+`DeviceSession` owns a device-bound refresh family, sliding/absolute deadlines and
+revocation state. `SessionRefreshToken` stores generation hashes and consumption
+metadata; consumed generations remain for replay detection until the family’s
+absolute expiry. A user-row lock serializes session issuance/rotation with
+credential changes and account deletion. Access JWTs remain stateless with respect
+to refresh families. See [session longevity](../specs/session-longevity.md).
 
 ## Schema changes
 

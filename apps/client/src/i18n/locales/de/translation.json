@@ -407,8 +407,8 @@
         "Verifying": "E-Mail wird verifiziert",
         "VerifyingDescription": "Bitte warten, wir verifizieren deine E-Mail-Adresse.",
         "Verified": "E-Mail verifiziert",
-        "VerifiedDescription": "Deine E-Mail wurde verifiziert und du bist jetzt angemeldet.",
-        "ContinueDescription": "Du hast nun vollen Zugang zu OFeed.",
+        "VerifiedDescription": "Deine E-Mail-Adresse wurde bestätigt.",
+        "ContinueDescription": "Melde dich an, um OFeed weiter zu nutzen.",
         "ContinueToApp": "Weiter zu OFeed",
         "AlreadyVerified": "Bereits verifiziert",
         "AlreadyVerifiedDescription": "Deine E-Mail-Adresse ist bereits verifiziert.",
@@ -882,7 +882,10 @@
           "Partial": "Teilweise bezahlt",
           "Paid": "Bezahlt",
           "Overpaid": "Überzahlt",
-          "Methods": { "CASH": "Bar", "QR": "QR-Zahlung" },
+          "Methods": {
+            "CASH": "Bar",
+            "QR": "QR-Zahlung"
+          },
           "DialogTitle": "Erhaltene Zahlung erfassen",
           "Method": "Methode",
           "Amount": "Betrag",
@@ -1823,5 +1826,19 @@
     "Routes": {
       "Board": "Board"
     }
+  },
+  "Sessions": {
+    "Title": "Gerätesitzungen",
+    "Current": "Dieses Gerät",
+    "Created": "Erstellt",
+    "LastRefresh": "Zuletzt erneuert",
+    "Expires": "Gültig bis",
+    "Revoke": "Gerät abmelden",
+    "Confirm": "Alle Sitzungen dieses Geräts widerrufen? Eine erneute Anmeldung ist erforderlich.",
+    "Cancel": "Abbrechen",
+    "Loading": "Sitzungen werden geladen…",
+    "Error": "Gerätesitzungen konnten nicht aktualisiert werden.",
+    "LogoutUnconfirmed": "Lokal abgemeldet. Der Widerruf auf dem Server wurde nicht bestätigt; stellen Sie die Verbindung wieder her.",
+    "RevocationDelay": "Abgemeldete Geräte können ein vorhandenes Zugriffstoken noch bis zu 15 Minuten verwenden."
   }
 }

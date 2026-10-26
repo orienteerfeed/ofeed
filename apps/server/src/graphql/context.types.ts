@@ -23,5 +23,6 @@ export type GraphQLContext = {
   resetPasswordUrl: string;
   pubsub: typeof pubsub;
   request?: Request;
+  responseHeaders?: Headers;
   requestId?: string;
 };

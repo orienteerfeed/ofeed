@@ -19,6 +19,15 @@ spec:
       annotations:
         {{- if .Values.vault.enabled }}
         vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-run-as-user: "1000"
+        vault.hashicorp.com/agent-run-as-group: "1000"
+        vault.hashicorp.com/template-static-secret-render-interval: "30s"
+        vault.hashicorp.com/agent-inject-secret-access-keys.json: {{ required "vault.accessKeysSecretPath is required when vault.enabled=true" .Values.vault.accessKeysSecretPath | quote }}
+        vault.hashicorp.com/agent-inject-perms-access-keys.json: "0400"
+        vault.hashicorp.com/agent-inject-template-access-keys.json: |
+          {{ printf "{{- with secret %q -}}" .Values.vault.accessKeysSecretPath }}
+          {{ if eq .Values.vault.kvVersion "v1" }}{{ `{{ index .Data "bundle" }}` }}{{ else }}{{ `{{ index .Data.data "bundle" }}` }}{{ end }}
+          {{ `{{- end -}}` }}
         vault.hashicorp.com/role: {{ required "vault.role is required when vault.enabled=true" .Values.vault.role | quote }}
         vault.hashicorp.com/auth-path: {{ required "vault.authPath is required when vault.enabled=true" .Values.vault.authPath | quote }}
         vault.hashicorp.com/agent-inject-secret-{{ .Values.vault.injectFileName }}: {{ required "vault.secretPath is required when vault.enabled=true" .Values.vault.secretPath | quote }}
@@ -53,6 +62,10 @@ spec:
               containerPort: {{ .Values.api.service.port }}
               protocol: TCP
           env:
+            {{- if .Values.vault.enabled }}
+            - name: ACCESS_JWT_KEY_FILE
+              value: /vault/secrets/access-keys.json
+            {{- end }}
             - name: VAULT_ENV_FILE
               value: {{ ternary (printf "/vault/secrets/%s" .Values.vault.injectFileName) "" .Values.vault.enabled | quote }}
             {{- range $key, $value := .Values.api.env }}

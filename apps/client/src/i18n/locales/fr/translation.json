@@ -39,8 +39,8 @@
         "Verifying": "Vérification de votre e-mail",
         "VerifyingDescription": "Veuillez patienter pendant la vérification de votre adresse e-mail.",
         "Verified": "E-mail vérifié",
-        "VerifiedDescription": "Votre e-mail a été vérifié et vous êtes maintenant connecté.",
-        "ContinueDescription": "Vous pouvez maintenant utiliser OFeed avec un accès complet.",
+        "VerifiedDescription": "Votre adresse e-mail a été vérifiée.",
+        "ContinueDescription": "Connectez-vous pour continuer sur OFeed.",
         "ContinueToApp": "Continuer vers OFeed",
         "AlreadyVerified": "Déjà vérifié",
         "AlreadyVerifiedDescription": "Votre adresse e-mail est déjà vérifiée.",
@@ -845,7 +845,10 @@
           "Partial": "Partiellement payé",
           "Paid": "Payé",
           "Overpaid": "Trop-perçu",
-          "Methods": { "CASH": "Espèces", "QR": "Paiement QR" },
+          "Methods": {
+            "CASH": "Espèces",
+            "QR": "Paiement QR"
+          },
           "DialogTitle": "Enregistrer un paiement reçu",
           "Method": "Méthode",
           "Amount": "Montant",
@@ -1189,5 +1192,19 @@
       "Loading": "Chargement des données...",
       "Error": "Échec du chargement des données."
     }
+  },
+  "Sessions": {
+    "Title": "Sessions des appareils",
+    "Current": "Cet appareil",
+    "Created": "Créée",
+    "LastRefresh": "Dernier renouvellement",
+    "Expires": "Expiration",
+    "Revoke": "Révoquer l’appareil",
+    "Confirm": "Révoquer toutes les sessions de cet appareil ? Une nouvelle connexion sera nécessaire.",
+    "Cancel": "Annuler",
+    "Loading": "Chargement des sessions…",
+    "Error": "Impossible de mettre à jour les sessions.",
+    "LogoutUnconfirmed": "Déconnexion locale effectuée. La révocation sur le serveur n’a pas été confirmée ; reconnectez-vous pour terminer.",
+    "RevocationDelay": "Les appareils révoqués peuvent utiliser un jeton d’accès existant pendant 15 minutes au maximum."
   }
 }

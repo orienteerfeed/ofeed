@@ -1,3 +1,5 @@
+import { reloadAccessKeys } from './modules/auth/access-token.js';
+import { startSessionCleanup } from './modules/auth/session-cleanup.js';
 import { serve } from '@hono/node-server';
 import type { Server as HttpServer } from 'node:http';
 
@@ -11,6 +13,12 @@ import { startIdempotencyCleanup } from './modules/idempotency/idempotency-clean
 
 import app from './app.js';
 
+reloadAccessKeys();
+const accessKeyTimer = setInterval(reloadAccessKeys, 5000);
+accessKeyTimer.unref();
+const stopSessionCleanup = startSessionCleanup(prisma, () =>
+  logger.error('Session cleanup failed'),
+);
 const server = serve(
   {
     fetch: app.fetch,
@@ -29,6 +37,8 @@ const disposeGraphQLWebSocket = attachGraphQLWebSocketServer(httpServer);
 const gracefulShutdown = createGracefulShutdown({
   server: httpServer,
   disposeGraphQLWebSocket: async () => {
+    clearInterval(accessKeyTimer);
+    await stopSessionCleanup();
     await stopIdempotencyCleanup();
     await disposeGraphQLWebSocket();
   },

@@ -8,7 +8,7 @@ import type {
 } from '@/types/api';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from '../utils';
-import { useAuthForRequest } from './useAuth';
+import { authenticatedFetch } from '@/stores/auth/session-manager';
 
 const log = config.REQUEST_LOGGING
   ? (message: string, ...args: unknown[]) => {
@@ -41,7 +41,6 @@ function normalizeHeaders(headers: HeadersInit = {}): Record<string, string> {
 export const useRequest = <T = unknown>(
   initialState: Partial<RequestState<T>> = {}
 ): UseRequestReturn<T> => {
-  const { token, logout } = useAuthForRequest();
   const [state, setState] = useState<RequestState<T>>({
     data: null,
     isLoading: false,
@@ -89,15 +88,7 @@ export const useRequest = <T = unknown>(
         // Normalize headers to Record<string, string>
         const normalizedHeaders = normalizeHeaders(headers);
 
-        // Construct auth headers
-        const authHeaders =
-          !skipAuth && token ? { Authorization: `Bearer ${token}` } : {};
-
-        // Create final headers object
-        const requestHeaders: Record<string, string> = {
-          ...authHeaders,
-          ...normalizedHeaders,
-        };
+        const requestHeaders: Record<string, string> = { ...normalizedHeaders };
 
         // Only add Content-Type if not FormData and not already set
         if (
@@ -109,16 +100,18 @@ export const useRequest = <T = unknown>(
 
         const fullUrl = `${config.BASE_API_URL}${url}`;
 
-        const response = await fetch(fullUrl, {
-          method,
-          headers: requestHeaders,
-          signal: abortControllerRef.current.signal,
-          ...fetchOptions,
-        });
+        const response = await (skipAuth ? fetch : authenticatedFetch)(
+          fullUrl,
+          {
+            method,
+            headers: requestHeaders,
+            signal: abortControllerRef.current.signal,
+            ...fetchOptions,
+          }
+        );
 
         // Handle unauthorized - automatic logout
         if (response.status === 401 && !skipAuth) {
-          logout();
           throw new Error('Session expired. Please sign in again.');
         }
 
@@ -205,7 +198,7 @@ export const useRequest = <T = unknown>(
         abortControllerRef.current = null;
       }
     },
-    [token, logout]
+    []
   );
 
   return {

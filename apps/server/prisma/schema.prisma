@@ -212,6 +212,7 @@ model User {
   oAuthAccessToken       OAuthAccessToken[]
   oAuthAuthorizationCode OAuthAuthorizationCode[]
   oAuthRefreshToken      OAuthRefreshToken[]
+  deviceSessions         DeviceSession[]
   passwordResetTokens    PasswordResetToken[]
   entries                Entry[]
   entryStatusChanges     EntryStatusHistory[]
@@ -1190,4 +1191,34 @@ model PunchReceipt {
 enum PunchSource {
   SRR
   READOUT
+}
+
+model DeviceSession {
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  userId            Int      @db.UnsignedInt
+  deviceId          String   @db.VarChar(36)
+  deviceName        String   @db.VarChar(100)
+  createdAt         DateTime @default(now())
+  lastRefreshedAt   DateTime @default(now())
+  expiresAt         DateTime
+  absoluteExpiresAt DateTime
+  revokedAt         DateTime?
+  revocationReason  String?  @db.VarChar(32)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generations       SessionRefreshToken[]
+
+  @@index([userId, deviceId])
+  @@index([absoluteExpiresAt])
+}
+
+model SessionRefreshToken {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  familyId     String   @db.VarChar(36)
+  tokenHash    String   @unique @db.Char(64)
+  generation   Int
+  consumedAt   DateTime?
+  replacementId String? @db.VarChar(36)
+  family       DeviceSession @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, generation])
 }

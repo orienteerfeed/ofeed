@@ -413,8 +413,8 @@
         "Verifying": "Verificando tu correo",
         "VerifyingDescription": "Por favor espera mientras verificamos tu dirección de correo electrónico.",
         "Verified": "Correo verificado",
-        "VerifiedDescription": "Tu correo ha sido verificado y ya has iniciado sesión.",
-        "ContinueDescription": "Ahora tienes acceso completo a OFeed.",
+        "VerifiedDescription": "Tu dirección de correo electrónico ha sido verificada.",
+        "ContinueDescription": "Inicia sesión para continuar en OFeed.",
         "ContinueToApp": "Continuar a OFeed",
         "AlreadyVerified": "Ya verificado",
         "AlreadyVerifiedDescription": "Tu dirección de correo electrónico ya está verificada.",
@@ -704,7 +704,10 @@
           "Partial": "Pago parcial",
           "Paid": "Pagado",
           "Overpaid": "Pago en exceso",
-          "Methods": { "CASH": "Efectivo", "QR": "Pago QR" },
+          "Methods": {
+            "CASH": "Efectivo",
+            "QR": "Pago QR"
+          },
           "DialogTitle": "Registrar pago recibido",
           "Method": "Método",
           "Amount": "Importe",
@@ -2057,5 +2060,19 @@
     "longitudeRange": "La longitud debe estar entre -180 y 180",
     "zeroTimeRequired": "La hora cero es obligatoria",
     "zeroTimeFormat": "La hora debe tener el formato HH:mm o HH:mm:ss"
+  },
+  "Sessions": {
+    "Title": "Sesiones de dispositivos",
+    "Current": "Este dispositivo",
+    "Created": "Creada",
+    "LastRefresh": "Última renovación",
+    "Expires": "Caduca",
+    "Revoke": "Revocar dispositivo",
+    "Confirm": "¿Revocar todas las sesiones de este dispositivo? Deberá iniciar sesión de nuevo.",
+    "Cancel": "Cancelar",
+    "Loading": "Cargando sesiones…",
+    "Error": "No se pudieron actualizar las sesiones.",
+    "LogoutUnconfirmed": "Sesión cerrada localmente. No se pudo confirmar la revocación en el servidor; vuelva a conectarse.",
+    "RevocationDelay": "Los dispositivos revocados pueden usar un token de acceso existente durante un máximo de 15 minutos."
   }
 }

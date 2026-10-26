@@ -6,6 +6,28 @@ desktop and web integrations.
 
 ## Authentication and user fields
 
+Signin requires `deviceId` (installation UUID) and `deviceName` (1–100 characters).
+REST `/rest/v1/auth/signin` returns `results.data.accessToken`, `expiresIn: 900`,
+`refreshToken` and user metadata. Use the access token as Bearer credentials.
+`POST /rest/v1/auth/refresh` takes `{ refreshToken, deviceId }` and returns a new
+pair in the same envelope; replace the stored refresh token after every success.
+`POST /rest/v1/auth/logout` takes the same credentials and revokes the family,
+even after access expiry. Never retry a consumed refresh token: replay revokes
+its whole family. Refresh expires after 30 days without renewal, or 90 days from
+signin. Legacy user JWTs are rejected; integrations must upgrade and sign in again.
+
+The browser uses GraphQL signin with `X-Ofeed-Session: web`, JSON and an allowed
+Origin; its refresh credential is a host-only HttpOnly cookie. Browser refresh
+and logout send `{ deviceId }` with that cookie and the same header/Origin.
+GraphQL `currentSessions` and `revokeDevice(deviceId)` manage the caller's devices.
+Access-token revocation is bounded by its 15-minute expiry; account deletion
+also retains the existing active-account rejection. Signup, email verification
+and password reset return success/message and direct users to signin.
+
+See [session specification](specs/session-longevity.md) and the
+[operations runbook](ops/runbooks/device-sessions.md), including native secure
+storage, outbox preservation and the strict-rotation lost-response exception.
+
 GraphQL `signin` returns user identity, organisation, emergency contact, activation,
 email verification and creation/update timestamps. Optional metadata can be null.
 `User.password` is nullable and always returns null; password hashes are never API
