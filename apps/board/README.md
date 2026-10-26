@@ -55,6 +55,12 @@ pnpm --filter ./apps/board dev:win
 
 ## Environment
 
+Use `VITE_*` for local Vite development. Containers accept `OFEED_BOARD_*`
+runtime settings and the legacy aliases below, with non-empty runtime settings
+taking precedence. See
+[`Frontend configuration`](../../docs/FRONTEND_CONFIGURATION.md) for Compose,
+Kubernetes, and migration instructions.
+
 - `VITE_PROVIDERS` controls enabled providers, for example `ofeed,liveResultat`
 - `VITE_OFEED_API_URL` defaults to `/api/ofeed`, so the board uses the same origin in both local Docker and Traefik deployments
 - `VITE_OFEED_GQL_WS_URL` optionally overrides the OFeed GraphQL WebSocket endpoint; when unset, the board derives `/graphql` from `VITE_OFEED_API_URL` or the current origin

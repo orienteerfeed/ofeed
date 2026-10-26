@@ -3,18 +3,49 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
 
+- Device sessions with 15-minute ES256 access JWTs, Vault-managed signing keys,
+  rotating refresh tokens (30 days sliding, 90 days absolute), replay detection,
+  browser automatic renewal and device revocation in profile settings.
+
+- Transactional 24-hour `Idempotency-Key` replay for REST entry and competitor
+  creates and competitor status changes, preventing duplicate offline retries.
+
+- Event Insights catalog with received-payment filtering, currency totals, CSV export
+  and printing for event owners and administrators.
+
+- Auditable CASH/QR entry payment receipts with retry-safe recording, operator and
+  device attribution, and event/desk closing-report endpoints.
+- Event-scoped SRR/SI readout punch ingestion with durable retry identities,
+  cross-device deduplication, delayed card matching and live result updates.
+
+- Indexed documentation for product, architecture, ADRs, specs, API sources,
+  development, operations and security, with one shared agent entry point.
+- Continuous deployment of successful `develop` builds to `dev.ofeed.live` and
+  `api.dev.ofeed.live`, with image digests, versioned charts and GitOps updates.
+- Optional dedicated API ingress, digest-required image rendering and migration
+  sync ordering for environments whose runtime secrets are managed by ESO.
 - Release-only GHCR publishing for immutable multi-architecture client, server,
   board, and database-migration images.
 - Runtime frontend configuration, Argo CD PreSync migrations, and optional
   Kubernetes Secret or Vault Agent secret delivery.
 
 ### Changed
+
+- **Breaking:** signin requires `deviceId` and `deviceName`, and returns
+  `accessToken`/`expiresIn` instead of `token`. Legacy user JWTs require a fresh
+  signin. Browser refresh credentials use HttpOnly cookies; native REST clients
+  receive opaque refresh tokens. Signup, verification and password reset return
+  completion results and require signin. Password changes/reset revoke device sessions.
+
+- Entries with payment receipts derive paid status from their recorded total and
+  reject manual paid overrides, currency changes and deletion of their payment history.
 
 - Standardized production Node images on Node 24.15.0 Bookworm slim and moved
   client router devtools to development-only dependencies.
@@ -23,6 +54,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Serialize StartList reservations across orders and competitors, atomically
+  transfer reservations during processing, and return 409 SLOT_TAKEN for slot
+  conflicts while preserving PUT semantics. Other modes allow shared times.
+
+- Preserve authoritative competitor updates and IOF/MOP snapshots over earlier
+  punch observations, consuming pending punches on the previous/current cards so
+  retries and delayed assignment cannot restore superseded data.
+- Resolve sign-in user timestamps and activation metadata, return authentication
+  errors before reading entry payment updates, and clear empty competitor notes.
+- Consume and restore competitor start slots atomically across time and class
+  changes; exclude occupied, reserved and duplicate times from availability.
+- Document entry prerequisites, unconfigured-entry conflicts, fee shapes and
+  late-entry surcharges, and personal data in QR payment messages.
+
+- Seed required countries, currencies and the Orienteering sport after
+  deployment migrations, preserving reference IDs and excluding optional event
+  creation.
 - Installed `wget` in the API image so Docker Compose healthchecks can run.
 - Pre-created client and board `runtime-config.js` files owned by the Nginx
   runtime user so startup scripts can write them without permission errors.
@@ -62,8 +110,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shared home event list rendering components for the home page views.
 - Consolidated IOF publish notifications to class-level handling.
 - Updated Swedish translations.
-- Updated production and development dependencies, including Hono, Apollo Client,
-  Prisma, TypeScript ESLint, Prettier, and repository model/tooling settings.
+- Updated production and development dependencies, including Hono, Apollo
+  Client, Prisma, TypeScript ESLint, Prettier, and repository model/tooling
+  settings.
 
 ### Removed
 

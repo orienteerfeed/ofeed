@@ -1,3 +1,5 @@
+import { PUNCH_OPENAPI_PATHS } from '../modules/punch/punch.openapi.js';
+import { ENTRY_PAYMENT_OPENAPI_PATHS } from '../modules/entry/entry-payment.openapi.js';
 import { ADMIN_OPENAPI, ADMIN_OPENAPI_PATHS } from '../modules/admin/admin.openapi.js';
 import { AUTH_OPENAPI, AUTH_OPENAPI_PATHS } from '../modules/auth/auth.openapi.js';
 import { EVENT_OPENAPI, EVENT_OPENAPI_PATHS } from '../modules/event/event.openapi.js';
@@ -61,6 +63,8 @@ export const OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   ...ADMIN_OPENAPI_PATHS,
   ...AUTH_OPENAPI_PATHS,
   ...EVENT_OPENAPI_PATHS,
+  ...PUNCH_OPENAPI_PATHS,
+  ...ENTRY_PAYMENT_OPENAPI_PATHS,
   ...MAP_OPENAPI_PATHS,
   ...UPLOAD_OPENAPI_PATHS,
   ...MEOS_OPENAPI_PATHS,

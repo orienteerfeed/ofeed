@@ -3,7 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  plugins: [vue()],
+  // Keep absolute public-dir URLs (e.g. /favicon-dark.svg) as plain strings;
+  // otherwise they become imports Vitest resolves against the filesystem root.
+  plugins: [vue({ template: { transformAssetUrls: { includeAbsolute: false } } })],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

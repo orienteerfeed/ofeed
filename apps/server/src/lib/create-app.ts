@@ -230,7 +230,11 @@ export default function createApp() {
     cors({
       origin: env.CORS_ORIGIN?.split(',') ?? ['*'],
       allowMethods: normalizeConfiguredCorsMethods(env.CORS_METHODS),
-      allowHeaders: env.CORS_HEADERS?.split(',') ?? ['Content-Type', 'Authorization'],
+      allowHeaders: [
+        ...(env.CORS_HEADERS?.split(',') ?? ['Content-Type', 'Authorization']),
+        'Idempotency-Key',
+        'X-Ofeed-Session',
+      ],
       credentials: true,
     }),
   );

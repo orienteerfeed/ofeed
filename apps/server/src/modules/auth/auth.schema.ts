@@ -1,9 +1,7 @@
-import { z } from "@hono/zod-openapi";
+import { z } from '@hono/zod-openapi';
 
-export const signinBodySchema = z.object({
-  username: z.string().email(),
-  password: z.string().min(1),
-});
+export { sessionSigninSchema as signinBodySchema } from '@repo/shared';
+import { sessionSigninSchema as signinBodySchema } from '@repo/shared';
 
 export const signupBodySchema = z.object({
   email: z.string().email(),
@@ -26,12 +24,12 @@ export const emailVerificationBodySchema = z.object({
 });
 
 export const oauthTokenBodySchema = z.object({
-  grant_type: z.literal("client_credentials"),
+  grant_type: z.literal('client_credentials'),
   scope: z.string().optional(),
 });
 
 export const oauthCredentialsBodySchema = z.object({
-  grants: z.literal("client_credentials"),
+  grants: z.literal('client_credentials'),
   scopes: z.string().optional(),
   redirectUris: z.string().optional(),
 });

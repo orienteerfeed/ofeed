@@ -356,6 +356,38 @@ describe('useAthletes', () => {
       expect(finishedAthletes.value.restRows[1].time).toBeUndefined()
     })
 
+    describe('unordered result modes', () => {
+      const athletes = ref<ClassifyAthletes>({
+        finished: [
+          { ...TestFinishedAthlete, id: 'z', surname: 'Žák', timeSeconds: 61 },
+          { ...TestFinishedAthlete, id: 'c', surname: 'Černý', timeSeconds: 120 },
+          { ...TestFinishedAthlete, id: 'a', surname: 'Adam', timeSeconds: 90 },
+          {
+            ...TestFinishedAthlete,
+            id: 'b',
+            surname: 'Bílý',
+            status: AthleteStatus.Disqualified,
+          },
+        ],
+        unfinished: [],
+      })
+
+      it('sorts alphabetically within status, keeps times, drops ranks, losses and pinning', () => {
+        const rows = useFinishedAthletes(athletes, ref(3), ref('Unordered'))
+        expect(rows.value.pinnedRows).toEqual([])
+        expect(rows.value.restRows.map((a) => a.id)).toEqual(['a', 'c', 'z', 'b'])
+        expect(rows.value.restRows.every((a) => a.rank === undefined)).toBe(true)
+        expect(rows.value.restRows[0].time).toEqual('1:30')
+        expect(rows.value.restRows.every((a) => !a.loss)).toBe(true)
+      })
+
+      it('hides times and losses in UnorderedNoTimes', () => {
+        const rows = useFinishedAthletes(athletes, ref(3), ref('UnorderedNoTimes'))
+        expect(rows.value.restRows.map((a) => a.id)).toEqual(['a', 'c', 'z', 'b'])
+        expect(rows.value.restRows.every((a) => !a.time && !a.loss)).toBe(true)
+      })
+    })
+
     describe('useUnfinishedAthletes', () => {
       it('should return empty array when no athletes', () => {
         const athletes = ref<ClassifyAthletes>({ finished: [], unfinished: [] })

@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
+  $queryRaw: vi.fn().mockResolvedValue([]),
+  $transaction: vi.fn(),
+  punch: { updateMany: vi.fn() },
+  entryPayment: { count: vi.fn().mockResolvedValue(0) },
   competitor: {
     findFirst: vi.fn(),
     findMany: vi.fn(),
@@ -23,6 +27,9 @@ const prismaMock = vi.hoisted(() => ({
     deleteMany: vi.fn(),
   },
   courseMap: {
+    deleteMany: vi.fn(),
+  },
+  entry: {
     deleteMany: vi.fn(),
   },
   eventImportState: {
@@ -67,6 +74,10 @@ vi.mock('../../../utils/context.js', () => ({
 }));
 
 vi.mock('../../../utils/subscriptionUtils.js', () => subscriptionMocks);
+
+beforeEach(() => {
+  prismaMock.$transaction.mockImplementation(async (callback) => callback({ ...prismaMock }));
+});
 
 import {
   changeCompetitorStatus,
@@ -165,6 +176,20 @@ describe('event.service event data deletion', () => {
     expect(prismaMock.eventImportState.deleteMany).toHaveBeenCalledWith({
       where: { eventId: 'event-1' },
     });
+  });
+
+  it('deletes entry orders before classes and services with all event data', async () => {
+    await deleteAllEventData('event-1');
+
+    expect(prismaMock.entry.deleteMany).toHaveBeenCalledWith({
+      where: { eventId: 'event-1' },
+    });
+    expect(prismaMock.entry.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+      prismaMock.class.deleteMany.mock.invocationCallOrder[0],
+    );
+    expect(prismaMock.entry.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+      prismaMock.eventService.deleteMany.mock.invocationCallOrder[0],
+    );
   });
 
   it('deletes event services with all event data', async () => {

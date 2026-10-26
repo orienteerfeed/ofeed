@@ -1,3 +1,4 @@
+import type { Prisma } from '../../generated/prisma/client.js';
 import prisma from '../../utils/context.js';
 
 /**
@@ -75,6 +76,7 @@ export type OrganisationUpsertInput = {
  */
 export const upsertOrganisation = async (
   input: OrganisationUpsertInput,
+  prismaClient: Pick<Prisma.TransactionClient, 'organisation'> = prisma,
 ): Promise<number | null> => {
   const eventId = input.eventId;
   const name = normaliseString(input.name);
@@ -86,7 +88,7 @@ export const upsertOrganisation = async (
 
   // Priority 1 — externalId match (Organisation.Id in IOF XML).
   if (externalId) {
-    const byExternalId = await prisma.organisation.findFirst({
+    const byExternalId = await prismaClient.organisation.findFirst({
       where: { eventId, externalId },
       select: organisationSelect,
     });
@@ -96,7 +98,7 @@ export const upsertOrganisation = async (
       if (name && shortName && !byExternalId.shortName) patch.shortName = shortName;
       if (nationality && !byExternalId.nationality) patch.nationality = nationality;
       if (Object.keys(patch).length > 0) {
-        await prisma.organisation.update({ where: { id: byExternalId.id }, data: patch });
+        await prismaClient.organisation.update({ where: { id: byExternalId.id }, data: patch });
       }
       return byExternalId.id;
     }
@@ -105,13 +107,16 @@ export const upsertOrganisation = async (
   // Priority 2 — name-based find-or-create.
   if (!name) return null;
 
-  const existing = await findOrCreateOrganisation({
-    eventId,
-    externalId,
-    name,
-    nationality,
-    shortName,
-  });
+  const existing = await findOrCreateOrganisation(
+    {
+      eventId,
+      externalId,
+      name,
+      nationality,
+      shortName,
+    },
+    prismaClient,
+  );
 
   const patch: Record<string, string | null> = {};
   if (externalId && !existing.externalId) patch.externalId = externalId;
@@ -122,7 +127,7 @@ export const upsertOrganisation = async (
   // causing a permanent false-positive short_name_change on every re-import.
   if (name && shortName && !existing.shortName) patch.shortName = shortName;
   if (Object.keys(patch).length > 0) {
-    await prisma.organisation.update({ where: { id: existing.id }, data: patch });
+    await prismaClient.organisation.update({ where: { id: existing.id }, data: patch });
   }
   return existing.id;
 };
@@ -133,15 +138,18 @@ const normaliseString = (value: string | null | undefined): string | null => {
   return trimmed === '' ? null : trimmed;
 };
 
-const findOrCreateOrganisation = async (data: {
-  eventId: string;
-  externalId: string | null;
-  name: string;
-  nationality: string | null;
-  shortName: string | null;
-}): Promise<OrganisationRecord> => {
+const findOrCreateOrganisation = async (
+  data: {
+    eventId: string;
+    externalId: string | null;
+    name: string;
+    nationality: string | null;
+    shortName: string | null;
+  },
+  prismaClient: Pick<Prisma.TransactionClient, 'organisation'>,
+): Promise<OrganisationRecord> => {
   try {
-    return await prisma.organisation.upsert({
+    return await prismaClient.organisation.upsert({
       where: { eventId_name: { eventId: data.eventId, name: data.name } },
       create: data,
       update: {},
@@ -150,7 +158,7 @@ const findOrCreateOrganisation = async (data: {
   } catch (error) {
     if (!isUniqueConstraintError(error)) throw error;
 
-    const existing = await prisma.organisation.findUnique({
+    const existing = await prismaClient.organisation.findUnique({
       where: { eventId_name: { eventId: data.eventId, name: data.name } },
       select: organisationSelect,
     });

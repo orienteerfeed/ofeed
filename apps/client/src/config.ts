@@ -63,7 +63,9 @@ export const config = {
   ),
   BOARD_APP_URL: optional(
     runtimeValue('VITE_BOARD_APP_URL'),
-    'http://localhost:5173'
+    import.meta.env.DEV
+      ? 'http://localhost:5173'
+      : 'https://board.orienteerfeed.com'
   ),
   DISCORD_INVITE_URL: optional(
     runtimeValue('VITE_DISCORD_INVITE_URL'),

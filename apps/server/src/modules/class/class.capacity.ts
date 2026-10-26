@@ -1,3 +1,5 @@
+export const requiresStartSlot = (startMode: string): boolean => startMode === 'StartList';
+
 export type CapacityMode = 'FreeStart' | 'StartSlot';
 
 export interface ComputeClassCapacityInput {
@@ -26,13 +28,13 @@ export function computeClassCapacity(input: ComputeClassCapacityInput): Computed
 
   // maxNumberOfCompetitors is always the hard cap — null means unconfigured → no capacity.
   if (maxNumberOfCompetitors === null) {
-    const capacityMode = effectiveStartMode === 'FreeStart' ? 'FreeStart' : 'StartSlot';
+    const capacityMode = !requiresStartSlot(effectiveStartMode) ? 'FreeStart' : 'StartSlot';
     return { availableCount: 0, capacityMode, isFull: true };
   }
 
   const headroom = Math.max(0, maxNumberOfCompetitors - competitorCount - pendingEntryCount);
 
-  if (effectiveStartMode === 'FreeStart') {
+  if (!requiresStartSlot(effectiveStartMode)) {
     return { availableCount: headroom, capacityMode: 'FreeStart', isFull: headroom === 0 };
   }
 

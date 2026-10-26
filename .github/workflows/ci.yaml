@@ -60,3 +60,30 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  deployment-contract:
+    name: Validate deployment contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.18.6
+      - run: ruby scripts/delivery/test-chart.rb
+      - run: ruby scripts/delivery/test-db-deploy.rb
+      - run: python3 -m unittest discover -s scripts/delivery -p 'test_*.py'
+
+  deploy-dev:
+    name: Deploy develop to dev
+    needs: [validate, deployment-contract]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy-dev.yaml
+    secrets:
+      gitops-deploy-key: ${{ secrets.OFEED_GITOPS_DEPLOY_KEY }}
+      argocd-dev-token: ${{ secrets.OFEED_ARGOCD_DEV_TOKEN }}

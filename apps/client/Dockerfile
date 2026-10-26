@@ -15,11 +15,13 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY patches ./patches
 COPY apps/client/package.json apps/client/package.json
 COPY packages/shared/package.json packages/shared/package.json
+COPY packages/commentator/package.json packages/commentator/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
   pnpm install --frozen-lockfile --ignore-scripts --filter ./apps/client... --filter ./packages/shared...
 
 COPY apps/client apps/client
 COPY packages/shared packages/shared
+COPY packages/commentator packages/commentator
 RUN pnpm --filter ./apps/client... run build
 
 FROM nginxinc/nginx-unprivileged:1.30-alpine AS runner
@@ -36,13 +38,13 @@ ENV PORT=8080 \
     API_UPSTREAM=http://api:3001 \
     OFEED_PUBLIC_API_URL= \
     OFEED_PUBLIC_URL= \
-    OFEED_DEFAULT_LANGUAGE=en \
-    OFEED_DOCS_URL=https://docs.orienteerfeed.com \
+    OFEED_DEFAULT_LANGUAGE= \
+    OFEED_DOCS_URL= \
     OFEED_BOARD_APP_URL= \
-    OFEED_DISCORD_INVITE_URL=https://discord.gg/QMvnurgKzU \
-    OFEED_GITHUB_REPO_URL=https://github.com/orienteerfeed/orienteerfeed \
-    OFEED_ENABLE_MAP_VIEW=true \
-    OFEED_DEBUG_LOGGING=false
+    OFEED_DISCORD_INVITE_URL= \
+    OFEED_GITHUB_REPO_URL= \
+    OFEED_ENABLE_MAP_VIEW= \
+    OFEED_DEBUG_LOGGING=
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 \
   CMD wget -qO- http://127.0.0.1:${PORT}/healthz >/dev/null || exit 1

@@ -24,8 +24,16 @@
       "label": "Contenido de la tabla",
       "pinnedLeaders": "Número de líderes fijados",
       "showUnfinished": "Mostrar incompletos (lista de salida, en curso)",
+      "hideEmptyCategories": "Ocultar categorías sin corredores",
       "compactMode": "Modo compacto (sin club, chip)",
+      "showClub": "Modo club (mostrar club)",
+      "showRegistration": "Modo registro (mostrar número de registro)",
       "showEmojis": "Mostrar emojis en la tabla"
+    },
+    "commentator": {
+      "label": "Comentarista",
+      "announceWinners": "Anunciar nuevos líderes de categoría (voz en checo)",
+      "enableSound": "🔊 Haz clic para activar el sonido del comentarista"
     },
     "classes": {
       "label": "Clases mostradas",
@@ -36,14 +44,25 @@
         "name": "Nombre",
         "col": "Col.",
         "color": "Color",
-        "order": "Orden"
-      }
+        "order": "Orden",
+        "mode": "Modo",
+        "places": "Puestos"
+      },
+      "sourceHint": "Los ajustes definidos por la fuente de datos (p. ej. en OFeed) tienen prioridad y están bloqueados aquí.",
+      "fromSource": "Definido por la fuente de datos"
     },
     "colorOverride": {
       "auto": "Auto (del origen de datos)",
       "male": "M – azul (masculino)",
       "female": "F – rosa (femenino)",
       "neutral": "X – gris (neutral)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Clasificación",
+      "Unordered": "A–Z",
+      "UnorderedNoTimes": "A–Z, sin tiempos"
+    },
+    "awardedPlaces": "Puestos premiados (resaltados)"
   }
 }

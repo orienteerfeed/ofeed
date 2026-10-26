@@ -149,6 +149,9 @@ const envSchema = z.object({
   MYSQL_PORT: z.string().optional(),
 
   DATABASE_URL: z.string().default(DEFAULT_DATABASE_URL),
+  ACCESS_JWT_KEY_FILE: z.string().optional(),
+  ACCESS_JWT_ISSUER: z.string().default('ofeed'),
+  ACCESS_JWT_AUDIENCE: z.string().default('ofeed-user'),
   JWT_TOKEN_SECRET_KEY: z.string().default('change-me-in-production'),
   ENCRYPTION_SECRET_KEY: z.string().default(DEFAULT_ENCRYPTION_SECRET_KEY),
   ORIS_API_BASE_URL: z.string().url().default('https://oris.orientacnisporty.cz/API/'),

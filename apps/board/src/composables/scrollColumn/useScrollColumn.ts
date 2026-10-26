@@ -1,6 +1,6 @@
 import { ref, computed, provide, inject, onMounted, onUnmounted, shallowRef } from 'vue'
 import type { Ref, InjectionKey } from 'vue'
-import { useEventListener, useDebounceFn } from '@vueuse/core'
+import { useEventListener, useDebounceFn, useResizeObserver } from '@vueuse/core'
 
 import type { ScrollType } from '@/types/layout'
 
@@ -26,11 +26,16 @@ interface VisibleItem {
 
 export function useScrollColumn(scrollType: Ref<ScrollType>) {
   const columnWrapper = ref<HTMLElement | null>(null)
-  // TODO - reactive on resize
-  const columnWrapperRect = computed(() => {
-    if (!columnWrapper.value) return { top: 0, height: 100, bottom: 100 } // Placeholder until columnWrapper is set
-    return columnWrapper.value.getBoundingClientRect()
+  // Placeholder until columnWrapper is set
+  const columnWrapperRect = shallowRef<Pick<DOMRect, 'top' | 'height' | 'bottom'>>({
+    top: 0,
+    height: 100,
+    bottom: 100,
   })
+  function updateColumnWrapperRect() {
+    if (columnWrapper.value)
+      columnWrapperRect.value = columnWrapper.value.getBoundingClientRect()
+  }
   const columnItems: ScrollColumnItem[] = []
   let activeItems: ScrollColumnItem[] = []
   const visibleItems = shallowRef<{
@@ -48,6 +53,14 @@ export function useScrollColumn(scrollType: Ref<ScrollType>) {
     { maxWait: scrollDebounceMaxWait }
   )
   useEventListener(columnWrapper, 'scroll', onScrollDebounced)
+  // Re-evaluate on window/column resize (e.g. TV switched to fullscreen) and when
+  // the content changes height (tables loading data) without any scroll happening.
+  useEventListener(window, 'resize', onScrollDebounced)
+  useResizeObserver(columnWrapper, onScrollDebounced)
+  useResizeObserver(
+    computed(() => columnWrapper.value?.firstElementChild as HTMLElement | undefined),
+    onScrollDebounced
+  )
 
   const registerScrollColumnItem: RegisterScrollColumnItem = (item) => {
     columnItems.push(item)
@@ -60,6 +73,7 @@ export function useScrollColumn(scrollType: Ref<ScrollType>) {
   provide(registerScrollColumnItemKey, registerScrollColumnItem)
 
   function checkColumnItemsActivity() {
+    updateColumnWrapperRect()
     activeItems = []
     // TODO - cache active items and check only around those
     for (const item of columnItems) {
@@ -112,6 +126,7 @@ export function useScrollColumn(scrollType: Ref<ScrollType>) {
 
   // TODO Fix top scroll
   function checkItemsVisibility() {
+    updateColumnWrapperRect()
     visibleItems.value = {}
     let isFirstItem = true
     for (const item of activeItems) {

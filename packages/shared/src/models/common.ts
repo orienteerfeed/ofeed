@@ -31,6 +31,7 @@ export const resultStatusSchema = z.enum([
 export const originSchema = z.enum(['START', 'OFFICE', 'FINISH', 'IT']);
 export const protocolProcessedByTypeSchema = z.enum(['USER', 'INTEGRATION', 'SYSTEM']);
 export const protocolTypeSchema = z.enum([
+  'punch_store',
   'competitor_create',
   'competitor_update',
   'class_change',

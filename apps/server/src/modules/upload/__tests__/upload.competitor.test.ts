@@ -246,6 +246,41 @@ describe('upsertCompetitor — authorId written to protocol', () => {
     vi.clearAllMocks();
   });
 
+  it('preserves timing input arrays when a write transaction is retried', async () => {
+    const start = { ControlCard: ['8123456'], BibNumber: ['42'] };
+    mockPrisma.competitor.findUnique.mockResolvedValue(null);
+    mockPrisma.competitor.findFirst.mockResolvedValue(null);
+    mockPrisma.competitor.create.mockResolvedValue({ id: 42 });
+    const tx = {
+      ...mockPrisma,
+      $queryRaw: vi.fn().mockResolvedValue([]),
+      punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+    };
+    let attempts = 0;
+    mockPrisma.$transaction.mockImplementation(async (callback) => {
+      const value = await callback(tx);
+      if (attempts++ === 0) throw Object.assign(new Error('write conflict'), { code: 'P2034' });
+      return value;
+    });
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      start as never,
+      null,
+      'UTC',
+      null,
+      null,
+      7,
+    );
+    expect(start).toEqual({ ControlCard: ['8123456'], BibNumber: ['42'] });
+    expect(mockPrisma.competitor.create).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ data: expect.objectContaining({ card: 8123456, bibNumber: 42 }) }),
+    );
+  });
+
   it('writes the caller-supplied authorId to competitor_create protocol row (JWT user scenario)', async () => {
     // Organisation lookup returns null (no org for this competitor).
     mockPrisma.organisation.findFirst.mockResolvedValue(null);
@@ -268,7 +303,13 @@ describe('upsertCompetitor — authorId written to protocol', () => {
           }),
         },
       };
-      return cb(txProxy);
+      return cb({
+        ...mockPrisma,
+        ...txProxy,
+        competitor: { ...mockPrisma.competitor, ...txProxy.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     const JWT_USER_ID = 7;
@@ -308,7 +349,13 @@ describe('upsertCompetitor — authorId written to protocol', () => {
           }),
         },
       };
-      return cb(txProxy);
+      return cb({
+        ...mockPrisma,
+        ...txProxy,
+        competitor: { ...mockPrisma.competitor, ...txProxy.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     const EVENT_CREATOR_ID = 3; // resolved from event.authorId for Basic Auth
@@ -368,7 +415,13 @@ describe('upsertCompetitor — authorId written to protocol', () => {
           }),
         },
       };
-      return cb(txProxy);
+      return cb({
+        ...mockPrisma,
+        ...txProxy,
+        competitor: { ...mockPrisma.competitor, ...txProxy.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     const JWT_USER_ID = 5;
@@ -435,7 +488,13 @@ describe('upsertCompetitor — authorId written to protocol', () => {
           }),
         },
       };
-      return cb(txProxy);
+      return cb({
+        ...mockPrisma,
+        ...txProxy,
+        competitor: { ...mockPrisma.competitor, ...txProxy.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     const result = await upsertCompetitor(
@@ -506,7 +565,13 @@ describe('upsertCompetitor — authorId written to protocol', () => {
         competitor: { update: vi.fn().mockResolvedValue({}) },
         protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
       };
-      return cb(txProxy);
+      return cb({
+        ...mockPrisma,
+        ...txProxy,
+        competitor: { ...mockPrisma.competitor, ...txProxy.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     await upsertCompetitor(
@@ -538,7 +603,19 @@ describe('upsertCompetitor — startTime preservation when StartList has no <Sta
   // start payload without StartTime (free-start slot: only ControlCard present)
   const startWithoutTime = { ControlCard: ['1712999'] };
 
-  function makeDbCompetitor(overrides: Partial<typeof baseDb & { id: number; externalId: string; license: null; organisationId: null; organisation: null; lateStart: boolean; note: null }>) {
+  function makeDbCompetitor(
+    overrides: Partial<
+      typeof baseDb & {
+        id: number;
+        externalId: string;
+        license: null;
+        organisationId: null;
+        organisation: null;
+        lateStart: boolean;
+        note: null;
+      }
+    >,
+  ) {
     return {
       id: 10,
       classId: 1,
@@ -571,33 +648,81 @@ describe('upsertCompetitor — startTime preservation when StartList has no <Sta
     let capturedData: any;
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
       const tx = {
-        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        competitor: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            capturedData = data;
+            return Promise.resolve({});
+          }),
+        },
         protocol: { createMany: vi.fn().mockResolvedValue({ count: 0 }) },
       };
-      return cb(tx);
+      return cb({
+        ...mockPrisma,
+        ...tx,
+        competitor: { ...mockPrisma.competitor, ...tx.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
-    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithoutTime as never, null, 'UTC', null, null, 5);
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      startWithoutTime as never,
+      null,
+      'UTC',
+      null,
+      null,
+      5,
+    );
 
     expect(capturedData?.startTime).toBeNull();
   });
 
   it('preserves existing startTime when XML has no StartTime and competitor is OK (already ran)', async () => {
     const actualStartTime = new Date('2026-05-31T10:35:23+02:00');
-    const db = makeDbCompetitor({ status: 'OK' as any, startTime: actualStartTime, nationality: 'SVK' });
+    const db = makeDbCompetitor({
+      status: 'OK' as any,
+      startTime: actualStartTime,
+      nationality: 'SVK',
+    });
     mockPrisma.competitor.findUnique.mockResolvedValue(db);
     mockPrisma.organisation.findFirst.mockResolvedValue(null);
 
     let capturedData: any;
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
       const tx = {
-        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        competitor: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            capturedData = data;
+            return Promise.resolve({});
+          }),
+        },
         protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
       };
-      return cb(tx);
+      return cb({
+        ...mockPrisma,
+        ...tx,
+        competitor: { ...mockPrisma.competitor, ...tx.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
-    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithoutTime as never, null, 'UTC', null, null, 5);
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      startWithoutTime as never,
+      null,
+      'UTC',
+      null,
+      null,
+      5,
+    );
 
     expect(capturedData?.startTime).toEqual(actualStartTime);
   });
@@ -610,13 +735,35 @@ describe('upsertCompetitor — startTime preservation when StartList has no <Sta
     let capturedData: any;
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
       const tx = {
-        competitor: { create: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({ id: 99 }); }) },
+        competitor: {
+          create: vi.fn().mockImplementation(({ data }) => {
+            capturedData = data;
+            return Promise.resolve({ id: 99 });
+          }),
+        },
         protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
       };
-      return cb(tx);
+      return cb({
+        ...mockPrisma,
+        ...tx,
+        competitor: { ...mockPrisma.competitor, ...tx.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
-    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithoutTime as never, null, 'UTC', null, null, 5);
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      startWithoutTime as never,
+      null,
+      'UTC',
+      null,
+      null,
+      5,
+    );
 
     expect(capturedData?.startTime).toBeNull();
   });
@@ -625,22 +772,51 @@ describe('upsertCompetitor — startTime preservation when StartList has no <Sta
     // Scenario: free-start competitor ran (status=OK, real chip time in DB).
     // StartList XML carries the event zero-time — must NOT overwrite the real time.
     const actualStartTime = new Date('2026-05-31T10:35:23+02:00');
-    const db = makeDbCompetitor({ status: 'OK' as any, startTime: actualStartTime, nationality: 'SVK' as any });
+    const db = makeDbCompetitor({
+      status: 'OK' as any,
+      startTime: actualStartTime,
+      nationality: 'SVK' as any,
+    });
     mockPrisma.competitor.findUnique.mockResolvedValue(db);
     mockPrisma.organisation.findFirst.mockResolvedValue(null);
 
     let capturedData: any;
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
       const tx = {
-        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        competitor: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            capturedData = data;
+            return Promise.resolve({});
+          }),
+        },
         protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
       };
-      return cb(tx);
+      return cb({
+        ...mockPrisma,
+        ...tx,
+        competitor: { ...mockPrisma.competitor, ...tx.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     // XML has zero-time (10:00:00) — a typical free-start StartList placeholder
-    const startWithZeroTime = { StartTime: ['2026-05-31T10:00:00+02:00'], ControlCard: ['8390839'] };
-    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithZeroTime as never, null, 'Europe/Prague', null, null, 5);
+    const startWithZeroTime = {
+      StartTime: ['2026-05-31T10:00:00+02:00'],
+      ControlCard: ['8390839'],
+    };
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      startWithZeroTime as never,
+      null,
+      'Europe/Prague',
+      null,
+      null,
+      5,
+    );
 
     // DB value must be preserved — zero-time must NOT overwrite the real chip time
     expect(capturedData?.startTime).toEqual(actualStartTime);
@@ -648,21 +824,47 @@ describe('upsertCompetitor — startTime preservation when StartList has no <Sta
 
   it('uses XML StartTime from StartList when competitor is OK but DB startTime is null', async () => {
     // OK status but no real startTime yet — XML value is safe to use.
-    const db = makeDbCompetitor({ status: 'OK' as any, startTime: null, nationality: 'SVK' as any });
+    const db = makeDbCompetitor({
+      status: 'OK' as any,
+      startTime: null,
+      nationality: 'SVK' as any,
+    });
     mockPrisma.competitor.findUnique.mockResolvedValue(db);
     mockPrisma.organisation.findFirst.mockResolvedValue(null);
 
     let capturedData: any;
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
       const tx = {
-        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        competitor: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            capturedData = data;
+            return Promise.resolve({});
+          }),
+        },
         protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
       };
-      return cb(tx);
+      return cb({
+        ...mockPrisma,
+        ...tx,
+        competitor: { ...mockPrisma.competitor, ...tx.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     const startWithTime = { StartTime: ['2026-05-31T10:32:00+02:00'], ControlCard: ['8390839'] };
-    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, startWithTime as never, null, 'Europe/Prague', null, null, 5);
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      startWithTime as never,
+      null,
+      'Europe/Prague',
+      null,
+      null,
+      5,
+    );
 
     expect(capturedData?.startTime).not.toBeNull();
     expect(capturedData?.startTime).toEqual(new Date('2026-05-31T10:32:00+02:00'));
@@ -672,22 +874,52 @@ describe('upsertCompetitor — startTime preservation when StartList has no <Sta
     // ResultList always wins — this allows correcting start times via result re-import.
     const oldStartTime = new Date('2026-05-31T10:00:00+02:00'); // wrong/default time in DB
     const realStartTime = new Date('2026-05-31T10:35:23+02:00');
-    const db = makeDbCompetitor({ status: 'OK' as any, startTime: oldStartTime, nationality: 'SVK' as any });
+    const db = makeDbCompetitor({
+      status: 'OK' as any,
+      startTime: oldStartTime,
+      nationality: 'SVK' as any,
+    });
     mockPrisma.competitor.findUnique.mockResolvedValue(db);
     mockPrisma.organisation.findFirst.mockResolvedValue(null);
 
     let capturedData: any;
     mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
       const tx = {
-        competitor: { update: vi.fn().mockImplementation(({ data }) => { capturedData = data; return Promise.resolve({}); }) },
+        competitor: {
+          update: vi.fn().mockImplementation(({ data }) => {
+            capturedData = data;
+            return Promise.resolve({});
+          }),
+        },
         protocol: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
       };
-      return cb(tx);
+      return cb({
+        ...mockPrisma,
+        ...tx,
+        competitor: { ...mockPrisma.competitor, ...tx.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     // ResultList result with the real start time
-    const result = { StartTime: ['2026-05-31T10:35:23+02:00'], Status: ['OK'], ControlCard: ['8390839'] };
-    await upsertCompetitor('event-abc', 1, minimalPerson as never, null, null, result as never, 'Europe/Prague', null, null, 5);
+    const result = {
+      StartTime: ['2026-05-31T10:35:23+02:00'],
+      Status: ['OK'],
+      ControlCard: ['8390839'],
+    };
+    await upsertCompetitor(
+      'event-abc',
+      1,
+      minimalPerson as never,
+      null,
+      null,
+      result as never,
+      'Europe/Prague',
+      null,
+      null,
+      5,
+    );
 
     expect(capturedData?.startTime).toEqual(realStartTime);
   });
@@ -718,7 +950,13 @@ describe('upsertCompetitor — organisation country import', () => {
           createMany: vi.fn().mockResolvedValue({ count: 1 }),
         },
       };
-      return cb(txProxy);
+      return cb({
+        ...mockPrisma,
+        ...txProxy,
+        competitor: { ...mockPrisma.competitor, ...txProxy.competitor },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
+      });
     });
 
     await upsertCompetitor(

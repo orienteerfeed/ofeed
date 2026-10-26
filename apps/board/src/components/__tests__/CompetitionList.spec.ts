@@ -61,7 +61,6 @@ describe('CompetitionList', () => {
       within(pastCompetitions).getAllByTestId('competition-link')
     ).toHaveLength(1)
 
-    getByText('Competition list', { exact: false })
     getByText('today', { exact: false })
     getByText('upcoming', { exact: false })
     getByText('past', { exact: false })

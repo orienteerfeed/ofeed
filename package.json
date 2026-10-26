@@ -1,6 +1,6 @@
 {
   "name": "ofeed-monorepo",
-  "version": "1.7.2",
+  "version": "1.7.6",
   "license": "GPL-3.0",
   "private": true,
   "type": "module",

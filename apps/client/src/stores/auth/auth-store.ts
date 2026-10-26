@@ -1,58 +1,24 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import type { User, UserRole } from '../../types';
 import type { AuthStore } from './types';
 
-const initialState = {
+export const useAuthStore = create<AuthStore>()((set, get) => ({
   token: null,
   user: null,
-};
-
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set, get) => ({
-      // State
-      ...initialState,
-
-      // Actions
-      signin: ({ token, user }: { token: string; user: User }) => {
-        set({ token, user });
-      },
-
-      signout: () => {
-        set(initialState);
-      },
-
-      // Utility functions
-      isAuthenticated: () => {
-        const { token, user } = get();
-        return !!token && !!user && !!user.id && !!user.email;
-      },
-
-      hasRole: (role: UserRole) => {
-        const { user } = get();
-        return user?.role === role;
-      },
-    }),
-    {
-      name: 'ofeed-auth',
-      storage: createJSONStorage(() => localStorage),
-      // Optional: migrate old storage format
-      migrate: (persistedState: unknown, version: number) => {
-        if (version === 0) {
-          // Migrace z předchozí verze pokud potřebujete
-          return persistedState;
-        }
-        return persistedState;
-      },
-    }
-  )
-);
-
-// Selectors pro optimalizaci re-renderů
+  signin: ({ token, user }) => set({ token, user }),
+  signout: () => {
+    set({ token: null, user: null });
+    if (typeof window !== 'undefined')
+      window.dispatchEvent(new Event('ofeed-signout'));
+  },
+  isAuthenticated: () =>
+    Boolean(get().token && get().user?.id && get().user?.email),
+  hasRole: role => get().user?.role === role,
+}));
 export const useToken = () => useAuthStore(state => state.token);
 export const useUser = () => useAuthStore(state => state.user);
 export const useIsAuthenticated = () =>
-  useAuthStore(s => Boolean(s.token && s.user && s.user.id && s.user.email));
-export const useSignin = () => useAuthStore(s => s.signin);
-export const useSignout = () => useAuthStore(s => s.signout);
+  useAuthStore(state =>
+    Boolean(state.token && state.user?.id && state.user?.email)
+  );
+export const useSignin = () => useAuthStore(state => state.signin);
+export const useSignout = () => useAuthStore(state => state.signout);

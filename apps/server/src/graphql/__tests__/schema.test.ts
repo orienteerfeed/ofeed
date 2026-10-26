@@ -32,6 +32,7 @@ describe('Pothos GraphQL schema', () => {
         'courseLeafletPoints',
         'courseRadioControls',
         'currencies',
+        'currentSessions',
         'currentUser',
         'currentUserCards',
         'entryOrderById',
@@ -93,6 +94,7 @@ describe('Pothos GraphQL schema', () => {
         'requestPasswordReset',
         'resendEmailVerification',
         'resetPassword',
+        'revokeDevice',
         'saveCustomEventService',
         'setDefaultUserCard',
         'signin',
@@ -113,6 +115,7 @@ describe('Pothos GraphQL schema', () => {
     expect(sorted(Object.keys(schema.getSubscriptionType()?.getFields() ?? {}))).toEqual(
       sorted([
         '_empty',
+        'classesUpdated',
         'competitorUpdated',
         'competitorsByClassUpdated',
         'splitCompetitorsByClassUpdated',

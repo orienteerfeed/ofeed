@@ -1,3 +1,4 @@
+import { idempotentCreate } from '../idempotency/create-idempotency.js';
 import path from 'path';
 import { z } from '@hono/zod-openapi';
 import type { Context, Handler } from 'hono';
@@ -1586,6 +1587,9 @@ export function registerSecureEventRoutes(router) {
           .status(200)
           .json(successResponse('Event successfully deleted', {}, res.statusCode));
       } catch (error) {
+        if (error instanceof ConflictError) {
+          return res.status(409).json(errorResponse(error.message, res.statusCode));
+        }
         if (error instanceof ValidationError) {
           return res.status(422).json(validationResponse(error.message, res.statusCode));
         } else if (error instanceof AuthenticationError) {
@@ -1894,25 +1898,38 @@ export function registerSecureEventRoutes(router) {
         }
 
         // Everything went fine.
-        try {
-          const statusChangeMessage = await changeCompetitorStatus(
+        return idempotentCreate(
+          req.c,
+          appPrisma,
+          {
             eventId,
-            parseInt(competitorId),
-            origin,
-            status,
             userId,
-          );
-          return res
-            .status(200)
-            .json(successResponse('OK', { data: statusChangeMessage }, res.statusCode));
-        } catch (error) {
-          if (error instanceof ValidationError) {
-            return res.status(422).json(validationResponse(error.message, res.statusCode));
-          } else if (error instanceof AuthenticationError) {
-            return res.status(401).json(errorResponse(error.message, res.statusCode));
-          }
-          return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
-        }
+            operation: `status-change:${competitorId}`,
+            body: req.body,
+          },
+          async (transaction) => {
+            try {
+              const statusChangeMessage = await changeCompetitorStatus(
+                eventId,
+                parseInt(competitorId),
+                origin,
+                status,
+                userId,
+                transaction,
+              );
+              return res
+                .status(200)
+                .json(successResponse('OK', { data: statusChangeMessage }, res.statusCode));
+            } catch (error) {
+              if (error instanceof ValidationError) {
+                return res.status(422).json(validationResponse(error.message, res.statusCode));
+              } else if (error instanceof AuthenticationError) {
+                return res.status(401).json(errorResponse(error.message, res.statusCode));
+              }
+              return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+            }
+          },
+        );
       },
     ),
   );
@@ -2126,67 +2143,84 @@ export function registerSecureEventRoutes(router) {
           return ownership.response;
         }
 
-        try {
-          if (classExternalId) {
+        return idempotentCreate(
+          req.c,
+          appPrisma,
+          {
+            eventId,
+            userId,
+            operation: 'competitors',
+            body: req.body,
+          },
+          async (transaction) => {
             try {
-              const dbClassResponse = await prisma.class.findFirst({
-                where: {
-                  eventId: eventId,
-                  externalId: classExternalId,
-                },
-                select: {
-                  id: true,
-                },
+              if (classExternalId) {
+                try {
+                  const dbClassResponse = await (transaction?.tx ?? prisma).class.findFirst({
+                    where: {
+                      eventId: eventId,
+                      externalId: classExternalId,
+                    },
+                    select: {
+                      id: true,
+                    },
+                  });
+
+                  if (!dbClassResponse) {
+                    return res.status(404).json(errorResponse('Class not found', res.statusCode));
+                  }
+                  req.body.classId = dbClassResponse.id;
+                } catch (error) {
+                  logEndpoint(
+                    req.c,
+                    'error',
+                    'Class lookup by externalId failed on competitor create',
+                    {
+                      eventId,
+                      classExternalId,
+                      ...getErrorDetails(error),
+                    },
+                  );
+                  return res
+                    .status(500)
+                    .json(errorResponse('Internal Server Error', res.statusCode));
+                }
+              }
+
+              const competitorData = req.body;
+
+              // Store competitor
+              const storeCompetitorMessage = await storeCompetitor(
+                eventId,
+                competitorData,
+                userId,
+                origin,
+                transaction,
+              );
+
+              return res
+                .status(200)
+                .json(successResponse('OK', { data: storeCompetitorMessage }, 200));
+            } catch (error) {
+              logEndpoint(req.c, 'error', 'Store competitor failed', {
+                eventId,
+                ...getErrorDetails(error),
               });
 
-              if (!dbClassResponse) {
-                return res.status(404).json(errorResponse('Class not found', res.statusCode));
+              if (error instanceof ValidationError) {
+                return res.status(422).json(validationResponse(error.message, 422));
+              } else if (error instanceof ConflictError) {
+                return res.status(409).json(errorResponse(error.message, 409, error.errorCode));
+              } else if (error instanceof AuthenticationError) {
+                return res.status(401).json(errorResponse(error.message, 401));
+              } else if (error instanceof DatabaseError) {
+                return res.status(500).json(errorResponse(error.message, 500));
               }
-              req.body.classId = dbClassResponse.id;
-            } catch (error) {
-              logEndpoint(
-                req.c,
-                'error',
-                'Class lookup by externalId failed on competitor create',
-                {
-                  eventId,
-                  classExternalId,
-                  ...getErrorDetails(error),
-                },
-              );
-              return res.status(500).json(errorResponse('Internal Server Error', res.statusCode));
+
+              return res.status(500).json(errorResponse('Internal Server Error', 500));
             }
-          }
-
-          const competitorData = req.body;
-
-          // Store competitor
-          const storeCompetitorMessage = await storeCompetitor(
-            eventId,
-            competitorData,
-            userId,
-            origin,
-          );
-
-          return res.status(200).json(successResponse('OK', { data: storeCompetitorMessage }, 200));
-        } catch (error) {
-          logEndpoint(req.c, 'error', 'Store competitor failed', {
-            eventId,
-            ...getErrorDetails(error),
-          });
-
-          if (error instanceof ValidationError) {
-            return res.status(422).json(validationResponse(error.message, 422));
-          } else if (error instanceof ConflictError) {
-            return res.status(409).json(errorResponse(error.message, 409));
-          } else if (error instanceof AuthenticationError) {
-            return res.status(401).json(errorResponse(error.message, 401));
-          } else if (error instanceof DatabaseError) {
-            return res.status(500).json(errorResponse(error.message, 500));
-          }
-
-          return res.status(500).json(errorResponse('Internal Server Error', 500));
-        }
+          },
+        );
       },
     ),
   );
@@ -2287,7 +2321,7 @@ export function registerSecureEventRoutes(router) {
       if (error instanceof ValidationError) {
         return res.status(422).json(validationResponse(error.message, res.statusCode));
       } else if (error instanceof ConflictError) {
-        return res.status(409).json(errorResponse(error.message, 409));
+        return res.status(409).json(errorResponse(error.message, 409, error.errorCode));
       } else if (error instanceof AuthenticationError) {
         return res.status(401).json(errorResponse(error.message, res.statusCode));
       } else if (error instanceof DatabaseError) {
@@ -3460,6 +3494,9 @@ export function registerSecureEventRoutes(router) {
 
         return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
       } catch (error) {
+        if (error instanceof ConflictError) {
+          return res.status(409).json(errorResponse(error.message, res.statusCode));
+        }
         logEndpoint(req.c, 'error', 'Delete all event data failed', {
           eventId,
           ...getErrorDetails(error),

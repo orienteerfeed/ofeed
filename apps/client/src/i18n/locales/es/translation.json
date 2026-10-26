@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Resúmenes",
+      "Description": "Resúmenes de pagos y controles de datos del evento.",
+      "Payments": "Pagos recibidos",
+      "PaymentsDescription": "Pagos recibidos, totales y datos de cierre.",
+      "Open": "Abrir resumen",
+      "From": "Recibido desde",
+      "To": "Recibido hasta",
+      "Method": "Método",
+      "Device": "Caja / dispositivo",
+      "Search": "Buscar",
+      "SearchPlaceholder": "Referencia de pago o nombre de contacto…",
+      "All": "Todos",
+      "Refresh": "Actualizar",
+      "Export": "Exportar CSV",
+      "Print": "Imprimir",
+      "Count": "Número de pagos",
+      "Cash": "Efectivo",
+      "QR": "QR",
+      "Total": "Total",
+      "PaidAt": "Hora de recepción",
+      "Reference": "Referencia de pago",
+      "Contact": "Contacto",
+      "Amount": "Importe",
+      "Currency": "Moneda",
+      "Operator": "ID del operador",
+      "RecordedAt": "Hora de registro",
+      "Empty": "Ningún pago recibido coincide con los filtros.",
+      "Error": "No se pudo cargar el resumen de pagos.",
+      "Retry": "Reintentar",
+      "Generated": "Generado",
+      "Timezone": "Zona horaria",
+      "InvalidRange": "La fecha inicial no debe ser posterior a la final."
+    },
     "Admin": {
       "Common": {
         "Zone": "Zona de administración",
@@ -379,8 +413,8 @@
         "Verifying": "Verificando tu correo",
         "VerifyingDescription": "Por favor espera mientras verificamos tu dirección de correo electrónico.",
         "Verified": "Correo verificado",
-        "VerifiedDescription": "Tu correo ha sido verificado y ya has iniciado sesión.",
-        "ContinueDescription": "Ahora tienes acceso completo a OFeed.",
+        "VerifiedDescription": "Tu dirección de correo electrónico ha sido verificada.",
+        "ContinueDescription": "Inicia sesión para continuar en OFeed.",
         "ContinueToApp": "Continuar a OFeed",
         "AlreadyVerified": "Ya verificado",
         "AlreadyVerifiedDescription": "Tu dirección de correo electrónico ya está verificada.",
@@ -568,7 +602,8 @@
           "status_change": "Cambio de estado",
           "late_start_change": "Salida tardía",
           "note_change": "Cambio de nota",
-          "external_id_change": "Cambio de ID externo"
+          "external_id_change": "Cambio de ID externo",
+          "punch_store": "Registro de paso guardado"
         },
         "OriginLabels": {
           "START": "Salida",
@@ -639,6 +674,7 @@
           "Items": "Elementos",
           "Total": "Total",
           "Paid": "Pagado",
+          "PaymentMethod": "Método de pago",
           "Created": "Creado",
           "Status": "Estado",
           "Actions": "Acciones"
@@ -655,6 +691,29 @@
         "Paid": {
           "Yes": "Sí",
           "No": "No"
+        },
+        "PaymentLedger": {
+          "Title": "Pagos recibidos",
+          "Record": "Registrar pago",
+          "Recorded": "Pago registrado.",
+          "Received": "Recibido",
+          "Balance": "Pendiente",
+          "State": "Estado",
+          "Empty": "No se han registrado pagos.",
+          "Unpaid": "No pagado",
+          "Partial": "Pago parcial",
+          "Paid": "Pagado",
+          "Overpaid": "Pago en exceso",
+          "Methods": {
+            "CASH": "Efectivo",
+            "QR": "Pago QR"
+          },
+          "DialogTitle": "Registrar pago recibido",
+          "Method": "Método",
+          "Amount": "Importe",
+          "PaidAt": "Recibido el",
+          "Device": "Caja / dispositivo",
+          "Confirm": "Registrar pago"
         },
         "Actions": {
           "Menu": "Acciones",
@@ -2001,5 +2060,19 @@
     "longitudeRange": "La longitud debe estar entre -180 y 180",
     "zeroTimeRequired": "La hora cero es obligatoria",
     "zeroTimeFormat": "La hora debe tener el formato HH:mm o HH:mm:ss"
+  },
+  "Sessions": {
+    "Title": "Sesiones de dispositivos",
+    "Current": "Este dispositivo",
+    "Created": "Creada",
+    "LastRefresh": "Última renovación",
+    "Expires": "Caduca",
+    "Revoke": "Revocar dispositivo",
+    "Confirm": "¿Revocar todas las sesiones de este dispositivo? Deberá iniciar sesión de nuevo.",
+    "Cancel": "Cancelar",
+    "Loading": "Cargando sesiones…",
+    "Error": "No se pudieron actualizar las sesiones.",
+    "LogoutUnconfirmed": "Sesión cerrada localmente. No se pudo confirmar la revocación en el servidor; vuelva a conectarse.",
+    "RevocationDelay": "Los dispositivos revocados pueden usar un token de acceso existente durante un máximo de 15 minutos."
   }
 }

@@ -1,3 +1,5 @@
+import type { DeviceMetadata } from '@repo/shared';
+import { createDeviceSession, lockSessionUser, revokeUserSessions } from './session.service.js';
 import argon2 from 'argon2';
 import crypto from 'crypto';
 import ejs from 'ejs';
@@ -7,7 +9,10 @@ import { AuthenticationError, DatabaseError, ValidationError } from '../../excep
 import { logger } from '../../lib/logging.js';
 import prisma from '../../utils/context.js';
 import { sendEmail } from '../../utils/email.js';
-import { generateJwtTokenForLink, getJwtToken, getUserIdFromEmailVerificationToken } from '../../utils/jwtToken.js';
+import {
+  generateJwtTokenForLink,
+  getUserIdFromEmailVerificationToken,
+} from '../../utils/jwtToken.js';
 import { getLoginSuccessPayload } from '../../utils/loginUser.js';
 
 type SignupUserPayload = {
@@ -77,7 +82,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // An asynchronous function to handle user authentication
-export const authenticateUser = async (username: string, password: string) => {
+export const authenticateUser = async (
+  username: string,
+  password: string,
+  device: DeviceMetadata,
+) => {
   // Attempt to find the first user in the database with the provided email (username).
   let user;
   try {
@@ -88,7 +97,10 @@ export const authenticateUser = async (username: string, password: string) => {
       select: { id: true, password: true, active: true },
     });
   } catch (err) {
-    logger.error('Database error in authenticateUser', { action: 'authenticate-user', error: getErrorMessage(err) });
+    logger.error('Database error in authenticateUser', {
+      action: 'authenticate-user',
+      error: getErrorMessage(err),
+    });
     throw new DatabaseError(`An error occurred: ` + getErrorMessage(err));
   }
 
@@ -122,7 +134,7 @@ export const authenticateUser = async (username: string, password: string) => {
     prisma,
   });
 
-  return loginSuccessPayload;
+  return { ...loginSuccessPayload, ...(await createDeviceSession(userId, device, passwordHash)) };
 };
 
 // Function to sign up a user and send a registration confirmation email
@@ -157,13 +169,6 @@ export const signupUser = async (
       },
     });
 
-    // Generate JWT login token — user is active immediately
-    const loginSuccessPayload = await getLoginSuccessPayload({
-      userId: user.id,
-      prisma,
-    });
-    const { token } = loginSuccessPayload;
-
     // Generate separate 48h token for email verification link (does not block login)
     await sendVerificationEmailForUser({
       userId: user.id,
@@ -173,13 +178,16 @@ export const signupUser = async (
       appBaseUrl: app_base_url,
     });
 
-    // Return both the login token and the created user object
-    return { token, user };
+    // Account creation does not create a device session.
+    return { success: true, message: 'Account created. Sign in to continue.' };
   } catch (error) {
     if (error instanceof ValidationError) {
       throw error; // rethrow to be handled by the caller
     }
-    logger.error('Database error in signupUser', { action: 'signup-user', error: getErrorMessage(error) });
+    logger.error('Database error in signupUser', {
+      action: 'signup-user',
+      error: getErrorMessage(error),
+    });
     throw new DatabaseError('Failed to create user');
   }
 };
@@ -214,7 +222,7 @@ export const verifyEmail = async (token: string) => {
       });
     }
 
-    return await getLoginSuccessPayload({ userId, prisma });
+    return { success: true, message: 'Email verified. Sign in to continue.' };
   } catch (error) {
     if (error instanceof ValidationError) {
       throw error;
@@ -276,10 +284,17 @@ export const passwordResetRequest = async (email: string, app_base_url: string) 
       subject: 'OrienteerFeed - forgotten password',
       emailTo: email,
       onSuccess: () => logger.info('Password reset email sent', { action: 'password-reset-email' }),
-      onError: (error) => logger.error('Failed to send password reset email', { action: 'password-reset-email', error: getErrorMessage(error) }),
+      onError: (error) =>
+        logger.error('Failed to send password reset email', {
+          action: 'password-reset-email',
+          error: getErrorMessage(error),
+        }),
     });
   } catch (error) {
-    logger.error('Failed to render password reset email template', { action: 'password-reset-template', error: getErrorMessage(error) });
+    logger.error('Failed to render password reset email template', {
+      action: 'password-reset-template',
+      error: getErrorMessage(error),
+    });
   }
 
   return successResponse;
@@ -334,20 +349,23 @@ export const passwordResetConfirm = async (token: string, newPassword: string) =
   const salt = crypto.randomBytes(16);
   const hashedPassword = await argon2.hash(newPassword, { salt });
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { password: hashedPassword },
+  await prisma.$transaction(async (tx) => {
+    await lockSessionUser(tx, user.id);
+    const currentUser = await tx.user.findUnique({
+      where: { id: user.id },
+      select: { active: true, deletedAt: true },
+    });
+    if (!currentUser?.active || currentUser.deletedAt)
+      throw new ValidationError('Password reset token invalid or expired.');
+    const consumed = await tx.passwordResetToken.updateMany({
+      where: { id: resetToken.id, usedAt: null, expiresAt: { gt: new Date() } },
+      data: { usedAt: new Date() },
+    });
+    if (consumed.count !== 1) throw new ValidationError('Password reset token invalid or expired.');
+    await tx.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+    await revokeUserSessions(tx, user.id, 'password_reset');
   });
-
-  // Mark token as used (single-use enforcement, audit trail kept)
-  await prisma.passwordResetToken.update({
-    where: { id: resetToken.id },
-    data: { usedAt: new Date() },
-  });
-
-  const jwtToken = getJwtToken({ userId: user.id });
-
-  return { jwtToken, user };
+  return { success: true, message: 'Password reset. Sign in to continue.' };
 };
 
 export const changeAuthenticatedUserPassword = async (
@@ -385,12 +403,16 @@ export const changeAuthenticatedUserPassword = async (
     const salt = crypto.randomBytes(16);
     const hashedPassword = await argon2.hash(newPassword, { salt });
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        updatedAt: new Date(),
-      },
+    await prisma.$transaction(async (tx) => {
+      await lockSessionUser(tx, user.id);
+      const current = await tx.user.findUnique({
+        where: { id: user.id },
+        select: { password: true, active: true, deletedAt: true },
+      });
+      if (!current?.active || current.deletedAt || current.password !== user.password)
+        throw new AuthenticationError('Current password is incorrect.');
+      await tx.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+      await revokeUserSessions(tx, user.id, 'password_changed');
     });
 
     return {
@@ -402,7 +424,10 @@ export const changeAuthenticatedUserPassword = async (
       throw error;
     }
 
-    logger.error('Error in changeAuthenticatedUserPassword', { action: 'change-password', error: getErrorMessage(error) });
+    logger.error('Error in changeAuthenticatedUserPassword', {
+      action: 'change-password',
+      error: getErrorMessage(error),
+    });
     throw new DatabaseError('Failed to update password.');
   }
 };

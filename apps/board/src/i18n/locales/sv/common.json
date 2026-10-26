@@ -24,8 +24,16 @@
       "label": "Tabellinnehåll",
       "pinnedLeaders": "Antal fästa ledare",
       "showUnfinished": "Visa oavslutade (startlista, springer)",
+      "hideEmptyCategories": "Dölj klasser utan deltagare",
       "compactMode": "Kompakt läge (utan klubb, bricka)",
+      "showClub": "Klubbläge (visa klubb)",
+      "showRegistration": "Registreringsläge (visa registreringsnummer)",
       "showEmojis": "Visa emojis i tabell"
+    },
+    "commentator": {
+      "label": "Kommentator",
+      "announceWinners": "Ropa ut nya klassledare (tjeckisk röst)",
+      "enableSound": "🔊 Klicka för att aktivera kommentatorns ljud"
     },
     "classes": {
       "label": "Visade klasser",
@@ -36,14 +44,25 @@
         "name": "Namn",
         "col": "Kol.",
         "color": "Färg",
-        "order": "Ordning"
-      }
+        "order": "Ordning",
+        "mode": "Läge",
+        "places": "Platser"
+      },
+      "sourceHint": "Inställningar från datakällan (t.ex. i OFeed) har företräde och är låsta här.",
+      "fromSource": "Angiven av datakällan"
     },
     "colorOverride": {
       "auto": "Auto (från datakälla)",
       "male": "M – blå (herrar)",
       "female": "F – rosa (damer)",
       "neutral": "X – grå (neutral)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Rangordnad",
+      "Unordered": "A–Ö",
+      "UnorderedNoTimes": "A–Ö, utan tider"
+    },
+    "awardedPlaces": "Prisplatser (markerade)"
   }
 }
