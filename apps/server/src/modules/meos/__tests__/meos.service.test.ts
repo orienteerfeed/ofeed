@@ -7,9 +7,12 @@ import type { MopDocument } from '../meos.parser.js';
 
 const mockPrisma = vi.hoisted(() => {
   const tx = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
+    punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
     split: { deleteMany: vi.fn(), create: vi.fn() },
     protocol: { createMany: vi.fn(), deleteMany: vi.fn() },
     competitor: {
+      findMany: vi.fn().mockResolvedValue([]),
       create: vi.fn(),
       deleteMany: vi.fn(),
       findFirst: vi.fn(),

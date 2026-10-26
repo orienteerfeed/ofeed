@@ -1,13 +1,43 @@
 import { AthleteStatus } from '@/types/category'
 
-export const fixEventJSONResponse = async (response: Response) => {
-  const invalidJSONString = await response.text()
-  const validJSONString = invalidJSONString
-    .replaceAll('"O"', 'O')
-    .replaceAll(/\t/g, '')
-  const jsonObject = JSON.parse(validJSONString)
-  return jsonObject
+/**
+ * LiveResultat emits unescaped quotes inside strings, e.g.
+ * `"organizer": "PD "Avala" Beograd"`. Inside a string, a quote only closes it
+ * when followed by `:`, `}`, `]`, end of input, or `,` + a new key/item.
+ * Any other quote gets escaped.
+ */
+const closingQuoteLookahead = /\s*(?:[:}\]]|,\s*[{"[])/y
+
+export const repairLiveResultatJSON = (input: string) => {
+  const text = input.replaceAll('\t', '')
+  const lastChar = text.trimEnd().length - 1
+  let out = ''
+  let inString = false
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    if (char === '\\' && inString) {
+      out += char + (text[++i] ?? '')
+      continue
+    }
+    if (char !== '"') {
+      out += char
+      continue
+    }
+    if (!inString) {
+      inString = true
+      out += char
+      continue
+    }
+    closingQuoteLookahead.lastIndex = i + 1
+    const closes = i === lastChar || closingQuoteLookahead.test(text)
+    if (closes) inString = false
+    out += closes ? char : '\\"'
+  }
+  return out
 }
+
+export const fixEventJSONResponse = async (response: Response) =>
+  JSON.parse(repairLiveResultatJSON(await response.text()))
 
 export const statusMap: { [lsStatus: number]: AthleteStatus } = {
   0: AthleteStatus.Ok,

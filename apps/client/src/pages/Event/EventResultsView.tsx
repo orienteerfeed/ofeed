@@ -439,7 +439,12 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      <WinnerNotification eventId={event.id} />
+      <WinnerNotification
+        eventId={event.id}
+        categoryNames={(event.classes ?? [])
+          .filter(c => !c.resultListMode || c.resultListMode === 'Default')
+          .map(c => c.name)}
+      />
       <div className="sticky top-0 z-10 bg-background border-b border-border pb-2 mb-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1 p-0.5 bg-muted rounded-md">

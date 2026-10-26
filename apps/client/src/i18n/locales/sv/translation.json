@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Översikter",
+      "Description": "Betalningsöversikter och kontroller av tävlingsdata.",
+      "Payments": "Mottagna betalningar",
+      "PaymentsDescription": "Mottagna betalningar, summor och avstämningsunderlag.",
+      "Open": "Öppna översikt",
+      "From": "Mottaget från",
+      "To": "Mottaget till",
+      "Method": "Metod",
+      "Device": "Kassa / enhet",
+      "Search": "Sök",
+      "SearchPlaceholder": "Betalningsreferens eller kontaktnamn…",
+      "All": "Alla",
+      "Refresh": "Uppdatera",
+      "Export": "Exportera CSV",
+      "Print": "Skriv ut",
+      "Count": "Antal betalningar",
+      "Cash": "Kontant",
+      "QR": "QR",
+      "Total": "Totalt",
+      "PaidAt": "Mottaget",
+      "Reference": "Betalningsreferens",
+      "Contact": "Kontakt",
+      "Amount": "Belopp",
+      "Currency": "Valuta",
+      "Operator": "Operatörs-ID",
+      "RecordedAt": "Registrerat",
+      "Empty": "Inga mottagna betalningar matchar filtren.",
+      "Error": "Kunde inte läsa in betalningsöversikten.",
+      "Retry": "Försök igen",
+      "Generated": "Skapad",
+      "Timezone": "Tidszon",
+      "InvalidRange": "Startdatumet får inte vara senare än slutdatumet."
+    },
     "Admin": {
       "Common": {
         "Zone": "Adminzon",
@@ -379,8 +413,8 @@
         "Verifying": "Verifierar e-post",
         "VerifyingDescription": "Vänta medan vi verifierar din e-postadress.",
         "Verified": "E-post verifierad",
-        "VerifiedDescription": "Din e-post har verifierats och du är nu inloggad.",
-        "ContinueDescription": "Du har nu full tillgång till OFeed.",
+        "VerifiedDescription": "Din e-postadress har verifierats.",
+        "ContinueDescription": "Logga in för att fortsätta till OFeed.",
         "ContinueToApp": "Fortsätt till OFeed",
         "AlreadyVerified": "Redan verifierad",
         "AlreadyVerifiedDescription": "Din e-postadress är redan verifierad.",
@@ -568,7 +602,8 @@
           "status_change": "Ändring av status",
           "late_start_change": "Ändring av sen start",
           "note_change": "Ändring av kommentar",
-          "external_id_change": "Ändring av externt id"
+          "external_id_change": "Ändring av externt id",
+          "punch_store": "Stämpling sparad"
         },
         "OriginLabels": {
           "START": "Start",
@@ -656,6 +691,29 @@
         "Paid": {
           "Yes": "Ja",
           "No": "Nej"
+        },
+        "PaymentLedger": {
+          "Title": "Mottagna betalningar",
+          "Record": "Registrera betalning",
+          "Recorded": "Betalning registrerad.",
+          "Received": "Mottaget",
+          "Balance": "Återstår",
+          "State": "Status",
+          "Empty": "Inga betalningar har registrerats.",
+          "Unpaid": "Obetald",
+          "Partial": "Delvis betald",
+          "Paid": "Betald",
+          "Overpaid": "Överbetald",
+          "Methods": {
+            "CASH": "Kontant",
+            "QR": "QR-betalning"
+          },
+          "DialogTitle": "Registrera mottagen betalning",
+          "Method": "Metod",
+          "Amount": "Belopp",
+          "PaidAt": "Mottagen",
+          "Device": "Kassa / enhet",
+          "Confirm": "Registrera betalning"
         },
         "Actions": {
           "Menu": "Åtgärder",
@@ -2004,5 +2062,19 @@
       "Tooltip": "Verifierad e-postadress",
       "Label": "Verifierad e-postadress"
     }
+  },
+  "Sessions": {
+    "Title": "Enhetssessioner",
+    "Current": "Den här enheten",
+    "Created": "Skapad",
+    "LastRefresh": "Senast förnyad",
+    "Expires": "Går ut",
+    "Revoke": "Återkalla enhet",
+    "Confirm": "Återkalla alla sessioner för den här enheten? En ny inloggning krävs.",
+    "Cancel": "Avbryt",
+    "Loading": "Läser in sessioner…",
+    "Error": "Det gick inte att uppdatera enhetssessionerna.",
+    "LogoutUnconfirmed": "Utloggad lokalt. Återkallelsen på servern kunde inte bekräftas; anslut igen för att slutföra utloggningen.",
+    "RevocationDelay": "Återkallade enheter kan använda en befintlig åtkomsttoken i upp till 15 minuter."
   }
 }

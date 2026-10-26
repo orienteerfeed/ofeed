@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Insights",
+      "Description": "Payment insights and event data checks.",
+      "Payments": "Received payments",
+      "PaymentsDescription": "Received payments, totals and closing report data.",
+      "Open": "Open insight",
+      "From": "Received from",
+      "To": "Received to",
+      "Method": "Method",
+      "Device": "Cash desk / device",
+      "Search": "Search",
+      "SearchPlaceholder": "Payment reference or contact name…",
+      "All": "All",
+      "Refresh": "Refresh",
+      "Export": "Export CSV",
+      "Print": "Print",
+      "Count": "Payment count",
+      "Cash": "Cash",
+      "QR": "QR",
+      "Total": "Total",
+      "PaidAt": "Received at",
+      "Reference": "Payment reference",
+      "Contact": "Contact",
+      "Amount": "Amount",
+      "Currency": "Currency",
+      "Operator": "Operator ID",
+      "RecordedAt": "Recorded at",
+      "Empty": "No received payments match the selected filters.",
+      "Error": "Could not load the payment insight.",
+      "Retry": "Try again",
+      "Generated": "Generated",
+      "Timezone": "Timezone",
+      "InvalidRange": "The start date must not be later than the end date."
+    },
     "Admin": {
       "Common": {
         "Zone": "Admin Zone",
@@ -379,8 +413,8 @@
         "Verifying": "Verifying your email",
         "VerifyingDescription": "Please wait while we verify your email address.",
         "Verified": "Email verified",
-        "VerifiedDescription": "Your email has been verified and you are now signed in.",
-        "ContinueDescription": "You can now use OFeed with full access.",
+        "VerifiedDescription": "Your email address has been verified.",
+        "ContinueDescription": "Sign in to continue to OFeed.",
         "ContinueToApp": "Continue to OFeed",
         "AlreadyVerified": "Already verified",
         "AlreadyVerifiedDescription": "Your email address is already verified.",
@@ -568,7 +602,8 @@
           "status_change": "Status change",
           "late_start_change": "Late start change",
           "note_change": "Note change",
-          "external_id_change": "External ID change"
+          "external_id_change": "External ID change",
+          "punch_store": "Punch stored"
         },
         "OriginLabels": {
           "START": "Start",
@@ -656,6 +691,29 @@
         "Paid": {
           "Yes": "Yes",
           "No": "No"
+        },
+        "PaymentLedger": {
+          "Title": "Received payments",
+          "Record": "Record payment",
+          "Recorded": "Payment recorded.",
+          "Received": "Received",
+          "Balance": "Remaining",
+          "State": "State",
+          "Empty": "No payments have been recorded.",
+          "Unpaid": "Unpaid",
+          "Partial": "Partially paid",
+          "Paid": "Paid",
+          "Overpaid": "Overpaid",
+          "Methods": {
+            "CASH": "Cash",
+            "QR": "QR payment"
+          },
+          "DialogTitle": "Record received payment",
+          "Method": "Method",
+          "Amount": "Amount",
+          "PaidAt": "Received at",
+          "Device": "Cash desk / device",
+          "Confirm": "Record payment"
         },
         "Actions": {
           "Menu": "Actions",
@@ -2003,5 +2061,19 @@
     "longitudeRange": "Longitude must be between -180 and 180",
     "zeroTimeRequired": "Zero time is required",
     "zeroTimeFormat": "Time must be in HH:mm or HH:mm:ss format"
+  },
+  "Sessions": {
+    "Title": "Device sessions",
+    "Current": "This device",
+    "Created": "Created",
+    "LastRefresh": "Last refreshed",
+    "Expires": "Expires",
+    "Revoke": "Revoke device",
+    "Confirm": "Revoke all sessions for this device? It will need to sign in again.",
+    "Cancel": "Cancel",
+    "Loading": "Loading sessions…",
+    "Error": "Unable to update device sessions.",
+    "LogoutUnconfirmed": "Signed out locally. Server revocation could not be confirmed; reconnect to complete logout.",
+    "RevocationDelay": "Revoked devices can use an existing access token for up to 15 minutes."
   }
 }

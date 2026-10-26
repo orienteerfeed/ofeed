@@ -1,3 +1,4 @@
+import { lockSessionUser, revokeUserSessions } from '../auth/session.service.js';
 import argon2 from 'argon2';
 import { GraphQLError } from 'graphql';
 import { isRelayDiscipline } from '../../utils/relay.js';
@@ -158,9 +159,9 @@ export async function signIn(input: LoginInput) {
   const { username, password } = input;
 
   try {
-    const loginSuccessPayload = await authenticateUser(username, password);
+    const loginSuccessPayload = await authenticateUser(username, password, input);
     return {
-      token: loginSuccessPayload.token,
+      ...loginSuccessPayload,
       user: {
         id: loginSuccessPayload.user.userId,
         firstname: loginSuccessPayload.user.firstName,
@@ -169,6 +170,10 @@ export async function signIn(input: LoginInput) {
         role: loginSuccessPayload.user.role,
         organisation: loginSuccessPayload.user.organisation ?? null,
         emergencyContact: loginSuccessPayload.user.emergencyContact ?? null,
+        active: loginSuccessPayload.user.active,
+        emailVerifiedAt: loginSuccessPayload.user.emailVerifiedAt,
+        createdAt: loginSuccessPayload.user.createdAt,
+        updatedAt: loginSuccessPayload.user.updatedAt,
       },
     };
   } catch (error) {
@@ -189,19 +194,7 @@ export async function signUp(input: UserInput, activationUrl: string) {
       organisation,
     );
 
-    return {
-      token: signUpPayload.token,
-      user: {
-        id: signUpPayload.user.id,
-        firstname,
-        lastname,
-        email,
-        role: signUpPayload.user.role,
-        organisation: signUpPayload.user.organisation ?? null,
-        emergencyContact: signUpPayload.user.emergencyContact ?? null,
-      },
-      message: 'User successfuly created',
-    };
+    return signUpPayload;
   } catch (error) {
     throw toGraphQLUserMutationError(error);
   }
@@ -209,20 +202,7 @@ export async function signUp(input: UserInput, activationUrl: string) {
 
 export async function verifyUserEmail(token: string) {
   try {
-    const verificationPayload = await verifyEmail(token);
-    return {
-      token: verificationPayload.token,
-      user: {
-        id: verificationPayload.user.userId,
-        firstname: verificationPayload.user.firstName,
-        lastname: verificationPayload.user.lastName,
-        email: verificationPayload.user.email,
-        role: verificationPayload.user.role,
-        organisation: verificationPayload.user.organisation ?? null,
-        emergencyContact: verificationPayload.user.emergencyContact ?? null,
-      },
-      message: 'Email verified',
-    };
+    return await verifyEmail(token);
   } catch (error) {
     throw toGraphQLUserMutationError(error);
   }
@@ -578,12 +558,7 @@ export async function requestUserPasswordReset(email: string, resetPasswordUrl: 
 }
 
 export async function resetUserPassword(token: string, newPassword: string) {
-  const passwordResetPayload = await passwordResetConfirm(token, newPassword);
-  return {
-    token: passwordResetPayload.jwtToken,
-    user: passwordResetPayload.user,
-    message: 'Password reset successful',
-  };
+  return passwordResetConfirm(token, newPassword);
 }
 
 export async function changeCurrentUserPassword(
@@ -628,6 +603,14 @@ export async function anonymizeCurrentUserAccount(
   }
 
   await prisma.$transaction(async (tx) => {
+    await lockSessionUser(tx, userId);
+    const current = await tx.user.findUnique({
+      where: { id: userId },
+      select: { password: true, deletedAt: true },
+    });
+    if (!current || current.deletedAt || current.password !== user.password)
+      throw new AuthzError('Account changed; sign in again', 401);
+    await revokeUserSessions(tx, userId, 'account_deleted');
     const clients = await tx.oAuthClient.findMany({
       where: { userId },
       select: { id: true },

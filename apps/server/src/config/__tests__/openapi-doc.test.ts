@@ -8,6 +8,43 @@ import { HEALTH_OPENAPI } from '../../modules/health/health.openapi.js';
 import { UPLOAD_OPENAPI } from '../../modules/upload/upload.openapi.js';
 
 describe('openapi doc', () => {
+  it('allows browser clients to send Idempotency-Key', async () => {
+    const response = await app.request(`${EVENT_OPENAPI.basePath}/event-1/entries`, {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'http://localhost:5173',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'Content-Type,Idempotency-Key',
+      },
+    });
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-headers')?.toLowerCase()).toContain(
+      'idempotency-key',
+    );
+  });
+
+  it('documents optional idempotency keys and conflicts on the three create routes', async () => {
+    const response = await app.request('/doc');
+    const document = await response.json();
+    for (const suffix of [
+      '/entries',
+      '/competitors',
+      '/competitors/{competitorId}/status-change',
+    ]) {
+      const operation = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}${suffix}`].post;
+      expect(operation.parameters).toContainEqual(
+        expect.objectContaining({
+          name: 'Idempotency-Key',
+          in: 'header',
+          required: false,
+          description: expect.stringContaining('24 hours'),
+          schema: expect.objectContaining({ minLength: 1, maxLength: 255 }),
+        }),
+      );
+      expect(operation.responses['409']).toBeDefined();
+    }
+  });
+
   it('exposes only the standard liveness and readiness probes', async () => {
     const response = await app.request('/doc');
     expect(response.status).toBe(200);
@@ -20,6 +57,85 @@ describe('openapi doc', () => {
     expect(paths['/health']).toBeUndefined();
     expect(paths['/health/live']).toBeUndefined();
     expect(paths['/health/ready']).toBeUndefined();
+  });
+
+  it('publishes optional entry details, typed fee breakdowns and unconfigured-entry conflicts', async () => {
+    const response = await app.request('/doc');
+    const document = await response.json();
+    const create = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/entries`].post;
+    const item = create.requestBody.content['application/json'].schema.properties.items.items;
+    expect(item.allOf).toBeUndefined();
+    for (const field of ['registration', 'birthYear', 'card', 'cardRental']) {
+      expect(item.properties[field]).toBeDefined();
+      expect(item.required ?? []).not.toContain(field);
+    }
+    expect(item.description).toContain('required only for age-restricted classes');
+    expect(create.responses['409'].description).toContain('not configured');
+    expect(create.description).toContain('statusSummary.entriesConfigured');
+    expect(create.description).toContain('at least one of entriesOpenAt or entriesCloseAt is set');
+    expect(create.description).toContain('An unavailable payment method returns 422');
+    expect(create.description).toContain('Null class fees are treated as zero');
+    expect(create.description).toContain('contactLastname');
+    const availability =
+      document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/entry-availability`].get;
+    expect(availability.security).toEqual([]);
+    const fee =
+      availability.responses['200'].content['application/json'].schema.properties.results.properties
+        .data.properties.classes.items.properties.fee;
+    expect(fee.properties).toMatchObject({
+      amount: { type: 'number' },
+      net: { type: 'number' },
+      vat: { type: 'number' },
+    });
+    expect(fee.nullable).toBe(true);
+    expect(availability.description).toContain('lateEntryFeePercent');
+  });
+
+  it('documents attributed payment receipts, retry behavior and closing filters', async () => {
+    const response = await app.request('/doc');
+    const document = await response.json();
+    const create =
+      document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/entries/{entryId}/payments`].post;
+    expect(create.security).toEqual([{ BearerAuth: [] }]);
+    expect(create.responses['201']).toBeDefined();
+    expect(create.responses['409']).toBeDefined();
+    const input = create.requestBody.content['application/json'].schema;
+    expect(input.required).toEqual(
+      expect.arrayContaining([
+        'clientPaymentId',
+        'method',
+        'amount',
+        'currency',
+        'paidAt',
+        'deviceId',
+      ]),
+    );
+    expect(input.properties.operatorId).toBeUndefined();
+    const receipt =
+      create.responses['201'].content['application/json'].schema.properties.results.properties.data;
+    expect(receipt.required).toEqual(expect.arrayContaining(['operatorId', 'recordedAt']));
+    const list = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/payments`].get;
+    expect(list.parameters.map((p: { name: string }) => p.name)).toEqual([
+      'eventId',
+      'entryId',
+      'since',
+      'deviceId',
+    ]);
+    expect(list.description).toContain('server recordedAt');
+    const insight = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/insights/payments`].get;
+    expect(insight.security).toEqual([{ BearerAuth: [] }]);
+    const row =
+      insight.responses['200'].content['application/json'].schema.properties.results.properties.data
+        .items;
+    expect(row.required).toEqual(
+      expect.arrayContaining([
+        'paymentReference',
+        'contactFirstname',
+        'contactLastname',
+        'amount',
+        'operatorId',
+      ]),
+    );
   });
 
   it('documents all registered API endpoint groups', async () => {
@@ -51,8 +167,22 @@ describe('openapi doc', () => {
         method: 'post',
         path: `${AUTH_OPENAPI.basePath}/signin`,
         contentType: 'application/json',
-        properties: ['username', 'password'],
-        required: ['username', 'password'],
+        properties: ['username', 'password', 'deviceId', 'deviceName'],
+        required: ['username', 'password', 'deviceId', 'deviceName'],
+      },
+      {
+        method: 'post',
+        path: `${AUTH_OPENAPI.basePath}/refresh`,
+        contentType: 'application/json',
+        properties: ['refreshToken', 'deviceId'],
+        required: ['deviceId'],
+      },
+      {
+        method: 'post',
+        path: `${AUTH_OPENAPI.basePath}/logout`,
+        contentType: 'application/json',
+        properties: ['refreshToken', 'deviceId'],
+        required: ['deviceId'],
       },
       {
         method: 'post',

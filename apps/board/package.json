@@ -21,6 +21,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@repo/commentator": "workspace:*",
     "@tanstack/vue-query": "^5.104.1",
     "@unocss/reset": "^66.10.5",
     "@vueuse/core": "^13.0.0",

@@ -75,7 +75,7 @@ describe('computeClassCapacity — StartSlot mode', () => {
   it('is full when vacancyCount is 0 (max set)', () => {
     expect(
       computeClassCapacity({
-        effectiveStartMode: 'MassStart',
+        effectiveStartMode: 'StartList',
         maxNumberOfCompetitors: 100,
         competitorCount: 30,
         vacancyCount: 0,
@@ -99,7 +99,7 @@ describe('computeClassCapacity — StartSlot mode', () => {
     // 100 max, 10 registered → headroom = 90; but only 7 slots → min(7, 90) = 7
     expect(
       computeClassCapacity({
-        effectiveStartMode: 'WaveStart',
+        effectiveStartMode: 'StartList',
         maxNumberOfCompetitors: 100,
         competitorCount: 10,
         vacancyCount: 7,
@@ -117,4 +117,21 @@ describe('computeClassCapacity — StartSlot mode', () => {
       }),
     ).toEqual({ availableCount: 0, capacityMode: 'StartSlot', isFull: true });
   });
+});
+
+describe('shared start modes', () => {
+  it.each(['MassStart', 'WaveStart', 'PursuitStart', 'FreeStart'])(
+    '%s uses capacity without exclusive vacancies',
+    (effectiveStartMode) => {
+      expect(
+        computeClassCapacity({
+          effectiveStartMode,
+          maxNumberOfCompetitors: 20,
+          competitorCount: 5,
+          pendingEntryCount: 2,
+          vacancyCount: 0,
+        }),
+      ).toEqual({ availableCount: 13, capacityMode: 'FreeStart', isFull: false });
+    },
+  );
 });

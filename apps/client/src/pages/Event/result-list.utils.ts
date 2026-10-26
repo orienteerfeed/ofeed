@@ -3,7 +3,7 @@
  *
  * - `Default`  - sort by result status and race time; show final time and time loss.
  * - `Unordered` - sort alphabetically (finished competitors still first);
- *                 keep final time and time loss visible.
+ *                 keep final time visible, hide time loss.
  * - `UnorderedNoTimes` - sort alphabetically (finished competitors still first);
  *                 hide final time and time loss.
  */
@@ -32,9 +32,9 @@ export function shouldDisplayResultTimes(mode?: string | null): boolean {
   return resolveResultListMode(mode) !== 'UnorderedNoTimes';
 }
 
-/** Whether the time-loss (diff) column should be displayed. */
+/** Whether the time-loss (diff) column should be displayed; unordered lists are not a ranking. */
 export function shouldDisplayResultTimeLoss(mode?: string | null): boolean {
-  return resolveResultListMode(mode) !== 'UnorderedNoTimes';
+  return !isUnorderedResultListMode(mode);
 }
 
 /**
@@ -169,9 +169,9 @@ export function compareByStatusPriorityThenName(
 }
 
 /**
- * Format the rank cell for display. Numeric ranks become "3." in default mode but
- * are hidden ("-") in the unordered modes, where the list is intentionally not a
- * time ranking. Non-numeric status markers (emoji) pass through unchanged.
+ * Format the rank cell for display. Numeric ranks become "3." in default mode; in
+ * the unordered modes, where the list is intentionally not a time ranking, a
+ * classified finisher gets "✅". Non-numeric status markers (emoji) pass through unchanged.
  */
 export function formatResultListRank(
   position: number | string | undefined | null,
@@ -181,7 +181,7 @@ export function formatResultListRank(
     return '';
   }
   if (typeof position === 'number') {
-    return isUnorderedResultListMode(mode) ? '-' : `${position}.`;
+    return isUnorderedResultListMode(mode) ? '✅' : `${position}.`;
   }
   return position;
 }

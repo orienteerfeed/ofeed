@@ -1,3 +1,4 @@
+import { verifyAccessToken } from '../modules/auth/access-token.js';
 import type { Context, Next } from 'hono';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 import env from '../config/env.js';
@@ -86,9 +87,7 @@ type AuthenticatedBasicContext = {
 };
 
 export type BuiltAuthContext =
-  | UnauthenticatedContext
-  | AuthenticatedJwtContext
-  | AuthenticatedBasicContext;
+  UnauthenticatedContext | AuthenticatedJwtContext | AuthenticatedBasicContext;
 
 export const getJwtToken = (payload: JwtTokenPayload, expiresIn: string | number | null = null) => {
   const options = expiresIn ? { expiresIn } : {};
@@ -291,11 +290,16 @@ export const buildAuthContextFromRequest = async (
     }
 
     try {
-      const decoded = verifyToken(rawToken) as JwtPayload & {
-        clientId?: string;
-        userId?: number | string;
-      };
-
+      let decoded: JwtPayload & { clientId?: string; userId?: number | string };
+      try {
+        const claims = verifyAccessToken(rawToken);
+        decoded = { ...claims, userId: Number(claims.sub) };
+      } catch {
+        const legacy = verifyToken(rawToken);
+        if (typeof legacy.clientId !== 'string' || !legacy.clientId)
+          return unauthenticated('invalid_bearer_token');
+        decoded = legacy;
+      }
       // Optional OAuth clientId check – same logic as before
       if (decoded.clientId) {
         const tokenDetails = await oauth2Model.getAccessToken(rawToken);

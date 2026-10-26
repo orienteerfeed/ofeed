@@ -2,6 +2,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 imagePullSecrets: []
+requireImageDigests: false
 
 serviceAccount:
   create: true
@@ -23,7 +24,7 @@ api:
     CLIENT_APP_URL: "http://localhost:3000"
     CORS_ORIGIN: "http://localhost:3000"
     CORS_METHODS: "GET,HEAD,POST,PUT,DELETE,OPTIONS"
-    CORS_HEADERS: "Content-Type,Authorization,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url"
+    CORS_HEADERS: "Content-Type,Authorization,Idempotency-Key,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url"
     RATE_LIMIT_WINDOW_MS: "60000"
     RATE_LIMIT_MAX: "100"
     MAP_TILE_SESSION_REQUIRED: "true"
@@ -37,6 +38,12 @@ api:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  ingress:
+    enabled: false
+    className: traefik
+    annotations: {}
+    hosts: []
+    tls: []
 
 web:
   replicaCount: 1
@@ -105,6 +112,8 @@ vault:
   authPath: auth/kubernetes
   secretPath: ""
   kvVersion: v2
+  # KV secret containing a bundle field with the JSON signing-key bundle.
+  accessKeysSecretPath: ""
   injectFileName: api-env
   secretKeys:
     - DATABASE_URL
@@ -112,5 +121,7 @@ vault:
 
 migrations:
   enabled: true
+  hook: PreSync
+  syncWave: -1
   backoffLimit: 3
   activeDeadlineSeconds: 600

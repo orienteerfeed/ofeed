@@ -1,3 +1,12 @@
+import { z } from '@hono/zod-openapi';
+import {
+  entryOrderItemInputSchema,
+  eventEntryAvailabilitySchema,
+  entryAvailabilityClassSchema,
+  entryAvailabilitySlotSchema,
+  entryOrderSchema,
+  entryOrderItemSchema,
+} from '@repo/shared';
 import { API_DEFAULTS } from '../../constants/index.js';
 import {
   jsonBody,
@@ -26,6 +35,15 @@ import eventWriteSchema from '../../utils/validateEvent.js';
 export const EVENT_OPENAPI = {
   tag: 'Events',
   basePath: `${API_DEFAULTS.BASE_PATH}/events`,
+} as const;
+
+const idempotencyKeyParam = {
+  name: 'Idempotency-Key',
+  in: 'header',
+  required: false,
+  description:
+    'Optional case-sensitive retry key, scoped to caller and endpoint. Successful responses are replayed for 24 hours. Reusing a key with a different body returns 409. Failures can be retried. Anonymous callers must use unpredictable keys.',
+  schema: { type: 'string', minLength: 1, maxLength: 255, pattern: '^[!-~]+$' },
 } as const;
 
 const eventIdParam = {
@@ -64,7 +82,66 @@ const eventOfficialResultsSyncRequestBodySchema = zodToOpenApiSchema(
   eventOfficialResultsSyncBodySchema,
 );
 const competitorUpdateBodySchema = zodToOpenApiSchema(updateCompetitorSchema);
-const createEntryOrderRequestBodySchema = zodToOpenApiSchema(createEntryOrderBodySchema);
+const baseEntryOrderRequestBodySchema = zodToOpenApiSchema(createEntryOrderBodySchema);
+const createEntryOrderRequestBodySchema = {
+  ...baseEntryOrderRequestBodySchema,
+  properties: {
+    ...(baseEntryOrderRequestBodySchema.properties as Record<string, unknown>),
+    items: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 50,
+      items: {
+        ...zodToOpenApiSchema(entryOrderItemInputSchema),
+        description:
+          'A resolved birth year from birthYear or registration is required only for age-restricted classes. ' +
+          'Both card and cardRental may be omitted. When cardRental is true, card rental must be enabled for the event.',
+      },
+    },
+  },
+};
+
+const dateTimeSchema = z.string().datetime({ offset: true });
+const availabilityResponseSchema = zodToOpenApiSchema(
+  eventEntryAvailabilitySchema.extend({
+    entriesOpenAt: dateTimeSchema.nullable(),
+    entriesCloseAt: dateTimeSchema.nullable(),
+    classes: z.array(
+      entryAvailabilityClassSchema.extend({
+        slots: z.array(entryAvailabilitySlotSchema.extend({ startTime: dateTimeSchema })),
+      }),
+    ),
+  }),
+);
+const createdEntryResponseSchema = zodToOpenApiSchema(
+  entryOrderSchema.extend({
+    createdAt: dateTimeSchema,
+    items: z.array(entryOrderItemSchema.extend({ startTime: dateTimeSchema.nullable() })),
+  }),
+);
+
+function dataResponse(description: string, dataSchema: Record<string, unknown>) {
+  const response = okJson(description);
+  const schema = response.content['application/json'].schema;
+  return {
+    ...response,
+    content: {
+      'application/json': {
+        schema: {
+          ...schema,
+          properties: {
+            ...schema.properties,
+            results: {
+              type: 'object' as const,
+              required: ['data'],
+              properties: { data: dataSchema },
+            },
+          },
+        },
+      },
+    },
+  };
+}
 const updateEntryOrderStatusRequestBodySchema = zodToOpenApiSchema(
   updateEntryOrderStatusBodySchema,
 );
@@ -474,6 +551,7 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
         404: okJson('Event not found'),
+        409: okJson('Event contains payment receipts and cannot be deleted or reset'),
       },
     },
   },
@@ -679,11 +757,15 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       description:
         'Returns all classes for the event with their available start slots, capacity, ' +
         'and computed entry fee. Covers new entries, late entries, and competitor slot-change scenarios. ' +
-        'No authentication required.',
+        'fee is null or {amount, net, vat}: amount is the current gross fee including the late-entry surcharge, ' +
+        'net excludes VAT and vat is the VAT component. The surcharge uses event.lateEntryFeePercent ' +
+        'after entriesCloseAt unless class.lateEntryFeeDisabled is true (base 100 plus 50% = amount 150). ' +
+        'GraphQL eventClasses.fee is the base amount as Float; currentFee, feeNet and feeVat are separate Float fields. ' +
+        'Slots contain each unoccupied, unreserved class/time once. No authentication required.',
       security: [],
       parameters: [eventIdParam],
       responses: {
-        200: okJson('Entry availability'),
+        200: dataResponse('Entry availability', availabilityResponseSchema),
         422: okJson('Event not found'),
         500: okJson('Internal server error'),
       },
@@ -734,14 +816,21 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         'start list only after the order is approved and processed. Authentication is optional — ' +
         'a valid bearer token links the order to the user account. When QR Payment is selected, ' +
         'the immediate response includes a SPAYD/QR Platba payload for the generated order. When ' +
-        'Cash is selected, it includes a time-limited signed token for the order detail link.',
+        'Cash is selected, it includes a time-limited signed token for the order detail link. ' +
+        'qrPayment.payload contains personal data: its SPAYD MSG field includes contactLastname and contactFirstname; ' +
+        'displaying or printing the payload discloses the contact name. ' +
+        'The public event statusSummary.entriesConfigured is true when at least one of entriesOpenAt or entriesCloseAt is set. ' +
+        'When both are unset, creation returns 409 with "Entries are not configured for this event." ' +
+        'An unavailable payment method returns 422 during payment-method validation. Null class fees are treated as zero.',
       security: [],
-      parameters: [eventIdParam],
+      parameters: [eventIdParam, idempotencyKeyParam],
       requestBody: jsonBody(createEntryOrderRequestBodySchema),
       responses: {
-        201: okJson('Entry order created'),
+        201: dataResponse('Entry order created', createdEntryResponseSchema),
         404: okJson('Event not found'),
-        409: okJson('Entries closed, class full, or start slot unavailable'),
+        409: okJson(
+          'Entries not configured, entries closed, class full, start slot unavailable (errorCode SLOT_TAKEN), or Idempotency-Key body mismatch',
+        ),
         422: okJson('Validation error'),
         500: okJson('Internal server error'),
       },
@@ -833,13 +922,14 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       operationId: 'eventCreateCompetitor',
       summary: 'Create competitor',
       security: bearerOrBasicSecurity,
-      parameters: [eventIdParam],
+      parameters: [eventIdParam, idempotencyKeyParam],
       requestBody: jsonBody(createCompetitorBodySchema),
       responses: {
         200: okJson('Competitor created'),
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
         404: okJson('Event or class not found'),
+        409: okJson('Conflict or Idempotency-Key body mismatch'),
         422: okJson('Validation error'),
       },
     },
@@ -872,11 +962,14 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       tags: [EVENT_OPENAPI.tag],
       operationId: 'eventUpdateCompetitorById',
       summary: 'Update competitor by id',
+      description:
+        'An empty or whitespace-only note clears it to null. For effective StartList, a changed class/time must match a listed free slot; occupied, reserved or unlisted times return 409 with errorCode SLOT_TAKEN. An unchanged own time is allowed. The old slot is released atomically. A class-only update preserves the existing time and never auto-selects a slot. Other start modes permit shared times without exclusive slot selection.',
       security: bearerOrBasicSecurity,
       parameters: [eventIdParam, competitorIdParam],
       requestBody: jsonBody(competitorUpdateBodySchema),
       responses: {
         200: okJson('Competitor updated'),
+        409: okJson('Start slot unavailable or bib number already assigned'),
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
         422: okJson('Validation error'),
@@ -902,12 +995,13 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       operationId: 'eventCompetitorStatusChange',
       summary: 'Change competitor status',
       security: bearerOrBasicSecurity,
-      parameters: [eventIdParam, competitorIdParam],
+      parameters: [eventIdParam, competitorIdParam, idempotencyKeyParam],
       requestBody: jsonBody(competitorStatusChangeBodySchema),
       responses: {
         200: okJson('Competitor status changed'),
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
+        409: okJson('Conflict or Idempotency-Key body mismatch'),
         422: okJson('Validation error'),
       },
     },
@@ -928,11 +1022,13 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       tags: [EVENT_OPENAPI.tag],
       operationId: 'eventUpdateCompetitorByExternalId',
       summary: 'Update competitor by external id',
+      description: 'Uses the same note-clearing and start-slot rules as update by id.',
       security: bearerOrBasicSecurity,
       parameters: [eventIdParam, competitorExternalIdParam],
       requestBody: jsonBody(competitorExternalUpdateRequestBodySchema),
       responses: {
         200: okJson('Competitor updated'),
+        409: okJson('Start slot unavailable or bib number already assigned'),
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
         404: okJson('Competitor not found'),
@@ -1009,6 +1105,7 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
         404: okJson('Event not found'),
+        409: okJson('Event contains payment receipts and cannot be deleted or reset'),
       },
     },
   },

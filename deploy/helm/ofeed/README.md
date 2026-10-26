@@ -1,7 +1,9 @@
 # OFeed Helm Chart
 
 Chart nasazuje `web`, `api`, volitelný `board` a Argo CD `PreSync` migrační Job
-z image `ops`. MariaDB/MySQL je externí služba.
+z image `ops`. MariaDB/MySQL je externí služba. Job nejdřív aplikuje migrace a
+potom doplní číselníky zemí, měn a sportu. Seed lze opakovat a nevytváří
+uživatelská ani demonstrační data. Selhání kteréhokoli kroku zablokuje rollout.
 
 ## Image a GitOps
 
@@ -15,6 +17,30 @@ helm template ofeed ./deploy/helm/ofeed \
   --set web.image.tag=1.2.3 \
   --set ops.image.tag=1.2.3 \
   --set board.image.tag=1.2.3
+```
+
+## Ingress
+
+`ingress` routes the web application. To expose the API on a distinct host,
+configure `api.ingress`; it always routes to the API Service rather than the web
+Service. For example, the dev environment can use `dev.ofeed.live` for the web
+application and `api.dev.ofeed.live` for the API:
+
+```yaml
+ingress:
+  hosts:
+    - host: dev.ofeed.live
+      paths: [{ path: /, pathType: Prefix }]
+
+api:
+  ingress:
+    enabled: true
+    hosts:
+      - host: api.dev.ofeed.live
+        paths: [{ path: /, pathType: Prefix }]
+    tls:
+      - secretName: ofeed-dev-api-tls
+        hosts: [api.dev.ofeed.live]
 ```
 
 ## Runtime configuration
@@ -39,3 +65,28 @@ například `DATABASE_URL`, `JWT_TOKEN_SECRET_KEY` a `MAPY_API_KEY`.
 
 Podrobný Argo CD a Vault postup je v
 [`docs/DEPLOYMENT_ARGOCD.md`](../../../docs/DEPLOYMENT_ARGOCD.md).
+
+## Image digests and migration order
+
+Each component supports `image.digest: sha256:<64 hex characters>`. A digest
+renders as `repository@sha256:...` and takes precedence over `image.tag`.
+`requireImageDigests: true` rejects any enabled workload without a digest.
+Explicit tags remain supported by default for existing deployments.
+
+`migrations.hook` accepts `PreSync` (default) or `Sync`; `migrations.syncWave`
+defaults to `-1`. For an ESO-managed dev environment, use `Sync` in wave `-10`
+and set `serviceAccount.annotations.argocd.argoproj.io/sync-wave: "-20"`. The
+runtime ExternalSecret must also be ready in wave `-20`. Hook Jobs use Argo hook
+deletion policies for cleanup.
+
+## Device-session signing keys
+
+Vault Agent mode also requires `vault.accessKeysSecretPath`, a KV secret whose
+`bundle` field contains the access-signing JSON bundle. The API reads
+`/vault/secrets/access-keys.json` rather than shell-sourcing PEM keys. The Agent
+runs as UID/GID 1000 and renders this file with mode `0400`. Existing ESO/volume
+delivery can instead provide `ACCESS_JWT_KEY_FILE` through API configuration.
+Production will not start without valid ES256 keys. Configure exact same-site
+web/API origins for browser refresh cookies. See the
+[device-session runbook](../../../docs/ops/runbooks/device-sessions.md) for the
+coordinated legacy-token cutover, staged key rotation, and outage behavior.

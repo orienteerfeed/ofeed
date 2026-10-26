@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Übersichten",
+      "Description": "Zahlungsübersichten und Prüfung der Veranstaltungsdaten.",
+      "Payments": "Erhaltene Zahlungen",
+      "PaymentsDescription": "Erhaltene Zahlungen, Summen und Abschlussdaten.",
+      "Open": "Übersicht öffnen",
+      "From": "Erhalten ab",
+      "To": "Erhalten bis",
+      "Method": "Methode",
+      "Device": "Kasse / Gerät",
+      "Search": "Suchen",
+      "SearchPlaceholder": "Zahlungsreferenz oder Kontaktname…",
+      "All": "Alle",
+      "Refresh": "Aktualisieren",
+      "Export": "CSV exportieren",
+      "Print": "Drucken",
+      "Count": "Anzahl Zahlungen",
+      "Cash": "Bar",
+      "QR": "QR",
+      "Total": "Gesamt",
+      "PaidAt": "Eingangszeit",
+      "Reference": "Zahlungsreferenz",
+      "Contact": "Kontakt",
+      "Amount": "Betrag",
+      "Currency": "Währung",
+      "Operator": "Bediener-ID",
+      "RecordedAt": "Erfasst am",
+      "Empty": "Keine erhaltenen Zahlungen für die gewählten Filter.",
+      "Error": "Die Zahlungsübersicht konnte nicht geladen werden.",
+      "Retry": "Erneut versuchen",
+      "Generated": "Erstellt",
+      "Timezone": "Zeitzone",
+      "InvalidRange": "Das Startdatum darf nicht nach dem Enddatum liegen."
+    },
     "Admin": {
       "Common": {
         "Zone": "Adminbereich",
@@ -373,8 +407,8 @@
         "Verifying": "E-Mail wird verifiziert",
         "VerifyingDescription": "Bitte warten, wir verifizieren deine E-Mail-Adresse.",
         "Verified": "E-Mail verifiziert",
-        "VerifiedDescription": "Deine E-Mail wurde verifiziert und du bist jetzt angemeldet.",
-        "ContinueDescription": "Du hast nun vollen Zugang zu OFeed.",
+        "VerifiedDescription": "Deine E-Mail-Adresse wurde bestätigt.",
+        "ContinueDescription": "Melde dich an, um OFeed weiter zu nutzen.",
         "ContinueToApp": "Weiter zu OFeed",
         "AlreadyVerified": "Bereits verifiziert",
         "AlreadyVerifiedDescription": "Deine E-Mail-Adresse ist bereits verifiziert.",
@@ -836,6 +870,29 @@
           "Yes": "Ja",
           "No": "Nein"
         },
+        "PaymentLedger": {
+          "Title": "Erhaltene Zahlungen",
+          "Record": "Zahlung erfassen",
+          "Recorded": "Zahlung erfasst.",
+          "Received": "Erhalten",
+          "Balance": "Offen",
+          "State": "Status",
+          "Empty": "Keine Zahlungen erfasst.",
+          "Unpaid": "Unbezahlt",
+          "Partial": "Teilweise bezahlt",
+          "Paid": "Bezahlt",
+          "Overpaid": "Überzahlt",
+          "Methods": {
+            "CASH": "Bar",
+            "QR": "QR-Zahlung"
+          },
+          "DialogTitle": "Erhaltene Zahlung erfassen",
+          "Method": "Methode",
+          "Amount": "Betrag",
+          "PaidAt": "Erhalten am",
+          "Device": "Kasse / Gerät",
+          "Confirm": "Zahlung erfassen"
+        },
         "Actions": {
           "Menu": "Aktionen",
           "MarkPaid": "Als bezahlt markieren",
@@ -1022,7 +1079,8 @@
           "status_change": "Statusänderung",
           "late_start_change": "Verspäteter Start",
           "note_change": "Notizänderung",
-          "external_id_change": "Externe ID-Änderung"
+          "external_id_change": "Externe ID-Änderung",
+          "punch_store": "Stempel gespeichert"
         },
         "OriginLabels": {
           "START": "Start",
@@ -1768,5 +1826,19 @@
     "Routes": {
       "Board": "Board"
     }
+  },
+  "Sessions": {
+    "Title": "Gerätesitzungen",
+    "Current": "Dieses Gerät",
+    "Created": "Erstellt",
+    "LastRefresh": "Zuletzt erneuert",
+    "Expires": "Gültig bis",
+    "Revoke": "Gerät abmelden",
+    "Confirm": "Alle Sitzungen dieses Geräts widerrufen? Eine erneute Anmeldung ist erforderlich.",
+    "Cancel": "Abbrechen",
+    "Loading": "Sitzungen werden geladen…",
+    "Error": "Gerätesitzungen konnten nicht aktualisiert werden.",
+    "LogoutUnconfirmed": "Lokal abgemeldet. Der Widerruf auf dem Server wurde nicht bestätigt; stellen Sie die Verbindung wieder her.",
+    "RevocationDelay": "Abgemeldete Geräte können ein vorhandenes Zugriffstoken noch bis zu 15 Minuten verwenden."
   }
 }

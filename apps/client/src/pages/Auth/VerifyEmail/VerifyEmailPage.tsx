@@ -13,23 +13,15 @@ import { AlertCircle, CheckCircle2, Loader2, MailCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/atoms';
-import { useAuth } from '../../../hooks';
 import { AuthPageLayout } from '../../../templates';
 
-type VerificationStatus = 'loading' | 'success' | 'already_verified' | 'expired' | 'error';
+type VerificationStatus =
+  'loading' | 'success' | 'already_verified' | 'expired' | 'error';
 
 type VerifyEmailResponse = {
   verifyEmail: {
-    token: string;
-    user: {
-      id: number;
-      firstname: string;
-      lastname: string;
-      email: string;
-      role: 'USER' | 'ADMIN';
-      organisation?: string | null;
-      emergencyContact?: string | null;
-    };
+    success: boolean;
+    message?: string;
   };
 };
 
@@ -40,30 +32,22 @@ type VerifyEmailVars = {
 const VERIFY_EMAIL_MUTATION = gql`
   mutation VerifyEmail($token: String!) {
     verifyEmail(token: $token) {
-      token
-      user {
-        id
-        firstname
-        lastname
-        email
-        role
-        organisation
-        emergencyContact
-      }
+      success
+      message
     }
   }
 `;
 
 export const VerifyEmailPage = () => {
   const { t } = useTranslation(['translation', 'common']);
-  const { signin } = useAuth();
   const { token } = useParams({ from: '/auth/verify-email/$token' });
   const hasVerifiedRef = useRef(false);
   const [status, setStatus] = useState<VerificationStatus>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [verifyEmailMutation] = useMutation<VerifyEmailResponse, VerifyEmailVars>(
-    VERIFY_EMAIL_MUTATION,
-  );
+  const [verifyEmailMutation] = useMutation<
+    VerifyEmailResponse,
+    VerifyEmailVars
+  >(VERIFY_EMAIL_MUTATION);
 
   useEffect(() => {
     if (hasVerifiedRef.current) return;
@@ -74,15 +58,16 @@ export const VerifyEmailPage = () => {
         const { data } = await verifyEmailMutation({ variables: { token } });
 
         const payload = data?.verifyEmail;
-        if (!payload?.token || !payload?.user) {
+        if (!payload?.success) {
           throw new Error('Missing verification payload');
         }
 
-        signin({ token: payload.token, user: payload.user });
         setStatus('success');
       } catch (error: unknown) {
         const msg =
-          error instanceof Error ? error.message : t('Errors.Generic', 'Something went wrong');
+          error instanceof Error
+            ? error.message
+            : t('Errors.Generic', 'Something went wrong');
         const lower = msg.toLowerCase();
 
         if (lower.includes('expired')) {
@@ -95,10 +80,12 @@ export const VerifyEmailPage = () => {
         }
       }
     })();
-  }, [verifyEmailMutation, signin, t, token]);
+  }, [verifyEmailMutation, t, token]);
 
   const icon = {
-    loading: <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />,
+    loading: (
+      <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+    ),
     success: <CheckCircle2 className="h-12 w-12 text-green-500" />,
     already_verified: <MailCheck className="h-12 w-12 text-blue-500" />,
     expired: <AlertCircle className="h-12 w-12 text-yellow-500" />,
@@ -116,7 +103,9 @@ export const VerifyEmailPage = () => {
   const description = {
     loading: t('Pages.Auth.VerifyEmailPage.VerifyingDescription'),
     success: t('Pages.Auth.VerifyEmailPage.VerifiedDescription'),
-    already_verified: t('Pages.Auth.VerifyEmailPage.AlreadyVerifiedDescription'),
+    already_verified: t(
+      'Pages.Auth.VerifyEmailPage.AlreadyVerifiedDescription'
+    ),
     expired: t('Pages.Auth.VerifyEmailPage.TokenExpiredDescription'),
     error: errorMessage ?? t('Pages.Auth.VerifyEmailPage.FailedDescription'),
   }[status];
@@ -131,14 +120,15 @@ export const VerifyEmailPage = () => {
         </CardHeader>
 
         <CardContent className="text-center text-sm text-muted-foreground">
-          {status === 'success' && t('Pages.Auth.VerifyEmailPage.ContinueDescription')}
+          {status === 'success' &&
+            t('Pages.Auth.VerifyEmailPage.ContinueDescription')}
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-4">
           {(status === 'success' || status === 'already_verified') && (
-            <Link to="/" className="w-full">
+            <Link to="/auth/signin" className="w-full">
               <Button className="w-full">
-                {t('Pages.Auth.VerifyEmailPage.ContinueToApp')}
+                {t('Pages.Auth.VerifyEmailPage.BackToSignIn')}
               </Button>
             </Link>
           )}

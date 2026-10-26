@@ -1,12 +1,46 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Vue d’ensemble",
+      "Description": "Récapitulatifs des paiements et contrôles des données.",
+      "Payments": "Paiements reçus",
+      "PaymentsDescription": "Paiements reçus, totaux et données de clôture.",
+      "Open": "Ouvrir le récapitulatif",
+      "From": "Reçu du",
+      "To": "Reçu au",
+      "Method": "Méthode",
+      "Device": "Caisse / appareil",
+      "Search": "Rechercher",
+      "SearchPlaceholder": "Référence de paiement ou nom du contact…",
+      "All": "Tous",
+      "Refresh": "Actualiser",
+      "Export": "Exporter CSV",
+      "Print": "Imprimer",
+      "Count": "Nombre de paiements",
+      "Cash": "Espèces",
+      "QR": "QR",
+      "Total": "Total",
+      "PaidAt": "Heure de réception",
+      "Reference": "Référence de paiement",
+      "Contact": "Contact",
+      "Amount": "Montant",
+      "Currency": "Devise",
+      "Operator": "ID opérateur",
+      "RecordedAt": "Heure d’enregistrement",
+      "Empty": "Aucun paiement reçu ne correspond aux filtres.",
+      "Error": "Impossible de charger le récapitulatif des paiements.",
+      "Retry": "Réessayer",
+      "Generated": "Généré",
+      "Timezone": "Fuseau horaire",
+      "InvalidRange": "La date de début ne doit pas dépasser la date de fin."
+    },
     "Auth": {
       "VerifyEmailPage": {
         "Verifying": "Vérification de votre e-mail",
         "VerifyingDescription": "Veuillez patienter pendant la vérification de votre adresse e-mail.",
         "Verified": "E-mail vérifié",
-        "VerifiedDescription": "Votre e-mail a été vérifié et vous êtes maintenant connecté.",
-        "ContinueDescription": "Vous pouvez maintenant utiliser OFeed avec un accès complet.",
+        "VerifiedDescription": "Votre adresse e-mail a été vérifiée.",
+        "ContinueDescription": "Connectez-vous pour continuer sur OFeed.",
         "ContinueToApp": "Continuer vers OFeed",
         "AlreadyVerified": "Déjà vérifié",
         "AlreadyVerifiedDescription": "Votre adresse e-mail est déjà vérifiée.",
@@ -799,6 +833,29 @@
           "Yes": "Oui",
           "No": "Non"
         },
+        "PaymentLedger": {
+          "Title": "Paiements reçus",
+          "Record": "Enregistrer le paiement",
+          "Recorded": "Paiement enregistré.",
+          "Received": "Reçu",
+          "Balance": "Restant",
+          "State": "État",
+          "Empty": "Aucun paiement n’a été enregistré.",
+          "Unpaid": "Non payé",
+          "Partial": "Partiellement payé",
+          "Paid": "Payé",
+          "Overpaid": "Trop-perçu",
+          "Methods": {
+            "CASH": "Espèces",
+            "QR": "Paiement QR"
+          },
+          "DialogTitle": "Enregistrer un paiement reçu",
+          "Method": "Méthode",
+          "Amount": "Montant",
+          "PaidAt": "Reçu le",
+          "Device": "Caisse / appareil",
+          "Confirm": "Enregistrer le paiement"
+        },
         "Actions": {
           "Menu": "Actions",
           "MarkPaid": "Marquer comme payée",
@@ -1135,5 +1192,19 @@
       "Loading": "Chargement des données...",
       "Error": "Échec du chargement des données."
     }
+  },
+  "Sessions": {
+    "Title": "Sessions des appareils",
+    "Current": "Cet appareil",
+    "Created": "Créée",
+    "LastRefresh": "Dernier renouvellement",
+    "Expires": "Expiration",
+    "Revoke": "Révoquer l’appareil",
+    "Confirm": "Révoquer toutes les sessions de cet appareil ? Une nouvelle connexion sera nécessaire.",
+    "Cancel": "Annuler",
+    "Loading": "Chargement des sessions…",
+    "Error": "Impossible de mettre à jour les sessions.",
+    "LogoutUnconfirmed": "Déconnexion locale effectuée. La révocation sur le serveur n’a pas été confirmée ; reconnectez-vous pour terminer.",
+    "RevocationDelay": "Les appareils révoqués peuvent utiliser un jeton d’accès existant pendant 15 minutes au maximum."
   }
 }
