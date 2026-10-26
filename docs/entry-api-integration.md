@@ -126,3 +126,16 @@ to each deployed database; application filtering does not repair historical rows
 
 The CORS allowlist is unchanged. Electron integrations using localhost or file
 origins continue to use their existing main-process HTTP workaround.
+
+
+## Retrying creates
+
+Send a fresh unpredictable `Idempotency-Key` (for example a UUID) with each new
+entry order, competitor create or competitor status change. Keep the same key
+and body for every retry of that operation. The server replays the successful
+HTTP status and JSON body for 24 hours, including the original entry detail
+access token and payment instructions. A changed body with the same live key
+returns 409. Keys are scoped to caller, event and endpoint; stay in the same
+authentication context when retrying. Failed requests can be corrected and
+retried; requests without the header can create duplicates. See the
+[specification](specs/create-idempotency.md) for expiry and concurrency details.

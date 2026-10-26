@@ -1,3 +1,4 @@
+import type { CreateTransaction } from '../idempotency/create-idempotency.js';
 import {
   eventPunchTransaction,
   lockPunchEvent,
@@ -93,7 +94,11 @@ export type EventVisibilityUpdateResult = {
 };
 
 export type EventSlugAvailabilityReason =
-  'TOO_SHORT' | 'TOO_LONG' | 'INVALID_FORMAT' | 'RESERVED' | 'TAKEN';
+  | 'TOO_SHORT'
+  | 'TOO_LONG'
+  | 'INVALID_FORMAT'
+  | 'RESERVED'
+  | 'TAKEN';
 
 export type EventSlugAvailability = {
   slug: string;
@@ -548,11 +553,15 @@ export const changeCompetitorStatus = async (
   origin: StatusChangeInput['origin'],
   status: StatusChangeInput['status'],
   userId: number,
+  transaction?: CreateTransaction,
 ) => {
-  const result = await eventPunchTransaction(prisma, eventId, (tx) =>
-    changeCompetitorStatusInTransaction(tx, eventId, competitorId, origin, status, userId),
-  );
-  await publishPunchChanges(eventId, result.changes);
+  const operation = (tx: Prisma.TransactionClient) =>
+    changeCompetitorStatusInTransaction(tx, eventId, competitorId, origin, status, userId);
+  const result = transaction
+    ? await operation(transaction.tx)
+    : await eventPunchTransaction(prisma, eventId, operation);
+  if (transaction) transaction.afterCommit.push(() => publishPunchChanges(eventId, result.changes));
+  else await publishPunchChanges(eventId, result.changes);
   return result.message;
 };
 
@@ -1116,14 +1125,15 @@ export const storeCompetitor = async (
   competitorData: StoreCompetitorData,
   userId: number,
   origin: string,
+  transaction?: CreateTransaction,
 ) => {
-  const result = await eventPunchTransaction(prisma, eventId, (tx) =>
-    storeCompetitorInTransaction(tx, eventId, competitorData, userId, origin),
-  );
-  await publishPunchChanges(eventId, result.changes);
-  // Class competitor counts changed (for example, a board may now show a
-  // previously empty class). Publish only after the transaction has committed.
-  publishClassesUpdated(eventId);
+  const operation = (tx: Prisma.TransactionClient) =>
+    storeCompetitorInTransaction(tx, eventId, competitorData, userId, origin);
+  const result = transaction
+    ? await operation(transaction.tx)
+    : await eventPunchTransaction(prisma, eventId, operation);
+  if (transaction) transaction.afterCommit.push(() => publishPunchChanges(eventId, result.changes));
+  else await publishPunchChanges(eventId, result.changes);
   return result.response;
 };
 

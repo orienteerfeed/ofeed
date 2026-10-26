@@ -1,3 +1,4 @@
+import type { CreateTransaction } from '../idempotency/create-idempotency.js';
 import crypto from 'node:crypto';
 
 import {
@@ -351,9 +352,10 @@ function resolvePaymentLinkLanguage(value: string | undefined): string {
  * {@link processEntryOrder} once the order is approved.
  */
 export async function createEntryOrder(
-  prisma: AppPrismaClient,
+  prisma: AppPrismaClient | Prisma.TransactionClient,
   context: CreateEntryOrderContext,
   input: CreateEntryOrderInput,
+  transaction?: CreateTransaction,
 ): Promise<CreatedEntryOrder> {
   const { eventId, userId } = context;
   const now = context.now ?? new Date();
@@ -574,11 +576,17 @@ export async function createEntryOrder(
       );
       // E-mail delivery is deliberately a non-blocking side effect: the persisted
       // entry remains valid even if Resend or template rendering is unavailable.
-      void notifyEntryOrderReceived({ ...serialized, detailAccessToken }, event, {
-        method: input.paymentMethod,
-        paymentUrl,
-        qrPayment,
-      });
+      const notify = () =>
+        notifyEntryOrderReceived({ ...serialized, detailAccessToken }, event, {
+          method: input.paymentMethod,
+          paymentUrl,
+          qrPayment,
+        });
+      if (transaction)
+        transaction.afterCommit.push(() => {
+          void notify();
+        });
+      else void notify();
       const result: CreatedEntryOrder = {
         ...serialized,
         detailAccessToken,
