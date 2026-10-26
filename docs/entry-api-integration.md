@@ -16,7 +16,40 @@ A missing token returns `extensions.code: UNAUTHENTICATED`, including when the
 supplied order ID does not exist. Authenticated callers still need event owner or
 admin access.
 
+## Record received payments and prepare closing reports
+
+Use `POST /rest/v1/events/{eventId}/entries/{entryId}/payments` for actual CASH/QR
+receipts. Supply `clientPaymentId` (UUID), `method`, positive `amount`, matching
+`currency`, timezone-qualified `paidAt` and `deviceId`. Both payment endpoints
+require a user JWT and event owner/admin access. The server attributes the operator.
+
+New receipts return 201 in `results.data`; identical retries return 200 with the
+original receipt. Reusing a UUID with different content returns 409. Keep each
+UUID stable across network retries. UUID uniqueness is per event across desks.
+Receipt totals atomically determine paid status; partial payments and overpayments
+are allowed. The first receipt replaces the historical Boolean interpretation;
+a partial first payment can clear a manually set paid flag. Boolean paid updates
+then return a GraphQL `CONFLICT`. Receipts are immutable; refunds are not supported.
+
+Use `GET /rest/v1/events/{eventId}/payments` for a complete closing dataset, or
+filter by `entryId`, `deviceId` and inclusive `since` (server `recordedAt`, not `paidAt`).
+Responses include entry ID, method, amount, currency, device, operator and both
+timestamps. Deduplicate overlapping incremental reads by receipt ID. Compute totals
+by currency and method. A full query is authoritative for closing; incremental
+queries are not a change-stream cursor and clients should overlap their reads.
+Event deletion/reset returns 409 when receipts exist. See the
+[payment spec](specs/entry-payments.md) and the running `/doc` for exact schemas.
+
+## Received payment insights
+
+The owner/admin Insights UI consumes `GET /rest/v1/events/{eventId}/insights/payments`.
+It returns all receipts enriched with current entry `paymentReference`,
+`contactFirstname` and `contactLastname` in `results.data`. It requires a user JWT
+and event owner/admin access. UI filters use `paidAt` calendar dates in the event
+timezone; they do not use the synchronization endpoint's `since` filter.
+
 ## Validate before collecting payment
+
 
 For items in `POST /rest/v1/events/{eventId}/entries`:
 

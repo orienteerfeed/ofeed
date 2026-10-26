@@ -29,6 +29,15 @@ export const PATHNAMES = {
     params: { eventId } as const,
     url: `/events/${eventId}/report`,
   }),
+  eventInsights: (eventId: string) => ({
+    to: '/events/$eventId/insights',
+    params: { eventId } as const,
+    url: `/events/${eventId}/insights`,
+  }),
+  eventPaymentInsight: (eventId: string) => ({
+    to: '/events/$eventId/insights/payments',
+    params: { eventId } as const,
+  }),
   eventEntries: (eventId: string) => ({
     to: '/events/$eventId/entries',
     params: { eventId } as const,

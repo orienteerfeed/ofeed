@@ -1586,6 +1586,9 @@ export function registerSecureEventRoutes(router) {
           .status(200)
           .json(successResponse('Event successfully deleted', {}, res.statusCode));
       } catch (error) {
+        if (error instanceof ConflictError) {
+          return res.status(409).json(errorResponse(error.message, res.statusCode));
+        }
         if (error instanceof ValidationError) {
           return res.status(422).json(validationResponse(error.message, res.statusCode));
         } else if (error instanceof AuthenticationError) {
@@ -3460,6 +3463,9 @@ export function registerSecureEventRoutes(router) {
 
         return res.status(200).json(successResponse('OK', { data: deleteMessage }, res.statusCode));
       } catch (error) {
+        if (error instanceof ConflictError) {
+          return res.status(409).json(errorResponse(error.message, res.statusCode));
+        }
         logEndpoint(req.c, 'error', 'Delete all event data failed', {
           eventId,
           ...getErrorDetails(error),

@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Insights",
+      "Description": "Payment insights and event data checks.",
+      "Payments": "Received payments",
+      "PaymentsDescription": "Received payments, totals and closing report data.",
+      "Open": "Open insight",
+      "From": "Received from",
+      "To": "Received to",
+      "Method": "Method",
+      "Device": "Cash desk / device",
+      "Search": "Search",
+      "SearchPlaceholder": "Payment reference or contact name…",
+      "All": "All",
+      "Refresh": "Refresh",
+      "Export": "Export CSV",
+      "Print": "Print",
+      "Count": "Payment count",
+      "Cash": "Cash",
+      "QR": "QR",
+      "Total": "Total",
+      "PaidAt": "Received at",
+      "Reference": "Payment reference",
+      "Contact": "Contact",
+      "Amount": "Amount",
+      "Currency": "Currency",
+      "Operator": "Operator ID",
+      "RecordedAt": "Recorded at",
+      "Empty": "No received payments match the selected filters.",
+      "Error": "Could not load the payment insight.",
+      "Retry": "Try again",
+      "Generated": "Generated",
+      "Timezone": "Timezone",
+      "InvalidRange": "The start date must not be later than the end date."
+    },
     "Admin": {
       "Common": {
         "Zone": "Admin Zone",
@@ -657,6 +691,26 @@
         "Paid": {
           "Yes": "Yes",
           "No": "No"
+        },
+        "PaymentLedger": {
+          "Title": "Received payments",
+          "Record": "Record payment",
+          "Recorded": "Payment recorded.",
+          "Received": "Received",
+          "Balance": "Remaining",
+          "State": "State",
+          "Empty": "No payments have been recorded.",
+          "Unpaid": "Unpaid",
+          "Partial": "Partially paid",
+          "Paid": "Paid",
+          "Overpaid": "Overpaid",
+          "Methods": { "CASH": "Cash", "QR": "QR payment" },
+          "DialogTitle": "Record received payment",
+          "Method": "Method",
+          "Amount": "Amount",
+          "PaidAt": "Received at",
+          "Device": "Cash desk / device",
+          "Confirm": "Record payment"
         },
         "Actions": {
           "Menu": "Actions",

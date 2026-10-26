@@ -1,5 +1,39 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Übersichten",
+      "Description": "Zahlungsübersichten und Prüfung der Veranstaltungsdaten.",
+      "Payments": "Erhaltene Zahlungen",
+      "PaymentsDescription": "Erhaltene Zahlungen, Summen und Abschlussdaten.",
+      "Open": "Übersicht öffnen",
+      "From": "Erhalten ab",
+      "To": "Erhalten bis",
+      "Method": "Methode",
+      "Device": "Kasse / Gerät",
+      "Search": "Suchen",
+      "SearchPlaceholder": "Zahlungsreferenz oder Kontaktname…",
+      "All": "Alle",
+      "Refresh": "Aktualisieren",
+      "Export": "CSV exportieren",
+      "Print": "Drucken",
+      "Count": "Anzahl Zahlungen",
+      "Cash": "Bar",
+      "QR": "QR",
+      "Total": "Gesamt",
+      "PaidAt": "Eingangszeit",
+      "Reference": "Zahlungsreferenz",
+      "Contact": "Kontakt",
+      "Amount": "Betrag",
+      "Currency": "Währung",
+      "Operator": "Bediener-ID",
+      "RecordedAt": "Erfasst am",
+      "Empty": "Keine erhaltenen Zahlungen für die gewählten Filter.",
+      "Error": "Die Zahlungsübersicht konnte nicht geladen werden.",
+      "Retry": "Erneut versuchen",
+      "Generated": "Erstellt",
+      "Timezone": "Zeitzone",
+      "InvalidRange": "Das Startdatum darf nicht nach dem Enddatum liegen."
+    },
     "Admin": {
       "Common": {
         "Zone": "Adminbereich",
@@ -835,6 +869,26 @@
         "Paid": {
           "Yes": "Ja",
           "No": "Nein"
+        },
+        "PaymentLedger": {
+          "Title": "Erhaltene Zahlungen",
+          "Record": "Zahlung erfassen",
+          "Recorded": "Zahlung erfasst.",
+          "Received": "Erhalten",
+          "Balance": "Offen",
+          "State": "Status",
+          "Empty": "Keine Zahlungen erfasst.",
+          "Unpaid": "Unbezahlt",
+          "Partial": "Teilweise bezahlt",
+          "Paid": "Bezahlt",
+          "Overpaid": "Überzahlt",
+          "Methods": { "CASH": "Bar", "QR": "QR-Zahlung" },
+          "DialogTitle": "Erhaltene Zahlung erfassen",
+          "Method": "Methode",
+          "Amount": "Betrag",
+          "PaidAt": "Erhalten am",
+          "Device": "Kasse / Gerät",
+          "Confirm": "Zahlung erfassen"
         },
         "Actions": {
           "Menu": "Aktionen",

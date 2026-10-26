@@ -106,6 +106,12 @@ export const ENDPOINTS = {
     `${apiPrefix}/events/${eventId}/entry-payment-methods`,
   eventEntries: (eventId: string | number): string =>
     `${apiPrefix}/events/${eventId}/entries`,
+  eventPaymentInsights: (eventId: string): string =>
+    `${apiPrefix}/events/${eventId}/insights/payments`,
+  eventPayments: (eventId: string | number, params?: QueryParams): string =>
+    `${apiPrefix}/events/${eventId}/payments${qs(params)}`,
+  entryPayments: (eventId: string | number, entryId: string): string =>
+    `${apiPrefix}/events/${eventId}/entries/${entryId}/payments`,
   eventChangelog: (eventId: string | number, params?: QueryParams): string =>
     `${apiPrefix}/events/${eventId}/changelog${qs(params)}`,
   markChangelogProcessed: (

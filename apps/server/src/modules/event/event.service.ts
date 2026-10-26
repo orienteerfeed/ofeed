@@ -1529,6 +1529,9 @@ export const deleteAllEventData = async (
   if (db === prisma)
     return eventPunchTransaction(prisma, eventId, (tx) => deleteAllEventData(eventId, tx));
   await lockPunchEvent(db, eventId);
+  if (await db.entryPayment.count({ where: { eventId } })) {
+    throw new ConflictError('Cannot delete event data containing payment receipts.');
+  }
   try {
     // Step 1: Delete competitors, protocols, splits
     await deleteEventCompetitorsAndProtocols(eventId, db);
@@ -1590,6 +1593,13 @@ export const deleteAllEventData = async (
     });
   } catch (err) {
     if (isPunchWriteConflict(err)) throw err;
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2003' &&
+      (await db.entryPayment.count({ where: { eventId } }))
+    ) {
+      throw new ConflictError('Cannot delete event data containing payment receipts.');
+    }
     console.error('Failed to delete all event data:', err);
     throw new DatabaseError('Error deleting all event data');
   }

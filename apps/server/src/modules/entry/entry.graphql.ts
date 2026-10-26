@@ -1,3 +1,5 @@
+import { GraphQLError } from 'graphql';
+import { ConflictError } from '../../exceptions/index.js';
 import { builder } from '../../graphql/builder.js';
 import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
@@ -115,7 +117,7 @@ builder.mutationFields((t) => ({
           cardRental: item.cardRental,
           startTime: item.startTime?.toISOString(),
         })),
-      }).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update entry order'));
+      }).catch((err: unknown) => rethrowEntryWriteError(err, 'Failed to update entry order'));
       return context.prisma.entry.findUniqueOrThrow({ ...query, where: { id: args.entryId } });
     },
   }),
@@ -163,7 +165,7 @@ builder.mutationFields((t) => ({
       await entryOrderPaidUpdateForGraphQL(context.prisma, context.auth, {
         entryId: args.entryId,
         paid: args.paid,
-      }).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to update entry payment'));
+      }).catch((err: unknown) => rethrowEntryWriteError(err, 'Failed to update entry payment'));
 
       return context.prisma.entry.findUniqueOrThrow({
         ...query,
@@ -190,3 +192,10 @@ builder.mutationFields((t) => ({
     },
   }),
 }));
+
+function rethrowEntryWriteError(err: unknown, fallback: string): never {
+  if (err instanceof ConflictError) {
+    throw new GraphQLError(err.message, { extensions: { code: 'CONFLICT' } });
+  }
+  return rethrowAuthzOrError(err, fallback);
+}

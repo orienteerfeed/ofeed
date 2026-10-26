@@ -8,6 +8,9 @@ not reopen an accepted decision without new context and a superseding ADR.
 | ----------------------------------------------- | -------- | ------------------------------------------------------------ |
 | [0001](0001-record-architecture-decisions.md)   | accepted | Record architecture decisions using MADR-lite                |
 | [0002](0002-contracts-and-module-boundaries.md) | accepted | Preserve code-owned contracts and feature service boundaries |
+| [0004](0004-entry-payment-ledger.md) | accepted | Immutable entry receipts and receipt-derived paid status |
+
+- [0003](0003-punch-observation-ledger.md): proposed punch ledger and event write serialization.
 
 - [0003](0003-punch-observation-ledger.md): proposed punch ledger and event write serialization.
 

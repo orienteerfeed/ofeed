@@ -72,3 +72,19 @@ retry and physical uniqueness, atomic rollback, pending assignment, timing/statu
 precedence, snapshots and deletion. Default server tests skip this suite when the
 variable is absent. Never point this suite at a production or shared development
 database. Prisma generation and applying migrations are separate prerequisites.
+## Payment concurrency integration tests
+
+Payment integration tests require a disposable local MariaDB database named
+`ofeed_payment_test` (or `ofeed_payment_test_*`) with current migrations applied.
+The suite rejects non-local hosts and other database names. It creates synthetic
+fixtures and removes them after each test; default server tests skip it.
+
+```bash
+PAYMENT_TEST_DATABASE_URL='mysql://test-user:test-password@127.0.0.1:13381/ofeed_payment_test' \
+  pnpm --filter ./apps/server exec vitest run src/modules/entry/__tests__/entry-payment.integration.test.ts
+```
+
+The suite verifies concurrent payments and retries, races with manual updates and
+repricing, currency protection, atomic rollback, report filters and database
+constraints. Never point it at a shared or production database. Prisma generation
+and migration deployment to the disposable database are separate prerequisites.

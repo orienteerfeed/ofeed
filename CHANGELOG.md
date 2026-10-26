@@ -10,6 +10,11 @@ and this project adheres to
 
 ### Added
 
+- Event Insights catalog with received-payment filtering, currency totals, CSV export
+  and printing for event owners and administrators.
+
+- Auditable CASH/QR entry payment receipts with retry-safe recording, operator and
+  device attribution, and event/desk closing-report endpoints.
 - Event-scoped SRR/SI readout punch ingestion with durable retry identities,
   cross-device deduplication, delayed card matching and live result updates.
 
@@ -25,6 +30,9 @@ and this project adheres to
   Kubernetes Secret or Vault Agent secret delivery.
 
 ### Changed
+
+- Entries with payment receipts derive paid status from their recorded total and
+  reject manual paid overrides, currency changes and deletion of their payment history.
 
 - Standardized production Node images on Node 24.15.0 Bookworm slim and moved
   client router devtools to development-only dependencies.
