@@ -2,7 +2,12 @@ import { computed, ref, type Ref } from 'vue'
 
 import { useDataProvider } from './providers/useDataProvider'
 import { AthleteStatus } from '@/types/category'
-import type { Category, RawAthlete, AthleteWithStats } from '@/types/category'
+import type {
+  Category,
+  RawAthlete,
+  AthleteWithStats,
+  ResultMode,
+} from '@/types/category'
 import type { Competition } from '@/types/competition'
 import { formatTimeOrienteering } from '@/utils/dateTime'
 
@@ -64,16 +69,38 @@ export function useAthletes({
 
 export function useFinishedAthletes(
   athletes: Ref<ClassifyAthletes>,
-  pinnedCount: Ref<number> = ref(1)
+  pinnedCount: Ref<number> = ref(1),
+  resultMode: Ref<ResultMode> = ref('Default')
 ) {
-  const finishedAthletes = computed(() => {
+  const finishedAthletes = computed((): ClassifiedFinishedAthletes => {
     if (!athletes.value.finished.length) return { pinnedRows: [], restRows: [] }
     const athletesCopy = [...athletes.value.finished]
     athletesCopy.sort(finishedAthleteSortFunction)
-    return formatFinishedAthletes(athletesCopy, pinnedCount.value)
+    if (resultMode.value === 'Default')
+      return formatFinishedAthletes(athletesCopy, pinnedCount.value)
+
+    // Unordered: not a ranking, so no ranks, loss or pinning, alphabetical.
+    const hideTimes = resultMode.value === 'UnorderedNoTimes'
+    const restRows = formatFinishedAthletes(athletesCopy, 0)
+      .restRows.map((athlete) => ({
+        ...athlete,
+        rank: undefined,
+        loss: undefined,
+        ...(hideTimes && { time: undefined }),
+      }))
+      .sort(unorderedAthleteSortFunction)
+    return { pinnedRows: [], restRows }
   })
 
   return finishedAthletes
+}
+
+function unorderedAthleteSortFunction(a: RawAthlete, b: RawAthlete) {
+  if (a.status !== b.status) return a.status - b.status
+  return (
+    a.surname.localeCompare(b.surname, undefined, { sensitivity: 'base' }) ||
+    a.firstName.localeCompare(b.firstName, undefined, { sensitivity: 'base' })
+  )
 }
 
 function finishedAthleteSortFunction(a: RawAthlete, b: RawAthlete) {

@@ -6,12 +6,15 @@ import { useTimeHelpers } from '@/composables/useTimeHelpers'
 import { AthleteStatus } from '@/types/category'
 import type { AthleteWithStats } from '@/types/category'
 import { formatTimeOrienteering } from '@/utils/dateTime'
+import { rowGridColumns } from '@/utils/tableLayout'
 
 const props = defineProps<{
   data: AthleteWithStats
   isEven: boolean
   isVisible: boolean
   isCompact: boolean
+  showClub?: boolean
+  showRegistration?: boolean
   showEmojis: boolean
   timezone?: string
 }>()
@@ -39,15 +42,21 @@ const timeRunning = computed(() => {
 })
 const timeRunningDisplay = computed(() => timeRunning.value.slice(0, 8))
 
-const gridClass = computed(() =>
-  props.isCompact ? 'table-row-grid-compact' : 'table-row-grid'
-)
+const isClubShown = computed(() => !props.isCompact || props.showClub)
+const gridStyle = computed(() => ({
+  gridTemplateColumns: rowGridColumns({
+    compact: props.isCompact,
+    club: isClubShown.value,
+    registration: props.showRegistration,
+  }),
+}))
 </script>
 
 <template>
   <div
-    :class="[bgColor, gridClass]"
-    class="grid table-row-grid gap-2 px-3 py-1.5 rounded-lg items-center"
+    :class="bgColor"
+    :style="gridStyle"
+    class="grid gap-2 px-3 py-1.5 rounded-lg items-center"
   >
     <span v-if="props.showEmojis && isDNS">🚷</span>
     <span v-else-if="props.showEmojis && isRunning">🏃</span>
@@ -56,8 +65,11 @@ const gridClass = computed(() =>
     <span class="text-ellipsis overflow-hidden whitespace-nowrap"
       >{{ data.surname }} {{ data.firstName }}</span
     >
+    <span v-if="showRegistration" class="whitespace-nowrap">{{ data.registration }}</span>
     <span v-if="!isCompact">{{ data.card }}</span>
-    <span v-if="!isCompact">{{ data.club }}</span>
+    <span v-if="isClubShown" class="text-ellipsis overflow-hidden whitespace-nowrap">{{
+      data.club
+    }}</span>
     <!-- TODO tabular-nums not nice override, special monospace font? -->
     <span class="text-right" v-if="isDNS">DNS</span>
     <span
@@ -78,12 +90,3 @@ const gridClass = computed(() =>
     <span v-else></span>
   </div>
 </template>
-
-<style>
-.table-row-grid {
-  grid-template-columns: 2em 3fr 1fr 3fr 7em 5em;
-}
-.table-row-grid-compact {
-  grid-template-columns: 2em 1fr max-content 4em;
-}
-</style>

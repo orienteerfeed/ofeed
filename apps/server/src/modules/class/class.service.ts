@@ -2,6 +2,7 @@ import { classUpdateInputSchema } from '@repo/shared';
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { ValidationError } from '../../exceptions/index.js';
+import { publishClassesUpdated } from '../../lib/pubsub.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { Sex } from '../../generated/prisma/enums.js';
@@ -583,6 +584,7 @@ export async function updateClassForGraphQL(
     where: { id: eventClass.id },
     data: data as Prisma.ClassUpdateInput,
   });
+  publishClassesUpdated(eventClass.eventId);
 
   return { message: 'Class updated' };
 }
@@ -655,6 +657,7 @@ export async function loadClassDefinitionsFromExternalSystemForGraphQL(
   }
 
   await prisma.$transaction(updates);
+  publishClassesUpdated(event.id);
 
   return { updatedCount: updates.length };
 }

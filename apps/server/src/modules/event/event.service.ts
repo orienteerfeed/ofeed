@@ -10,7 +10,11 @@ import { ConflictError, DatabaseError, ValidationError } from '../../exceptions/
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma, type Event as PrismaEvent } from '../../generated/prisma/client.js';
 import type { Origin, ProtocolType, ResultStatus, Sex } from '../../generated/prisma/enums.js';
-import { WINNER_UPDATED, pubsub as defaultPubsub } from '../../lib/pubsub.js';
+import {
+  WINNER_UPDATED,
+  publishClassesUpdated,
+  pubsub as defaultPubsub,
+} from '../../lib/pubsub.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
@@ -1117,6 +1121,9 @@ export const storeCompetitor = async (
     storeCompetitorInTransaction(tx, eventId, competitorData, userId, origin),
   );
   await publishPunchChanges(eventId, result.changes);
+  // Class competitor counts changed (for example, a board may now show a
+  // previously empty class). Publish only after the transaction has committed.
+  publishClassesUpdated(eventId);
   return result.response;
 };
 
