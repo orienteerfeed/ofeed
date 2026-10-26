@@ -16,7 +16,10 @@ Persist immutable device receipts and canonical physical punches separately.
 Project matched punches into existing Split and Competitor fields. Uniqueness
 constraints protect retry and physical identities. Serialize affected writes on
 the event row within database transactions; in-memory locks are insufficient
-across API replicas. Legacy snapshots supersede previously assigned punches.
+across API replicas. Authoritative competitor updates and legacy snapshots
+supersede previously assigned punches and pending punches on the competitor's
+previous/current cards within the event. Omitting splits in a competitor update
+preserves them; supplying splits replaces the full list, including an empty list.
 Write Protocol in the transaction and publish existing subscriptions after commit.
 
 ## Consequences

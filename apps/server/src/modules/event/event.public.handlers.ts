@@ -231,7 +231,7 @@ export function registerPublicEventRoutes(router) {
           hundredthPrecision: true,
           defaultStartMode: true,
           classes: {
-            include: { _count: { select: { competitors: true } } },
+            include: { _count: { select: { competitors: true, teams: true } } },
           },
         },
       });
@@ -258,7 +258,11 @@ export function registerPublicEventRoutes(router) {
     const refYear = new Date().getFullYear();
     const classes = (rawClasses ?? []).map((cls) => {
       const { _count, ...classRest } = cls;
-      return { ...ageToRestClass(classRest, refYear), competitorsCount: _count.competitors };
+      return {
+        ...ageToRestClass(classRest, refYear),
+        competitorsCount: _count.competitors,
+        teamsCount: _count.teams,
+      };
     });
     return c.json(
       success(

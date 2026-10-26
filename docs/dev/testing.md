@@ -72,7 +72,6 @@ retry and physical uniqueness, atomic rollback, pending assignment, timing/statu
 precedence, snapshots and deletion. Default server tests skip this suite when the
 variable is absent. Never point this suite at a production or shared development
 database. Prisma generation and applying migrations are separate prerequisites.
-
 ## Payment concurrency integration tests
 
 Payment integration tests require a disposable local MariaDB database named

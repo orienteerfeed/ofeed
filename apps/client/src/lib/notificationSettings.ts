@@ -1,4 +1,5 @@
 export const NOTIFICATION_STORAGE_KEY = 'notifications';
+const NOTIFICATION_SETTINGS_CHANGED = 'ofeed:notification-settings-changed';
 
 export interface NotificationSettings {
   general: {
@@ -64,9 +65,28 @@ export const saveNotificationSettings = (
 
   try {
     localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(settings));
+    window.dispatchEvent(new Event(NOTIFICATION_SETTINGS_CHANGED));
   } catch (error) {
     console.error('Error saving notification settings to localStorage:', error);
   }
+};
+
+/**
+ * Notifies about settings changes from this tab and from other tabs
+ * (for `useSyncExternalStore`).
+ */
+export const subscribeNotificationSettings = (
+  onChange: () => void
+): (() => void) => {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === NOTIFICATION_STORAGE_KEY) onChange();
+  };
+  window.addEventListener(NOTIFICATION_SETTINGS_CHANGED, onChange);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener(NOTIFICATION_SETTINGS_CHANGED, onChange);
+    window.removeEventListener('storage', onStorage);
+  };
 };
 
 /**

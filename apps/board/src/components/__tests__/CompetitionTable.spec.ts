@@ -80,3 +80,40 @@ describe('CompetitionTable', () => {
     })
   })
 })
+
+it('hides empty relay classes and restores them when event team counts change', async () => {
+  const competition = ref<Competition>({
+    ...TEST_COMPETITION,
+    isRelay: true,
+    categories: [
+      { id: '1', name: 'Empty', gender: 'M', teamsCount: 0 },
+      { id: '2', name: 'Populated', gender: 'F', teamsCount: 2 },
+      { id: '3', name: 'Unknown', gender: 'X' },
+    ],
+  })
+  const view = render(CompetitionTable, {
+    props: { competitionId: competition.value.id },
+    global: {
+      plugins: [createPinia(), i18n],
+      provide: {
+        [useDataProviderKey as symbol]: createDataProvider(competition.value),
+      },
+      stubs: {
+        CompetitionHeader: true,
+        ScrollColumn: { template: '<div><slot /></div>' },
+        CategoryRelayTable: {
+          props: ['category'],
+          template: '<div>{{ category.name }}</div>',
+        },
+      },
+    },
+  })
+  await waitFor(() => {
+    expect(view.queryByText('Empty')).toBeNull()
+    expect(view.getByText('Populated')).toBeTruthy()
+    expect(view.getByText('Unknown')).toBeTruthy()
+  })
+  competition.value.categories[0]!.teamsCount = 1
+  await waitFor(() => expect(view.getByText('Empty')).toBeTruthy())
+  view.unmount()
+})

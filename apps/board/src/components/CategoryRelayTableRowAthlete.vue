@@ -7,19 +7,28 @@ import { formatStatus } from '@/utils/localize'
 import { formatTimeOrienteering } from '@/utils/dateTime'
 import { useTimeHelpers } from '@/composables/useTimeHelpers'
 import { AthleteStatus, isResultItemPre } from '@/types/category'
-import type { RelayAthleteWithStats } from '@/types/category'
+import type { RelayAthleteWithStats, ResultMode } from '@/types/category'
 import { isTableActiveKey } from '@/types/providers'
 
-const props = defineProps<{ data: RelayAthleteWithStats; timezone?: string }>()
+const props = withDefaults(
+  defineProps<{
+    data: RelayAthleteWithStats
+    timezone?: string
+    resultMode?: ResultMode
+  }>(),
+  { resultMode: 'Default', timezone: undefined }
+)
 const isActive = inject(isTableActiveKey, ref(false))
 const { now, startTimeFormatter } = useTimeHelpers()
 
 const timeFormatted = computed(() =>
+  props.resultMode !== 'UnorderedNoTimes' &&
   props.data.legResult.status === AthleteStatus.Ok
     ? formatTimeOrienteering(props.data.legResult.timeSeconds)
     : ''
 )
 const lossFormatted = computed(() =>
+  props.resultMode === 'Default' &&
   props.data.totalResult.status === AthleteStatus.Ok
     ? `+ ${formatTimeOrienteering(props.data.totalResult.loss)}`
     : ''
@@ -59,19 +68,23 @@ const startTimeFormatted = computed(() => {
         <span
           class="block min-w-0 overflow-hidden whitespace-nowrap text-right tabular-nums"
           v-if="data.legResult.status === AthleteStatus.Ok"
-          >{{ timeFormattedDisplay }} [{{ data.legResult.rank }}.]</span
+          >{{ timeFormattedDisplay
+          }}<template v-if="resultMode === 'Default'">
+            [{{ data.legResult.rank }}.]</template
+          ></span
         >
         <span
           v-else-if="isRunning"
           class="block min-w-0 overflow-hidden whitespace-nowrap text-right text-xl leading-none tabular-nums"
-          >[{{ timeRunningDisplay }}]</span
+          ><template v-if="resultMode !== 'UnorderedNoTimes'"
+            >[{{ timeRunningDisplay }}]</template
+          ></span
         >
         <span
           class="block min-w-0 overflow-hidden whitespace-nowrap text-right tabular-nums"
           v-else-if="isNotStarted"
-          >{{
-          startTimeFormatted
-        }}</span>
+          >{{ startTimeFormatted }}</span
+        >
         <span class="text-right" v-else>{{ formatStatus(data.status) }}</span>
       </template>
     </SlotVirtualizer>

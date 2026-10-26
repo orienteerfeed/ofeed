@@ -16,6 +16,7 @@ The board is excluded from root `pnpm dev`. Start with `pnpm dev:board` (root) o
 In dev, Vite proxies `/api/ofeed` → `http://localhost:3001` (override via `VITE_OFEED_PROXY_TARGET`). In Docker, Nginx proxies to `http://api:3001`. Don't hardcode the API base URL — use the proxy path.
 
 The board does **not** depend on `@repo/shared` — it consumes the OFeed REST API directly.
+The winner commentator comes from `@repo/commentator` (shared with the client) — change announcement logic there, not per app.
 
 ## TypeScript config
 
