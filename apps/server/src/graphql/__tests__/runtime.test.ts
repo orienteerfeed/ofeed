@@ -307,6 +307,49 @@ describe('GraphQL runtime execution', () => {
     expect(result.errors?.[0]?.message).toBe('Forbidden');
   });
 
+  it('resolves every sign-in user field, including nullable metadata and timestamps', async () => {
+    const createdAt = new Date('2026-01-01T00:00:00Z');
+    const updatedAt = new Date('2026-02-01T00:00:00Z');
+    authServiceMock.authenticateUser.mockResolvedValue({
+      token: 'login-token',
+      user: {
+        userId: 7,
+        firstName: 'Test',
+        lastName: 'Runner',
+        email: 'runner@example.test',
+        role: 'USER',
+        organisation: null,
+        emergencyContact: null,
+        active: true,
+        emailVerifiedAt: null,
+        createdAt,
+        updatedAt,
+      },
+    });
+    const result = await execute(`mutation {
+      signin(input: { username: "runner@example.test", password: "valid-password" }) {
+        token
+        user { id email firstname lastname role organisation emergencyContact active emailVerifiedAt createdAt updatedAt password }
+      }
+    }`);
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toMatchObject({
+      signin: {
+        token: 'login-token',
+        user: {
+          id: 7,
+          active: true,
+          emailVerifiedAt: null,
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-02-01T00:00:00Z',
+          organisation: null,
+          emergencyContact: null,
+          password: null,
+        },
+      },
+    });
+  });
+
   it('maps signin AuthenticationError("Login failed") to the public GraphQL error', async () => {
     authServiceMock.authenticateUser.mockRejectedValue(new AuthenticationError('Login failed'));
 

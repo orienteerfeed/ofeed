@@ -38,7 +38,8 @@
     "db:generate": "pnpm exec prisma generate",
     "db:migrate": "pnpm exec prisma migrate dev",
     "db:migrate:deploy": "pnpm exec prisma migrate deploy",
-    "db:seed": "pnpm exec tsx prisma/seed.ts"
+    "db:seed": "pnpm exec tsx prisma/seed.ts",
+    "db:seed:reference": "pnpm exec tsx prisma/seed-reference-data.ts"
   },
   "author": "Martin Křivda",
   "license": "GPL-3.0",

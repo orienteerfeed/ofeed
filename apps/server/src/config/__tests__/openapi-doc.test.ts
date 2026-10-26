@@ -22,6 +22,38 @@ describe('openapi doc', () => {
     expect(paths['/health/ready']).toBeUndefined();
   });
 
+  it('publishes optional entry details, typed fee breakdowns and unconfigured-entry conflicts', async () => {
+    const response = await app.request('/doc');
+    const document = await response.json();
+    const create = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/entries`].post;
+    const item = create.requestBody.content['application/json'].schema.properties.items.items;
+    expect(item.allOf).toBeUndefined();
+    for (const field of ['registration', 'birthYear', 'card', 'cardRental']) {
+      expect(item.properties[field]).toBeDefined();
+      expect(item.required ?? []).not.toContain(field);
+    }
+    expect(item.description).toContain('required only for age-restricted classes');
+    expect(create.responses['409'].description).toContain('not configured');
+    expect(create.description).toContain('statusSummary.entriesConfigured');
+    expect(create.description).toContain('at least one of entriesOpenAt or entriesCloseAt is set');
+    expect(create.description).toContain('An unavailable payment method returns 422');
+    expect(create.description).toContain('Null class fees are treated as zero');
+    expect(create.description).toContain('contactLastname');
+    const availability =
+      document.paths[`${EVENT_OPENAPI.basePath}/{eventId}/entry-availability`].get;
+    expect(availability.security).toEqual([]);
+    const fee =
+      availability.responses['200'].content['application/json'].schema.properties.results.properties
+        .data.properties.classes.items.properties.fee;
+    expect(fee.properties).toMatchObject({
+      amount: { type: 'number' },
+      net: { type: 'number' },
+      vat: { type: 'number' },
+    });
+    expect(fee.nullable).toBe(true);
+    expect(availability.description).toContain('lateEntryFeePercent');
+  });
+
   it('documents all registered API endpoint groups', async () => {
     const response = await app.request('/doc');
 

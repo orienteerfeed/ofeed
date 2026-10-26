@@ -40,7 +40,9 @@ export const UserRef = builder.prismaObject('User', {
     }),
     password: t.field({
       type: 'password_String_NotNull_maxLength_255',
-      resolve: (user) => user.password,
+      nullable: true,
+      description: 'Always null. Passwords are never returned by the API.',
+      resolve: () => null,
     }),
     active: t.exposeBoolean('active', { nullable: true }),
     emailVerifiedAt: t.expose('emailVerifiedAt', { type: 'DateTime', nullable: true }),

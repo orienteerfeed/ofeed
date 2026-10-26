@@ -2,5 +2,5 @@ apiVersion: v2
 name: ofeed
 description: OFeed application stack for k3s (web, api, optional migration job)
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: "1.0.0"

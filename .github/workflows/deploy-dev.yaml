@@ -1,0 +1,239 @@
+name: Publish and deploy develop
+
+on:
+  workflow_call:
+    secrets:
+      gitops-deploy-key:
+        required: true
+      argocd-dev-token:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ofeed-dev
+  cancel-in-progress: true
+
+jobs:
+  configuration:
+    name: Check deployment credentials are configured
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Check required inputs without printing values
+        env:
+          GITOPS_DEPLOY_KEY: ${{ secrets.gitops-deploy-key }}
+          ARGOCD_DEV_TOKEN: ${{ secrets.argocd-dev-token }}
+        run: |
+          test -n "$GITOPS_DEPLOY_KEY" || { echo 'Configure OFEED_GITOPS_DEPLOY_KEY'; exit 1; }
+          test -n "$ARGOCD_DEV_TOKEN" || { echo 'Configure OFEED_ARGOCD_DEV_TOKEN'; exit 1; }
+
+  publish:
+    name: Publish dev ${{ matrix.component }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs: configuration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: api
+            repository: server
+            dockerfile: apps/server/Dockerfile
+            target: production
+          - component: web
+            repository: client
+            dockerfile: apps/client/Dockerfile
+            target: runner
+          - component: board
+            repository: board
+            dockerfile: apps/board/Dockerfile
+            target: runner
+          - component: ops
+            repository: ops
+            dockerfile: apps/server/Dockerfile
+            target: ops
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish both architectures
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/orienteerfeed/ofeed/${{ matrix.repository }}:dev-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=dev-${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=dev-${{ matrix.component }}
+          cache-to: type=gha,mode=max,scope=dev-${{ matrix.component }}
+      - name: Record published digest
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          COMPONENT: ${{ matrix.component }}
+          IMAGE_REPOSITORY: ghcr.io/orienteerfeed/ofeed/${{ matrix.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, re
+          digest = os.environ['IMAGE_DIGEST']
+          if not re.fullmatch(r'sha256:[a-f0-9]{64}', digest):
+              raise SystemExit('Missing published multiarch digest')
+          pathlib.Path('image.json').write_text(json.dumps({
+              'component': os.environ['COMPONENT'],
+              'repository': os.environ['IMAGE_REPOSITORY'],
+              'digest': digest,
+          }) + '\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev-image-${{ matrix.component }}
+          path: image.json
+          retention-days: 7
+
+  deliver:
+    name: Publish chart and update GitOps
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      revision: ${{ steps.update.outputs.revision }}
+      updated: ${{ steps.update.outputs.updated }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.18.6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dev-image-*
+          path: images
+      - name: Publish chart and assemble candidate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          chart_version="0.0.0-dev.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          helm package deploy/helm/ofeed --version "$chart_version" --app-version "$GITHUB_SHA" --destination dist
+          printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          helm push "dist/ofeed-${chart_version}.tgz" oci://ghcr.io/orienteerfeed/charts
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          images = {}
+          for file in pathlib.Path('images').glob('*/image.json'):
+              image = json.loads(file.read_text())
+              component = image.pop('component')
+              if component in images:
+                  raise SystemExit('Duplicate image artifact')
+              images[component] = image
+          if set(images) != {'api', 'web', 'board', 'ops'}:
+              raise SystemExit('Incomplete image candidate')
+          version = f"0.0.0-dev.{os.environ['GITHUB_RUN_NUMBER']}.{os.environ['GITHUB_RUN_ATTEMPT']}"
+          package = pathlib.Path(f'dist/ofeed-{version}.tgz')
+          candidate = {
+              'schemaVersion': 1,
+              'repository': 'orienteerfeed/ofeed',
+              'source': {'branch': 'develop', 'sha': os.environ['GITHUB_SHA']},
+              'version': f"dev-{os.environ['GITHUB_SHA']}",
+              'images': images,
+              'chart': {'version': version, 'packageDigest': f'sha256:{hashlib.sha256(package.read_bytes()).hexdigest()}'},
+          }
+          pathlib.Path('dist/candidate.json').write_text(json.dumps(candidate, indent=2) + '\n')
+          PY
+      - name: Checkout GitOps control configuration
+        uses: actions/checkout@v4
+        with:
+          repository: martinkrivda/officelab-argocd-apps
+          ref: main
+          path: gitops
+          ssh-key: ${{ secrets.gitops-deploy-key }}
+          ssh-strict: true
+          persist-credentials: true
+      - name: Select deployment branch or bootstrap it from main
+        run: |
+          set -euo pipefail
+          git -C gitops fetch origin refs/heads/main:refs/remotes/origin/main
+          deployment_ref="$(git -C gitops ls-remote --heads origin refs/heads/deploy/dev)"
+          if [ -n "$deployment_ref" ]; then
+            git -C gitops fetch origin refs/heads/deploy/dev:refs/remotes/origin/deploy/dev
+            git -C gitops checkout -b deploy/dev origin/deploy/dev
+          else
+            git -C gitops checkout -b deploy/dev origin/main
+          fi
+      - name: Validate and push one complete release
+        id: update
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OFEED_REQUIRE_DEV_RELEASE: "1"
+        run: |
+          set -euo pipefail
+          echo 'updated=false' >> "$GITHUB_OUTPUT"
+          current_sha="$(gh api repos/orienteerfeed/ofeed/git/ref/heads/develop --jq '.object.sha')"
+          if [ "$current_sha" != "$GITHUB_SHA" ]; then
+            echo 'A newer develop commit exists; skipping this deployment.'
+            exit 0
+          fi
+          ruby gitops/scripts/update-ofeed-dev.rb \
+            --candidate dist/candidate.json \
+            --chart "dist/ofeed-0.0.0-dev.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}.tgz"
+          ruby gitops/scripts/validate-ofeed-delivery.rb
+          git -C gitops config user.name 'github-actions[bot]'
+          git -C gitops config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C gitops add -- apps/office-lab/_apps/dev/ofeed
+          if ! git -C gitops diff --cached --quiet; then
+            git -C gitops commit -m "chore(ofeed-dev): deploy ${GITHUB_SHA}"
+          fi
+          current_sha="$(gh api repos/orienteerfeed/ofeed/git/ref/heads/develop --jq '.object.sha')"
+          if [ "$current_sha" != "$GITHUB_SHA" ]; then
+            echo 'A newer develop commit exists; skipping this deployment.'
+            exit 0
+          fi
+          git -C gitops push origin HEAD:refs/heads/deploy/dev
+          echo "revision=$(git -C gitops rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo 'updated=true' >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev-candidate
+          path: dist/
+          retention-days: 14
+
+  verify:
+    name: Wait for Argo CD and smoke test dev
+    needs: deliver
+    if: needs.deliver.outputs.updated == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify this deployment
+        env:
+          ARGOCD_DEV_TOKEN: ${{ secrets.argocd-dev-token }}
+          GITOPS_REVISION: ${{ needs.deliver.outputs.revision }}
+        run: python3 scripts/delivery/verify-dev.py

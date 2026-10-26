@@ -3,12 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
 
+- Indexed documentation for product, architecture, ADRs, specs, API sources,
+  development, operations and security, with one shared agent entry point.
+- Continuous deployment of successful `develop` builds to `dev.ofeed.live` and
+  `api.dev.ofeed.live`, with image digests, versioned charts and GitOps updates.
+- Optional dedicated API ingress, digest-required image rendering and migration
+  sync ordering for environments whose runtime secrets are managed by ESO.
 - Release-only GHCR publishing for immutable multi-architecture client, server,
   board, and database-migration images.
 - Runtime frontend configuration, Argo CD PreSync migrations, and optional
@@ -23,6 +30,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Resolve sign-in user timestamps and activation metadata, return authentication
+  errors before reading entry payment updates, and clear empty competitor notes.
+- Consume and restore competitor start slots atomically across time and class
+  changes; exclude occupied, reserved and duplicate times from availability.
+- Document entry prerequisites, unconfigured-entry conflicts, fee shapes and
+  late-entry surcharges, and personal data in QR payment messages.
+
+- Seed required countries, currencies and the Orienteering sport after
+  deployment migrations, preserving reference IDs and excluding optional event
+  creation.
 - Installed `wget` in the API image so Docker Compose healthchecks can run.
 - Pre-created client and board `runtime-config.js` files owned by the Nginx
   runtime user so startup scripts can write them without permission errors.
@@ -62,8 +79,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shared home event list rendering components for the home page views.
 - Consolidated IOF publish notifications to class-level handling.
 - Updated Swedish translations.
-- Updated production and development dependencies, including Hono, Apollo Client,
-  Prisma, TypeScript ESLint, Prettier, and repository model/tooling settings.
+- Updated production and development dependencies, including Hono, Apollo
+  Client, Prisma, TypeScript ESLint, Prettier, and repository model/tooling
+  settings.
 
 ### Removed
 
