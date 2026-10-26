@@ -22,7 +22,7 @@ it('stop() silences an announcement that is already in progress', async () => {
     }
   );
 
-  const commentator = startWinnerCommentator('event');
+  const commentator = startWinnerCommentator('event', ['H21']);
   commentator.announce({ eventId: 'event', classId: 1, className: 'H21', name: 'Novák Jan' });
   await vi.advanceTimersByTimeAsync(0); // gong finished, speech scheduled
   commentator.stop();

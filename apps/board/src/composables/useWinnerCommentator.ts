@@ -7,7 +7,7 @@ import {
 import { subscribeWithRetry } from '@/composables/providers/useOfeed'
 import { useSettingStore } from '@/stores/settings'
 
-/** Speaks leader changes of an OFeed event; one tab per event announces. */
+/** Speaks leader changes of an OFeed event; one eligible tab per class announces. */
 export function useWinnerCommentator(
   eventId: Ref<string>,
   enabled: Ref<boolean>
@@ -18,7 +18,17 @@ export function useWinnerCommentator(
     const id = eventId.value
     if (!enabled.value || !id) return
 
-    const commentator = startWinnerCommentator(id)
+    const categoryNames = settingsStore.categoriesDisplayByColumn.flatMap(
+      (column) =>
+        column
+          .filter(
+            (c) =>
+              settingsStore.resolveCategorySettings(c.name).resultMode ===
+              'Default'
+          )
+          .map((c) => c.name)
+    )
+    const commentator = startWinnerCommentator(id, categoryNames)
     const unsubscribe = subscribeWithRetry<{ winnerUpdated: Winner }>(
       { query: WINNER_UPDATED_SUBSCRIPTION, variables: { eventId: id } },
       (data) => {

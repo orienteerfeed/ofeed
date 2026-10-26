@@ -45,10 +45,32 @@ export const isFemaleWinner = (winner: Winner): boolean => {
 };
 
 const CZECH_LETTERS: Record<string, string> = {
-  A: 'á', B: 'bé', C: 'cé', D: 'dé', E: 'é', F: 'ef', G: 'gé', H: 'há',
-  I: 'í', J: 'jé', K: 'ká', L: 'el', M: 'em', N: 'en', O: 'ó', P: 'pé',
-  Q: 'kvé', R: 'er', S: 'es', T: 'té', U: 'ú', V: 'vé', W: 'dvojité vé',
-  X: 'iks', Y: 'ypsilon', Z: 'zet',
+  A: 'á',
+  B: 'bé',
+  C: 'cé',
+  D: 'dé',
+  E: 'é',
+  F: 'ef',
+  G: 'gé',
+  H: 'há',
+  I: 'í',
+  J: 'jé',
+  K: 'ká',
+  L: 'el',
+  M: 'em',
+  N: 'en',
+  O: 'ó',
+  P: 'pé',
+  Q: 'kvé',
+  R: 'er',
+  S: 'es',
+  T: 'té',
+  U: 'ú',
+  V: 'vé',
+  W: 'dvojité vé',
+  X: 'iks',
+  Y: 'ypsilon',
+  Z: 'zet',
 };
 
 /**
@@ -60,9 +82,7 @@ export const speakClassName = (className: string): string =>
     .map(part =>
       // Spell codes (H, DE, HDR), keep short words like "Dět" readable.
       /^(\p{L}{1,2}|\p{Lu}{3})$/u.test(part)
-        ? [...part.toUpperCase()]
-            .map(letter => CZECH_LETTERS[letter] ?? letter)
-            .join(' ')
+        ? [...part.toUpperCase()].map(letter => CZECH_LETTERS[letter] ?? letter).join(' ')
         : part
     )
     .join(' ');
@@ -116,30 +136,35 @@ export const announceWinner = (winner: Winner): (() => void) => {
 };
 
 /**
- * Joins the announcer election for an event. `announce` speaks only in the
+ * Joins an announcer election for each eligible class. `announce` speaks only in the
  * elected tab, so call this only while sound is enabled - a muted tab must
  * not hold the election and silence the others.
  */
 export const startWinnerCommentator = (
-  eventId: string
+  eventId: string,
+  categoryNames: readonly string[]
 ): { announce: (winner: Winner) => void; stop: () => void } => {
-  let isAnnouncer = false;
+  const activeCategories = new Set<string>();
   // ponytail: never pruned, one tiny entry per announcement until stop().
   const pending = new Set<() => void>();
-  const leave = coordinateWinnerAnnouncements(eventId, active => {
-    isAnnouncer = active;
-  });
+  const leave = [...new Set(categoryNames)].map(className =>
+    coordinateWinnerAnnouncements(JSON.stringify([eventId, className]), active => {
+      if (active) activeCategories.add(className);
+      else activeCategories.delete(className);
+    })
+  );
   return {
     announce: winner => {
-      if (isAnnouncer) pending.add(announceWinner(winner));
+      if (winner.eventId === eventId && activeCategories.has(winner.className))
+        pending.add(announceWinner(winner));
     },
     // Muting must also silence gongs and speech already queued.
     stop: () => {
-      leave();
+      leave.forEach(stop => stop());
       if (pending.size === 0) return;
       pending.forEach(cancel => cancel());
       pending.clear();
-      speechSynthesis.cancel();
+      window.speechSynthesis?.cancel();
     },
   };
 };

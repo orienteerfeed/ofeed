@@ -18,12 +18,14 @@ interface WinnerUpdatedData {
 
 interface WinnerNotificationProps {
   eventId: string;
+  categoryNames: readonly string[];
 }
 
 const WINNER_UPDATED = gql(WINNER_UPDATED_SUBSCRIPTION);
 
 export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
   eventId,
+  categoryNames,
 }) => {
   const sound = useSyncExternalStore(
     subscribeNotificationSettings,
@@ -32,16 +34,20 @@ export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
   const commentator = useRef<ReturnType<typeof startWinnerCommentator> | null>(
     null
   );
+  const categoryKey = JSON.stringify([...new Set(categoryNames)].sort());
   // Only tabs with sound on join the election, so a muted tab can't win it.
   useEffect(() => {
     if (!sound || !eventId) return;
-    const current = startWinnerCommentator(eventId);
+    const current = startWinnerCommentator(
+      eventId,
+      JSON.parse(categoryKey) as string[]
+    );
     commentator.current = current;
     return () => {
       current.stop();
       commentator.current = null;
     };
-  }, [eventId, sound]);
+  }, [eventId, sound, categoryKey]);
 
   const { data, error } = useSubscription<WinnerUpdatedData>(WINNER_UPDATED, {
     variables: { eventId },
@@ -55,7 +61,7 @@ export const WinnerNotification: React.FC<WinnerNotificationProps> = ({
       if (getNotificationSettings().general.push) {
         sendNotification(data.winnerUpdated);
       }
-      // One tab per event announces, including while it is in the background.
+      // One eligible tab per class announces, including in the background.
       commentator.current?.announce(data.winnerUpdated);
     }
   }, [data]);

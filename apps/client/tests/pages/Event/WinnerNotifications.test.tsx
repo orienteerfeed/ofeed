@@ -45,8 +45,12 @@ describe('WinnerNotification sound', () => {
       JSON.stringify({ general: { sound: true, push: false } })
     );
     subscription.mockReturnValue({ data: undefined });
-    const first = render(<WinnerNotification eventId="event" />);
-    const second = render(<WinnerNotification eventId="event" />);
+    const first = render(
+      <WinnerNotification eventId="event" categoryNames={['D21']} />
+    );
+    const second = render(
+      <WinnerNotification eventId="event" categoryNames={['D21']} />
+    );
     subscription.mockReturnValue({
       data: {
         winnerUpdated: {
@@ -62,8 +66,12 @@ describe('WinnerNotification sound', () => {
     vi.useFakeTimers();
     try {
       await act(async () => {
-        first.rerender(<WinnerNotification eventId="event" />);
-        second.rerender(<WinnerNotification eventId="event" />);
+        first.rerender(
+          <WinnerNotification eventId="event" categoryNames={['D21']} />
+        );
+        second.rerender(
+          <WinnerNotification eventId="event" categoryNames={['D21']} />
+        );
       });
       expect(play).toHaveBeenCalledTimes(1);
     } finally {
@@ -82,7 +90,9 @@ describe('WinnerNotification sound', () => {
       JSON.stringify({ general: { sound: false, push: false } })
     );
     subscription.mockReturnValue({ data: undefined });
-    const view = render(<WinnerNotification eventId="event" />);
+    const view = render(
+      <WinnerNotification eventId="event" categoryNames={['D21']} />
+    );
     try {
       expect(request).not.toHaveBeenCalled();
     } finally {

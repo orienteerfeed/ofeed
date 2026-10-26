@@ -176,6 +176,16 @@ Default local URLs:
 
 ### Board (`apps/board`)
 
+Board URLs describe the complete display configuration. Parameters omitted from a
+link use application defaults, including showing all categories in their natural
+order; previously saved browser settings do not override the link. Changes made
+in the settings panel are reflected in the URL.
+
+Relay categories respect `Unordered` (alphabetical, without ranks, losses or
+pinned leaders) and `UnorderedNoTimes` (also hides team and leg times). The public
+event-detail API includes both `competitorsCount` and `teamsCount` per class so
+the board can hide empty individual and relay categories.
+
 - `pnpm dev`
 - `pnpm dev:win`
 - `pnpm build`

@@ -17,7 +17,11 @@ import { useSettingStore, type CategoryDisplay } from '@/stores/settings'
 
 const DEFAULTS = createDisplaySettingsDefaults()
 
-const category = (name: string, order: number, extra: Partial<CategoryDisplay> = {}): CategoryDisplay => ({
+const category = (
+  name: string,
+  order: number,
+  extra: Partial<CategoryDisplay> = {}
+): CategoryDisplay => ({
   name,
   selected: true,
   column: 1,
@@ -120,12 +124,21 @@ describe('category url encoding', () => {
 
   it('round-trips order, columns, hidden classes and overrides', () => {
     const cats = [
-      category('D12C', 0, { column: 2, colorOverride: 'F', resultModeOverride: 'Unordered', awardedPlacesOverride: 5 }),
+      category('D12C', 0, {
+        column: 2,
+        colorOverride: 'F',
+        resultModeOverride: 'Unordered',
+        awardedPlacesOverride: 5,
+      }),
       category('D10C', 1, { selected: false, column: null }),
       category('H21 A,B:x', 2, { awardedPlacesOverride: 0 }),
       category('D10F', 3),
     ]
-    const encoded = encodeCategories(cats, ['D10C', 'D10F', 'D12C', 'H21 A,B:x'], 2)
+    const encoded = encodeCategories(
+      cats,
+      ['D10C', 'D10F', 'D12C', 'H21 A,B:x'],
+      2
+    )
     expect(encoded).toBe('D12C:2:F:U:5,D10C:0,H21 A%2CB%3Ax:1:::0,D10F:1')
     expect(decodeCategories(encoded!)).toEqual(
       cats.map(({ order: _order, ...rest }) => rest)
@@ -133,8 +146,16 @@ describe('category url encoding', () => {
   })
 
   it('applies url entries in url order, unknown classes keep state and go last', () => {
-    const current = [category('D10C', 0), category('D10F', 1), category('D12C', 2)]
-    const result = applyCategoryEntries(current, decodeCategories('D12C:3:M,D10C:0,X99:1'), 2)
+    const current = [
+      category('D10C', 0),
+      category('D10F', 1),
+      category('D12C', 2),
+    ]
+    const result = applyCategoryEntries(
+      current,
+      decodeCategories('D12C:3:M,D10C:0,X99:1'),
+      2
+    )
     expect(result).toEqual([
       category('D12C', 0, { column: 2, colorOverride: 'M' }),
       category('D10C', 1, { selected: false, column: null }),
@@ -143,11 +164,86 @@ describe('category url encoding', () => {
   })
 
   it('ignores entries from another competition', () => {
-    expect(applyCategoryEntries([category('D10C', 0)], decodeCategories('H21:1'), 1)).toBeUndefined()
+    expect(
+      applyCategoryEntries([category('D10C', 0)], decodeCategories('H21:1'), 1)
+    ).toBeUndefined()
   })
 })
 
 describe('useDisplaySettingsUrlSync in a mounted app', () => {
+  it('restores omitted defaults instead of leaking persisted settings into a shared link', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useSettingStore()
+    store.showClub = true
+    store.announceWinners = false
+    store.setAvailableCategories(['H21', 'D21'])
+    store.categoriesDisplayRaw = [
+      category('D21', 0, { selected: false, column: null }),
+      category('H21', 1, { colorOverride: 'F' }),
+    ]
+    store.setScrollColumnsCount(2)
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div />' } }],
+    })
+    await router.push('/?unrelated=keep#results')
+    const wrapper = mount(
+      defineComponent({
+        setup: () => useDisplaySettingsUrlSync(),
+        template: '<div />',
+      }),
+      { global: { plugins: [router, pinia] } }
+    )
+    await flushPromises()
+    expect(store.showClub).toBe(false)
+    expect(store.announceWinners).toBe(true)
+    expect(store.scrollColumnsCount).toBe(1)
+    expect(store.categoriesDisplay).toEqual([
+      category('H21', 0),
+      category('D21', 1),
+    ])
+    expect(router.currentRoute.value.fullPath).toBe('/?unrelated=keep#results')
+    store.showClub = true
+    await flushPromises()
+    expect(router.currentRoute.value.query.club).toBe('1')
+    await router.push('/?unrelated=keep#results')
+    await flushPromises()
+    expect(store.showClub).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('resets persisted category overrides when default categories arrive later', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useSettingStore()
+    store.categoriesDisplayRaw = [
+      category('H21', 0, {
+        selected: false,
+        column: null,
+        resultModeOverride: 'UnorderedNoTimes',
+      }),
+    ]
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { template: '<div />' } }],
+    })
+    await router.push('/')
+    const wrapper = mount(
+      defineComponent({
+        setup: () => useDisplaySettingsUrlSync(),
+        template: '<div />',
+      }),
+      { global: { plugins: [router, pinia] } }
+    )
+    await flushPromises()
+    store.setAvailableCategories(['H21'])
+    await flushPromises()
+    expect(store.categoriesDisplay).toEqual([category('H21', 0)])
+    expect(router.currentRoute.value.query).toEqual({})
+    wrapper.unmount()
+  })
+
   it('applies url classes once data arrives and writes store changes back', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
@@ -158,9 +254,15 @@ describe('useDisplaySettingsUrlSync in a mounted app', () => {
     await router.push('/?cols=2&club=1&cats=D12C:2:M,D10C:0')
     await router.isReady()
 
-    mount(defineComponent({ setup: () => useDisplaySettingsUrlSync(), template: '<div />' }), {
-      global: { plugins: [router, pinia] },
-    })
+    mount(
+      defineComponent({
+        setup: () => useDisplaySettingsUrlSync(),
+        template: '<div />',
+      }),
+      {
+        global: { plugins: [router, pinia] },
+      }
+    )
     await flushPromises()
     const store = useSettingStore()
     expect(store.showClub).toBe(true)
@@ -170,18 +272,30 @@ describe('useDisplaySettingsUrlSync in a mounted app', () => {
 
     store.setAvailableCategories(['D10C', 'D10F', 'D12C'])
     await flushPromises()
-    expect(store.categoriesDisplay.map((c) => [c.name, c.selected, c.column, c.colorOverride])).toEqual([
+    expect(
+      store.categoriesDisplay.map((c) => [
+        c.name,
+        c.selected,
+        c.column,
+        c.colorOverride,
+      ])
+    ).toEqual([
       ['D12C', true, 2, 'M'],
       ['D10C', false, null, null],
       ['D10F', true, 1, null],
     ])
-    expect(store.categoriesDisplayByColumn.map((col) => col.map((c) => c.name))).toEqual([['D10F'], ['D12C']])
+    expect(
+      store.categoriesDisplayByColumn.map((col) => col.map((c) => c.name))
+    ).toEqual([['D10F'], ['D12C']])
     expect(router.currentRoute.value.query.cats).toBe('D12C:2:M,D10C:0,D10F:1')
 
     store.setCategoryColorOverride(store.categoriesDisplay[2]!, 'F')
     store.showClub = false
     await nextTick()
     await flushPromises()
-    expect(router.currentRoute.value.query).toEqual({ cols: '2', cats: 'D12C:2:M,D10C:0,D10F:1:F' })
+    expect(router.currentRoute.value.query).toEqual({
+      cols: '2',
+      cats: 'D12C:2:M,D10C:0,D10F:1:F',
+    })
   })
 })

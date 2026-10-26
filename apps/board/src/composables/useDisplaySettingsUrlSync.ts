@@ -1,5 +1,10 @@
 import { ref, watch } from 'vue'
-import { useRoute, useRouter, type LocationQuery, type LocationQueryRaw } from 'vue-router'
+import {
+  useRoute,
+  useRouter,
+  type LocationQuery,
+  type LocationQueryRaw,
+} from 'vue-router'
 
 import type { ScrollType } from '@/types/layout'
 import type { CategoryGender, ResultMode } from '@/types/category'
@@ -157,7 +162,8 @@ export function buildDisplaySettingsQuery(
   for (const [key, field] of Object.entries(BOOLEAN_KEYS)) {
     if (state[field] !== defaults[field]) query[key] = state[field] ? '1' : '0'
   }
-  if (state.pinnedCount !== defaults.pinnedCount) query.pinned = String(state.pinnedCount)
+  if (state.pinnedCount !== defaults.pinnedCount)
+    query.pinned = String(state.pinnedCount)
   if (state.scrollColumnsCount !== defaults.scrollColumnsCount) {
     query.cols = String(state.scrollColumnsCount)
   }
@@ -170,19 +176,26 @@ export function parseDisplaySettingsQuery(
   const result: Partial<DisplaySettingsUrlState> = {}
   const scrollType = parseScrollType(firstQueryValue(query.scroll))
   if (scrollType !== undefined) result.scrollType = scrollType
-  const speed = parseFloatValue(firstQueryValue(query.speed), { min: 0.1, max: 4 })
+  const speed = parseFloatValue(firstQueryValue(query.speed), {
+    min: 0.1,
+    max: 4,
+  })
   if (speed !== undefined) result.readLineTimeSeconds = speed
   for (const [key, field] of Object.entries(BOOLEAN_KEYS)) {
     const value = parseBoolean(firstQueryValue(query[key]))
     if (value !== undefined) result[field] = value
   }
-  const pinnedCount = parseNumber(firstQueryValue(query.pinned), { min: 0, max: 10 })
+  const pinnedCount = parseNumber(firstQueryValue(query.pinned), {
+    min: 0,
+    max: 10,
+  })
   if (pinnedCount !== undefined) result.pinnedCount = pinnedCount
   const scrollColumnsCount = parseNumber(firstQueryValue(query.cols), {
     min: 1,
     max: MAX_COLUMNS,
   })
-  if (scrollColumnsCount !== undefined) result.scrollColumnsCount = scrollColumnsCount
+  if (scrollColumnsCount !== undefined)
+    result.scrollColumnsCount = scrollColumnsCount
   return result
 }
 
@@ -200,7 +213,12 @@ const MODES_BY_CODE = Object.fromEntries(
 
 export type CategoryUrlEntry = Pick<
   CategoryDisplay,
-  'name' | 'selected' | 'column' | 'colorOverride' | 'resultModeOverride' | 'awardedPlacesOverride'
+  | 'name'
+  | 'selected'
+  | 'column'
+  | 'colorOverride'
+  | 'resultModeOverride'
+  | 'awardedPlacesOverride'
 >
 
 const escapeName = (name: string) => name.replace(/[%,:]/g, encodeURIComponent)
@@ -250,13 +268,16 @@ export function decodeCategories(value: string): CategoryUrlEntry[] {
     .split(',')
     .map((entry) => {
       const [rawName = '', column, color, mode, places] = entry.split(':')
-      const columnNumber = parseNumber(column, { min: 0, max: MAX_COLUMNS }) ?? 1
+      const columnNumber =
+        parseNumber(column, { min: 0, max: MAX_COLUMNS }) ?? 1
       return {
         name: unescapeName(rawName),
         selected: columnNumber > 0,
         column: columnNumber > 0 ? columnNumber : null,
         colorOverride:
-          color === 'M' || color === 'F' || color === 'X' ? (color as CategoryGender) : null,
+          color === 'M' || color === 'F' || color === 'X'
+            ? (color as CategoryGender)
+            : null,
         resultModeOverride: (mode && MODES_BY_CODE[mode]) || null,
         awardedPlacesOverride: parseNumber(places, { min: 0, max: 99 }) ?? null,
       }
@@ -283,7 +304,9 @@ export function applyCategoryEntries(
       {
         ...existing,
         ...entry,
-        column: entry.selected ? Math.min(entry.column ?? 1, columnsCount) : null,
+        column: entry.selected
+          ? Math.min(entry.column ?? 1, columnsCount)
+          : null,
       },
     ]
   })
@@ -311,9 +334,25 @@ export function useDisplaySettingsUrlSync() {
     if (!settingsStore.availableCategories.length) return
     categoriesReady.value = true
     const cats = firstQueryValue(route.query.cats)
-    if (!cats || cats === encodeStoreCategories()) return
+    if (cats === encodeStoreCategories()) return
+    const defaultCategories = settingsStore.availableCategories.map(
+      (name, order) => ({
+        name,
+        order,
+        selected: true,
+        column: 1,
+        colorOverride: null,
+        resultModeOverride: null,
+        awardedPlacesOverride: null,
+      })
+    )
+    if (!cats) {
+      settingsStore.categoriesDisplayRaw = defaultCategories
+      settingsStore.setScrollColumnsCount(settingsStore.scrollColumnsCount)
+      return
+    }
     const next = applyCategoryEntries(
-      settingsStore.categoriesDisplay,
+      defaultCategories,
       decodeCategories(cats),
       settingsStore.scrollColumnsCount
     )
@@ -321,20 +360,14 @@ export function useDisplaySettingsUrlSync() {
   }
 
   const syncFromRoute = () => {
-    const next = parseDisplaySettingsQuery(route.query)
-    if (next.scrollType !== undefined) settingsStore.setScrollType(next.scrollType)
-    if (next.readLineTimeSeconds !== undefined) {
-      settingsStore.readLineTimeSeconds = next.readLineTimeSeconds
-    }
+    const next = { ...defaults, ...parseDisplaySettingsQuery(route.query) }
+    settingsStore.setScrollType(next.scrollType)
+    settingsStore.readLineTimeSeconds = next.readLineTimeSeconds
     for (const field of Object.values(BOOLEAN_KEYS)) {
-      const value = next[field]
-      if (value !== undefined) settingsStore[field] = value
+      settingsStore[field] = next[field]
     }
-    if (next.pinnedCount !== undefined) settingsStore.pinnedCount = next.pinnedCount
-    if (
-      next.scrollColumnsCount !== undefined &&
-      next.scrollColumnsCount !== settingsStore.scrollColumnsCount
-    ) {
+    settingsStore.pinnedCount = next.pinnedCount
+    if (next.scrollColumnsCount !== settingsStore.scrollColumnsCount) {
       settingsStore.setScrollColumnsCount(next.scrollColumnsCount)
     }
     // After columns: changing the column count redistributes classes.
@@ -358,7 +391,9 @@ export function useDisplaySettingsUrlSync() {
       },
       defaults
     )
-    const cats = categoriesReady.value ? encodeStoreCategories() : firstQueryValue(route.query.cats)
+    const cats = categoriesReady.value
+      ? encodeStoreCategories()
+      : firstQueryValue(route.query.cats)
     if (cats) query.cats = cats
     return query
   }
@@ -366,7 +401,9 @@ export function useDisplaySettingsUrlSync() {
   const syncToRoute = () => {
     const nextManagedQuery = buildStoreQuery()
     const currentManagedQuery = readManagedQuery(route.query)
-    if (normalizeQuery(currentManagedQuery) === normalizeQuery(nextManagedQuery)) {
+    if (
+      normalizeQuery(currentManagedQuery) === normalizeQuery(nextManagedQuery)
+    ) {
       return
     }
     const query = {
@@ -380,5 +417,7 @@ export function useDisplaySettingsUrlSync() {
     immediate: true,
   })
   watch(() => settingsStore.availableCategories, syncCategoriesFromRoute)
-  watch(() => normalizeQuery(buildStoreQuery()), syncToRoute, { immediate: true })
+  watch(() => normalizeQuery(buildStoreQuery()), syncToRoute, {
+    immediate: true,
+  })
 }

@@ -64,6 +64,7 @@ const TEST_RESP_COMPETITION = {
           climb: 320,
           controlsCount: 25,
           competitorsCount: 42,
+          teamsCount: 0,
           sex: 'M',
         },
       ],
@@ -206,7 +207,10 @@ describe('useOfeed', () => {
   })
 
   it('uses the configured GraphQL WebSocket URL when defined', () => {
-    vi.stubEnv('VITE_OFEED_GQL_WS_URL', 'wss://subscriptions.example.com/graphql')
+    vi.stubEnv(
+      'VITE_OFEED_GQL_WS_URL',
+      'wss://subscriptions.example.com/graphql'
+    )
 
     expect(getGraphQLWsUrl()).toEqual('wss://subscriptions.example.com/graphql')
   })
@@ -281,7 +285,9 @@ describe('useOfeed', () => {
       },
     })
 
-    await waitFor(() => expect(athletesComposable.status.value).toEqual('success'))
+    await waitFor(() =>
+      expect(athletesComposable.status.value).toEqual('success')
+    )
 
     expect(athletesComposable.rawAthletes.value).toEqual([
       {
@@ -302,20 +308,31 @@ describe('useOfeed', () => {
   it('keeps last athletes across remount and subscription error', async () => {
     const category = { ...TEST_COMPETITION.categories[0], id: '999' }
     const renderAthletes = () =>
-      render(getTestAthletesComponent({ competition: TEST_COMPETITION, category }), {
-        global: { provide: { [VUE_QUERY_CLIENT]: createQueryClient() } },
-      })
+      render(
+        getTestAthletesComponent({ competition: TEST_COMPETITION, category }),
+        {
+          global: { provide: { [VUE_QUERY_CLIENT]: createQueryClient() } },
+        }
+      )
 
     const first = renderAthletes()
     await waitFor(() => expect(capturedSink).not.toBeNull())
     capturedSink!.next({
       data: {
         competitorsByClassUpdated: [
-          { id: 7, lastname: 'Doe', firstname: 'Jane', time: 100, status: 'Finished' },
+          {
+            id: 7,
+            lastname: 'Doe',
+            firstname: 'Jane',
+            time: 100,
+            status: 'Finished',
+          },
         ],
       },
     })
-    await waitFor(() => expect(athletesComposable.status.value).toEqual('success'))
+    await waitFor(() =>
+      expect(athletesComposable.status.value).toEqual('success')
+    )
     first.unmount()
 
     renderAthletes()
@@ -352,7 +369,9 @@ describe('useOfeed', () => {
             relay: false,
             published: true,
             zeroTime: new Date('2023-01-01T10:00:00.000Z').toISOString(),
-            classes: [{ id: '1', name, length: 0, climb: 0, controlsCount: 0, sex }],
+            classes: [
+              { id: '1', name, length: 0, climb: 0, controlsCount: 0, sex },
+            ],
           },
         },
       })
@@ -362,9 +381,9 @@ describe('useOfeed', () => {
       await waitFor(() =>
         expect(competitionComposable.status.value).toEqual('success')
       )
-      expect(competitionComposable.competition.value?.categories[0].gender).toEqual(
-        expected
-      )
+      expect(
+        competitionComposable.competition.value?.categories[0].gender
+      ).toEqual(expected)
     }
   )
 
@@ -388,8 +407,11 @@ describe('useOfeed', () => {
       ...TEST_COMPETITION,
       zeroTime: new Date('2023-01-01T10:00:00.000Z'),
     })
-    expect(competitionComposable.competition.value?.categories[0]).toMatchObject({
+    expect(
+      competitionComposable.competition.value?.categories[0]
+    ).toMatchObject({
       competitorsCount: 42,
+      teamsCount: 0,
     })
     expect(fetch).toHaveBeenCalledWith('/api/ofeed/rest/v1/events/1')
   })
