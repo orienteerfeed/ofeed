@@ -21,6 +21,20 @@ datasource db {
 //   url      = "file:./dev.db"
 // }
 
+model IdempotencyResponse {
+  id          String   @id @db.Char(64)
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  requestHash String   @db.Char(64)
+  status      Int      @db.UnsignedSmallInt
+  contentType String   @db.VarChar(100)
+  body        String   @db.LongText
+  expiresAt   DateTime @db.DateTime(3)
+
+  @@index([eventId, expiresAt])
+  @@index([expiresAt])
+}
+
 model Country {
   countryCode String  @id @db.Char(2)
   countryName String
@@ -294,6 +308,7 @@ model Event {
   services                     EventService[]
   paymentMethods               EventPaymentMethod[]
   entries                      Entry[]
+  idempotencyResponses         IdempotencyResponse[]
   rentalCards                  EventRentalCard[]
 
   controls   Control[]

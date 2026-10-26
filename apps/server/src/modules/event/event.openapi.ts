@@ -37,6 +37,15 @@ export const EVENT_OPENAPI = {
   basePath: `${API_DEFAULTS.BASE_PATH}/events`,
 } as const;
 
+const idempotencyKeyParam = {
+  name: 'Idempotency-Key',
+  in: 'header',
+  required: false,
+  description:
+    'Optional case-sensitive retry key, scoped to caller and endpoint. Successful responses are replayed for 24 hours. Reusing a key with a different body returns 409. Failures can be retried. Anonymous callers must use unpredictable keys.',
+  schema: { type: 'string', minLength: 1, maxLength: 255, pattern: '^[!-~]+$' },
+} as const;
+
 const eventIdParam = {
   name: 'eventId',
   in: 'path',
@@ -814,13 +823,13 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         'When both are unset, creation returns 409 with "Entries are not configured for this event." ' +
         'An unavailable payment method returns 422 during payment-method validation. Null class fees are treated as zero.',
       security: [],
-      parameters: [eventIdParam],
+      parameters: [eventIdParam, idempotencyKeyParam],
       requestBody: jsonBody(createEntryOrderRequestBodySchema),
       responses: {
         201: dataResponse('Entry order created', createdEntryResponseSchema),
         404: okJson('Event not found'),
         409: okJson(
-          'Entries not configured, entries closed, class full, or start slot unavailable',
+          'Entries not configured, entries closed, class full, start slot unavailable, or Idempotency-Key body mismatch',
         ),
         422: okJson('Validation error'),
         500: okJson('Internal server error'),
@@ -913,13 +922,14 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       operationId: 'eventCreateCompetitor',
       summary: 'Create competitor',
       security: bearerOrBasicSecurity,
-      parameters: [eventIdParam],
+      parameters: [eventIdParam, idempotencyKeyParam],
       requestBody: jsonBody(createCompetitorBodySchema),
       responses: {
         200: okJson('Competitor created'),
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
         404: okJson('Event or class not found'),
+        409: okJson('Conflict or Idempotency-Key body mismatch'),
         422: okJson('Validation error'),
       },
     },
@@ -985,12 +995,13 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       operationId: 'eventCompetitorStatusChange',
       summary: 'Change competitor status',
       security: bearerOrBasicSecurity,
-      parameters: [eventIdParam, competitorIdParam],
+      parameters: [eventIdParam, competitorIdParam, idempotencyKeyParam],
       requestBody: jsonBody(competitorStatusChangeBodySchema),
       responses: {
         200: okJson('Competitor status changed'),
         401: okJson('Unauthorized'),
         403: okJson('Forbidden'),
+        409: okJson('Conflict or Idempotency-Key body mismatch'),
         422: okJson('Validation error'),
       },
     },

@@ -89,3 +89,17 @@ The suite verifies concurrent payments and retries, races with manual updates an
 repricing, currency protection, atomic rollback, report filters and database
 constraints. Never point it at a shared or production database. Prisma generation
 and migration deployment to the disposable database are separate prerequisites.
+
+
+## Create idempotency concurrency tests
+
+Use a disposable local MariaDB database named `ofeed_idempotency_test` (or
+`ofeed_idempotency_test_*`) with the current migrations. The suite rejects other
+hosts/database names, removes its synthetic fixtures and is skipped by default.
+It checks cross-connection serialization, durable replay, atomic rollback and
+expired key reuse.
+
+```bash
+IDEMPOTENCY_TEST_DATABASE_URL='mysql://root@127.0.0.1:13382/ofeed_idempotency_test' \
+  pnpm --filter ./apps/server exec vitest run src/modules/idempotency/__tests__/create-idempotency.integration.test.ts
+```

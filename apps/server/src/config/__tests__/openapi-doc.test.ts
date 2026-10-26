@@ -8,6 +8,43 @@ import { HEALTH_OPENAPI } from '../../modules/health/health.openapi.js';
 import { UPLOAD_OPENAPI } from '../../modules/upload/upload.openapi.js';
 
 describe('openapi doc', () => {
+  it('allows browser clients to send Idempotency-Key', async () => {
+    const response = await app.request(`${EVENT_OPENAPI.basePath}/event-1/entries`, {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'http://localhost:5173',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'Content-Type,Idempotency-Key',
+      },
+    });
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-headers')?.toLowerCase()).toContain(
+      'idempotency-key',
+    );
+  });
+
+  it('documents optional idempotency keys and conflicts on the three create routes', async () => {
+    const response = await app.request('/doc');
+    const document = await response.json();
+    for (const suffix of [
+      '/entries',
+      '/competitors',
+      '/competitors/{competitorId}/status-change',
+    ]) {
+      const operation = document.paths[`${EVENT_OPENAPI.basePath}/{eventId}${suffix}`].post;
+      expect(operation.parameters).toContainEqual(
+        expect.objectContaining({
+          name: 'Idempotency-Key',
+          in: 'header',
+          required: false,
+          description: expect.stringContaining('24 hours'),
+          schema: expect.objectContaining({ minLength: 1, maxLength: 255 }),
+        }),
+      );
+      expect(operation.responses['409']).toBeDefined();
+    }
+  });
+
   it('exposes only the standard liveness and readiness probes', async () => {
     const response = await app.request('/doc');
     expect(response.status).toBe(200);

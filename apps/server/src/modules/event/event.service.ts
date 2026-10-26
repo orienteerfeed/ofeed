@@ -1,3 +1,4 @@
+import type { CreateTransaction } from '../idempotency/create-idempotency.js';
 import {
   eventPunchTransaction,
   lockPunchEvent,
@@ -544,11 +545,15 @@ export const changeCompetitorStatus = async (
   origin: StatusChangeInput['origin'],
   status: StatusChangeInput['status'],
   userId: number,
+  transaction?: CreateTransaction,
 ) => {
-  const result = await eventPunchTransaction(prisma, eventId, (tx) =>
-    changeCompetitorStatusInTransaction(tx, eventId, competitorId, origin, status, userId),
-  );
-  await publishPunchChanges(eventId, result.changes);
+  const operation = (tx: Prisma.TransactionClient) =>
+    changeCompetitorStatusInTransaction(tx, eventId, competitorId, origin, status, userId);
+  const result = transaction
+    ? await operation(transaction.tx)
+    : await eventPunchTransaction(prisma, eventId, operation);
+  if (transaction) transaction.afterCommit.push(() => publishPunchChanges(eventId, result.changes));
+  else await publishPunchChanges(eventId, result.changes);
   return result.message;
 };
 
@@ -1109,11 +1114,15 @@ export const storeCompetitor = async (
   competitorData: StoreCompetitorData,
   userId: number,
   origin: string,
+  transaction?: CreateTransaction,
 ) => {
-  const result = await eventPunchTransaction(prisma, eventId, (tx) =>
-    storeCompetitorInTransaction(tx, eventId, competitorData, userId, origin),
-  );
-  await publishPunchChanges(eventId, result.changes);
+  const operation = (tx: Prisma.TransactionClient) =>
+    storeCompetitorInTransaction(tx, eventId, competitorData, userId, origin);
+  const result = transaction
+    ? await operation(transaction.tx)
+    : await eventPunchTransaction(prisma, eventId, operation);
+  if (transaction) transaction.afterCommit.push(() => publishPunchChanges(eventId, result.changes));
+  else await publishPunchChanges(eventId, result.changes);
   return result.response;
 };
 

@@ -7,6 +7,8 @@ import { attachGraphQLWebSocketServer } from './graphql/server.js';
 import { createGracefulShutdown } from './lib/graceful-shutdown.js';
 import { logger } from './lib/logging.js';
 
+import { startIdempotencyCleanup } from './modules/idempotency/idempotency-cleanup.js';
+
 import app from './app.js';
 
 const server = serve(
@@ -20,9 +22,16 @@ const server = serve(
 );
 
 const httpServer = server as unknown as HttpServer;
+const stopIdempotencyCleanup = startIdempotencyCleanup(prisma, (error) => {
+  logger.error('Idempotency response cleanup failed', { error });
+});
+const disposeGraphQLWebSocket = attachGraphQLWebSocketServer(httpServer);
 const gracefulShutdown = createGracefulShutdown({
   server: httpServer,
-  disposeGraphQLWebSocket: attachGraphQLWebSocketServer(httpServer),
+  disposeGraphQLWebSocket: async () => {
+    await stopIdempotencyCleanup();
+    await disposeGraphQLWebSocket();
+  },
   prisma,
   logger,
 });

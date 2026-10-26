@@ -12,6 +12,8 @@ not reopen an accepted decision without new context and a superseding ADR.
 
 - [0003](0003-punch-observation-ledger.md): proposed punch ledger and event write serialization.
 
+- [0005](0005-create-idempotency.md): proposed transactional REST create response storage.
+
 Copy [0000-template.md](0000-template.md) to the next unused four-digit sequence
 with a lowercase kebab-case title. Keep numbers stable. Statuses are `proposed`,
 `accepted`, `deprecated`, or `superseded by NNNN`. A proposal becomes accepted

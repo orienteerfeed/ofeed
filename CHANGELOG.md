@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Transactional 24-hour `Idempotency-Key` replay for REST entry and competitor
+  creates and competitor status changes, preventing duplicate offline retries.
+
 - Event Insights catalog with received-payment filtering, currency totals, CSV export
   and printing for event owners and administrators.
 
