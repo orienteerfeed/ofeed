@@ -43,6 +43,7 @@
       "dependsOn": ["^type-check"]
     },
     "test": {
+      "env": ["PUNCH_TEST_DATABASE_URL"],
       "dependsOn": ["^build", "^test"]
     },
     "test:watch": {

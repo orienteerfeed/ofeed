@@ -13,6 +13,8 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [Punch ingestion](punch-ingestion.md): SRR/readout ledger and split projection.
+
 - [Entry checkout](entry-checkout.md): baseline of existing checkout behavior.
 
 ## Historical designs

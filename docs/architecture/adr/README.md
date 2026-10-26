@@ -9,6 +9,8 @@ not reopen an accepted decision without new context and a superseding ADR.
 | [0001](0001-record-architecture-decisions.md)   | accepted | Record architecture decisions using MADR-lite                |
 | [0002](0002-contracts-and-module-boundaries.md) | accepted | Preserve code-owned contracts and feature service boundaries |
 
+- [0003](0003-punch-observation-ledger.md): proposed punch ledger and event write serialization.
+
 Copy [0000-template.md](0000-template.md) to the next unused four-digit sequence
 with a lowercase kebab-case title. Keep numbers stable. Statuses are `proposed`,
 `accepted`, `deprecated`, or `superseded by NNNN`. A proposal becomes accepted

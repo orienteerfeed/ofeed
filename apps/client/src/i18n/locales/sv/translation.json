@@ -568,7 +568,8 @@
           "status_change": "Ändring av status",
           "late_start_change": "Ändring av sen start",
           "note_change": "Ändring av kommentar",
-          "external_id_change": "Ändring av externt id"
+          "external_id_change": "Ändring av externt id",
+          "punch_store": "Stämpling sparad"
         },
         "OriginLabels": {
           "START": "Start",

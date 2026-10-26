@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Event-scoped SRR/SI readout punch ingestion with durable retry identities,
+  cross-device deduplication, delayed card matching and live result updates.
+
 - Indexed documentation for product, architecture, ADRs, specs, API sources,
   development, operations and security, with one shared agent entry point.
 - Continuous deployment of successful `develop` builds to `dev.ofeed.live` and
@@ -30,6 +33,9 @@ and this project adheres to
 
 ### Fixed
 
+- Preserve authoritative competitor updates and IOF/MOP snapshots over earlier
+  punch observations, consuming pending punches on the previous/current cards so
+  retries and delayed assignment cannot restore superseded data.
 - Resolve sign-in user timestamps and activation metadata, return authentication
   errors before reading entry payment updates, and clear empty competitor notes.
 - Consume and restore competitor start slots atomically across time and class

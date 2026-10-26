@@ -37,6 +37,19 @@ erDiagram
 | Federation cache    | `Registration`, `Club`, sync-state and Czech ranking models; cache provenance must be preserved                                   |
 | Integration history | `Protocol`, `EventImportState`, `EventExternalResultsSyncState`, `EventMeosBinding`, `EventPassword`                              |
 
+## Punch observations
+
+`Punch` identifies a physical event/card/control/UTC-millisecond observation;
+`PunchReceipt` retains device retry identity, source, station, client receipt time,
+server storage time and author. Punches may remain unassigned. Matched observations
+project into existing splits and competitor timings. Authoritative competitor
+updates and snapshot imports supersede assigned observations and pending
+observations on the previous/current cards within the event. Superseded punches
+remain stored but cannot project again, including after a retry or source
+promotion. Competitor deletion retains observations without replay.
+Deleting an event cascades its punch ledger. See the
+[punch ingestion spec](../specs/punch-ingestion.md).
+
 ## Schema changes
 
 Create migrations in [prisma/migrations](../../apps/server/prisma/migrations/),

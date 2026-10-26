@@ -1,3 +1,11 @@
+import {
+  eventPunchTransaction,
+  lockPunchEvent,
+  isPunchWriteConflict,
+  publishPunchChanges,
+  supersedeCompetitorPunches,
+} from '../punch/punch-write.js';
+import { reconcileEventPunches } from '../punch/punch.service.js';
 import { ConflictError, DatabaseError, ValidationError } from '../../exceptions/index.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma, type Event as PrismaEvent } from '../../generated/prisma/client.js';
@@ -541,10 +549,25 @@ export const changeCompetitorStatus = async (
   status: StatusChangeInput['status'],
   userId: number,
 ) => {
+  const result = await eventPunchTransaction(prisma, eventId, (tx) =>
+    changeCompetitorStatusInTransaction(tx, eventId, competitorId, origin, status, userId),
+  );
+  await publishPunchChanges(eventId, result.changes);
+  return result.message;
+};
+
+const changeCompetitorStatusInTransaction = async (
+  prisma: Prisma.TransactionClient,
+  eventId: string,
+  competitorId: number,
+  origin: StatusChangeInput['origin'],
+  status: StatusChangeInput['status'],
+  userId: number,
+) => {
   let dbResponseCompetitor;
   try {
     dbResponseCompetitor = await prisma.competitor.findFirst({
-      where: { id: competitorId },
+      where: { id: competitorId, class: { eventId } },
       select: {
         id: true,
         classId: true,
@@ -554,6 +577,7 @@ export const changeCompetitorStatus = async (
       },
     });
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     console.error(err);
     throw new DatabaseError(`An error occurred: ` + getErrorMessage(err));
   }
@@ -584,6 +608,7 @@ export const changeCompetitorStatus = async (
       data: { status: competitorStatus, lateStart: lateStart },
     });
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     console.error('Failed to update competitor:', err);
     throw new DatabaseError('Error updating competitor');
   }
@@ -621,39 +646,16 @@ export const changeCompetitorStatus = async (
         })),
       });
     } catch (err) {
+      if (isPunchWriteConflict(err)) throw err;
       console.error('Failed to update competitor:', err);
       throw new DatabaseError('Error creating protocol record');
     }
   }
 
-  // Select the current competitor from the database
-  let updatedCompetitor: Awaited<ReturnType<typeof prisma.competitor.findUnique>>;
-  try {
-    updatedCompetitor = await prisma.competitor.findUnique({
-      where: { id: competitorId },
-      include: {
-        class: true,
-        team: true,
-      },
-    });
-  } catch (err) {
-    console.error('Failed to fetch updated competitor:', err);
-    throw new DatabaseError('Error fetching updated competitor');
-  }
-
-  if (!updatedCompetitor) {
-    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
-  }
-
-  // Publish changes to subscribers
-  try {
-    await publishUpdatedCompetitor(eventId, updatedCompetitor);
-    await publishUpdatedCompetitors(dbResponseCompetitor.classId);
-  } catch (err) {
-    console.error('Error publishing competitors update:', err);
-  }
-
-  return `Competitor's status has been successfully changed to ${competitorStatus}`;
+  return {
+    message: `Competitor's status has been successfully changed to ${competitorStatus}`,
+    changes: new Map([[competitorId, dbResponseCompetitor.classId]]),
+  };
 };
 
 /**
@@ -745,6 +747,23 @@ export const updateCompetitor = async (
   updateData: UpdateCompetitorData,
   userId: number,
 ) => {
+  const result = await eventPunchTransaction(prisma, eventId, (tx) =>
+    updateCompetitorInTransaction(tx, eventId, competitorId, origin, updateData, userId),
+  );
+  await publishPunchChanges(eventId, result.changes);
+  if (result.oldClassId !== null)
+    await publishUpdatedCompetitors(result.oldClassId).catch(console.error);
+  return result.response;
+};
+
+const updateCompetitorInTransaction = async (
+  prisma: Prisma.TransactionClient,
+  eventId: string,
+  competitorId: string | number,
+  origin: UpdateCompetitorInput['origin'],
+  updateData: UpdateCompetitorData,
+  userId: number,
+) => {
   if (typeof updateData.note === 'string' && updateData.note.trim() === '') {
     updateData = { ...updateData, note: null };
   }
@@ -753,7 +772,7 @@ export const updateCompetitor = async (
   let dbResponseCompetitor;
   try {
     dbResponseCompetitor = await prisma.competitor.findFirst({
-      where: { id: competitorIdNumber },
+      where: { id: competitorIdNumber, class: { eventId } },
       select: {
         id: true,
         classId: true,
@@ -792,6 +811,7 @@ export const updateCompetitor = async (
       },
     });
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     console.error(err);
     throw new DatabaseError(`An error occurred: ` + getErrorMessage(err));
   }
@@ -836,13 +856,14 @@ export const updateCompetitor = async (
     let targetClass;
     try {
       targetClass = await prisma.class.findUnique({
-        where: { id: targetClassId },
+        where: { id: targetClassId, eventId },
         select: {
           startMode: true,
           event: { select: { defaultStartMode: true } },
         },
       });
     } catch (err) {
+      if (isPunchWriteConflict(err)) throw err;
       console.error('Database error:', err);
       throw new DatabaseError('Error retrieving target class information.');
     }
@@ -871,6 +892,7 @@ export const updateCompetitor = async (
         select: { id: true },
       });
     } catch (err) {
+      if (isPunchWriteConflict(err)) throw err;
       console.error('Database error:', err);
       throw new DatabaseError('Error checking bib number uniqueness.');
     }
@@ -959,11 +981,14 @@ export const updateCompetitor = async (
     const targetShortName = Object.prototype.hasOwnProperty.call(updateData, 'shortName')
       ? nextShortName
       : previousOrganisation?.shortName;
-    const newOrganisationId = await upsertOrganisation({
-      eventId: dbResponseCompetitor.class?.eventId ?? eventId,
-      name: targetName,
-      shortName: targetShortName,
-    });
+    const newOrganisationId = await upsertOrganisation(
+      {
+        eventId: dbResponseCompetitor.class?.eventId ?? eventId,
+        name: targetName,
+        shortName: targetShortName,
+      },
+      prisma,
+    );
     organisationIdUpdate = { organisationId: newOrganisationId };
   }
 
@@ -975,78 +1000,76 @@ export const updateCompetitor = async (
 
     // Update the competitor, refresh splits, and atomically manage start slot
     // vacancies when the start time changes.
-    await prisma.$transaction(
-      async (tx) => {
-        // Claim a new class/time atomically. Deleting exactly one vacancy prevents
-        // two concurrent moves from booking the same start-list position.
-        const targetStartTime = isStartTimeInPayload ? newStartTimeValue : oldStartTime;
-        if (
-          (startTimeIsChanging || classIsChanging) &&
-          targetStartTime &&
-          targetEffectiveStartMode !== 'FreeStart'
-        ) {
-          const reservation = await tx.entryItem.findFirst({
-            where: {
-              classId: targetClassId,
-              startTime: targetStartTime,
-              competitorId: null,
-              entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
-            },
-            select: { id: true },
-          });
-          if (reservation) throw new ConflictError('The requested start time is not available.');
-          await deleteMatchingStartSlotVacancy(tx, {
+    await (async (tx: Prisma.TransactionClient) => {
+      // Claim a new class/time atomically. Deleting exactly one vacancy prevents
+      // two concurrent moves from booking the same start-list position.
+      const targetStartTime = isStartTimeInPayload ? newStartTimeValue : oldStartTime;
+      if (
+        (startTimeIsChanging || classIsChanging) &&
+        targetStartTime &&
+        targetEffectiveStartMode !== 'FreeStart'
+      ) {
+        const reservation = await tx.entryItem.findFirst({
+          where: {
             classId: targetClassId,
             startTime: targetStartTime,
-            requireAvailable: true,
-          });
-        }
-
-        const updated = await tx.competitor.update({
-          where: { id: competitorIdNumber },
-          data: competitorUpdateData,
+            competitorId: null,
+            entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
+          },
+          select: { id: true },
         });
-
-        // Consume the new start slot vacancy (no-op when no vacancy exists).
+        if (reservation) throw new ConflictError('The requested start time is not available.');
         await deleteMatchingStartSlotVacancy(tx, {
-          classId: updated.classId,
-          startTime: updated.startTime,
+          classId: targetClassId,
+          startTime: targetStartTime,
+          requireAvailable: true,
+        });
+      }
+
+      const updated = await tx.competitor.update({
+        where: { id: competitorIdNumber },
+        data: competitorUpdateData,
+      });
+
+      // Consume the new start slot vacancy (no-op when no vacancy exists).
+      await deleteMatchingStartSlotVacancy(tx, {
+        classId: updated.classId,
+        startTime: updated.startTime,
+      });
+
+      // Free the old start slot vacancy when the start time actually changed.
+      if (
+        (startTimeIsChanging || classIsChanging) &&
+        oldStartTime &&
+        oldEffectiveStartMode !== 'FreeStart'
+      ) {
+        await restoreStartSlotVacancy(tx, {
+          classId: dbResponseCompetitor.classId,
+          startTime: oldStartTime,
+          bibNumber: dbResponseCompetitor.bibNumber,
+        });
+      }
+
+      await supersedeCompetitorPunches(tx, [competitorIdNumber], {
+        eventId,
+        cards: [dbResponseCompetitor.card, updated.card],
+      });
+      if (splits && Array.isArray(splits)) {
+        await tx.split.deleteMany({
+          where: { competitorId: competitorIdNumber },
         });
 
-        // Free the old start slot vacancy when the start time actually changed.
-        if (
-          (startTimeIsChanging || classIsChanging) &&
-          oldStartTime &&
-          oldEffectiveStartMode !== 'FreeStart'
-        ) {
-          await restoreStartSlotVacancy(tx, {
-            classId: dbResponseCompetitor.classId,
-            startTime: oldStartTime,
-            bibNumber: dbResponseCompetitor.bibNumber,
-          });
-        }
-
-        if (splits && Array.isArray(splits)) {
-          await tx.split.deleteMany({
-            where: { competitorId: competitorIdNumber },
-          });
-
-          await tx.split.createMany({
-            data: splits.map((split) => ({
-              competitorId: competitorIdNumber,
-              controlCode: Number((split as { controlCode: string | number }).controlCode),
-              time: (split as { time?: number | null }).time,
-            })),
-          });
-        }
-      },
-      {
-        // Concurrent updates of the same competitor (e.g. OFB/MeOS bursts) fail
-        // under REPEATABLE READ snapshot isolation with MariaDB error 1020.
-        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-      },
-    );
+        await tx.split.createMany({
+          data: splits.map((split) => ({
+            competitorId: competitorIdNumber,
+            controlCode: Number((split as { controlCode: string | number }).controlCode),
+            time: (split as { time?: number | null }).time,
+          })),
+        });
+      }
+    })(prisma);
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     if (err instanceof ConflictError) throw err;
     console.error('Failed to update competitor:', err);
     throw new DatabaseError('Error updating competitor');
@@ -1067,51 +1090,45 @@ export const updateCompetitor = async (
         })),
       });
     } catch (err) {
+      if (isPunchWriteConflict(err)) throw err;
       console.error('Failed to update competitor:', err);
       throw new DatabaseError('Error creating protocol record');
     }
   }
 
-  // Select the current competitor from the database
-  let updatedCompetitor;
-  try {
-    const raw = await prisma.competitor.findUnique({
-      where: { id: competitorIdNumber },
-      include: {
-        class: true,
-        team: { include: { organisation: { select: organisationSelect } } },
-        organisation: { select: organisationSelect },
-      },
-    });
-    if (raw) {
-      const flat = flattenOrganisation(raw) as Record<string, unknown> | null;
-      if (flat && raw.team) flat.team = flattenOrganisation(raw.team);
-      updatedCompetitor = flat;
-    }
-  } catch (err) {
-    console.error('Failed to fetch updated competitor:', err);
-    throw new DatabaseError('Error fetching updated competitor');
-  }
-
-  if (!updatedCompetitor) {
-    throw new ValidationError(`Competitor with ID ${competitorId} does not exist in the database`);
-  }
-
-  // Publish changes to subscribers
-  try {
-    await publishUpdatedCompetitor(eventId, updatedCompetitor);
-    await publishUpdatedCompetitors(updatedCompetitor.classId);
-  } catch (err) {
-    console.error('Error publishing competitors update:', err);
-  }
-
+  const punchChanges = await reconcileEventPunches(prisma, eventId, new Map(), {
+    cards: [dbResponseCompetitor.card, updateData.card],
+    competitorIds: [competitorIdNumber],
+  });
+  punchChanges.set(competitorIdNumber, targetClassId);
   return {
-    message: 'Competitor has been successfully updated',
-    updatedFields: updateData,
+    response: {
+      message: 'Competitor has been successfully updated',
+      updatedFields: updateData,
+    },
+    changes: punchChanges,
+    oldClassId: classIsChanging ? dbResponseCompetitor.classId : null,
   };
 };
 
 export const storeCompetitor = async (
+  eventId: string,
+  competitorData: StoreCompetitorData,
+  userId: number,
+  origin: string,
+) => {
+  const result = await eventPunchTransaction(prisma, eventId, (tx) =>
+    storeCompetitorInTransaction(tx, eventId, competitorData, userId, origin),
+  );
+  await publishPunchChanges(eventId, result.changes);
+  // Class competitor counts changed (for example, a board may now show a
+  // previously empty class). Publish only after the transaction has committed.
+  publishClassesUpdated(eventId);
+  return result.response;
+};
+
+const storeCompetitorInTransaction = async (
+  prisma: Prisma.TransactionClient,
   eventId: string,
   competitorData: StoreCompetitorData,
   userId: number,
@@ -1124,7 +1141,7 @@ export const storeCompetitor = async (
   let existingClass;
   try {
     existingClass = await prisma.class.findUnique({
-      where: { id: classIdNumber },
+      where: { id: classIdNumber, eventId },
       select: {
         id: true,
         eventId: true,
@@ -1135,6 +1152,7 @@ export const storeCompetitor = async (
       },
     });
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     console.error('Database error:', err);
     throw new DatabaseError('Error retrieving class information.');
   }
@@ -1193,6 +1211,7 @@ export const storeCompetitor = async (
         select: { id: true },
       });
     } catch (err) {
+      if (isPunchWriteConflict(err)) throw err;
       console.error('Database error:', err);
       throw new DatabaseError('Error checking bib number uniqueness.');
     }
@@ -1204,18 +1223,21 @@ export const storeCompetitor = async (
   }
 
   // Resolve organisation relation (event-scoped) for the new competitor
-  const organisationId = await upsertOrganisation({
-    eventId: existingClass.eventId,
-    name: competitorData.organisation,
-    shortName: competitorData.shortName,
-    nationality: competitorData.nationality,
-  });
+  const organisationId = await upsertOrganisation(
+    {
+      eventId: existingClass.eventId,
+      name: competitorData.organisation,
+      shortName: competitorData.shortName,
+      nationality: competitorData.nationality,
+    },
+    prisma,
+  );
 
   let newCompetitor;
   try {
     // Create the competitor and free up the matching start slot vacancy (if the
     // competitor has a start time) atomically in a single transaction.
-    newCompetitor = await prisma.$transaction(async (tx) => {
+    newCompetitor = await (async (tx: Prisma.TransactionClient) => {
       if (effectiveStartMode !== 'FreeStart') {
         await deleteMatchingStartSlotVacancy(tx, {
           classId: classIdNumber,
@@ -1260,35 +1282,22 @@ export const storeCompetitor = async (
         startTime: created.startTime,
       });
 
+      if (splits && Array.isArray(splits) && splits.length > 0) {
+        await tx.split.createMany({
+          data: splits.map(({ controlCode, time }) => ({
+            competitorId: created.id,
+            controlCode,
+            time: time ?? null,
+          })),
+        });
+      }
       return created;
-    });
+    })(prisma);
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     if (err instanceof ConflictError) throw err;
     console.error('Error creating competitor:', err);
     throw new DatabaseError('Error storing competitor.');
-  }
-
-  // Handle splits if provided
-  if (splits && Array.isArray(splits)) {
-    try {
-      await prisma.$transaction(
-        splits.map(({ controlCode, time }) =>
-          prisma.split.create({
-            data: {
-              competitorId: newCompetitor.id,
-              controlCode,
-              time: time ?? null,
-            },
-          }),
-        ),
-        {
-          isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-        },
-      );
-    } catch (err) {
-      console.error('Error storing splits:', err);
-      throw new DatabaseError('Error storing competitor splits.');
-    }
   }
 
   // Add a protocol record for each changed field
@@ -1305,50 +1314,22 @@ export const storeCompetitor = async (
       },
     });
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     console.error('Error creating protocol record:', err);
     throw new DatabaseError('Error creating protocol record.');
   }
 
-  // Select the current competitor from the database
-  let updatedCompetitor;
-  try {
-    const raw = await prisma.competitor.findUnique({
-      where: { id: newCompetitor.id },
-      include: {
-        class: true,
-        team: { include: { organisation: { select: organisationSelect } } },
-        organisation: { select: organisationSelect },
-      },
-    });
-    if (raw) {
-      const flat = flattenOrganisation(raw) as Record<string, unknown> | null;
-      if (flat && raw.team) flat.team = flattenOrganisation(raw.team);
-      updatedCompetitor = flat;
-    }
-  } catch (err) {
-    console.error('Failed to fetch updated competitor:', err);
-    throw new DatabaseError('Error fetching updated competitor');
-  }
-
-  if (!updatedCompetitor) {
-    throw new ValidationError(
-      `Competitor with ID ${newCompetitor.id} does not exist in the database`,
-    );
-  }
-
-  // Publish event updates
-  try {
-    await publishUpdatedCompetitor(eventId, updatedCompetitor);
-    await publishUpdatedCompetitors(newCompetitor.classId);
-    // Class competitor counts changed (e.g. boards showing a previously empty class).
-    publishClassesUpdated(eventId);
-  } catch (err) {
-    console.error('Error publishing competitors update:', err);
-  }
-
+  const changes = await reconcileEventPunches(prisma, eventId, new Map(), {
+    cards: [newCompetitor.card],
+    competitorIds: [newCompetitor.id],
+  });
+  changes.set(newCompetitor.id, newCompetitor.classId);
   return {
-    message: 'Competitor has been successfully created',
-    competitor: newCompetitor,
+    response: {
+      message: 'Competitor has been successfully created',
+      competitor: await prisma.competitor.findUniqueOrThrow({ where: { id: newCompetitor.id } }),
+    },
+    changes,
   };
 };
 
@@ -1361,7 +1342,12 @@ export const storeCompetitor = async (
 export const deleteEventCompetitorsAndProtocols = async (
   eventId: string,
   db: AppPrismaClient | Prisma.TransactionClient = prisma,
-) => {
+): Promise<void> => {
+  if (db === prisma)
+    return eventPunchTransaction(prisma, eventId, (tx) =>
+      deleteEventCompetitorsAndProtocols(eventId, tx),
+    );
+  await lockPunchEvent(db, eventId);
   try {
     // 1. Find all class IDs associated with the eventId
     const classIds = await db.class.findMany({
@@ -1388,6 +1374,7 @@ export const deleteEventCompetitorsAndProtocols = async (
     const competitorIdList = competitors.map((c) => c.id);
 
     if (competitorIdList.length > 0) {
+      await supersedeCompetitorPunches(db, competitorIdList);
       // 3. Delete Protocols linked to competitors
       await db.protocol.deleteMany({
         where: { competitorId: { in: competitorIdList } },
@@ -1413,6 +1400,7 @@ export const deleteEventCompetitorsAndProtocols = async (
       where: { eventId: eventId },
     });
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     console.error('Failed to delete competitors or protocols:', err);
     throw new DatabaseError('Error deleting competitors or related data');
   }
@@ -1426,64 +1414,66 @@ export const deleteEventCompetitorsAndProtocols = async (
  * @throws {DatabaseError} If any deletion fails.
  */
 export const deleteEventCompetitorAndProtocols = async (eventId: string, competitorId: number) => {
-  try {
-    // 1. Verify that the competitor belongs to the given event
-    const competitor = await prisma.competitor.findUnique({
-      where: { id: competitorId },
-      select: { classId: true, startTime: true, bibNumber: true },
-    });
-
-    if (!competitor) {
-      console.warn(`Competitor ${competitorId} not found.`);
-      return;
-    }
-
-    // 2. Check if the competitor's class is associated with the event; load start mode
-    const eventClass = await prisma.class.findFirst({
-      where: { id: competitor.classId, eventId },
-      select: {
-        id: true,
-        startMode: true,
-        event: { select: { defaultStartMode: true } },
-      },
-    });
-
-    if (!eventClass) {
-      console.warn(`Competitor ${competitorId} does not belong to event ${eventId}.`);
-      return;
-    }
-
-    const effectiveStartMode = resolveEffectiveStartMode(
-      eventClass.startMode,
-      eventClass.event.defaultStartMode,
-    );
-
-    // 3–5. Delete protocols, splits and the competitor atomically, then restore
-    //      the start slot vacancy when the class uses a start list.
-    await prisma.$transaction(async (tx) => {
-      await tx.protocol.deleteMany({ where: { competitorId } });
-      await tx.split.deleteMany({ where: { competitorId } });
-      await tx.competitor.delete({ where: { id: competitorId } });
-
-      if (effectiveStartMode !== 'FreeStart' && competitor.startTime) {
-        await restoreStartSlotVacancy(tx, {
-          classId: competitor.classId,
-          startTime: competitor.startTime,
-          bibNumber: competitor.bibNumber,
-        });
-      }
-    });
-
-    // Publish changes to subscribers
+  const removed = await eventPunchTransaction(prisma, eventId, async (prisma) => {
     try {
-      await publishUpdatedCompetitor(eventId, competitor);
-      await publishUpdatedCompetitors(competitor.classId);
+      // 1. Verify that the competitor belongs to the given event
+      const competitor = await prisma.competitor.findUnique({
+        where: { id: competitorId },
+        select: { classId: true, startTime: true, bibNumber: true },
+      });
+
+      if (!competitor) {
+        console.warn(`Competitor ${competitorId} not found.`);
+        return;
+      }
+
+      // 2. Check if the competitor's class is associated with the event; load start mode
+      const eventClass = await prisma.class.findFirst({
+        where: { id: competitor.classId, eventId },
+        select: {
+          id: true,
+          startMode: true,
+          event: { select: { defaultStartMode: true } },
+        },
+      });
+
+      if (!eventClass) {
+        console.warn(`Competitor ${competitorId} does not belong to event ${eventId}.`);
+        return;
+      }
+
+      const effectiveStartMode = resolveEffectiveStartMode(
+        eventClass.startMode,
+        eventClass.event.defaultStartMode,
+      );
+
+      // 3–5. Delete protocols, splits and the competitor atomically, then restore
+      //      the start slot vacancy when the class uses a start list.
+      await (async (tx: Prisma.TransactionClient) => {
+        await supersedeCompetitorPunches(tx, [competitorId]);
+        await tx.protocol.deleteMany({ where: { competitorId } });
+        await tx.split.deleteMany({ where: { competitorId } });
+        await tx.competitor.delete({ where: { id: competitorId } });
+
+        if (effectiveStartMode !== 'FreeStart' && competitor.startTime) {
+          await restoreStartSlotVacancy(tx, {
+            classId: competitor.classId,
+            startTime: competitor.startTime,
+            bibNumber: competitor.bibNumber,
+          });
+        }
+      })(prisma);
+
+      return competitor;
     } catch (err) {
-      console.error('Error publishing competitors update:', err);
+      if (isPunchWriteConflict(err)) throw err;
+      console.error('Failed to delete competitor or protocols:', err);
+      throw new DatabaseError('Error deleting competitor or related data');
     }
-  } catch (err) {
-    console.error('Failed to delete competitor or protocols:', err);
-    throw new DatabaseError('Error deleting competitor or related data');
+  });
+  if (removed) {
+    await publishUpdatedCompetitor(eventId, removed).catch(console.error);
+    await publishUpdatedCompetitors(removed.classId).catch(console.error);
   }
 };
 
@@ -1535,7 +1525,10 @@ export const deleteEventCompetitor = async (eventId: string, competitorId: numbe
 export const deleteAllEventData = async (
   eventId: string,
   db: AppPrismaClient | Prisma.TransactionClient = prisma,
-) => {
+): Promise<string> => {
+  if (db === prisma)
+    return eventPunchTransaction(prisma, eventId, (tx) => deleteAllEventData(eventId, tx));
+  await lockPunchEvent(db, eventId);
   try {
     // Step 1: Delete competitors, protocols, splits
     await deleteEventCompetitorsAndProtocols(eventId, db);
@@ -1596,6 +1589,7 @@ export const deleteAllEventData = async (
       where: { eventId: eventId },
     });
   } catch (err) {
+    if (isPunchWriteConflict(err)) throw err;
     console.error('Failed to delete all event data:', err);
     throw new DatabaseError('Error deleting all event data');
   }

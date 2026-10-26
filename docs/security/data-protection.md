@@ -12,6 +12,7 @@ operator must approve those policies and document unresolved decisions.
 | Participants               | Name, registration, birth year, timing card, club, results/splits          | Publication is contextual; include minors and restricted splits in reviews |
 | Entry orders               | Contact identity, email, participant items, notes, fees, payment reference | Separate organizer access from public event data                           |
 | Emergency/contact metadata | User-provided contact information                                          | Minimize exposure and review field authorization                           |
+| Timing ingestion           | Card, control, punch time, device ID, station serial, receipt times and author | JWT owner/admin ingestion; private raw ledger, removed with event deletion |
 | Imports and caches         | Federation registrations, XML/CSV payloads and import history              | Preserve provenance; public source does not remove privacy obligations     |
 | Operations                 | IP, user agent, request paths, errors and browser traces                   | Restrict sinks, redact sensitive fields and set retention                  |
 | Storage/backups            | Uploaded assets, snapshots, database backups                               | Access control, deletion propagation and restore policy                    |

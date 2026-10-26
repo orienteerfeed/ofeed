@@ -11,20 +11,23 @@ const prismaMock = vi.hoisted(() => {
       update: vi.fn(),
       findFirst: vi.fn(),
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
     },
     split: { deleteMany: vi.fn(), createMany: vi.fn() },
     protocol: { createMany: vi.fn() },
     startSlotVacancy: { deleteMany: vi.fn(), createMany: vi.fn() },
     entryItem: { findFirst: vi.fn() },
     organisation: { findFirst: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), update: vi.fn() },
+    $queryRaw: vi.fn().mockResolvedValue([]),
+    punch: { findMany: vi.fn().mockResolvedValue([]), updateMany: vi.fn() },
     $transaction: vi.fn(),
   };
   return mock;
 });
 
 const subscriptionMocks = vi.hoisted(() => ({
-  publishUpdatedCompetitor: vi.fn(),
-  publishUpdatedCompetitors: vi.fn(),
+  publishUpdatedCompetitor: vi.fn().mockResolvedValue(undefined),
+  publishUpdatedCompetitors: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../../../utils/context.js', () => ({ default: prismaMock }));
@@ -44,6 +47,13 @@ beforeEach(() => {
     // Array form: resolve each operation (none of these tests rely on it).
     return Promise.all(arg as Promise<unknown>[]);
   });
+  (
+    prismaMock.competitor as { findUniqueOrThrow: ReturnType<typeof vi.fn> }
+  ).findUniqueOrThrow.mockImplementation((...args) =>
+    (prismaMock.competitor as { findUnique: (...args: unknown[]) => Promise<unknown> }).findUnique(
+      ...args,
+    ),
+  );
   (prismaMock.protocol as { createMany: ReturnType<typeof vi.fn> }).createMany.mockResolvedValue({
     count: 1,
   });

@@ -568,7 +568,8 @@
           "status_change": "Cambio de estado",
           "late_start_change": "Salida tardía",
           "note_change": "Cambio de nota",
-          "external_id_change": "Cambio de ID externo"
+          "external_id_change": "Cambio de ID externo",
+          "punch_store": "Registro de paso guardado"
         },
         "OriginLabels": {
           "START": "Salida",
