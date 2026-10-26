@@ -2,7 +2,11 @@ import { ConflictError, DatabaseError, ValidationError } from '../../exceptions/
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma, type Event as PrismaEvent } from '../../generated/prisma/client.js';
 import type { Origin, ProtocolType, ResultStatus, Sex } from '../../generated/prisma/enums.js';
-import { WINNER_UPDATED, pubsub as defaultPubsub } from '../../lib/pubsub.js';
+import {
+  WINNER_UPDATED,
+  publishClassesUpdated,
+  pubsub as defaultPubsub,
+} from '../../lib/pubsub.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import prisma from '../../utils/context.js';
 import { decodeBase64, decrypt } from '../../lib/crypto/encryption.js';
@@ -971,70 +975,77 @@ export const updateCompetitor = async (
 
     // Update the competitor, refresh splits, and atomically manage start slot
     // vacancies when the start time changes.
-    await prisma.$transaction(async (tx) => {
-      // Claim a new class/time atomically. Deleting exactly one vacancy prevents
-      // two concurrent moves from booking the same start-list position.
-      const targetStartTime = isStartTimeInPayload ? newStartTimeValue : oldStartTime;
-      if (
-        (startTimeIsChanging || classIsChanging) &&
-        targetStartTime &&
-        targetEffectiveStartMode !== 'FreeStart'
-      ) {
-        const reservation = await tx.entryItem.findFirst({
-          where: {
+    await prisma.$transaction(
+      async (tx) => {
+        // Claim a new class/time atomically. Deleting exactly one vacancy prevents
+        // two concurrent moves from booking the same start-list position.
+        const targetStartTime = isStartTimeInPayload ? newStartTimeValue : oldStartTime;
+        if (
+          (startTimeIsChanging || classIsChanging) &&
+          targetStartTime &&
+          targetEffectiveStartMode !== 'FreeStart'
+        ) {
+          const reservation = await tx.entryItem.findFirst({
+            where: {
+              classId: targetClassId,
+              startTime: targetStartTime,
+              competitorId: null,
+              entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
+            },
+            select: { id: true },
+          });
+          if (reservation) throw new ConflictError('The requested start time is not available.');
+          await deleteMatchingStartSlotVacancy(tx, {
             classId: targetClassId,
             startTime: targetStartTime,
-            competitorId: null,
-            entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
-          },
-          select: { id: true },
+            requireAvailable: true,
+          });
+        }
+
+        const updated = await tx.competitor.update({
+          where: { id: competitorIdNumber },
+          data: competitorUpdateData,
         });
-        if (reservation) throw new ConflictError('The requested start time is not available.');
+
+        // Consume the new start slot vacancy (no-op when no vacancy exists).
         await deleteMatchingStartSlotVacancy(tx, {
-          classId: targetClassId,
-          startTime: targetStartTime,
-          requireAvailable: true,
-        });
-      }
-
-      const updated = await tx.competitor.update({
-        where: { id: competitorIdNumber },
-        data: competitorUpdateData,
-      });
-
-      // Consume the new start slot vacancy (no-op when no vacancy exists).
-      await deleteMatchingStartSlotVacancy(tx, {
-        classId: updated.classId,
-        startTime: updated.startTime,
-      });
-
-      // Free the old start slot vacancy when the start time actually changed.
-      if (
-        (startTimeIsChanging || classIsChanging) &&
-        oldStartTime &&
-        oldEffectiveStartMode !== 'FreeStart'
-      ) {
-        await restoreStartSlotVacancy(tx, {
-          classId: dbResponseCompetitor.classId,
-          startTime: oldStartTime,
-          bibNumber: dbResponseCompetitor.bibNumber,
-        });
-      }
-
-      if (splits && Array.isArray(splits)) {
-        await tx.split.deleteMany({
-          where: { competitorId: competitorIdNumber },
+          classId: updated.classId,
+          startTime: updated.startTime,
         });
 
-        await tx.split.createMany({
-          data: splits.map((split) => ({
-            competitorId: competitorIdNumber,
-            controlCode: Number((split as { controlCode: string | number }).controlCode),
-            time: (split as { time?: number | null }).time,
-          })),
-        });
-      }
-    });
+        // Free the old start slot vacancy when the start time actually changed.
+        if (
+          (startTimeIsChanging || classIsChanging) &&
+          oldStartTime &&
+          oldEffectiveStartMode !== 'FreeStart'
+        ) {
+          await restoreStartSlotVacancy(tx, {
+            classId: dbResponseCompetitor.classId,
+            startTime: oldStartTime,
+            bibNumber: dbResponseCompetitor.bibNumber,
+          });
+        }
+
+        if (splits && Array.isArray(splits)) {
+          await tx.split.deleteMany({
+            where: { competitorId: competitorIdNumber },
+          });
+
+          await tx.split.createMany({
+            data: splits.map((split) => ({
+              competitorId: competitorIdNumber,
+              controlCode: Number((split as { controlCode: string | number }).controlCode),
+              time: (split as { time?: number | null }).time,
+            })),
+          });
+        }
+      },
+      {
+        // Concurrent updates of the same competitor (e.g. OFB/MeOS bursts) fail
+        // under REPEATABLE READ snapshot isolation with MariaDB error 1020.
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      },
+    );
   } catch (err) {
     if (err instanceof ConflictError) throw err;
     console.error('Failed to update competitor:', err);
@@ -1329,6 +1340,8 @@ export const storeCompetitor = async (
   try {
     await publishUpdatedCompetitor(eventId, updatedCompetitor);
     await publishUpdatedCompetitors(newCompetitor.classId);
+    // Class competitor counts changed (e.g. boards showing a previously empty class).
+    publishClassesUpdated(eventId);
   } catch (err) {
     console.error('Error publishing competitors update:', err);
   }

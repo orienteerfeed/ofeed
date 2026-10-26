@@ -36,7 +36,16 @@ const activeTab = ref<DataProviders>(
 <template>
   <div class="grid home-layout gap-y-10 font-mrb">
     <header class="header text-center mt-10">
-      <h1 class="text-4xl font-bold uppercase">OFEED BOARD</h1>
+      <h1
+        class="text-4xl font-bold uppercase inline-flex items-center gap-3"
+      >
+        <span
+          class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-header"
+        >
+          <img src="/favicon-dark.svg" alt="" class="w-8 h-8" />
+        </span>
+        OFEED BOARD
+      </h1>
       <p class="text-xl capitalize">Technology Preview</p>
       <p class="mt-6 text-3xl font-semibold">
         Orienteering competitions result board

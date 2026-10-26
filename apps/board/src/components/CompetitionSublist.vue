@@ -50,6 +50,9 @@ const providerId = computed(() => dataProvider.key ?? 'test')
           >({{ dateTimeFormatter.format(competition.date) }})
         </span>
         {{ competition.name }}
+        <span v-if="competition.organizer" class="text-gray-500"
+          >– {{ competition.organizer }}</span
+        >
       </RouterLink>
     </li>
   </ul>
