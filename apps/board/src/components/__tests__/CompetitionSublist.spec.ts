@@ -57,6 +57,7 @@ describe('CompetitionSublist', () => {
       exact: false,
     })
     expect(oneEventLink).toHaveAttribute('href', '/events/test/1')
+    expect(oneEventLink).toHaveTextContent(`– ${firstCompetition.organizer}`)
 
     getByText('TEST LIST')
     expect(() => getByText(/\d+. \d+. \d+/)).toThrow()
@@ -77,7 +78,8 @@ describe('CompetitionSublist', () => {
     })
 
     getByText('TEST LIST')
-    getAllByText(/\(\d{1,2}\/\d{1,2}\/\d{4}\)/)
+    // Formatter uses the system locale: "10/22/2026" or "22. 10. 2026".
+    getAllByText(/\(\d{1,2}[./] ?\d{1,2}[./] ?\d{4}\)/)
   })
 
   it('should render competitions with pagination', async () => {

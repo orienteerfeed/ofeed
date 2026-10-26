@@ -15,11 +15,13 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY patches ./patches
 COPY apps/client/package.json apps/client/package.json
 COPY packages/shared/package.json packages/shared/package.json
+COPY packages/commentator/package.json packages/commentator/package.json
 RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
   pnpm install --frozen-lockfile --ignore-scripts --filter ./apps/client... --filter ./packages/shared...
 
 COPY apps/client apps/client
 COPY packages/shared packages/shared
+COPY packages/commentator packages/commentator
 RUN pnpm --filter ./apps/client... run build
 
 FROM nginxinc/nginx-unprivileged:1.30-alpine AS runner

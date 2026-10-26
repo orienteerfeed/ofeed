@@ -46,8 +46,15 @@ const categoryColumns = computed(() =>
       .map((displayCategory) => {
         const category = categoriesHashByName.value[displayCategory.name]
         if (!category) return null
-        const override = displayCategory.colorOverride ?? undefined
-        return override ? { ...category, colorOverride: override } : category
+        // Server-side count, so the class reappears once a competitor is entered.
+        const count = competition.value?.isRelay
+          ? category.teamsCount
+          : category.competitorsCount
+        if (settingStore.hideEmptyCategories && count === 0) return null
+        return {
+          ...category,
+          ...settingStore.resolveCategorySettings(category.name, category.source),
+        }
       })
       .filter((category): category is NonNullable<typeof category> => Boolean(category))
   )
@@ -69,6 +76,7 @@ watchEffect(() => {
     if (count !== undefined) {
       settingStore.updateCategoryCount(category.name, count)
     }
+    settingStore.updateCategorySource(category.name, category.source ?? {})
   }
 })
 

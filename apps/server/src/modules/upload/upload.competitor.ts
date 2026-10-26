@@ -248,7 +248,7 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
   const firstname = person.Name?.[0]?.Given?.[0] ?? dbCompetitor?.firstname ?? '';
   const lastname = person.Name?.[0]?.Family?.[0] ?? dbCompetitor?.lastname ?? '';
   const hasFinishTime = Boolean(result?.FinishTime?.[0]);
-  const fallbackStatus: ResultStatus = hasFinishTime ? 'OK' : (dbCompetitor?.status ?? 'Inactive');
+  const fallbackStatus: ResultStatus = hasFinishTime ? 'OK' : dbCompetitor?.status ?? 'Inactive';
   const normalizedStatus = toResultStatus(result?.Status, fallbackStatus);
 
   const orgInput = buildOrganisationInput(organisation);
@@ -290,10 +290,10 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
     !isInactive && result === null && dbStartTime !== null
       ? dbStartTime
       : xmlStartTime !== undefined
-        ? xmlStartTime
-        : isInactive
-          ? null
-          : dbStartTime;
+      ? xmlStartTime
+      : isInactive
+      ? null
+      : dbStartTime;
 
   const competitorData = {
     classId,
@@ -303,24 +303,24 @@ function buildCompetitorSnapshot(input: SnapshotInputs): CompetitorSnapshot {
     nationality: person.Nationality?.[0].ATTR.code,
     registration,
     license: dbCompetitor?.license || null,
-    organisation: sameOrgByExternalId ? (dbCompetitor?.organisation?.name ?? null) : effectiveName,
+    organisation: sameOrgByExternalId ? dbCompetitor?.organisation?.name ?? null : effectiveName,
     shortName: sameOrgByExternalId
-      ? (dbCompetitor?.organisation?.shortName ?? null)
+      ? dbCompetitor?.organisation?.shortName ?? null
       : effectiveShortName,
     bibNumber: result?.BibNumber
       ? parseInt(result.BibNumber[0])
       : start?.BibNumber
-        ? (parseInt(start.BibNumber[0]) ?? dbCompetitor?.bibNumber)
-        : null,
+      ? parseInt(start.BibNumber[0]) ?? dbCompetitor?.bibNumber
+      : null,
     startTime: resolvedStartTime,
     finishTime:
       getIofDateTime(result?.FinishTime, eventTimeZone) ?? (dbCompetitor?.finishTime || null),
-    time: result?.Time ? parseInt(result.Time[0]) : (dbCompetitor?.time ?? null),
+    time: result?.Time ? parseInt(result.Time[0]) : dbCompetitor?.time ?? null,
     card: result?.ControlCard
       ? parseInt(result.ControlCard[0])
       : start?.ControlCard
-        ? parseInt(start.ControlCard[0])
-        : (dbCompetitor?.card ?? null),
+      ? parseInt(start.ControlCard[0])
+      : dbCompetitor?.card ?? null,
     status: normalizedStatus,
     lateStart: dbCompetitor?.lateStart || false,
     team: teamId ? { connect: { id: teamId } } : undefined,
@@ -411,7 +411,7 @@ async function updateExistingCompetitor(
   );
   const resolvedOrganisationId = orgChanged
     ? await upsertOrganisation({ eventId, ...snapshot.orgInput }, prisma)
-    : (dbCompetitor.organisationId ?? null);
+    : dbCompetitor.organisationId ?? null;
 
   await prisma.competitor.update({
     where: { id: dbCompetitor.id },
@@ -460,7 +460,6 @@ export async function upsertCompetitor(
   void cache;
   const written = await eventPunchTransaction(prisma, eventId, async (tx) => {
     const dbCompetitor = await findCompetitorForImport(eventId, classId, externalId, undefined, tx);
-    if (result && dbCompetitor) await supersedeCompetitorPunches(tx, [dbCompetitor.id]);
     const snapshot = buildCompetitorSnapshot({
       classId,
       person,
@@ -477,6 +476,10 @@ export async function upsertCompetitor(
     const value = dbCompetitor
       ? await updateExistingCompetitor(eventId, dbCompetitor, snapshot, authorId, tx)
       : await insertNewCompetitor(eventId, snapshot, authorId, tx);
+    await supersedeCompetitorPunches(tx, [value.id], {
+      eventId,
+      cards: [dbCompetitor?.card, snapshot.competitorData.card as number | null],
+    });
     const changes = await reconcileEventPunches(tx, eventId, new Map(), {
       cards: [dbCompetitor?.card, snapshot.competitorData.card as number | null],
       competitorIds: [value.id],

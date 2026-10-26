@@ -24,8 +24,16 @@
       "label": "Table content",
       "pinnedLeaders": "Number of pinned leaders",
       "showUnfinished": "Show unfinished (startlist, running)",
+      "hideEmptyCategories": "Hide classes with no competitors",
       "compactMode": "Compact mode (no club, card)",
+      "showClub": "Club mode (show club)",
+      "showRegistration": "Registration mode (show registration number)",
       "showEmojis": "Show Emojis in table"
+    },
+    "commentator": {
+      "label": "Commentator",
+      "announceWinners": "Announce new class leaders (Czech voice)",
+      "enableSound": "🔊 Click to enable commentator sound"
     },
     "classes": {
       "label": "Displayed classes",
@@ -36,14 +44,25 @@
         "name": "Name",
         "col": "Col",
         "color": "Color",
-        "order": "Order"
-      }
+        "order": "Order",
+        "mode": "Mode",
+        "places": "Places"
+      },
+      "sourceHint": "Settings defined by the data source (e.g. in OFeed) take precedence and are locked here.",
+      "fromSource": "Set by the data source"
     },
     "colorOverride": {
       "auto": "Auto (from data source)",
       "male": "M – blue (male)",
       "female": "F – pink (female)",
       "neutral": "X – grey (neutral)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Ranked",
+      "Unordered": "A–Z",
+      "UnorderedNoTimes": "A–Z, no times"
+    },
+    "awardedPlaces": "Awarded places (highlighted)"
   }
 }

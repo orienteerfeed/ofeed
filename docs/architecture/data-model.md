@@ -42,8 +42,11 @@ erDiagram
 `Punch` identifies a physical event/card/control/UTC-millisecond observation;
 `PunchReceipt` retains device retry identity, source, station, client receipt time,
 server storage time and author. Punches may remain unassigned. Matched observations
-project into existing splits and competitor timings. Snapshot imports supersede
-previous observations, and competitor deletion retains them without replay.
+project into existing splits and competitor timings. Authoritative competitor
+updates and snapshot imports supersede assigned observations and pending
+observations on the previous/current cards within the event. Superseded punches
+remain stored but cannot project again, including after a retry or source
+promotion. Competitor deletion retains observations without replay.
 Deleting an event cascades its punch ledger. See the
 [punch ingestion spec](../specs/punch-ingestion.md).
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { coordinateWinnerAnnouncements } from '../../src/lib/winner-announcement-leader';
+import { coordinateWinnerAnnouncements } from '../src/leader';
 
 afterEach(() => {
   vi.restoreAllMocks();

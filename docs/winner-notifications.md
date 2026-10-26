@@ -1,8 +1,12 @@
 # Winner announcements and XML start windows
 
-Sound announcements elect one tab per event. The elected tab continues to
-announce while hidden or minimized. Other tabs wait for ownership and take over
-when it closes or leaves the results page. Modern browsers use Web Locks; browsers
+Sound announcements elect one eligible tab per event and class. Boards only join
+the elections for their selected, ranked classes; the client joins for all ranked
+classes in the event. Boards with disjoint class selections can therefore announce
+independently, while overlapping selections announce each change only once within
+the same origin. The elected tab continues to announce while hidden or minimized.
+Other eligible tabs wait for ownership and take over when it closes, is muted, or
+leaves the results page. Modern browsers use Web Locks; browsers
 without Web Locks use a local-storage lease renewed every five seconds and expiring
 after thirty seconds. Browser autoplay and speech permissions still apply.
 
