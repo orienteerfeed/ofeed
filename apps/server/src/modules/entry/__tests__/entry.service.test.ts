@@ -263,6 +263,8 @@ describe('generatePaymentReference', () => {
 });
 
 type PrismaStub = {
+  $queryRaw: ReturnType<typeof vi.fn>;
+  $transaction: ReturnType<typeof vi.fn>;
   user: { findUnique: ReturnType<typeof vi.fn> };
   event: { findUnique: ReturnType<typeof vi.fn> };
   entry: {
@@ -274,12 +276,16 @@ type PrismaStub = {
 };
 
 function makePrismaStub(): PrismaStub {
-  return {
+  const prisma: PrismaStub = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
+    $transaction: vi.fn(),
     user: { findUnique: vi.fn() },
     event: { findUnique: vi.fn() },
     entry: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     entryItem: { update: vi.fn() },
   };
+  prisma.$transaction.mockImplementation((callback) => callback(prisma));
+  return prisma;
 }
 
 const decimal = (value: number) => ({ toNumber: () => value });
@@ -615,14 +621,12 @@ describe('updateEntryOrderForGraphQL', () => {
         aggregate: vi.fn().mockResolvedValue({ _sum: { amount: null } }),
       },
     });
-    prisma.entry.findUnique = vi
-      .fn()
-      .mockResolvedValue({
-        id: 'entry-1',
-        eventId: 'event-1',
-        status: 'RECEIVED',
-        currency: 'CZK',
-      });
+    prisma.entry.findUnique = vi.fn().mockResolvedValue({
+      id: 'entry-1',
+      eventId: 'event-1',
+      status: 'RECEIVED',
+      currency: 'CZK',
+    });
     prisma.event.findUnique.mockResolvedValue({ id: 'event-1', authorId: 7 });
     prisma.user.findUnique.mockResolvedValue({ role: 'USER' });
     prisma.event.findUniqueOrThrow = vi.fn().mockResolvedValue(
@@ -715,6 +719,7 @@ describe('processEntryOrder', () => {
       }),
       42,
       'OFFICE',
+      expect.objectContaining({ tx: prisma, reservationItemId: 1 }),
     );
     expect(prisma.entryItem.update).toHaveBeenCalledWith({
       where: { id: 1 },
@@ -747,5 +752,47 @@ describe('processEntryOrder', () => {
 
     expect(mockStoreCompetitor).not.toHaveBeenCalled();
     expect(prisma.entryItem.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('G19 exclusive start modes', () => {
+  it.each(['MassStart', 'WaveStart', 'PursuitStart'] as const)(
+    '%s allows two items with the same time without vacancies',
+    (startMode) => {
+      const items = priceEntryOrderItems(
+        [
+          makeItem({ startTime: SLOT_A.toISOString() }),
+          makeItem({ startTime: SLOT_A.toISOString() }),
+        ],
+        [makeClass({ startMode })],
+        makeContext(),
+      );
+      expect(items.map((item) => item.startTime)).toEqual([SLOT_A, SLOT_A]);
+    },
+  );
+
+  it('identifies a taken last slot as SLOT_TAKEN', () => {
+    expect(() =>
+      priceEntryOrderItems(
+        [makeItem({ startTime: SLOT_A.toISOString() })],
+        [makeClass({ startMode: 'StartList', slotStartTimes: [], pendingEntryCount: 1 })],
+        makeContext(),
+      ),
+    ).toThrow(expect.objectContaining({ statusCode: 409, errorCode: 'SLOT_TAKEN' }));
+  });
+
+  it('locks the event before reading availability even without an idempotency key', async () => {
+    const prisma = makePrismaStub();
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+    prisma.entry.create.mockResolvedValue(makeStoredEntry());
+    await createEntryOrder(
+      prisma as never,
+      { eventId: 'event-1', userId: null, now: NOW },
+      ORDER_INPUT,
+    );
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.event.findUnique.mock.invocationCallOrder[0],
+    );
   });
 });

@@ -195,7 +195,7 @@ builder.mutationFields((t) => ({
 
 function rethrowEntryWriteError(err: unknown, fallback: string): never {
   if (err instanceof ConflictError) {
-    throw new GraphQLError(err.message, { extensions: { code: 'CONFLICT' } });
+    throw new GraphQLError(err.message, { extensions: { code: err.errorCode ?? 'CONFLICT' } });
   }
   return rethrowAuthzOrError(err, fallback);
 }

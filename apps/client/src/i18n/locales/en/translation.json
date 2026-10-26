@@ -413,8 +413,8 @@
         "Verifying": "Verifying your email",
         "VerifyingDescription": "Please wait while we verify your email address.",
         "Verified": "Email verified",
-        "VerifiedDescription": "Your email has been verified and you are now signed in.",
-        "ContinueDescription": "You can now use OFeed with full access.",
+        "VerifiedDescription": "Your email address has been verified.",
+        "ContinueDescription": "Sign in to continue to OFeed.",
         "ContinueToApp": "Continue to OFeed",
         "AlreadyVerified": "Already verified",
         "AlreadyVerifiedDescription": "Your email address is already verified.",
@@ -704,7 +704,10 @@
           "Partial": "Partially paid",
           "Paid": "Paid",
           "Overpaid": "Overpaid",
-          "Methods": { "CASH": "Cash", "QR": "QR payment" },
+          "Methods": {
+            "CASH": "Cash",
+            "QR": "QR payment"
+          },
           "DialogTitle": "Record received payment",
           "Method": "Method",
           "Amount": "Amount",
@@ -2058,5 +2061,19 @@
     "longitudeRange": "Longitude must be between -180 and 180",
     "zeroTimeRequired": "Zero time is required",
     "zeroTimeFormat": "Time must be in HH:mm or HH:mm:ss format"
+  },
+  "Sessions": {
+    "Title": "Device sessions",
+    "Current": "This device",
+    "Created": "Created",
+    "LastRefresh": "Last refreshed",
+    "Expires": "Expires",
+    "Revoke": "Revoke device",
+    "Confirm": "Revoke all sessions for this device? It will need to sign in again.",
+    "Cancel": "Cancel",
+    "Loading": "Loading sessions…",
+    "Error": "Unable to update device sessions.",
+    "LogoutUnconfirmed": "Signed out locally. Server revocation could not be confirmed; reconnect to complete logout.",
+    "RevocationDelay": "Revoked devices can use an existing access token for up to 15 minutes."
   }
 }

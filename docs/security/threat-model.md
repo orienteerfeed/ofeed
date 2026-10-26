@@ -37,3 +37,15 @@ API ↔ provider/storage and deployment tooling ↔ runtime secrets. See the
 Track unresolved findings in issues with an owner and severity. The current map
 does not establish residual-risk acceptance or a security response SLA. See
 [data protection](data-protection.md) and [operations](../ops/deployment.md).
+
+## Device sessions
+
+User access JWTs expire after 15 minutes and use ES256 with an explicit kid,
+issuer, audience and token type. Refresh credentials are opaque, hashed at rest,
+rotated on every use and bound to an installation ID. Replay revokes the family.
+Device identity alone is not cryptographic sender constraint. Password
+changes/reset and account deletion revoke every refresh family. Issued access
+tokens remain valid until expiry, subject to the existing active-account check.
+Browser refresh is protected by HttpOnly/Secure/SameSite cookies, an exact Origin
+allowlist and a required custom header; access credentials stay in memory.
+See [G4](../specs/session-longevity.md) for acceptance criteria and limitations.

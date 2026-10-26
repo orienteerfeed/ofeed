@@ -103,6 +103,8 @@ vault:
   authPath: auth/kubernetes
   secretPath: kv/data/ofeed/api
   kvVersion: v2
+  # KV secret containing a bundle field with the JSON signing-key bundle.
+  accessKeysSecretPath: ""
   injectFileName: api-env
   secretKeys:
     - DATABASE_URL

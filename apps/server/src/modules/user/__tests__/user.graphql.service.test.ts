@@ -34,6 +34,8 @@ describe('user GraphQL service signIn', () => {
 
     await expect(
       signIn({
+        deviceId: '72c0c95c-16f8-4d0d-a4bf-a84681cfab39',
+        deviceName: 'Browser',
         username: 'missing@example.com',
         password: 'secret',
       }),
@@ -52,6 +54,8 @@ describe('user GraphQL service signIn', () => {
 
     await expect(
       signIn({
+        deviceId: '72c0c95c-16f8-4d0d-a4bf-a84681cfab39',
+        deviceName: 'Browser',
         username: 'inactive@example.com',
         password: 'secret',
       }),

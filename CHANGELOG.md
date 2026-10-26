@@ -10,6 +10,10 @@ and this project adheres to
 
 ### Added
 
+- Device sessions with 15-minute ES256 access JWTs, Vault-managed signing keys,
+  rotating refresh tokens (30 days sliding, 90 days absolute), replay detection,
+  browser automatic renewal and device revocation in profile settings.
+
 - Transactional 24-hour `Idempotency-Key` replay for REST entry and competitor
   creates and competitor status changes, preventing duplicate offline retries.
 
@@ -34,6 +38,12 @@ and this project adheres to
 
 ### Changed
 
+- **Breaking:** signin requires `deviceId` and `deviceName`, and returns
+  `accessToken`/`expiresIn` instead of `token`. Legacy user JWTs require a fresh
+  signin. Browser refresh credentials use HttpOnly cookies; native REST clients
+  receive opaque refresh tokens. Signup, verification and password reset return
+  completion results and require signin. Password changes/reset revoke device sessions.
+
 - Entries with payment receipts derive paid status from their recorded total and
   reject manual paid overrides, currency changes and deletion of their payment history.
 
@@ -43,6 +53,10 @@ and this project adheres to
 ### Removed
 
 ### Fixed
+
+- Serialize StartList reservations across orders and competitors, atomically
+  transfer reservations during processing, and return 409 SLOT_TAKEN for slot
+  conflicts while preserving PUT semantics. Other modes allow shared times.
 
 - Preserve authoritative competitor updates and IOF/MOP snapshots over earlier
   punch observations, consuming pending punches on the previous/current cards so

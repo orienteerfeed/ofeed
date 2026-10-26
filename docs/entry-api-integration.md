@@ -6,6 +6,28 @@ desktop and web integrations.
 
 ## Authentication and user fields
 
+Signin requires `deviceId` (installation UUID) and `deviceName` (1–100 characters).
+REST `/rest/v1/auth/signin` returns `results.data.accessToken`, `expiresIn: 900`,
+`refreshToken` and user metadata. Use the access token as Bearer credentials.
+`POST /rest/v1/auth/refresh` takes `{ refreshToken, deviceId }` and returns a new
+pair in the same envelope; replace the stored refresh token after every success.
+`POST /rest/v1/auth/logout` takes the same credentials and revokes the family,
+even after access expiry. Never retry a consumed refresh token: replay revokes
+its whole family. Refresh expires after 30 days without renewal, or 90 days from
+signin. Legacy user JWTs are rejected; integrations must upgrade and sign in again.
+
+The browser uses GraphQL signin with `X-Ofeed-Session: web`, JSON and an allowed
+Origin; its refresh credential is a host-only HttpOnly cookie. Browser refresh
+and logout send `{ deviceId }` with that cookie and the same header/Origin.
+GraphQL `currentSessions` and `revokeDevice(deviceId)` manage the caller's devices.
+Access-token revocation is bounded by its 15-minute expiry; account deletion
+also retains the existing active-account rejection. Signup, email verification
+and password reset return success/message and direct users to signin.
+
+See [session specification](specs/session-longevity.md) and the
+[operations runbook](ops/runbooks/device-sessions.md), including native secure
+storage, outbox preservation and the strict-rotation lost-response exception.
+
 GraphQL `signin` returns user identity, organisation, emergency contact, activation,
 email verification and creation/update timestamps. Optional metadata can be null.
 `User.password` is nullable and always returns null; password hashes are never API
@@ -104,23 +126,35 @@ data. The QR image encodes the same payload.
 whitespace-only notes as null. Omitting `note` leaves it unchanged. The external-ID
 update and GraphQL competitor update use the same normalization.
 
-For start-list modes (any effective start mode other than `FreeStart`), a changed
-class/time must match a listed free slot in the target class. Arbitrary unlisted,
-occupied or pending-entry-reserved times return 409. Keeping the competitor's own
-class/time is allowed without a vacancy. `FreeStart` accepts arbitrary timestamps
-without slot selection; creating a free-start competitor without a timestamp uses
-the event date-time.
+Only effective `StartList` requires an exclusive free slot. A changed class/time
+must match a listed free slot in the target class. Arbitrary unlisted, occupied
+or pending-entry-reserved times return HTTP 409 with the existing numeric `code`
+and additive `errorCode: "SLOT_TAKEN"`. GraphQL uses `extensions.code: SLOT_TAKEN`.
+Keeping the competitor's own class/time is allowed without a vacancy.
+`MassStart`, `WaveStart`, `PursuitStart` and `FreeStart` permit shared times without
+exclusive slot selection; creating a free-start competitor without a timestamp
+continues to use the event date-time.
 
-A move consumes the target vacancy and releases the previous class/time in the
-same transaction. Moving back consumes the restored slot. Changing only the class
-performs the same transfer. A slot still occupied by another competitor is not
-released. Public entry availability excludes confirmed competitors and active
-pending entries, deduplicates class/time pairs and computes capacity from the
-remaining slots. Entry creation also excludes confirmed competitors' times.
+PUT retains its payload and response semantics. A class-only update preserves
+the existing time: it must be a free slot if the target is StartList. The server
+does not auto-select another time. A successful move consumes the target vacancy
+and restores the previous StartList class/time in the same transaction. A failure
+leaves both the competitor and vacancies unchanged. A slot still occupied by
+another competitor is not released.
 
-The database schema already has a unique constraint on `(classId, startTime)` for
-vacancies. These changes require no new migration. Apply all existing migrations
-to each deployed database; application filtering does not repair historical rows.
+Entry submission reserves the time immediately, even before processing/payment.
+Both subsequent entries and direct competitor creates respect that reservation.
+Checks and writes use the database event lock, with or without Idempotency-Key.
+RECEIVED/APPROVED unprocessed items reserve slots; CANCELLED/REJECTED orders do
+not. Processing atomically transfers an item's own reservation to its competitor.
+Availability lists each free slot once and excludes all competitors' times
+(including the caller's own) and active reservations. Non-StartList classes
+return an empty slot list and use competitor limits for capacity.
+
+The existing vacancy unique constraint remains. No unique constraint is added
+to Competitor or EntryItem, and no new migration is required. Existing historical
+collisions are hidden from availability, not automatically repaired. New G16
+change-item APIs and the broader G21 error redesign remain separate work.
 
 ## Desktop CORS
 

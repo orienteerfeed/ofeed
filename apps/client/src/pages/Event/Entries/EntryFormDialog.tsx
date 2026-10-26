@@ -624,7 +624,7 @@ export function EntryFormDialog({
                     </Alert>
                   )}
                 </div>
-                {entryClass.startMode !== 'FreeStart' && (
+                {entryClass.startMode === 'StartList' && (
                   <Field
                     form={form}
                     {...{

@@ -23,7 +23,10 @@ function startSlotAuthPrisma(options?: {
   competitorAtStartTime?: unknown;
 }) {
   const authorId = options?.authorId ?? 7;
-  return {
+  const prisma = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
+    $transaction: vi.fn(),
+    entryItem: { findFirst: vi.fn().mockResolvedValue(null) },
     class: {
       findUnique: vi.fn().mockResolvedValue({ eventId: 'event-1' }),
     },
@@ -44,6 +47,8 @@ function startSlotAuthPrisma(options?: {
       findUnique: vi.fn().mockResolvedValue({ role: options?.role ?? 'USER' }),
     },
   };
+  prisma.$transaction.mockImplementation((callback) => callback(prisma));
+  return prisma;
 }
 
 describe('createStartSlotVacancy', () => {
@@ -459,6 +464,7 @@ describe('atomic start-slot claims', () => {
   it('allows only one concurrent claim of a vacancy', async () => {
     let available = true;
     const tx = {
+      entryItem: { findFirst: vi.fn().mockResolvedValue(null) },
       competitor: { findFirst: vi.fn().mockResolvedValue(null) },
       startSlotVacancy: {
         deleteMany: vi.fn().mockImplementation(async () => {
@@ -480,6 +486,7 @@ describe('atomic start-slot claims', () => {
 
   it('rejects an occupied time even if a stale vacancy exists', async () => {
     const tx = {
+      entryItem: { findFirst: vi.fn().mockResolvedValue(null) },
       competitor: { findFirst: vi.fn().mockResolvedValue({ id: 7 }) },
       startSlotVacancy: { deleteMany: vi.fn() },
     };
@@ -491,5 +498,46 @@ describe('atomic start-slot claims', () => {
       }),
     ).rejects.toThrow('The requested start time is not available.');
     expect(tx.startSlotVacancy.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('G19 order reservations', () => {
+  it('rejects a pending reservation before consuming a vacancy', async () => {
+    const tx = {
+      entryItem: { findFirst: vi.fn().mockResolvedValue({ id: 12 }) },
+      competitor: { findFirst: vi.fn() },
+      startSlotVacancy: { deleteMany: vi.fn() },
+    };
+    await expect(
+      deleteMatchingStartSlotVacancy(tx as never, {
+        classId: 42,
+        startTime: new Date('2026-06-01T10:00:00Z'),
+        requireAvailable: true,
+      }),
+    ).rejects.toMatchObject({ statusCode: 409, errorCode: 'SLOT_TAKEN' });
+    expect(tx.startSlotVacancy.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('excludes only the processing item from reservation checks', async () => {
+    const tx = {
+      entryItem: { findFirst: vi.fn().mockResolvedValue(null) },
+      competitor: { findFirst: vi.fn().mockResolvedValue(null) },
+      startSlotVacancy: { deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
+    };
+    await deleteMatchingStartSlotVacancy(tx as never, {
+      classId: 42,
+      startTime: new Date('2026-06-01T10:00:00Z'),
+      requireAvailable: true,
+      reservationItemId: 12,
+    });
+    expect(tx.entryItem.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: { not: 12 },
+          competitorId: null,
+          entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
+        }),
+      }),
+    );
   });
 });

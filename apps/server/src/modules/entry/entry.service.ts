@@ -23,7 +23,8 @@ import type { EntryStatus } from '../../generated/prisma/enums.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import { AuthzError, requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
-import { computeClassCapacity } from '../class/class.capacity.js';
+import { eventPunchTransaction } from '../punch/punch-write.js';
+import { computeClassCapacity, requiresStartSlot } from '../class/class.capacity.js';
 import { computeClassFee } from '../class/class.fee.js';
 import { availablePaymentMethodsForEvent } from '../event/event-payment-methods.service.js';
 import { loadLockedCardNumbers } from '../event/event-rental-cards.service.js';
@@ -126,6 +127,31 @@ export function priceEntryOrderItems(
 
     const effectiveStartMode = resolveEffectiveStartMode(cls.startMode, context.defaultStartMode);
 
+    // Start slot selection for slot-based start modes.
+    let startTime: Date | null =
+      effectiveStartMode !== 'FreeStart' && item.startTime ? new Date(item.startTime) : null;
+    if (requiresStartSlot(effectiveStartMode)) {
+      if (!item.startTime) {
+        throw new ValidationError(`A start time selection is required for class ${cls.name}.`);
+      }
+      startTime = new Date(item.startTime);
+      const requestedTime = startTime.getTime();
+      if (!cls.slotStartTimes.some((slot) => slot.getTime() === requestedTime)) {
+        throw new ConflictError(
+          `The requested start time is not available in class ${cls.name}.`,
+          'SLOT_TAKEN',
+        );
+      }
+      const slotKey = `${cls.id}:${requestedTime}`;
+      if (usedSlotKeys.has(slotKey)) {
+        throw new ConflictError(
+          `The requested start time in class ${cls.name} is already taken by another entry in this order.`,
+          'SLOT_TAKEN',
+        );
+      }
+      usedSlotKeys.add(slotKey);
+    }
+
     // Capacity: account for items of the same class earlier in this order.
     const alreadyAdded = addedPerClass.get(cls.id) ?? 0;
     const { availableCount } = computeClassCapacity({
@@ -153,26 +179,6 @@ export function priceEntryOrderItems(
         );
       }
       throw new ValidationError(`Birth year ${birthYear} is not allowed in class ${cls.name}.`);
-    }
-
-    // Start slot selection for slot-based start modes.
-    let startTime: Date | null = null;
-    if (effectiveStartMode !== 'FreeStart') {
-      if (!item.startTime) {
-        throw new ValidationError(`A start time selection is required for class ${cls.name}.`);
-      }
-      startTime = new Date(item.startTime);
-      const requestedTime = startTime.getTime();
-      if (!cls.slotStartTimes.some((slot) => slot.getTime() === requestedTime)) {
-        throw new ConflictError(`The requested start time is not available in class ${cls.name}.`);
-      }
-      const slotKey = `${cls.id}:${requestedTime}`;
-      if (usedSlotKeys.has(slotKey)) {
-        throw new ConflictError(
-          `The requested start time in class ${cls.name} is already taken by another entry in this order.`,
-        );
-      }
-      usedSlotKeys.add(slotKey);
     }
 
     // Card rental must be an enabled event service; a null price means free.
@@ -357,6 +363,15 @@ export async function createEntryOrder(
   input: CreateEntryOrderInput,
   transaction?: CreateTransaction,
 ): Promise<CreatedEntryOrder> {
+  if (!transaction) {
+    const effects: CreateTransaction['afterCommit'] = [];
+    const result = await eventPunchTransaction(prisma as AppPrismaClient, context.eventId, (tx) => {
+      effects.length = 0;
+      return createEntryOrder(tx, context, input, { tx, afterCommit: effects });
+    });
+    for (const effect of effects) await effect();
+    return result;
+  }
   const { eventId, userId } = context;
   const now = context.now ?? new Date();
 
@@ -808,6 +823,15 @@ export async function updateEntryOrderStatus(
   prisma: AppPrismaClient,
   input: UpdateEntryOrderStatusInput,
 ): Promise<SerializedEntryOrder> {
+  return eventPunchTransaction(prisma, input.eventId, (tx) =>
+    updateEntryOrderStatusInTransaction(tx, input),
+  );
+}
+
+async function updateEntryOrderStatusInTransaction(
+  prisma: Prisma.TransactionClient,
+  input: UpdateEntryOrderStatusInput,
+): Promise<SerializedEntryOrder> {
   if (input.status === 'PROCESSED') {
     throw new ValidationError('PROCESSED can only be reached via processEntryOrder.');
   }
@@ -910,12 +934,27 @@ export interface ProcessEntryOrderInput {
 /**
  * Propagate an approved entry order into `Competitor` rows. Each item goes
  * through the standard `storeCompetitor` flow (capacity re-check, start slot
- * consumption, organisation upsert, protocol records). Items already linked
- * to a competitor are skipped, so a partially failed run can be retried.
+ * consumption, organisation upsert, protocol records). The order is processed
+ * under the event lock; each created competitor and item link commit together.
+ * Already-linked items from legacy partial runs are skipped.
  */
 export async function processEntryOrder(
   prisma: AppPrismaClient,
   input: ProcessEntryOrderInput,
+): Promise<SerializedEntryOrder> {
+  let effects: CreateTransaction['afterCommit'] = [];
+  const result = await eventPunchTransaction(prisma, input.eventId, async (tx) => {
+    effects = [];
+    return processEntryOrderInTransaction(tx, input, { tx, afterCommit: effects });
+  });
+  for (const effect of effects) await effect();
+  return result;
+}
+
+async function processEntryOrderInTransaction(
+  prisma: Prisma.TransactionClient,
+  input: ProcessEntryOrderInput,
+  transaction: CreateTransaction,
 ): Promise<SerializedEntryOrder> {
   const entry = await prisma.entry.findFirst({
     where: { id: input.entryId, eventId: input.eventId },
@@ -963,6 +1002,7 @@ export async function processEntryOrder(
       },
       input.userId,
       'OFFICE',
+      { ...transaction, reservationItemId: item.id },
     );
 
     await prisma.entryItem.update({
@@ -982,16 +1022,18 @@ export async function processEntryOrder(
     include: entryInclude,
   });
   const serialized = serializeEntryOrder(processed);
-  void notifyEntryOrderProcessed(
-    {
-      ...serialized,
-      detailAccessToken: createEntryOrderAccessToken(
-        entry.id,
-        entryOrderAccessExpiresAt(entry.event.date, new Date()),
-      ),
-    },
-    entry.event,
-  );
+  transaction.afterCommit.push(() => {
+    void notifyEntryOrderProcessed(
+      {
+        ...serialized,
+        detailAccessToken: createEntryOrderAccessToken(
+          entry.id,
+          entryOrderAccessExpiresAt(entry.event.date, new Date()),
+        ),
+      },
+      entry.event,
+    );
+  });
   return serialized;
 }
 

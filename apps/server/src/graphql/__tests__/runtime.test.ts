@@ -70,6 +70,15 @@ type RuntimeExecutionResult = {
 
 function createContext(): GraphQLContext {
   return {
+    request: new Request('http://localhost:3001/graphql', {
+      method: 'POST',
+      headers: {
+        Origin: 'http://localhost:3000',
+        'Content-Type': 'application/json',
+        'X-Ofeed-Session': 'web',
+      },
+    }),
+    responseHeaders: new Headers(),
     prisma: prismaContext,
     auth: {
       isAuthenticated: true,
@@ -331,7 +340,10 @@ describe('GraphQL runtime execution', () => {
     const createdAt = new Date('2026-01-01T00:00:00Z');
     const updatedAt = new Date('2026-02-01T00:00:00Z');
     authServiceMock.authenticateUser.mockResolvedValue({
-      token: 'login-token',
+      accessToken: 'login-token',
+      expiresIn: 900,
+      refreshToken: 'a'.repeat(43),
+      refreshExpiresAt: new Date(Date.now() + 60_000),
       user: {
         userId: 7,
         firstName: 'Test',
@@ -347,15 +359,15 @@ describe('GraphQL runtime execution', () => {
       },
     });
     const result = await execute(`mutation {
-      signin(input: { username: "runner@example.test", password: "valid-password" }) {
-        token
+      signin(input: { username: "runner@example.test", password: "valid-password", deviceId: "72c0c95c-16f8-4d0d-a4bf-a84681cfab39", deviceName: "Browser" }) {
+        accessToken
         user { id email firstname lastname role organisation emergencyContact active emailVerifiedAt createdAt updatedAt password }
       }
     }`);
     expect(result.errors).toBeUndefined();
     expect(result.data).toMatchObject({
       signin: {
-        token: 'login-token',
+        accessToken: 'login-token',
         user: {
           id: 7,
           active: true,
@@ -376,8 +388,8 @@ describe('GraphQL runtime execution', () => {
     const result = await execute(
       `#graphql
         mutation Signin {
-          signin(input: { username: "runner@example.test", password: "bad-password" }) {
-            token
+          signin(input: { username: "runner@example.test", password: "bad-password", deviceId: "72c0c95c-16f8-4d0d-a4bf-a84681cfab39", deviceName: "Browser" }) {
+            accessToken
           }
         }
       `,
@@ -389,6 +401,10 @@ describe('GraphQL runtime execution', () => {
     expect(authServiceMock.authenticateUser).toHaveBeenCalledWith(
       'runner@example.test',
       'bad-password',
+      expect.objectContaining({
+        deviceId: '72c0c95c-16f8-4d0d-a4bf-a84681cfab39',
+        deviceName: 'Browser',
+      }),
     );
   });
 
@@ -397,13 +413,15 @@ describe('GraphQL runtime execution', () => {
       `#graphql
         mutation SigninValidation($input: LoginInput) {
           signin(input: $input) {
-            token
+            accessToken
           }
         }
       `,
       createContext(),
       {
         input: {
+          deviceId: '72c0c95c-16f8-4d0d-a4bf-a84681cfab39',
+          deviceName: 'Browser',
           username: 'r'.repeat(256),
           password: 'bad-password',
         },
@@ -416,71 +434,13 @@ describe('GraphQL runtime execution', () => {
     expect(authServiceMock.authenticateUser).not.toHaveBeenCalled();
   });
 
-  it('returns token and user details from signup', async () => {
-    authServiceMock.signupUser.mockResolvedValue({
-      token: 'signup-token',
-      user: {
-        id: 42,
-        role: 'USER',
-        organisation: 'OK Test',
-        emergencyContact: null,
-      },
-    });
-
+  it('returns signup completion without issuing credentials', async () => {
+    authServiceMock.signupUser.mockResolvedValue({ success: true, message: 'Account created' });
     const result = await execute(
-      `#graphql
-        mutation Signup($input: UserInput) {
-          signup(input: $input) {
-            token
-            message
-            user {
-              id
-              firstname
-              lastname
-              email
-              role
-              organisation
-              emergencyContact
-            }
-          }
-        }
-      `,
-      createContext(),
-      {
-        input: {
-          email: 'runner@example.test',
-          password: 'secret-password',
-          firstname: 'Test',
-          lastname: 'Runner',
-          organisation: 'OK Test',
-        },
-      },
+      `mutation { signup(input: { email: "runner@example.test", password: "secret-password", firstname: "Test", lastname: "Runner" }) { success message } }`,
     );
-
     expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual({
-      signup: {
-        token: 'signup-token',
-        message: 'User successfuly created',
-        user: {
-          id: 42,
-          firstname: 'Test',
-          lastname: 'Runner',
-          email: 'runner@example.test',
-          role: 'USER',
-          organisation: 'OK Test',
-          emergencyContact: null,
-        },
-      },
-    });
-    expect(authServiceMock.signupUser).toHaveBeenCalledWith(
-      'runner@example.test',
-      'secret-password',
-      'Test',
-      'Runner',
-      'https://app.example.test/activate',
-      'OK Test',
-    );
+    expect(result.data).toEqual({ signup: { success: true, message: 'Account created' } });
   });
 
   it('maps signup validation failures to public GraphQL errors', async () => {
@@ -490,7 +450,7 @@ describe('GraphQL runtime execution', () => {
       `#graphql
         mutation Signup($input: UserInput) {
           signup(input: $input) {
-            token
+            success
           }
         }
       `,
@@ -510,56 +470,13 @@ describe('GraphQL runtime execution', () => {
     expect(result.errors?.[0]?.extensions?.code).toBe('BAD_USER_INPUT');
   });
 
-  it('returns token and user details from email verification', async () => {
-    authServiceMock.verifyEmail.mockResolvedValue({
-      token: 'verified-token',
-      user: {
-        userId: 77,
-        firstName: 'Verified',
-        lastName: 'Runner',
-        email: 'verified@example.test',
-        role: 'USER',
-        organisation: 'OK Test',
-        emergencyContact: null,
-      },
-    });
-
+  it('returns email verification completion without issuing credentials', async () => {
+    authServiceMock.verifyEmail.mockResolvedValue({ success: true, message: 'Email verified' });
     const result = await execute(
-      `#graphql
-        mutation VerifyEmail($token: String!) {
-          verifyEmail(token: $token) {
-            token
-            user {
-              id
-              firstname
-              lastname
-              email
-              role
-              organisation
-              emergencyContact
-            }
-          }
-        }
-      `,
-      createContext(),
-      { token: 'email-token' },
+      `mutation { verifyEmail(token: "email-token") { success message } }`,
     );
-
     expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual({
-      verifyEmail: {
-        token: 'verified-token',
-        user: {
-          id: 77,
-          firstname: 'Verified',
-          lastname: 'Runner',
-          email: 'verified@example.test',
-          role: 'USER',
-          organisation: 'OK Test',
-          emergencyContact: null,
-        },
-      },
-    });
+    expect(result.data).toEqual({ verifyEmail: { success: true, message: 'Email verified' } });
     expect(authServiceMock.verifyEmail).toHaveBeenCalledWith('email-token');
   });
 

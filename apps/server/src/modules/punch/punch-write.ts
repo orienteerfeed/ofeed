@@ -71,9 +71,8 @@ export async function supersedeCompetitorPunches(
 export async function publishPunchChanges(eventId: string, changes: PunchChanges) {
   if (changes.size === 0) return;
   // Loaded after commit; avoids service-registration dependency cycles.
-  const { publishUpdatedCompetitorsById, publishUpdatedClasses } = await import(
-    '../competitor/competitor-change.service.js'
-  );
+  const { publishUpdatedCompetitorsById, publishUpdatedClasses } =
+    await import('../competitor/competitor-change.service.js');
   const report = (id: number, error: unknown) =>
     console.error('Punch subscription publication failed', { eventId, id, error });
   await publishUpdatedCompetitorsById(eventId, changes.keys(), report);

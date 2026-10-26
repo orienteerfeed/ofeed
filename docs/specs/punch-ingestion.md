@@ -75,8 +75,7 @@ OpenAPI contract tests, lint and formatting checks.
 Snapshot regressions cover timing corrections without splits, replacement and
 clearing of existing splits, consuming unknown/ambiguous pending punches on old
 and new cards, isolation from other cards/events/assigned competitors, IOF and MOP
-creation/update/unchanged imports, retry/source promotion and later new punches.
-
+ creation/update/unchanged imports, retry/source promotion and later new punches.
 Apply the additive migration before the application rollout. Complete all writer
 upgrades before enabling ingestion clients; mixed old/new writers cannot provide
 the concurrency guarantee. No production migration is authorized by this spec.

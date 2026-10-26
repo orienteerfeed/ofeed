@@ -423,8 +423,8 @@
         "Verifying": "Ověřuji e-mail",
         "VerifyingDescription": "Prosím čekej, ověřujeme tvou e-mailovou adresu.",
         "Verified": "E-mail ověřen",
-        "VerifiedDescription": "Tvůj e-mail byl ověřen a jsi přihlášen.",
-        "ContinueDescription": "Nyní máš plný přístup k OFeedu.",
+        "VerifiedDescription": "Tvá e-mailová adresa byla ověřena.",
+        "ContinueDescription": "Přihlas se a pokračuj do OFeedu.",
         "ContinueToApp": "Pokračovat do OFeedu",
         "AlreadyVerified": "Již ověřeno",
         "AlreadyVerifiedDescription": "Tvá e-mailová adresa je již ověřena.",
@@ -706,7 +706,10 @@
           "Partial": "Částečně zaplaceno",
           "Paid": "Zaplaceno",
           "Overpaid": "Přeplatek",
-          "Methods": { "CASH": "Hotově", "QR": "QR platba" },
+          "Methods": {
+            "CASH": "Hotově",
+            "QR": "QR platba"
+          },
           "DialogTitle": "Zaznamenat přijatou platbu",
           "Method": "Metoda",
           "Amount": "Částka",
@@ -2060,5 +2063,19 @@
     "longitudeRange": "Zeměpisná délka musí být mezi -180 a 180",
     "zeroTimeRequired": "Nulový čas je povinný",
     "zeroTimeFormat": "Čas musí být ve formátu HH:mm nebo HH:mm:ss"
+  },
+  "Sessions": {
+    "Title": "Relace zařízení",
+    "Current": "Toto zařízení",
+    "Created": "Vytvořeno",
+    "LastRefresh": "Poslední obnovení",
+    "Expires": "Platnost do",
+    "Revoke": "Odhlásit zařízení",
+    "Confirm": "Odhlásit všechny relace tohoto zařízení? Bude se muset znovu přihlásit.",
+    "Cancel": "Zrušit",
+    "Loading": "Načítání relací…",
+    "Error": "Relace zařízení se nepodařilo aktualizovat.",
+    "LogoutUnconfirmed": "Odhlášení na tomto zařízení proběhlo. Odvolání na serveru nebylo potvrzeno; připojte se k dokončení odhlášení.",
+    "RevocationDelay": "Odhlášená zařízení mohou používat stávající přístupový token až 15 minut."
   }
 }

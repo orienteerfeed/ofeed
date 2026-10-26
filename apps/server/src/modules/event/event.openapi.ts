@@ -829,7 +829,7 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         201: dataResponse('Entry order created', createdEntryResponseSchema),
         404: okJson('Event not found'),
         409: okJson(
-          'Entries not configured, entries closed, class full, start slot unavailable, or Idempotency-Key body mismatch',
+          'Entries not configured, entries closed, class full, start slot unavailable (errorCode SLOT_TAKEN), or Idempotency-Key body mismatch',
         ),
         422: okJson('Validation error'),
         500: okJson('Internal server error'),
@@ -963,7 +963,7 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
       operationId: 'eventUpdateCompetitorById',
       summary: 'Update competitor by id',
       description:
-        'An empty or whitespace-only note clears it to null. For start-list modes, a changed class/time must match a listed free slot; occupied or reserved times return 409. The old slot is released. FreeStart accepts arbitrary timestamps and does not require a slot.',
+        'An empty or whitespace-only note clears it to null. For effective StartList, a changed class/time must match a listed free slot; occupied, reserved or unlisted times return 409 with errorCode SLOT_TAKEN. An unchanged own time is allowed. The old slot is released atomically. A class-only update preserves the existing time and never auto-selects a slot. Other start modes permit shared times without exclusive slot selection.',
       security: bearerOrBasicSecurity,
       parameters: [eventIdParam, competitorIdParam],
       requestBody: jsonBody(competitorUpdateBodySchema),

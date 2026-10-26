@@ -426,3 +426,12 @@ v3.0. See [LICENSE](./LICENSE).
 Contributions are accepted under the terms of [CLA.md](./CLA.md). By 
 contributing, you agree that your contributions may be relicensed
 and used in commercial products and SaaS offerings.
+
+## Device-session authentication
+
+User signin requires device metadata and returns a 15-minute access JWT. Native
+REST clients rotate opaque refresh tokens; the web client renews through protected
+HttpOnly cookies. Production requires a Vault-delivered ES256 signing-key file.
+This changes the signin contract and invalidates legacy user tokens at cutover.
+See the [integration contract](docs/entry-api-integration.md) and
+[device-session operations](docs/ops/runbooks/device-sessions.md).

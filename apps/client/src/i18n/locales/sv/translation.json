@@ -413,8 +413,8 @@
         "Verifying": "Verifierar e-post",
         "VerifyingDescription": "Vänta medan vi verifierar din e-postadress.",
         "Verified": "E-post verifierad",
-        "VerifiedDescription": "Din e-post har verifierats och du är nu inloggad.",
-        "ContinueDescription": "Du har nu full tillgång till OFeed.",
+        "VerifiedDescription": "Din e-postadress har verifierats.",
+        "ContinueDescription": "Logga in för att fortsätta till OFeed.",
         "ContinueToApp": "Fortsätt till OFeed",
         "AlreadyVerified": "Redan verifierad",
         "AlreadyVerifiedDescription": "Din e-postadress är redan verifierad.",
@@ -704,7 +704,10 @@
           "Partial": "Delvis betald",
           "Paid": "Betald",
           "Overpaid": "Överbetald",
-          "Methods": { "CASH": "Kontant", "QR": "QR-betalning" },
+          "Methods": {
+            "CASH": "Kontant",
+            "QR": "QR-betalning"
+          },
           "DialogTitle": "Registrera mottagen betalning",
           "Method": "Metod",
           "Amount": "Belopp",
@@ -2059,5 +2062,19 @@
       "Tooltip": "Verifierad e-postadress",
       "Label": "Verifierad e-postadress"
     }
+  },
+  "Sessions": {
+    "Title": "Enhetssessioner",
+    "Current": "Den här enheten",
+    "Created": "Skapad",
+    "LastRefresh": "Senast förnyad",
+    "Expires": "Går ut",
+    "Revoke": "Återkalla enhet",
+    "Confirm": "Återkalla alla sessioner för den här enheten? En ny inloggning krävs.",
+    "Cancel": "Avbryt",
+    "Loading": "Läser in sessioner…",
+    "Error": "Det gick inte att uppdatera enhetssessionerna.",
+    "LogoutUnconfirmed": "Utloggad lokalt. Återkallelsen på servern kunde inte bekräftas; anslut igen för att slutföra utloggningen.",
+    "RevocationDelay": "Återkallade enheter kan använda en befintlig åtkomsttoken i upp till 15 minuter."
   }
 }
