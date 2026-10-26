@@ -367,6 +367,11 @@ export async function upsertMeosCompetitor(
       select: { id: true, classId: true },
     });
 
+    await supersedeCompetitorPunches(tx, [created.id], {
+      eventId,
+      cards: [createData.card],
+    });
+
     await createCompetitorProtocolEntries(tx, {
       eventId,
       competitorId: created.id,
@@ -388,7 +393,10 @@ export async function upsertMeosCompetitor(
     return { updated: true, classId: created.classId, competitorId: created.id };
   }
 
-  await supersedeCompetitorPunches(tx, [existing.id]);
+  await supersedeCompetitorPunches(tx, [existing.id], {
+    eventId,
+    cards: [existing.card, cmp.card],
+  });
   const fieldChanges = detectCompetitorChanges(
     existing as unknown as Record<string, unknown>,
     incomingData,

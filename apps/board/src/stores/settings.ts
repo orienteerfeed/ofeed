@@ -2,15 +2,27 @@ import { ref, reactive, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { ScrollType } from '@/types/layout'
-import type { CategoryGender } from '@/types/category'
+import {
+  DEFAULT_AWARDED_PLACES,
+  type CategoryGender,
+  type CategorySourceSettings,
+  type ResultMode,
+} from '@/types/category'
 
-type CategoryDisplay = {
+export type CategoryDisplay = {
   name: string
   selected: boolean
   column: null | number
   order: number
   colorOverride?: CategoryGender | null
+  resultModeOverride?: ResultMode | null
+  awardedPlacesOverride?: number | null
 }
+
+type CategoryOverrides = Pick<
+  CategoryDisplay,
+  'colorOverride' | 'resultModeOverride' | 'awardedPlacesOverride'
+>
 
 type CategoryDisplaySelected = Omit<CategoryDisplay, 'column'> & {
   column: number
@@ -27,10 +39,12 @@ export const useSettingStore = defineStore(
     }
 
     const compactMode = ref(true)
+    const showClub = ref(false)
+    const showRegistration = ref(false)
     const showEmojis = ref(true)
     const pinnedCount = ref(3)
 
-    const scrollType = ref<ScrollType>('page')
+    const scrollType = ref<ScrollType>('continues')
 
     const scrollColumnsCount = ref(1)
     function setScrollColumnsCount(count: number) {
@@ -38,13 +52,15 @@ export const useSettingStore = defineStore(
       autoUpdateCategoryDisplayColumns()
     }
 
-    const readLineTimeSeconds = ref(import.meta.env.PROD ? 0.3 : 0.1)
+    const readLineTimeSeconds = ref(1)
     const readLineTimeMS = computed(() => readLineTimeSeconds.value * 1000)
     function setScrollType(type: ScrollType) {
       scrollType.value = type
     }
 
     const showUnfinishedAthletes = ref(true)
+    const hideEmptyCategories = ref(true)
+    const announceWinners = ref(true)
 
     const availableCategories = ref<string[]>([])
     const categoryCounts = reactive<Record<string, number>>({})
@@ -59,9 +75,40 @@ export const useSettingStore = defineStore(
       )
         return // Bugfix skip rewrite update
       availableCategories.value = categories
-      categoriesDisplayRaw.value = categories.map(createSelectedCategoryItem)
-      if (scrollColumnsCount.value > 1) {
+      // Keep persisted per-class settings; only add new classes and drop gone ones.
+      const known = new Map(categoriesDisplayRaw.value.map((c) => [c.name, c]))
+      const merged = categories.map(
+        (name, index) =>
+          known.get(name) ??
+          createSelectedCategoryItem(name, categoriesDisplayRaw.value.length + index)
+      )
+      categoriesDisplayRaw.value = merged
+        .sort((a, b) => a.order - b.order)
+        .map((c, order) => ({ ...c, order }))
+      const hasNew = categories.some((name) => !known.has(name))
+      if (hasNew && scrollColumnsCount.value > 1) {
         autoUpdateCategoryDisplayColumns()
+      }
+    }
+
+    // Class settings defined by the data source (not persisted, they win).
+    const categorySources = reactive<Record<string, CategorySourceSettings>>({})
+    function updateCategorySource(name: string, source: CategorySourceSettings) {
+      categorySources[name] = source
+    }
+
+    function resolveCategorySettings(
+      name: string,
+      source: CategorySourceSettings = categorySources[name] ?? {}
+    ) {
+      const display = categoriesDisplayRaw.value.find((c) => c.name === name)
+      return {
+        colorOverride: source.gender ?? display?.colorOverride ?? undefined,
+        resultMode: source.resultMode ?? display?.resultModeOverride ?? 'Default',
+        awardedPlaces:
+          source.awardedPlaces ??
+          display?.awardedPlacesOverride ??
+          DEFAULT_AWARDED_PLACES,
       }
     }
 
@@ -106,6 +153,19 @@ export const useSettingStore = defineStore(
         column: 1,
         order: index,
         colorOverride: null,
+        resultModeOverride: null,
+        awardedPlacesOverride: null,
+      }
+    }
+
+    function setCategoryOverride(
+      category: CategoryDisplay,
+      overrides: CategoryOverrides
+    ) {
+      const idx = categoriesDisplayRaw.value.findIndex((c) => c.name === category.name)
+      const existing = categoriesDisplayRaw.value[idx]
+      if (idx !== -1 && existing) {
+        categoriesDisplayRaw.value[idx] = { ...existing, ...overrides }
       }
     }
 
@@ -113,11 +173,7 @@ export const useSettingStore = defineStore(
       category: CategoryDisplay,
       color: CategoryGender | null
     ) {
-      const idx = categoriesDisplayRaw.value.findIndex((c) => c.name === category.name)
-      const existing = categoriesDisplayRaw.value[idx]
-      if (idx !== -1 && existing) {
-        categoriesDisplayRaw.value[idx] = { ...existing, colorOverride: color }
-      }
+      setCategoryOverride(category, { colorOverride: color })
     }
 
     function setCategorySelected(
@@ -189,6 +245,8 @@ export const useSettingStore = defineStore(
       setSettingsDisplayed,
 
       compactMode,
+      showClub,
+      showRegistration,
       showEmojis,
       pinnedCount,
 
@@ -202,9 +260,14 @@ export const useSettingStore = defineStore(
       readLineTimeMS,
 
       showUnfinishedAthletes,
+      hideEmptyCategories,
+      announceWinners,
       availableCategories,
       categoryCounts,
       updateCategoryCount,
+      categorySources,
+      updateCategorySource,
+      resolveCategorySettings,
       categoriesDisplayRaw, // Export for persist to work
       categoriesDisplay,
       categoriesDisplayByColumn,
@@ -214,15 +277,16 @@ export const useSettingStore = defineStore(
       setCategorySelected,
       selectCategories,
       setCategoryColorOverride,
+      setCategoryOverride,
       moveCategoryToIndex,
     }
   },
   {
     persist: {
       pick: [
-        'compactMode', 'showEmojis', 'pinnedCount',
+        'compactMode', 'showClub', 'showRegistration', 'showEmojis', 'pinnedCount',
         'scrollType', 'scrollColumnsCount', 'readLineTimeSeconds',
-        'showUnfinishedAthletes', 'categoriesDisplayRaw',
+        'showUnfinishedAthletes', 'hideEmptyCategories', 'announceWinners', 'categoriesDisplayRaw',
       ],
     },
   }

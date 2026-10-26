@@ -72,7 +72,6 @@ retry and physical uniqueness, atomic rollback, pending assignment, timing/statu
 precedence, snapshots and deletion. Default server tests skip this suite when the
 variable is absent. Never point this suite at a production or shared development
 database. Prisma generation and applying migrations are separate prerequisites.
-
 ## Payment concurrency integration tests
 
 Payment integration tests require a disposable local MariaDB database named
@@ -89,8 +88,6 @@ The suite verifies concurrent payments and retries, races with manual updates an
 repricing, currency protection, atomic rollback, report filters and database
 constraints. Never point it at a shared or production database. Prisma generation
 and migration deployment to the disposable database are separate prerequisites.
-
-
 ## Create idempotency concurrency tests
 
 Use a disposable local MariaDB database named `ofeed_idempotency_test` (or

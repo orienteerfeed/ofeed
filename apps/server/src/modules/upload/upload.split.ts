@@ -214,7 +214,14 @@ async function upsertSplitsUnsafe(
     const created = Math.max(0, incoming.length - previous.length);
     const deleted = Math.max(0, previous.length - incoming.length);
     const changeMade = created > 0 || updated > 0 || deleted > 0;
-    await supersedeCompetitorPunches(tx, [competitorId]);
+    const current = await tx.competitor.findUniqueOrThrow({
+      where: { id: competitorId },
+      select: { card: true },
+    });
+    await supersedeCompetitorPunches(tx, [competitorId], {
+      eventId: competitor.class.eventId,
+      cards: [current.card],
+    });
     if (changeMade) {
       await tx.split.deleteMany({ where: { competitorId } });
       if (incoming.length)

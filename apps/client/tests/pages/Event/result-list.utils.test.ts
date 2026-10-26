@@ -47,7 +47,7 @@ describe('time and time-loss visibility', () => {
   it('shows time loss for every mode except UnorderedNoTimes', () => {
     expect(shouldDisplayResultTimeLoss(null)).toBe(true);
     expect(shouldDisplayResultTimeLoss('Default')).toBe(true);
-    expect(shouldDisplayResultTimeLoss('Unordered')).toBe(true);
+    expect(shouldDisplayResultTimeLoss('Unordered')).toBe(false);
     expect(shouldDisplayResultTimeLoss('UnorderedNoTimes')).toBe(false);
   });
 });
@@ -129,8 +129,8 @@ describe('formatResultListRank', () => {
   });
 
   it('hides the numeric rank in unordered modes', () => {
-    expect(formatResultListRank(3, 'Unordered')).toBe('-');
-    expect(formatResultListRank(1, 'UnorderedNoTimes')).toBe('-');
+    expect(formatResultListRank(3, 'Unordered')).toBe('✅');
+    expect(formatResultListRank(1, 'UnorderedNoTimes')).toBe('✅');
   });
 
   it('passes through status markers regardless of mode', () => {

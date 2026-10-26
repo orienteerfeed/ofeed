@@ -31,9 +31,17 @@ split snapshots remain authoritative. No frontend or punch browsing API is added
   start and earliest finish at or after start. Existing start is the fallback.
   SRR sets Finished from Inactive/Active/Finished only; READOUT sets OK even over
   adjudication. Later SRR cannot downgrade a readout result.
-- Competitor creation/card/timing changes retry pending matches. Snapshot writes
-  supersede already assigned observations, including observations absent from
-  the snapshot. Retries never resurrect superseded projections.
+- Competitor creation retries pending matches. `updateCompetitor`, IOF XML and
+  MOP imports are authoritative over previously stored observations. Under the
+  event lock they supersede assigned observations and pending observations for
+  the competitor's previous/current card within the event, including observations
+  absent from the snapshot. Observations assigned to another competitor are
+  unaffected. This includes ambiguous shared-card observations, which must not
+  later refill an authoritative snapshot.
+- Supplied splits replace the complete list, including an empty list. Omitting
+  splits in `updateCompetitor` preserves existing splits. Timing changes survive
+  reconciliation. Retries and source promotion never resurrect consumed punches;
+  genuinely new observations received after the write may apply.
 - Punch application and field changes write Protocol atomically, attributed to
   the original receipt author. Publish competitorUpdated and class updates
   after commit, once per changed competitor/class. Pure retries do neither.
@@ -64,6 +72,10 @@ constraints and races against disposable MariaDB, in addition to service tests.
 Run Prisma generation, focused server Vitest suites, server/GraphQL type checks,
 OpenAPI contract tests, lint and formatting checks.
 
+Snapshot regressions cover timing corrections without splits, replacement and
+clearing of existing splits, consuming unknown/ambiguous pending punches on old
+and new cards, isolation from other cards/events/assigned competitors, IOF and MOP
+ creation/update/unchanged imports, retry/source promotion and later new punches.
 Apply the additive migration before the application rollout. Complete all writer
 upgrades before enabling ingestion clients; mixed old/new writers cannot provide
 the concurrency guarantee. No production migration is authorized by this spec.

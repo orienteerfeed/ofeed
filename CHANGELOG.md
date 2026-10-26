@@ -22,7 +22,6 @@ and this project adheres to
 
 - Auditable CASH/QR entry payment receipts with retry-safe recording, operator and
   device attribution, and event/desk closing-report endpoints.
-
 - Event-scoped SRR/SI readout punch ingestion with durable retry identities,
   cross-device deduplication, delayed card matching and live result updates.
 
@@ -59,6 +58,9 @@ and this project adheres to
   transfer reservations during processing, and return 409 SLOT_TAKEN for slot
   conflicts while preserving PUT semantics. Other modes allow shared times.
 
+- Preserve authoritative competitor updates and IOF/MOP snapshots over earlier
+  punch observations, consuming pending punches on the previous/current cards so
+  retries and delayed assignment cannot restore superseded data.
 - Resolve sign-in user timestamps and activation metadata, return authentication
   errors before reading entry payment updates, and clear empty competitor notes.
 - Consume and restore competitor start slots atomically across time and class

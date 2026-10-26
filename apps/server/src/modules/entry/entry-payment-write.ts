@@ -1,5 +1,4 @@
 import type { AppPrismaClient } from '../../db/prisma-client.js';
-import { lockPunchEvent } from '../punch/punch-write.js';
 import { NotFoundError } from '../../exceptions/index.js';
 import { Prisma } from '../../generated/prisma/client.js';
 
@@ -14,7 +13,6 @@ export async function entryPaymentTransaction<T>(
     try {
       return await prisma.$transaction(
         async (tx) => {
-          await lockPunchEvent(tx, eventId);
           const rows = await tx.$queryRaw<Array<{ id: string }>>`
           SELECT id FROM Entry WHERE id = ${entryId} AND eventId = ${eventId} FOR UPDATE
         `;

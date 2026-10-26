@@ -32,6 +32,8 @@ import {
 } from '../../../utils/subscriptionUtils.js';
 import { deleteEventCompetitorAndProtocols, updateCompetitor } from '../../event/event.service.js';
 import { upsertSplits } from '../../upload/upload.split.js';
+import { upsertCompetitor } from '../../upload/upload.competitor.js';
+import { processMopDocument } from '../../meos/meos.service.js';
 import { ingestPunches, PunchConflictError, reconcileEventPunches } from '../punch.service.js';
 import { eventPunchTransaction, supersedeCompetitorPunches } from '../punch-write.js';
 
@@ -220,9 +222,7 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     await ingestPunches(client, auth, eventId, batch(0, 10));
 
     expect((await competitor()).startTime).toEqual(at(10));
-    expect(
-      await client.startSlotVacancy.count({ where: { classId, startTime: at(10) } }),
-    ).toBe(1);
+    expect(await client.startSlotVacancy.count({ where: { classId, startTime: at(10) } })).toBe(1);
   });
   it('rolls back a whole batch when a later retry identity conflicts', async () => {
     const existing = batch();
@@ -236,7 +236,7 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     expect(await client.punch.count({ where: { eventId } })).toBe(1);
     expect((await competitor()).splits).toHaveLength(1);
   });
-  it('retains unknown cards and matches them on a real competitor card update', async () => {
+  it('consumes unknown-card punches on an authoritative card update', async () => {
     await client.competitor.update({ where: { id: competitorId }, data: { card: null } });
     const input = batch();
     expect(await ingestPunches(client, auth, eventId, input)).toMatchObject([
@@ -244,9 +244,13 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     ]);
     expect(await client.protocol.count({ where: { eventId } })).toBe(0);
     await updateCompetitor(eventId, competitorId, 'OFFICE', { card: 8123456 }, userId);
-    expect((await competitor()).splits).toMatchObject([{ time: 60 }]);
+    expect((await competitor()).splits).toEqual([]);
+    expect(await client.punch.findFirstOrThrow({ where: { eventId } })).toMatchObject({
+      competitorId: null,
+      superseded: true,
+    });
     expect(await ingestPunches(client, auth, eventId, input)).toMatchObject([
-      { status: 'DUPLICATE', competitorId },
+      { status: 'DUPLICATE' },
     ]);
   });
   it('resolves shared cards through bounded windows and keeps unmatched observations pending', async () => {
@@ -270,8 +274,17 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
       { status: 'UNKNOWN_CARD' },
     ]);
     await updateCompetitor(eventId, competitorId, 'OFFICE', { card: 9000000 }, userId);
-    expect(await client.punch.count({ where: { eventId, competitorId: later.id } })).toBe(2);
+    expect(await client.punch.count({ where: { eventId, competitorId: later.id } })).toBe(1);
+    expect(
+      await client.punch.count({ where: { eventId, competitorId: later.id, superseded: false } }),
+    ).toBe(1);
     expect(await client.punch.count({ where: { eventId, competitorId } })).toBe(1);
+    expect(
+      await client.punch.findFirstOrThrow({ where: { eventId, controlCode: 33 } }),
+    ).toMatchObject({
+      competitorId: null,
+      superseded: true,
+    });
   });
   it('does not resurrect split projections after REST or IOF snapshots, including source promotion', async () => {
     const input = batch();
@@ -442,7 +455,7 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     expect((await competitor()).splits).toHaveLength(201);
   });
 
-  it('serializes card changes with ingestion and matches pending punches when the card returns', async () => {
+  it('serializes card changes with ingestion and consumes pending punches when the card returns', async () => {
     const input = batch();
     const [results] = await Promise.all([
       ingestPunches(second, auth, eventId, input),
@@ -451,8 +464,189 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     const stored = await client.punch.findFirstOrThrow({ where: { eventId } });
     expect(stored.competitorId).toBe(results[0].status === 'STORED' ? competitorId : null);
     await updateCompetitor(eventId, competitorId, 'OFFICE', { card: 8123456 }, userId);
-    expect((await competitor()).splits).toHaveLength(1);
+    const applied = results[0].status === 'STORED';
+    expect((await competitor()).splits).toHaveLength(applied ? 1 : 0);
     expect(await client.punchReceipt.count({ where: { eventId } })).toBe(1);
-    expect(await client.protocol.count({ where: { eventId, type: 'punch_store' } })).toBe(1);
+    expect(await client.protocol.count({ where: { eventId, type: 'punch_store' } })).toBe(
+      applied ? 1 : 0,
+    );
   });
+
+  it('preserves explicit timing corrections and omitted splits through retries and source promotion', async () => {
+    await ingestPunches(client, auth, eventId, batch(0, 0));
+    const control = batch(31, 60);
+    await ingestPunches(client, auth, eventId, control);
+    await ingestPunches(client, auth, eventId, batch(-1, 120));
+    await updateCompetitor(
+      eventId,
+      competitorId,
+      'OFFICE',
+      {
+        startTime: at(10),
+        finishTime: at(150),
+        time: 140,
+        status: 'MissingPunch',
+      },
+      userId,
+    );
+    await ingestPunches(client, auth, eventId, control);
+    await ingestPunches(client, auth, eventId, batch(0, 0, 'READOUT'));
+    await ingestPunches(client, auth, eventId, batch(-1, 120, 'READOUT'));
+    expect(await competitor()).toMatchObject({
+      startTime: at(10),
+      finishTime: at(150),
+      time: 140,
+      status: 'MissingPunch',
+      splits: [{ controlCode: 31, time: 60 }],
+    });
+    expect(await client.punch.count({ where: { eventId, superseded: false } })).toBe(0);
+    await ingestPunches(client, auth, eventId, batch(32, 100));
+    expect((await competitor()).splits).toHaveLength(2);
+  });
+
+  it('consumes pending punches on old/new cards, preserving unrelated cards', async () => {
+    await client.competitor.update({ where: { id: competitorId }, data: { card: null } });
+    const pending = batch();
+    pending.punches.push({ ...batch(32, 90).punches[0], card: 9000000 });
+    pending.punches.push({ ...batch(33, 100).punches[0], card: 9999999 });
+    await ingestPunches(client, auth, eventId, pending);
+    await client.competitor.update({ where: { id: competitorId }, data: { card: 8123456 } });
+    await client.split.create({ data: { competitorId, controlCode: 99, time: 30 } });
+    await updateCompetitor(
+      eventId,
+      competitorId,
+      'OFFICE',
+      {
+        card: 9000000,
+        splits: [{ controlCode: 34, time: 110 }],
+      },
+      userId,
+    );
+    await ingestPunches(client, auth, eventId, pending);
+    await ingestPunches(client, auth, eventId, {
+      ...pending,
+      source: 'READOUT',
+      deviceId: 'readout',
+    });
+    expect((await competitor()).splits).toMatchObject([{ controlCode: 34, time: 110 }]);
+    expect(await client.punch.count({ where: { eventId, superseded: true } })).toBe(2);
+    expect(
+      await client.punch.findFirstOrThrow({ where: { eventId, card: 9999999 } }),
+    ).toMatchObject({
+      competitorId: null,
+      superseded: false,
+    });
+    await updateCompetitor(eventId, competitorId, 'OFFICE', { splits: [] }, userId);
+    expect((await competitor()).splits).toEqual([]);
+  });
+
+  it('does not consume pending observations for the same card in another event', async () => {
+    const other = await client.event.create({
+      data: { name: 'Other event', date: at(0), authorId: userId, sportId, currencyId },
+    });
+    try {
+      const input = batch();
+      await ingestPunches(client, auth, other.id, input);
+      await updateCompetitor(eventId, competitorId, 'OFFICE', { splits: [] }, userId);
+      expect(await client.punch.findFirstOrThrow({ where: { eventId: other.id } })).toMatchObject({
+        competitorId: null,
+        superseded: false,
+      });
+    } finally {
+      await client.event.delete({ where: { id: other.id } });
+    }
+  });
+
+  it.each(['IOF', 'MOP'] as const)(
+    'consumes pre-import pending punches for %s creation, updates and unchanged snapshots',
+    async (source) => {
+      await client.competitor.update({ where: { id: competitorId }, data: { card: null } });
+      const pending = batch();
+      await ingestPunches(client, auth, eventId, pending);
+      // The import creates a competitor after its punches have already arrived.
+      await client.competitor.delete({ where: { id: competitorId } });
+      const writeSnapshot = async (controlCode: number) => {
+        if (source === 'IOF') {
+          const result = {
+            ControlCard: ['8123456'],
+            StartTime: [at(0).toISOString()],
+            FinishTime: [at(150).toISOString()],
+            Time: ['150'],
+            Status: ['OK'],
+            SplitTime: [{ ControlCode: [String(controlCode)], Time: ['110'] }],
+          };
+          const value = await upsertCompetitor(
+            eventId,
+            classId,
+            {
+              Id: [{ _: '1', ATTR: { type: 'QuickEvent' } }],
+              Name: [{ Given: ['Imported'], Family: ['Runner'] }],
+            },
+            null,
+            null,
+            result,
+            'UTC',
+            null,
+            null,
+            userId,
+          );
+          competitorId = value.id;
+          await upsertSplits(competitorId, result);
+        } else {
+          await processMopDocument(
+            eventId,
+            {
+              rootType: 'MOPDiff',
+              orgs: [],
+              classes: [],
+              teams: [],
+              competitors: [
+                {
+                  id: 1,
+                  classId: 1,
+                  card: 8123456,
+                  firstname: 'Imported',
+                  lastname: 'Runner',
+                  competing: true,
+                  stat: 1,
+                  startTenths: 324000,
+                  runTimeTenths: 1500,
+                  splits: [{ code: controlCode, tenths: 1100 }],
+                  delete: false,
+                },
+              ],
+            },
+            { id: eventId, date: at(0), timezone: 'UTC', authorId: userId },
+          );
+          competitorId = (await client.competitor.findFirstOrThrow({ where: { classId } })).id;
+        }
+      };
+      await writeSnapshot(34);
+      expect(await client.punch.findFirstOrThrow({ where: { eventId } })).toMatchObject({
+        competitorId: null,
+        superseded: true,
+      });
+      await ingestPunches(client, auth, eventId, pending);
+      await ingestPunches(client, auth, eventId, batch(31, 60, 'READOUT'));
+      expect((await competitor()).splits).toMatchObject([{ controlCode: 34, time: 110 }]);
+      await ingestPunches(client, auth, eventId, batch(35, 130));
+      expect((await competitor()).splits).toHaveLength(2);
+      await writeSnapshot(36);
+      await ingestPunches(client, auth, eventId, batch(35, 130, 'READOUT'));
+      expect((await competitor()).splits).toMatchObject([{ controlCode: 36, time: 110 }]);
+      await client.competitor.update({ where: { id: competitorId }, data: { card: null } });
+      const latePending = batch(37, 140);
+      await ingestPunches(client, auth, eventId, latePending);
+      await client.competitor.update({ where: { id: competitorId }, data: { card: 8123456 } });
+      await writeSnapshot(36);
+      await ingestPunches(client, auth, eventId, latePending);
+      expect(
+        await client.punch.findFirstOrThrow({ where: { eventId, controlCode: 37 } }),
+      ).toMatchObject({
+        competitorId: null,
+        superseded: true,
+      });
+      expect((await competitor()).splits).toMatchObject([{ controlCode: 36, time: 110 }]);
+    },
+  );
 });

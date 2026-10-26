@@ -115,6 +115,7 @@ describe('Pothos GraphQL schema', () => {
     expect(sorted(Object.keys(schema.getSubscriptionType()?.getFields() ?? {}))).toEqual(
       sorted([
         '_empty',
+        'classesUpdated',
         'competitorUpdated',
         'competitorsByClassUpdated',
         'splitCompetitorsByClassUpdated',
