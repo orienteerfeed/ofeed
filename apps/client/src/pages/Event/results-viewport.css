@@ -1,0 +1,67 @@
+/* Row order follows incoming results; browser scroll anchoring must not follow
+   a moved row. Keep these rules local to the live result views. */
+.results-viewport {
+  position: relative;
+  overflow-anchor: none;
+}
+
+.results-viewport [data-slot='table-container'],
+.results-viewport [data-result-scroll] {
+  overflow-anchor: none;
+}
+
+.results-viewport table {
+  table-layout: fixed;
+  min-width: 32rem;
+}
+
+.results-viewport th,
+.results-viewport td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.results-viewport tbody tr:not(:has(td[colspan])) {
+  height: 3.25rem;
+}
+
+.results-viewport td > div,
+.results-viewport td button {
+  max-width: 100%;
+}
+
+.results-viewport-splits table {
+  /* Explicit colgroup widths define the total width. */
+  min-width: 0;
+}
+
+.results-viewport-splits tbody tr {
+  height: 6.5rem;
+}
+
+.results-refresh-error {
+  position: absolute;
+  top: 0;
+  right: 0;
+  max-width: min(20rem, 80%);
+  z-index: 10;
+}
+
+.results-viewport:not(.results-viewport-splits) th:first-child {
+  width: 4rem;
+}
+
+.results-viewport:not(.results-viewport-splits) th:nth-child(2) {
+  width: 10rem;
+}
+
+@media (min-width: 640px) {
+  .results-viewport:not(.results-viewport-splits) table {
+    min-width: 40rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits) th:nth-child(2) {
+    width: 14rem;
+  }
+}
