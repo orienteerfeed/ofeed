@@ -158,6 +158,77 @@ describe('browser session coordinator', () => {
       `Bearer ${next}`
     );
   });
+  it.each([
+    ['seconds', '120', 120_000],
+    ['HTTP date', new Date(Date.now() + 120_000).toUTCString(), 120_000],
+    ['missing', null, 60_000],
+    ['invalid', 'invalid', 60_000],
+  ])(
+    'respects %s Retry-After across forced retries and recovers automatically',
+    async (_name, header, delay) => {
+      // Freeze on a whole second for the HTTP date case.
+      if (header && _name === 'HTTP date')
+        vi.setSystemTime(Date.parse(header) - delay);
+      const previous = token(60);
+      manager.acceptSignin(previous, user);
+      fetchMock.mockResolvedValueOnce(
+        new Response('', {
+          status: 429,
+          headers: header ? { 'Retry-After': header } : {},
+        })
+      );
+      await expect(manager.refreshSession(true)).rejects.toThrow(
+        'temporarily unavailable'
+      );
+      for (let index = 0; index < 3; index++) {
+        window.dispatchEvent(new Event('focus'));
+      expect(await manager.refreshSession()).toBe(previous);
+      await expect(manager.refreshSession(true)).rejects.toThrow();
+      }
+      await vi.advanceTimersByTimeAsync(delay - 1);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(store.getState().token).toBe(previous);
+      fetchMock.mockResolvedValueOnce(pairResponse(token(1800)));
+      await vi.advanceTimersByTimeAsync(1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(localStorage.getItem('ofeed-session-retry-at')).toBeNull();
+    }
+  );
+  it('continues ordinary requests with a usable token during rate-limit recovery', async () => {
+    const previous = token(60);
+    manager.acceptSignin(previous, user);
+    fetchMock
+      .mockResolvedValueOnce(new Response('', { status: 429 }))
+      .mockResolvedValueOnce(new Response('events'));
+    const response = await manager.authenticatedFetch('/events');
+    expect(await response.text()).toBe('events');
+    expect(fetchMock.mock.calls[1]![1].headers.get('Authorization')).toBe(
+      `Bearer ${previous}`
+    );
+    expect(await manager.refreshSession()).toBe(previous);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.setSystemTime(Date.now() + 60_001);
+    localStorage.setItem('ofeed-session-retry-at', String(Date.now() + 60_000));
+    await expect(manager.refreshSession()).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+  it('checks persisted cooldown inside the lock for queued tabs or reloaded pages', async () => {
+    manager.initializeSessionManager();
+    let release!: () => void;
+    const busy = manager.withSessionLock(
+      () =>
+        new Promise<void>(resolve => {
+          release = resolve;
+        })
+    );
+    await Promise.resolve();
+    const refresh = manager.refreshSession(true);
+    localStorage.setItem('ofeed-session-retry-at', String(Date.now() + 60_000));
+    release();
+    await busy;
+    await expect(refresh).rejects.toThrow();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
   it('does not replay a consumed refresh credential when profile loading fails', async () => {
     fetchMock
       .mockResolvedValueOnce(pairResponse(token()))

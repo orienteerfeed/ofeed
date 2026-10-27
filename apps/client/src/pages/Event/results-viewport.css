@@ -15,15 +15,17 @@
   min-width: 32rem;
 }
 
+.results-viewport thead {
+  position: relative;
+  z-index: 20;
+  background: var(--background);
+}
+
 .results-viewport th,
 .results-viewport td {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.results-viewport tbody tr:not(:has(td[colspan])) {
-  height: 3.25rem;
 }
 
 .results-viewport td > div,
@@ -34,10 +36,6 @@
 .results-viewport-splits table {
   /* Explicit colgroup widths define the total width. */
   min-width: 0;
-}
-
-.results-viewport-splits tbody tr {
-  height: 6.5rem;
 }
 
 .results-refresh-error {

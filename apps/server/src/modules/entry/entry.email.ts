@@ -2,12 +2,14 @@ import ejs from 'ejs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
+import type { Attachment } from 'resend';
 
 import type { PaymentMethodType, QrPaymentInstruction } from '@repo/shared';
 
 import env from '../../config/env.js';
 import { logger } from '../../lib/logging.js';
 import { sendEmail } from '../../utils/email.js';
+import { getEmailLogoUrl } from '../../utils/email-assets.js';
 
 type EmailDetail = { label: string; value: string };
 
@@ -51,7 +53,7 @@ type EntryEmailPaymentSection = {
   heading: string;
   paragraphs: string[];
   details: EmailDetail[];
-  qrCodeDataUrl?: string;
+  qrCode?: Attachment;
   action?: { label: string; url: string };
 };
 
@@ -149,13 +151,20 @@ async function paymentSection(
         };
       }
 
-      let qrCodeDataUrl: string | undefined;
+      let qrCode: Attachment | undefined;
       try {
-        qrCodeDataUrl = await QRCode.toDataURL(qrPayment.payload, {
+        const content = await QRCode.toBuffer(qrPayment.payload, {
+          type: 'png',
           errorCorrectionLevel: 'M',
           margin: 1,
           width: 208,
         });
+        qrCode = {
+          filename: 'qr-platba.png',
+          content: content.toString('base64'),
+          contentType: 'image/png',
+          contentId: 'entry-payment-qr',
+        };
       } catch (error) {
         logger.error('Failed to generate entry payment QR code', {
           action: 'entry-payment-qr-code',
@@ -165,7 +174,11 @@ async function paymentSection(
 
       return {
         heading: 'QR platba',
-        paragraphs: ['Naskenujte QR kód v bankovní aplikaci a platební příkaz se předvyplní.'],
+        paragraphs: [
+          qrCode
+            ? 'Naskenujte QR kód v bankovní aplikaci a platební příkaz se předvyplní.'
+            : 'Platební údaje najdete také v detailu přihlášky.',
+        ],
         details: [
           ...(qrPayment.bankAccountName
             ? [{ label: 'Název účtu', value: qrPayment.bankAccountName }]
@@ -174,7 +187,7 @@ async function paymentSection(
           { label: 'Konstantní symbol', value: qrPayment.constantSymbol },
           { label: 'Zpráva pro příjemce', value: qrPayment.recipientMessage },
         ],
-        ...(qrCodeDataUrl ? { qrCodeDataUrl } : {}),
+        ...(qrCode ? { qrCode } : {}),
         action: { label: 'Zobrazit platební údaje', url: detailUrl },
       };
     }
@@ -198,6 +211,7 @@ async function sendEntryEmail(input: EntryEmailTemplateInput): Promise<void> {
     const html = await ejs.renderFile(templatePath, {
       ...input,
       title: input.subject,
+      logoUrl: getEmailLogoUrl(),
       payment: input.payment ?? null,
       entryDetailUrl: input.entryDetailUrl ?? null,
       year: new Date().getFullYear(),
@@ -207,6 +221,7 @@ async function sendEntryEmail(input: EntryEmailTemplateInput): Promise<void> {
       text: notificationText(input),
       subject: input.subject,
       emailTo: input.emailTo,
+      ...(input.payment?.qrCode ? { attachments: [input.payment.qrCode] } : {}),
       onSuccess: () => logger.info('Entry notification email sent', { action: 'entry-email' }),
       onError: (error) =>
         logger.error('Failed to send entry notification email', { action: 'entry-email', error }),

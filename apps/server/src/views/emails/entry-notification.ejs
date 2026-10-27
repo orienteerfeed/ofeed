@@ -13,7 +13,7 @@
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 580px; background: #ffffff; border-radius: 8px; overflow: hidden">
             <tr>
               <td style="padding: 24px 28px 8px">
-                <img src="https://ofeed.live/images/logos/2025-04-11_orienteerfeed_logo_48x48px_logo_favicon.png" alt="OFeed" height="48" style="display: block" />
+                <img src="<%= logoUrl %>" alt="OFeed" height="48" style="display: block" />
               </td>
             </tr>
             <tr>
@@ -28,9 +28,9 @@
                   <% for (const paragraph of payment.paragraphs) { %>
                     <p style="margin: 0 0 12px"><%= paragraph %></p>
                   <% } %>
-                  <% if (payment.qrCodeDataUrl) { %>
+                  <% if (payment.qrCode) { %>
                     <p style="margin: 16px 0; text-align: center">
-                      <img src="<%= payment.qrCodeDataUrl %>" width="208" height="208" alt="QR kód pro platbu" style="display: inline-block; max-width: 208px; height: auto; background: #ffffff" />
+                      <img src="cid:<%= payment.qrCode.contentId %>" width="208" height="208" alt="QR kód pro platbu" style="display: inline-block; max-width: 208px; height: auto; background: #ffffff" />
                     </p>
                   <% } %>
                   <% if (payment.details.length > 0) { %>

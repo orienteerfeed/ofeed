@@ -43,10 +43,28 @@ import {
   passwordResetConfirm,
   passwordResetRequest,
   signupUser,
+  sendVerificationEmailHelper,
   verifyEmail,
 } from '../auth.service.js';
 
 const sha256 = (s: string) => crypto.createHash('sha256').update(s).digest('hex');
+
+it('passes the configured logo URL to the verification email template', async () => {
+  ejsMock.renderFile.mockReset();
+  ejsMock.renderFile.mockResolvedValue('<html>verification</html>');
+  await sendVerificationEmailHelper(
+    'Jana',
+    'Nováková',
+    'jana@example.test',
+    'https://app.test/verify/token',
+  );
+  expect(ejsMock.renderFile).toHaveBeenCalledWith(
+    expect.stringMatching(/welcome\.ejs$/),
+    expect.objectContaining({
+      logoUrl: expect.stringMatching(/^https?:\/\/.+\/images\/logos\/.+\.png$/),
+    }),
+  );
+});
 
 describe('auth service signupUser', () => {
   beforeEach(() => {
@@ -224,6 +242,12 @@ describe('auth service passwordResetRequest', () => {
     expect(prismaMock.passwordResetToken.deleteMany).toHaveBeenCalledWith({
       where: { userId: 77, usedAt: null },
     });
+    expect(ejsMock.renderFile).toHaveBeenCalledWith(
+      expect.stringMatching(/password-reset\.ejs$/),
+      expect.objectContaining({
+        logoUrl: expect.stringMatching(/^https?:\/\/.+\/images\/logos\/.+\.png$/),
+      }),
+    );
     expect(prismaMock.passwordResetToken.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: 77,

@@ -236,13 +236,29 @@ export default function createApp() {
         'X-Ofeed-Session',
       ],
       credentials: true,
+      exposeHeaders: [
+        'Retry-After',
+        'RateLimit-Limit',
+        'RateLimit-Remaining',
+        'RateLimit-Reset',
+        'RateLimit-Policy',
+      ],
     }),
   );
 
   app.use('*', authMiddleware);
 
-  const keyGenerator = (c: { req: { header: (name: string) => string | undefined } }) => {
+  const ipKeyGenerator = (c: { req: { header: (name: string) => string | undefined } }) => {
     return extractClientIp(c) ?? buildAnonymousRateLimitKey(c);
+  };
+
+  const keyGenerator = (c: Context<AppBindings>) => {
+    const auth = c.get('authContext');
+    if (auth?.isAuthenticated) {
+      if (auth.type === 'jwt' && auth.userId != null) return `user:${auth.userId}`;
+      if (auth.type === 'eventBasic' && auth.eventId) return `event:${auth.eventId}`;
+    }
+    return `anonymous:${ipKeyGenerator(c)}`;
   };
 
   const defaultRateLimiter = rateLimiter({
@@ -256,12 +272,27 @@ export default function createApp() {
     windowMs: 60_000,
     limit: 10,
     standardHeaders: 'draft-6',
-    keyGenerator,
+    keyGenerator: ipKeyGenerator,
+  } as RateLimitOptions);
+
+  // Routine renewal must not consume the credential-authentication budget.
+  const refreshRateLimiter = rateLimiter({
+    windowMs: 60_000,
+    limit: env.SESSION_RATE_LIMIT_MAX,
+    standardHeaders: 'draft-6',
+    keyGenerator: ipKeyGenerator,
   } as RateLimitOptions);
 
   const graphQLRateLimiter = rateLimiter({
     windowMs: 60_000,
-    limit: 30,
+    limit: env.GRAPHQL_RATE_LIMIT_MAX,
+    standardHeaders: 'draft-6',
+    keyGenerator,
+  } as RateLimitOptions);
+
+  const uploadRateLimiter = rateLimiter({
+    windowMs: 60_000,
+    limit: env.UPLOAD_RATE_LIMIT_MAX,
     standardHeaders: 'draft-6',
     keyGenerator,
   } as RateLimitOptions);
@@ -270,11 +301,11 @@ export default function createApp() {
     windowMs: env.MAP_TILE_RATE_LIMIT_WINDOW_MS,
     limit: env.MAP_TILE_RATE_LIMIT_MAX,
     standardHeaders: 'draft-6',
-    keyGenerator,
+    keyGenerator: ipKeyGenerator,
   } as RateLimitOptions);
 
   app.use('*', async (c, next) => {
-    const path = c.req.path;
+    const path = c.req.path.replace(/\/+$/, '') || '/';
 
     if (path.startsWith(mapTilesRoutePrefix)) {
       return mapTileRateLimiter(c as never, next as never);
@@ -285,12 +316,20 @@ export default function createApp() {
       return;
     }
 
+    if (path === `${authRateLimitPrefix}/refresh` || path === `${authRateLimitPrefix}/logout`) {
+      return refreshRateLimiter(c as never, next as never);
+    }
+
     if (path.startsWith(authRateLimitPrefix)) {
       return authRateLimiter(c as never, next as never);
     }
 
     if (path === GRAPHQL_OPENAPI.path) {
       return graphQLRateLimiter(c as never, next as never);
+    }
+
+    if (['POST', 'PUT', 'PATCH'].includes(c.req.method) && shouldUseUploadBodyLimit(path)) {
+      return uploadRateLimiter(c as never, next as never);
     }
 
     return defaultRateLimiter(c as never, next as never);

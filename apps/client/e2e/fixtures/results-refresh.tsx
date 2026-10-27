@@ -22,6 +22,7 @@ import i18n from '../../src/i18n/i18n';
 import '../../src/index.css';
 
 const view = new URLSearchParams(location.search).get('view') ?? 'splits';
+const stickyHeaders = new URLSearchParams(location.search).has('sticky');
 const isRelay = view === 'relay';
 const codes = Array.from({ length: 20 }, (_, i) => String(31 + i));
 const runner = (id: number) => ({
@@ -205,11 +206,29 @@ function Fixture() {
   const { t } = useTranslation();
   return (
     <ApolloProvider client={client}>
+      {stickyHeaders && (
+        <header
+          data-navbar
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: 64,
+            zIndex: 50,
+            background: 'white',
+          }}
+        >
+          Fixture navbar
+        </header>
+      )}
       <div style={{ height: 250 }} />
       <div
         data-testid="fixture-scroll"
         data-result-scroll
-        style={{ height: 400, overflow: 'auto', width: '100%' }}
+        style={
+          stickyHeaders
+            ? { width: '100%' }
+            : { height: 400, overflow: 'auto', width: '100%' }
+        }
       >
         {view === 'splits' ? (
           <ClassIndividualSplit

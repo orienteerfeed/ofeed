@@ -60,6 +60,28 @@ and this project adheres to
 
 ### Fixed
 
+- Entry forms hide interval start slots already selected in the local cart and
+  reject duplicate cart additions for the same event, category and start time.
+
+- Email logos use the instance's configured public frontend URL instead of the
+  hard-coded production host, including entry, verification and reset emails.
+
+- QR payment confirmation emails embed the QR PNG as a CID attachment so mail
+  clients do not strip its image source as an unsupported data URL.
+
+- Result and split table headers stay visible below the navbar during scrolling,
+  retaining horizontal alignment and interactive sorting on mobile and desktop.
+
+- Session renewal uses a separate rate-limit budget and honors shared browser
+  cooldowns after HTTP 429, preserving usable access tokens during recovery.
+
+- Raise GraphQL headroom from 30 to 600 requests/minute and isolate verified
+  user/event budgets; reserve independent upload and session budgets and align
+  API/Helm defaults so polling and navigation do not block file imports.
+
+- Restore compact result and split table rows, including on mobile, by removing
+  oversized row heights introduced with background refresh scroll preservation.
+
 - QR payment settings accept Czech domestic bank accounts (including prefixes)
   alongside IBAN, validate checksums and normalize stored/generated payment
   instructions to IBAN, including previously saved domestic accounts (Fixes #601).

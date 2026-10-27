@@ -4,7 +4,13 @@ import type {
   EntryAvailabilityClass,
 } from '@repo/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const addCartItemMock = vi.hoisted(() => vi.fn());
@@ -20,7 +26,8 @@ const authState = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@/stores/cart', () => ({
+vi.mock('@/stores/cart', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/stores/cart')>()),
   useAddCartItem: () => addCartItemMock,
 }));
 
@@ -56,6 +63,8 @@ vi.mock('react-i18next', () => ({
         'Pages.Event.Entries.Form.ClearForm': 'Clear form',
         'Pages.Event.Entries.Form.AddToCart': 'Add to cart',
         'Pages.Event.Entries.Form.Title': 'Entry',
+        'Pages.Event.Entries.Form.StartTime': 'Start time',
+        'Pages.Event.Entries.Form.StartTimePlaceholder': 'Select a start time',
         'Pages.Event.Entries.Form.DescriptionFree':
           'This class has no entry fee.',
         'Pages.Event.Entries.Form.Warnings.CardAlreadyUsed':
@@ -79,6 +88,7 @@ import {
   CURRENT_USER_ENTRY_PREFILL,
   EntryFormDialog,
 } from '@/pages/Event/Entries/EntryFormDialog';
+import { useCartStore, type CartEntryItem } from '@/stores/cart';
 
 const entryClass = {
   id: 10,
@@ -107,12 +117,115 @@ const availability = {
   classes: [entryClass],
 } satisfies EventEntryAvailability;
 
+const SLOT_A = '2026-10-27T08:00:00.000Z';
+const SLOT_B = '2026-10-27T08:02:00.000Z';
+const intervalClass: EntryAvailabilityClass = {
+  ...entryClass,
+  startMode: 'StartList',
+  slots: [SLOT_A, SLOT_B].map((startTime, index) => ({
+    id: index + 1,
+    startTime,
+    bibNumber: null,
+  })),
+};
+const heldSlot = {
+  eventId: 'event-1',
+  eventName: 'Test event',
+  currencyCode: 'CZK',
+  classId: 10,
+  className: 'M21',
+  firstname: 'Jan',
+  lastname: 'Novak',
+  startTime: SLOT_A,
+  cardRental: false,
+  fee: 0,
+  cardRentalFee: null,
+} satisfies Omit<CartEntryItem, 'id'>;
+
+function renderIntervalForm() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MockedProvider>
+        <EntryFormDialog
+          open
+          onOpenChange={vi.fn()}
+          entryClass={intervalClass}
+          availability={availability}
+          eventId="event-1"
+          eventName="Test event"
+          eventSportId={1}
+        />
+      </MockedProvider>
+    </QueryClientProvider>
+  );
+}
+
+const slotSelect = () =>
+  document.querySelector<HTMLSelectElement>('select[name="startTime"]')!;
+const offeredSlots = () =>
+  [...slotSelect().options].map(option => option.value).filter(Boolean);
+
 describe('EntryFormDialog', () => {
   beforeEach(() => {
-    addCartItemMock.mockClear();
+    addCartItemMock.mockReset();
+    addCartItemMock.mockReturnValue(true);
+    useCartStore.getState().clear();
     navigateMock.mockClear();
     authState.isAuthenticated = false;
     authState.user = null;
+  });
+
+  it('hides cart slots and offers them again after removing the cart item', async () => {
+    useCartStore
+      .getState()
+      .addItem({ ...heldSlot, startTime: '2026-10-27T09:00:00+01:00' });
+    renderIntervalForm();
+    expect(offeredSlots()).toEqual([SLOT_B]);
+    await act(async () => {
+      useCartStore.getState().removeItem(useCartStore.getState().items[0]!.id);
+    });
+    expect(offeredSlots().sort()).toEqual([SLOT_A, SLOT_B]);
+  });
+
+  it('clears a selected time when another item in this cart claims it', async () => {
+    renderIntervalForm();
+    fireEvent.change(slotSelect(), { target: { value: SLOT_A } });
+    expect(slotSelect()).toHaveValue(SLOT_A);
+    await act(async () => {
+      useCartStore.getState().addItem(heldSlot);
+    });
+    await waitFor(() => expect(slotSelect()).toHaveValue(''));
+    expect(offeredSlots()).toEqual([SLOT_B]);
+  });
+
+  it('does not report success when the latest cart state rejects a stale slot', async () => {
+    addCartItemMock.mockReturnValue(false);
+    renderIntervalForm();
+    for (const [name, value] of Object.entries({
+      firstname: 'Jan',
+      lastname: 'Novak',
+      birthYear: '1995',
+      card: '8123456',
+    })) {
+      fireEvent.change(document.querySelector(`input[name="${name}"]`)!, {
+        target: { value },
+      });
+    }
+    fireEvent.change(slotSelect(), { target: { value: SLOT_A } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add to cart' }));
+    await waitFor(() =>
+      expect(addCartItemMock).toHaveBeenCalledWith(
+        expect.objectContaining({ startTime: SLOT_A }),
+        { exclusiveStartSlot: true }
+      )
+    );
+    expect(
+      screen.queryByText('Pages.Event.Entries.Form.AddedTitle')
+    ).not.toBeInTheDocument();
+    expect(slotSelect()).toHaveValue('');
   });
 
   it('warns about an existing competitor with the same SI card without blocking add to cart', async () => {
@@ -194,7 +307,8 @@ describe('EntryFormDialog', () => {
           firstname: 'Petr',
           lastname: 'Novak',
           card: 8123456,
-        })
+        }),
+        { exclusiveStartSlot: false }
       );
     });
   });
@@ -290,7 +404,8 @@ describe('EntryFormDialog', () => {
           lastname: 'Novak',
           registration: 'ABC9955',
           card: 8123457,
-        })
+        }),
+        { exclusiveStartSlot: false }
       );
     });
   });

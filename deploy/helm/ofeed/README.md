@@ -19,6 +19,17 @@ helm template ofeed ./deploy/helm/ofeed \
   --set board.image.tag=1.2.3
 ```
 
+## API request budgets
+
+API request budgets are configured in `api.env`. Defaults are 600/minute for
+GraphQL (`GRAPHQL_RATE_LIMIT_MAX`) and ordinary REST (`RATE_LIMIT_MAX` with
+`RATE_LIMIT_WINDOW_MS=60000`), 60/minute for uploads (`UPLOAD_RATE_LIMIT_MAX`)
+and 120/minute for session refresh/logout (`SESSION_RATE_LIMIT_MAX`). Verified
+users/events have independent GraphQL/REST/upload budgets; session limits use
+the client IP. Update old values in external GitOps overrides during rollout.
+See
+[request budget verification](../../../docs/ops/observability.md#api-request-budgets).
+
 ## Ingress
 
 `ingress` routes the web application. To expose the API on a distinct host,
