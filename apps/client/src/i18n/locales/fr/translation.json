@@ -32,7 +32,32 @@
       "Retry": "Réessayer",
       "Generated": "Généré",
       "Timezone": "Fuseau horaire",
-      "InvalidRange": "La date de début ne doit pas dépasser la date de fin."
+      "InvalidRange": "La date de début ne doit pas dépasser la date de fin.",
+      "Cards": {
+        "Title": "Contrôle des puces",
+        "Description": "Repérez les concurrents sans puce ou partageant un numéro de puce dans toutes les catégories de la compétition.",
+        "Name": "Nom",
+        "Registration": "Numéro de licence",
+        "Class": "Catégorie",
+        "Organisation": "Club",
+        "BibNumber": "Dossard",
+        "Card": "Puce",
+        "MissingCount": "Puces manquantes",
+        "DuplicateCount": "Numéros de puce en double",
+        "AffectedCount": "Concurrents avec une puce en double",
+        "Missing": "Concurrents sans puce",
+        "Duplicates": "Puces en double",
+        "GroupSize": "Concurrents du groupe",
+        "SearchPlaceholder": "Nom, licence, dossard, club ou puce",
+        "Loading": "Chargement du rapport des puces…",
+        "Stale": "Échec de l’actualisation. Les données affichées sont périmées ; l’export et l’impression sont désactivés.",
+        "Error": "Impossible de charger le rapport des puces.",
+        "NoIssues": "Tous les concurrents ont une puce et aucun numéro en double n’a été trouvé.",
+        "NoMatches": "Aucun problème ne correspond aux filtres sélectionnés.",
+        "NoMissing": "Aucun concurrent sans puce dans cette sélection.",
+        "NoDuplicates": "Aucune puce en double dans cette sélection.",
+        "FullGroups": "Les filtres sélectionnent des groupes entiers. Tous les concurrents partageant une puce restent visibles, y compris dans les autres catégories."
+      }
     },
     "Auth": {
       "VerifyEmailPage": {

@@ -33,6 +33,7 @@ import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventI
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
 import { Route as EventsEventIdEntriesEntryIdRouteImport } from './routes/events/$eventId/entries_.$entryId'
 import { Route as EventsEventIdInsightsIndexRouteImport } from './routes/events/$eventId/insights.index'
+import { Route as EventsEventIdInsightsCardsRouteImport } from './routes/events/$eventId/insights.cards'
 import { Route as EventsEventIdInsightsPaymentsRouteImport } from './routes/events/$eventId/insights.payments'
 import { Route as EventsEventIdEntriesEntryIdEditRouteImport } from './routes/events/$eventId/entries_.$entryId_.edit'
 
@@ -158,6 +159,12 @@ const EventsEventIdInsightsIndexRoute =
     path: '/',
     getParentRoute: () => EventsEventIdInsightsRoute,
   } as any)
+const EventsEventIdInsightsCardsRoute =
+  EventsEventIdInsightsCardsRouteImport.update({
+    id: '/cards',
+    path: '/cards',
+    getParentRoute: () => EventsEventIdInsightsRoute,
+  } as any)
 const EventsEventIdInsightsPaymentsRoute =
   EventsEventIdInsightsPaymentsRouteImport.update({
     id: '/payments',
@@ -195,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
@@ -222,6 +230,7 @@ export interface FileRoutesByTo {
   '/e/$eventId': typeof EEventIdIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
@@ -251,6 +260,7 @@ export interface FileRoutesById {
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries_/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries_/$entryId_/edit': typeof EventsEventIdEntriesEntryIdEditRoute
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/e/$eventId/'
     | '/events/$eventId/'
     | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/insights/cards'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
     | '/events/$eventId/entries/$entryId/edit'
@@ -308,6 +319,7 @@ export interface FileRouteTypes {
     | '/e/$eventId'
     | '/events/$eventId'
     | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/insights/cards'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights'
     | '/events/$eventId/entries/$entryId/edit'
@@ -336,6 +348,7 @@ export interface FileRouteTypes {
     | '/e/$eventId/'
     | '/events/$eventId/'
     | '/events/$eventId/entries_/$entryId'
+    | '/events/$eventId/insights/cards'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
     | '/events/$eventId/entries_/$entryId_/edit'
@@ -538,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdInsightsIndexRouteImport
       parentRoute: typeof EventsEventIdInsightsRoute
     }
+    '/events/$eventId/insights/cards': {
+      id: '/events/$eventId/insights/cards'
+      path: '/cards'
+      fullPath: '/events/$eventId/insights/cards'
+      preLoaderRoute: typeof EventsEventIdInsightsCardsRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
     '/events/$eventId/insights/payments': {
       id: '/events/$eventId/insights/payments'
       path: '/payments'
@@ -556,11 +576,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface EventsEventIdInsightsRouteChildren {
+  EventsEventIdInsightsCardsRoute: typeof EventsEventIdInsightsCardsRoute
   EventsEventIdInsightsPaymentsRoute: typeof EventsEventIdInsightsPaymentsRoute
   EventsEventIdInsightsIndexRoute: typeof EventsEventIdInsightsIndexRoute
 }
 
 const EventsEventIdInsightsRouteChildren: EventsEventIdInsightsRouteChildren = {
+  EventsEventIdInsightsCardsRoute: EventsEventIdInsightsCardsRoute,
   EventsEventIdInsightsPaymentsRoute: EventsEventIdInsightsPaymentsRoute,
   EventsEventIdInsightsIndexRoute: EventsEventIdInsightsIndexRoute,
 }

@@ -7,6 +7,18 @@ exports[`Pothos GraphQL schema > matches the public schema snapshot 1`] = `
   user: User
 }
 
+type CardInsightCompetitor {
+  bibNumber: Int
+  card: Int
+  classId: Int!
+  className: String!
+  firstname: String!
+  id: Int!
+  lastname: String!
+  organisation: String
+  registration: String!
+}
+
 input ChangeCurrentUserPasswordInput {
   currentPassword: currentPassword_String_NotNull_minLength_1_maxLength_255!
   newPassword: newPassword_String_NotNull_minLength_8_maxLength_255!
@@ -193,6 +205,11 @@ type DeviceSession {
   expiresAt: DateTime!
   id: ID!
   lastRefreshedAt: DateTime!
+}
+
+type DuplicateCardGroup {
+  card: Int!
+  competitors: [CardInsightCompetitor!]!
 }
 
 type Entry {
@@ -406,6 +423,11 @@ type EventAddOn {
   maxQuantity: Int
   name: String!
   price: Float
+}
+
+type EventCardInsight {
+  duplicateCards: [DuplicateCardGroup!]!
+  missingCards: [CardInsightCompetitor!]!
 }
 
 type EventConnection {
@@ -779,6 +801,7 @@ type Query {
   entryOrderById(accessToken: String, entryId: String!): Entry
   entryOrdersByEvent(eventId: String!): [Entry!]!
   event(id: String!): Event
+  eventCardInsight(eventId: String!): EventCardInsight!
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
   eventEntryAvailability(eventId: String!): EntryAvailability

@@ -32,7 +32,32 @@
       "Retry": "Försök igen",
       "Generated": "Skapad",
       "Timezone": "Tidszon",
-      "InvalidRange": "Startdatumet får inte vara senare än slutdatumet."
+      "InvalidRange": "Startdatumet får inte vara senare än slutdatumet.",
+      "Cards": {
+        "Title": "Chipkontroll",
+        "Description": "Hitta deltagare utan chip eller med samma chipnummer i tävlingens alla klasser.",
+        "Name": "Namn",
+        "Registration": "Registreringsnummer",
+        "Class": "Klass",
+        "Organisation": "Klubb",
+        "BibNumber": "Startnummer",
+        "Card": "Chip",
+        "MissingCount": "Saknade chip",
+        "DuplicateCount": "Dubbla chipnummer",
+        "AffectedCount": "Deltagare med dubbla chip",
+        "Missing": "Deltagare utan chip",
+        "Duplicates": "Dubbla chip",
+        "GroupSize": "Deltagare i gruppen",
+        "SearchPlaceholder": "Namn, registrering, startnummer, klubb eller chip",
+        "Loading": "Laddar chiprapport…",
+        "Stale": "Uppdateringen misslyckades. Visade uppgifter är inaktuella; export och utskrift är inaktiverade.",
+        "Error": "Kunde inte ladda chiprapporten.",
+        "NoIssues": "Alla deltagare har chip och inga dubbla chipnummer hittades.",
+        "NoMatches": "Inga problem matchar de valda filtren.",
+        "NoMissing": "Inga deltagare utan chip i detta urval.",
+        "NoDuplicates": "Inga dubbla chip i detta urval.",
+        "FullGroups": "Filtren väljer hela grupper. Alla deltagare med samma chip visas, även från andra klasser."
+      }
     },
     "Admin": {
       "Common": {

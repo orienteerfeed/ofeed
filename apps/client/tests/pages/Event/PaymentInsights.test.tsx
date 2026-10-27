@@ -96,15 +96,19 @@ beforeEach(() => {
 });
 
 describe('event insights UI', () => {
-  it('shows only the available payment insight and links to its own route', () => {
+  it('links to the payment and timing-card insights', () => {
     render(<EventInsightsPage />);
     expect(
       screen.getByRole('heading', { name: 'Insights', level: 1 })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open insight' })).toHaveAttribute(
-      'href',
-      '/events/race/insights/payments'
-    );
+    expect(
+      screen
+        .getAllByRole('link', { name: 'Open insight' })
+        .map(link => link.getAttribute('href'))
+    ).toEqual([
+      '/events/race/insights/cards',
+      '/events/race/insights/payments',
+    ]);
   });
   it('paginates receipt rows while totals cover every page, and filters by contact', () => {
     render(<EventPaymentInsightPage />);

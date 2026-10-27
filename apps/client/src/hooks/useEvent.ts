@@ -70,7 +70,7 @@ const GET_EVENT = gql`
 `;
 
 export const useEvent = (eventId: string) => {
-  const { data, loading, error } = useQuery<
+  const { data, loading, error, refetch } = useQuery<
     EventQueryData,
     EventQueryVariables
   >(GET_EVENT, {
@@ -82,5 +82,6 @@ export const useEvent = (eventId: string) => {
     event: data?.event as Event | undefined,
     loading,
     error,
+    refetch,
   };
 };

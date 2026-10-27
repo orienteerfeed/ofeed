@@ -24,12 +24,16 @@ import '../../src/index.css';
 const view = new URLSearchParams(location.search).get('view') ?? 'splits';
 const stickyHeaders = new URLSearchParams(location.search).has('sticky');
 const isRelay = view === 'relay';
+const compactResults = new URLSearchParams(location.search).has('compact');
 const codes = Array.from({ length: 20 }, (_, i) => String(31 + i));
 const runner = (id: number) => ({
   __typename: 'Competitor',
   id: String(id),
   firstname: 'Jan',
-  lastname: `Runner ${id}`,
+  lastname:
+    compactResults && id === 1
+      ? 'Verylongsurnamewithmanycharacters'
+      : `Runner ${id}`,
   registration: '',
   bibNumber: String(id),
   organisationId: 1,
@@ -37,12 +41,12 @@ const runner = (id: number) => ({
   card: '',
   startTime: '2026-10-27T10:00:00Z',
   finishTime: '2026-10-27T11:00:00Z',
-  time: 1800 + id * 10,
+  time: compactResults ? 3600 + id * 90 : 1800 + id * 10,
   status: 'OK',
   updatedAt: '2026-10-27T11:00:00Z',
   lateStart: false,
   note: null,
-  rankingPoints: null,
+  rankingPoints: compactResults ? 1234 : null,
   rankingReferenceValue: null,
   countsTowardsRanking: false,
   countsTowardsRankingReason: null,
@@ -197,8 +201,9 @@ window.resultsRefresh = {
 const event = {
   id: 'fixture',
   name: 'Fixture event',
+  discipline: 'LONG',
   relay: isRelay,
-  ranking: false,
+  ranking: new URLSearchParams(location.search).has('ranking'),
   country: { countryCode: 'CZ' },
   classes: [{ id: 1, name: 'H21' }],
 } as Event;
@@ -226,7 +231,7 @@ function Fixture() {
         data-result-scroll
         style={
           stickyHeaders
-            ? { width: '100%' }
+            ? { width: '100%', paddingInline: compactResults ? 16 : 0 }
             : { height: 400, overflow: 'auto', width: '100%' }
         }
       >

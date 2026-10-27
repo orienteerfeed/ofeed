@@ -32,7 +32,32 @@
       "Retry": "Erneut versuchen",
       "Generated": "Erstellt",
       "Timezone": "Zeitzone",
-      "InvalidRange": "Das Startdatum darf nicht nach dem Enddatum liegen."
+      "InvalidRange": "Das Startdatum darf nicht nach dem Enddatum liegen.",
+      "Cards": {
+        "Title": "Chipkontrolle",
+        "Description": "Teilnehmer ohne Chip und gemeinsame Chipnummern in allen Kategorien der Veranstaltung finden.",
+        "Name": "Name",
+        "Registration": "Registrierungsnummer",
+        "Class": "Kategorie",
+        "Organisation": "Verein",
+        "BibNumber": "Startnummer",
+        "Card": "Chip",
+        "MissingCount": "Fehlende Chips",
+        "DuplicateCount": "Doppelte Chipnummern",
+        "AffectedCount": "Teilnehmer mit doppeltem Chip",
+        "Missing": "Teilnehmer ohne Chip",
+        "Duplicates": "Doppelte Chips",
+        "GroupSize": "Teilnehmer in der Gruppe",
+        "SearchPlaceholder": "Name, Registrierung, Startnummer, Verein oder Chip",
+        "Loading": "Chipbericht wird geladen…",
+        "Stale": "Aktualisierung fehlgeschlagen. Die angezeigten Daten sind veraltet; Export und Druck sind deaktiviert.",
+        "Error": "Der Chipbericht konnte nicht geladen werden.",
+        "NoIssues": "Alle Teilnehmer haben einen Chip. Keine doppelten Chipnummern gefunden.",
+        "NoMatches": "Keine Probleme entsprechen den gewählten Filtern.",
+        "NoMissing": "Keine Teilnehmer ohne Chip in dieser Auswahl.",
+        "NoDuplicates": "Keine doppelten Chips in dieser Auswahl.",
+        "FullGroups": "Filter wählen ganze Gruppen aus. Alle Teilnehmer mit demselben Chip bleiben sichtbar, auch aus anderen Kategorien."
+      }
     },
     "Admin": {
       "Common": {
