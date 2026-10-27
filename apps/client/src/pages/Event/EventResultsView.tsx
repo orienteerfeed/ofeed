@@ -456,8 +456,8 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           .map(c => c.name)}
       />
       <div className="sticky top-0 z-10 bg-background border-b border-border pb-2 mb-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 p-0.5 bg-muted rounded-md">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1 p-0.5 bg-muted rounded-md">
             <Button
               variant={viewMode === 'category' ? 'default' : 'ghost'}
               size="sm"
@@ -920,7 +920,7 @@ const CategoryResultsView = ({
       className="border border-border rounded-lg overflow-hidden"
     >
       <div className={mobileResultsTableClassName}>
-        <Table>
+        <Table data-results-table="category">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-8 px-2 text-xs">#</TableHead>
@@ -1545,7 +1545,7 @@ const ClubResultsView = ({
               {relaySections.length === 0 && (
                 <div className="border border-border rounded-lg overflow-hidden">
                   <div className={mobileResultsTableClassName}>
-                    <Table>
+                    <Table data-results-table="club">
                       <TableHeader>
                         <TableRow className="bg-muted/50">
                           {!isRelay && (
@@ -1880,7 +1880,7 @@ const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       <div className={mobileResultsTableClassName}>
-        <Table>
+        <Table data-results-table="relay">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-8 px-2 text-xs">#</TableHead>
@@ -2311,8 +2311,8 @@ const RelayResultsView = ({
           ponytail: fixed offset matched to that switcher's height; if the two ever
           overlap, hoist both control rows into one sticky wrapper. */}
       <div className="sticky top-[38px] z-[9] bg-background border-b border-border pb-2 mb-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 p-0.5 bg-muted rounded-md">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1 p-0.5 bg-muted rounded-md">
             {(() => {
               const courseLength =
                 currentClass?.course?.length ?? currentClass?.length ?? 0;
@@ -2425,7 +2425,7 @@ const RelayResultsView = ({
         processedLegCompetitors.length > 0 && (
           <div className="border border-border rounded-lg overflow-hidden">
             <div className={mobileResultsTableClassName}>
-              <Table>
+              <Table data-results-table="relay-leg">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="h-8 px-2 text-xs">#</TableHead>

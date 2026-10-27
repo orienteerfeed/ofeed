@@ -32,7 +32,32 @@
       "Retry": "Try again",
       "Generated": "Generated",
       "Timezone": "Timezone",
-      "InvalidRange": "The start date must not be later than the end date."
+      "InvalidRange": "The start date must not be later than the end date.",
+      "Cards": {
+        "Title": "Timing-card check",
+        "Description": "Find competitors with missing cards or shared card numbers across all event classes.",
+        "Name": "Name",
+        "Registration": "Registration",
+        "Class": "Class",
+        "Organisation": "Club",
+        "BibNumber": "Bib number",
+        "Card": "Card",
+        "MissingCount": "Missing cards",
+        "DuplicateCount": "Duplicate card numbers",
+        "AffectedCount": "Competitors with duplicate cards",
+        "Missing": "Competitors without a card",
+        "Duplicates": "Duplicate cards",
+        "GroupSize": "Competitors in group",
+        "SearchPlaceholder": "Name, registration, bib, club or card",
+        "Loading": "Loading card report…",
+        "Stale": "Refresh failed. Displayed data is out of date; export and print are disabled.",
+        "Error": "Could not load the card report.",
+        "NoIssues": "All competitors have a card and no duplicate card numbers were found.",
+        "NoMatches": "No issues match the selected filters.",
+        "NoMissing": "No competitors without a card in this selection.",
+        "NoDuplicates": "No duplicate cards in this selection.",
+        "FullGroups": "Filters select whole groups. All competitors sharing a card remain visible, including those in other classes."
+      }
     },
     "Admin": {
       "Common": {

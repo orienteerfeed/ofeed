@@ -21,13 +21,15 @@ export const CompetitorName = ({ competitor }: CompetitorNameProps) => {
   const lastname = competitor.lastname?.trim() ?? '';
   const hasLastname = lastname.length > 0;
 
+  const fullName = hasLastname ? `${lastname} ${firstname}` : firstname;
+
   return (
     <>
-      <span className="block sm:hidden">
+      <span className="block truncate sm:hidden" title={fullName}>
         {getMobileCompetitorName(competitor)}
       </span>
-      <span className="hidden sm:block">
-        {hasLastname ? `${lastname} ${firstname}` : firstname}
+      <span className="hidden truncate sm:block" title={fullName}>
+        {fullName}
       </span>
     </>
   );

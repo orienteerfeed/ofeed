@@ -142,7 +142,7 @@ const EventLiveResultsView = ({
       {visible.length > 0 && (
         <div className="border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto [&_table]:text-sm [&_th]:h-7 sm:[&_th]:h-8 [&_th]:px-1.5 sm:[&_th]:px-2 [&_th]:text-xs [&_td]:px-1.5 sm:[&_td]:px-2 [&_td]:py-0.5 sm:[&_td]:py-1 [&_td]:text-sm">
-            <Table>
+            <Table data-results-table="live">
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="h-8 px-2 text-xs">

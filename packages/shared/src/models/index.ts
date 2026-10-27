@@ -19,3 +19,4 @@ export * from './startMode.js';
 export * from './system-message.js';
 export * from './team.js';
 export * from './user.js';
+export * from './card-insight.js';

@@ -32,7 +32,32 @@
       "Retry": "Reintentar",
       "Generated": "Generado",
       "Timezone": "Zona horaria",
-      "InvalidRange": "La fecha inicial no debe ser posterior a la final."
+      "InvalidRange": "La fecha inicial no debe ser posterior a la final.",
+      "Cards": {
+        "Title": "Revisión de chips",
+        "Description": "Detecta participantes sin chip o con números de chip compartidos entre todas las categorías del evento.",
+        "Name": "Nombre",
+        "Registration": "Número de registro",
+        "Class": "Categoría",
+        "Organisation": "Club",
+        "BibNumber": "Dorsal",
+        "Card": "Chip",
+        "MissingCount": "Chips sin asignar",
+        "DuplicateCount": "Números de chip duplicados",
+        "AffectedCount": "Participantes con chip duplicado",
+        "Missing": "Participantes sin chip",
+        "Duplicates": "Chips duplicados",
+        "GroupSize": "Participantes del grupo",
+        "SearchPlaceholder": "Nombre, registro, dorsal, club o chip",
+        "Loading": "Cargando informe de chips…",
+        "Stale": "Error al actualizar. Los datos mostrados están desactualizados; la exportación e impresión están desactivadas.",
+        "Error": "No se pudo cargar el informe de chips.",
+        "NoIssues": "Todos los participantes tienen chip y no se encontraron números duplicados.",
+        "NoMatches": "Ningún problema coincide con los filtros seleccionados.",
+        "NoMissing": "No hay participantes sin chip en esta selección.",
+        "NoDuplicates": "No hay chips duplicados en esta selección.",
+        "FullGroups": "Los filtros seleccionan grupos completos. Se muestran todos los participantes con el mismo chip, incluso de otras categorías."
+      }
     },
     "Admin": {
       "Common": {

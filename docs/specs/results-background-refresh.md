@@ -104,3 +104,35 @@ and `e2e/results-refresh.spec.ts` passed together: 66 browser checks across
 Chromium, Firefox and WebKit at 1280px and 390px. Header checks cover category,
 club, relay, live and split views, nested club scrolling, horizontal alignment,
 interactive split sorting, navbar height changes and the table end.
+
+## Compact mobile results (2026-10-27)
+
+Restore viewport-fitting result tables after the fixed 32rem minimum introduced
+in b23286ab (#631). At 390px and 402px viewport widths, including page padding,
+category results must show all existing mobile columns (rank, name/club, time,
+loss and ranking points when enabled) without horizontal scrolling. Preserve
+existing responsive column visibility, all desktop columns and wide split tables.
+
+Use content-independent widths for numeric columns and the remaining width for
+names. Scale text and horizontal padding within readable bounds using the table
+container width. Truncate long names/clubs with full-name titles, never ordinary
+race times or ranks. On genuinely narrow containers below 320px, allow local
+horizontal scrolling rather than shrinking text indefinitely. Club, relay and
+live result views follow the same compact policy, with their own column budgets.
+Keep sticky headers, sorting and scroll preservation across polling intact.
+No API, database or dependency changes. This is a correction under issue #630.
+
+Validate actual table/client/scroll geometry at 320, 390 and 402px, ranking
+on/off, long names and hour-long times; include a small-width scrolling fallback,
+responsive resizing and desktop/mobile polling and sticky-header regressions in
+Chromium, Firefox and WebKit. Run client Vitest, types, lint and formatting.
+
+
+Compact mobile validation: 105 Playwright checks passed across Chromium,
+Firefox and WebKit using `results-mobile.spec.ts`, `results-refresh.spec.ts`
+and `results-sticky-header.spec.ts` (two workers). Checks cover 320/390/402px,
+page padding, ranking on/off, long names, times and losses over one hour,
+non-clipped numeric cells, local small-screen scrolling, resizing, polling,
+sticky headers and desktop results. Screenshots at 402px were visually inspected
+in Chromium and WebKit; this is browser emulation, not a physical iPhone test.
+Client Vitest: 302 passed. Client type-check and lint passed.

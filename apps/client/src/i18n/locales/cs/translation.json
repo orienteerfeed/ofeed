@@ -32,7 +32,32 @@
       "Retry": "Zkusit znovu",
       "Generated": "Vytvořeno",
       "Timezone": "Časové pásmo",
-      "InvalidRange": "Datum od musí být nejpozději v den data do."
+      "InvalidRange": "Datum od musí být nejpozději v den data do.",
+      "Cards": {
+        "Title": "Kontrola čipů",
+        "Description": "Závodníci bez čipu a shodná čísla čipů napříč všemi kategoriemi eventu.",
+        "Name": "Jméno",
+        "Registration": "Registrační číslo",
+        "Class": "Kategorie",
+        "Organisation": "Oddíl",
+        "BibNumber": "Startovní číslo",
+        "Card": "Čip",
+        "MissingCount": "Chybějící čipy",
+        "DuplicateCount": "Duplicitní čísla čipů",
+        "AffectedCount": "Závodníci s duplicitním čipem",
+        "Missing": "Závodníci bez čipu",
+        "Duplicates": "Duplicitní čipy",
+        "GroupSize": "Závodníků ve skupině",
+        "SearchPlaceholder": "Jméno, registrace, startovní číslo, oddíl nebo čip",
+        "Loading": "Načítání přehledu čipů…",
+        "Stale": "Obnovení selhalo. Zobrazené údaje nejsou aktuální; export a tisk jsou zakázány.",
+        "Error": "Přehled čipů se nepodařilo načíst.",
+        "NoIssues": "Všichni závodníci mají čip a nebyla nalezena duplicitní čísla čipů.",
+        "NoMatches": "Zvoleným filtrům neodpovídají žádné problémy.",
+        "NoMissing": "Ve výběru nejsou závodníci bez čipu.",
+        "NoDuplicates": "Ve výběru nejsou duplicitní čipy.",
+        "FullGroups": "Filtry vybírají celé skupiny. Zůstávají viditelní všichni závodníci se stejným čipem, včetně ostatních kategorií."
+      }
     },
     "Admin": {
       "Common": {

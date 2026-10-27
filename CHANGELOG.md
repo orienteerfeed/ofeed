@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Event timing-card insight for missing and duplicate chips across categories,
+  with filtering, complete duplicate groups, CSV export and printing.
+
 - Event-wide numeric payment-reference prefixes in service payment settings, used
   for new entry orders and QR payments within the 10-digit variable-symbol limit.
 
@@ -59,6 +62,9 @@ and this project adheres to
 ### Removed
 
 ### Fixed
+
+- Restore compact mobile result tables that fit phone displays, with bounded
+  responsive typography and horizontal scrolling only on very narrow screens.
 
 - Entry forms hide interval start slots already selected in the local cart and
   reject duplicate cart additions for the same event, category and start time.
