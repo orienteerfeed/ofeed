@@ -54,6 +54,9 @@ and this project adheres to
 
 ### Fixed
 
+- Fix client production builds by checking Playwright specs and React browser
+  fixtures in the browser TypeScript project instead of the Node tooling project.
+
 - Preserve result and split table scroll positions during background refreshes,
   reconnects and live reordering, with stable columns and retained data on transient errors.
 

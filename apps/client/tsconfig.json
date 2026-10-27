@@ -5,7 +5,7 @@
     // ES2024 for Map.groupBy; browser floor is Safari 17.4 / Chrome 117.
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -31,7 +31,7 @@
     // Path mapping
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src", "tests", "e2e/fixtures/**/*.tsx", "vite-env.d.ts"],
+  "include": ["src", "tests", "e2e", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist", "coverage"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

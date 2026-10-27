@@ -43,8 +43,14 @@ Browser regressions use controlled GraphQL
 responses to check scroll offsets and geometry on desktop/mobile across polling,
 insertions, new leaders and long names; exercise Chromium, Firefox and WebKit.
 Run client tests, type-check and focused lint. Record unavailable checks honestly.
-Browser fixtures under `e2e/fixtures` must be included in the client TypeScript
-project so normal type-check and typed ESLint checks cover their TSX entry points.
+Browser specs and fixtures under `e2e` must be included in the client TypeScript
+project so normal type-check, build and typed ESLint checks cover their TS/TSX
+entry points with browser libraries, a modern target and React JSX support.
+Node types remain available for Playwright specs that read test environment variables.
+The referenced Node TypeScript project covers tooling configuration files only;
+it must not pull browser fixtures and their React imports into its composite build.
+Verify both the client type-check and the root `pnpm build` after changing this
+boundary. No runtime or API behavior changes are required.
 
 ## Implementation and validation
 
