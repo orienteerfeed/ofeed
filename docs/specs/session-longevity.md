@@ -28,6 +28,16 @@ Electron and Expo are external repositories: main-process safeStorage and expo-s
 
 ## Tests and rollout
 
+Rate-limit recovery: session refresh/logout has an independent IP budget (120/minute)
+from credential authentication (10/minute). A browser receiving HTTP 429 honors
+Retry-After (seconds or HTTP date; 60 seconds when absent/invalid). The cooldown
+is shared across tabs and survives reloads; focus, polling and forced retries
+must not bypass it. Preserve the current identity and allow ordinary requests
+with an unexpired access token during cooldown; rejected/expired tokens must
+not bypass renewal. Schedule automatic recovery after cooldown. Expose
+Retry-After through CORS. Tests cover both header forms, fallback, queued
+refreshes, reload/tab cooldown, token expiry, and independent server budgets.
+
 Test JWT validation/rotation/cutover, refresh boundary deadlines/concurrency/replay, account-change races, session ownership, cookies/CSRF/CORS/redaction, refresh retries/bootstrap/multi-tab/logout, and WebSocket expiry. Validate migration against MariaDB, regenerate Prisma, rebuild shared contracts, run focused server/client checks and browser flows. Deploy additive migration and Vault keys before coordinated API/web cutover. See ADR 0006 and the session operations runbook.
 
 Provider regressions use real Apollo queries with controlled delayed responses:

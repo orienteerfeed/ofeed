@@ -13,6 +13,9 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [API rate-limit headroom](api-rate-limit-headroom.md): independent budgets for
+  user work, uploads and session renewal.
+
 - [QR bank account formats](qr-payment-bank-account-formats.md): Czech domestic
   account and IBAN input with canonical QR payment instructions; issue #601.
 

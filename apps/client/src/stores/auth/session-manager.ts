@@ -7,6 +7,7 @@ const api = (path: string) =>
 const DEVICE_KEY = 'ofeed-device';
 const DISABLED_KEY = 'ofeed-session-disabled';
 const REVISION_KEY = 'ofeed-session-revision';
+const RETRY_AT_KEY = 'ofeed-session-retry-at';
 let channel: BroadcastChannel | undefined;
 let initialized = false;
 let activeRevision: string | null = null;
@@ -31,6 +32,18 @@ function revision() {
 }
 function disabled() {
   return localStorage.getItem(DISABLED_KEY) === '1';
+}
+function retryDelay() {
+  const retryAt = Number(localStorage.getItem(RETRY_AT_KEY));
+  return Number.isFinite(retryAt) ? Math.max(0, retryAt - Date.now()) : 0;
+}
+function rateLimitDelay(response: Response) {
+  const header = response.headers.get('Retry-After')?.trim();
+  if (!header) return 60_000;
+  const delay = /^\d+$/.test(header)
+    ? Number(header) * 1000
+    : Date.parse(header) - Date.now();
+  return Number.isFinite(delay) ? Math.max(1000, delay) : 60_000;
 }
 function expiresAt(token: string) {
   try {
@@ -65,7 +78,10 @@ function schedule(token: string | null) {
 function scheduleRetry() {
   clearTimeout(timer);
   if (disabled()) return;
-  const delay = Math.min(60_000, 1000 * 2 ** Math.min(failures++, 6));
+  const delay = Math.max(
+    retryDelay(),
+    Math.min(60_000, 1000 * 2 ** Math.min(failures++, 6))
+  );
   timer = setTimeout(() => {
     void refreshSession().catch(scheduleRetry);
   }, delay);
@@ -197,8 +213,22 @@ export function refreshSession(
         (!force && expiresAt(token) - Date.now() > 120_000))
     )
       return ensureUser(token, expectedRevision);
+    if (retryDelay() > 0) {
+      if (!force && token && expiresAt(token) > Date.now())
+        return ensureUser(token, expectedRevision);
+      throw new Error('Session renewal temporarily unavailable');
+    }
     const response = await sessionPost('refresh');
     if (revision() !== expectedRevision || disabled()) return null;
+    if (response.status === 429) {
+      localStorage.setItem(
+        RETRY_AT_KEY,
+        String(Date.now() + rateLimitDelay(response))
+      );
+      scheduleRetry();
+      if (!force && token && expiresAt(token) > Date.now())
+        return ensureUser(token, expectedRevision);
+    }
     if (response.status === 401) {
       localStorage.setItem(DISABLED_KEY, '1');
       clearSession();
@@ -207,6 +237,7 @@ export function refreshSession(
     }
     if (!response.ok)
       throw new Error('Session renewal temporarily unavailable');
+    localStorage.removeItem(RETRY_AT_KEY);
     const payload = (await response.json()).results?.data;
     if (typeof payload?.accessToken !== 'string')
       throw new Error('Invalid refresh response');

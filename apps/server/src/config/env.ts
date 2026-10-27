@@ -172,8 +172,11 @@ const envSchema = z.object({
       'Content-Type,Authorization,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url',
     ),
 
-  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
-  RATE_LIMIT_MAX: z.coerce.number().default(200),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(600),
+  GRAPHQL_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(600),
+  UPLOAD_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
+  SESSION_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
   MAP_TILE_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
   MAP_TILE_RATE_LIMIT_MAX: z.coerce.number().default(2000),
   MAP_TILE_SESSION_REQUIRED: booleanEnv(false),

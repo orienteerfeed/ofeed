@@ -60,6 +60,16 @@ and this project adheres to
 
 ### Fixed
 
+- Session renewal uses a separate rate-limit budget and honors shared browser
+  cooldowns after HTTP 429, preserving usable access tokens during recovery.
+
+- Raise GraphQL headroom from 30 to 600 requests/minute and isolate verified
+  user/event budgets; reserve independent upload and session budgets and align
+  API/Helm defaults so polling and navigation do not block file imports.
+
+- Restore compact result and split table rows, including on mobile, by removing
+  oversized row heights introduced with background refresh scroll preservation.
+
 - QR payment settings accept Czech domestic bank accounts (including prefixes)
   alongside IBAN, validate checksums and normalize stored/generated payment
   instructions to IBAN, including previously saved domestic accounts (Fixes #601).

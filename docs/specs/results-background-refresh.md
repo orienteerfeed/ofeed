@@ -22,6 +22,9 @@ within the viewport; the UI does not follow a particular runner.
   Confirmed publication restrictions still hide splits and clear their data.
 - Existing ranking and result-list rules remain authoritative; rows reorder
   immediately without movement animations.
+- Result rows retain their original compact padding and content-driven height,
+  including on mobile. Scroll preservation must not impose oversized minimum
+  row heights on results or splits.
 
 ## Edge cases and interfaces
 
