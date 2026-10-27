@@ -17,6 +17,7 @@ same change as the code. A spec defines intent and acceptance criteria; the
   account and IBAN input with canonical QR payment instructions; issue #601.
 
 - [Payment reference prefix](entry-payment-reference-prefix.md): event-wide numeric prefixes for new entry-order payments.
+- [Results background refresh](results-background-refresh.md): stable scroll and layout during live result updates.
 
 - [Start slot integrity](start-slot-integrity.md): exclusive StartList reservations and atomic vacancy exchange.
 

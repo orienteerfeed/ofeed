@@ -361,7 +361,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   );
 
   // Loading state
-  if (isLoading) {
+  if (isLoading && competitors.length === 0) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
@@ -373,7 +373,7 @@ export const SplitChart: React.FC<SplitChartProps> = ({
   }
 
   // Error state
-  if (error) {
+  if (error && competitors.length === 0) {
     return (
       <Alert
         severity="error"

@@ -70,6 +70,11 @@ and this project adheres to
 - Session restoration and account changes no longer interrupt event loading
   with “Store reset while query was in flight”; Apollo caches are isolated per
   authentication scope while token renewal preserves active queries.
+- Fix client production builds by checking Playwright specs and React browser
+  fixtures in the browser TypeScript project instead of the Node tooling project.
+
+- Preserve result and split table scroll positions during background refreshes,
+  reconnects and live reordering, with stable columns and retained data on transient errors.
 
 - Serialize StartList reservations across orders and competitors, atomically
   transfer reservations during processing, and return 409 SLOT_TAKEN for slot
