@@ -10,6 +10,7 @@ describe('entry notification email template', () => {
   it('renders an email without an optional payment section', async () => {
     const html = await ejs.renderFile(templatePath, {
       title: 'OFeed – přihláška zpracována: Test závod',
+      logoUrl: 'https://dev.ofeed.live/images/logos/test-logo.png',
       preheader: 'Přihláška byla zpracována.',
       recipientName: 'Jana',
       paragraphs: ['Vaše přihláška byla zpracována.'],
@@ -21,5 +22,6 @@ describe('entry notification email template', () => {
 
     expect(html).toContain('<title>OFeed – přihláška zpracována: Test závod</title>');
     expect(html).toContain('Ahoj Jana,');
+    expect(html).toContain('src="https://dev.ofeed.live/images/logos/test-logo.png"');
   });
 });

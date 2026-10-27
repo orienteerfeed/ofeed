@@ -45,6 +45,17 @@ does not itself mean payment was received or competitors were processed.
   Bank-app import support depends on the installed app; the UI does not promise
   direct launch or payment completion. All six locales stay in sync. API and
   payment payloads remain unchanged.
+- AC-10: QR payment confirmation emails embed the PNG as an inline attachment
+  with a Content-ID matched by the HTML image's `cid:` source. Do not use data
+  URLs, which mail clients may strip. Attach the QR only to the entrant's QR
+  payment confirmation. Generation failure still sends the confirmation with
+  bank details and the protected entry-detail link, without a broken image.
+  Existing mail types and API/configuration contracts remain unchanged.
+- AC-11: All email logos (entry notifications, account verification and password
+  reset) use an absolute asset URL under the configured `CLIENT_APP_URL`,
+  including its base path. Dev, production and local instances use their own
+  frontend host; API hosts and request Host headers do not determine asset URLs.
+  No additional environment variable is required.
 
 ## Edge cases and API
 
@@ -73,3 +84,25 @@ For QR payment actions, test PNG file sharing, download, unsupported sharing,
 cancellation and errors, plus rendered email links and both UI placements.
 Device acceptance: iPhone Chrome, share to a compatible banking app, and save
 then import the PNG when the banking app does not appear in the share sheet.
+For email QR delivery, verify the rendered CID matches the PNG attachment,
+that the email transport forwards attachment content/type/Content-ID, and that
+owner, non-QR and processed notifications have no QR attachment. Cover QR
+generation failure. Delivery in an actual mailbox requires a deployed server
+and a newly submitted QR entry; tests must not send real mail.
+Logo regressions render all three templates and cover dev/production/local
+frontend URLs, trailing slashes and a deployment under a base path.
+
+Inline QR validation on 2026-10-27: 23 focused email/template/transport/auth
+tests passed, along with server type-check (including Prisma generation),
+focused ESLint and formatting checks. The email regression generates a real
+208×208 PNG and checks its signature, dimensions, CID reference and attachment
+metadata. No real email was sent and mailbox rendering remains a deployment
+acceptance check. Resend's documented inline-image format is the reference:
+https://resend.com/docs/dashboard/emails/embed-inline-images.
+
+Instance-logo validation on 2026-10-27: 29 tests across email assets, rendered
+templates, entry notifications, transport and authentication passed. Server
+type-check, focused ESLint and formatting passed. Rendered templates cover
+development, production, localhost and a frontend base path; notification tests
+also verify that logo URLs reach the entry, verification and reset templates.
+No live email was sent.

@@ -13,6 +13,11 @@ within the viewport; the UI does not follow a particular runner.
 
 ## Acceptance criteria
 
+- Result and split table headers remain visible immediately below the navbar
+  while scrolling through their table, including horizontal scrolling on mobile.
+  Headers retain working sorting controls and stop at the end of their table.
+  The offset follows the actual navbar height after resizing. Nested scroll
+  containers keep headers within their visible area. No API changes are needed.
 - Background polling, subscription updates and transient refresh errors retain
   existing data, table DOM, category, tab, filter and sorting choices.
 - Horizontal/vertical scroll offsets stay within one CSS pixel across refreshes.
@@ -40,6 +45,9 @@ codes remain independent occurrences.
 
 ## Test plan
 
+Browser checks also cover pinned headers on desktop/mobile, horizontal column
+alignment, sorting, navbar resizing and releasing the header at the table end.
+
 Vitest component regressions cover polling/loading/error transitions, stable DOM,
 sorting, publication revocation and independent rankings for repeated controls.
 Browser regressions use controlled GraphQL
@@ -64,6 +72,12 @@ inside the result view. Fixed table geometry prevents incoming values from
 changing column widths. Compatible course metadata supplies the split sequence;
 otherwise the longest recorded sequence is retained for the active category.
 
+Table headers stay in their original table and receive a vertical translation
+on scroll, bounded by the table end and any ancestor clipping area. This keeps
+horizontal alignment and sorting handlers intact despite overflow wrappers.
+The navbar is measured directly; a resize observer updates the offset when its
+height changes. Scroll events are batched with animation frames.
+
 Validation completed on 2026-10-27:
 
 - Client Vitest: 28 files, 208 tests passed; the focused four refresh regressions
@@ -83,3 +97,10 @@ Commands: `pnpm --filter ./apps/client test`,
 `pnpm --filter ./apps/client exec playwright test e2e/results-refresh.spec.ts`.
 In this checkout the commands used `--config.verify-deps-before-run=false` to use
 installed dependencies without pnpm's automatic dependency reinstall.
+
+Sticky-header validation on 2026-10-27: all 279 client tests (33 files), client
+type-check and focused ESLint passed. Both `e2e/results-sticky-header.spec.ts`
+and `e2e/results-refresh.spec.ts` passed together: 66 browser checks across
+Chromium, Firefox and WebKit at 1280px and 390px. Header checks cover category,
+club, relay, live and split views, nested club scrolling, horizontal alignment,
+interactive split sorting, navbar height changes and the table end.

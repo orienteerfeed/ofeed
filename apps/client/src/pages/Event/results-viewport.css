@@ -15,6 +15,12 @@
   min-width: 32rem;
 }
 
+.results-viewport thead {
+  position: relative;
+  z-index: 20;
+  background: var(--background);
+}
+
 .results-viewport th,
 .results-viewport td {
   overflow: hidden;

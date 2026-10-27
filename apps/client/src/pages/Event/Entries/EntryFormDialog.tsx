@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks';
 import { formatTimeToHms } from '@/lib/date';
 import PATHNAMES from '@/lib/paths/pathnames';
-import { useAddCartItem } from '@/stores/cart';
+import { isStartSlotInCart, useAddCartItem, useCartItems } from '@/stores/cart';
 
 import { formatEntryFee } from './EntryClassCard';
 import {
@@ -180,6 +180,7 @@ export function EntryFormDialog({
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const addCartItem = useAddCartItem();
+  const cartItems = useCartItems();
   const [addedEntry, setAddedEntry] = useState<AddedEntrySummary | null>(null);
   const [hasClearedForm, setHasClearedForm] = useState(false);
   const [matchedRegistration, setMatchedRegistration] = useState<string | null>(
@@ -221,33 +222,41 @@ export function EntryFormDialog({
       const birthYear = resolveFormBirthYear(value, referenceYear);
       const name = `${value.firstname.trim()} ${value.lastname.trim()}`;
 
-      addCartItem({
-        eventId,
-        eventName,
-        currencyCode,
-        classId: entryClass.id,
-        className: entryClass.name,
-        firstname: value.firstname.trim(),
-        lastname: value.lastname.trim(),
-        ...(registration ? { registration } : {}),
-        ...(birthYear !== null ? { birthYear } : {}),
-        ...(value.organisation.trim()
-          ? { organisation: value.organisation.trim() }
-          : {}),
-        ...(value.license.trim()
-          ? { license: value.license.trim().toUpperCase() }
-          : {}),
-        ...(value.note.trim() ? { note: value.note.trim() } : {}),
-        ...(value.card.trim()
-          ? { card: Number.parseInt(value.card.trim(), 10) }
-          : {}),
-        cardRental: value.cardRental,
-        ...(value.startTime ? { startTime: value.startTime } : {}),
-        fee: entryClass.fee?.amount ?? 0,
-        cardRentalFee: value.cardRental
-          ? (cardRentalAction?.price ?? null)
-          : null,
-      });
+      const added = addCartItem(
+        {
+          eventId,
+          eventName,
+          currencyCode,
+          classId: entryClass.id,
+          className: entryClass.name,
+          firstname: value.firstname.trim(),
+          lastname: value.lastname.trim(),
+          ...(registration ? { registration } : {}),
+          ...(birthYear !== null ? { birthYear } : {}),
+          ...(value.organisation.trim()
+            ? { organisation: value.organisation.trim() }
+            : {}),
+          ...(value.license.trim()
+            ? { license: value.license.trim().toUpperCase() }
+            : {}),
+          ...(value.note.trim() ? { note: value.note.trim() } : {}),
+          ...(value.card.trim()
+            ? { card: Number.parseInt(value.card.trim(), 10) }
+            : {}),
+          cardRental: value.cardRental,
+          ...(value.startTime ? { startTime: value.startTime } : {}),
+          fee: entryClass.fee?.amount ?? 0,
+          cardRentalFee: value.cardRental
+            ? (cardRentalAction?.price ?? null)
+            : null,
+        },
+        { exclusiveStartSlot: entryClass.startMode === 'StartList' }
+      );
+
+      if (!added) {
+        form.setFieldValue('startTime', '');
+        return;
+      }
 
       setAddedEntry({ name, className: entryClass.name });
       form.reset();
@@ -424,18 +433,46 @@ export function EntryFormDialog({
 
   const canSubmit = useStore(form.store, state => state.canSubmit);
   const isDirty = useStore(form.store, state => state.isDirty);
+  const selectedStartTime = useStore(
+    form.store,
+    state => state.values.startTime
+  );
+
+  useEffect(() => {
+    if (
+      entryClass?.startMode === 'StartList' &&
+      selectedStartTime &&
+      isStartSlotInCart(cartItems, {
+        eventId,
+        classId: entryClass.id,
+        startTime: selectedStartTime,
+      })
+    ) {
+      form.setFieldValue('startTime', '');
+    }
+  }, [cartItems, entryClass, eventId, form, selectedStartTime]);
 
   if (!entryClass) {
     return null;
   }
 
-  const slotOptions = entryClass.slots.map(slot => {
-    const startTime = new Date(slot.startTime);
-    return {
-      value: startTime.toISOString(),
-      label: formatTimeToHms(startTime),
-    };
-  });
+  const slotOptions = entryClass.slots
+    .filter(
+      slot =>
+        entryClass.startMode !== 'StartList' ||
+        !isStartSlotInCart(cartItems, {
+          eventId,
+          classId: entryClass.id,
+          startTime: new Date(slot.startTime).toISOString(),
+        })
+    )
+    .map(slot => {
+      const startTime = new Date(slot.startTime);
+      return {
+        value: startTime.toISOString(),
+        label: formatTimeToHms(startTime),
+      };
+    });
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {

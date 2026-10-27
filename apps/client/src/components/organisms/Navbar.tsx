@@ -51,7 +51,10 @@ export function Navbar({ navLinks, t }: NavbarProps) {
     : undefined;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm">
+    <header
+      data-navbar
+      className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm"
+    >
       <div className="container mx-auto flex items-center justify-between px-4 py-3">
         {/* Logo - vlevo */}
         <Link

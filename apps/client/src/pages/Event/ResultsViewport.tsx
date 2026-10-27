@@ -24,6 +24,76 @@ export class ResultsViewport extends Component<
   ScrollSnapshot | null
 > {
   private root = createRef<HTMLDivElement>();
+  private headerOffsets = new WeakMap<HTMLTableSectionElement, number>();
+  private frame: number | undefined;
+  private resizeObserver?: ResizeObserver;
+
+  // Keep the real header inside its horizontally scrolling table. CSS sticky
+  // alone sticks to that overflow wrapper rather than to the page viewport.
+  private positionHeaders = () => {
+    this.frame = undefined;
+    const root = this.root.current;
+    if (!root) return;
+    const navbar = document.querySelector('[data-navbar]');
+    const navbarBottom = Math.max(
+      0,
+      navbar?.getBoundingClientRect().bottom ?? 0
+    );
+    for (const table of root.querySelectorAll('table')) {
+      const header = table.tHead;
+      if (!header) continue;
+      // Nested ResultsViewports may share a table; only its nearest owner moves it.
+      if (table.closest('.results-viewport') !== root) continue;
+      let top = navbarBottom;
+      for (
+        let parent = table.parentElement;
+        parent;
+        parent = parent.parentElement
+      ) {
+        const { overflowY } = getComputedStyle(parent);
+        if (/(auto|scroll|hidden|clip)/.test(overflowY)) {
+          top = Math.max(
+            top,
+            parent.getBoundingClientRect().top + parent.clientTop
+          );
+        }
+      }
+      const rect = header.getBoundingClientRect();
+      const naturalTop = rect.top - (this.headerOffsets.get(header) ?? 0);
+      const offset = Math.max(
+        0,
+        Math.min(
+          top - naturalTop,
+          table.getBoundingClientRect().bottom - naturalTop - rect.height
+        )
+      );
+      header.style.transform = `translateY(${offset}px)`;
+      this.headerOffsets.set(header, offset);
+    }
+  };
+
+  private scheduleHeaders = () => {
+    if (this.frame === undefined) {
+      this.frame = requestAnimationFrame(this.positionHeaders);
+    }
+  };
+
+  override componentDidMount() {
+    document.addEventListener('scroll', this.scheduleHeaders, true);
+    window.addEventListener('resize', this.scheduleHeaders);
+    this.resizeObserver = new ResizeObserver(this.scheduleHeaders);
+    if (this.root.current) this.resizeObserver.observe(this.root.current);
+    const navbar = document.querySelector('[data-navbar]');
+    if (navbar) this.resizeObserver.observe(navbar);
+    this.positionHeaders();
+  }
+
+  override componentWillUnmount() {
+    document.removeEventListener('scroll', this.scheduleHeaders, true);
+    window.removeEventListener('resize', this.scheduleHeaders);
+    this.resizeObserver?.disconnect();
+    if (this.frame !== undefined) cancelAnimationFrame(this.frame);
+  }
 
   override getSnapshotBeforeUpdate(previous: Props): ScrollSnapshot | null {
     const root = this.root.current;
@@ -59,6 +129,7 @@ export class ResultsViewport extends Component<
       if (element.scrollTop !== top) element.scrollTop = top;
       if (element.scrollLeft !== left) element.scrollLeft = left;
     }
+    this.scheduleHeaders();
   }
 
   override render() {

@@ -9,6 +9,7 @@ import { AuthenticationError, DatabaseError, ValidationError } from '../../excep
 import { logger } from '../../lib/logging.js';
 import prisma from '../../utils/context.js';
 import { sendEmail } from '../../utils/email.js';
+import { getEmailLogoUrl } from '../../utils/email-assets.js';
 import {
   generateJwtTokenForLink,
   getUserIdFromEmailVerificationToken,
@@ -45,6 +46,7 @@ export async function sendVerificationEmailHelper(
       user_lastname: lastname,
       user_email: email,
       confirm_link: verificationLink,
+      logoUrl: getEmailLogoUrl(),
       year: new Date().getFullYear(),
     });
     sendEmail({
@@ -275,6 +277,7 @@ export const passwordResetRequest = async (email: string, app_base_url: string) 
     const emailTemplate = await ejs.renderFile(templatePath, {
       user_firstname: existingUser.firstname,
       password_reset_link: resetPasswordAppLink,
+      logoUrl: getEmailLogoUrl(),
       year: new Date().getFullYear(),
     });
 
