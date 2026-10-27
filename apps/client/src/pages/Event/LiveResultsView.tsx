@@ -20,6 +20,7 @@ import {
   rankFeedRows,
 } from './live-feed.utils';
 import { MobileClubName } from './MobileClubName';
+import { ResultsViewport } from './ResultsViewport';
 import {
   formatResultListRank,
   getResultStatusDisplay,
@@ -100,7 +101,11 @@ const EventLiveResultsView = ({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <ResultsViewport
+      resetKey={search}
+      error={error}
+      className="flex flex-col gap-2"
+    >
       <div className="relative">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -298,6 +303,6 @@ const EventLiveResultsView = ({
           })}
         </Button>
       )}
-    </div>
+    </ResultsViewport>
   );
 };

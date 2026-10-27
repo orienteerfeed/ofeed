@@ -30,6 +30,7 @@ import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { MobileClubName } from './MobileClubName';
+import { ResultsViewport } from './ResultsViewport';
 import {
   getResultStatusDisplay,
   getResultStatusPriority,
@@ -73,19 +74,23 @@ interface SplitTableProps {
   competitors: Competitor[];
   isLoading?: boolean;
   error?: unknown;
+  courseControlCodes?: string[] | undefined;
 }
 
 interface LegPositionData {
-  [controlCode: string]: {
+  [splitIndex: number]: {
     [competitorId: string]: number;
   };
 }
 
 interface SplitPositionData {
-  [controlCode: string]: {
+  [splitIndex: number]: {
     [competitorId: string]: number;
   };
 }
+
+type BestLegTimes = Array<number | null>;
+type LegLossData = Array<{ [competitorId: string]: number }>;
 
 // Sorting types
 type SortField =
@@ -155,17 +160,19 @@ const calculateSplitPositions = (
 ): SplitPositionData => {
   const positions: SplitPositionData = {};
 
-  controlCodes.forEach(code => {
+  controlCodes.forEach((_, index) => {
     const runnersWithSplit: TimedEntry[] = competitors
       .map(c => {
-        const split = c.splits.find(s => s.controlCode === code);
+        const split = c.splits[index];
         return split && typeof split.time === 'number'
           ? { id: c.id, time: split.time }
           : null;
       })
       .filter((entry): entry is TimedEntry => entry !== null);
 
-    positions[code] = Object.fromEntries(rankByTime(runnersWithSplit).rankById);
+    positions[index] = Object.fromEntries(
+      rankByTime(runnersWithSplit).rankById
+    );
   });
 
   return positions;
@@ -174,8 +181,7 @@ const calculateSplitPositions = (
 // Calculate average and standard deviation of losses for each competitor
 const calculateCompetitorLossStats = (
   competitors: Competitor[],
-  controlCodes: string[],
-  legLosses: { [controlCode: string]: { [competitorId: string]: number } }
+  legLosses: LegLossData
 ): {
   [competitorId: string]: {
     averageLoss: number;
@@ -194,8 +200,8 @@ const calculateCompetitorLossStats = (
   competitors.forEach(competitor => {
     const losses: number[] = [];
 
-    controlCodes.forEach(code => {
-      const legLoss = legLosses[code]?.[competitor.id];
+    legLosses.forEach(lossesAtSplit => {
+      const legLoss = lossesAtSplit?.[competitor.id];
       if (legLoss !== undefined && legLoss > 0) {
         losses.push(legLoss);
       }
@@ -368,6 +374,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
   competitors,
   isLoading = false,
   error,
+  courseControlCodes,
 }) => {
   const { t } = useTranslation();
   const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -400,10 +407,26 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     [processedCompetitors]
   );
 
-  // Build the list of all controlCodes from first competitor
-  const controlCodes = useMemo(() => {
-    return sortedCompetitors[0]?.splits.map(split => split.controlCode) || [];
-  }, [sortedCompetitors]);
+  // A new leader may have fewer recorded controls. Keep the fullest sequence,
+  // including repeated visits, rather than changing columns with the ranking.
+  const recordedCodes = competitors.reduce<string[]>(
+    (longest, runner) =>
+      runner.splits.length > longest.length
+        ? runner.splits.map(split => split.controlCode)
+        : longest,
+    []
+  );
+  // Use course order only when split indexes describe that same sequence.
+  // Radio-only or forked sequences must retain their original split indexes.
+  const incomingCodes =
+    courseControlCodes?.length &&
+    recordedCodes.length > 0 &&
+    recordedCodes.every((code, index) => code === courseControlCodes[index])
+      ? courseControlCodes
+      : recordedCodes;
+  const [controlCodes, setControlCodes] = useState(incomingCodes);
+  if (incomingCodes.length > controlCodes.length)
+    setControlCodes(incomingCodes);
 
   // Apply sorting
   const sortedAndProcessedCompetitors = useMemo(() => {
@@ -412,13 +435,11 @@ export const SplitTable: React.FC<SplitTableProps> = ({
 
   // Calculate best leg times and leg positions
   const { bestLegTimes, legPositions, legLosses } = useMemo(() => {
-    const bestLegTimes: { [controlCode: string]: number | null } = {};
+    const bestLegTimes: BestLegTimes = [];
     const legPositions: LegPositionData = {};
-    const legLosses: {
-      [controlCode: string]: { [competitorId: string]: number };
-    } = {};
+    const legLosses: LegLossData = [];
 
-    controlCodes.forEach((code, idx) => {
+    controlCodes.forEach((_, idx) => {
       const legResults: TimedEntry[] = [];
 
       validResultCompetitors.forEach(c => {
@@ -429,13 +450,13 @@ export const SplitTable: React.FC<SplitTableProps> = ({
       });
 
       const { rankById, bestTime } = rankByTime(legResults);
-      bestLegTimes[code] = bestTime ?? null;
-      legPositions[code] = Object.fromEntries(rankById);
+      bestLegTimes[idx] = bestTime ?? null;
+      legPositions[idx] = Object.fromEntries(rankById);
 
-      legLosses[code] = {};
+      legLosses[idx] = {};
       if (bestTime != null) {
         legResults.forEach(r => {
-          legLosses[code]![r.id] = r.time - bestTime;
+          legLosses[idx]![r.id] = r.time - bestTime;
         });
       }
     });
@@ -445,11 +466,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
 
   // Calculate competitor loss statistics
   const competitorLossStats = useMemo(() => {
-    return calculateCompetitorLossStats(
-      validResultCompetitors,
-      controlCodes,
-      legLosses
-    );
+    return calculateCompetitorLossStats(validResultCompetitors, legLosses);
   }, [validResultCompetitors, controlCodes, legLosses]);
 
   const splitPositions = useMemo(() => {
@@ -536,7 +553,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     return field;
   };
 
-  if (isLoading) {
+  if (isLoading && competitors.length === 0) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
@@ -547,7 +564,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
     );
   }
 
-  if (error) {
+  if (error && competitors.length === 0) {
     return (
       <Alert
         severity="error"
@@ -570,164 +587,182 @@ export const SplitTable: React.FC<SplitTableProps> = ({
   }
 
   return (
-    <TooltipProvider>
-      <Card className="w-full">
-        {/* Sorting Controls */}
-        <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {t('Pages.Event.Splits.SortedBy')}
-            </span>
-            <Badge variant="secondary" className="font-medium">
-              {t('Pages.Event.Splits.SortSummary', {
-                direction: t(
-                  sortConfig.direction === 'asc'
-                    ? 'Pages.Event.Splits.SortDirectionAsc'
-                    : 'Pages.Event.Splits.SortDirectionDesc'
-                ),
-                field: getSortFieldLabel(sortConfig.field),
-              })}
-            </Badge>
+    <ResultsViewport splits error={error}>
+      <TooltipProvider>
+        <Card className="w-full">
+          {/* Sorting Controls */}
+          <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {t('Pages.Event.Splits.SortedBy')}
+              </span>
+              <Badge variant="secondary" className="font-medium">
+                {t('Pages.Event.Splits.SortSummary', {
+                  direction: t(
+                    sortConfig.direction === 'asc'
+                      ? 'Pages.Event.Splits.SortDirectionAsc'
+                      : 'Pages.Event.Splits.SortDirectionDesc'
+                  ),
+                  field: getSortFieldLabel(sortConfig.field),
+                })}
+              </Badge>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetSorting}
+              className="h-8 gap-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {t('Pages.Event.Splits.ResetSort')}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetSorting}
-            className="h-8 gap-1"
-          >
-            <RotateCcw className="h-3 w-3" />
-            {t('Pages.Event.Splits.ResetSort')}
-          </Button>
-        </div>
 
-        <div className={mobileResultsTableClassName}>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                {/* Position Column */}
-                <TableHead className="w-12 text-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('position')}
-                    className="h-8 font-medium hover:bg-muted"
-                  >
-                    <span className="mr-1">#</span>
-                    {getSortIcon('position')}
-                  </Button>
-                </TableHead>
-
-                <TableHead className="min-w-[140px]">
-                  {t('Pages.Event.Splits.Competitor')}
-                </TableHead>
-
-                {/* Finish Time Column */}
-                <TableHead className="w-20 text-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('time')}
-                    className="h-8 font-medium hover:bg-muted"
-                  >
-                    <span className="mr-1">Finish</span>
-                    {getSortIcon('time')}
-                  </Button>
-                </TableHead>
-
-                {/* Loss Column */}
-                <TableHead className="w-20 text-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('loss')}
-                    className="h-8 font-medium hover:bg-muted"
-                  >
-                    <span className="mr-1">Loss</span>
-                    {getSortIcon('loss')}
-                  </Button>
-                </TableHead>
-
-                {/* Leg Columns */}
-                {controlCodes.map((code, i) => (
-                  <TableHead key={i} className="text-center min-w-[110px]">
+          <div data-result-scroll className={mobileResultsTableClassName}>
+            <Table
+              style={{
+                width: `${48 + 192 + 96 + 96 + (controlCodes.length + 1) * 128}px`,
+              }}
+            >
+              <colgroup>
+                <col style={{ width: 48 }} />
+                <col style={{ width: 192 }} />
+                <col style={{ width: 96 }} />
+                <col style={{ width: 96 }} />
+                {controlCodes.map((_, index) => (
+                  <col key={index} style={{ width: 128 }} />
+                ))}
+                <col style={{ width: 128 }} />
+              </colgroup>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  {/* Position Column */}
+                  <TableHead className="w-12 text-center">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleSort(`leg-${i}`)}
-                      className="h-8 font-medium hover:bg-muted p-1"
+                      onClick={() => handleSort('position')}
+                      className="h-8 font-medium hover:bg-muted"
                     >
-                      <span className="mr-1 text-xs">
-                        {i + 1} ({code})
-                      </span>
-                      {getSortIcon(`leg-${i}`)}
+                      <span className="mr-1">#</span>
+                      {getSortIcon('position')}
                     </Button>
                   </TableHead>
-                ))}
 
-                {/* Final Leg Column */}
-                <TableHead className="text-center min-w-[100px]">
-                  <div className="flex flex-col text-xs">
+                  <TableHead className="min-w-[140px]">
+                    {t('Pages.Event.Splits.Competitor')}
+                  </TableHead>
+
+                  {/* Finish Time Column */}
+                  <TableHead className="w-20 text-center">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleSort('final-leg')}
-                      className="h-8 font-medium hover:bg-muted p-1"
+                      onClick={() => handleSort('time')}
+                      className="h-8 font-medium hover:bg-muted"
                     >
-                      <span className="mr-1 text-xs">Final</span>
-                      {getSortIcon('final-leg')}
+                      <span className="mr-1">Finish</span>
+                      {getSortIcon('time')}
                     </Button>
-                    <span className="text-muted-foreground font-normal">
-                      (Finish)
-                    </span>
-                  </div>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleCompetitors.map(competitor => (
-                <CompetitorRow
-                  key={competitor.id}
-                  competitor={competitor}
-                  controlCodes={controlCodes}
-                  bestLegTimes={bestLegTimes}
-                  legPositions={legPositions}
-                  legLosses={legLosses}
-                  competitorLossStats={competitorLossStats}
-                  splitPositions={splitPositions}
-                  mobileClubWidthReference={mobileClubWidthReference}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  </TableHead>
 
-        {/* Legend */}
-        <div className="p-4 border-t bg-muted/20">
-          <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-100 border border-green-300 rounded" />
-              <span>{t('Pages.Event.Splits.LegendFastestLegTime')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded" />
-              <span>{t('Pages.Event.Splits.LegendBestCumulativeTime')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded" />
-              <span>{t('Pages.Event.Splits.LegendSignificantDeviation')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
-              <span>{t('Pages.Event.Splits.LegendMajorDeviation')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-200 border border-red-400 rounded" />
-              <span>{t('Pages.Event.Splits.LegendCriticalDeviation')}</span>
+                  {/* Loss Column */}
+                  <TableHead className="w-20 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort('loss')}
+                      className="h-8 font-medium hover:bg-muted"
+                    >
+                      <span className="mr-1">Loss</span>
+                      {getSortIcon('loss')}
+                    </Button>
+                  </TableHead>
+
+                  {/* Leg Columns */}
+                  {controlCodes.map((code, i) => (
+                    <TableHead key={i} className="text-center min-w-[110px]">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort(`leg-${i}`)}
+                        className="h-8 font-medium hover:bg-muted p-1"
+                      >
+                        <span className="mr-1 text-xs">
+                          {i + 1} ({code})
+                        </span>
+                        {getSortIcon(`leg-${i}`)}
+                      </Button>
+                    </TableHead>
+                  ))}
+
+                  {/* Final Leg Column */}
+                  <TableHead className="text-center min-w-[100px]">
+                    <div className="flex flex-col text-xs">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSort('final-leg')}
+                        className="h-8 font-medium hover:bg-muted p-1"
+                      >
+                        <span className="mr-1 text-xs">Final</span>
+                        {getSortIcon('final-leg')}
+                      </Button>
+                      <span className="text-muted-foreground font-normal">
+                        (Finish)
+                      </span>
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleCompetitors.map(competitor => (
+                  <CompetitorRow
+                    key={competitor.id}
+                    competitor={competitor}
+                    controlCodes={controlCodes}
+                    bestLegTimes={bestLegTimes}
+                    legPositions={legPositions}
+                    legLosses={legLosses}
+                    competitorLossStats={competitorLossStats}
+                    splitPositions={splitPositions}
+                    mobileClubWidthReference={mobileClubWidthReference}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Legend */}
+          <div className="p-4 border-t bg-muted/20">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-100 border border-green-300 rounded" />
+                <span>{t('Pages.Event.Splits.LegendFastestLegTime')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded" />
+                <span>{t('Pages.Event.Splits.LegendBestCumulativeTime')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-orange-100 border border-orange-300 rounded" />
+                <span>
+                  {t('Pages.Event.Splits.LegendSignificantDeviation')}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
+                <span>{t('Pages.Event.Splits.LegendMajorDeviation')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-200 border border-red-400 rounded" />
+                <span>{t('Pages.Event.Splits.LegendCriticalDeviation')}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
-    </TooltipProvider>
+        </Card>
+      </TooltipProvider>
+    </ResultsViewport>
   );
 };
 
@@ -735,9 +770,9 @@ export const SplitTable: React.FC<SplitTableProps> = ({
 interface CompetitorRowProps {
   competitor: ProcessedCompetitor;
   controlCodes: string[];
-  bestLegTimes: { [controlCode: string]: number | null };
+  bestLegTimes: BestLegTimes;
   legPositions: LegPositionData;
-  legLosses: { [controlCode: string]: { [competitorId: string]: number } };
+  legLosses: LegLossData;
   competitorLossStats: {
     [competitorId: string]: {
       averageLoss: number;
@@ -813,16 +848,16 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
       {/* Leg Times */}
       {controlCodes.map((code, index) => {
         const legTime = getLegTime(competitor.splits, index);
-        const legPosition = legPositions[code]?.[competitor.id];
-        const splitPosition = splitPositions[code]?.[competitor.id];
+        const legPosition = legPositions[index]?.[competitor.id];
+        const splitPosition = splitPositions[index]?.[competitor.id];
 
-        const rawBestTime = bestLegTimes[code];
+        const rawBestTime = bestLegTimes[index];
         const bestTime: number | null = rawBestTime ?? null;
 
         const isBestLeg =
           legTime !== null && bestTime !== null && legTime === bestTime;
         const isBestSplit = splitPosition === 1;
-        const legLoss = legLosses[code]?.[competitor.id];
+        const legLoss = legLosses[index]?.[competitor.id];
 
         const lossLevel =
           legLoss !== undefined &&

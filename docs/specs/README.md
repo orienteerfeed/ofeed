@@ -13,6 +13,8 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [Results background refresh](results-background-refresh.md): stable scroll and layout during live result updates.
+
 - [Start slot integrity](start-slot-integrity.md): exclusive StartList reservations and atomic vacancy exchange.
 
 - [Create idempotency](create-idempotency.md): 24-hour REST create replay.
