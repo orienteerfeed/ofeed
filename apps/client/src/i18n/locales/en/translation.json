@@ -846,6 +846,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Payment reference prefix",
+              "Help": "Optionally enter 1–2 digits before 8 random digits (10 total at most). Leave empty to use the two-digit year. Applies to new orders for all payment methods; existing references stay unchanged.",
+              "Invalid": "Enter up to 2 digits (0–9), or leave empty."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -880,7 +885,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Enter an IBAN or a Czech account, e.g. 2201340123/2010 or 19-2000145399/0800. Czech accounts are automatically converted to IBAN.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -916,6 +922,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Enter a valid IBAN or Czech account in prefix-number/bank-code format. Check the account digits.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1625,6 +1632,7 @@
         "Cancel": "Cancel"
       },
       "Entries": {
+        "Enter": "Enter now",
         "FreeEntry": "Free entry",
         "BirthYearRange": "Birth years {{from}}–{{to}}",
         "LoadError": "Failed to load entry availability.",
@@ -1860,7 +1868,12 @@
         "Title": "Pay via QR code",
         "Description": "Scan this code in your bank app to pre-fill the payment.",
         "QrCodeAriaLabel": "Payment QR code",
-        "OpenInBankApp": "Pay in bank app"
+        "ShareQr": "Share payment QR",
+        "DownloadQr": "Download QR",
+        "MobileInstructions": "Share the QR image to a supported banking app, or download it and import the image in your banking app.",
+        "ShareUnavailable": "Image sharing is not supported. The QR code will download; import it in your banking app.",
+        "ShareError": "Unable to share the QR code. Try downloading it.",
+        "ExportError": "Unable to download the QR code. Please try again."
       },
       "CashPayment": {
         "Title": "Pay in cash",

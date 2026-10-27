@@ -555,6 +555,7 @@ type EventPaymentMethodSettings {
   eventId: String!
   paymentCapabilities: EventPaymentCapabilities!
   paymentMethods: [EventPaymentMethod!]!
+  paymentReferencePrefix: String
 }
 
 enum EventPrimaryStatus {
@@ -1022,6 +1023,7 @@ input UpdateEventPaymentMethodsInput {
   bankAccountIban: String
   bankAccountName: String
   paymentMethods: [EventPaymentMethodInput!]!
+  paymentReferencePrefix: String
 }
 
 input UpdateEventRentalCardInput {

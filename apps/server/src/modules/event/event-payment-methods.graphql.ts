@@ -45,6 +45,7 @@ const EventPaymentMethodSettingsRef = builder
   .implement({
     fields: (t) => ({
       eventId: t.exposeString('eventId'),
+      paymentReferencePrefix: t.exposeString('paymentReferencePrefix', { nullable: true }),
       paymentMethods: t.expose('paymentMethods', { type: [EventPaymentMethodRef] }),
       paymentCapabilities: t.expose('paymentCapabilities', {
         type: EventPaymentCapabilitiesRef,
@@ -65,6 +66,7 @@ const EventPaymentMethodInputRef = builder.inputType('EventPaymentMethodInput', 
 const UpdateEventPaymentMethodsInputRef = builder.inputType('UpdateEventPaymentMethodsInput', {
   fields: (t) => ({
     paymentMethods: t.field({ type: [EventPaymentMethodInputRef], required: true }),
+    paymentReferencePrefix: t.string({ required: false }),
     bankAccountName: t.string({ required: false }),
     bankAccountIban: t.string({ required: false }),
   }),
@@ -106,6 +108,7 @@ builder.mutationFields((t) => ({
           paymentLinkTemplate: method.paymentLinkTemplate,
         })),
         bankAccount,
+        paymentReferencePrefix: args.input.paymentReferencePrefix,
       }).catch((error: unknown) =>
         rethrowAuthzOrError(error, 'Failed to update event payment methods'),
       );

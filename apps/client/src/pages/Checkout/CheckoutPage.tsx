@@ -1,13 +1,7 @@
 import type { EntryOrder, PaymentMethodType } from '@repo/shared';
 import { useForm, useStore } from '@tanstack/react-form';
 import { Link } from '@tanstack/react-router';
-import {
-  CheckCircle2,
-  ExternalLink,
-  Smartphone,
-  ShoppingCart,
-  Trash2,
-} from 'lucide-react';
+import { CheckCircle2, ExternalLink, ShoppingCart, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
@@ -27,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { QrPaymentInstructions } from './QrPaymentInstructions';
 import PATHNAMES from '@/lib/paths/pathnames';
 import { useCartItems, useRemoveCartItem } from '@/stores/cart';
 import type { CartEntryItem } from '@/stores/cart';
@@ -51,53 +45,6 @@ interface EventCartGroup {
 interface CompletedOrder {
   eventName: string;
   order: EntryOrder;
-}
-
-function QrPaymentInstructions({
-  payment,
-}: {
-  payment: NonNullable<EntryOrder['qrPayment']>;
-}) {
-  const { t } = useTranslation();
-  const isMobile = useIsMobile();
-  const accountDisplay = [payment.bankAccountName, payment.bankAccountIban]
-    .filter(Boolean)
-    .join(' · ');
-
-  return (
-    <section
-      className="space-y-4 border-t pt-4 text-center"
-      aria-labelledby="qr-payment-title"
-    >
-      <div className="space-y-1">
-        <h3 id="qr-payment-title" className="font-semibold">
-          {t('Pages.Checkout.QrPayment.Title')}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {t('Pages.Checkout.QrPayment.Description')}
-        </p>
-      </div>
-      <div className="inline-flex rounded-lg border bg-white p-3">
-        <QRCodeSVG
-          value={payment.payload}
-          size={208}
-          level="M"
-          aria-label={t('Pages.Checkout.QrPayment.QrCodeAriaLabel')}
-        />
-      </div>
-      {accountDisplay ? (
-        <p className="text-sm text-muted-foreground">{accountDisplay}</p>
-      ) : null}
-      {isMobile ? (
-        <Button asChild className="w-full sm:w-auto">
-          <a href={`spayd://${payment.payload}`}>
-            <Smartphone className="h-4 w-4" />
-            {t('Pages.Checkout.QrPayment.OpenInBankApp')}
-          </a>
-        </Button>
-      ) : null}
-    </section>
-  );
 }
 
 function CashPaymentInstructions({

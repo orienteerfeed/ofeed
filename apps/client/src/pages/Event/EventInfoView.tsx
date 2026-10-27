@@ -17,7 +17,7 @@ import {
   hasDisplayableCourseLength,
 } from '@/lib/course-info';
 import { Event } from '@/types/event';
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Calendar, Clock, MapPin, Trophy, UserPlus, Users } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,19 @@ export function EventInfoView({ event }: EventInfoViewProps) {
   // Entries are shown only for non-relay events with configured entries.
   const entriesEnabled =
     !event.relay && Boolean(event.statusSummary?.entriesConfigured);
+  const hash = useLocation({ select: location => location.hash });
+  const entriesRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!entriesEnabled || hash !== 'entries') return;
+
+    // The event is loaded outside the route loader, so the anchor may mount
+    // after the router has already committed navigation.
+    const frame = requestAnimationFrame(() => {
+      entriesRef.current?.scrollIntoView({ block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [entriesEnabled, event.id, hash]);
 
   const sortedClasses = React.useMemo(() => {
     if (!event.classes) return [];
@@ -345,7 +358,7 @@ export function EventInfoView({ event }: EventInfoViewProps) {
       </Card>
 
       {entriesEnabled && (
-        <Card>
+        <Card id="entries" ref={entriesRef} className="scroll-mt-24">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-primary" />

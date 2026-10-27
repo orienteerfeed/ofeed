@@ -289,6 +289,7 @@ model Event {
   vatRate                      Decimal?                       @db.Decimal(5, 2)
   lateEntryFeePercent          Decimal?                       @db.Decimal(5, 2)
   ofeedPaymentAvailable        Boolean                        @default(false)
+  paymentReferencePrefix       String?                        @db.VarChar(2)
   bankAccountIban              String?                        @db.VarChar(34)
   bankAccountName              String?                        @db.VarChar(191)
   splitPublicationMode         SplitPublicationMode           @default(UNRESTRICTED)

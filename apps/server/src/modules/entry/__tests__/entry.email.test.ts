@@ -110,6 +110,10 @@ describe('entry email notifications', () => {
   });
 
   it('embeds a QR payment code and bank details in the entrant email', async () => {
+    const realEjs = await vi.importActual<typeof import('ejs')>('ejs');
+    ejsMock.renderFile.mockImplementation((filename, data) =>
+      realEjs.default.renderFile(filename, data),
+    );
     await notifyEntryOrderReceived(order, event, {
       method: 'QR_PAYMENT',
       qrPayment: {
@@ -135,11 +139,29 @@ describe('entry email notifications', () => {
         payment: expect.objectContaining({
           heading: 'QR platba',
           qrCodeDataUrl: 'data:image/png;base64,qr-code',
+          action: {
+            label: 'Zobrazit platební údaje',
+            url: expect.stringContaining(
+              '/events/event-1/entries/entry-1?access=signed-entry-access-token',
+            ),
+          },
           details: expect.arrayContaining([
             expect.objectContaining({ label: 'IBAN', value: 'CZ6508000000192000145399' }),
           ]),
         }),
       }),
     );
+    const entrantMail = sendEmailMock.mock.calls[0]![0];
+    const paymentLink = entrantMail.html.match(
+      /<a href="([^"]+)"[^>]*>Zobrazit platební údaje<\/a>/,
+    );
+    expect(paymentLink).not.toBeNull();
+    const url = new URL(paymentLink![1]);
+    expect(['http:', 'https:']).toContain(url.protocol);
+    expect(url.pathname).toBe('/events/event-1/entries/entry-1');
+    expect(url.searchParams.get('access')).toBe(order.detailAccessToken);
+    expect(entrantMail.html).not.toContain('spayd://');
+    expect(entrantMail.text).not.toContain('spayd://');
+    expect(entrantMail.text).toContain('?access=signed-entry-access-token');
   });
 });

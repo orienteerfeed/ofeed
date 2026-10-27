@@ -1256,6 +1256,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Präfix der Zahlungsreferenz",
+              "Help": "Optional 1–2 Ziffern vor 8 zufälligen Ziffern (insgesamt höchstens 10). Leer lassen, um die zweistellige Jahreszahl zu verwenden. Gilt für neue Bestellungen bei allen Zahlungsarten; bestehende Referenzen bleiben erhalten.",
+              "Invalid": "Bis zu 2 Ziffern (0–9) eingeben oder leer lassen."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -1290,7 +1295,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Gib eine IBAN oder eine tschechische Kontonummer ein, z. B. 2201340123/2010 oder 19-2000145399/0800. Tschechische Kontonummern werden automatisch in IBAN umgewandelt.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -1326,6 +1332,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Gib eine gültige IBAN oder tschechische Kontonummer im Format Präfix-Kontonummer/Bankleitzahl ein. Prüfe die Ziffern.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1553,6 +1560,7 @@
         }
       },
       "Entries": {
+        "Enter": "Nachmelden",
         "FreeEntry": "Kostenlose Anmeldung",
         "BirthYearRange": "Jahrgänge {{from}}–{{to}}",
         "LoadError": "Anmeldeverfügbarkeit konnte nicht geladen werden.",
@@ -1701,7 +1709,12 @@
         "Title": "Per QR-Code bezahlen",
         "Description": "Scanne diesen Code in deiner Banking-App, um die Zahlung vorauszufüllen.",
         "QrCodeAriaLabel": "Zahlungs-QR-Code",
-        "OpenInBankApp": "In Banking-App bezahlen"
+        "ShareQr": "Zahlungs-QR teilen",
+        "DownloadQr": "QR herunterladen",
+        "MobileInstructions": "Teile das QR-Bild mit einer unterstützten Banking-App oder lade es herunter und importiere das Bild in deiner Banking-App.",
+        "ShareUnavailable": "Das Teilen von Bildern wird nicht unterstützt. Der QR-Code wird heruntergeladen; importiere ihn in deiner Banking-App.",
+        "ShareError": "Der QR-Code konnte nicht geteilt werden. Versuche, ihn herunterzuladen.",
+        "ExportError": "Der QR-Code konnte nicht heruntergeladen werden. Versuche es erneut."
       },
       "CashPayment": {
         "Title": "Bar bezahlen",
