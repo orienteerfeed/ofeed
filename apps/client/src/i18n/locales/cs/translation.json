@@ -497,7 +497,7 @@
         "Cat": "Kat",
         "Club": "Klub",
         "Live": "Živě",
-        "Entries": "Přihlášky"
+        "Entries": "Dohlášky a změny"
       },
       "Overview": {
         "NoEventsToday": "Dnes žádné akce",
@@ -848,6 +848,11 @@
           "Title": "Služby",
           "Description": "Nastav služby nabízené u této akce, sazby a navýšení startovného pro pozdní přihlášky.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Prefix variabilního symbolu",
+              "Help": "Volitelně 1–2 číslice před 8 náhodnými číslicemi (celkem nejvýše 10). Prázdné pole použije dvoumístný rok. Platí pro nové objednávky u všech platebních metod; stávající symboly se nemění.",
+              "Invalid": "Zadejte nejvýše 2 číslice (0–9), nebo nechte pole prázdné."
+            },
             "Title": "Platební metody",
             "Description": "Vyberte platební metody dostupné pro tuto akci a nastavte pořadí jejich zobrazení.",
             "Loading": "Načítám platební metody…",
@@ -882,7 +887,8 @@
                 "BankAccountName": "Název účtu",
                 "BankAccountNamePlaceholder": "Bankovní účet pořadatele",
                 "BankAccountIban": "IBAN / bankovní účet",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Zadejte IBAN nebo český účet, např. 2201340123/2010 či 19-2000145399/0800. Český účet automaticky převedeme na IBAN.",
                 "BankAccountMissing": "Před aktivací QR plateb nastavte bankovní účet pořadatele."
               },
               "Cash": {
@@ -918,6 +924,7 @@
               "AtLeastOne": "Aktivujte alespoň jednu platební metodu.",
               "OFeedUnavailable": "Nedostupnou OFeed Platbu nelze aktivovat.",
               "BankAccountRequired": "Je vyžadován bankovní účet",
+              "InvalidBankAccount": "Zadejte platný IBAN nebo český účet ve tvaru předčíslí-číslo/kód banky. Zkontrolujte číslice účtu.",
               "DisplayNameRequired": "Název platební metody je povinný.",
               "PaymentLinkRequired": "Platební odkaz je povinný.",
               "InvalidPaymentLink": "Zadejte absolutní HTTPS adresu s platným názvem hostitele a bez mezer.",
@@ -1628,14 +1635,15 @@
         "Cancel": "Zrušit"
       },
       "Entries": {
+        "Enter": "Dohlásit se",
         "FreeEntry": "Zdarma",
         "BirthYearRange": "Ročníky {{from}}–{{to}}",
         "LoadError": "Nepodařilo se načíst dostupnost přihlášek.",
         "OpensIn": "Přihlášky se otevřou za",
-        "ClosedDescription": "Přihlášky jsou uzavřeny.",
+        "ClosedDescription": "Dohlášky a změny jsou uzavřeny.",
         "EntriesCount": "Odeslané přihlášky a změny",
         "ChangesCount": "Změn provedených přes OFeed",
-        "ClosesAt": "Přihlášky se uzavírají {{date}}",
+        "ClosesAt": "Dohlášky se uzavírají {{date}}",
         "AllClassesFull": "Všechny kategorie jsou plné.",
         "Form": {
           "Firstname": "Jméno",
@@ -1863,7 +1871,12 @@
         "Title": "Zaplatit přes QR kód",
         "Description": "Naskenujte kód v bankovní aplikaci a platební příkaz se předvyplní.",
         "QrCodeAriaLabel": "QR kód pro platbu",
-        "OpenInBankApp": "Zaplatit v bankovní aplikaci"
+        "ShareQr": "Sdílet platební QR",
+        "DownloadQr": "Stáhnout QR",
+        "MobileInstructions": "Sdílejte QR obrázek do podporované bankovní aplikace, nebo jej stáhněte a načtěte z obrázku v bankovní aplikaci.",
+        "ShareUnavailable": "Sdílení obrázků není podporováno. QR kód se stáhne; otevřete jej v bankovní aplikaci.",
+        "ShareError": "QR kód se nepodařilo sdílet. Zkuste jej stáhnout.",
+        "ExportError": "QR kód se nepodařilo stáhnout. Zkuste to znovu."
       },
       "CashPayment": {
         "Title": "Platba v hotovosti",

@@ -846,6 +846,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Prefix för betalningsreferens",
+              "Help": "Valfritt: 1–2 siffror före 8 slumpmässiga siffror (högst 10 totalt). Lämna tomt för att använda det tvåsiffriga årtalet. Gäller nya beställningar för alla betalningsmetoder; befintliga referenser ändras inte.",
+              "Invalid": "Ange högst 2 siffror (0–9) eller lämna tomt."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -880,7 +885,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Ange ett IBAN eller ett tjeckiskt konto, t.ex. 2201340123/2010 eller 19-2000145399/0800. Tjeckiska konton omvandlas automatiskt till IBAN.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -916,6 +922,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Ange ett giltigt IBAN eller tjeckiskt konto i formatet prefix-nummer/bankkod. Kontrollera siffrorna.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1625,6 +1632,7 @@
         "Cancel": "Avbryt"
       },
       "Entries": {
+        "Enter": "Anmäl dig",
         "FreeEntry": "Gratis anmälan",
         "BirthYearRange": "Födelseår {{from}}–{{to}}",
         "LoadError": "Kunde inte ladda anmälningstillgänglighet.",
@@ -1860,7 +1868,12 @@
         "Title": "Betala med QR-kod",
         "Description": "Skanna koden i din bankapp för att fylla i betalningen.",
         "QrCodeAriaLabel": "QR-kod för betalning",
-        "OpenInBankApp": "Betala i bankappen"
+        "ShareQr": "Dela betalnings-QR",
+        "DownloadQr": "Ladda ner QR",
+        "MobileInstructions": "Dela QR-bilden till en bankapp som stöds, eller ladda ner den och importera bilden i din bankapp.",
+        "ShareUnavailable": "Bilddelning stöds inte. QR-koden laddas ner; importera den i din bankapp.",
+        "ShareError": "Det gick inte att dela QR-koden. Försök ladda ner den.",
+        "ExportError": "Det gick inte att ladda ner QR-koden. Försök igen."
       },
       "CashPayment": {
         "Title": "Betala kontant",

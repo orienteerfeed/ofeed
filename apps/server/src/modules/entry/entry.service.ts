@@ -2,9 +2,11 @@ import type { CreateTransaction } from '../idempotency/create-idempotency.js';
 import crypto from 'node:crypto';
 
 import {
+  PAYMENT_REFERENCE_RANDOM_LENGTH,
   checkClassEligibility,
   createEntryOrderInputSchema,
   createQrPaymentInstruction,
+  paymentReferencePrefixSchema,
   replacePaymentLinkVariables,
   resolveEffectiveStartMode,
   resolveEntryBirthYear,
@@ -220,15 +222,16 @@ export function computeEntryOrderTotal(items: PricedEntryOrderItem[]): number {
   return round2(items.reduce((total, item) => total + item.fee + (item.cardRentalFee ?? 0), 0));
 }
 
-/**
- * Variable symbol for payment pairing: `YY` + 8 random digits (10 digits
- * total). Uniqueness per event is enforced by the DB constraint; callers
- * retry on collision.
- */
-export function generatePaymentReference(reference: Date): string {
-  const twoDigitYear = String(reference.getFullYear() % 100).padStart(2, '0');
-  const random = crypto.randomInt(0, 100_000_000).toString().padStart(8, '0');
-  return `${twoDigitYear}${random}`;
+/** Event prefix (or two-digit year) + eight random digits; retry DB collisions. */
+export function generatePaymentReference(reference: Date, prefix?: string | null): string {
+  const configuredPrefix = paymentReferencePrefixSchema.parse(prefix ?? '');
+  const effectivePrefix =
+    configuredPrefix || String(reference.getFullYear() % 100).padStart(2, '0');
+  const random = crypto
+    .randomInt(0, 10 ** PAYMENT_REFERENCE_RANDOM_LENGTH)
+    .toString()
+    .padStart(PAYMENT_REFERENCE_RANDOM_LENGTH, '0');
+  return `${effectivePrefix}${random}`;
 }
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -395,6 +398,7 @@ export async function createEntryOrder(
       lateEntryFeePercent: true,
       currency: { select: { iso4217Alpha3: true } },
       ofeedPaymentAvailable: true,
+      paymentReferencePrefix: true,
       bankAccountIban: true,
       bankAccountName: true,
       paymentMethods: {
@@ -511,7 +515,7 @@ export async function createEntryOrder(
 
   const maxAttempts = 5;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    const paymentReference = generatePaymentReference(now);
+    const paymentReference = generatePaymentReference(now, event.paymentReferencePrefix);
     try {
       const qrPayment =
         input.paymentMethod === 'QR_PAYMENT' && event.bankAccountIban

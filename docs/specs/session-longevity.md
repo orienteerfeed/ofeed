@@ -16,8 +16,22 @@ Password changes, password reset and account deletion revoke all families transa
 
 Keep access tokens in memory, refresh credentials in Secure HttpOnly SameSite=Lax host-only cookies, and only nonsecret device metadata in localStorage. Refresh two minutes before expiry and after the first authentication failure, single-flight across tabs. Retry each operation once without changing its body/idempotency key. Temporary network/server failures preserve authentication; terminal refresh rejection requires signin. Bootstrap before protected guards; reconnect authenticated subscriptions after rotation and close sockets at JWT expiry.
 
+Apollo queries must survive session restoration without displaying “Store reset
+while query was in flight”. Anonymous, restoring and identified-user scopes use
+separate Apollo clients and query trees. On identity change, mount the new scope
+before disposing the old client; never reset a cache with mounted query consumers.
+Account switches and logout must not expose the previous user's cached data or
+accept late responses into the new cache. Token rotation for the same user keeps
+the current client and query tree. This correction has no API or data-model impact.
+
 Electron and Expo are external repositories: main-process safeStorage and expo-secure-store respectively. Queues survive reauthentication, are scoped to their original user, and preserve payloads/idempotency keys. Offline expiry, revocation and a lost refresh response under strict rotation require signin.
 
 ## Tests and rollout
 
 Test JWT validation/rotation/cutover, refresh boundary deadlines/concurrency/replay, account-change races, session ownership, cookies/CSRF/CORS/redaction, refresh retries/bootstrap/multi-tab/logout, and WebSocket expiry. Validate migration against MariaDB, regenerate Prisma, rebuild shared contracts, run focused server/client checks and browser flows. Deploy additive migration and Vault keys before coordinated API/web cutover. See ADR 0006 and the session operations runbook.
+
+Provider regressions use real Apollo queries with controlled delayed responses:
+restore a session while an event query is pending, switch users and log out with
+cached/pending data, rotate a token without restarting queries, and exercise
+StrictMode cleanup. Run the focused provider and session-manager client tests
+plus client type checking. Browser acceptance requires a running API and account.

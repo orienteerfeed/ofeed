@@ -27,6 +27,24 @@ does not itself mean payment was received or competitors were processed.
   payment-method validation, provided earlier checks have passed.
 - AC-06: generated SPAYD messages disclose the contact name; callers account for
   that when displaying, printing or storing QR payloads.
+- AC-07: the Czech public entry tab is labelled “Dohlášky a změny”; its closed
+  state reads “Dohlášky a změny jsou uzavřeny.” Its closing-date notice reads
+  “Dohlášky se uzavírají {{date}}”. Verify the existing translation keys in the
+  Czech locale resource; these copy changes have no API impact.
+- AC-08: home-grid cards for non-relay events with configured, open entries
+  replace the detail action with a localized “Dohlásit se” action. It opens
+  `?tab=info#entries` and scrolls to the entries section after event data loads.
+  Closed, not-yet-open, unconfigured and relay events keep the detail action;
+  the results action stays available. No API changes are required.
+- AC-09: QR payment emails link to the existing token-protected HTTPS entry
+  detail with the label “Zobrazit platební údaje”, never to `spayd://`.
+  Checkout and entry detail offer local PNG download and file sharing through
+  Web Share where supported. Generate the PNG synchronously on the user's
+  click to preserve mobile user activation. Unsupported file sharing downloads
+  the QR with instructions; cancellation is silent, other failures are visible.
+  Bank-app import support depends on the installed app; the UI does not promise
+  direct launch or payment completion. All six locales stay in sync. API and
+  payment payloads remain unchanged.
 
 ## Edge cases and API
 
@@ -48,3 +66,10 @@ For changes to processing or start-slot mutation, also run affected entry-status
 and start-slot-vacancy tests. UI changes need relevant client tests and checkout
 browser checks with a test event. Add regressions for changed behavior rather
 than treating this baseline as exhaustive test coverage.
+For home-grid entry navigation, test the open/closed/unconfigured/relay card
+actions and delayed mounting of the entries anchor. Verify scrolling in a
+browser when a local API and test event are available.
+For QR payment actions, test PNG file sharing, download, unsupported sharing,
+cancellation and errors, plus rendered email links and both UI placements.
+Device acceptance: iPhone Chrome, share to a compatible banking app, and save
+then import the PNG when the banking app does not appear in the share sheet.

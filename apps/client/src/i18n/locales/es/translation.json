@@ -846,6 +846,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Prefijo de referencia de pago",
+              "Help": "Opcional: 1–2 dígitos antes de 8 dígitos aleatorios (máximo 10 en total). Déjelo vacío para usar el año de dos dígitos. Se aplica a nuevos pedidos en todos los métodos de pago; las referencias existentes no cambian.",
+              "Invalid": "Introduzca hasta 2 dígitos (0–9) o deje el campo vacío."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -880,7 +885,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Introduce un IBAN o una cuenta checa, p. ej. 2201340123/2010 o 19-2000145399/0800. Las cuentas checas se convierten automáticamente a IBAN.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -916,6 +922,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Introduce un IBAN válido o una cuenta checa con formato prefijo-número/código bancario. Comprueba los dígitos.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1625,6 +1632,7 @@
         "Cancel": "Cancelar"
       },
       "Entries": {
+        "Enter": "Inscribirse",
         "FreeEntry": "Inscripción gratuita",
         "BirthYearRange": "Años de nacimiento {{from}}–{{to}}",
         "LoadError": "No se pudo cargar la disponibilidad de inscripciones.",
@@ -1860,7 +1868,12 @@
         "Title": "Pagar mediante código QR",
         "Description": "Escanea este código en tu aplicación bancaria para rellenar el pago.",
         "QrCodeAriaLabel": "Código QR de pago",
-        "OpenInBankApp": "Pagar en la aplicación bancaria"
+        "ShareQr": "Compartir QR de pago",
+        "DownloadQr": "Descargar QR",
+        "MobileInstructions": "Comparte la imagen QR con una aplicación bancaria compatible, o descárgala e impórtala en tu aplicación bancaria.",
+        "ShareUnavailable": "No se pueden compartir imágenes. Se descargará el código QR; impórtalo en tu aplicación bancaria.",
+        "ShareError": "No se pudo compartir el código QR. Prueba a descargarlo.",
+        "ExportError": "No se pudo descargar el código QR. Inténtalo de nuevo."
       },
       "CashPayment": {
         "Title": "Pagar en efectivo",

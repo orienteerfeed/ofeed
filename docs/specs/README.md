@@ -13,6 +13,11 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [QR bank account formats](qr-payment-bank-account-formats.md): Czech domestic
+  account and IBAN input with canonical QR payment instructions; issue #601.
+
+- [Payment reference prefix](entry-payment-reference-prefix.md): event-wide numeric prefixes for new entry-order payments.
+
 - [Start slot integrity](start-slot-integrity.md): exclusive StartList reservations and atomic vacancy exchange.
 
 - [Create idempotency](create-idempotency.md): 24-hour REST create replay.

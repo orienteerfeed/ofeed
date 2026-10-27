@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Event-wide numeric payment-reference prefixes in service payment settings, used
+  for new entry orders and QR payments within the 10-digit variable-symbol limit.
+
 - Device sessions with 15-minute ES256 access JWTs, Vault-managed signing keys,
   rotating refresh tokens (30 days sliding, 90 days absolute), replay detection,
   browser automatic renewal and device revocation in profile settings.
@@ -38,6 +41,9 @@ and this project adheres to
 
 ### Changed
 
+- Home-grid event cards with open entries now offer a localized entry action
+  that opens the event detail and scrolls directly to the entries section.
+
 - **Breaking:** signin requires `deviceId` and `deviceName`, and returns
   `accessToken`/`expiresIn` instead of `token`. Legacy user JWTs require a fresh
   signin. Browser refresh credentials use HttpOnly cookies; native REST clients
@@ -53,6 +59,17 @@ and this project adheres to
 ### Removed
 
 ### Fixed
+
+- QR payment settings accept Czech domestic bank accounts (including prefixes)
+  alongside IBAN, validate checksums and normalize stored/generated payment
+  instructions to IBAN, including previously saved domestic accounts (Fixes #601).
+
+- Replace nonfunctional `spayd://` payment links with PNG QR sharing/download
+  in checkout and entry detail, and standard entry-detail links in QR emails.
+
+- Session restoration and account changes no longer interrupt event loading
+  with “Store reset while query was in flight”; Apollo caches are isolated per
+  authentication scope while token renewal preserves active queries.
 
 - Serialize StartList reservations across orders and competitors, atomically
   transfer reservations during processing, and return 409 SLOT_TAKEN for slot

@@ -1,6 +1,7 @@
 import {
   PAYMENT_METHOD_TYPES,
   getPaymentMethodConfigurationStatus,
+  normalizeBankAccountIban,
   updateEventPaymentMethodsInputSchema,
   type EventPaymentMethodConfiguration,
   type AvailableEventPaymentMethod,
@@ -24,6 +25,7 @@ type StoredPaymentMethod = {
 
 type PaymentCapabilityEvent = {
   id: string;
+  paymentReferencePrefix?: string | null;
   ofeedPaymentAvailable: boolean;
   bankAccountIban: string | null;
   bankAccountName: string | null;
@@ -43,6 +45,7 @@ export type EventPaymentCapabilities = {
 };
 
 export type EventPaymentMethodSettings = {
+  paymentReferencePrefix: string | null;
   eventId: string;
   paymentMethods: EventPaymentMethodSetting[];
   paymentCapabilities: EventPaymentCapabilities;
@@ -82,17 +85,21 @@ const DEFAULT_PAYMENT_METHODS: EventPaymentMethodConfiguration[] = [
 ];
 
 function bankAccountDisplay(event: PaymentCapabilityEvent): string | null {
-  const parts = [event.bankAccountName?.trim(), event.bankAccountIban?.trim()].filter(Boolean);
+  const account = event.bankAccountIban
+    ? normalizeBankAccountIban(event.bankAccountIban) ?? event.bankAccountIban.trim()
+    : null;
+  const parts = [event.bankAccountName?.trim(), account].filter(Boolean);
   return parts.length > 0 ? parts.join(' - ') : null;
 }
 
 function capabilitiesForEvent(event: PaymentCapabilityEvent): EventPaymentCapabilities {
   const display = bankAccountDisplay(event);
+  const iban = event.bankAccountIban ? normalizeBankAccountIban(event.bankAccountIban) : null;
   return {
     ofeedPaymentAvailable: event.ofeedPaymentAvailable,
-    qrPaymentAvailable: Boolean(event.bankAccountIban?.trim()),
+    qrPaymentAvailable: iban !== null,
     bankAccountDisplay: display,
-    bankAccountIban: event.bankAccountIban,
+    bankAccountIban: iban ?? event.bankAccountIban,
     bankAccountName: event.bankAccountName,
   };
 }
@@ -114,6 +121,7 @@ function toSettings(event: PaymentCapabilityEvent): EventPaymentMethodSettings {
   );
   return {
     eventId: event.id,
+    paymentReferencePrefix: event.paymentReferencePrefix ?? null,
     paymentCapabilities: capabilities,
     paymentMethods: effectiveMethods.map((method) => ({
       ...method,
@@ -134,7 +142,7 @@ export function availablePaymentMethodsForEvent(
     .filter((method) => getPaymentMethodConfigurationStatus(method, capabilities) === 'READY')
     .map((method) => ({
       type: method.type,
-      displayName: method.type === 'CUSTOM_PAYMENT_LINK' ? (method.displayName ?? null) : null,
+      displayName: method.type === 'CUSTOM_PAYMENT_LINK' ? method.displayName ?? null : null,
     }));
 }
 
@@ -176,6 +184,7 @@ export async function listEventPaymentMethods(
     where: { id: eventId },
     select: {
       id: true,
+      paymentReferencePrefix: true,
       ofeedPaymentAvailable: true,
       bankAccountIban: true,
       bankAccountName: true,
@@ -213,6 +222,7 @@ export async function updateEventPaymentMethods(
     where: { id: eventId },
     select: {
       id: true,
+      paymentReferencePrefix: true,
       ofeedPaymentAvailable: true,
       bankAccountIban: true,
       bankAccountName: true,
@@ -231,6 +241,10 @@ export async function updateEventPaymentMethods(
   if (!event) throw new Error('Event not found');
 
   const capabilities = capabilitiesForEvent(event as PaymentCapabilityEvent);
+  const nextPaymentReferencePrefix =
+    parsed.data.paymentReferencePrefix === undefined
+      ? event.paymentReferencePrefix
+      : parsed.data.paymentReferencePrefix || null;
   const bankAccount = parsed.data.bankAccount;
   const nextBankAccountIban =
     bankAccount === undefined ? event.bankAccountIban : bankAccount.bankAccountIban?.trim() || null;
@@ -262,12 +276,16 @@ export async function updateEventPaymentMethods(
   }));
 
   await prisma.$transaction(async (transaction) => {
-    if (bankAccount !== undefined) {
+    if (bankAccount !== undefined || parsed.data.paymentReferencePrefix !== undefined) {
       await transaction.event.update({
         where: { id: eventId },
         data: {
-          bankAccountIban: nextBankAccountIban,
-          bankAccountName: nextBankAccountName,
+          ...(parsed.data.paymentReferencePrefix !== undefined
+            ? { paymentReferencePrefix: nextPaymentReferencePrefix }
+            : {}),
+          ...(bankAccount !== undefined
+            ? { bankAccountIban: nextBankAccountIban, bankAccountName: nextBankAccountName }
+            : {}),
         },
       });
     }
@@ -279,6 +297,7 @@ export async function updateEventPaymentMethods(
     ...(event as PaymentCapabilityEvent),
     bankAccountIban: nextBankAccountIban,
     bankAccountName: nextBankAccountName,
+    paymentReferencePrefix: nextPaymentReferencePrefix,
     paymentMethods: normalizedMethods.map(({ eventId: _eventId, ...method }) => method),
   });
 }

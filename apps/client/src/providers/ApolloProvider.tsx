@@ -11,9 +11,7 @@ import { useAuthStore } from '@/stores/auth';
 import { toast } from '@/utils';
 import { useTranslation } from 'react-i18next';
 
-export function ApolloProvider({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
-  const router = useRouter();
+function ScopedApolloProvider({ children }: { children: React.ReactNode }) {
   const [client] = React.useState(() =>
     createApolloClient(getGraphQLUrls(), getToken)
   );
@@ -22,6 +20,21 @@ export function ApolloProvider({ children }: { children: React.ReactNode }) {
   );
   React.useEffect(() => {
     clearTimeout(disposal.current);
+    return () => {
+      disposal.current = setTimeout(() => client.stop(), 0);
+    };
+  }, [client]);
+  return <Provider client={client}>{children}</Provider>;
+}
+
+export function ApolloProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const scope = useAuthStore(state =>
+    state.token ? (state.user?.id ?? 'restoring') : 'anonymous'
+  );
+
+  React.useEffect(() => {
     initializeSessionManager();
     void bootstrapSession().catch(() => {});
     const unsubscribe = useAuthStore.subscribe((state, previous) => {
@@ -29,15 +42,13 @@ export function ApolloProvider({ children }: { children: React.ReactNode }) {
         (previous.token && !state.token) ||
         state.user?.id !== previous.user?.id
       ) {
-        void client.clearStore();
         void router.invalidate();
       }
     });
     return () => {
       unsubscribe();
-      disposal.current = setTimeout(() => client.stop(), 0);
     };
-  }, [client, router]);
+  }, [router]);
   React.useEffect(() => {
     const unconfirmed = () =>
       toast({ title: t('Sessions.LogoutUnconfirmed'), variant: 'error' });
@@ -45,5 +56,7 @@ export function ApolloProvider({ children }: { children: React.ReactNode }) {
     return () =>
       window.removeEventListener('ofeed-logout-unconfirmed', unconfirmed);
   }, [t]);
-  return <Provider client={client}>{children}</Provider>;
+  // Remount query consumers with an isolated cache before stopping the old
+  // client. Clearing a live client's store cancels its in-flight queries.
+  return <ScopedApolloProvider key={scope}>{children}</ScopedApolloProvider>;
 }

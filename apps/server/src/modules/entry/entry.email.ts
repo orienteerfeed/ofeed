@@ -125,7 +125,10 @@ function notificationText(input: Omit<EntryEmailTemplateInput, 'emailTo'>): stri
   ].join('\n');
 }
 
-async function paymentSection(payment: EntryEmailPayment): Promise<EntryEmailPaymentSection> {
+async function paymentSection(
+  payment: EntryEmailPayment,
+  detailUrl: string,
+): Promise<EntryEmailPaymentSection> {
   switch (payment.method) {
     case 'CUSTOM_PAYMENT_LINK':
       return {
@@ -172,7 +175,7 @@ async function paymentSection(payment: EntryEmailPayment): Promise<EntryEmailPay
           { label: 'Zpráva pro příjemce', value: qrPayment.recipientMessage },
         ],
         ...(qrCodeDataUrl ? { qrCodeDataUrl } : {}),
-        action: { label: 'Zaplatit v bankovní aplikaci', url: `spayd://${qrPayment.payload}` },
+        action: { label: 'Zobrazit platební údaje', url: detailUrl },
       };
     }
     case 'CASH':
@@ -224,8 +227,8 @@ export async function notifyEntryOrderReceived(
 ): Promise<void> {
   const details = orderDetails(order, event);
   const entrantName = `${order.contactFirstname} ${order.contactLastname}`.trim();
-  const paymentDetails = await paymentSection(payment);
   const detailUrl = entryDetailUrl(order, event);
+  const paymentDetails = await paymentSection(payment, detailUrl);
 
   await sendEntryEmail({
     emailTo: order.contactEmail,

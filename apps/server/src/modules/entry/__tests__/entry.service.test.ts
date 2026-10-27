@@ -262,6 +262,21 @@ describe('generatePaymentReference', () => {
   });
 });
 
+describe('configured payment reference prefix', () => {
+  it.each(['7', '07', '99', '0'])('uses prefix %s with eight random digits', (prefix) => {
+    const reference = generatePaymentReference(NOW, prefix);
+    expect(reference.startsWith(prefix)).toBe(true);
+    expect(reference.slice(prefix.length)).toMatch(/^[0-9]{8}$/);
+    expect(reference.length).toBeLessThanOrEqual(10);
+  });
+  it.each([null, undefined, ''])('keeps year fallback for %j', (prefix) => {
+    expect(generatePaymentReference(NOW, prefix)).toMatch(/^26[0-9]{8}$/);
+  });
+  it.each(['123', 'ab'])('rejects invalid prefix %s defensively', (prefix) => {
+    expect(() => generatePaymentReference(NOW, prefix)).toThrow();
+  });
+});
+
 type PrismaStub = {
   $queryRaw: ReturnType<typeof vi.fn>;
   $transaction: ReturnType<typeof vi.fn>;
@@ -454,6 +469,13 @@ describe('createEntryOrder', () => {
     expect(order.items[0].note).toBe('Bezlepková strava.');
   });
 
+  it('uses the event prefix for cash orders too', async () => {
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord({ paymentReferencePrefix: '81' }));
+    prisma.entry.create.mockResolvedValue(makeStoredEntry());
+    await run();
+    expect(prisma.entry.create.mock.calls[0][0].data.paymentReference).toMatch(/^81[0-9]{8}$/);
+  });
+
   it('returns a signed detail access token for a cash order', async () => {
     prisma.event.findUnique.mockResolvedValue(makeEventRecord());
     prisma.entry.create.mockResolvedValue(makeStoredEntry());
@@ -464,11 +486,16 @@ describe('createEntryOrder', () => {
     expect(hasEntryOrderAccess(order.detailAccessToken!, order.id, NOW)).toBe(true);
   });
 
-  it('returns QR Platba instructions only for a QR payment order', async () => {
+  it.each([
+    ['CZ6508000000192000145399', 'CZ6508000000192000145399'],
+    ['19-2000145399/0800', 'CZ6508000000192000145399'],
+    ['2201340123/2010', 'CZ8020100000002201340123'],
+  ])('returns QR Platba instructions with canonical IBAN for %s', async (account, iban) => {
     prisma.event.findUnique.mockResolvedValue(
       makeEventRecord({
-        bankAccountIban: 'CZ6508000000192000145399',
+        bankAccountIban: account,
         bankAccountName: 'OK Chrudim',
+        paymentReferencePrefix: '07',
         paymentMethods: [
           {
             type: 'QR_PAYMENT',
@@ -489,11 +516,12 @@ describe('createEntryOrder', () => {
     );
 
     const paymentReference = prisma.entry.create.mock.calls[0][0].data.paymentReference;
+    expect(paymentReference).toMatch(/^07[0-9]{8}$/);
     expect(order.qrPayment).toEqual({
       payload:
-        `SPD*1.0*ACC:CZ6508000000192000145399*AM:100.00*CC:CZK*X-VS:${paymentReference}` +
+        `SPD*1.0*ACC:${iban}*AM:100.00*CC:CZK*X-VS:${paymentReference}` +
         '*X-KS:0308*MSG:OFeed QR payment - Novak Jan',
-      bankAccountIban: 'CZ6508000000192000145399',
+      bankAccountIban: iban,
       bankAccountName: 'OK Chrudim',
       amount: 100,
       currency: 'CZK',
@@ -594,8 +622,8 @@ describe('createEntryOrder', () => {
     await expect(run()).rejects.toThrow(/closed/);
   });
 
-  it('retries payment reference generation on a unique constraint collision', async () => {
-    prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+  it.each([null, '07'])('retries payment reference collisions with prefix %j', async (prefix) => {
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord({ paymentReferencePrefix: prefix }));
     prisma.entry.create
       .mockRejectedValueOnce({ code: 'P2002' })
       .mockResolvedValue(makeStoredEntry());
@@ -603,6 +631,10 @@ describe('createEntryOrder', () => {
     const order = await run();
 
     expect(prisma.entry.create).toHaveBeenCalledTimes(2);
+    for (const [args] of prisma.entry.create.mock.calls) {
+      expect(args.data.paymentReference.startsWith(prefix ?? '26')).toBe(true);
+      expect(args.data.paymentReference).toHaveLength(10);
+    }
     expect(order.id).toBe('entry-1');
   });
 });
