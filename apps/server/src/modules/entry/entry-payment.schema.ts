@@ -38,4 +38,6 @@ export const entryPaymentRecordSchema = z.object({
   deviceId: z.string(),
   operatorId: z.number().int(),
   recordedAt: z.iso.datetime(),
+  source: z.enum(['MANUAL', 'BANK_IMPORT']),
+  bankTransactionId: z.string().nullable(),
 });

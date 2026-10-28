@@ -1,5 +1,7 @@
 import { PUNCH_OPENAPI_PATHS } from '../modules/punch/punch.openapi.js';
 import { ENTRY_PAYMENT_OPENAPI_PATHS } from '../modules/entry/entry-payment.openapi.js';
+import { BANK_CONNECTION_OPENAPI, BANK_OPENAPI_PATHS } from '../modules/bank/bank.openapi.js';
+import { DEVICES_OPENAPI, DEVICES_OPENAPI_PATHS } from '../modules/devices/devices.openapi.js';
 import { ADMIN_OPENAPI, ADMIN_OPENAPI_PATHS } from '../modules/admin/admin.openapi.js';
 import { AUTH_OPENAPI, AUTH_OPENAPI_PATHS } from '../modules/auth/auth.openapi.js';
 import { EVENT_OPENAPI, EVENT_OPENAPI_PATHS } from '../modules/event/event.openapi.js';
@@ -23,9 +25,14 @@ export const OPENAPI_TAGS = [
   { name: ADMIN_OPENAPI.tag, description: 'Admin zone endpoints' },
   { name: AUTH_OPENAPI.tag, description: 'Authentication and OAuth2 endpoints' },
   {
+    name: BANK_CONNECTION_OPENAPI.tag,
+    description: 'Bank connections and client-reported bank payments',
+  },
+  {
     name: EVENT_OPENAPI.tag,
     description: 'Events and competitor management endpoints',
   },
+  { name: DEVICES_OPENAPI.tag, description: 'Push notification devices and settings' },
   { name: MAP_OPENAPI.tag, description: 'Map tile proxy endpoints' },
   { name: MEOS_OPENAPI.tag, description: 'MeOS MOP and MIP protocol endpoints' },
   {
@@ -65,6 +72,8 @@ export const OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   ...EVENT_OPENAPI_PATHS,
   ...PUNCH_OPENAPI_PATHS,
   ...ENTRY_PAYMENT_OPENAPI_PATHS,
+  ...BANK_OPENAPI_PATHS,
+  ...DEVICES_OPENAPI_PATHS,
   ...MAP_OPENAPI_PATHS,
   ...UPLOAD_OPENAPI_PATHS,
   ...MEOS_OPENAPI_PATHS,

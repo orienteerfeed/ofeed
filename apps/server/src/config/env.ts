@@ -160,6 +160,8 @@ const envSchema = z.object({
   MAPY_API_KEY: z.string().optional(),
   MAP_TILE_COOKIE_SECRET: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
+  // Only needed when the Expo project enables enhanced push security. Inject from Vault.
+  EXPO_ACCESS_TOKEN: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().default('onboarding@resend.dev'),
   RESEND_FROM_NAME: z.string().default('OFeed'),
   CLIENT_APP_URL: z.string().url().default('http://localhost:3000'),

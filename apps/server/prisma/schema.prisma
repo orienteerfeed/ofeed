@@ -190,32 +190,37 @@ model Sport {
 }
 
 model User {
-  id                     Int                      @id @default(autoincrement()) @db.UnsignedInt
-  email                  String                   @unique
-  firstname              String
-  lastname               String
-  role                   UserRole                 @default(USER)
-  organisation           String?
-  emergencyContact       String?                  @db.VarChar(255)
-  password               String                   @db.VarChar(255)
-  active                 Boolean                  @default(false)
-  emailVerifiedAt        DateTime?
-  deletedAt              DateTime?
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  events                 Event[]
-  userCards              UserCard[]
-  punchReceipts          PunchReceipt[]
-  protocols              Protocol[]               @relation("ProtocolAuthor")
-  processedProtocols     Protocol[]               @relation("ProtocolProcessedByUser")
-  oAuthClients           OAuthClient[]
-  oAuthAccessToken       OAuthAccessToken[]
-  oAuthAuthorizationCode OAuthAuthorizationCode[]
-  oAuthRefreshToken      OAuthRefreshToken[]
-  deviceSessions         DeviceSession[]
-  passwordResetTokens    PasswordResetToken[]
-  entries                Entry[]
-  entryStatusChanges     EntryStatusHistory[]
+  id                       Int                       @id @default(autoincrement()) @db.UnsignedInt
+  email                    String                    @unique
+  firstname                String
+  lastname                 String
+  role                     UserRole                  @default(USER)
+  organisation             String?
+  emergencyContact         String?                   @db.VarChar(255)
+  password                 String                    @db.VarChar(255)
+  active                   Boolean                   @default(false)
+  emailVerifiedAt          DateTime?
+  deletedAt                DateTime?
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  events                   Event[]
+  userCards                UserCard[]
+  punchReceipts            PunchReceipt[]
+  protocols                Protocol[]                @relation("ProtocolAuthor")
+  processedProtocols       Protocol[]                @relation("ProtocolProcessedByUser")
+  oAuthClients             OAuthClient[]
+  oAuthAccessToken         OAuthAccessToken[]
+  oAuthAuthorizationCode   OAuthAuthorizationCode[]
+  oAuthRefreshToken        OAuthRefreshToken[]
+  deviceSessions           DeviceSession[]
+  passwordResetTokens      PasswordResetToken[]
+  entries                  Entry[]
+  entryStatusChanges       EntryStatusHistory[]
+  bankConnections          BankConnection[]
+  pushDevices              PushDevice[]
+  bankPaymentNotifications BankPaymentNotification[]
+  // Per-status bank payment push switches, e.g. {"UNMATCHED": false}; missing keys are on.
+  bankPushStatuses         Json?
 }
 
 model UserCard {
@@ -440,6 +445,7 @@ model Entry {
   addOnItems       EntryAddOnItem[]
   statusHistory    EntryStatusHistory[]
   payments         EntryPayment[]
+  bankTransactions BankTransaction[]
 
   @@unique([eventId, id], map: "Entry_event_id_uq")
   @@unique([eventId, paymentReference], map: "Entry_event_payment_reference_uq")
@@ -453,25 +459,189 @@ enum EntryPaymentMethod {
   QR
 }
 
+enum EntryPaymentSource {
+  MANUAL
+  BANK_IMPORT
+}
+
 model EntryPayment {
-  id              String             @id @default(cuid())
-  entry           Entry              @relation(fields: [eventId, entryId], references: [eventId, id], onDelete: Restrict)
-  eventId         String
-  entryId         String
-  clientPaymentId String             @db.Char(36)
-  method          EntryPaymentMethod
-  amount          Decimal            @db.Decimal(10, 2)
-  currency        String             @db.Char(3)
-  paidAt          DateTime           @db.DateTime(3)
-  deviceId        String             @db.VarChar(191)
+  id                String             @id @default(cuid())
+  entry             Entry              @relation(fields: [eventId, entryId], references: [eventId, id], onDelete: Restrict)
+  eventId           String
+  entryId           String
+  clientPaymentId   String             @db.Char(36)
+  method            EntryPaymentMethod
+  amount            Decimal            @db.Decimal(10, 2)
+  currency          String             @db.Char(3)
+  paidAt            DateTime           @db.DateTime(3)
+  deviceId          String             @db.VarChar(191)
   // Immutable authenticated identity snapshot, independent of user deletion.
-  operatorId      Int                @db.UnsignedInt
-  recordedAt      DateTime           @default(now()) @db.DateTime(3)
+  operatorId        Int                @db.UnsignedInt
+  recordedAt        DateTime           @default(now()) @db.DateTime(3)
+  source            EntryPaymentSource @default(MANUAL)
+  // Set for receipts written by bank import matching; one receipt per bank transaction.
+  bankTransaction   BankTransaction?   @relation(fields: [bankTransactionId], references: [id], onDelete: SetNull)
+  bankTransactionId String?            @unique
 
   @@unique([eventId, clientPaymentId], map: "EntryPayment_event_client_uq")
   @@index([eventId, recordedAt, id], map: "EntryPayment_event_recorded_idx")
   @@index([eventId, deviceId, recordedAt], map: "EntryPayment_event_device_recorded_idx")
   @@index([eventId, entryId], map: "EntryPayment_event_entry_idx")
+}
+
+enum BankProvider {
+  FIO
+}
+
+enum BankConnectionMode {
+  LIVE
+  TEST
+}
+
+enum BankConnectionStatus {
+  ACTIVE
+  PAUSED
+  REVOKED
+}
+
+enum BankTransactionSource {
+  BANK_API
+  SIMULATED
+}
+
+enum BankTransactionTrust {
+  CLIENT_REPORTED
+}
+
+// DUPLICATE and INVALID exist only in batch responses and are never stored.
+enum BankMatchingStatus {
+  MATCHED
+  UNMATCHED
+  AMBIGUOUS
+  PARTIALLY_PAID
+  OVERPAID
+  IGNORED
+}
+
+enum BankSyncStatus {
+  OK
+  ERROR
+}
+
+// An organizer's own bank account polled by the desktop collector. The bank
+// API token never reaches the server; accountIdentifier is the account IBAN.
+model BankConnection {
+  id                   String               @id @default(cuid())
+  owner                User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId              Int                  @db.UnsignedInt
+  provider             BankProvider
+  mode                 BankConnectionMode
+  name                 String               @db.VarChar(100)
+  accountIdentifier    String               @db.VarChar(34)
+  variableSymbolPrefix String               @db.VarChar(10)
+  // Transactions booked before this day are ignored; prefix changes are never retroactive.
+  prefixEffectiveFrom  DateTime             @db.Date
+  status               BankConnectionStatus @default(ACTIVE)
+  collectorDeviceId    String?              @db.VarChar(36)
+  lastSeenAt           DateTime?            @db.DateTime(3)
+  lastSuccessfulSyncAt DateTime?            @db.DateTime(3)
+  lastRelevantAt       DateTime?            @db.DateTime(3)
+  createdAt            DateTime             @default(now()) @db.DateTime(3)
+  updatedAt            DateTime             @updatedAt @db.DateTime(3)
+  revokedAt            DateTime?            @db.DateTime(3)
+  transactions         BankTransaction[]
+  syncLogs             BankSyncLog[]
+
+  @@unique([ownerId, provider, accountIdentifier], map: "BankConnection_owner_account_uq")
+}
+
+// An incoming payment reported by the desktop collector. Holds no payer data.
+model BankTransaction {
+  id                    String                    @id @default(cuid())
+  connection            BankConnection            @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  connectionId          String
+  // Fio IDpohyb (column22).
+  providerTransactionId String                    @db.VarChar(32)
+  amount                Decimal                   @db.Decimal(14, 2)
+  currency              String                    @db.Char(3)
+  // String: leading zeros are significant.
+  variableSymbol        String                    @db.VarChar(10)
+  bookingDate           DateTime                  @db.Date
+  source                BankTransactionSource
+  trust                 BankTransactionTrust      @default(CLIENT_REPORTED)
+  matchingStatus        BankMatchingStatus
+  matchedEntry          Entry?                    @relation(fields: [matchedEntryId], references: [id], onDelete: SetNull)
+  matchedEntryId        String?
+  matchedAmount         Decimal?                  @db.Decimal(14, 2)
+  reportedByDeviceId    String                    @db.VarChar(36)
+  receivedAt            DateTime                  @default(now()) @db.DateTime(3)
+  createdAt             DateTime                  @default(now()) @db.DateTime(3)
+  updatedAt             DateTime                  @updatedAt @db.DateTime(3)
+  receipt               EntryPayment?
+  notifications         BankPaymentNotification[]
+
+  @@unique([connectionId, providerTransactionId], map: "BankTransaction_connection_provider_uq")
+  @@index([connectionId, receivedAt, id], map: "BankTransaction_connection_received_idx")
+  @@index([variableSymbol, matchingStatus], map: "BankTransaction_vs_status_idx")
+  @@index([matchedEntryId], map: "BankTransaction_matched_entry_idx")
+}
+
+// Collector run counts only; deleted after 90 days.
+model BankSyncLog {
+  id            String         @id @default(cuid())
+  connection    BankConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  connectionId  String
+  deviceId      String         @db.VarChar(36)
+  startedAt     DateTime       @db.DateTime(3)
+  finishedAt    DateTime       @db.DateTime(3)
+  status        BankSyncStatus
+  fetchedCount  Int            @db.UnsignedInt
+  relevantCount Int            @db.UnsignedInt
+  matchedCount  Int            @db.UnsignedInt
+  errorCode     String?        @db.VarChar(64)
+  createdAt     DateTime       @default(now()) @db.DateTime(3)
+
+  @@index([connectionId, startedAt], map: "BankSyncLog_connection_started_idx")
+  @@index([createdAt], map: "BankSyncLog_created_idx")
+}
+
+enum PushPlatform {
+  IOS
+  ANDROID
+}
+
+// A phone registered for Expo push notifications.
+model PushDevice {
+  id            String       @id @default(cuid())
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int          @db.UnsignedInt
+  deviceId      String       @db.VarChar(36)
+  expoPushToken String       @unique @db.VarChar(255)
+  platform      PushPlatform
+  createdAt     DateTime     @default(now()) @db.DateTime(3)
+  updatedAt     DateTime     @updatedAt @db.DateTime(3)
+
+  @@unique([userId, deviceId], map: "PushDevice_user_device_uq")
+}
+
+// Outbox: one push per (bank transaction, matching status), written with the status change.
+model BankPaymentNotification {
+  id                String             @id @default(cuid())
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int                @db.UnsignedInt
+  bankTransaction   BankTransaction    @relation(fields: [bankTransactionId], references: [id], onDelete: Cascade)
+  bankTransactionId String
+  matchingStatus    BankMatchingStatus
+  attempts          Int                @default(0) @db.UnsignedTinyInt
+  claimedUntil      DateTime?          @db.DateTime(3)
+  sentAt            DateTime?          @db.DateTime(3)
+  lastErrorCode     String?            @db.VarChar(64)
+  createdAt         DateTime           @default(now()) @db.DateTime(3)
+
+  @@unique([bankTransactionId, matchingStatus], map: "BankPaymentNotification_tx_status_uq")
+  @@index([sentAt, attempts, claimedUntil], map: "BankPaymentNotification_pending_idx")
+  @@index([createdAt], map: "BankPaymentNotification_created_idx")
+  @@index([userId], map: "BankPaymentNotification_user_idx")
 }
 
 // A single competitor entry inside an entry order. Fee amounts are snapshots

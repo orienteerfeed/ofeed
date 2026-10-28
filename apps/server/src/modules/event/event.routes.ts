@@ -3,6 +3,7 @@ import { requireAuth } from '../../middlewares/require-jwt.js';
 
 import punchRoutes from '../punch/punch.routes.js';
 import entryPaymentRoutes from '../entry/entry-payment.routes.js';
+import { eventBankTransactionRoutes } from '../bank/bank.routes.js';
 
 import publicEventRoutes from './event.public.routes.js';
 import secureEventRoutes from './event.secure.routes.js';
@@ -19,5 +20,6 @@ router.use('*', requireAuth);
 router.route('/', secureEventRoutes);
 router.route('/', punchRoutes);
 router.route('/', entryPaymentRoutes);
+router.route('/', eventBankTransactionRoutes);
 
 export default router;
