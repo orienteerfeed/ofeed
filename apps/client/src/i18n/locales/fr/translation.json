@@ -57,6 +57,45 @@
         "NoMissing": "Aucun concurrent sans puce dans cette sélection.",
         "NoDuplicates": "Aucune puce en double dans cette sélection.",
         "FullGroups": "Les filtres sélectionnent des groupes entiers. Tous les concurrents partageant une puce restent visibles, y compris dans les autres catégories."
+      },
+      "Anomalies": {
+        "Title": "Analyse des anomalies",
+        "Description": "Examiner les premiers temps intermédiaires et les départs suspects.",
+        "Explanation": "Les anomalies sont des pistes à examiner par le juge, pas des preuves de départ incorrect. Les résultats ne sont jamais modifiés automatiquement. Le départ initialement prévu n’est pas conservé séparément.",
+        "Method": "Fonctionnement de la détection",
+        "Rules": "Le premier temps intermédiaire nécessite un premier poste de parcours importé et au moins huit autres temps valides OK/Finished dans la même catégorie. Les temps signalés sont inférieurs à la moitié de la médiane, plus rapides d’au moins 30 secondes et inférieurs à la médiane moins trois écarts absolus médians. La grille de départ nécessite cinq horaires distincts, un écart le plus fréquent unique (au moins 10 secondes, trois occurrences) et au moins 80 % de concordance avec une phase unique, avec une tolérance d’une seconde. Seuls les départs StartList/WaveStart sont contrôlés. Parcours manquants, petits échantillons et grilles ambiguës sont ignorés. Les alertes de boîtier de départ nécessitent des observations actuelles attribuées ; leur absence n’exclut pas un poinçonnage de départ.",
+        "Affected": "Concurrents concernés",
+        "Type": "Type d’anomalie",
+        "Findings": "Anomalies",
+        "Coverage": "Couverture de l’analyse",
+        "CoverageExplanation": "La couverture suit les filtres de catégorie et de type ; la recherche ne filtre que les concurrents. Les nombres indiquent les concurrents évalués et le total de la catégorie. Le contrôle du boîtier de départ inclut seulement les concurrents avec des poinçonnages de départ enregistrés. Les contrôles ignorés ou partiels ne garantissent pas l’absence d’erreurs.",
+        "Status": "État",
+        "Evaluated": "Évalués",
+        "Total": "Total",
+        "NoIssues": "Aucune anomalie dans les données évaluées. Vérifiez aussi les contrôles ignorés.",
+        "NoData": "Aucun contrôle n’a pu être évalué avec les données disponibles. Consultez la couverture.",
+        "Control": "Poste",
+        "Split": "Premier temps intermédiaire",
+        "Median": "Médiane des autres",
+        "Difference": "Écart",
+        "References": "Concurrents de référence",
+        "Interval": "Intervalle",
+        "Phase": "Décalage de la grille",
+        "NearestStart": "Départ de grille le plus proche",
+        "ObservedStart": "Poinçonnages de départ observés",
+        "StartMode": "Mode de départ",
+        "StartTime": "Heure de départ",
+        "FAST_FIRST_SPLIT": "Premier temps inhabituellement rapide",
+        "OFF_START_GRID": "Départ hors de la grille de la catégorie",
+        "START_PUNCH": "Poinçonnage de départ observé",
+        "EVALUATED": "Évalué",
+        "UNSUPPORTED_MODE": "Non applicable à ce mode",
+        "NO_COURSE": "Parcours vérifié manquant",
+        "AMBIGUOUS_FIRST_CONTROL": "Premier poste ambigu",
+        "INSUFFICIENT_DATA": "Données insuffisantes",
+        "NO_RELIABLE_GRID": "Aucune grille de départ fiable",
+        "Loading": "Chargement du rapport d’anomalies…",
+        "Error": "Impossible de charger le rapport d’anomalies."
       }
     },
     "Auth": {
@@ -1244,5 +1283,10 @@
     "Error": "Impossible de mettre à jour les sessions.",
     "LogoutUnconfirmed": "Déconnexion locale effectuée. La révocation sur le serveur n’a pas été confirmée ; reconnectez-vous pour terminer.",
     "RevocationDelay": "Les appareils révoqués peuvent utiliser un jeton d’accès existant pendant 15 minutes au maximum."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Délai de paiement (heures)",
+    "Help": "Vide = aucune annulation automatique. 1–8760 heures après réception d’une nouvelle inscription. Espèces exclues. Les inscriptions existantes restent inchangées.",
+    "Deadline": "Si le paiement n’est pas reçu avant le {{date}}, cette inscription sera automatiquement annulée."
   }
 }

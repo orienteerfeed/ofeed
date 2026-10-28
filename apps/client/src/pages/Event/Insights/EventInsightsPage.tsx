@@ -1,5 +1,5 @@
 import { Link, useParams } from '@tanstack/react-router';
-import { ReceiptText, ScanLine } from 'lucide-react';
+import { ReceiptText, ScanLine, ScanSearch } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/atoms';
 import { BackLink } from '@/components/molecules';
@@ -9,6 +9,13 @@ import { useEvent } from '@/hooks/useEvent';
 import PATHNAMES from '@/lib/paths/pathnames';
 
 const insights = [
+  {
+    id: 'anomalies',
+    title: 'Pages.Insights.Anomalies.Title',
+    description: 'Pages.Insights.Anomalies.Description',
+    path: '/events/$eventId/insights/anomalies',
+    icon: ScanSearch,
+  },
   {
     id: 'cards',
     title: 'Pages.Insights.Cards.Title',

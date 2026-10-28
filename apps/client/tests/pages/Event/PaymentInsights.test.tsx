@@ -96,7 +96,7 @@ beforeEach(() => {
 });
 
 describe('event insights UI', () => {
-  it('links to the payment and timing-card insights', () => {
+  it('links to payment, timing-card and anomaly insights', () => {
     render(<EventInsightsPage />);
     expect(
       screen.getByRole('heading', { name: 'Insights', level: 1 })
@@ -106,6 +106,7 @@ describe('event insights UI', () => {
         .getAllByRole('link', { name: 'Open insight' })
         .map(link => link.getAttribute('href'))
     ).toEqual([
+      '/events/race/insights/anomalies',
       '/events/race/insights/cards',
       '/events/race/insights/payments',
     ]);

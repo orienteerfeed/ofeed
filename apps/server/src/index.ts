@@ -1,3 +1,4 @@
+import { startEntryExpiry } from './modules/entry/entry-expiry.js';
 import { reloadAccessKeys } from './modules/auth/access-token.js';
 import { startSessionCleanup } from './modules/auth/session-cleanup.js';
 import { serve } from '@hono/node-server';
@@ -19,6 +20,9 @@ accessKeyTimer.unref();
 const stopSessionCleanup = startSessionCleanup(prisma, () =>
   logger.error('Session cleanup failed'),
 );
+const stopEntryExpiry = startEntryExpiry(prisma, (error) =>
+  logger.error('Entry expiry failed', { error }),
+);
 const server = serve(
   {
     fetch: app.fetch,
@@ -39,6 +43,7 @@ const gracefulShutdown = createGracefulShutdown({
   disposeGraphQLWebSocket: async () => {
     clearInterval(accessKeyTimer);
     await stopSessionCleanup();
+    await stopEntryExpiry();
     await stopIdempotencyCleanup();
     await disposeGraphQLWebSocket();
   },

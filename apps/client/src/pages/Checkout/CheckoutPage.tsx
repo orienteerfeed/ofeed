@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
+import { EntryPaymentDeadline } from '@/components/molecules/EntryPaymentDeadline';
 import { QrPaymentInstructions } from './QrPaymentInstructions';
 import PATHNAMES from '@/lib/paths/pathnames';
 import { useCartItems, useRemoveCartItem } from '@/stores/cart';
@@ -133,6 +134,7 @@ function CompletedOrderCard({
         <CardTitle className="text-lg">{eventName}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
+        <EntryPaymentDeadline entry={order} />
         <div className="flex justify-between">
           <span className="text-muted-foreground">
             {t('Pages.Checkout.PaymentReference')}

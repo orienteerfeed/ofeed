@@ -120,6 +120,7 @@ export const eventPaymentMethodConfigurationSchema = z.object({
 
 export const updateEventPaymentMethodsInputSchema = z
   .object({
+    entryPaymentLifetimeHours: z.number().int().min(1).max(8760).nullable().optional(),
     paymentReferencePrefix: paymentReferencePrefixSchema.nullable().optional(),
     paymentMethods: z.array(eventPaymentMethodConfigurationSchema).min(1).max(4),
     bankAccount: z

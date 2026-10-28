@@ -161,6 +161,7 @@ export const EntryRef = builder.prismaObject('Entry', {
       type: EntryStatusRef,
       resolve: (entry) => entry.status,
     }),
+    paymentDueAt: t.expose('paymentDueAt', { type: 'DateTime', nullable: true }),
     paid: t.exposeBoolean('paid'),
     paymentMethod: t.field({
       type: PaymentMethodTypeRef,

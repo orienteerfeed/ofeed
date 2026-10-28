@@ -262,6 +262,7 @@ export const entryOrderSchema = z.object({
   contactLastname: z.string(),
   totalAmount: z.number(),
   currency: z.string(),
+  paymentDueAt: dateLikeSchema.nullable().optional(),
   createdAt: dateLikeSchema,
   items: z.array(entryOrderItemSchema),
   /** Present only in the immediate create-order response for QR payments. */

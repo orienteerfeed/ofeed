@@ -38,6 +38,7 @@ describe('Pothos GraphQL schema', () => {
         'entryOrderById',
         'entryOrdersByEvent',
         'event',
+        'eventAnomalyInsight',
         'eventCardInsight',
         'eventClasses',
         'eventClassesByIds',

@@ -1,7 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Pothos GraphQL schema > matches the public schema snapshot 1`] = `
-"type AuthPayload {
+"type AnomalyCompetitor {
+  bibNumber: Int
+  card: Int
+  classId: Int!
+  className: String!
+  findings: [AnomalyFinding!]!
+  firstname: String!
+  id: Int!
+  lastname: String!
+  organisation: String
+  registration: String!
+  startMode: String!
+  startTime: String
+}
+
+type AnomalyCoverage {
+  classId: Int!
+  className: String!
+  evaluated: Int!
+  status: AnomalyCoverageStatus!
+  total: Int!
+  type: AnomalyType!
+}
+
+enum AnomalyCoverageStatus {
+  AMBIGUOUS_FIRST_CONTROL
+  EVALUATED
+  INSUFFICIENT_DATA
+  NO_COURSE
+  NO_RELIABLE_GRID
+  UNSUPPORTED_MODE
+}
+
+type AnomalyFinding {
+  controlCode: Int
+  differenceSeconds: Float
+  intervalSeconds: Float
+  medianSeconds: Float
+  nearestStartTime: String
+  phaseSeconds: Float
+  punchTimes: [String!]!
+  referenceCount: Int
+  splitSeconds: Float
+  type: AnomalyType!
+}
+
+enum AnomalyType {
+  FAST_FIRST_SPLIT
+  OFF_START_GRID
+  START_PUNCH
+}
+
+type AuthPayload {
   accessToken: String!
   expiresIn: Int!
   user: User
@@ -224,6 +276,7 @@ type Entry {
   id: String!
   items: [EntryItem!]!
   paid: Boolean!
+  paymentDueAt: DateTime
   paymentMethod: PaymentMethodType
   paymentReference: String!
   qrPayment: QrPaymentInstruction
@@ -425,6 +478,11 @@ type EventAddOn {
   price: Float
 }
 
+type EventAnomalyInsight {
+  competitors: [AnomalyCompetitor!]!
+  coverage: [AnomalyCoverage!]!
+}
+
 type EventCardInsight {
   duplicateCards: [DuplicateCardGroup!]!
   missingCards: [CardInsightCompetitor!]!
@@ -574,6 +632,7 @@ input EventPaymentMethodInput {
 }
 
 type EventPaymentMethodSettings {
+  entryPaymentLifetimeHours: Int
   eventId: String!
   paymentCapabilities: EventPaymentCapabilities!
   paymentMethods: [EventPaymentMethod!]!
@@ -801,6 +860,7 @@ type Query {
   entryOrderById(accessToken: String, entryId: String!): Entry
   entryOrdersByEvent(eventId: String!): [Entry!]!
   event(id: String!): Event
+  eventAnomalyInsight(eventId: String!): EventAnomalyInsight!
   eventCardInsight(eventId: String!): EventCardInsight!
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
@@ -1045,6 +1105,7 @@ input UpdateCurrentUserInput {
 input UpdateEventPaymentMethodsInput {
   bankAccountIban: String
   bankAccountName: String
+  entryPaymentLifetimeHours: Int
   paymentMethods: [EventPaymentMethodInput!]!
   paymentReferencePrefix: String
 }

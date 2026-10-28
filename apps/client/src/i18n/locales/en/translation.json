@@ -57,6 +57,45 @@
         "NoMissing": "No competitors without a card in this selection.",
         "NoDuplicates": "No duplicate cards in this selection.",
         "FullGroups": "Filters select whole groups. All competitors sharing a card remain visible, including those in other classes."
+      },
+      "Anomalies": {
+        "Title": "Anomaly analysis",
+        "Description": "Review suspicious first splits and start times.",
+        "Explanation": "Findings are suggestions for referee review, not proof of an incorrect start. Results are never changed automatically. The original scheduled start is not stored separately.",
+        "Method": "How detection works",
+        "Rules": "First splits require an imported first course control and at least eight other valid OK/Finished splits in the same class. Flagged times are below half the peer median, at least 30 seconds faster, and below the median minus three median absolute deviations. Start grids require five distinct times, a unique most common gap (at least 10 seconds, three occurrences) and at least 80% support within one second of a unique phase. Only StartList/WaveStart classes have start checks. Missing course data, insufficient samples and ambiguous grids are skipped. Start-unit warnings require assigned, current punch observations; missing observations do not rule out a start punch.",
+        "Affected": "Affected competitors",
+        "Type": "Finding type",
+        "Findings": "Findings",
+        "Coverage": "Analysis coverage",
+        "CoverageExplanation": "Coverage follows class and type filters; search only filters competitors. Counts show evaluated competitors out of all competitors in the class. Start-unit coverage includes only competitors with stored start punches. Skipped or partial checks do not establish that everyone is clear.",
+        "Status": "Status",
+        "Evaluated": "Evaluated",
+        "Total": "Total",
+        "NoIssues": "No anomalies found in the evaluated data. Review coverage for skipped checks.",
+        "NoData": "No checks could be evaluated with the available data. Review coverage below.",
+        "Control": "Control",
+        "Split": "First split",
+        "Median": "Peer median",
+        "Difference": "Difference",
+        "References": "Reference competitors",
+        "Interval": "Interval",
+        "Phase": "Grid offset",
+        "NearestStart": "Nearest grid start",
+        "ObservedStart": "Observed start punches",
+        "StartMode": "Start mode",
+        "StartTime": "Start time",
+        "FAST_FIRST_SPLIT": "Unusually fast first split",
+        "OFF_START_GRID": "Start outside class grid",
+        "START_PUNCH": "Observed start-unit punch",
+        "EVALUATED": "Evaluated",
+        "UNSUPPORTED_MODE": "Not applicable for this mode",
+        "NO_COURSE": "Missing verified course",
+        "AMBIGUOUS_FIRST_CONTROL": "Ambiguous first control",
+        "INSUFFICIENT_DATA": "Insufficient data",
+        "NO_RELIABLE_GRID": "No reliable start grid",
+        "Loading": "Loading anomaly report…",
+        "Error": "Could not load the anomaly report."
       }
     },
     "Admin": {
@@ -2113,5 +2152,10 @@
     "Error": "Unable to update device sessions.",
     "LogoutUnconfirmed": "Signed out locally. Server revocation could not be confirmed; reconnect to complete logout.",
     "RevocationDelay": "Revoked devices can use an existing access token for up to 15 minutes."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Payment deadline (hours)",
+    "Help": "Empty = no automatic cancellation. 1–8760 hours after a new order is received. Cash is excluded. Existing orders are unaffected.",
+    "Deadline": "If payment is not received by {{date}}, this order will be automatically cancelled."
   }
 }

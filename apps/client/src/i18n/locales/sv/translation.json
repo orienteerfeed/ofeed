@@ -57,6 +57,45 @@
         "NoMissing": "Inga deltagare utan chip i detta urval.",
         "NoDuplicates": "Inga dubbla chip i detta urval.",
         "FullGroups": "Filtren väljer hela grupper. Alla deltagare med samma chip visas, även från andra klasser."
+      },
+      "Anomalies": {
+        "Title": "Anomalianalys",
+        "Description": "Granska misstänkta första sträcktider och starttider.",
+        "Explanation": "Fynd är underlag för tävlingsjuryn, inte bevis på felaktig start. Resultat ändras aldrig automatiskt. Den ursprungliga planerade starttiden sparas inte separat.",
+        "Method": "Så fungerar detekteringen",
+        "Rules": "Första sträcktiden kräver en importerad första bankontroll och minst åtta andra giltiga OK/Finished-tider i samma klass. Markerade tider är kortare än halva medianen, minst 30 sekunder snabbare och under medianen minus tre medianabsolutavvikelser. Startmönstret kräver fem olika tider, ett entydigt vanligaste avstånd (minst 10 sekunder, tre förekomster) och minst 80 % stöd för en entydig fas med en sekunds tolerans. Startkontroller gäller bara StartList/WaveStart. Saknade banor, små urval och tvetydiga mönster hoppas över. Startstämpling kräver aktuella tilldelade observationer; saknade observationer utesluter inte startstämpling.",
+        "Affected": "Berörda deltagare",
+        "Type": "Typ av fynd",
+        "Findings": "Fynd",
+        "Coverage": "Analysens täckning",
+        "CoverageExplanation": "Täckningen följer klass- och typfiltren; sökningen filtrerar bara deltagare. Antalen visar granskade deltagare och totalt antal i klassen. Startstämplingskontrollen omfattar bara deltagare med lagrade startstämplingar. Överhoppade eller partiella kontroller bekräftar inte att allt är korrekt.",
+        "Status": "Status",
+        "Evaluated": "Granskade",
+        "Total": "Totalt",
+        "NoIssues": "Inga anomalier hittades i granskade data. Kontrollera även överhoppade kontroller.",
+        "NoData": "Inga kontroller kunde utföras med tillgängliga data. Se täckningen nedan.",
+        "Control": "Kontroll",
+        "Split": "Första sträcktid",
+        "Median": "Övrigas median",
+        "Difference": "Skillnad",
+        "References": "Referensdeltagare",
+        "Interval": "Intervall",
+        "Phase": "Mönsterförskjutning",
+        "NearestStart": "Närmaste start i mönstret",
+        "ObservedStart": "Observerade startstämplingar",
+        "StartMode": "Startmetod",
+        "StartTime": "Starttid",
+        "FAST_FIRST_SPLIT": "Ovanligt snabb första sträcktid",
+        "OFF_START_GRID": "Start utanför klassens mönster",
+        "START_PUNCH": "Observerad startstämpling",
+        "EVALUATED": "Granskad",
+        "UNSUPPORTED_MODE": "Gäller inte denna metod",
+        "NO_COURSE": "Verifierad bana saknas",
+        "AMBIGUOUS_FIRST_CONTROL": "Tvetydig första kontroll",
+        "INSUFFICIENT_DATA": "Otillräckliga data",
+        "NO_RELIABLE_GRID": "Inget tillförlitligt startmönster",
+        "Loading": "Läser in anomalirapport…",
+        "Error": "Kunde inte läsa in anomalirapporten."
       }
     },
     "Admin": {
@@ -2114,5 +2153,10 @@
     "Error": "Det gick inte att uppdatera enhetssessionerna.",
     "LogoutUnconfirmed": "Utloggad lokalt. Återkallelsen på servern kunde inte bekräftas; anslut igen för att slutföra utloggningen.",
     "RevocationDelay": "Återkallade enheter kan använda en befintlig åtkomsttoken i upp till 15 minuter."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Betalningsfrist (timmar)",
+    "Help": "Tomt = ingen automatisk avbokning. 1–8760 timmar efter att en ny anmälan tagits emot. Kontantbetalning undantas. Befintliga anmälningar påverkas inte.",
+    "Deadline": "Om betalningen inte har kommit in senast {{date}} avbokas anmälan automatiskt."
   }
 }

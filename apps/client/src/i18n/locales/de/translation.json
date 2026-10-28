@@ -57,6 +57,45 @@
         "NoMissing": "Keine Teilnehmer ohne Chip in dieser Auswahl.",
         "NoDuplicates": "Keine doppelten Chips in dieser Auswahl.",
         "FullGroups": "Filter wählen ganze Gruppen aus. Alle Teilnehmer mit demselben Chip bleiben sichtbar, auch aus anderen Kategorien."
+      },
+      "Anomalies": {
+        "Title": "Anomalieanalyse",
+        "Description": "Verdächtige erste Zwischenzeiten und Startzeiten prüfen.",
+        "Explanation": "Befunde sind Hinweise zur Prüfung durch das Schiedsgericht, kein Beweis für einen Fehlstart. Ergebnisse werden nicht automatisch geändert. Die ursprüngliche geplante Startzeit wird nicht separat gespeichert.",
+        "Method": "So funktioniert die Erkennung",
+        "Rules": "Die erste Zwischenzeit erfordert einen importierten ersten Streckenposten und mindestens acht weitere gültige OK/Finished-Zeiten derselben Kategorie. Auffällige Zeiten liegen unter der Hälfte des Medians, sind mindestens 30 Sekunden schneller und liegen unter dem Median abzüglich der dreifachen medianen absoluten Abweichung. Das Startraster erfordert fünf verschiedene Zeiten, einen eindeutig häufigsten Abstand (mindestens 10 Sekunden, drei Vorkommen) und mindestens 80 % Übereinstimmung mit einer eindeutigen Phase bei einer Sekunde Toleranz. Startprüfungen gelten nur für StartList/WaveStart. Fehlende Strecken, kleine Stichproben und uneindeutige Raster werden übersprungen. Startstempel erfordern aktuelle, zugeordnete Beobachtungen; fehlende Beobachtungen schließen einen Startstempel nicht aus.",
+        "Affected": "Betroffene Teilnehmer",
+        "Type": "Befundtyp",
+        "Findings": "Befunde",
+        "Coverage": "Prüfabdeckung",
+        "CoverageExplanation": "Die Abdeckung berücksichtigt Kategorie und Typ; die Suche filtert nur Teilnehmer. Angezeigt werden geprüfte Teilnehmer und die Gesamtzahl der Kategorie. Die Startstempelprüfung umfasst nur Teilnehmer mit gespeicherten Startstempeln. Übersprungene oder teilweise Prüfungen bestätigen keinen fehlerfreien Ablauf.",
+        "Status": "Status",
+        "Evaluated": "Geprüft",
+        "Total": "Gesamt",
+        "NoIssues": "Keine Anomalien in den geprüften Daten gefunden. Übersprungene Prüfungen beachten.",
+        "NoData": "Mit den verfügbaren Daten konnte keine Prüfung durchgeführt werden. Siehe Prüfabdeckung.",
+        "Control": "Posten",
+        "Split": "Erste Zwischenzeit",
+        "Median": "Median der anderen",
+        "Difference": "Differenz",
+        "References": "Referenzteilnehmer",
+        "Interval": "Intervall",
+        "Phase": "Rasterversatz",
+        "NearestStart": "Nächster Rasterstart",
+        "ObservedStart": "Beobachtete Startstempel",
+        "StartMode": "Startmodus",
+        "StartTime": "Startzeit",
+        "FAST_FIRST_SPLIT": "Ungewöhnlich schnelle erste Zwischenzeit",
+        "OFF_START_GRID": "Start außerhalb des Kategorierasters",
+        "START_PUNCH": "Beobachteter Startstempel",
+        "EVALUATED": "Geprüft",
+        "UNSUPPORTED_MODE": "Für diesen Modus nicht anwendbar",
+        "NO_COURSE": "Verifizierte Strecke fehlt",
+        "AMBIGUOUS_FIRST_CONTROL": "Erster Posten nicht eindeutig",
+        "INSUFFICIENT_DATA": "Unzureichende Daten",
+        "NO_RELIABLE_GRID": "Kein zuverlässiges Startraster",
+        "Loading": "Anomaliebericht wird geladen…",
+        "Error": "Der Anomaliebericht konnte nicht geladen werden."
       }
     },
     "Admin": {
@@ -1878,5 +1917,10 @@
     "Error": "Gerätesitzungen konnten nicht aktualisiert werden.",
     "LogoutUnconfirmed": "Lokal abgemeldet. Der Widerruf auf dem Server wurde nicht bestätigt; stellen Sie die Verbindung wieder her.",
     "RevocationDelay": "Abgemeldete Geräte können ein vorhandenes Zugriffstoken noch bis zu 15 Minuten verwenden."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Zahlungsfrist (Stunden)",
+    "Help": "Leer = keine automatische Stornierung. 1–8760 Stunden ab Eingang einer neuen Anmeldung. Barzahlung ausgenommen. Bestehende Anmeldungen bleiben unverändert.",
+    "Deadline": "Geht die Zahlung nicht bis {{date}} ein, wird diese Anmeldung automatisch storniert."
   }
 }

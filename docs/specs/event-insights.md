@@ -7,9 +7,11 @@
 ## Goal and acceptance criteria
 
 Give event owners and administrators an extensible Insights (Přehledy) catalog
-at `/events/{eventId}/insights`. The first card opens received payments at
+at `/events/{eventId}/insights`. The received-payments card opens
 `/events/{eventId}/insights/payments`. Existing `/report` and payment APIs remain
-unchanged. The catalog also offers the timing-card check described below.
+unchanged. The catalog also offers the timing-card check described below and
+[anomaly analysis](anomaly-analysis.md) for suspicious split and start times
+(issue [#164](https://github.com/orienteerfeed/ofeed/issues/164)).
 
 The read-only payment view lists receipt time, entry reference/contact, method,
 amount/currency, device, operator ID and server recording time. Links open the

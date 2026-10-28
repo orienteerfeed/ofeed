@@ -51,6 +51,7 @@ import { formatEntryFee } from './EntryClassCard';
 import { EntryItemsTable } from './EntryItemsTable';
 import { EntryPaymentLedger } from './EntryPaymentLedger';
 import { useEntryPayments } from './entries.hooks';
+import { EntryPaymentDeadline } from '@/components/molecules/EntryPaymentDeadline';
 import { EntryPaymentSection } from './EntryPaymentSection';
 import { getEntryStatusBadgeVariant } from './entries.utils';
 import {
@@ -439,6 +440,7 @@ export function EventEntryOrderDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-1 text-sm">
+                <EntryPaymentDeadline entry={entry} />
                 <span className="font-medium">
                   {entry.contactFirstname} {entry.contactLastname}
                 </span>

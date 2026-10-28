@@ -10,6 +10,12 @@ and this project adheres to
 
 ### Added
 
+- Optional event payment lifetime with automatic cancellation of unpaid received
+  non-cash orders and deadline notices on checkout and entry detail.
+
+- Event anomaly analysis for fast first splits, off-grid starts and observed
+  start-unit punches, with coverage, filtering, CSV export and printing (issue #164).
+
 - Event timing-card insight for missing and duplicate chips across categories,
   with filtering, complete duplicate groups, CSV export and printing.
 
