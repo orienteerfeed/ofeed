@@ -1,6 +1,7 @@
 import type { EntryAvailabilityClass } from '@repo/shared';
 import { useTranslation } from 'react-i18next';
 
+import { Badge } from '@/components/atoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
@@ -70,10 +71,17 @@ export function EntryClassCard({
               }
             }}
           >
-            <CardHeader className="space-y-0 p-3 pb-1 sm:p-6 sm:pb-2">
+            <CardHeader className="space-y-0 p-3 pb-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2 sm:p-6 sm:pb-2">
               <CardTitle className="break-words text-sm leading-snug sm:text-lg">
                 {entryClass.name}
               </CardTitle>
+              <Badge
+                variant="secondary"
+                className="hidden shrink-0 font-mono sm:inline-flex"
+              >
+                {entryClass.competitorCount} /{' '}
+                {entryClass.maxNumberOfCompetitors}
+              </Badge>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col p-3 pt-0 sm:p-6 sm:pt-0">
               <p className="break-words text-base font-bold text-primary sm:text-2xl">
@@ -85,11 +93,22 @@ export function EntryClassCard({
                     )
                   : t('Pages.Event.Entries.FreeEntry')}
               </p>
-              <p className="mt-auto pt-2 text-right text-xs font-medium tabular-nums text-muted-foreground sm:pt-3 sm:text-sm">
-                {t('Pages.Event.Entries.PlacesRemaining', {
-                  count: Math.max(0, entryClass.availableCount),
-                })}
-              </p>
+              <div className="mt-auto flex items-end justify-between gap-2 pt-2 sm:pt-3">
+                {(entryClass.birthYearFrom !== null ||
+                  entryClass.birthYearTo !== null) && (
+                  <p className="hidden text-xs text-muted-foreground sm:block">
+                    {t('Pages.Event.Entries.BirthYearRange', {
+                      from: entryClass.birthYearFrom ?? '…',
+                      to: entryClass.birthYearTo ?? '…',
+                    })}
+                  </p>
+                )}
+                <p className="ml-auto text-right text-xs font-medium tabular-nums text-muted-foreground sm:text-sm">
+                  {t('Pages.Event.Entries.PlacesRemaining', {
+                    count: Math.max(0, entryClass.availableCount),
+                  })}
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TooltipTrigger>
