@@ -30,7 +30,11 @@ export interface CartState {
 }
 
 export interface CartActions {
-  addItem: (item: Omit<CartEntryItem, 'id'>) => void;
+  /** Returns false if an exclusive slot is already held in this local cart. */
+  addItem: (
+    item: Omit<CartEntryItem, 'id'>,
+    options?: { exclusiveStartSlot?: boolean }
+  ) => boolean;
   removeItem: (id: string) => void;
   clearEvent: (eventId: string) => void;
   clear: () => void;

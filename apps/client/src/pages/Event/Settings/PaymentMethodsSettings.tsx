@@ -2,9 +2,12 @@ import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
   PAYMENT_LINK_VARIABLES,
+  PAYMENT_REFERENCE_PREFIX_MAX_LENGTH,
   findUnknownPaymentLinkVariables,
   getPaymentMethodConfigurationStatus,
+  normalizeBankAccountIban,
   paymentLinkTemplateSchema,
+  paymentReferencePrefixSchema,
   type EventPaymentMethodConfiguration,
   type PaymentMethodConfigurationStatus,
   type PaymentMethodType,
@@ -32,6 +35,8 @@ export const EVENT_PAYMENT_METHODS = gql`
   query EventPaymentMethods($eventId: String!) {
     eventPaymentMethods(eventId: $eventId) {
       eventId
+      entryPaymentLifetimeHours
+      paymentReferencePrefix
       paymentMethods {
         type
         enabled
@@ -58,6 +63,8 @@ export const UPDATE_EVENT_PAYMENT_METHODS = gql`
   ) {
     updateEventPaymentMethods(eventId: $eventId, input: $input) {
       eventId
+      entryPaymentLifetimeHours
+      paymentReferencePrefix
       paymentMethods {
         type
         enabled
@@ -86,6 +93,8 @@ type PaymentCapabilities = {
 };
 
 type PaymentMethodsPayload = {
+  entryPaymentLifetimeHours: number | null;
+  paymentReferencePrefix: string | null;
   eventId: string;
   paymentMethods: Array<
     EventPaymentMethodConfiguration & {
@@ -223,7 +232,9 @@ function validateMethods(
       !capabilities.qrPaymentAvailable
     ) {
       methodErrors.method = t(
-        'Pages.Event.Settings.Services.PaymentMethods.Validation.BankAccountRequired'
+        capabilities.bankAccountIban
+          ? 'Pages.Event.Settings.Services.PaymentMethods.Validation.InvalidBankAccount'
+          : 'Pages.Event.Settings.Services.PaymentMethods.Validation.BankAccountRequired'
       );
     }
 
@@ -282,6 +293,10 @@ export function PaymentMethodsSettings({
     bankAccountName: '',
     bankAccountIban: '',
   });
+  const [paymentReferencePrefix, setPaymentReferencePrefix] = useState('');
+  const committedPrefixRef = useRef('');
+  const [lifetime, setLifetime] = useState('');
+  const committedLifetime = useRef('');
   const committedRef = useRef('');
   const committedBankAccountRef = useRef('');
   const paymentLinkInputRef = useRef<HTMLInputElement>(null);
@@ -297,9 +312,14 @@ export function PaymentMethodsSettings({
   const effectiveCapabilities = useMemo(
     () => ({
       ...capabilities,
-      qrPaymentAvailable: Boolean(bankAccount.bankAccountIban.trim()),
+      qrPaymentAvailable:
+        normalizeBankAccountIban(bankAccount.bankAccountIban) !== null,
       bankAccountDisplay:
-        [bankAccount.bankAccountName.trim(), bankAccount.bankAccountIban.trim()]
+        [
+          bankAccount.bankAccountName.trim(),
+          normalizeBankAccountIban(bankAccount.bankAccountIban) ??
+            bankAccount.bankAccountIban.trim(),
+        ]
           .filter(Boolean)
           .join(' - ') || null,
       bankAccountIban: bankAccount.bankAccountIban.trim() || null,
@@ -317,6 +337,14 @@ export function PaymentMethodsSettings({
       bankAccountName: loadedCapabilities.bankAccountName ?? '',
       bankAccountIban: loadedCapabilities.bankAccountIban ?? '',
     };
+    const loadedPrefix = data?.eventPaymentMethods.paymentReferencePrefix ?? '';
+    const loadedLifetime = String(
+      data?.eventPaymentMethods.entryPaymentLifetimeHours ?? ''
+    );
+    setLifetime(loadedLifetime);
+    committedLifetime.current = loadedLifetime;
+    setPaymentReferencePrefix(loadedPrefix);
+    committedPrefixRef.current = loadedPrefix;
     setMethods(normalized);
     setBankAccount(loadedBankAccount);
     committedRef.current = serialized(normalized);
@@ -325,13 +353,28 @@ export function PaymentMethodsSettings({
 
   const dirty =
     methods.length > 0 &&
-    (serialized(methods) !== committedRef.current ||
+    (lifetime !== committedLifetime.current ||
+      paymentReferencePrefix !== committedPrefixRef.current ||
+      serialized(methods) !== committedRef.current ||
       serializedBankAccount(bankAccount) !== committedBankAccountRef.current);
   const validationErrors = useMemo(
     () => validateMethods(methods, effectiveCapabilities, t),
     [effectiveCapabilities, methods, t]
   );
-  const valid = !hasValidationErrors(validationErrors);
+  const prefixValid = paymentReferencePrefixSchema.safeParse(
+    paymentReferencePrefix
+  ).success;
+  const bankAccountInvalid =
+    Boolean(bankAccount.bankAccountIban.trim()) &&
+    normalizeBankAccountIban(bankAccount.bankAccountIban) === null;
+  const valid =
+    (lifetime === '' ||
+      (/^[0-9]+$/.test(lifetime) &&
+        Number(lifetime) >= 1 &&
+        Number(lifetime) <= 8760)) &&
+    prefixValid &&
+    !bankAccountInvalid &&
+    !hasValidationErrors(validationErrors);
 
   const blocker = useBlocker({
     shouldBlockFn: useCallback(() => dirty, [dirty]),
@@ -411,6 +454,9 @@ export function PaymentMethodsSettings({
         variables: {
           eventId,
           input: {
+            entryPaymentLifetimeHours:
+              lifetime === '' ? null : Number(lifetime),
+            paymentReferencePrefix: paymentReferencePrefix || null,
             paymentMethods: methods.map((method, position) => ({
               ...method,
               position,
@@ -418,7 +464,9 @@ export function PaymentMethodsSettings({
               paymentLinkTemplate: method.paymentLinkTemplate?.trim() || null,
             })),
             bankAccountName: bankAccount.bankAccountName.trim() || null,
-            bankAccountIban: bankAccount.bankAccountIban.trim() || null,
+            bankAccountIban: normalizeBankAccountIban(
+              bankAccount.bankAccountIban
+            ),
           },
         },
       });
@@ -432,6 +480,15 @@ export function PaymentMethodsSettings({
         bankAccountName: savedCapabilities.bankAccountName ?? '',
         bankAccountIban: savedCapabilities.bankAccountIban ?? '',
       };
+      const savedPrefix =
+        result.data?.updateEventPaymentMethods.paymentReferencePrefix ?? '';
+      const savedLifetime = String(
+        result.data?.updateEventPaymentMethods.entryPaymentLifetimeHours ?? ''
+      );
+      setLifetime(savedLifetime);
+      committedLifetime.current = savedLifetime;
+      setPaymentReferencePrefix(savedPrefix);
+      committedPrefixRef.current = savedPrefix;
       setMethods(normalized);
       setBankAccount(savedBankAccount);
       committedRef.current = serialized(normalized);
@@ -478,6 +535,65 @@ export function PaymentMethodsSettings({
       ) : (
         <TooltipProvider>
           <div className="space-y-3">
+            <div className="space-y-2 rounded-md border p-4">
+              <Label htmlFor="entry-payment-lifetime">
+                {t('EntryPaymentExpiry.Label')}
+              </Label>
+              <Input
+                id="entry-payment-lifetime"
+                type="number"
+                min={1}
+                max={8760}
+                step={1}
+                value={lifetime}
+                disabled={saving}
+                onChange={event => setLifetime(event.target.value)}
+                aria-describedby="entry-payment-lifetime-help"
+              />
+              <p
+                id="entry-payment-lifetime-help"
+                className="text-xs text-muted-foreground"
+              >
+                {t('EntryPaymentExpiry.Help')}
+              </p>
+            </div>
+            <div className="space-y-2 rounded-md border p-4">
+              <Label htmlFor="payment-reference-prefix">
+                {t(
+                  'Pages.Event.Settings.Services.PaymentMethods.PaymentReferencePrefix.Label'
+                )}
+              </Label>
+              <Input
+                id="payment-reference-prefix"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={PAYMENT_REFERENCE_PREFIX_MAX_LENGTH}
+                value={paymentReferencePrefix}
+                disabled={saving}
+                aria-invalid={!prefixValid}
+                aria-describedby="payment-reference-prefix-help"
+                onChange={event =>
+                  setPaymentReferencePrefix(event.target.value)
+                }
+                className="max-w-32"
+              />
+              <p
+                id="payment-reference-prefix-help"
+                className="text-sm text-muted-foreground"
+              >
+                {t(
+                  'Pages.Event.Settings.Services.PaymentMethods.PaymentReferencePrefix.Help'
+                )}
+              </p>
+              {!prefixValid && (
+                <p role="alert" className="text-sm text-destructive">
+                  {t(
+                    'Pages.Event.Settings.Services.PaymentMethods.PaymentReferencePrefix.Invalid'
+                  )}
+                </p>
+              )}
+            </div>
             {methods.map((method, index) => {
               const keys = METHOD_I18N_KEYS[method.type];
               const status = getPaymentMethodConfigurationStatus(
@@ -787,7 +903,10 @@ export function PaymentMethodsSettings({
                                 id="qr-bank-account-iban"
                                 value={bankAccount.bankAccountIban}
                                 disabled={saving}
-                                aria-invalid={Boolean(methodErrors?.method)}
+                                aria-invalid={
+                                  bankAccountInvalid ||
+                                  Boolean(methodErrors?.method)
+                                }
                                 placeholder={t(
                                   'Pages.Event.Settings.Services.PaymentMethods.Methods.QRPayment.BankAccountIbanPlaceholder'
                                 )}
@@ -798,6 +917,21 @@ export function PaymentMethodsSettings({
                                   }))
                                 }
                               />
+                              <p className="text-xs text-muted-foreground">
+                                {t(
+                                  'Pages.Event.Settings.Services.PaymentMethods.Methods.QRPayment.BankAccountHelp'
+                                )}
+                              </p>
+                              {bankAccountInvalid && !methodErrors?.method && (
+                                <p
+                                  className="text-xs text-destructive"
+                                  role="alert"
+                                >
+                                  {t(
+                                    'Pages.Event.Settings.Services.PaymentMethods.Validation.InvalidBankAccount'
+                                  )}
+                                </p>
+                              )}
                             </div>
                           </div>
                           {effectiveCapabilities.bankAccountDisplay && (

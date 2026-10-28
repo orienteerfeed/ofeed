@@ -1,5 +1,103 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Resúmenes",
+      "Description": "Resúmenes de pagos y controles de datos del evento.",
+      "Payments": "Pagos recibidos",
+      "PaymentsDescription": "Pagos recibidos, totales y datos de cierre.",
+      "Open": "Abrir resumen",
+      "From": "Recibido desde",
+      "To": "Recibido hasta",
+      "Method": "Método",
+      "Device": "Caja / dispositivo",
+      "Search": "Buscar",
+      "SearchPlaceholder": "Referencia de pago o nombre de contacto…",
+      "All": "Todos",
+      "Refresh": "Actualizar",
+      "Export": "Exportar CSV",
+      "Print": "Imprimir",
+      "Count": "Número de pagos",
+      "Cash": "Efectivo",
+      "QR": "QR",
+      "Total": "Total",
+      "PaidAt": "Hora de recepción",
+      "Reference": "Referencia de pago",
+      "Contact": "Contacto",
+      "Amount": "Importe",
+      "Currency": "Moneda",
+      "Operator": "ID del operador",
+      "RecordedAt": "Hora de registro",
+      "Empty": "Ningún pago recibido coincide con los filtros.",
+      "Error": "No se pudo cargar el resumen de pagos.",
+      "Retry": "Reintentar",
+      "Generated": "Generado",
+      "Timezone": "Zona horaria",
+      "InvalidRange": "La fecha inicial no debe ser posterior a la final.",
+      "Cards": {
+        "Title": "Revisión de chips",
+        "Description": "Detecta participantes sin chip o con números de chip compartidos entre todas las categorías del evento.",
+        "Name": "Nombre",
+        "Registration": "Número de registro",
+        "Class": "Categoría",
+        "Organisation": "Club",
+        "BibNumber": "Dorsal",
+        "Card": "Chip",
+        "MissingCount": "Chips sin asignar",
+        "DuplicateCount": "Números de chip duplicados",
+        "AffectedCount": "Participantes con chip duplicado",
+        "Missing": "Participantes sin chip",
+        "Duplicates": "Chips duplicados",
+        "GroupSize": "Participantes del grupo",
+        "SearchPlaceholder": "Nombre, registro, dorsal, club o chip",
+        "Loading": "Cargando informe de chips…",
+        "Stale": "Error al actualizar. Los datos mostrados están desactualizados; la exportación e impresión están desactivadas.",
+        "Error": "No se pudo cargar el informe de chips.",
+        "NoIssues": "Todos los participantes tienen chip y no se encontraron números duplicados.",
+        "NoMatches": "Ningún problema coincide con los filtros seleccionados.",
+        "NoMissing": "No hay participantes sin chip en esta selección.",
+        "NoDuplicates": "No hay chips duplicados en esta selección.",
+        "FullGroups": "Los filtros seleccionan grupos completos. Se muestran todos los participantes con el mismo chip, incluso de otras categorías."
+      },
+      "Anomalies": {
+        "Title": "Análisis de anomalías",
+        "Description": "Revisa primeros parciales y horas de salida sospechosos.",
+        "Explanation": "Los hallazgos son indicios para el juez, no pruebas de una salida incorrecta. Los resultados no se modifican automáticamente. La salida programada original no se guarda por separado.",
+        "Method": "Cómo funciona la detección",
+        "Rules": "El primer parcial requiere el primer control del recorrido importado y al menos ocho parciales válidos adicionales de corredores OK/Finished de la misma categoría. Se señalan tiempos inferiores a la mitad de la mediana, al menos 30 segundos más rápidos y por debajo de la mediana menos tres desviaciones absolutas medianas. La pauta de salida requiere cinco horas distintas, un intervalo más frecuente único (al menos 10 segundos, tres apariciones) y al menos un 80 % de coincidencia con una fase única con tolerancia de un segundo. Solo se comprueban salidas StartList/WaveStart. Se omiten recorridos ausentes, muestras pequeñas y pautas ambiguas. Los avisos de pinza de salida requieren registros vigentes asignados; su ausencia no descarta una picada de salida.",
+        "Affected": "Corredores afectados",
+        "Type": "Tipo de hallazgo",
+        "Findings": "Hallazgos",
+        "Coverage": "Cobertura del análisis",
+        "CoverageExplanation": "La cobertura sigue los filtros de categoría y tipo; la búsqueda solo filtra corredores. Se muestran corredores evaluados y el total de la categoría. La comprobación de salida incluye solo corredores con picadas de salida guardadas. Las comprobaciones omitidas o parciales no garantizan que todo esté correcto.",
+        "Status": "Estado",
+        "Evaluated": "Evaluados",
+        "Total": "Total",
+        "NoIssues": "No se encontraron anomalías en los datos evaluados. Revisa las comprobaciones omitidas.",
+        "NoData": "No se pudo evaluar ninguna comprobación con los datos disponibles. Consulta la cobertura.",
+        "Control": "Control",
+        "Split": "Primer parcial",
+        "Median": "Mediana de los demás",
+        "Difference": "Diferencia",
+        "References": "Corredores de referencia",
+        "Interval": "Intervalo",
+        "Phase": "Desfase de la pauta",
+        "NearestStart": "Salida más cercana de la pauta",
+        "ObservedStart": "Picadas de salida observadas",
+        "StartMode": "Modo de salida",
+        "StartTime": "Hora de salida",
+        "FAST_FIRST_SPLIT": "Primer parcial inusualmente rápido",
+        "OFF_START_GRID": "Salida fuera de la pauta de la categoría",
+        "START_PUNCH": "Picada de salida observada",
+        "EVALUATED": "Evaluado",
+        "UNSUPPORTED_MODE": "No aplicable a este modo",
+        "NO_COURSE": "Falta un recorrido verificado",
+        "AMBIGUOUS_FIRST_CONTROL": "Primer control ambiguo",
+        "INSUFFICIENT_DATA": "Datos insuficientes",
+        "NO_RELIABLE_GRID": "No hay una pauta de salida fiable",
+        "Loading": "Cargando el informe de anomalías…",
+        "Error": "No se pudo cargar el informe de anomalías."
+      }
+    },
     "Admin": {
       "Common": {
         "Zone": "Zona de administración",
@@ -379,8 +477,8 @@
         "Verifying": "Verificando tu correo",
         "VerifyingDescription": "Por favor espera mientras verificamos tu dirección de correo electrónico.",
         "Verified": "Correo verificado",
-        "VerifiedDescription": "Tu correo ha sido verificado y ya has iniciado sesión.",
-        "ContinueDescription": "Ahora tienes acceso completo a OFeed.",
+        "VerifiedDescription": "Tu dirección de correo electrónico ha sido verificada.",
+        "ContinueDescription": "Inicia sesión para continuar en OFeed.",
         "ContinueToApp": "Continuar a OFeed",
         "AlreadyVerified": "Ya verificado",
         "AlreadyVerifiedDescription": "Tu dirección de correo electrónico ya está verificada.",
@@ -568,7 +666,8 @@
           "status_change": "Cambio de estado",
           "late_start_change": "Salida tardía",
           "note_change": "Cambio de nota",
-          "external_id_change": "Cambio de ID externo"
+          "external_id_change": "Cambio de ID externo",
+          "punch_store": "Registro de paso guardado"
         },
         "OriginLabels": {
           "START": "Salida",
@@ -639,6 +738,7 @@
           "Items": "Elementos",
           "Total": "Total",
           "Paid": "Pagado",
+          "PaymentMethod": "Método de pago",
           "Created": "Creado",
           "Status": "Estado",
           "Actions": "Acciones"
@@ -655,6 +755,29 @@
         "Paid": {
           "Yes": "Sí",
           "No": "No"
+        },
+        "PaymentLedger": {
+          "Title": "Pagos recibidos",
+          "Record": "Registrar pago",
+          "Recorded": "Pago registrado.",
+          "Received": "Recibido",
+          "Balance": "Pendiente",
+          "State": "Estado",
+          "Empty": "No se han registrado pagos.",
+          "Unpaid": "No pagado",
+          "Partial": "Pago parcial",
+          "Paid": "Pagado",
+          "Overpaid": "Pago en exceso",
+          "Methods": {
+            "CASH": "Efectivo",
+            "QR": "Pago QR"
+          },
+          "DialogTitle": "Registrar pago recibido",
+          "Method": "Método",
+          "Amount": "Importe",
+          "PaidAt": "Recibido el",
+          "Device": "Caja / dispositivo",
+          "Confirm": "Registrar pago"
         },
         "Actions": {
           "Menu": "Acciones",
@@ -787,6 +910,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Prefijo de referencia de pago",
+              "Help": "Opcional: 1–2 dígitos antes de 8 dígitos aleatorios (máximo 10 en total). Déjelo vacío para usar el año de dos dígitos. Se aplica a nuevos pedidos en todos los métodos de pago; las referencias existentes no cambian.",
+              "Invalid": "Introduzca hasta 2 dígitos (0–9) o deje el campo vacío."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -821,7 +949,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Introduce un IBAN o una cuenta checa, p. ej. 2201340123/2010 o 19-2000145399/0800. Las cuentas checas se convierten automáticamente a IBAN.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -857,6 +986,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Introduce un IBAN válido o una cuenta checa con formato prefijo-número/código bancario. Comprueba los dígitos.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1566,6 +1696,7 @@
         "Cancel": "Cancelar"
       },
       "Entries": {
+        "Enter": "Inscribirse",
         "FreeEntry": "Inscripción gratuita",
         "BirthYearRange": "Años de nacimiento {{from}}–{{to}}",
         "LoadError": "No se pudo cargar la disponibilidad de inscripciones.",
@@ -1801,7 +1932,12 @@
         "Title": "Pagar mediante código QR",
         "Description": "Escanea este código en tu aplicación bancaria para rellenar el pago.",
         "QrCodeAriaLabel": "Código QR de pago",
-        "OpenInBankApp": "Pagar en la aplicación bancaria"
+        "ShareQr": "Compartir QR de pago",
+        "DownloadQr": "Descargar QR",
+        "MobileInstructions": "Comparte la imagen QR con una aplicación bancaria compatible, o descárgala e impórtala en tu aplicación bancaria.",
+        "ShareUnavailable": "No se pueden compartir imágenes. Se descargará el código QR; impórtalo en tu aplicación bancaria.",
+        "ShareError": "No se pudo compartir el código QR. Prueba a descargarlo.",
+        "ExportError": "No se pudo descargar el código QR. Inténtalo de nuevo."
       },
       "CashPayment": {
         "Title": "Pagar en efectivo",
@@ -2001,5 +2137,24 @@
     "longitudeRange": "La longitud debe estar entre -180 y 180",
     "zeroTimeRequired": "La hora cero es obligatoria",
     "zeroTimeFormat": "La hora debe tener el formato HH:mm o HH:mm:ss"
+  },
+  "Sessions": {
+    "Title": "Sesiones de dispositivos",
+    "Current": "Este dispositivo",
+    "Created": "Creada",
+    "LastRefresh": "Última renovación",
+    "Expires": "Caduca",
+    "Revoke": "Revocar dispositivo",
+    "Confirm": "¿Revocar todas las sesiones de este dispositivo? Deberá iniciar sesión de nuevo.",
+    "Cancel": "Cancelar",
+    "Loading": "Cargando sesiones…",
+    "Error": "No se pudieron actualizar las sesiones.",
+    "LogoutUnconfirmed": "Sesión cerrada localmente. No se pudo confirmar la revocación en el servidor; vuelva a conectarse.",
+    "RevocationDelay": "Los dispositivos revocados pueden usar un token de acceso existente durante un máximo de 15 minutos."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Plazo de pago (horas)",
+    "Help": "Vacío = sin cancelación automática. 1–8760 horas desde la recepción de una nueva inscripción. No se aplica al efectivo ni modifica inscripciones existentes.",
+    "Deadline": "Si no se recibe el pago antes del {{date}}, esta inscripción se cancelará automáticamente."
   }
 }

@@ -1,3 +1,4 @@
+import { idempotentCreate } from '../idempotency/create-idempotency.js';
 import { z } from '@hono/zod-openapi';
 
 import prisma from '../../utils/context.js';
@@ -231,7 +232,7 @@ export function registerPublicEventRoutes(router) {
           hundredthPrecision: true,
           defaultStartMode: true,
           classes: {
-            include: { _count: { select: { competitors: true } } },
+            include: { _count: { select: { competitors: true, teams: true } } },
           },
         },
       });
@@ -258,7 +259,11 @@ export function registerPublicEventRoutes(router) {
     const refYear = new Date().getFullYear();
     const classes = (rawClasses ?? []).map((cls) => {
       const { _count, ...classRest } = cls;
-      return { ...ageToRestClass(classRest, refYear), competitorsCount: _count.competitors };
+      return {
+        ...ageToRestClass(classRest, refYear),
+        competitorsCount: _count.competitors,
+        teamsCount: _count.teams,
+      };
     });
     return c.json(
       success(
@@ -692,33 +697,46 @@ export function registerPublicEventRoutes(router) {
 
     const { eventId } = parsedParams.data;
 
-    try {
-      const entryOrder = await createEntryOrder(
-        prisma as never,
-        {
-          eventId,
-          userId: getJwtNumericUserId(c) ?? null,
-          paymentLinkLanguage: c.req.header('accept-language'),
-        },
-        parsedBody.data,
-      );
-      return c.json(success('Entry order created', { data: entryOrder }, 201), 201);
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        return c.json(validation(err.message, 422), 422);
-      }
-      if (err instanceof ConflictError) {
-        return c.json(error(err.message, 409), 409);
-      }
-      if (err instanceof NotFoundError) {
-        return c.json(error(err.message, 404), 404);
-      }
-      logEndpoint(c, 'error', 'Entry order creation failed', {
+    return idempotentCreate(
+      c,
+      prisma as never,
+      {
         eventId,
-        ...getErrorDetails(err),
-      });
-      return c.json(error('Failed to create entry order', 500), 500);
-    }
+        userId: getJwtNumericUserId(c) ?? null,
+        operation: 'entries',
+        body: parsedBody.data,
+      },
+      async (transaction) => {
+        try {
+          const entryOrder = await createEntryOrder(
+            transaction?.tx ?? (prisma as never),
+            {
+              eventId,
+              userId: getJwtNumericUserId(c) ?? null,
+              paymentLinkLanguage: c.req.header('accept-language'),
+            },
+            parsedBody.data,
+            transaction,
+          );
+          return c.json(success('Entry order created', { data: entryOrder }, 201), 201);
+        } catch (err) {
+          if (err instanceof ValidationError) {
+            return c.json(validation(err.message, 422), 422);
+          }
+          if (err instanceof ConflictError) {
+            return c.json(error(err.message, 409, err.errorCode), 409);
+          }
+          if (err instanceof NotFoundError) {
+            return c.json(error(err.message, 404), 404);
+          }
+          logEndpoint(c, 'error', 'Entry order creation failed', {
+            eventId,
+            ...getErrorDetails(err),
+          });
+          return c.json(error('Failed to create entry order', 500), 500);
+        }
+      },
+    );
   });
 
   router.post('/:eventId/czech-ranking', async (c) => {

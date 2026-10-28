@@ -17,10 +17,10 @@ describe('WinnerNotification sound', () => {
     vi.stubGlobal(
       'Audio',
       vi.fn(function () {
-        return { play };
+        return { play, pause: vi.fn() };
       })
     );
-    vi.stubGlobal('speechSynthesis', { speak: vi.fn() });
+    vi.stubGlobal('speechSynthesis', { speak: vi.fn(), cancel: vi.fn() });
     // The first request owns the lock; the second waits for ownership.
     let owner: (() => Promise<void> | void) | undefined;
     vi.stubGlobal('navigator', {
@@ -45,8 +45,12 @@ describe('WinnerNotification sound', () => {
       JSON.stringify({ general: { sound: true, push: false } })
     );
     subscription.mockReturnValue({ data: undefined });
-    const first = render(<WinnerNotification eventId="event" />);
-    const second = render(<WinnerNotification eventId="event" />);
+    const first = render(
+      <WinnerNotification eventId="event" categoryNames={['D21']} />
+    );
+    const second = render(
+      <WinnerNotification eventId="event" categoryNames={['D21']} />
+    );
     subscription.mockReturnValue({
       data: {
         winnerUpdated: {
@@ -62,8 +66,12 @@ describe('WinnerNotification sound', () => {
     vi.useFakeTimers();
     try {
       await act(async () => {
-        first.rerender(<WinnerNotification eventId="event" />);
-        second.rerender(<WinnerNotification eventId="event" />);
+        first.rerender(
+          <WinnerNotification eventId="event" categoryNames={['D21']} />
+        );
+        second.rerender(
+          <WinnerNotification eventId="event" categoryNames={['D21']} />
+        );
       });
       expect(play).toHaveBeenCalledTimes(1);
     } finally {
@@ -71,6 +79,24 @@ describe('WinnerNotification sound', () => {
       second.unmount();
       vi.clearAllTimers();
       vi.useRealTimers();
+    }
+  });
+
+  it('keeps a muted tab out of the announcer election', () => {
+    const request = vi.fn(() => new Promise(() => {}));
+    vi.stubGlobal('navigator', { locks: { request } });
+    localStorage.setItem(
+      'notifications',
+      JSON.stringify({ general: { sound: false, push: false } })
+    );
+    subscription.mockReturnValue({ data: undefined });
+    const view = render(
+      <WinnerNotification eventId="event" categoryNames={['D21']} />
+    );
+    try {
+      expect(request).not.toHaveBeenCalled();
+    } finally {
+      view.unmount();
     }
   });
 });

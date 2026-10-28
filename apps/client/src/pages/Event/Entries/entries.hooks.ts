@@ -8,6 +8,10 @@ import {
   type AvailableEventPaymentMethod,
   type EventEntryAvailability,
   type EventEntryStats,
+  createEntryPaymentInputSchema,
+  entryPaymentRecordSchema,
+  type CreateEntryPaymentInput,
+  type EntryPaymentRecord,
 } from '@repo/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -16,6 +20,48 @@ import { ENDPOINTS } from '@/lib/api/endpoints';
 
 interface EnvelopeData<T> {
   data: T;
+}
+
+export function useEntryPayments(
+  eventId: string,
+  entryId: string,
+  enabled = true
+) {
+  const api = useApi();
+  return useQuery<EntryPaymentRecord[]>({
+    queryKey: ['events', eventId, 'entries', entryId, 'payments'],
+    queryFn: async () => {
+      const response = await api.get<EnvelopeData<unknown>>(
+        ENDPOINTS.eventPayments(eventId, { entryId })
+      );
+      return entryPaymentRecordSchema.array().parse(response.data);
+    },
+    enabled: enabled && !!eventId && !!entryId,
+  });
+}
+
+export function useRecordEntryPayment() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation<
+    EntryPaymentRecord,
+    Error,
+    { eventId: string; entryId: string; payment: CreateEntryPaymentInput }
+  >({
+    mutationFn: async ({ eventId, entryId, payment }) => {
+      const input = createEntryPaymentInputSchema.parse(payment);
+      const response = await api.post<EnvelopeData<unknown>>(
+        ENDPOINTS.entryPayments(eventId, entryId),
+        input
+      );
+      return entryPaymentRecordSchema.parse(response.data);
+    },
+    onSuccess: (_payment, { eventId, entryId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['events', eventId, 'entries', entryId, 'payments'],
+      });
+    },
+  });
 }
 
 export function useEventEntryAvailability(eventId: string, enabled = true) {

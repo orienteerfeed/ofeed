@@ -2,6 +2,9 @@ import crypto from 'crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
+  $transaction: vi.fn(),
+  $queryRaw: vi.fn(),
+  deviceSession: { updateMany: vi.fn() },
   user: {
     findUnique: vi.fn(),
     create: vi.fn(),
@@ -9,6 +12,7 @@ const prismaMock = vi.hoisted(() => ({
     update: vi.fn(),
   },
   passwordResetToken: {
+    updateMany: vi.fn(),
     deleteMany: vi.fn(),
     create: vi.fn(),
     findUnique: vi.fn(),
@@ -35,9 +39,32 @@ vi.mock('ejs', () => ({
 }));
 
 import { generateJwtTokenForLink } from '../../../utils/jwtToken.js';
-import { passwordResetConfirm, passwordResetRequest, signupUser, verifyEmail } from '../auth.service.js';
+import {
+  passwordResetConfirm,
+  passwordResetRequest,
+  signupUser,
+  sendVerificationEmailHelper,
+  verifyEmail,
+} from '../auth.service.js';
 
 const sha256 = (s: string) => crypto.createHash('sha256').update(s).digest('hex');
+
+it('passes the configured logo URL to the verification email template', async () => {
+  ejsMock.renderFile.mockReset();
+  ejsMock.renderFile.mockResolvedValue('<html>verification</html>');
+  await sendVerificationEmailHelper(
+    'Jana',
+    'Nováková',
+    'jana@example.test',
+    'https://app.test/verify/token',
+  );
+  expect(ejsMock.renderFile).toHaveBeenCalledWith(
+    expect.stringMatching(/welcome\.ejs$/),
+    expect.objectContaining({
+      logoUrl: expect.stringMatching(/^https?:\/\/.+\/images\/logos\/.+\.png$/),
+    }),
+  );
+});
 
 describe('auth service signupUser', () => {
   beforeEach(() => {
@@ -80,14 +107,8 @@ describe('auth service signupUser', () => {
       'OK Test',
     );
 
-    expect(payload.user).toMatchObject({
-      id: 123,
-      email: 'runner@example.test',
-      firstname: 'Test',
-      lastname: 'Runner',
-      organisation: 'OK Test',
-    });
-    expect(payload.token).toEqual(expect.any(String));
+    expect(payload).toMatchObject({ success: true });
+    expect(payload).not.toHaveProperty('token');
     expect(sendEmailMock).not.toHaveBeenCalled();
   });
 });
@@ -117,18 +138,8 @@ describe('auth service verifyEmail', () => {
 
     const payload = await verifyEmail(generateJwtTokenForLink(123));
 
-    expect(payload).toMatchObject({
-      token: expect.any(String),
-      user: {
-        userId: 123,
-        email: 'runner@example.test',
-        firstName: 'Test',
-        lastName: 'Runner',
-        role: 'USER',
-        organisation: 'OK Test',
-        emergencyContact: null,
-      },
-    });
+    expect(payload).toMatchObject({ success: true });
+    expect(payload).not.toHaveProperty('token');
     expect(prismaMock.user.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 123, active: true },
@@ -162,7 +173,7 @@ describe('auth service verifyEmail', () => {
 
     const payload = await verifyEmail(generateJwtTokenForLink(123));
 
-    expect(payload.token).toEqual(expect.any(String));
+    expect(payload.success).toBe(true);
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
@@ -194,7 +205,10 @@ describe('auth service passwordResetRequest', () => {
   it('returns generic success without creating a token when email is not registered', async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
-    const result = await passwordResetRequest('unknown@example.test', 'https://app.test/auth/reset-password');
+    const result = await passwordResetRequest(
+      'unknown@example.test',
+      'https://app.test/auth/reset-password',
+    );
 
     expect(result).toMatchObject({ success: true });
     expect(prismaMock.passwordResetToken.create).not.toHaveBeenCalled();
@@ -204,7 +218,10 @@ describe('auth service passwordResetRequest', () => {
   it('returns generic success without creating a token when user account is inactive', async () => {
     prismaMock.user.findUnique.mockResolvedValue({ id: 42, firstname: 'Test', active: false });
 
-    const result = await passwordResetRequest('inactive@example.test', 'https://app.test/auth/reset-password');
+    const result = await passwordResetRequest(
+      'inactive@example.test',
+      'https://app.test/auth/reset-password',
+    );
 
     expect(result).toMatchObject({ success: true });
     expect(prismaMock.passwordResetToken.create).not.toHaveBeenCalled();
@@ -216,12 +233,21 @@ describe('auth service passwordResetRequest', () => {
     prismaMock.passwordResetToken.create.mockResolvedValue({});
     ejsMock.renderFile.mockResolvedValue('<html>reset link</html>');
 
-    const result = await passwordResetRequest('jana@example.test', 'https://app.test/auth/reset-password');
+    const result = await passwordResetRequest(
+      'jana@example.test',
+      'https://app.test/auth/reset-password',
+    );
 
     expect(result).toMatchObject({ success: true });
     expect(prismaMock.passwordResetToken.deleteMany).toHaveBeenCalledWith({
       where: { userId: 77, usedAt: null },
     });
+    expect(ejsMock.renderFile).toHaveBeenCalledWith(
+      expect.stringMatching(/password-reset\.ejs$/),
+      expect.objectContaining({
+        logoUrl: expect.stringMatching(/^https?:\/\/.+\/images\/logos\/.+\.png$/),
+      }),
+    );
     expect(prismaMock.passwordResetToken.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: 77,
@@ -237,7 +263,9 @@ describe('auth service passwordResetRequest', () => {
     );
 
     // Verify that the raw token never ends up in the stored tokenHash
-    const createCall = prismaMock.passwordResetToken.create.mock.calls[0][0] as { data: { tokenHash: string } };
+    const createCall = prismaMock.passwordResetToken.create.mock.calls[0][0] as {
+      data: { tokenHash: string };
+    };
     const storedHash = createCall.data.tokenHash;
     // storedHash must be a SHA-256 hex string (64 chars), not the raw token itself
     expect(storedHash).toHaveLength(64);
@@ -250,7 +278,10 @@ describe('auth service passwordResetRequest', () => {
     prismaMock.passwordResetToken.create.mockResolvedValue({});
     ejsMock.renderFile.mockRejectedValue(new Error('template error'));
 
-    const result = await passwordResetRequest('jana@example.test', 'https://app.test/auth/reset-password');
+    const result = await passwordResetRequest(
+      'jana@example.test',
+      'https://app.test/auth/reset-password',
+    );
 
     expect(result).toMatchObject({ success: true });
     expect(sendEmailMock).not.toHaveBeenCalled();
@@ -326,9 +357,13 @@ describe('auth service passwordResetConfirm', () => {
     prismaMock.user.update.mockResolvedValue({});
     prismaMock.passwordResetToken.update.mockResolvedValue({});
 
+    prismaMock.$transaction.mockImplementation((work) => work(prismaMock));
+    prismaMock.passwordResetToken.updateMany.mockResolvedValue({ count: 1 });
     const result = await passwordResetConfirm(rawToken, 'newpassword8');
 
-    expect(result.jwtToken).toEqual(expect.any(String));
+    expect(result.success).toBe(true);
+    expect(result).not.toHaveProperty('jwtToken');
+    expect(prismaMock.deviceSession.updateMany).toHaveBeenCalled();
 
     expect(prismaMock.passwordResetToken.findUnique).toHaveBeenCalledWith({
       where: { tokenHash },
@@ -340,8 +375,8 @@ describe('auth service passwordResetConfirm', () => {
         data: { password: expect.any(String) },
       }),
     );
-    expect(prismaMock.passwordResetToken.update).toHaveBeenCalledWith({
-      where: { id: 'tok1' },
+    expect(prismaMock.passwordResetToken.updateMany).toHaveBeenCalledWith({
+      where: { id: 'tok1', usedAt: null, expiresAt: { gt: expect.any(Date) } },
       data: { usedAt: expect.any(Date) },
     });
   });

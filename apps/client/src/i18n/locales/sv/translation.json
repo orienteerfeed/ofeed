@@ -1,5 +1,103 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Översikter",
+      "Description": "Betalningsöversikter och kontroller av tävlingsdata.",
+      "Payments": "Mottagna betalningar",
+      "PaymentsDescription": "Mottagna betalningar, summor och avstämningsunderlag.",
+      "Open": "Öppna översikt",
+      "From": "Mottaget från",
+      "To": "Mottaget till",
+      "Method": "Metod",
+      "Device": "Kassa / enhet",
+      "Search": "Sök",
+      "SearchPlaceholder": "Betalningsreferens eller kontaktnamn…",
+      "All": "Alla",
+      "Refresh": "Uppdatera",
+      "Export": "Exportera CSV",
+      "Print": "Skriv ut",
+      "Count": "Antal betalningar",
+      "Cash": "Kontant",
+      "QR": "QR",
+      "Total": "Totalt",
+      "PaidAt": "Mottaget",
+      "Reference": "Betalningsreferens",
+      "Contact": "Kontakt",
+      "Amount": "Belopp",
+      "Currency": "Valuta",
+      "Operator": "Operatörs-ID",
+      "RecordedAt": "Registrerat",
+      "Empty": "Inga mottagna betalningar matchar filtren.",
+      "Error": "Kunde inte läsa in betalningsöversikten.",
+      "Retry": "Försök igen",
+      "Generated": "Skapad",
+      "Timezone": "Tidszon",
+      "InvalidRange": "Startdatumet får inte vara senare än slutdatumet.",
+      "Cards": {
+        "Title": "Chipkontroll",
+        "Description": "Hitta deltagare utan chip eller med samma chipnummer i tävlingens alla klasser.",
+        "Name": "Namn",
+        "Registration": "Registreringsnummer",
+        "Class": "Klass",
+        "Organisation": "Klubb",
+        "BibNumber": "Startnummer",
+        "Card": "Chip",
+        "MissingCount": "Saknade chip",
+        "DuplicateCount": "Dubbla chipnummer",
+        "AffectedCount": "Deltagare med dubbla chip",
+        "Missing": "Deltagare utan chip",
+        "Duplicates": "Dubbla chip",
+        "GroupSize": "Deltagare i gruppen",
+        "SearchPlaceholder": "Namn, registrering, startnummer, klubb eller chip",
+        "Loading": "Laddar chiprapport…",
+        "Stale": "Uppdateringen misslyckades. Visade uppgifter är inaktuella; export och utskrift är inaktiverade.",
+        "Error": "Kunde inte ladda chiprapporten.",
+        "NoIssues": "Alla deltagare har chip och inga dubbla chipnummer hittades.",
+        "NoMatches": "Inga problem matchar de valda filtren.",
+        "NoMissing": "Inga deltagare utan chip i detta urval.",
+        "NoDuplicates": "Inga dubbla chip i detta urval.",
+        "FullGroups": "Filtren väljer hela grupper. Alla deltagare med samma chip visas, även från andra klasser."
+      },
+      "Anomalies": {
+        "Title": "Anomalianalys",
+        "Description": "Granska misstänkta första sträcktider och starttider.",
+        "Explanation": "Fynd är underlag för tävlingsjuryn, inte bevis på felaktig start. Resultat ändras aldrig automatiskt. Den ursprungliga planerade starttiden sparas inte separat.",
+        "Method": "Så fungerar detekteringen",
+        "Rules": "Första sträcktiden kräver en importerad första bankontroll och minst åtta andra giltiga OK/Finished-tider i samma klass. Markerade tider är kortare än halva medianen, minst 30 sekunder snabbare och under medianen minus tre medianabsolutavvikelser. Startmönstret kräver fem olika tider, ett entydigt vanligaste avstånd (minst 10 sekunder, tre förekomster) och minst 80 % stöd för en entydig fas med en sekunds tolerans. Startkontroller gäller bara StartList/WaveStart. Saknade banor, små urval och tvetydiga mönster hoppas över. Startstämpling kräver aktuella tilldelade observationer; saknade observationer utesluter inte startstämpling.",
+        "Affected": "Berörda deltagare",
+        "Type": "Typ av fynd",
+        "Findings": "Fynd",
+        "Coverage": "Analysens täckning",
+        "CoverageExplanation": "Täckningen följer klass- och typfiltren; sökningen filtrerar bara deltagare. Antalen visar granskade deltagare och totalt antal i klassen. Startstämplingskontrollen omfattar bara deltagare med lagrade startstämplingar. Överhoppade eller partiella kontroller bekräftar inte att allt är korrekt.",
+        "Status": "Status",
+        "Evaluated": "Granskade",
+        "Total": "Totalt",
+        "NoIssues": "Inga anomalier hittades i granskade data. Kontrollera även överhoppade kontroller.",
+        "NoData": "Inga kontroller kunde utföras med tillgängliga data. Se täckningen nedan.",
+        "Control": "Kontroll",
+        "Split": "Första sträcktid",
+        "Median": "Övrigas median",
+        "Difference": "Skillnad",
+        "References": "Referensdeltagare",
+        "Interval": "Intervall",
+        "Phase": "Mönsterförskjutning",
+        "NearestStart": "Närmaste start i mönstret",
+        "ObservedStart": "Observerade startstämplingar",
+        "StartMode": "Startmetod",
+        "StartTime": "Starttid",
+        "FAST_FIRST_SPLIT": "Ovanligt snabb första sträcktid",
+        "OFF_START_GRID": "Start utanför klassens mönster",
+        "START_PUNCH": "Observerad startstämpling",
+        "EVALUATED": "Granskad",
+        "UNSUPPORTED_MODE": "Gäller inte denna metod",
+        "NO_COURSE": "Verifierad bana saknas",
+        "AMBIGUOUS_FIRST_CONTROL": "Tvetydig första kontroll",
+        "INSUFFICIENT_DATA": "Otillräckliga data",
+        "NO_RELIABLE_GRID": "Inget tillförlitligt startmönster",
+        "Loading": "Läser in anomalirapport…",
+        "Error": "Kunde inte läsa in anomalirapporten."
+      }
+    },
     "Admin": {
       "Common": {
         "Zone": "Adminzon",
@@ -379,8 +477,8 @@
         "Verifying": "Verifierar e-post",
         "VerifyingDescription": "Vänta medan vi verifierar din e-postadress.",
         "Verified": "E-post verifierad",
-        "VerifiedDescription": "Din e-post har verifierats och du är nu inloggad.",
-        "ContinueDescription": "Du har nu full tillgång till OFeed.",
+        "VerifiedDescription": "Din e-postadress har verifierats.",
+        "ContinueDescription": "Logga in för att fortsätta till OFeed.",
         "ContinueToApp": "Fortsätt till OFeed",
         "AlreadyVerified": "Redan verifierad",
         "AlreadyVerifiedDescription": "Din e-postadress är redan verifierad.",
@@ -568,7 +666,8 @@
           "status_change": "Ändring av status",
           "late_start_change": "Ändring av sen start",
           "note_change": "Ändring av kommentar",
-          "external_id_change": "Ändring av externt id"
+          "external_id_change": "Ändring av externt id",
+          "punch_store": "Stämpling sparad"
         },
         "OriginLabels": {
           "START": "Start",
@@ -639,6 +738,7 @@
           "Items": "Rader",
           "Total": "Totalt",
           "Paid": "Betald",
+          "PaymentMethod": "Betalningssätt",
           "Created": "Skapad",
           "Status": "Status",
           "Actions": "Åtgärder"
@@ -655,6 +755,29 @@
         "Paid": {
           "Yes": "Ja",
           "No": "Nej"
+        },
+        "PaymentLedger": {
+          "Title": "Mottagna betalningar",
+          "Record": "Registrera betalning",
+          "Recorded": "Betalning registrerad.",
+          "Received": "Mottaget",
+          "Balance": "Återstår",
+          "State": "Status",
+          "Empty": "Inga betalningar har registrerats.",
+          "Unpaid": "Obetald",
+          "Partial": "Delvis betald",
+          "Paid": "Betald",
+          "Overpaid": "Överbetald",
+          "Methods": {
+            "CASH": "Kontant",
+            "QR": "QR-betalning"
+          },
+          "DialogTitle": "Registrera mottagen betalning",
+          "Method": "Metod",
+          "Amount": "Belopp",
+          "PaidAt": "Mottagen",
+          "Device": "Kassa / enhet",
+          "Confirm": "Registrera betalning"
         },
         "Actions": {
           "Menu": "Åtgärder",
@@ -787,6 +910,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Prefix för betalningsreferens",
+              "Help": "Valfritt: 1–2 siffror före 8 slumpmässiga siffror (högst 10 totalt). Lämna tomt för att använda det tvåsiffriga årtalet. Gäller nya beställningar för alla betalningsmetoder; befintliga referenser ändras inte.",
+              "Invalid": "Ange högst 2 siffror (0–9) eller lämna tomt."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -821,7 +949,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Ange ett IBAN eller ett tjeckiskt konto, t.ex. 2201340123/2010 eller 19-2000145399/0800. Tjeckiska konton omvandlas automatiskt till IBAN.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -857,6 +986,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Ange ett giltigt IBAN eller tjeckiskt konto i formatet prefix-nummer/bankkod. Kontrollera siffrorna.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1566,6 +1696,7 @@
         "Cancel": "Avbryt"
       },
       "Entries": {
+        "Enter": "Anmäl dig",
         "FreeEntry": "Gratis anmälan",
         "BirthYearRange": "Födelseår {{from}}–{{to}}",
         "LoadError": "Kunde inte ladda anmälningstillgänglighet.",
@@ -1801,7 +1932,12 @@
         "Title": "Betala med QR-kod",
         "Description": "Skanna koden i din bankapp för att fylla i betalningen.",
         "QrCodeAriaLabel": "QR-kod för betalning",
-        "OpenInBankApp": "Betala i bankappen"
+        "ShareQr": "Dela betalnings-QR",
+        "DownloadQr": "Ladda ner QR",
+        "MobileInstructions": "Dela QR-bilden till en bankapp som stöds, eller ladda ner den och importera bilden i din bankapp.",
+        "ShareUnavailable": "Bilddelning stöds inte. QR-koden laddas ner; importera den i din bankapp.",
+        "ShareError": "Det gick inte att dela QR-koden. Försök ladda ner den.",
+        "ExportError": "Det gick inte att ladda ner QR-koden. Försök igen."
       },
       "CashPayment": {
         "Title": "Betala kontant",
@@ -2003,5 +2139,24 @@
       "Tooltip": "Verifierad e-postadress",
       "Label": "Verifierad e-postadress"
     }
+  },
+  "Sessions": {
+    "Title": "Enhetssessioner",
+    "Current": "Den här enheten",
+    "Created": "Skapad",
+    "LastRefresh": "Senast förnyad",
+    "Expires": "Går ut",
+    "Revoke": "Återkalla enhet",
+    "Confirm": "Återkalla alla sessioner för den här enheten? En ny inloggning krävs.",
+    "Cancel": "Avbryt",
+    "Loading": "Läser in sessioner…",
+    "Error": "Det gick inte att uppdatera enhetssessionerna.",
+    "LogoutUnconfirmed": "Utloggad lokalt. Återkallelsen på servern kunde inte bekräftas; anslut igen för att slutföra utloggningen.",
+    "RevocationDelay": "Återkallade enheter kan använda en befintlig åtkomsttoken i upp till 15 minuter."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Betalningsfrist (timmar)",
+    "Help": "Tomt = ingen automatisk avbokning. 1–8760 timmar efter att en ny anmälan tagits emot. Kontantbetalning undantas. Befintliga anmälningar påverkas inte.",
+    "Deadline": "Om betalningen inte har kommit in senast {{date}} avbokas anmälan automatiskt."
   }
 }

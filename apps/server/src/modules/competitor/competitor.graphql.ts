@@ -1,3 +1,7 @@
+import { EventAnomalyInsightRef } from './anomaly-insight.graphql-types.js';
+import { getEventAnomalyInsight } from './anomaly-insight.service.js';
+import { EventCardInsightRef } from './card-insight.graphql-types.js';
+import { getEventCardInsight } from './card-insight.service.js';
 import type { outputShapeKey } from '@pothos/core';
 
 import { builder } from '../../graphql/builder.js';
@@ -164,6 +168,18 @@ const StoreCompetitorResponseRef = builder
   });
 
 builder.queryFields((t) => ({
+  eventAnomalyInsight: t.field({
+    type: EventAnomalyInsightRef,
+    args: { eventId: t.arg.string({ required: true }) },
+    resolve: (_root, args, context) =>
+      getEventAnomalyInsight(context.prisma, context.auth, args.eventId),
+  }),
+  eventCardInsight: t.field({
+    type: EventCardInsightRef,
+    args: { eventId: t.arg.string({ required: true }) },
+    resolve: (_root, args, context) =>
+      getEventCardInsight(context.prisma, context.auth, args.eventId),
+  }),
   competitorById: t.prismaField({
     type: CompetitorRef,
     args: {
@@ -293,9 +309,7 @@ builder.mutationFields((t) => ({
         context.prisma,
         context.auth,
         statusChangeInputSchema.parse(args.input),
-      ).catch((err: unknown) =>
-        rethrowAuthzOrError(err, 'Failed to change competitor status'),
-      ),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to change competitor status')),
   }),
   competitorUpdate: t.field({
     type: ResponseMessageRef,

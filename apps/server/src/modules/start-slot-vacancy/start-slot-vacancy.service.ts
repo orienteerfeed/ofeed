@@ -1,3 +1,4 @@
+import { ConflictError } from '../../exceptions/index.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { EntryStatus } from '../../generated/prisma/enums.js';
@@ -6,7 +7,12 @@ import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { resolveEffectiveStartMode } from '@repo/shared';
 
 import { computeClassFee } from '../class/class.fee.js';
-import { computeClassCapacity, type CapacityMode } from '../class/class.capacity.js';
+import { eventPunchTransaction } from '../punch/punch-write.js';
+import {
+  computeClassCapacity,
+  requiresStartSlot,
+  type CapacityMode,
+} from '../class/class.capacity.js';
 import {
   SYSTEM_EVENT_SERVICE_KEYS,
   type EventServiceSystemKey,
@@ -38,6 +44,8 @@ export interface StartSlotVacancySlot {
 export interface MatchingStartSlotVacancyInput {
   classId: number;
   startTime?: Date | null;
+  requireAvailable?: boolean;
+  reservationItemId?: number;
 }
 
 export interface EventStartSlotVacancyGroup {
@@ -105,7 +113,7 @@ async function requireVacancyStartSlotAccess(
 }
 
 async function assertStartTimeIsNotAssignedToCompetitor(
-  prisma: AppPrismaClient,
+  prisma: AppPrismaClient | Prisma.TransactionClient,
   classId: number,
   startTime: Date,
 ) {
@@ -118,7 +126,10 @@ async function assertStartTimeIsNotAssignedToCompetitor(
   });
 
   if (existingCompetitor) {
-    throw new Error('Start time is already assigned to a competitor in this class');
+    throw new ConflictError(
+      'Start time is already assigned to a competitor in this class',
+      'SLOT_TAKEN',
+    );
   }
 }
 
@@ -127,9 +138,12 @@ export async function createStartSlotVacancyForGraphQL(
   auth: GraphQLAuthContext,
   input: CreateStartSlotVacancyInput,
 ) {
-  await requireClassStartSlotAccess(prisma, auth, input.classId);
-  await assertStartTimeIsNotAssignedToCompetitor(prisma, input.classId, input.startTime);
-  return createStartSlotVacancy(prisma, input);
+  const cls = await requireClassStartSlotAccess(prisma, auth, input.classId);
+  return eventPunchTransaction(prisma, cls.eventId, async (tx) => {
+    await assertStartTimeIsNotAssignedToCompetitor(tx, input.classId, input.startTime);
+    await assertNoSlotReservation(tx, input.classId, input.startTime);
+    return tx.startSlotVacancy.create({ data: { ...input, bibNumber: input.bibNumber ?? null } });
+  });
 }
 
 export async function listClassCompetitorStartTimesForGraphQL(
@@ -156,20 +170,48 @@ export async function listClassCompetitorStartTimesForGraphQL(
   );
 }
 
+async function assertNoSlotReservation(
+  tx: Prisma.TransactionClient,
+  classId: number,
+  startTime?: Date,
+  vacancyId?: number,
+) {
+  const vacancy =
+    vacancyId === undefined
+      ? null
+      : await tx.startSlotVacancy.findUnique({ where: { id: vacancyId } });
+  const time = startTime ?? vacancy?.startTime;
+  if (!time) return;
+  const reservation = await tx.entryItem.findFirst({
+    where: {
+      classId,
+      startTime: time,
+      competitorId: null,
+      entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
+    },
+    select: { id: true },
+  });
+  if (reservation) throw new ConflictError('The requested start time is reserved.', 'SLOT_TAKEN');
+}
+
 export async function updateStartSlotVacancyForGraphQL(
   prisma: AppPrismaClient,
   auth: GraphQLAuthContext,
   input: UpdateStartSlotVacancyInput,
 ) {
   const vacancy = await requireVacancyStartSlotAccess(prisma, auth, input.id);
-  await assertStartTimeIsNotAssignedToCompetitor(prisma, vacancy.classId, input.startTime);
-
-  return prisma.startSlotVacancy.update({
-    where: { id: input.id },
-    data: {
-      startTime: input.startTime,
-      bibNumber: input.bibNumber ?? null,
-    },
+  return eventPunchTransaction(prisma, vacancy.class.eventId, async (tx) => {
+    await assertStartTimeIsNotAssignedToCompetitor(tx, vacancy.classId, input.startTime);
+    await assertNoSlotReservation(tx, vacancy.classId, input.startTime);
+    // A pending order holds this vacancy even though it has not yet been consumed.
+    await assertNoSlotReservation(tx, vacancy.classId, undefined, input.id);
+    return tx.startSlotVacancy.update({
+      where: { id: input.id },
+      data: {
+        startTime: input.startTime,
+        bibNumber: input.bibNumber ?? null,
+      },
+    });
   });
 }
 
@@ -178,8 +220,11 @@ export async function deleteStartSlotVacancyForGraphQL(
   auth: GraphQLAuthContext,
   id: number,
 ) {
-  await requireVacancyStartSlotAccess(prisma, auth, id);
-  await deleteStartSlotVacancy(prisma, id);
+  const vacancy = await requireVacancyStartSlotAccess(prisma, auth, id);
+  await eventPunchTransaction(prisma, vacancy.class.eventId, async (tx) => {
+    await assertNoSlotReservation(tx, vacancy.classId, undefined, id);
+    await tx.startSlotVacancy.delete({ where: { id } });
+  });
   return { message: 'Start slot vacancy deleted' };
 }
 
@@ -270,6 +315,12 @@ export async function restoreStartSlotVacancy(
 ): Promise<void> {
   if (!input.startTime) return;
 
+  const occupant = await tx.competitor.findFirst({
+    where: { classId: input.classId, startTime: input.startTime },
+    select: { id: true },
+  });
+  if (occupant) return;
+
   await tx.startSlotVacancy.createMany({
     data: [
       {
@@ -299,12 +350,36 @@ export async function deleteMatchingStartSlotVacancy(
 ): Promise<void> {
   if (!input.startTime) return;
 
-  await tx.startSlotVacancy.deleteMany({
+  if (input.requireAvailable) {
+    const reservation = await tx.entryItem.findFirst({
+      where: {
+        classId: input.classId,
+        startTime: input.startTime,
+        competitorId: null,
+        ...(input.reservationItemId === undefined ? {} : { id: { not: input.reservationItemId } }),
+        entry: { status: { in: ['RECEIVED', 'APPROVED'] } },
+      },
+      select: { id: true },
+    });
+    if (reservation)
+      throw new ConflictError('The requested start time is not available.', 'SLOT_TAKEN');
+    const occupant = await tx.competitor.findFirst({
+      where: { classId: input.classId, startTime: input.startTime },
+      select: { id: true },
+    });
+    if (occupant)
+      throw new ConflictError('The requested start time is not available.', 'SLOT_TAKEN');
+  }
+
+  const deleted = await tx.startSlotVacancy.deleteMany({
     where: {
       classId: input.classId,
       startTime: input.startTime,
     },
   });
+  if (input.requireAvailable && deleted.count !== 1) {
+    throw new ConflictError('The requested start time is not available.', 'SLOT_TAKEN');
+  }
 }
 
 export interface EntryAvailabilitySlot {
@@ -421,6 +496,7 @@ export async function listEventEntryAvailability(
             select: { id: true, startTime: true, bibNumber: true },
             orderBy: { startTime: 'asc' },
           },
+          competitors: { select: { startTime: true } },
           entryItems: {
             where: {
               competitorId: null,
@@ -470,9 +546,16 @@ export async function listEventEntryAvailability(
         entryItem.startTime === null ? [] : [entryItem.startTime.getTime()],
       ),
     );
-    const availableSlots = eventClass.startSlotVacancies.filter(
-      (slot) => !reservedStartTimes.has(slot.startTime.getTime()),
-    );
+    for (const competitor of eventClass.competitors ?? []) {
+      if (competitor.startTime) reservedStartTimes.add(competitor.startTime.getTime());
+    }
+    const seenStartTimes = new Set<number>();
+    const availableSlots = eventClass.startSlotVacancies.filter((slot) => {
+      const time = slot.startTime.getTime();
+      if (reservedStartTimes.has(time) || seenStartTimes.has(time)) return false;
+      seenStartTimes.add(time);
+      return true;
+    });
     const vacancyCount = availableSlots.length;
 
     const { currentFee, feeNet, feeVat } = computeClassFee({
@@ -499,10 +582,9 @@ export async function listEventEntryAvailability(
     });
 
     const configuredMax = eventClass.maxNumberOfCompetitors ?? competitorCount;
-    const effectiveMax =
-      effectiveStartMode === 'FreeStart'
-        ? configuredMax
-        : Math.min(configuredMax, competitorCount + pendingEntryCount + vacancyCount);
+    const effectiveMax = !requiresStartSlot(effectiveStartMode)
+      ? configuredMax
+      : Math.min(configuredMax, competitorCount + pendingEntryCount + vacancyCount);
 
     return {
       id: eventClass.id,

@@ -1,31 +1,31 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import pino from "pino";
-import { createStream } from "rotating-file-stream";
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import pino from 'pino';
+import { createStream } from 'rotating-file-stream';
 
-import env from "../config/env.js";
+import env from '../config/env.js';
 import {
   getLogRotationConfig,
   isAccessLogEnabled,
   isAppLogEnabled,
   isRotationEnabled,
   LOG_DIR,
-} from "../config/logging.js";
+} from '../config/logging.js';
 
 if (!fs.existsSync(LOG_DIR)) {
   fs.mkdirSync(LOG_DIR, { recursive: true });
 }
 
-type RotationInterval = "1h" | "1d" | "7d";
+type RotationInterval = '1h' | '1d' | '7d';
 
 function calculateMaxFiles(retentionDays: number, frequency: string): number {
   switch (frequency) {
-    case "hourly":
+    case 'hourly':
       return retentionDays * 24;
-    case "weekly":
+    case 'weekly':
       return Math.ceil(retentionDays / 7);
-    case "daily":
+    case 'daily':
     default:
       return retentionDays;
   }
@@ -33,13 +33,13 @@ function calculateMaxFiles(retentionDays: number, frequency: string): number {
 
 function getRotationInterval(frequency: string): RotationInterval {
   switch (frequency) {
-    case "hourly":
-      return "1h";
-    case "weekly":
-      return "7d";
-    case "daily":
+    case 'hourly':
+      return '1h';
+    case 'weekly':
+      return '7d';
+    case 'daily':
     default:
-      return "1d";
+      return '1d';
   }
 }
 
@@ -53,13 +53,13 @@ function createRotatingStream(filename: string) {
 
     const dateTime = time instanceof Date ? time : new Date(time);
     const year = dateTime.getFullYear();
-    const month = String(dateTime.getMonth() + 1).padStart(2, "0");
-    const day = String(dateTime.getDate()).padStart(2, "0");
+    const month = String(dateTime.getMonth() + 1).padStart(2, '0');
+    const day = String(dateTime.getDate()).padStart(2, '0');
 
-    const collisionSuffix = index && index > 1 ? `.${index - 1}` : "";
+    const collisionSuffix = index && index > 1 ? `.${index - 1}` : '';
 
-    if (rotationConfig.frequency === "hourly") {
-      const hour = String(dateTime.getHours()).padStart(2, "0");
+    if (rotationConfig.frequency === 'hourly') {
+      const hour = String(dateTime.getHours()).padStart(2, '0');
       return `${filename}.${year}-${month}-${day}-${hour}${collisionSuffix}`;
     }
 
@@ -71,7 +71,7 @@ function createRotatingStream(filename: string) {
     interval: getRotationInterval(rotationConfig.frequency),
     intervalBoundary: rotationConfig.boundary,
     intervalUTC: rotationConfig.utc,
-    compress: rotationConfig.compress ? "gzip" : false,
+    compress: rotationConfig.compress ? 'gzip' : false,
     maxFiles: calculateMaxFiles(rotationConfig.retentionDays, rotationConfig.frequency),
     initialRotation: true,
   });
@@ -94,14 +94,14 @@ export interface LogContext {
 
 function toStreamLevel(level: typeof env.LOG_LEVEL): pino.Level {
   // Stream entries do not support "silent". Global logger level still can be "silent".
-  return level === "silent" ? "trace" : level;
+  return level === 'silent' ? 'trace' : level;
 }
 
 function createAppLogger() {
   const streamLevel = toStreamLevel(env.LOG_LEVEL);
   const streams: pino.StreamEntry[] = [];
 
-  if (env.NODE_ENV === "development") {
+  if (env.NODE_ENV === 'development') {
     streams.push({
       level: streamLevel,
       stream: pino.destination({ dest: 1, sync: false }),
@@ -110,8 +110,8 @@ function createAppLogger() {
 
   if (isAppLogEnabled()) {
     const stream = isRotationEnabled()
-      ? createRotatingStream("app.log")
-      : pino.destination({ dest: path.join(LOG_DIR, "app.log"), sync: false });
+      ? createRotatingStream('app.log')
+      : pino.destination({ dest: path.join(LOG_DIR, 'app.log'), sync: false });
 
     streams.push({ level: streamLevel, stream });
   }
@@ -123,13 +123,59 @@ function createAppLogger() {
   const base = {
     pid: process.pid,
     hostname: os.hostname(),
-    service: "orienteerfeed-api",
+    service: 'orienteerfeed-api',
     env: env.NODE_ENV,
   };
 
   return streams.length > 1
-    ? pino({ level: env.LOG_LEVEL, base, timestamp: pino.stdTimeFunctions.isoTime }, pino.multistream(streams))
-    : pino({ level: env.LOG_LEVEL, base, timestamp: pino.stdTimeFunctions.isoTime }, streams[0].stream);
+    ? pino(
+        {
+          level: env.LOG_LEVEL,
+          base,
+          redact: [
+            'accessToken',
+            'refreshToken',
+            '*.accessToken',
+            '*.refreshToken',
+            '*.*.accessToken',
+            '*.*.refreshToken',
+            '*.headers.authorization',
+            '*.headers.cookie',
+            '*.headers["set-cookie"]',
+            'headers.authorization',
+            'headers.cookie',
+            'headers["set-cookie"]',
+            'request.headers.authorization',
+            'request.headers.cookie',
+          ],
+          timestamp: pino.stdTimeFunctions.isoTime,
+        },
+        pino.multistream(streams),
+      )
+    : pino(
+        {
+          level: env.LOG_LEVEL,
+          base,
+          redact: [
+            'accessToken',
+            'refreshToken',
+            '*.accessToken',
+            '*.refreshToken',
+            '*.*.accessToken',
+            '*.*.refreshToken',
+            '*.headers.authorization',
+            '*.headers.cookie',
+            '*.headers["set-cookie"]',
+            'headers.authorization',
+            'headers.cookie',
+            'headers["set-cookie"]',
+            'request.headers.authorization',
+            'request.headers.cookie',
+          ],
+          timestamp: pino.stdTimeFunctions.isoTime,
+        },
+        streams[0].stream,
+      );
 }
 
 function createAccessLogger() {
@@ -138,14 +184,14 @@ function createAccessLogger() {
   }
 
   const stream = isRotationEnabled()
-    ? createRotatingStream("access.log")
-    : pino.destination({ dest: path.join(LOG_DIR, "access.log"), sync: false });
+    ? createRotatingStream('access.log')
+    : pino.destination({ dest: path.join(LOG_DIR, 'access.log'), sync: false });
 
   return pino(
     {
-      level: "info",
+      level: 'info',
       timestamp: pino.stdTimeFunctions.isoTime,
-      base: { service: "orienteerfeed-access" },
+      base: { service: 'orienteerfeed-access' },
     },
     stream,
   );
@@ -159,11 +205,11 @@ export function createLogMessage(level: pino.Level, message: string, context?: L
 }
 
 export const logger = {
-  debug: (message: string, context?: LogContext) => createLogMessage("debug", message, context),
-  info: (message: string, context?: LogContext) => createLogMessage("info", message, context),
-  warn: (message: string, context?: LogContext) => createLogMessage("warn", message, context),
-  error: (message: string, context?: LogContext) => createLogMessage("error", message, context),
-  fatal: (message: string, context?: LogContext) => createLogMessage("fatal", message, context),
+  debug: (message: string, context?: LogContext) => createLogMessage('debug', message, context),
+  info: (message: string, context?: LogContext) => createLogMessage('info', message, context),
+  warn: (message: string, context?: LogContext) => createLogMessage('warn', message, context),
+  error: (message: string, context?: LogContext) => createLogMessage('error', message, context),
+  fatal: (message: string, context?: LogContext) => createLogMessage('fatal', message, context),
 };
 
 export default appLogger;

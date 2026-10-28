@@ -7,6 +7,7 @@ import {
   COMPETITORS_BY_CLASS_UPDATED,
   COMPETITOR_UPDATED,
   pubsub as defaultPubsub,
+  subscribeWithInitial,
 } from '../../lib/pubsub.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { normalizeCountryAlpha2 } from '../../utils/country-code.js';
@@ -521,23 +522,19 @@ export async function createCompetitorForGraphQL(
   }
 }
 
-export async function* subscribeCompetitorsByClassUpdated(
+export function subscribeCompetitorsByClassUpdated(
   prisma: AppPrismaClient,
   classId: number,
   pubsub: typeof defaultPubsub = defaultPubsub,
 ): AsyncIterable<CompetitorsByClassUpdatedPayload> {
-  yield {
-    competitorsByClassUpdated: await findCompetitorsByClassWithLegacyShape(prisma, classId, false),
-  };
-
-  const topic = `${COMPETITORS_BY_CLASS_UPDATED}_${classId}`;
-  const asyncIterableIterator = pubsub.asyncIterableIterator([
-    topic,
-  ]) as AsyncIterable<CompetitorsByClassUpdatedPayload>;
-
-  for await (const payload of asyncIterableIterator) {
-    yield payload;
-  }
+  return subscribeWithInitial<CompetitorsByClassUpdatedPayload, CompetitorsByClassUpdatedPayload>(
+    `${COMPETITORS_BY_CLASS_UPDATED}_${classId}`,
+    async () => ({
+      competitorsByClassUpdated: await findCompetitorsByClassWithLegacyShape(prisma, classId, false),
+    }),
+    (payload) => payload,
+    pubsub,
+  );
 }
 
 export function subscribeCompetitorUpdated(

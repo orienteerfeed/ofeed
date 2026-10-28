@@ -207,7 +207,7 @@ describe('listEventEntryAvailability', () => {
   it('StartSlot: maximum includes existing competitors and caps availableCount', async () => {
     const slots = Array.from({ length: 25 }, (_, i) => ({
       id: i + 1,
-      startTime: new Date('2026-06-15T08:00:00.000Z'),
+      startTime: new Date(Date.UTC(2026, 5, 15, 8, i * 2)),
       bibNumber: null,
     }));
     const prisma = {
@@ -236,7 +236,7 @@ describe('listEventEntryAvailability', () => {
   it('StartSlot: maximum is limited by all available start-list positions', async () => {
     const slots = Array.from({ length: 5 }, (_, i) => ({
       id: i + 1,
-      startTime: new Date('2026-06-15T08:00:00.000Z'),
+      startTime: new Date(Date.UTC(2026, 5, 15, 8, i * 2)),
       bibNumber: null,
     }));
     const prisma = {
@@ -342,6 +342,32 @@ describe('listEventEntryAvailability', () => {
       availableCount: 1,
       isFull: false,
       slots: [availableSlot],
+    });
+  });
+
+  it('hides occupied times and deduplicates vacancies before computing capacity', async () => {
+    const occupied = { id: 1, startTime: new Date('2026-06-15T08:00:00Z'), bibNumber: null };
+    const free = { id: 2, startTime: new Date('2026-06-15T08:02:00Z'), bibNumber: null };
+    const prisma = {
+      event: {
+        findUnique: vi.fn().mockResolvedValue(
+          makeEvent({
+            classes: [
+              makeClass({
+                startSlotVacancies: [occupied, free, { ...free, id: 3 }],
+                competitors: [{ startTime: occupied.startTime }],
+                _count: { competitors: 1, entryItems: 0 },
+              }),
+            ],
+          }),
+        ),
+      },
+    };
+    const result = await listEventEntryAvailability(prisma as never, 'event-1');
+    expect(result!.classes[0]).toMatchObject({
+      slots: [free],
+      availableCount: 1,
+      maxNumberOfCompetitors: 2,
     });
   });
 

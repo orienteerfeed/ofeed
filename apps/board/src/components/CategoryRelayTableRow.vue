@@ -5,13 +5,15 @@ import { differenceInSeconds } from 'date-fns'
 import { useTimeHelpers } from '@/composables/useTimeHelpers'
 import CategoryRelayTableRowTeam from './CategoryRelayTableRowTeam.vue'
 import CategoryRelayTableRowAthlete from './CategoryRelayTableRowAthlete.vue'
-import type { RelayTeamWithStats } from '@/types/category'
+import type { RelayTeamWithStats, ResultMode } from '@/types/category'
 
 const props = defineProps<{
   data: RelayTeamWithStats
   isEven: boolean
   legCount: number
   showEmojis?: boolean
+  awardedPlaces?: number
+  resultMode?: ResultMode
   timezone?: string
 }>()
 const { now5s } = useTimeHelpers()
@@ -47,6 +49,8 @@ const additionalLegSpaces = computed(() => {
       class="table-row-grid text-table-large"
       :data="props.data"
       :show-emojis="props.showEmojis"
+      :awarded-places="props.awardedPlaces"
+      :result-mode="props.resultMode"
     />
     <CategoryRelayTableRowAthlete
       class="table-row-grid text-table-small"
@@ -54,6 +58,7 @@ const additionalLegSpaces = computed(() => {
       :key="athlete.id"
       :data="athlete"
       :timezone="props.timezone"
+      :result-mode="props.resultMode"
     ></CategoryRelayTableRowAthlete>
     <template v-for="n in additionalLegSpaces" :key="data.id + '-' + n">
       <div class="table-row-grid text-table-small grid gap-2 px-3 py-1.5">

@@ -66,7 +66,7 @@ import {
   type EntryOrdersByEventVariables,
 } from './entryOrders.gql';
 
-const TABLE_COLUMN_COUNT = 8;
+const TABLE_COLUMN_COUNT = 9;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const STATUS_VISIBILITY_STORAGE_KEY =
   'orienteerfeed:entry-orders:status-visibility';
@@ -85,6 +85,7 @@ type SortKey =
   | 'items'
   | 'totalAmount'
   | 'paid'
+  | 'paymentMethod'
   | 'createdAt'
   | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -93,7 +94,7 @@ type Sort = { key: SortKey; direction: SortDirection };
 const DEFAULT_STATUS_VISIBILITY: StatusVisibility = {
   PROCESSED: true,
   APPROVED: true,
-  CANCELLED: true,
+  CANCELLED: false,
   REJECTED: true,
 };
 
@@ -321,6 +322,12 @@ export function EventEntriesManagePage() {
         case 'paid':
           comparison = compareNumber(Number(left.paid), Number(right.paid));
           break;
+        case 'paymentMethod':
+          comparison = compareText(
+            left.paymentMethod ?? '',
+            right.paymentMethod ?? ''
+          );
+          break;
         case 'createdAt':
           comparison = compareNumber(
             new Date(left.createdAt).getTime(),
@@ -429,6 +436,7 @@ export function EventEntriesManagePage() {
       t('Pages.Event.EntriesManage.Columns.Items'),
       t('Pages.Event.EntriesManage.Columns.Total'),
       t('Pages.Event.EntriesManage.Columns.Paid'),
+      t('Pages.Event.EntriesManage.Columns.PaymentMethod'),
       t('Pages.Event.EntriesManage.Columns.Created'),
       t('Pages.Event.EntriesManage.Columns.Status'),
     ];
@@ -451,6 +459,13 @@ export function EventEntriesManagePage() {
             entry.paid
               ? t('Pages.Event.EntriesManage.Paid.Yes')
               : t('Pages.Event.EntriesManage.Paid.No')
+          ),
+          escapeHtml(
+            entry.paymentMethod
+              ? t(
+                  `Pages.Checkout.PaymentMethods.Methods.${entry.paymentMethod}`
+                )
+              : '—'
           ),
           escapeHtml(formatDateTime(entry.createdAt)),
           escapeHtml(t(`Pages.Event.EntriesManage.Status.${entry.status}`)),
@@ -731,6 +746,10 @@ export function EventEntriesManagePage() {
                   t('Pages.Event.EntriesManage.Columns.Paid')
                 )}
                 {renderSortableHeader(
+                  'paymentMethod',
+                  t('Pages.Event.EntriesManage.Columns.PaymentMethod')
+                )}
+                {renderSortableHeader(
                   'createdAt',
                   t('Pages.Event.EntriesManage.Columns.Created')
                 )}
@@ -817,6 +836,13 @@ export function EventEntriesManagePage() {
                       </span>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {entry.paymentMethod
+                      ? t(
+                          `Pages.Checkout.PaymentMethods.Methods.${entry.paymentMethod}`
+                        )
+                      : '—'}
+                  </TableCell>
                   <TableCell>{formatDateTime(entry.createdAt)}</TableCell>
                   <TableCell>
                     <Badge variant={badge.variant} className={badge.className}>
@@ -891,7 +917,8 @@ export function EventEntriesManagePage() {
                             {t('Pages.Event.EntriesManage.Actions.Process')}
                           </DropdownMenuItem>
                         )}
-                        {(entry.status === 'RECEIVED' || entry.status === 'APPROVED') && (
+                        {(entry.status === 'RECEIVED' ||
+                          entry.status === 'APPROVED') && (
                           <>
                             <DropdownMenuItem
                               onSelect={() =>

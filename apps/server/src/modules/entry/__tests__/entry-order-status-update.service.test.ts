@@ -46,12 +46,15 @@ function makeEntryRow(overrides: Record<string, unknown> = {}) {
 }
 
 function createPrismaMock() {
-  return {
+  const prisma = {
+    $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry-1' }]),
+    entryPayment: { count: vi.fn().mockResolvedValue(0) },
     entry: {
       findFirst: vi.fn(),
       update: vi.fn(),
     },
   };
+  return { ...prisma, $transaction: vi.fn(async (callback) => callback(prisma)) };
 }
 
 describe('updateEntryOrderStatus', () => {

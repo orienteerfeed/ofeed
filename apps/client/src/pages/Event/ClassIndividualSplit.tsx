@@ -138,6 +138,7 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
 
   const {
     data: splitPublicationData,
+    previousData: previousSplitPublicationData,
     loading: splitPublicationLoading,
     error: splitPublicationError,
     refetch: refetchSplitPublicationStatus,
@@ -146,15 +147,17 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
     skip: !selectedClass,
     pollInterval: selectedClass ? 30000 : 0,
     fetchPolicy: 'network-only',
+    notifyOnNetworkStatusChange: false,
   });
 
+  const publication =
+    splitPublicationData?.splitPublicationStatus ??
+    previousSplitPublicationData?.splitPublicationStatus;
   const splitPublicationStatus =
-    splitPublicationData?.splitPublicationStatus?.classId === selectedClass
-      ? splitPublicationData.splitPublicationStatus
-      : null;
+    publication?.classId === selectedClass ? publication : null;
 
-  // Course distances only scale the split chart's x axis, so a failure here must
-  // not break the split view — it just falls back to evenly-spaced legs.
+  // Optional course metadata scales the chart and can supply the table's control
+  // sequence. Missing metadata must not prevent viewing recorded splits.
   const { data: courseDistancesData } = useQuery<SplitCourseDistancesData>(
     SPLIT_COURSE_DISTANCES,
     {
@@ -208,10 +211,13 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
   }, [refetchSplitPublicationStatus, splitPublicationStatus]);
 
   useEffect(() => {
-    if (data?.splitCompetitorsByClassUpdated) {
+    if (
+      splitPublicationStatus?.isAccessible &&
+      data?.splitCompetitorsByClassUpdated
+    ) {
       setCompetitors(data.splitCompetitorsByClassUpdated);
     }
-  }, [data]);
+  }, [data, splitPublicationStatus?.isAccessible]);
 
   useEffect(() => {
     // Auto-select first class if none selected
@@ -236,7 +242,7 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
     );
   }
 
-  if (splitPublicationError) {
+  if (splitPublicationError && !splitPublicationStatus) {
     return (
       <Alert
         severity="error"
@@ -271,8 +277,10 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
     Boolean(splitPublicationStatus) &&
     !splitPublicationStatus?.isAccessible;
   const splitDataLoading =
-    splitPublicationLoading ||
-    (Boolean(splitPublicationStatus?.isAccessible) && loading);
+    (!splitPublicationStatus && splitPublicationLoading) ||
+    (Boolean(splitPublicationStatus?.isAccessible) &&
+      loading &&
+      competitors.length === 0);
   const splitDataError = splitPublicationStatus?.isAccessible ? error : null;
 
   const getPublicationAlertTitle = () => {
@@ -407,8 +415,11 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
             <TabsContent value="table" className="mt-4">
               <SplitTable
                 competitors={competitors}
+                courseControlCodes={courseDistancesData?.splitCourseDistances?.controls.map(
+                  control => control.controlCode
+                )}
                 isLoading={splitDataLoading}
-                error={splitDataError}
+                error={splitDataError ?? splitPublicationError}
               />
             </TabsContent>
 
@@ -416,7 +427,7 @@ export const ClassIndividualSplit: React.FC<ClassIndividualSplitProps> = ({
               <SplitChart
                 competitors={competitors}
                 isLoading={splitDataLoading}
-                error={splitDataError}
+                error={splitDataError ?? splitPublicationError}
                 courseDistances={
                   courseDistancesData?.splitCourseDistances ?? null
                 }

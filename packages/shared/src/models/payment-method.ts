@@ -1,4 +1,30 @@
 import { z } from 'zod';
+import { normalizeBankAccountIban } from './bank-account.js';
+
+export { normalizeBankAccountIban } from './bank-account.js';
+
+function createBankAccountSchema(allowEmpty: boolean) {
+  return z
+    .string()
+    .trim()
+    .refine(
+      value => (allowEmpty && value === '') || normalizeBankAccountIban(value) !== null,
+      'Enter a valid IBAN or Czech bank account.'
+    )
+    .transform(value => (value === '' ? '' : normalizeBankAccountIban(value)!));
+}
+
+export const bankAccountIbanSchema = createBankAccountSchema(false);
+
+export const PAYMENT_REFERENCE_MAX_LENGTH = 10;
+export const PAYMENT_REFERENCE_RANDOM_LENGTH = 8;
+export const PAYMENT_REFERENCE_PREFIX_MAX_LENGTH =
+  PAYMENT_REFERENCE_MAX_LENGTH - PAYMENT_REFERENCE_RANDOM_LENGTH;
+
+export const paymentReferencePrefixSchema = z
+  .string()
+  .max(PAYMENT_REFERENCE_PREFIX_MAX_LENGTH)
+  .refine(value => !/[^0-9]/.test(value), 'Payment reference prefix must contain only digits.');
 
 export const PAYMENT_METHOD_TYPES = [
   'OFEED_PAYMENT',
@@ -94,11 +120,13 @@ export const eventPaymentMethodConfigurationSchema = z.object({
 
 export const updateEventPaymentMethodsInputSchema = z
   .object({
+    entryPaymentLifetimeHours: z.number().int().min(1).max(8760).nullable().optional(),
+    paymentReferencePrefix: paymentReferencePrefixSchema.nullable().optional(),
     paymentMethods: z.array(eventPaymentMethodConfigurationSchema).min(1).max(4),
     bankAccount: z
       .object({
         bankAccountName: z.string().trim().max(191).nullable().optional(),
-        bankAccountIban: z.string().trim().max(34).nullable().optional(),
+        bankAccountIban: createBankAccountSchema(true).nullable().optional(),
       })
       .optional(),
   })
@@ -176,8 +204,8 @@ export type PaymentLinkVariables = z.infer<typeof paymentLinkVariablesSchema>;
 
 /**
  * Payment instructions encoded according to the Czech QR Platba / SPAYD
- * standard. The payload can be rendered as a QR code or passed to a banking
- * application through its `spayd://` URI handler.
+ * standard. Render the payload as a QR code for scanning or image import in a
+ * compatible banking application. SPAYD does not define a universal app URI.
  */
 export const qrPaymentInstructionSchema = z.object({
   payload: z.string().min(1),
@@ -216,7 +244,7 @@ export function createQrPaymentInstruction({
   message,
   constantSymbol = '0308',
 }: CreateQrPaymentInstructionInput): QrPaymentInstruction {
-  const normalizedIban = bankAccountIban.replaceAll(/\s/g, '').toUpperCase();
+  const normalizedIban = bankAccountIbanSchema.parse(bankAccountIban);
   const normalizedCurrency = spaydValue(currency).toUpperCase();
   const normalizedReference = spaydValue(paymentReference);
   const normalizedMessage = spaydValue(message);

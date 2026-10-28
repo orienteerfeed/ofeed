@@ -26,6 +26,28 @@ If you do not agree to those terms, do not submit a contribution.
 5. Update README.md and docs when behavior, API, or configuration changes.
 6. You may merge a Pull Request after required review approval.
 
+## Specs, decisions and documentation
+
+Use [docs/README.md](docs/README.md) as the documentation map. For non-trivial
+work, link the GitHub Issue in the pull request and relevant spec.
+
+- Write or update a [feature spec](docs/specs/README.md) before implementation:
+  goal, acceptance criteria, edge cases, API changes and test plan. Include the
+  spec with the code change.
+- Before architecture changes, read
+  [accepted ADRs](docs/architecture/adr/README.md) and record the new decision
+  using the MADR-lite template. Explain replacements with a superseding ADR
+  rather than silently changing an accepted decision.
+- Run checks from the [testing guide](docs/dev/testing.md) and report
+  limitations.
+- Update code-owned [API contracts](docs/api/README.md) and affected docs
+  together.
+- Keep notable changes under `Unreleased` in [CHANGELOG.md](CHANGELOG.md), using
+  Keep a Changelog categories. Release notes do not replace this local summary.
+- New documentation filenames use lowercase kebab-case; use `.gitkeep` for empty
+  directories. Agent plans in `docs/plans/` are temporary: remove or archive
+  them after completion, retaining durable decisions in specs and ADRs.
+
 ## Git Conventions
 
 ### Branch prefixes

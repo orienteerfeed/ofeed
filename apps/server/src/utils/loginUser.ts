@@ -1,4 +1,3 @@
-import { getJwtToken } from './jwtToken.js';
 import type { AppPrismaClient } from '../db/prisma-client.js';
 
 export const getLoginSuccessPayload = async ({
@@ -8,8 +7,6 @@ export const getLoginSuccessPayload = async ({
   userId: number;
   prisma: AppPrismaClient;
 }) => {
-  const token = getJwtToken({ userId });
-
   const dbResponse = await prisma.user.findFirst({
     where: {
       id: userId,
@@ -23,6 +20,10 @@ export const getLoginSuccessPayload = async ({
       role: true,
       organisation: true,
       emergencyContact: true,
+      active: true,
+      emailVerifiedAt: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 
@@ -33,7 +34,6 @@ export const getLoginSuccessPayload = async ({
   const privileges = dbResponse.role === 'ADMIN' ? ['ADMIN'] : [];
 
   const loginSuccessPayload = {
-    token,
     user: {
       userId: dbResponse.id,
       firstName: dbResponse.firstname,
@@ -42,6 +42,10 @@ export const getLoginSuccessPayload = async ({
       role: dbResponse.role,
       organisation: dbResponse.organisation,
       emergencyContact: dbResponse.emergencyContact,
+      active: dbResponse.active,
+      emailVerifiedAt: dbResponse.emailVerifiedAt,
+      createdAt: dbResponse.createdAt,
+      updatedAt: dbResponse.updatedAt,
     },
     privileges,
   };

@@ -50,6 +50,7 @@ export interface EntryOrderRow {
   contactLastname: string;
   totalAmount: number;
   currency: string;
+  paymentDueAt?: string | null;
   createdAt: string;
   updatedAt: string;
   items: EntryOrderItemRow[];
@@ -102,6 +103,7 @@ export const ENTRY_ORDERS_BY_EVENT = gql`
       eventId
       status
       paid
+      paymentDueAt
       paymentMethod
       paymentReference
       userId
@@ -132,6 +134,7 @@ export interface EntryOrderStatusHistoryRow {
   id: number;
   status: EntryStatus | null;
   paymentState: boolean | null;
+  paymentDueAt?: string | null;
   createdAt: string;
   changedByName: string | null;
 }
@@ -175,6 +178,7 @@ export const ENTRY_ORDER_BY_ID = gql`
       eventId
       status
       paid
+      paymentDueAt
       paymentMethod
       paymentReference
       qrPayment {

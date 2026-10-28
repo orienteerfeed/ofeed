@@ -50,6 +50,10 @@ Default local API URL: `http://localhost:3001`.
 - Readiness: `http://localhost:3001/readyz`
 - Metrics: `http://localhost:3001/metrics`
 
+See [Entry API integration contract](../../docs/entry-api-integration.md) for
+checkout validation, fee shapes, QR payload contents and competitor start-time
+rules.
+
 ## Environment
 
 Runtime environment lives in `apps/server/.env`; do not add a root runtime

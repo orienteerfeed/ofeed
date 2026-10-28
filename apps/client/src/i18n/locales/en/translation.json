@@ -1,5 +1,103 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Insights",
+      "Description": "Payment insights and event data checks.",
+      "Payments": "Received payments",
+      "PaymentsDescription": "Received payments, totals and closing report data.",
+      "Open": "Open insight",
+      "From": "Received from",
+      "To": "Received to",
+      "Method": "Method",
+      "Device": "Cash desk / device",
+      "Search": "Search",
+      "SearchPlaceholder": "Payment reference or contact name…",
+      "All": "All",
+      "Refresh": "Refresh",
+      "Export": "Export CSV",
+      "Print": "Print",
+      "Count": "Payment count",
+      "Cash": "Cash",
+      "QR": "QR",
+      "Total": "Total",
+      "PaidAt": "Received at",
+      "Reference": "Payment reference",
+      "Contact": "Contact",
+      "Amount": "Amount",
+      "Currency": "Currency",
+      "Operator": "Operator ID",
+      "RecordedAt": "Recorded at",
+      "Empty": "No received payments match the selected filters.",
+      "Error": "Could not load the payment insight.",
+      "Retry": "Try again",
+      "Generated": "Generated",
+      "Timezone": "Timezone",
+      "InvalidRange": "The start date must not be later than the end date.",
+      "Cards": {
+        "Title": "Timing-card check",
+        "Description": "Find competitors with missing cards or shared card numbers across all event classes.",
+        "Name": "Name",
+        "Registration": "Registration",
+        "Class": "Class",
+        "Organisation": "Club",
+        "BibNumber": "Bib number",
+        "Card": "Card",
+        "MissingCount": "Missing cards",
+        "DuplicateCount": "Duplicate card numbers",
+        "AffectedCount": "Competitors with duplicate cards",
+        "Missing": "Competitors without a card",
+        "Duplicates": "Duplicate cards",
+        "GroupSize": "Competitors in group",
+        "SearchPlaceholder": "Name, registration, bib, club or card",
+        "Loading": "Loading card report…",
+        "Stale": "Refresh failed. Displayed data is out of date; export and print are disabled.",
+        "Error": "Could not load the card report.",
+        "NoIssues": "All competitors have a card and no duplicate card numbers were found.",
+        "NoMatches": "No issues match the selected filters.",
+        "NoMissing": "No competitors without a card in this selection.",
+        "NoDuplicates": "No duplicate cards in this selection.",
+        "FullGroups": "Filters select whole groups. All competitors sharing a card remain visible, including those in other classes."
+      },
+      "Anomalies": {
+        "Title": "Anomaly analysis",
+        "Description": "Review suspicious first splits and start times.",
+        "Explanation": "Findings are suggestions for referee review, not proof of an incorrect start. Results are never changed automatically. The original scheduled start is not stored separately.",
+        "Method": "How detection works",
+        "Rules": "First splits require an imported first course control and at least eight other valid OK/Finished splits in the same class. Flagged times are below half the peer median, at least 30 seconds faster, and below the median minus three median absolute deviations. Start grids require five distinct times, a unique most common gap (at least 10 seconds, three occurrences) and at least 80% support within one second of a unique phase. Only StartList/WaveStart classes have start checks. Missing course data, insufficient samples and ambiguous grids are skipped. Start-unit warnings require assigned, current punch observations; missing observations do not rule out a start punch.",
+        "Affected": "Affected competitors",
+        "Type": "Finding type",
+        "Findings": "Findings",
+        "Coverage": "Analysis coverage",
+        "CoverageExplanation": "Coverage follows class and type filters; search only filters competitors. Counts show evaluated competitors out of all competitors in the class. Start-unit coverage includes only competitors with stored start punches. Skipped or partial checks do not establish that everyone is clear.",
+        "Status": "Status",
+        "Evaluated": "Evaluated",
+        "Total": "Total",
+        "NoIssues": "No anomalies found in the evaluated data. Review coverage for skipped checks.",
+        "NoData": "No checks could be evaluated with the available data. Review coverage below.",
+        "Control": "Control",
+        "Split": "First split",
+        "Median": "Peer median",
+        "Difference": "Difference",
+        "References": "Reference competitors",
+        "Interval": "Interval",
+        "Phase": "Grid offset",
+        "NearestStart": "Nearest grid start",
+        "ObservedStart": "Observed start punches",
+        "StartMode": "Start mode",
+        "StartTime": "Start time",
+        "FAST_FIRST_SPLIT": "Unusually fast first split",
+        "OFF_START_GRID": "Start outside class grid",
+        "START_PUNCH": "Observed start-unit punch",
+        "EVALUATED": "Evaluated",
+        "UNSUPPORTED_MODE": "Not applicable for this mode",
+        "NO_COURSE": "Missing verified course",
+        "AMBIGUOUS_FIRST_CONTROL": "Ambiguous first control",
+        "INSUFFICIENT_DATA": "Insufficient data",
+        "NO_RELIABLE_GRID": "No reliable start grid",
+        "Loading": "Loading anomaly report…",
+        "Error": "Could not load the anomaly report."
+      }
+    },
     "Admin": {
       "Common": {
         "Zone": "Admin Zone",
@@ -379,8 +477,8 @@
         "Verifying": "Verifying your email",
         "VerifyingDescription": "Please wait while we verify your email address.",
         "Verified": "Email verified",
-        "VerifiedDescription": "Your email has been verified and you are now signed in.",
-        "ContinueDescription": "You can now use OFeed with full access.",
+        "VerifiedDescription": "Your email address has been verified.",
+        "ContinueDescription": "Sign in to continue to OFeed.",
         "ContinueToApp": "Continue to OFeed",
         "AlreadyVerified": "Already verified",
         "AlreadyVerifiedDescription": "Your email address is already verified.",
@@ -568,7 +666,8 @@
           "status_change": "Status change",
           "late_start_change": "Late start change",
           "note_change": "Note change",
-          "external_id_change": "External ID change"
+          "external_id_change": "External ID change",
+          "punch_store": "Punch stored"
         },
         "OriginLabels": {
           "START": "Start",
@@ -639,6 +738,7 @@
           "Items": "Items",
           "Total": "Total",
           "Paid": "Paid",
+          "PaymentMethod": "Payment method",
           "Created": "Created",
           "Status": "Status",
           "Actions": "Actions"
@@ -655,6 +755,29 @@
         "Paid": {
           "Yes": "Yes",
           "No": "No"
+        },
+        "PaymentLedger": {
+          "Title": "Received payments",
+          "Record": "Record payment",
+          "Recorded": "Payment recorded.",
+          "Received": "Received",
+          "Balance": "Remaining",
+          "State": "State",
+          "Empty": "No payments have been recorded.",
+          "Unpaid": "Unpaid",
+          "Partial": "Partially paid",
+          "Paid": "Paid",
+          "Overpaid": "Overpaid",
+          "Methods": {
+            "CASH": "Cash",
+            "QR": "QR payment"
+          },
+          "DialogTitle": "Record received payment",
+          "Method": "Method",
+          "Amount": "Amount",
+          "PaidAt": "Received at",
+          "Device": "Cash desk / device",
+          "Confirm": "Record payment"
         },
         "Actions": {
           "Menu": "Actions",
@@ -787,6 +910,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Payment reference prefix",
+              "Help": "Optionally enter 1–2 digits before 8 random digits (10 total at most). Leave empty to use the two-digit year. Applies to new orders for all payment methods; existing references stay unchanged.",
+              "Invalid": "Enter up to 2 digits (0–9), or leave empty."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -821,7 +949,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Enter an IBAN or a Czech account, e.g. 2201340123/2010 or 19-2000145399/0800. Czech accounts are automatically converted to IBAN.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -857,6 +986,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Enter a valid IBAN or Czech account in prefix-number/bank-code format. Check the account digits.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1566,6 +1696,7 @@
         "Cancel": "Cancel"
       },
       "Entries": {
+        "Enter": "Enter now",
         "FreeEntry": "Free entry",
         "BirthYearRange": "Birth years {{from}}–{{to}}",
         "LoadError": "Failed to load entry availability.",
@@ -1801,7 +1932,12 @@
         "Title": "Pay via QR code",
         "Description": "Scan this code in your bank app to pre-fill the payment.",
         "QrCodeAriaLabel": "Payment QR code",
-        "OpenInBankApp": "Pay in bank app"
+        "ShareQr": "Share payment QR",
+        "DownloadQr": "Download QR",
+        "MobileInstructions": "Share the QR image to a supported banking app, or download it and import the image in your banking app.",
+        "ShareUnavailable": "Image sharing is not supported. The QR code will download; import it in your banking app.",
+        "ShareError": "Unable to share the QR code. Try downloading it.",
+        "ExportError": "Unable to download the QR code. Please try again."
       },
       "CashPayment": {
         "Title": "Pay in cash",
@@ -2002,5 +2138,24 @@
     "longitudeRange": "Longitude must be between -180 and 180",
     "zeroTimeRequired": "Zero time is required",
     "zeroTimeFormat": "Time must be in HH:mm or HH:mm:ss format"
+  },
+  "Sessions": {
+    "Title": "Device sessions",
+    "Current": "This device",
+    "Created": "Created",
+    "LastRefresh": "Last refreshed",
+    "Expires": "Expires",
+    "Revoke": "Revoke device",
+    "Confirm": "Revoke all sessions for this device? It will need to sign in again.",
+    "Cancel": "Cancel",
+    "Loading": "Loading sessions…",
+    "Error": "Unable to update device sessions.",
+    "LogoutUnconfirmed": "Signed out locally. Server revocation could not be confirmed; reconnect to complete logout.",
+    "RevocationDelay": "Revoked devices can use an existing access token for up to 15 minutes."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Payment deadline (hours)",
+    "Help": "Empty = no automatic cancellation. 1–8760 hours after a new order is received. Cash is excluded. Existing orders are unaffected.",
+    "Deadline": "If payment is not received by {{date}}, this order will be automatically cancelled."
   }
 }

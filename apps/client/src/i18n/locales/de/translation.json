@@ -1,5 +1,103 @@
 {
   "Pages": {
+    "Insights": {
+      "Title": "Übersichten",
+      "Description": "Zahlungsübersichten und Prüfung der Veranstaltungsdaten.",
+      "Payments": "Erhaltene Zahlungen",
+      "PaymentsDescription": "Erhaltene Zahlungen, Summen und Abschlussdaten.",
+      "Open": "Übersicht öffnen",
+      "From": "Erhalten ab",
+      "To": "Erhalten bis",
+      "Method": "Methode",
+      "Device": "Kasse / Gerät",
+      "Search": "Suchen",
+      "SearchPlaceholder": "Zahlungsreferenz oder Kontaktname…",
+      "All": "Alle",
+      "Refresh": "Aktualisieren",
+      "Export": "CSV exportieren",
+      "Print": "Drucken",
+      "Count": "Anzahl Zahlungen",
+      "Cash": "Bar",
+      "QR": "QR",
+      "Total": "Gesamt",
+      "PaidAt": "Eingangszeit",
+      "Reference": "Zahlungsreferenz",
+      "Contact": "Kontakt",
+      "Amount": "Betrag",
+      "Currency": "Währung",
+      "Operator": "Bediener-ID",
+      "RecordedAt": "Erfasst am",
+      "Empty": "Keine erhaltenen Zahlungen für die gewählten Filter.",
+      "Error": "Die Zahlungsübersicht konnte nicht geladen werden.",
+      "Retry": "Erneut versuchen",
+      "Generated": "Erstellt",
+      "Timezone": "Zeitzone",
+      "InvalidRange": "Das Startdatum darf nicht nach dem Enddatum liegen.",
+      "Cards": {
+        "Title": "Chipkontrolle",
+        "Description": "Teilnehmer ohne Chip und gemeinsame Chipnummern in allen Kategorien der Veranstaltung finden.",
+        "Name": "Name",
+        "Registration": "Registrierungsnummer",
+        "Class": "Kategorie",
+        "Organisation": "Verein",
+        "BibNumber": "Startnummer",
+        "Card": "Chip",
+        "MissingCount": "Fehlende Chips",
+        "DuplicateCount": "Doppelte Chipnummern",
+        "AffectedCount": "Teilnehmer mit doppeltem Chip",
+        "Missing": "Teilnehmer ohne Chip",
+        "Duplicates": "Doppelte Chips",
+        "GroupSize": "Teilnehmer in der Gruppe",
+        "SearchPlaceholder": "Name, Registrierung, Startnummer, Verein oder Chip",
+        "Loading": "Chipbericht wird geladen…",
+        "Stale": "Aktualisierung fehlgeschlagen. Die angezeigten Daten sind veraltet; Export und Druck sind deaktiviert.",
+        "Error": "Der Chipbericht konnte nicht geladen werden.",
+        "NoIssues": "Alle Teilnehmer haben einen Chip. Keine doppelten Chipnummern gefunden.",
+        "NoMatches": "Keine Probleme entsprechen den gewählten Filtern.",
+        "NoMissing": "Keine Teilnehmer ohne Chip in dieser Auswahl.",
+        "NoDuplicates": "Keine doppelten Chips in dieser Auswahl.",
+        "FullGroups": "Filter wählen ganze Gruppen aus. Alle Teilnehmer mit demselben Chip bleiben sichtbar, auch aus anderen Kategorien."
+      },
+      "Anomalies": {
+        "Title": "Anomalieanalyse",
+        "Description": "Verdächtige erste Zwischenzeiten und Startzeiten prüfen.",
+        "Explanation": "Befunde sind Hinweise zur Prüfung durch das Schiedsgericht, kein Beweis für einen Fehlstart. Ergebnisse werden nicht automatisch geändert. Die ursprüngliche geplante Startzeit wird nicht separat gespeichert.",
+        "Method": "So funktioniert die Erkennung",
+        "Rules": "Die erste Zwischenzeit erfordert einen importierten ersten Streckenposten und mindestens acht weitere gültige OK/Finished-Zeiten derselben Kategorie. Auffällige Zeiten liegen unter der Hälfte des Medians, sind mindestens 30 Sekunden schneller und liegen unter dem Median abzüglich der dreifachen medianen absoluten Abweichung. Das Startraster erfordert fünf verschiedene Zeiten, einen eindeutig häufigsten Abstand (mindestens 10 Sekunden, drei Vorkommen) und mindestens 80 % Übereinstimmung mit einer eindeutigen Phase bei einer Sekunde Toleranz. Startprüfungen gelten nur für StartList/WaveStart. Fehlende Strecken, kleine Stichproben und uneindeutige Raster werden übersprungen. Startstempel erfordern aktuelle, zugeordnete Beobachtungen; fehlende Beobachtungen schließen einen Startstempel nicht aus.",
+        "Affected": "Betroffene Teilnehmer",
+        "Type": "Befundtyp",
+        "Findings": "Befunde",
+        "Coverage": "Prüfabdeckung",
+        "CoverageExplanation": "Die Abdeckung berücksichtigt Kategorie und Typ; die Suche filtert nur Teilnehmer. Angezeigt werden geprüfte Teilnehmer und die Gesamtzahl der Kategorie. Die Startstempelprüfung umfasst nur Teilnehmer mit gespeicherten Startstempeln. Übersprungene oder teilweise Prüfungen bestätigen keinen fehlerfreien Ablauf.",
+        "Status": "Status",
+        "Evaluated": "Geprüft",
+        "Total": "Gesamt",
+        "NoIssues": "Keine Anomalien in den geprüften Daten gefunden. Übersprungene Prüfungen beachten.",
+        "NoData": "Mit den verfügbaren Daten konnte keine Prüfung durchgeführt werden. Siehe Prüfabdeckung.",
+        "Control": "Posten",
+        "Split": "Erste Zwischenzeit",
+        "Median": "Median der anderen",
+        "Difference": "Differenz",
+        "References": "Referenzteilnehmer",
+        "Interval": "Intervall",
+        "Phase": "Rasterversatz",
+        "NearestStart": "Nächster Rasterstart",
+        "ObservedStart": "Beobachtete Startstempel",
+        "StartMode": "Startmodus",
+        "StartTime": "Startzeit",
+        "FAST_FIRST_SPLIT": "Ungewöhnlich schnelle erste Zwischenzeit",
+        "OFF_START_GRID": "Start außerhalb des Kategorierasters",
+        "START_PUNCH": "Beobachteter Startstempel",
+        "EVALUATED": "Geprüft",
+        "UNSUPPORTED_MODE": "Für diesen Modus nicht anwendbar",
+        "NO_COURSE": "Verifizierte Strecke fehlt",
+        "AMBIGUOUS_FIRST_CONTROL": "Erster Posten nicht eindeutig",
+        "INSUFFICIENT_DATA": "Unzureichende Daten",
+        "NO_RELIABLE_GRID": "Kein zuverlässiges Startraster",
+        "Loading": "Anomaliebericht wird geladen…",
+        "Error": "Der Anomaliebericht konnte nicht geladen werden."
+      }
+    },
     "Admin": {
       "Common": {
         "Zone": "Adminbereich",
@@ -373,8 +471,8 @@
         "Verifying": "E-Mail wird verifiziert",
         "VerifyingDescription": "Bitte warten, wir verifizieren deine E-Mail-Adresse.",
         "Verified": "E-Mail verifiziert",
-        "VerifiedDescription": "Deine E-Mail wurde verifiziert und du bist jetzt angemeldet.",
-        "ContinueDescription": "Du hast nun vollen Zugang zu OFeed.",
+        "VerifiedDescription": "Deine E-Mail-Adresse wurde bestätigt.",
+        "ContinueDescription": "Melde dich an, um OFeed weiter zu nutzen.",
         "ContinueToApp": "Weiter zu OFeed",
         "AlreadyVerified": "Bereits verifiziert",
         "AlreadyVerifiedDescription": "Deine E-Mail-Adresse ist bereits verifiziert.",
@@ -818,6 +916,7 @@
           "Items": "Positionen",
           "Total": "Gesamt",
           "Paid": "Bezahlt",
+          "PaymentMethod": "Zahlungsart",
           "Created": "Erstellt",
           "Status": "Status",
           "Actions": "Aktionen"
@@ -834,6 +933,29 @@
         "Paid": {
           "Yes": "Ja",
           "No": "Nein"
+        },
+        "PaymentLedger": {
+          "Title": "Erhaltene Zahlungen",
+          "Record": "Zahlung erfassen",
+          "Recorded": "Zahlung erfasst.",
+          "Received": "Erhalten",
+          "Balance": "Offen",
+          "State": "Status",
+          "Empty": "Keine Zahlungen erfasst.",
+          "Unpaid": "Unbezahlt",
+          "Partial": "Teilweise bezahlt",
+          "Paid": "Bezahlt",
+          "Overpaid": "Überzahlt",
+          "Methods": {
+            "CASH": "Bar",
+            "QR": "QR-Zahlung"
+          },
+          "DialogTitle": "Erhaltene Zahlung erfassen",
+          "Method": "Methode",
+          "Amount": "Betrag",
+          "PaidAt": "Erhalten am",
+          "Device": "Kasse / Gerät",
+          "Confirm": "Zahlung erfassen"
         },
         "Actions": {
           "Menu": "Aktionen",
@@ -1021,7 +1143,8 @@
           "status_change": "Statusänderung",
           "late_start_change": "Verspäteter Start",
           "note_change": "Notizänderung",
-          "external_id_change": "Externe ID-Änderung"
+          "external_id_change": "Externe ID-Änderung",
+          "punch_store": "Stempel gespeichert"
         },
         "OriginLabels": {
           "START": "Start",
@@ -1197,6 +1320,11 @@
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
+            "PaymentReferencePrefix": {
+              "Label": "Präfix der Zahlungsreferenz",
+              "Help": "Optional 1–2 Ziffern vor 8 zufälligen Ziffern (insgesamt höchstens 10). Leer lassen, um die zweistellige Jahreszahl zu verwenden. Gilt für neue Bestellungen bei allen Zahlungsarten; bestehende Referenzen bleiben erhalten.",
+              "Invalid": "Bis zu 2 Ziffern (0–9) eingeben oder leer lassen."
+            },
             "Title": "Payment methods",
             "Description": "Choose which payment methods customers can use for this event and set their display order.",
             "Loading": "Loading payment methods…",
@@ -1231,7 +1359,8 @@
                 "BankAccountName": "Account name",
                 "BankAccountNamePlaceholder": "Organizer bank account",
                 "BankAccountIban": "IBAN / bank account",
-                "BankAccountIbanPlaceholder": "CZ6508000000192000145399",
+                "BankAccountIbanPlaceholder": "2201340123/2010, CZ8020100000002201340123",
+                "BankAccountHelp": "Gib eine IBAN oder eine tschechische Kontonummer ein, z. B. 2201340123/2010 oder 19-2000145399/0800. Tschechische Kontonummern werden automatisch in IBAN umgewandelt.",
                 "BankAccountMissing": "Configure the organizer’s bank account before enabling QR payments."
               },
               "Cash": {
@@ -1267,6 +1396,7 @@
               "AtLeastOne": "Enable at least one payment method.",
               "OFeedUnavailable": "Unavailable OFeed Payment cannot be enabled.",
               "BankAccountRequired": "Bank account required",
+              "InvalidBankAccount": "Gib eine gültige IBAN oder tschechische Kontonummer im Format Präfix-Kontonummer/Bankleitzahl ein. Prüfe die Ziffern.",
               "DisplayNameRequired": "Payment method name is required.",
               "PaymentLinkRequired": "Payment link is required.",
               "InvalidPaymentLink": "Enter an absolute HTTPS URL with a valid hostname and no spaces.",
@@ -1494,6 +1624,7 @@
         }
       },
       "Entries": {
+        "Enter": "Nachmelden",
         "FreeEntry": "Kostenlose Anmeldung",
         "BirthYearRange": "Jahrgänge {{from}}–{{to}}",
         "LoadError": "Anmeldeverfügbarkeit konnte nicht geladen werden.",
@@ -1642,7 +1773,12 @@
         "Title": "Per QR-Code bezahlen",
         "Description": "Scanne diesen Code in deiner Banking-App, um die Zahlung vorauszufüllen.",
         "QrCodeAriaLabel": "Zahlungs-QR-Code",
-        "OpenInBankApp": "In Banking-App bezahlen"
+        "ShareQr": "Zahlungs-QR teilen",
+        "DownloadQr": "QR herunterladen",
+        "MobileInstructions": "Teile das QR-Bild mit einer unterstützten Banking-App oder lade es herunter und importiere das Bild in deiner Banking-App.",
+        "ShareUnavailable": "Das Teilen von Bildern wird nicht unterstützt. Der QR-Code wird heruntergeladen; importiere ihn in deiner Banking-App.",
+        "ShareError": "Der QR-Code konnte nicht geteilt werden. Versuche, ihn herunterzuladen.",
+        "ExportError": "Der QR-Code konnte nicht heruntergeladen werden. Versuche es erneut."
       },
       "CashPayment": {
         "Title": "Bar bezahlen",
@@ -1767,5 +1903,24 @@
     "Routes": {
       "Board": "Board"
     }
+  },
+  "Sessions": {
+    "Title": "Gerätesitzungen",
+    "Current": "Dieses Gerät",
+    "Created": "Erstellt",
+    "LastRefresh": "Zuletzt erneuert",
+    "Expires": "Gültig bis",
+    "Revoke": "Gerät abmelden",
+    "Confirm": "Alle Sitzungen dieses Geräts widerrufen? Eine erneute Anmeldung ist erforderlich.",
+    "Cancel": "Abbrechen",
+    "Loading": "Sitzungen werden geladen…",
+    "Error": "Gerätesitzungen konnten nicht aktualisiert werden.",
+    "LogoutUnconfirmed": "Lokal abgemeldet. Der Widerruf auf dem Server wurde nicht bestätigt; stellen Sie die Verbindung wieder her.",
+    "RevocationDelay": "Abgemeldete Geräte können ein vorhandenes Zugriffstoken noch bis zu 15 Minuten verwenden."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Zahlungsfrist (Stunden)",
+    "Help": "Leer = keine automatische Stornierung. 1–8760 Stunden ab Eingang einer neuen Anmeldung. Barzahlung ausgenommen. Bestehende Anmeldungen bleiben unverändert.",
+    "Deadline": "Geht die Zahlung nicht bis {{date}} ein, wird diese Anmeldung automatisch storniert."
   }
 }

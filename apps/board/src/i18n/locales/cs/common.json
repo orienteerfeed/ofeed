@@ -24,8 +24,16 @@
       "label": "Obsah tabulky",
       "pinnedLeaders": "Počet připnutých vedoucích",
       "showUnfinished": "Zobrazit nedokončené (startovka, běžící)",
+      "hideEmptyCategories": "Skrýt kategorie bez závodníků",
       "compactMode": "Kompaktní mód (bez oddílu, čipu)",
+      "showClub": "Oddílový mód (zobrazit oddíl)",
+      "showRegistration": "Registrační mód (zobrazit registrační číslo)",
       "showEmojis": "Zobrazit emoji v tabulce"
+    },
+    "commentator": {
+      "label": "Komentátor",
+      "announceWinners": "Hlasem oznamovat nové vedoucí kategorií",
+      "enableSound": "🔊 Klikněte pro zapnutí zvuku komentátora"
     },
     "classes": {
       "label": "Zobrazené kategorie",
@@ -36,14 +44,25 @@
         "name": "Název",
         "col": "Sloupec",
         "color": "Barva",
-        "order": "Pořadí"
-      }
+        "order": "Pořadí",
+        "mode": "Režim",
+        "places": "Místa"
+      },
+      "sourceHint": "Nastavení definované zdrojem dat (např. v OFeedu) má přednost a zde je zamčené.",
+      "fromSource": "Nastaveno ve zdroji dat"
     },
     "colorOverride": {
       "auto": "Auto (z datového zdroje)",
       "male": "M – modrá (muži)",
       "female": "F – růžová (ženy)",
       "neutral": "X – šedá (neutrální)"
-    }
+    },
+    "resultMode": {
+      "auto": "Auto",
+      "Default": "Pořadí",
+      "Unordered": "A–Z",
+      "UnorderedNoTimes": "A–Z, bez časů"
+    },
+    "awardedPlaces": "Oceňovaná místa (zvýrazněná)"
   }
 }

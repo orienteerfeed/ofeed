@@ -1,5 +1,6 @@
 import {
   createQrPaymentInstruction,
+  normalizeBankAccountIban,
   type EntryItemPreviousValue,
   type QrPaymentInstruction,
 } from '@repo/shared';
@@ -160,6 +161,7 @@ export const EntryRef = builder.prismaObject('Entry', {
       type: EntryStatusRef,
       resolve: (entry) => entry.status,
     }),
+    paymentDueAt: t.expose('paymentDueAt', { type: 'DateTime', nullable: true }),
     paid: t.exposeBoolean('paid'),
     paymentMethod: t.field({
       type: PaymentMethodTypeRef,
@@ -186,9 +188,11 @@ export const EntryRef = builder.prismaObject('Entry', {
       },
       resolve: (entry) => {
         if (entry.paymentMethod !== 'QR_PAYMENT' || !entry.event.bankAccountIban) return null;
+        const iban = normalizeBankAccountIban(entry.event.bankAccountIban);
+        if (!iban) return null;
 
         return createQrPaymentInstruction({
-          bankAccountIban: entry.event.bankAccountIban,
+          bankAccountIban: iban,
           bankAccountName: entry.event.bankAccountName,
           amount: entry.totalAmount.toNumber(),
           currency: entry.currency,

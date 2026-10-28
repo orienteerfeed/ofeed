@@ -213,3 +213,18 @@ describe('resolveFormBirthYear', () => {
     ).toBeNull();
   });
 });
+
+describe('shared start modes', () => {
+  it.each(['MassStart', 'WaveStart', 'PursuitStart'])(
+    '%s does not require an exclusive slot',
+    startMode => {
+      expect(
+        validateEntryForm(
+          values({ startTime: '' }),
+          { ...OPEN_CLASS, startMode },
+          { referenceYear: REFERENCE_YEAR }
+        )
+      ).toEqual({});
+    }
+  );
+});

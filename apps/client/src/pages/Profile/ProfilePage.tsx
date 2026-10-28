@@ -1,3 +1,4 @@
+import { DeviceSessions } from '@/components/organisms/DeviceSessions/DeviceSessions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -278,8 +279,14 @@ const RESEND_EMAIL_VERIFICATION_MUTATION = gql`
 `;
 
 const DELETE_CURRENT_ACCOUNT_MUTATION = gql`
-  mutation DeleteCurrentAccount($currentPassword: String!, $deleteEvents: Boolean) {
-    deleteCurrentAccount(currentPassword: $currentPassword, deleteEvents: $deleteEvents)
+  mutation DeleteCurrentAccount(
+    $currentPassword: String!
+    $deleteEvents: Boolean
+  ) {
+    deleteCurrentAccount(
+      currentPassword: $currentPassword
+      deleteEvents: $deleteEvents
+    )
   }
 `;
 
@@ -757,6 +764,7 @@ export const ProfilePage = () => {
         }
 
         passwordChangeForm.reset();
+        signout();
 
         toast({
           title: t('Operations.Success', { ns: 'common' }),
@@ -863,8 +871,7 @@ export const ProfilePage = () => {
       signout();
       void navigate({ to: '/' });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : undefined;
+      const message = error instanceof Error ? error.message : undefined;
       toast({
         title: t('Operations.Error', { ns: 'common' }),
         description:
@@ -1649,6 +1656,7 @@ export const ProfilePage = () => {
             </TabsContent>
 
             <TabsContent value="security" className="space-y-4">
+              <DeviceSessions />
               <Card>
                 <CardHeader>
                   <CardTitle>
@@ -1796,7 +1804,7 @@ export const ProfilePage = () => {
 
               <Dialog
                 open={isDeleteAccountDialogOpen}
-                onOpenChange={(open) => {
+                onOpenChange={open => {
                   setIsDeleteAccountDialogOpen(open);
                   if (!open) {
                     setDeleteAccountPassword('');
@@ -1825,9 +1833,7 @@ export const ProfilePage = () => {
                         type="password"
                         autoComplete="current-password"
                         value={deleteAccountPassword}
-                        onChange={(e) =>
-                          setDeleteAccountPassword(e.target.value)
-                        }
+                        onChange={e => setDeleteAccountPassword(e.target.value)}
                         placeholder={t(
                           'Pages.Profile.Security.DeleteAccount.PasswordPlaceholder'
                         )}
@@ -1837,7 +1843,7 @@ export const ProfilePage = () => {
                       <Checkbox
                         id="deleteEventsCheckbox"
                         checked={deleteEventsChecked}
-                        onCheckedChange={(checked) =>
+                        onCheckedChange={checked =>
                           setDeleteEventsChecked(checked === true)
                         }
                         className="mt-0.5"

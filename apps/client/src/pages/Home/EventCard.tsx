@@ -19,6 +19,8 @@ interface EventCardProps {
 
 export const EventCard = ({ event }: EventCardProps) => {
   const locationLabel = getEventLocationLabel(event);
+  const canEnter =
+    !event.relay && event.entriesConfigured && event.entriesStatus === 'OPEN';
 
   const getRandomEventPlaceholder = () => {
     const randomNum = Math.floor(Math.random() * 5) + 1; // 1-5
@@ -101,8 +103,16 @@ export const EventCard = ({ event }: EventCardProps) => {
             to="/events/$eventId"
             params={{ eventId: event.id }}
             search={{ tab: 'info' }}
+            hash={canEnter ? 'entries' : ''}
+            hashScrollIntoView={false}
           >
-            {t('View', { ns: 'common' })} {t('Pages.Event.Tabs.Detail')}
+            {canEnter ? (
+              t('Pages.Event.Entries.Enter')
+            ) : (
+              <>
+                {t('View', { ns: 'common' })} {t('Pages.Event.Tabs.Detail')}
+              </>
+            )}
           </Link>
         </Button>
       </CardContent>

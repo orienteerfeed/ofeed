@@ -21,6 +21,20 @@ datasource db {
 //   url      = "file:./dev.db"
 // }
 
+model IdempotencyResponse {
+  id          String   @id @db.Char(64)
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  requestHash String   @db.Char(64)
+  status      Int      @db.UnsignedSmallInt
+  contentType String   @db.VarChar(100)
+  body        String   @db.LongText
+  expiresAt   DateTime @db.DateTime(3)
+
+  @@index([eventId, expiresAt])
+  @@index([expiresAt])
+}
+
 model Country {
   countryCode String  @id @db.Char(2)
   countryName String
@@ -191,12 +205,14 @@ model User {
   updatedAt              DateTime                 @updatedAt
   events                 Event[]
   userCards              UserCard[]
+  punchReceipts          PunchReceipt[]
   protocols              Protocol[]               @relation("ProtocolAuthor")
   processedProtocols     Protocol[]               @relation("ProtocolProcessedByUser")
   oAuthClients           OAuthClient[]
   oAuthAccessToken       OAuthAccessToken[]
   oAuthAuthorizationCode OAuthAuthorizationCode[]
   oAuthRefreshToken      OAuthRefreshToken[]
+  deviceSessions         DeviceSession[]
   passwordResetTokens    PasswordResetToken[]
   entries                Entry[]
   entryStatusChanges     EntryStatusHistory[]
@@ -239,6 +255,8 @@ model Currency {
 }
 
 model Event {
+  punches                      Punch[]
+  punchReceipts                PunchReceipt[]
   id                           String                         @id @default(cuid())
   slug                         String?                        @unique @db.VarChar(64)
   sport                        Sport                          @relation(fields: [sportId], references: [id])
@@ -271,6 +289,8 @@ model Event {
   vatRate                      Decimal?                       @db.Decimal(5, 2)
   lateEntryFeePercent          Decimal?                       @db.Decimal(5, 2)
   ofeedPaymentAvailable        Boolean                        @default(false)
+  entryPaymentLifetimeHours    Int?
+  paymentReferencePrefix       String?                        @db.VarChar(2)
   bankAccountIban              String?                        @db.VarChar(34)
   bankAccountName              String?                        @db.VarChar(191)
   splitPublicationMode         SplitPublicationMode           @default(UNRESTRICTED)
@@ -291,6 +311,7 @@ model Event {
   services                     EventService[]
   paymentMethods               EventPaymentMethod[]
   entries                      Entry[]
+  idempotencyResponses         IdempotencyResponse[]
   rentalCards                  EventRentalCard[]
 
   controls   Control[]
@@ -396,31 +417,61 @@ model EventRentalCard {
 // entry shop. Competitors are propagated into `Competitor` only after the
 // order is approved and processed (see EntryItem.competitorId).
 model Entry {
-  id               String               @id @default(cuid())
-  event            Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id               String                  @id @default(cuid())
+  event            Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId          String
-  status           EntryStatus          @default(RECEIVED)
-  paid             Boolean              @default(false)
+  status           EntryStatus             @default(RECEIVED)
+  paid             Boolean                 @default(false)
   paymentMethod    EventPaymentMethodType?
   // Variable symbol used to pair incoming payments; unique per event.
-  paymentReference String               @db.VarChar(10)
-  user             User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId           Int?                 @db.UnsignedInt
-  contactEmail     String               @db.VarChar(254)
-  contactFirstname String               @db.VarChar(191)
-  contactLastname  String               @db.VarChar(191)
-  totalAmount      Decimal              @db.Decimal(10, 2)
+  paymentDueAt     DateTime?
+  paymentReference String                  @db.VarChar(10)
+  user             User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId           Int?                    @db.UnsignedInt
+  contactEmail     String                  @db.VarChar(254)
+  contactFirstname String                  @db.VarChar(191)
+  contactLastname  String                  @db.VarChar(191)
+  totalAmount      Decimal                 @db.Decimal(10, 2)
   // ISO 4217 alpha-3 snapshot of the event currency at order time.
-  currency         String               @db.Char(3)
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+  currency         String                  @db.Char(3)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
   items            EntryItem[]
   addOnItems       EntryAddOnItem[]
   statusHistory    EntryStatusHistory[]
+  payments         EntryPayment[]
 
+  @@unique([eventId, id], map: "Entry_event_id_uq")
   @@unique([eventId, paymentReference], map: "Entry_event_payment_reference_uq")
   @@index([eventId, status], map: "Entry_event_status_idx")
+  @@index([status, paid, paymentDueAt], map: "Entry_payment_expiry_idx")
   @@index([userId], map: "Entry_user_idx")
+}
+
+enum EntryPaymentMethod {
+  CASH
+  QR
+}
+
+model EntryPayment {
+  id              String             @id @default(cuid())
+  entry           Entry              @relation(fields: [eventId, entryId], references: [eventId, id], onDelete: Restrict)
+  eventId         String
+  entryId         String
+  clientPaymentId String             @db.Char(36)
+  method          EntryPaymentMethod
+  amount          Decimal            @db.Decimal(10, 2)
+  currency        String             @db.Char(3)
+  paidAt          DateTime           @db.DateTime(3)
+  deviceId        String             @db.VarChar(191)
+  // Immutable authenticated identity snapshot, independent of user deletion.
+  operatorId      Int                @db.UnsignedInt
+  recordedAt      DateTime           @default(now()) @db.DateTime(3)
+
+  @@unique([eventId, clientPaymentId], map: "EntryPayment_event_client_uq")
+  @@index([eventId, recordedAt, id], map: "EntryPayment_event_recorded_idx")
+  @@index([eventId, deviceId, recordedAt], map: "EntryPayment_event_device_recorded_idx")
+  @@index([eventId, entryId], map: "EntryPayment_event_entry_idx")
 }
 
 // A single competitor entry inside an entry order. Fee amounts are snapshots
@@ -502,16 +553,16 @@ model EntryAddOnItem {
 // order detail view's payment/status timeline. Not a record of actual bank
 // transactions — see `Entry.paymentReference` for bank payment pairing.
 model EntryStatusHistory {
-  id          Int         @id @default(autoincrement()) @db.UnsignedInt
-  entry       Entry       @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  entryId     String
+  id           Int          @id @default(autoincrement()) @db.UnsignedInt
+  entry        Entry        @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId      String
   // Null for payment-only changes; populated for lifecycle status transitions.
   status       EntryStatus?
   // Null for lifecycle changes; true/false records a manual payment update.
   paymentState Boolean?
-  changedBy   User?       @relation(fields: [changedById], references: [id], onDelete: SetNull)
-  changedById Int?        @db.UnsignedInt
-  createdAt   DateTime    @default(now())
+  changedBy    User?        @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  changedById  Int?         @db.UnsignedInt
+  createdAt    DateTime     @default(now())
 
   @@index([entryId], map: "EntryStatusHistory_entry_idx")
 }
@@ -693,14 +744,17 @@ model Competitor {
   updatedAt             DateTime      @default(now()) @updatedAt
   externalId            String?
   protocols             Protocol[]
+  punches               Punch[]
   splits                Split[]
   entryItems            EntryItem[]
 
   @@unique([classId, externalId], map: "Competitor_class_external_uq")
+  @@index([card, classId], map: "Competitor_card_class_idx")
   @@index([organisationId])
 }
 
 model Split {
+  punch        Punch?
   id           Int        @id @default(autoincrement()) @db.UnsignedInt
   competitorId Int        @db.UnsignedInt
   competitor   Competitor @relation(fields: [competitorId], references: [id])
@@ -1008,6 +1062,7 @@ enum ProtocolType {
   late_start_change
   note_change
   external_id_change
+  punch_store
 }
 
 enum ProtocolProcessedByType {
@@ -1095,4 +1150,79 @@ enum CourseControlInstruction {
   FUNNEL_TAPED_ROUTE
   MANDATORY_CROSSING_POINT
   MANDATORY_OUT_OF_BOUNDS_AREA_PASSAGE
+}
+
+// Physical observations are distinct from replaceable elapsed-time projections.
+model Punch {
+  id            Int            @id @default(autoincrement()) @db.UnsignedInt
+  eventId       String
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  card          Int            @db.UnsignedInt
+  controlCode   Int
+  punchTime     DateTime       @db.DateTime(3)
+  competitorId  Int?           @db.UnsignedInt
+  competitor    Competitor?    @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+  splitId       Int?           @unique @db.UnsignedInt
+  split         Split?         @relation(fields: [splitId], references: [id], onDelete: SetNull)
+  appliedSource PunchSource?
+  superseded    Boolean        @default(false)
+  receipts      PunchReceipt[]
+
+  @@unique([eventId, card, controlCode, punchTime], map: "Punch_physical_uq")
+  @@index([eventId, card, competitorId], map: "Punch_matching_idx")
+  @@index([competitorId])
+}
+
+model PunchReceipt {
+  id            Int         @id @default(autoincrement()) @db.UnsignedInt
+  eventId       String
+  event         Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  deviceId      String      @db.VarChar(128)
+  clientPunchId String      @db.Char(36)
+  source        PunchSource
+  punchId       Int         @db.UnsignedInt
+  punch         Punch       @relation(fields: [punchId], references: [id], onDelete: Cascade)
+  stationSerial Int?        @db.UnsignedInt
+  receivedAt    DateTime    @db.DateTime(3)
+  storedAt      DateTime    @default(now()) @db.DateTime(3)
+  authorId      Int         @db.UnsignedInt
+  author        User        @relation(fields: [authorId], references: [id])
+
+  @@unique([eventId, deviceId, clientPunchId], map: "PunchReceipt_retry_uq")
+  @@index([punchId])
+}
+
+enum PunchSource {
+  SRR
+  READOUT
+}
+
+model DeviceSession {
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  userId            Int      @db.UnsignedInt
+  deviceId          String   @db.VarChar(36)
+  deviceName        String   @db.VarChar(100)
+  createdAt         DateTime @default(now())
+  lastRefreshedAt   DateTime @default(now())
+  expiresAt         DateTime
+  absoluteExpiresAt DateTime
+  revokedAt         DateTime?
+  revocationReason  String?  @db.VarChar(32)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generations       SessionRefreshToken[]
+
+  @@index([userId, deviceId])
+  @@index([absoluteExpiresAt])
+}
+
+model SessionRefreshToken {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  familyId     String   @db.VarChar(36)
+  tokenHash    String   @unique @db.Char(64)
+  generation   Int
+  consumedAt   DateTime?
+  replacementId String? @db.VarChar(36)
+  family       DeviceSession @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, generation])
 }
