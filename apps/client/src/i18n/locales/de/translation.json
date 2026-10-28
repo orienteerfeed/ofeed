@@ -1625,6 +1625,9 @@
       },
       "Entries": {
         "Enter": "Nachmelden",
+        "PlacesRemaining_one": "{{count}} Platz frei",
+        "PlacesRemaining_other": "{{count}} Plätze frei",
+        "Occupancy": "{{count}} von {{capacity}} belegt",
         "FreeEntry": "Kostenlose Anmeldung",
         "BirthYearRange": "Jahrgänge {{from}}–{{to}}",
         "LoadError": "Anmeldeverfügbarkeit konnte nicht geladen werden.",

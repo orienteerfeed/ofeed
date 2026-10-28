@@ -794,6 +794,10 @@
       },
       "Entries": {
         "Enter": "S’inscrire",
+        "PlacesRemaining_one": "{{count}} place restante",
+        "PlacesRemaining_many": "{{count}} places restantes",
+        "PlacesRemaining_other": "{{count}} places restantes",
+        "Occupancy": "{{count}} sur {{capacity}} occupées",
         "FreeEntry": "Inscription gratuite",
         "BirthYearRange": "Années de naissance {{from}}–{{to}}",
         "LoadError": "Impossible de charger la disponibilité des inscriptions.",

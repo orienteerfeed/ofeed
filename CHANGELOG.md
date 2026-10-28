@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Compact public entry category cards into a two-column mobile grid and show
+  remaining places, with occupancy and birth-year details in a tooltip.
+
 ### Added
 
 - Optional event payment lifetime with automatic cancellation of unpaid received

@@ -57,6 +57,13 @@ does not itself mean payment was received or competitors were processed.
   frontend host; API hosts and request Host headers do not determine asset URLs.
   No additional environment variable is required.
 
+- AC-12: Public entry class cards show the server-provided `availableCount` in
+  the lower right, with localized plural forms. Mobile cards use a compact
+  two-column grid (four cards in two rows), smaller typography and spacing.
+  Occupancy and birth-year limits are supplementary tooltip content, also
+  exposed to assistive technology. Class selection stays keyboard accessible;
+  the entry form retains eligibility details on touch devices. No API changes.
+
 ## Edge cases and API
 
 Class eligibility, unavailable rental, closed/not-yet-open entries, missing

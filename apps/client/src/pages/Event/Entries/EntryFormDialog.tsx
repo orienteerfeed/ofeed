@@ -551,6 +551,15 @@ export function EntryFormDialog({
                       ),
                     })
                   : t('Pages.Event.Entries.Form.DescriptionFree')}
+                {(entryClass.birthYearFrom !== null ||
+                  entryClass.birthYearTo !== null) && (
+                  <span className="mt-1 block">
+                    {t('Pages.Event.Entries.BirthYearRange', {
+                      from: entryClass.birthYearFrom ?? '…',
+                      to: entryClass.birthYearTo ?? '…',
+                    })}
+                  </span>
+                )}
               </DialogDescription>
             </DialogHeader>
 
