@@ -1701,6 +1701,11 @@
       "Entries": {
         "Enter": "Dohlásit se",
         "FreeEntry": "Zdarma",
+        "Occupancy": "Obsazeno {{count}} z {{capacity}}",
+        "PlacesRemaining_one": "{{count}} místo",
+        "PlacesRemaining_few": "{{count}} místa",
+        "PlacesRemaining_many": "{{count}} místa",
+        "PlacesRemaining_other": "{{count}} míst",
         "BirthYearRange": "Ročníky {{from}}–{{to}}",
         "LoadError": "Nepodařilo se načíst dostupnost přihlášek.",
         "OpensIn": "Přihlášky se otevřou za",
