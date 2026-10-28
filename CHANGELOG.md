@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Fixed
 
+- Restore desktop entry category occupancy badges and birth-year ranges.
 - Restore missing entry class occupancy and remaining-place translations in all
   six locales, fixing the client type check and untranslated card labels.
 - Deliver bank payment pushes to all registered devices in batches and expose
