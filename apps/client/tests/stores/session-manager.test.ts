@@ -276,9 +276,11 @@ describe('browser session coordinator', () => {
     });
     expect(store.getState().token).toBe(next);
     localStorage.setItem('ofeed-session-revision', 'new-account-revision');
-    window.dispatchEvent(
-      new StorageEvent('storage', { key: 'ofeed-session-revision' })
-    );
+    const storageEvent = new Event('storage');
+    Object.defineProperty(storageEvent, 'key', {
+      value: 'ofeed-session-revision',
+    });
+    window.dispatchEvent(storageEvent);
     expect(store.getState().token).toBeNull();
     receive?.({
       data: { type: 'session', revision: previousRevision, token: next, user },

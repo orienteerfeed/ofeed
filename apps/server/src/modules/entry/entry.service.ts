@@ -608,11 +608,9 @@ export async function createEntryOrder(
           paymentUrl,
           qrPayment,
         });
-      if (transaction)
-        transaction.afterCommit.push(() => {
-          void notify();
-        });
-      else void notify();
+      transaction.afterCommit.push(() => {
+        void notify();
+      });
       const result: CreatedEntryOrder = {
         ...serialized,
         detailAccessToken,
