@@ -1,6 +1,6 @@
 # Server Guidelines
 
-Hono + Prisma 7 (MariaDB) + GraphQL Yoga + Pothos. See @package.json for stack
+Hono + Prisma 7 (MariaDB) + GraphQL Yoga + Pothos. See `package.json` for stack
 and scripts; root `CLAUDE.md` for monorepo rules.
 
 ## Layered architecture (ESLint-enforced)
@@ -16,18 +16,18 @@ Entry points:
 
 - `src/app.ts` — Hono assembly, exports `AppType` for RPC codegen
 - `src/index.ts` — HTTP + WebSocket upgrade + graceful shutdown
-- `src/api/build-api.ts` — versioned router factory (`/rest/v1`),
-  `MODULE_ROUTES`
+- `src/routes/rest/registry.ts` — `REST_ROUTE_REGISTRY`, mounted by
+  `src/routes/rest/index.ts`
 
 Path alias `@/*` → `apps/server/src/*`. **JSX uses `jsxImportSource: "hono/jsx"`
 — NOT React.**
 
 ## Adding a module
 
-1. Register GraphQL side-effect import + REST export in `src/modules/index.ts`.
-2. Add entry to `MODULE_ROUTES` in `src/api/build-api.ts`.
-3. Wire into `buildApi()` in `src/app.ts`.
-4. Use `createRouter()` from `src/lib/create-app.ts` — the Zod `defaultHook`
+1. Add a side-effect import of `<module>.graphql.ts` in `src/graphql/schema.ts`.
+2. Add the router to `REST_ROUTE_REGISTRY` in `src/routes/rest/registry.ts` and
+   its OpenAPI `basePath` to `src/routes/rest/paths.ts`.
+3. Use `createRouter()` from `src/lib/create-app.ts` — the Zod `defaultHook`
    does not propagate to child routers; the factory ensures it is applied.
 
 ## Key Invariants

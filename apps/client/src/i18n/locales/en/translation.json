@@ -1698,6 +1698,9 @@
       "Entries": {
         "Enter": "Enter now",
         "FreeEntry": "Free entry",
+        "Occupancy": "Occupied {{count}} of {{capacity}}",
+        "PlacesRemaining_one": "{{count}} place",
+        "PlacesRemaining_other": "{{count}} places",
         "BirthYearRange": "Birth years {{from}}–{{to}}",
         "LoadError": "Failed to load entry availability.",
         "OpensIn": "Entries open in",

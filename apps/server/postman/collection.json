@@ -11648,6 +11648,374 @@
       ]
     },
     {
+      "name": "11b - Bank import",
+      "item": [
+        {
+          "name": "[POST] /rest/v1/bank-connections - Create TEST bank connection",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"FIO\",\n  \"mode\": \"TEST\",\n  \"name\": \"Postman test account\",\n  \"accountIdentifier\": \"CZ6508000000192000145399\",\n  \"variableSymbolPrefix\": \"99\",\n  \"prefixEffectiveFrom\": \"{{bankToday}}\",\n  \"deviceId\": \"5f0c4c1e-7d2a-4c55-8f0e-3b1d2a9c6e10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const runId = pm.collectionVariables.get('runId') || String(Date.now());",
+                  "pm.collectionVariables.set('bankToday', new Date().toISOString().slice(0, 10));",
+                  "pm.collectionVariables.set('bankTransactionId', runId.replace(/\\D/g, '').slice(-20) || String(Date.now()));",
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Connection never echoes a token', function () { pm.expect(body.results.data).to.not.have.property('token'); });",
+                  "pm.collectionVariables.set('bankConnectionId', body.results.data.id);",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[PATCH] /rest/v1/bank-connections/{{bankConnectionId}} - Resume connection",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections/{{bankConnectionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections", "{{bankConnectionId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.expect(pm.response.code).to.be.oneOf([200]); });",
+                  "pm.test('Connection is active', function () { pm.expect(pm.response.json().results.data.status).to.eql('ACTIVE'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/bank-connections/{{bankConnectionId}}/sync-reports - Collector sync report",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections/{{bankConnectionId}}/sync-reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections", "{{bankConnectionId}}", "sync-reports"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"5f0c4c1e-7d2a-4c55-8f0e-3b1d2a9c6e10\",\n  \"startedAt\": \"{{$isoTimestamp}}\",\n  \"finishedAt\": \"{{$isoTimestamp}}\",\n  \"status\": \"OK\",\n  \"fetchedCount\": 1,\n  \"relevantCount\": 1,\n  \"errorCode\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () { pm.expect(pm.response.code).to.be.oneOf([201]); });",
+                  "pm.test('Heartbeat recorded', function () { pm.expect(pm.response.json().results.data.lastSeenAt).to.be.a('string'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/bank-connections/{{bankConnectionId}}/transactions - Report simulated transaction",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections/{{bankConnectionId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections", "{{bankConnectionId}}", "transactions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"5f0c4c1e-7d2a-4c55-8f0e-3b1d2a9c6e10\",\n  \"transactions\": [\n    {\n      \"providerTransactionId\": \"{{bankTransactionId}}\",\n      \"amount\": \"10.00\",\n      \"currency\": \"CZK\",\n      \"variableSymbol\": \"9900000001\",\n      \"bookingDate\": \"{{bankToday}}\",\n      \"source\": \"SIMULATED\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.expect(pm.response.code).to.be.oneOf([200]); });",
+                  "const item = pm.response.json().results.data[0];",
+                  "pm.test('Unknown reference stays unmatched or was already stored', function () { pm.expect(item.status).to.be.oneOf(['UNMATCHED', 'DUPLICATE']); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/bank-connections/{{bankConnectionId}}/transactions - Repeat report is DUPLICATE",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections/{{bankConnectionId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections", "{{bankConnectionId}}", "transactions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"5f0c4c1e-7d2a-4c55-8f0e-3b1d2a9c6e10\",\n  \"transactions\": [\n    {\n      \"providerTransactionId\": \"{{bankTransactionId}}\",\n      \"amount\": \"10.00\",\n      \"currency\": \"CZK\",\n      \"variableSymbol\": \"9900000001\",\n      \"bookingDate\": \"{{bankToday}}\",\n      \"source\": \"SIMULATED\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.expect(pm.response.code).to.be.oneOf([200]); });",
+                  "pm.test('Retry is DUPLICATE', function () { pm.expect(pm.response.json().results.data[0].status).to.eql('DUPLICATE'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/bank-connections/{{bankConnectionId}}/transactions?limit=10 - List connection transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections/{{bankConnectionId}}/transactions?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections", "{{bankConnectionId}}", "transactions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.expect(pm.response.code).to.be.oneOf([200]); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Amounts are decimal strings', function () { body.results.data.forEach((t) => pm.expect(t.amount).to.match(/^\\d+\\.\\d{2}$/)); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[DELETE] /rest/v1/bank-connections/{{bankConnectionId}} - Revoke connection",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections/{{bankConnectionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections", "{{bankConnectionId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.expect(pm.response.code).to.be.oneOf([200]); });",
+                  "pm.test('Connection is revoked', function () { pm.expect(pm.response.json().results.data.status).to.eql('REVOKED'); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[POST] /rest/v1/bank-connections/{{bankConnectionId}}/transactions - Report after revoke is refused",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/bank-connections/{{bankConnectionId}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "bank-connections", "{{bankConnectionId}}", "transactions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"5f0c4c1e-7d2a-4c55-8f0e-3b1d2a9c6e10\",\n  \"transactions\": [\n    {\n      \"providerTransactionId\": \"{{bankTransactionId}}\",\n      \"amount\": \"10.00\",\n      \"currency\": \"CZK\",\n      \"variableSymbol\": \"9900000001\",\n      \"bookingDate\": \"{{bankToday}}\",\n      \"source\": \"SIMULATED\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', function () { pm.expect(pm.response.code).to.be.oneOf([409]); });",
+                  ""
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "12 - Cleanup",
       "description": "Revoke generated credentials and remove all scenario data from the local server.",
       "item": [

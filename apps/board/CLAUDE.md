@@ -1,6 +1,6 @@
 # Board Guidelines
 
-Vue 3 + Pinia + UnoCSS standalone SPA. See @package.json for stack and scripts; root `CLAUDE.md` for monorepo rules.
+Vue 3 + Pinia + UnoCSS standalone SPA. See `package.json` for stack and scripts; root `CLAUDE.md` for monorepo rules.
 
 ## Architecture
 

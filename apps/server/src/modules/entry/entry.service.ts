@@ -31,6 +31,7 @@ import { computeClassFee } from '../class/class.fee.js';
 import { availablePaymentMethodsForEvent } from '../event/event-payment-methods.service.js';
 import { loadLockedCardNumbers } from '../event/event-rental-cards.service.js';
 import { storeCompetitor } from '../event/event.service.js';
+import { rematchEntryBankTransactions } from '../bank/bank-matching.js';
 import { entryPaymentTransaction, reconcileEntryPaymentState } from './entry-payment-write.js';
 import { createEntryOrderAccessToken } from './entry-public-access.js';
 import { notifyEntryOrderProcessed, notifyEntryOrderReceived } from './entry.email.js';
@@ -595,6 +596,8 @@ export async function createEntryOrder(
         },
         include: entryInclude,
       });
+      // A bank payment may have been reported before the order existed.
+      await rematchEntryBankTransactions(prisma, entry.id);
       const serialized = serializeEntryOrder(entry);
       const detailAccessToken = createEntryOrderAccessToken(
         entry.id,
@@ -801,6 +804,8 @@ async function updateEntryOrderInTransaction(
     },
   });
   await reconcileEntryPaymentState(prisma, entry.eventId, entry.id, userId);
+  // A new total can turn an earlier unmatched bank transfer into an exact match.
+  await rematchEntryBankTransactions(prisma, entry.id);
 }
 
 /** List all entry orders of an event, newest first. */

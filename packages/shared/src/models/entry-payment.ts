@@ -3,6 +3,10 @@ import { z } from 'zod';
 export const entryPaymentMethodSchema = z.enum(['CASH', 'QR']);
 export type EntryPaymentMethod = z.infer<typeof entryPaymentMethodSchema>;
 
+/** BANK_IMPORT receipts were asserted by the organizer's bank collector, not a statement. */
+export const entryPaymentSourceSchema = z.enum(['MANUAL', 'BANK_IMPORT']);
+export type EntryPaymentSource = z.infer<typeof entryPaymentSourceSchema>;
+
 export const entryPaymentRecordSchema = z.object({
   id: z.string(),
   eventId: z.string(),
@@ -15,6 +19,8 @@ export const entryPaymentRecordSchema = z.object({
   deviceId: z.string(),
   operatorId: z.number().int(),
   recordedAt: z.iso.datetime(),
+  source: entryPaymentSourceSchema,
+  bankTransactionId: z.string().nullable(),
 });
 export type EntryPaymentRecord = z.infer<typeof entryPaymentRecordSchema>;
 

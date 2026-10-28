@@ -29,6 +29,8 @@ const receipt = (
   operatorId: 7,
   paidAt: '2026-10-25T09:00:00Z',
   recordedAt: '2026-10-26T10:00:00Z',
+  source: 'MANUAL',
+  bankTransactionId: null,
   paymentReference: '2600000001',
   contactFirstname: 'Jan',
   contactLastname: 'Novák',

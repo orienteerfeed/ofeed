@@ -1698,6 +1698,9 @@
       "Entries": {
         "Enter": "Anmäl dig",
         "FreeEntry": "Gratis anmälan",
+        "Occupancy": "{{count}} av {{capacity}} upptagna",
+        "PlacesRemaining_one": "{{count}} plats",
+        "PlacesRemaining_other": "{{count}} platser",
         "BirthYearRange": "Födelseår {{from}}–{{to}}",
         "LoadError": "Kunde inte ladda anmälningstillgänglighet.",
         "OpensIn": "Anmälan öppnar om",

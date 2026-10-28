@@ -1698,6 +1698,10 @@
       "Entries": {
         "Enter": "Inscribirse",
         "FreeEntry": "Inscripción gratuita",
+        "Occupancy": "{{count}} de {{capacity}} ocupadas",
+        "PlacesRemaining_one": "{{count}} plaza",
+        "PlacesRemaining_many": "{{count}} plazas",
+        "PlacesRemaining_other": "{{count}} plazas",
         "BirthYearRange": "Años de nacimiento {{from}}–{{to}}",
         "LoadError": "No se pudo cargar la disponibilidad de inscripciones.",
         "OpensIn": "Las inscripciones abren en",

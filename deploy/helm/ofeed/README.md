@@ -74,6 +74,11 @@ Při `vault.enabled=true` chart vyžaduje `vault.role` a `vault.secretPath`.
 `vault.secretKeys` určuje přesné klíče exportované do souboru Vault Agentu,
 například `DATABASE_URL`, `JWT_TOKEN_SECRET_KEY` a `MAPY_API_KEY`.
 
+`EXPO_ACCESS_TOKEN` (push notifikace, G25) je volitelný a potřebný jen při
+zapnutém Expo enhanced push security. Do `vault.secretKeys` ho přidej až ve
+chvíli, kdy klíč ve Vaultu existuje. API pody potřebují odchozí HTTPS na
+`exp.host`.
+
 Podrobný Argo CD a Vault postup je v
 [`docs/DEPLOYMENT_ARGOCD.md`](../../../docs/DEPLOYMENT_ARGOCD.md).
 
