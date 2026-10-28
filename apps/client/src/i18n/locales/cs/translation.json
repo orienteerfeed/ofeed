@@ -1700,11 +1700,6 @@
       },
       "Entries": {
         "Enter": "Dohlásit se",
-        "PlacesRemaining_one": "{{count}} místo",
-        "PlacesRemaining_few": "{{count}} místa",
-        "PlacesRemaining_many": "{{count}} místa",
-        "PlacesRemaining_other": "{{count}} míst",
-        "Occupancy": "Obsazeno {{count}} z {{capacity}}",
         "FreeEntry": "Zdarma",
         "BirthYearRange": "Ročníky {{from}}–{{to}}",
         "LoadError": "Nepodařilo se načíst dostupnost přihlášek.",
