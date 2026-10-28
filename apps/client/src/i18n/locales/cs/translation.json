@@ -57,6 +57,45 @@
         "NoMissing": "Ve výběru nejsou závodníci bez čipu.",
         "NoDuplicates": "Ve výběru nejsou duplicitní čipy.",
         "FullGroups": "Filtry vybírají celé skupiny. Zůstávají viditelní všichni závodníci se stejným čipem, včetně ostatních kategorií."
+      },
+      "Anomalies": {
+        "Title": "Analýza anomálií",
+        "Description": "Prověřte podezřelé první mezičasy a startovní časy.",
+        "Explanation": "Nálezy jsou podněty pro rozhodčího, nikoli důkaz chybného startu. Výsledky se automaticky nemění. Původní plánovaný start není uložen samostatně.",
+        "Method": "Jak detekce funguje",
+        "Rules": "První mezičas vyžaduje importovanou první kontrolu tratě a alespoň osm dalších platných mezičasů závodníků se stavem OK nebo Finished ve stejné kategorii. Označený čas musí být kratší než polovina mediánu ostatních, alespoň o 30 sekund rychlejší a pod mediánem sníženým o trojnásobek mediánové absolutní odchylky. Startovní rastr vyžaduje pět různých časů, jednoznačně nejčastější odstup (alespoň 10 sekund, tři výskyty) a alespoň 80% shodu s jediným posunem s tolerancí jedné sekundy. Starty se kontrolují jen u režimů StartList a WaveStart. Chybějící trať, malý vzorek a nejednoznačný rastr se přeskakují. Ražení startovací krabičky musí být doloženo aktuálním přiřazeným záznamem; chybějící záznam ražení nevylučuje.",
+        "Affected": "Dotčení závodníci",
+        "Type": "Typ nálezu",
+        "Findings": "Nálezy",
+        "Coverage": "Pokrytí analýzy",
+        "CoverageExplanation": "Pokrytí respektuje filtr kategorie a typu; hledání filtruje pouze závodníky. Počty uvádějí vyhodnocené závodníky z celkového počtu v kategorii. U startovací krabičky zahrnují jen závodníky s uloženým ražením startu. Přeskočená nebo částečná kontrola nepotvrzuje bezchybný průběh.",
+        "Status": "Stav",
+        "Evaluated": "Vyhodnoceno",
+        "Total": "Celkem",
+        "NoIssues": "Ve vyhodnocených datech nebyly nalezeny anomálie. Zkontrolujte také přeskočené kontroly.",
+        "NoData": "Z dostupných dat nebylo možné vyhodnotit žádnou kontrolu. Podrobnosti jsou v pokrytí analýzy.",
+        "Control": "Kontrola",
+        "Split": "První mezičas",
+        "Median": "Medián ostatních",
+        "Difference": "Rozdíl",
+        "References": "Referenční závodníci",
+        "Interval": "Interval",
+        "Phase": "Posun rastru",
+        "NearestStart": "Nejbližší start v rastru",
+        "ObservedStart": "Doložená ražení startu",
+        "StartMode": "Startovní režim",
+        "StartTime": "Startovní čas",
+        "FAST_FIRST_SPLIT": "Neobvykle rychlý první mezičas",
+        "OFF_START_GRID": "Start mimo rastr kategorie",
+        "START_PUNCH": "Doložené ražení startovací krabičky",
+        "EVALUATED": "Vyhodnoceno",
+        "UNSUPPORTED_MODE": "Pro tento režim se nehodnotí",
+        "NO_COURSE": "Chybí ověřená trať",
+        "AMBIGUOUS_FIRST_CONTROL": "Nejednoznačná první kontrola",
+        "INSUFFICIENT_DATA": "Nedostatek dat",
+        "NO_RELIABLE_GRID": "Nelze určit spolehlivý rastr",
+        "Loading": "Načítání analýzy anomálií…",
+        "Error": "Analýzu anomálií se nepodařilo načíst."
       }
     },
     "Admin": {
@@ -2115,5 +2154,10 @@
     "Error": "Relace zařízení se nepodařilo aktualizovat.",
     "LogoutUnconfirmed": "Odhlášení na tomto zařízení proběhlo. Odvolání na serveru nebylo potvrzeno; připojte se k dokončení odhlášení.",
     "RevocationDelay": "Odhlášená zařízení mohou používat stávající přístupový token až 15 minut."
+  },
+  "EntryPaymentExpiry": {
+    "Label": "Lhůta pro zaplacení (hodiny)",
+    "Help": "Prázdné = bez automatického storna. 1–8760 hodin od přijetí nové přihlášky. Neplatí pro hotovost. Změna neovlivní existující přihlášky.",
+    "Deadline": "Pokud nebude platba připsána do {{date}}, přihláška bude automaticky stornována."
   }
 }

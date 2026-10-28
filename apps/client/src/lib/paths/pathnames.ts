@@ -34,6 +34,10 @@ export const PATHNAMES = {
     params: { eventId } as const,
     url: `/events/${eventId}/insights`,
   }),
+  eventAnomalyInsight: (eventId: string) => ({
+    to: '/events/$eventId/insights/anomalies',
+    params: { eventId } as const,
+  }),
   eventCardInsight: (eventId: string) => ({
     to: '/events/$eventId/insights/cards',
     params: { eventId } as const,

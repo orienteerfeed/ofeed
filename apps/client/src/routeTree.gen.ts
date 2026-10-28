@@ -33,6 +33,7 @@ import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventI
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
 import { Route as EventsEventIdEntriesEntryIdRouteImport } from './routes/events/$eventId/entries_.$entryId'
 import { Route as EventsEventIdInsightsIndexRouteImport } from './routes/events/$eventId/insights.index'
+import { Route as EventsEventIdInsightsAnomaliesRouteImport } from './routes/events/$eventId/insights.anomalies'
 import { Route as EventsEventIdInsightsCardsRouteImport } from './routes/events/$eventId/insights.cards'
 import { Route as EventsEventIdInsightsPaymentsRouteImport } from './routes/events/$eventId/insights.payments'
 import { Route as EventsEventIdEntriesEntryIdEditRouteImport } from './routes/events/$eventId/entries_.$entryId_.edit'
@@ -159,6 +160,12 @@ const EventsEventIdInsightsIndexRoute =
     path: '/',
     getParentRoute: () => EventsEventIdInsightsRoute,
   } as any)
+const EventsEventIdInsightsAnomaliesRoute =
+  EventsEventIdInsightsAnomaliesRouteImport.update({
+    id: '/anomalies',
+    path: '/anomalies',
+    getParentRoute: () => EventsEventIdInsightsRoute,
+  } as any)
 const EventsEventIdInsightsCardsRoute =
   EventsEventIdInsightsCardsRouteImport.update({
     id: '/cards',
@@ -202,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
@@ -230,6 +238,7 @@ export interface FileRoutesByTo {
   '/e/$eventId': typeof EEventIdIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights': typeof EventsEventIdInsightsIndexRoute
@@ -260,6 +269,7 @@ export interface FileRoutesById {
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries_/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/e/$eventId/'
     | '/events/$eventId/'
     | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/e/$eventId'
     | '/events/$eventId'
     | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights'
@@ -348,6 +360,7 @@ export interface FileRouteTypes {
     | '/e/$eventId/'
     | '/events/$eventId/'
     | '/events/$eventId/entries_/$entryId'
+    | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdInsightsIndexRouteImport
       parentRoute: typeof EventsEventIdInsightsRoute
     }
+    '/events/$eventId/insights/anomalies': {
+      id: '/events/$eventId/insights/anomalies'
+      path: '/anomalies'
+      fullPath: '/events/$eventId/insights/anomalies'
+      preLoaderRoute: typeof EventsEventIdInsightsAnomaliesRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
     '/events/$eventId/insights/cards': {
       id: '/events/$eventId/insights/cards'
       path: '/cards'
@@ -576,12 +596,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface EventsEventIdInsightsRouteChildren {
+  EventsEventIdInsightsAnomaliesRoute: typeof EventsEventIdInsightsAnomaliesRoute
   EventsEventIdInsightsCardsRoute: typeof EventsEventIdInsightsCardsRoute
   EventsEventIdInsightsPaymentsRoute: typeof EventsEventIdInsightsPaymentsRoute
   EventsEventIdInsightsIndexRoute: typeof EventsEventIdInsightsIndexRoute
 }
 
 const EventsEventIdInsightsRouteChildren: EventsEventIdInsightsRouteChildren = {
+  EventsEventIdInsightsAnomaliesRoute: EventsEventIdInsightsAnomaliesRoute,
   EventsEventIdInsightsCardsRoute: EventsEventIdInsightsCardsRoute,
   EventsEventIdInsightsPaymentsRoute: EventsEventIdInsightsPaymentsRoute,
   EventsEventIdInsightsIndexRoute: EventsEventIdInsightsIndexRoute,

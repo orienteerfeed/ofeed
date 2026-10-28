@@ -25,6 +25,7 @@ type StoredPaymentMethod = {
 
 type PaymentCapabilityEvent = {
   id: string;
+  entryPaymentLifetimeHours?: number | null;
   paymentReferencePrefix?: string | null;
   ofeedPaymentAvailable: boolean;
   bankAccountIban: string | null;
@@ -45,6 +46,7 @@ export type EventPaymentCapabilities = {
 };
 
 export type EventPaymentMethodSettings = {
+  entryPaymentLifetimeHours: number | null;
   paymentReferencePrefix: string | null;
   eventId: string;
   paymentMethods: EventPaymentMethodSetting[];
@@ -86,7 +88,7 @@ const DEFAULT_PAYMENT_METHODS: EventPaymentMethodConfiguration[] = [
 
 function bankAccountDisplay(event: PaymentCapabilityEvent): string | null {
   const account = event.bankAccountIban
-    ? normalizeBankAccountIban(event.bankAccountIban) ?? event.bankAccountIban.trim()
+    ? (normalizeBankAccountIban(event.bankAccountIban) ?? event.bankAccountIban.trim())
     : null;
   const parts = [event.bankAccountName?.trim(), account].filter(Boolean);
   return parts.length > 0 ? parts.join(' - ') : null;
@@ -121,6 +123,7 @@ function toSettings(event: PaymentCapabilityEvent): EventPaymentMethodSettings {
   );
   return {
     eventId: event.id,
+    entryPaymentLifetimeHours: event.entryPaymentLifetimeHours ?? null,
     paymentReferencePrefix: event.paymentReferencePrefix ?? null,
     paymentCapabilities: capabilities,
     paymentMethods: effectiveMethods.map((method) => ({
@@ -142,7 +145,7 @@ export function availablePaymentMethodsForEvent(
     .filter((method) => getPaymentMethodConfigurationStatus(method, capabilities) === 'READY')
     .map((method) => ({
       type: method.type,
-      displayName: method.type === 'CUSTOM_PAYMENT_LINK' ? method.displayName ?? null : null,
+      displayName: method.type === 'CUSTOM_PAYMENT_LINK' ? (method.displayName ?? null) : null,
     }));
 }
 
@@ -184,6 +187,7 @@ export async function listEventPaymentMethods(
     where: { id: eventId },
     select: {
       id: true,
+      entryPaymentLifetimeHours: true,
       paymentReferencePrefix: true,
       ofeedPaymentAvailable: true,
       bankAccountIban: true,
@@ -222,6 +226,7 @@ export async function updateEventPaymentMethods(
     where: { id: eventId },
     select: {
       id: true,
+      entryPaymentLifetimeHours: true,
       paymentReferencePrefix: true,
       ofeedPaymentAvailable: true,
       bankAccountIban: true,
@@ -276,10 +281,17 @@ export async function updateEventPaymentMethods(
   }));
 
   await prisma.$transaction(async (transaction) => {
-    if (bankAccount !== undefined || parsed.data.paymentReferencePrefix !== undefined) {
+    if (
+      bankAccount !== undefined ||
+      parsed.data.paymentReferencePrefix !== undefined ||
+      parsed.data.entryPaymentLifetimeHours !== undefined
+    ) {
       await transaction.event.update({
         where: { id: eventId },
         data: {
+          ...(parsed.data.entryPaymentLifetimeHours !== undefined
+            ? { entryPaymentLifetimeHours: parsed.data.entryPaymentLifetimeHours }
+            : {}),
           ...(parsed.data.paymentReferencePrefix !== undefined
             ? { paymentReferencePrefix: nextPaymentReferencePrefix }
             : {}),
@@ -297,6 +309,10 @@ export async function updateEventPaymentMethods(
     ...(event as PaymentCapabilityEvent),
     bankAccountIban: nextBankAccountIban,
     bankAccountName: nextBankAccountName,
+    entryPaymentLifetimeHours:
+      parsed.data.entryPaymentLifetimeHours === undefined
+        ? event.entryPaymentLifetimeHours
+        : parsed.data.entryPaymentLifetimeHours,
     paymentReferencePrefix: nextPaymentReferencePrefix,
     paymentMethods: normalizedMethods.map(({ eventId: _eventId, ...method }) => method),
   });

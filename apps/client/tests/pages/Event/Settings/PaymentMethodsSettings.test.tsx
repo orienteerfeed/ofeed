@@ -156,6 +156,7 @@ function queryMock(options?: { ofeed?: boolean; bankAccount?: string | null }) {
       data: {
         eventPaymentMethods: {
           eventId: 'event-1',
+          entryPaymentLifetimeHours: null,
           paymentReferencePrefix: null as string | null,
           paymentMethods: baseMethods.map(method =>
             method.type === 'OFEED_PAYMENT'
@@ -212,6 +213,51 @@ describe('PaymentMethodsSettings', () => {
     }
   );
 
+  it('saves the configured payment lifetime', async () => {
+    const loaded = queryMock();
+    const saved = {
+      ...loaded.result.data.eventPaymentMethods,
+      entryPaymentLifetimeHours: 48,
+    };
+    renderSettings([
+      loaded,
+      {
+        request: {
+          query: UPDATE_EVENT_PAYMENT_METHODS,
+          variables: {
+            eventId: 'event-1',
+            input: {
+              entryPaymentLifetimeHours: 48,
+              paymentReferencePrefix: null,
+              paymentMethods: baseMethods.map(toMutationInput),
+              bankAccountName: null,
+              bankAccountIban: null,
+            },
+          },
+        },
+        result: { data: { updateEventPaymentMethods: saved } },
+      },
+    ]);
+    await loadSettings();
+    fireEvent.change(screen.getByLabelText('EntryPaymentExpiry.Label'), {
+      target: { value: '48' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Save payment methods' })
+    );
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: 'Payment methods have been saved.',
+        })
+      )
+    );
+    expect(screen.getByLabelText('EntryPaymentExpiry.Label')).toHaveValue(48);
+    expect(
+      screen.getByRole('button', { name: 'Save payment methods' })
+    ).toBeDisabled();
+  });
+
   it.each(['07', null])(
     'loads and saves prefix %j without losing leading zeros',
     async prefix => {
@@ -219,10 +265,12 @@ describe('PaymentMethodsSettings', () => {
       const saved = queryMock();
       loaded.result.data.eventPaymentMethods = {
         ...loaded.result.data.eventPaymentMethods,
+        entryPaymentLifetimeHours: null,
         paymentReferencePrefix: '99',
       };
       saved.result.data.eventPaymentMethods = {
         ...saved.result.data.eventPaymentMethods,
+        entryPaymentLifetimeHours: null,
         paymentReferencePrefix: prefix,
       };
       renderSettings([
@@ -233,6 +281,7 @@ describe('PaymentMethodsSettings', () => {
             variables: {
               eventId: 'event-1',
               input: {
+                entryPaymentLifetimeHours: null,
                 paymentReferencePrefix: prefix,
                 paymentMethods: baseMethods.map(toMutationInput),
                 bankAccountName: null,
@@ -335,6 +384,7 @@ describe('PaymentMethodsSettings', () => {
           variables: {
             eventId: 'event-1',
             input: {
+              entryPaymentLifetimeHours: null,
               paymentReferencePrefix: null,
               paymentMethods: enabledQrMethods.map(toMutationInput),
               bankAccountName: 'Organizer account',
@@ -346,6 +396,7 @@ describe('PaymentMethodsSettings', () => {
           data: {
             updateEventPaymentMethods: {
               eventId: 'event-1',
+              entryPaymentLifetimeHours: null,
               paymentReferencePrefix: null,
               paymentMethods: enabledQrMethods,
               paymentCapabilities: {
@@ -496,6 +547,7 @@ describe('PaymentMethodsSettings', () => {
         variables: {
           eventId: 'event-1',
           input: {
+            entryPaymentLifetimeHours: null,
             paymentReferencePrefix: null,
             paymentMethods: savedMethods.map(toMutationInput),
             bankAccountName: null,
@@ -507,6 +559,7 @@ describe('PaymentMethodsSettings', () => {
         data: {
           updateEventPaymentMethods: {
             eventId: 'event-1',
+            entryPaymentLifetimeHours: null,
             paymentReferencePrefix: null,
             paymentMethods: savedMethods,
             paymentCapabilities: {
@@ -558,6 +611,7 @@ describe('PaymentMethodsSettings', () => {
         variables: {
           eventId: 'event-1',
           input: {
+            entryPaymentLifetimeHours: null,
             paymentReferencePrefix: null,
             paymentMethods: methods.map(toMutationInput),
             bankAccountName: null,

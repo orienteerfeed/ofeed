@@ -13,6 +13,10 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [Entry payment expiry](entry-payment-expiry.md): optional lifetime and automatic cancellation of unpaid received non-cash orders.
+
+- [Anomaly analysis](anomaly-analysis.md): evidence-backed split and start checks; issue #164.
+
 - [API rate-limit headroom](api-rate-limit-headroom.md): independent budgets for
   user work, uploads and session renewal.
 

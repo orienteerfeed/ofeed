@@ -496,6 +496,7 @@ describe('createEntryOrder', () => {
         bankAccountIban: account,
         bankAccountName: 'OK Chrudim',
         paymentReferencePrefix: '07',
+        entryPaymentLifetimeHours: 48,
         paymentMethods: [
           {
             type: 'QR_PAYMENT',
@@ -517,6 +518,9 @@ describe('createEntryOrder', () => {
 
     const paymentReference = prisma.entry.create.mock.calls[0][0].data.paymentReference;
     expect(paymentReference).toMatch(/^07[0-9]{8}$/);
+    expect(prisma.entry.create.mock.calls[0][0].data.paymentDueAt).toEqual(
+      new Date(NOW.getTime() + 48 * 3600000),
+    );
     expect(order.qrPayment).toEqual({
       payload:
         `SPD*1.0*ACC:${iban}*AM:100.00*CC:CZK*X-VS:${paymentReference}` +

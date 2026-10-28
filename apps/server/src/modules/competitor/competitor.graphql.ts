@@ -1,3 +1,5 @@
+import { EventAnomalyInsightRef } from './anomaly-insight.graphql-types.js';
+import { getEventAnomalyInsight } from './anomaly-insight.service.js';
 import { EventCardInsightRef } from './card-insight.graphql-types.js';
 import { getEventCardInsight } from './card-insight.service.js';
 import type { outputShapeKey } from '@pothos/core';
@@ -166,6 +168,12 @@ const StoreCompetitorResponseRef = builder
   });
 
 builder.queryFields((t) => ({
+  eventAnomalyInsight: t.field({
+    type: EventAnomalyInsightRef,
+    args: { eventId: t.arg.string({ required: true }) },
+    resolve: (_root, args, context) =>
+      getEventAnomalyInsight(context.prisma, context.auth, args.eventId),
+  }),
   eventCardInsight: t.field({
     type: EventCardInsightRef,
     args: { eventId: t.arg.string({ required: true }) },

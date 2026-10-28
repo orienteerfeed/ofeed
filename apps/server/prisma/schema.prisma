@@ -289,6 +289,7 @@ model Event {
   vatRate                      Decimal?                       @db.Decimal(5, 2)
   lateEntryFeePercent          Decimal?                       @db.Decimal(5, 2)
   ofeedPaymentAvailable        Boolean                        @default(false)
+  entryPaymentLifetimeHours    Int?
   paymentReferencePrefix       String?                        @db.VarChar(2)
   bankAccountIban              String?                        @db.VarChar(34)
   bankAccountName              String?                        @db.VarChar(191)
@@ -423,6 +424,7 @@ model Entry {
   paid             Boolean                 @default(false)
   paymentMethod    EventPaymentMethodType?
   // Variable symbol used to pair incoming payments; unique per event.
+  paymentDueAt     DateTime?
   paymentReference String                  @db.VarChar(10)
   user             User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId           Int?                    @db.UnsignedInt
@@ -442,6 +444,7 @@ model Entry {
   @@unique([eventId, id], map: "Entry_event_id_uq")
   @@unique([eventId, paymentReference], map: "Entry_event_payment_reference_uq")
   @@index([eventId, status], map: "Entry_event_status_idx")
+  @@index([status, paid, paymentDueAt], map: "Entry_payment_expiry_idx")
   @@index([userId], map: "Entry_user_idx")
 }
 

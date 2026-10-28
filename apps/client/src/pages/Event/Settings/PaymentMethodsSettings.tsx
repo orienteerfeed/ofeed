@@ -35,6 +35,7 @@ export const EVENT_PAYMENT_METHODS = gql`
   query EventPaymentMethods($eventId: String!) {
     eventPaymentMethods(eventId: $eventId) {
       eventId
+      entryPaymentLifetimeHours
       paymentReferencePrefix
       paymentMethods {
         type
@@ -62,6 +63,7 @@ export const UPDATE_EVENT_PAYMENT_METHODS = gql`
   ) {
     updateEventPaymentMethods(eventId: $eventId, input: $input) {
       eventId
+      entryPaymentLifetimeHours
       paymentReferencePrefix
       paymentMethods {
         type
@@ -91,6 +93,7 @@ type PaymentCapabilities = {
 };
 
 type PaymentMethodsPayload = {
+  entryPaymentLifetimeHours: number | null;
   paymentReferencePrefix: string | null;
   eventId: string;
   paymentMethods: Array<
@@ -292,6 +295,8 @@ export function PaymentMethodsSettings({
   });
   const [paymentReferencePrefix, setPaymentReferencePrefix] = useState('');
   const committedPrefixRef = useRef('');
+  const [lifetime, setLifetime] = useState('');
+  const committedLifetime = useRef('');
   const committedRef = useRef('');
   const committedBankAccountRef = useRef('');
   const paymentLinkInputRef = useRef<HTMLInputElement>(null);
@@ -333,6 +338,11 @@ export function PaymentMethodsSettings({
       bankAccountIban: loadedCapabilities.bankAccountIban ?? '',
     };
     const loadedPrefix = data?.eventPaymentMethods.paymentReferencePrefix ?? '';
+    const loadedLifetime = String(
+      data?.eventPaymentMethods.entryPaymentLifetimeHours ?? ''
+    );
+    setLifetime(loadedLifetime);
+    committedLifetime.current = loadedLifetime;
     setPaymentReferencePrefix(loadedPrefix);
     committedPrefixRef.current = loadedPrefix;
     setMethods(normalized);
@@ -343,7 +353,8 @@ export function PaymentMethodsSettings({
 
   const dirty =
     methods.length > 0 &&
-    (paymentReferencePrefix !== committedPrefixRef.current ||
+    (lifetime !== committedLifetime.current ||
+      paymentReferencePrefix !== committedPrefixRef.current ||
       serialized(methods) !== committedRef.current ||
       serializedBankAccount(bankAccount) !== committedBankAccountRef.current);
   const validationErrors = useMemo(
@@ -357,6 +368,10 @@ export function PaymentMethodsSettings({
     Boolean(bankAccount.bankAccountIban.trim()) &&
     normalizeBankAccountIban(bankAccount.bankAccountIban) === null;
   const valid =
+    (lifetime === '' ||
+      (/^[0-9]+$/.test(lifetime) &&
+        Number(lifetime) >= 1 &&
+        Number(lifetime) <= 8760)) &&
     prefixValid &&
     !bankAccountInvalid &&
     !hasValidationErrors(validationErrors);
@@ -439,6 +454,8 @@ export function PaymentMethodsSettings({
         variables: {
           eventId,
           input: {
+            entryPaymentLifetimeHours:
+              lifetime === '' ? null : Number(lifetime),
             paymentReferencePrefix: paymentReferencePrefix || null,
             paymentMethods: methods.map((method, position) => ({
               ...method,
@@ -465,6 +482,11 @@ export function PaymentMethodsSettings({
       };
       const savedPrefix =
         result.data?.updateEventPaymentMethods.paymentReferencePrefix ?? '';
+      const savedLifetime = String(
+        result.data?.updateEventPaymentMethods.entryPaymentLifetimeHours ?? ''
+      );
+      setLifetime(savedLifetime);
+      committedLifetime.current = savedLifetime;
       setPaymentReferencePrefix(savedPrefix);
       committedPrefixRef.current = savedPrefix;
       setMethods(normalized);
@@ -513,6 +535,28 @@ export function PaymentMethodsSettings({
       ) : (
         <TooltipProvider>
           <div className="space-y-3">
+            <div className="space-y-2 rounded-md border p-4">
+              <Label htmlFor="entry-payment-lifetime">
+                {t('EntryPaymentExpiry.Label')}
+              </Label>
+              <Input
+                id="entry-payment-lifetime"
+                type="number"
+                min={1}
+                max={8760}
+                step={1}
+                value={lifetime}
+                disabled={saving}
+                onChange={event => setLifetime(event.target.value)}
+                aria-describedby="entry-payment-lifetime-help"
+              />
+              <p
+                id="entry-payment-lifetime-help"
+                className="text-xs text-muted-foreground"
+              >
+                {t('EntryPaymentExpiry.Help')}
+              </p>
+            </div>
             <div className="space-y-2 rounded-md border p-4">
               <Label htmlFor="payment-reference-prefix">
                 {t(

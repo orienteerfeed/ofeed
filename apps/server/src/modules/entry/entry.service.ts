@@ -253,6 +253,7 @@ type EntryWithItems = {
   contactLastname: string;
   totalAmount: { toNumber(): number };
   currency: string;
+  paymentDueAt?: Date | null;
   createdAt: Date;
   items: Array<{
     id: number;
@@ -291,6 +292,7 @@ export function serializeEntryOrder(entry: EntryWithItems) {
     contactLastname: entry.contactLastname,
     totalAmount: entry.totalAmount.toNumber(),
     currency: entry.currency,
+    paymentDueAt: entry.paymentDueAt ?? null,
     createdAt: entry.createdAt,
     items: entry.items.map((item) => ({
       id: item.id,
@@ -398,6 +400,7 @@ export async function createEntryOrder(
       lateEntryFeePercent: true,
       currency: { select: { iso4217Alpha3: true } },
       ofeedPaymentAvailable: true,
+      entryPaymentLifetimeHours: true,
       paymentReferencePrefix: true,
       bankAccountIban: true,
       bankAccountName: true,
@@ -557,6 +560,10 @@ export async function createEntryOrder(
         data: {
           eventId,
           status: 'RECEIVED',
+          paymentDueAt:
+            input.paymentMethod !== 'CASH' && totalAmount > 0 && event.entryPaymentLifetimeHours
+              ? new Date(now.getTime() + event.entryPaymentLifetimeHours * 3600000)
+              : null,
           paymentMethod: input.paymentMethod,
           paymentReference,
           userId,
@@ -832,7 +839,7 @@ export async function updateEntryOrderStatus(
   );
 }
 
-async function updateEntryOrderStatusInTransaction(
+export async function updateEntryOrderStatusInTransaction(
   prisma: Prisma.TransactionClient,
   input: UpdateEntryOrderStatusInput,
 ): Promise<SerializedEntryOrder> {

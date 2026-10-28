@@ -63,6 +63,27 @@ const validInput: Parameters<typeof updateEventPaymentMethods>[3] = {
 };
 
 describe('event payment methods', () => {
+  it.each([null, 1, 48, 8760])('saves payment lifetime %s', async (entryPaymentLifetimeHours) => {
+    const prisma = createPrismaMock();
+    const settings = await updateEventPaymentMethods(prisma as never, auth, 'event-1', {
+      ...validInput,
+      entryPaymentLifetimeHours,
+    });
+    expect(settings.entryPaymentLifetimeHours).toBe(entryPaymentLifetimeHours);
+    expect(prisma.eventUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ entryPaymentLifetimeHours }) }),
+    );
+  });
+  it.each([0, -1, 1.5, 8761])('rejects invalid lifetime %s', async (entryPaymentLifetimeHours) => {
+    const prisma = createPrismaMock();
+    await expect(
+      updateEventPaymentMethods(prisma as never, auth, 'event-1', {
+        ...validInput,
+        entryPaymentLifetimeHours,
+      }),
+    ).rejects.toThrow();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
   it.each([
     ['2201340123/2010', 'CZ8020100000002201340123'],
     ['19-2000145399/0800', 'CZ6508000000192000145399'],
