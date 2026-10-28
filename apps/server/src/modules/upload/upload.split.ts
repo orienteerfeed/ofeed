@@ -10,14 +10,12 @@
  * writes and `upload.course.ts` for course metrics).
  */
 
-import { Prisma } from '../../generated/prisma/client.js';
 import prisma from '../../utils/context.js';
+import { eventPunchTransaction, supersedeCompetitorPunches } from '../punch/punch-write.js';
 import {
   SPLIT_WRITE_CONFLICT_MAX_RETRIES,
   SPLIT_WRITE_CONFLICT_RETRY_DELAY_MS,
   SPLIT_WRITE_CONFLICT_RETRY_JITTER_MS,
-  SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
-  SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
 } from './upload.constants.js';
 import type { IofResult } from './upload.iof.types.js';
 
@@ -194,70 +192,43 @@ async function withSplitWriteConflictRetry<T>(
 async function upsertSplitsUnsafe(
   competitorId: number,
   result: IofResult,
-  splitCache?: SplitCache,
+  _splitCache?: SplitCache,
 ) {
-  // When a cache is provided: all splits for pre-existing competitors were
-  // bulk-loaded before this call. A missing entry means the competitor is new
-  // (no prior splits). This replaces the per-competitor findMany with a cache
-  // lookup, saving one DB round-trip per competitor on re-uploads.
-  const dbSplitResponse: CachedSplit[] = splitCache
-    ? (splitCache.get(competitorId) ?? [])
-    : await prisma.split.findMany({
-        where: { competitorId },
-        select: { id: true, controlCode: true, time: true },
-        orderBy: { id: 'asc' },
-      });
-
-  const incomingSplits = normalizeIncomingSplits(result);
-
-  // Compare by position (IOF XML order = course order). A competitor can visit
-  // the same control more than once (butterfly loops), so we cannot use
-  // controlCode as a unique key — position is the only stable identity.
-  const commonLen = Math.min(dbSplitResponse.length, incomingSplits.length);
-  let updated = 0;
-  for (let i = 0; i < commonLen; i++) {
-    const ex = dbSplitResponse[i];
-    const inc = incomingSplits[i];
-    if (ex.controlCode !== inc.controlCode || ex.time !== inc.time) updated++;
-  }
-  const created = Math.max(0, incomingSplits.length - dbSplitResponse.length);
-  const deleted = Math.max(0, dbSplitResponse.length - incomingSplits.length);
-
-  const changeMade = created > 0 || updated > 0 || deleted > 0;
-  if (!changeMade) {
+  const competitor = await prisma.competitor.findUniqueOrThrow({
+    where: { id: competitorId },
+    select: { class: { select: { eventId: true } } },
+  });
+  return eventPunchTransaction(prisma, competitor.class.eventId, async (tx) => {
+    // Cached rows predate the event lock and cannot decide a snapshot write.
+    const previous = await tx.split.findMany({ where: { competitorId }, orderBy: { id: 'asc' } });
+    const incoming = normalizeIncomingSplits(result);
+    const common = Math.min(previous.length, incoming.length);
+    let updated = 0;
+    for (let i = 0; i < common; i++) {
+      if (
+        previous[i].controlCode !== incoming[i].controlCode ||
+        previous[i].time !== incoming[i].time
+      )
+        updated++;
+    }
+    const created = Math.max(0, incoming.length - previous.length);
+    const deleted = Math.max(0, previous.length - incoming.length);
+    const changeMade = created > 0 || updated > 0 || deleted > 0;
+    const current = await tx.competitor.findUniqueOrThrow({
+      where: { id: competitorId },
+      select: { card: true },
+    });
+    await supersedeCompetitorPunches(tx, [competitorId], {
+      eventId: competitor.class.eventId,
+      cards: [current.card],
+    });
+    if (changeMade) {
+      await tx.split.deleteMany({ where: { competitorId } });
+      if (incoming.length)
+        await tx.split.createMany({ data: incoming.map((split) => ({ competitorId, ...split })) });
+    }
     return { created, updated, deleted, changeMade };
-  }
-
-  // Replace all competitor splits atomically to avoid interleaving create/update/delete conflicts.
-  await prisma.$transaction(
-    async (tx) => {
-      await tx.split.deleteMany({
-        where: { competitorId: competitorId },
-      });
-
-      if (incomingSplits.length > 0) {
-        await tx.split.createMany({
-          data: incomingSplits.map((split) => ({
-            competitorId: competitorId,
-            controlCode: split.controlCode,
-            time: split.time,
-          })),
-        });
-      }
-    },
-    {
-      maxWait: SPLIT_WRITE_TRANSACTION_MAX_WAIT_MS,
-      timeout: SPLIT_WRITE_TRANSACTION_TIMEOUT_MS,
-      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-    },
-  );
-
-  return {
-    created,
-    updated,
-    deleted,
-    changeMade,
-  };
+  });
 }
 
 /**
@@ -265,14 +236,15 @@ async function upsertSplitsUnsafe(
  * result data. Wraps the unsafe write in a per-competitor write lock and a
  * conflict-retry loop.
  *
- * - Finds existing splits for the competitor in the database (or uses cache).
+ * - Reads current splits under the shared event lock; preload caches cannot
+ *   decide writes after another timing client may have changed the competitor.
  * - Replaces all splits atomically when any position-based difference is found.
  * - Retries on transient MariaDB write conflicts / deadlocks.
  * - Serializes concurrent writes for the same competitor via `splitWriteLocks`.
  *
  * @param competitorId - Competitor database ID.
  * @param result - IOF Result payload carrying SplitTime elements.
- * @param splitCache - Optional pre-loaded class split cache.
+ * @param splitCache - Legacy preload argument retained for caller compatibility.
  * @returns Summary of split mutations.
  */
 export async function upsertSplits(

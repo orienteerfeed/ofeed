@@ -156,6 +156,8 @@ function queryMock(options?: { ofeed?: boolean; bankAccount?: string | null }) {
       data: {
         eventPaymentMethods: {
           eventId: 'event-1',
+          entryPaymentLifetimeHours: null,
+          paymentReferencePrefix: null as string | null,
           paymentMethods: baseMethods.map(method =>
             method.type === 'OFEED_PAYMENT'
               ? { ...method, status: ofeed ? 'DISABLED' : 'UNAVAILABLE' }
@@ -192,6 +194,130 @@ describe('PaymentMethodsSettings', () => {
     routerMocks.useBlocker.mockClear();
     toastMock.mockClear();
   });
+
+  it.each(['123', 'a', '-1', '1e2'])(
+    'blocks saving invalid prefix %s',
+    async prefix => {
+      renderSettings();
+      await loadSettings();
+      const input = screen.getByLabelText(
+        'Pages.Event.Settings.Services.PaymentMethods.PaymentReferencePrefix.Label'
+      );
+      expect(input).toHaveAttribute('inputmode', 'numeric');
+      expect(input).toHaveAttribute('maxlength', '2');
+      fireEvent.change(input, { target: { value: prefix } });
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(
+        screen.getByRole('button', { name: 'Save payment methods' })
+      ).toBeDisabled();
+    }
+  );
+
+  it('saves the configured payment lifetime', async () => {
+    const loaded = queryMock();
+    const saved = {
+      ...loaded.result.data.eventPaymentMethods,
+      entryPaymentLifetimeHours: 48,
+    };
+    renderSettings([
+      loaded,
+      {
+        request: {
+          query: UPDATE_EVENT_PAYMENT_METHODS,
+          variables: {
+            eventId: 'event-1',
+            input: {
+              entryPaymentLifetimeHours: 48,
+              paymentReferencePrefix: null,
+              paymentMethods: baseMethods.map(toMutationInput),
+              bankAccountName: null,
+              bankAccountIban: null,
+            },
+          },
+        },
+        result: { data: { updateEventPaymentMethods: saved } },
+      },
+    ]);
+    await loadSettings();
+    fireEvent.change(screen.getByLabelText('EntryPaymentExpiry.Label'), {
+      target: { value: '48' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Save payment methods' })
+    );
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: 'Payment methods have been saved.',
+        })
+      )
+    );
+    expect(screen.getByLabelText('EntryPaymentExpiry.Label')).toHaveValue(48);
+    expect(
+      screen.getByRole('button', { name: 'Save payment methods' })
+    ).toBeDisabled();
+  });
+
+  it.each(['07', null])(
+    'loads and saves prefix %j without losing leading zeros',
+    async prefix => {
+      const loaded = queryMock();
+      const saved = queryMock();
+      loaded.result.data.eventPaymentMethods = {
+        ...loaded.result.data.eventPaymentMethods,
+        entryPaymentLifetimeHours: null,
+        paymentReferencePrefix: '99',
+      };
+      saved.result.data.eventPaymentMethods = {
+        ...saved.result.data.eventPaymentMethods,
+        entryPaymentLifetimeHours: null,
+        paymentReferencePrefix: prefix,
+      };
+      renderSettings([
+        loaded,
+        {
+          request: {
+            query: UPDATE_EVENT_PAYMENT_METHODS,
+            variables: {
+              eventId: 'event-1',
+              input: {
+                entryPaymentLifetimeHours: null,
+                paymentReferencePrefix: prefix,
+                paymentMethods: baseMethods.map(toMutationInput),
+                bankAccountName: null,
+                bankAccountIban: null,
+              },
+            },
+          },
+          result: {
+            data: {
+              updateEventPaymentMethods: saved.result.data.eventPaymentMethods,
+            },
+          },
+        },
+      ]);
+      await loadSettings();
+      const input = screen.getByLabelText(
+        'Pages.Event.Settings.Services.PaymentMethods.PaymentReferencePrefix.Label'
+      );
+      expect(input).toHaveValue('99');
+      fireEvent.change(input, { target: { value: prefix ?? '' } });
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Save payment methods' })
+      );
+      await waitFor(() =>
+        expect(toastMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            description: 'Payment methods have been saved.',
+          })
+        )
+      );
+      expect(input).toHaveValue(prefix ?? '');
+      expect(
+        screen.getByRole('button', { name: 'Save payment methods' })
+      ).toBeDisabled();
+    }
+  );
 
   it('toggles every available method and only shows custom configuration while enabled', async () => {
     renderSettings([
@@ -239,7 +365,12 @@ describe('PaymentMethodsSettings', () => {
     ).toBeDisabled();
   });
 
-  it('allows QR Payment after entering the organizer bank account', async () => {
+  it.each([
+    ['CZ6508000000192000145399', 'CZ6508000000192000145399'],
+    ['2201340123/2010', 'CZ8020100000002201340123'],
+    ['19-2000145399/0800', 'CZ6508000000192000145399'],
+    ['GB82WEST12345698765432', 'GB82WEST12345698765432'],
+  ])('saves organizer account %s as canonical IBAN', async (account, iban) => {
     const enabledQrMethods = baseMethods.map(method =>
       method.type === 'QR_PAYMENT'
         ? { ...method, enabled: true, status: 'READY' }
@@ -253,9 +384,11 @@ describe('PaymentMethodsSettings', () => {
           variables: {
             eventId: 'event-1',
             input: {
+              entryPaymentLifetimeHours: null,
+              paymentReferencePrefix: null,
               paymentMethods: enabledQrMethods.map(toMutationInput),
               bankAccountName: 'Organizer account',
-              bankAccountIban: 'CZ6508000000192000145399',
+              bankAccountIban: iban,
             },
           },
         },
@@ -263,13 +396,14 @@ describe('PaymentMethodsSettings', () => {
           data: {
             updateEventPaymentMethods: {
               eventId: 'event-1',
+              entryPaymentLifetimeHours: null,
+              paymentReferencePrefix: null,
               paymentMethods: enabledQrMethods,
               paymentCapabilities: {
                 ofeedPaymentAvailable: false,
                 qrPaymentAvailable: true,
-                bankAccountDisplay:
-                  'Organizer account - CZ6508000000192000145399',
-                bankAccountIban: 'CZ6508000000192000145399',
+                bankAccountDisplay: `Organizer account - ${iban}`,
+                bankAccountIban: iban,
                 bankAccountName: 'Organizer account',
               },
             },
@@ -284,9 +418,13 @@ describe('PaymentMethodsSettings', () => {
       target: { value: 'Organizer account' },
     });
     fireEvent.change(screen.getByLabelText('IBAN / bank account'), {
-      target: { value: 'CZ6508000000192000145399' },
+      target: { value: account },
     });
 
+    expect(screen.getByLabelText('IBAN / bank account')).toHaveAttribute(
+      'aria-invalid',
+      'false'
+    );
     const save = screen.getByRole('button', { name: 'Save payment methods' });
     expect(save).toBeEnabled();
     fireEvent.click(save);
@@ -298,6 +436,32 @@ describe('PaymentMethodsSettings', () => {
         })
       )
     );
+    expect(screen.getByLabelText('IBAN / bank account')).toHaveValue(iban);
+  });
+
+  it.each([
+    '2201340124/2010',
+    '20-2000145399/0800',
+    'CZ8120100000002201340123',
+  ])('blocks saving malformed bank account %s', async account => {
+    renderSettings();
+    await loadSettings();
+    fireEvent.click(screen.getByRole('switch', { name: 'Toggle QR Payment' }));
+    fireEvent.change(screen.getByLabelText('IBAN / bank account'), {
+      target: { value: account },
+    });
+    expect(screen.getByLabelText('IBAN / bank account')).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    expect(
+      screen.getByText(
+        'Pages.Event.Settings.Services.PaymentMethods.Validation.InvalidBankAccount'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Save payment methods' })
+    ).toBeDisabled();
   });
 
   it('validates the custom name, HTTPS URL, and unknown variables', async () => {
@@ -383,6 +547,8 @@ describe('PaymentMethodsSettings', () => {
         variables: {
           eventId: 'event-1',
           input: {
+            entryPaymentLifetimeHours: null,
+            paymentReferencePrefix: null,
             paymentMethods: savedMethods.map(toMutationInput),
             bankAccountName: null,
             bankAccountIban: null,
@@ -393,6 +559,8 @@ describe('PaymentMethodsSettings', () => {
         data: {
           updateEventPaymentMethods: {
             eventId: 'event-1',
+            entryPaymentLifetimeHours: null,
+            paymentReferencePrefix: null,
             paymentMethods: savedMethods,
             paymentCapabilities: {
               ofeedPaymentAvailable: false,
@@ -443,6 +611,8 @@ describe('PaymentMethodsSettings', () => {
         variables: {
           eventId: 'event-1',
           input: {
+            entryPaymentLifetimeHours: null,
+            paymentReferencePrefix: null,
             paymentMethods: methods.map(toMutationInput),
             bankAccountName: null,
             bankAccountIban: null,

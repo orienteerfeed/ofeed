@@ -1,9 +1,12 @@
+import { deviceMetadataSchema } from '@repo/shared';
+import { listDeviceSessions, revokeDevice } from '../auth/session.service.js';
+import { requireBrowserSessionRequest, refreshCookie } from '../auth/session-cookie.js';
+import { getAuthenticatedJwtUserId } from './user.service.js';
 import type { outputShapeKey } from '@pothos/core';
 
 import { builder } from '../../graphql/builder.js';
 import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { EventRef } from '../event/event.graphql-types.js';
-import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 
 import {
   verifyUserEmail,
@@ -47,12 +50,14 @@ type UserGraphQLShape = OutputShapeOf<typeof UserRef>;
 
 const AuthPayloadRef = builder
   .objectRef<{
-    token?: string | null;
+    accessToken: string;
+    expiresIn: number;
     user?: unknown;
   }>('AuthPayload')
   .implement({
     fields: (t) => ({
-      token: t.exposeString('token', { nullable: true }),
+      accessToken: t.exposeString('accessToken'),
+      expiresIn: t.exposeInt('expiresIn'),
       user: t.field({
         type: UserRef,
         nullable: true,
@@ -75,6 +80,8 @@ const ResetResponseRef = builder
 
 const LoginInputRef = builder.inputType('LoginInput', {
   fields: (t) => ({
+    deviceId: t.string({ required: true }),
+    deviceName: t.string({ required: true }),
     username: t.field({
       type: 'username_String_NotNull_maxLength_255',
       required: true,
@@ -214,10 +221,20 @@ builder.mutationFields((t) => ({
     args: {
       input: t.arg({ type: LoginInputRef }),
     },
-    resolve: (_root, args) => signIn(loginInputSchema.parse(args.input)),
+    resolve: async (_root, args, context) => {
+      if (!context.request || !context.responseHeaders)
+        throw new Error('Browser signin requires HTTP');
+      requireBrowserSessionRequest(context.request);
+      const payload = await signIn(loginInputSchema.parse(args.input));
+      context.responseHeaders.set(
+        'Set-Cookie',
+        refreshCookie(payload.refreshToken, payload.refreshExpiresAt),
+      );
+      return payload;
+    },
   }),
   signup: t.field({
-    type: ResponseMessageRef,
+    type: ResetResponseRef,
     nullable: true,
     args: {
       input: t.arg({ type: UserInputRef }),
@@ -226,7 +243,7 @@ builder.mutationFields((t) => ({
       signUp(userInputSchema.parse(args.input), context.activationUrl),
   }),
   verifyEmail: t.field({
-    type: AuthPayloadRef,
+    type: ResetResponseRef,
     args: {
       token: t.arg.string({ required: true }),
     },
@@ -290,8 +307,8 @@ builder.mutationFields((t) => ({
       id: t.arg.int({ required: true }),
     },
     resolve: (_root, args, context) =>
-      setDefaultAuthenticatedUserCard(context.prisma, context.auth, args.id).catch(
-        (err: unknown) => rethrowAuthzOrError(err, 'Failed to set default user card'),
+      setDefaultAuthenticatedUserCard(context.prisma, context.auth, args.id).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to set default user card'),
       ),
   }),
   requestPasswordReset: t.field({
@@ -303,7 +320,7 @@ builder.mutationFields((t) => ({
       requestUserPasswordReset(args.email as string, context.resetPasswordUrl),
   }),
   resetPassword: t.field({
-    type: AuthPayloadRef,
+    type: ResetResponseRef,
     args: {
       token: t.arg.string({ required: true }),
       newPassword: t.arg.string({ required: true }),
@@ -319,9 +336,7 @@ builder.mutationFields((t) => ({
       changeCurrentUserPassword(
         context.auth,
         changeCurrentUserPasswordInputSchema.parse(args.input),
-      ).catch((err: unknown) =>
-        rethrowAuthzOrError(err, 'Failed to change current user password'),
-      ),
+      ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to change current user password')),
   }),
   deleteCurrentAccount: t.boolean({
     args: {
@@ -338,3 +353,34 @@ builder.mutationFields((t) => ({
       ).catch((err: unknown) => rethrowAuthzOrError(err, 'Failed to delete account')),
   }),
 }));
+
+const DeviceSessionRef = builder.prismaObject('DeviceSession', {
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    deviceId: t.exposeString('deviceId'),
+    deviceName: t.exposeString('deviceName'),
+    createdAt: t.expose('createdAt', { type: 'DateTime' }),
+    lastRefreshedAt: t.expose('lastRefreshedAt', { type: 'DateTime' }),
+    expiresAt: t.expose('expiresAt', { type: 'DateTime' }),
+    absoluteExpiresAt: t.expose('absoluteExpiresAt', { type: 'DateTime' }),
+    current: t.boolean({
+      resolve: (session, _args, context) =>
+        context.auth.isAuthenticated && context.auth.tokenPayload?.sid === session.id,
+    }),
+  }),
+});
+builder.queryField('currentSessions', (t) =>
+  t.field({
+    type: [DeviceSessionRef],
+    resolve: (_root, _args, context) => listDeviceSessions(getAuthenticatedJwtUserId(context.auth)),
+  }),
+);
+builder.mutationField('revokeDevice', (t) =>
+  t.boolean({
+    args: { deviceId: t.arg.string({ required: true }) },
+    resolve: (_root, args, context) => {
+      const deviceId = deviceMetadataSchema.shape.deviceId.parse(args.deviceId);
+      return revokeDevice(getAuthenticatedJwtUserId(context.auth), deviceId);
+    },
+  }),
+);

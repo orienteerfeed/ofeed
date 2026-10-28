@@ -1,12 +1,12 @@
 import type { PaymentMethodType, QrPaymentInstruction } from '@repo/shared';
-import { Printer, QrCode, Share2, WalletCards } from 'lucide-react';
+import { Printer, QrCode, WalletCards } from 'lucide-react';
 import { useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/atoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/utils';
+import { QrPaymentActions } from '@/components/molecules/QrPaymentActions';
 
 import { formatEntryFee } from './EntryClassCard';
 
@@ -63,40 +63,6 @@ export function EntryPaymentSection({
         ],
       ]
     : [];
-
-  const paymentText = [
-    `${t('Pages.Event.EntriesManage.Detail.Payment.Title')}: ${eventName}`,
-    ...paymentRows.map(([label, value]) => `${label}: ${value}`),
-    `${t('Pages.Event.EntriesManage.Detail.Payment.Amount')}: ${formatEntryFee(
-      totalAmount,
-      currency,
-      i18n.language
-    )}`,
-  ].join('\n');
-
-  const handleShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: t('Pages.Event.EntriesManage.Detail.Payment.Title'),
-          text: paymentText,
-        });
-        return;
-      }
-
-      await navigator.clipboard.writeText(paymentText);
-      toast({
-        title: t('Pages.Event.EntriesManage.Detail.Payment.Copied'),
-        variant: 'success',
-      });
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      toast({
-        title: t('Pages.Event.EntriesManage.Detail.Payment.ShareError'),
-        variant: 'error',
-      });
-    }
-  };
 
   const handlePrint = () => {
     const canvas = qrCanvasRef.current;
@@ -157,9 +123,10 @@ export function EntryPaymentSection({
                   <QRCodeCanvas
                     ref={qrCanvasRef}
                     value={qrPayment.payload}
-                    size={112}
+                    size={256}
+                    style={{ width: 112, height: 112 }}
                     level="M"
-                    marginSize={1}
+                    marginSize={4}
                     aria-label={t(
                       'Pages.Event.EntriesManage.Detail.Payment.QrCodeAriaLabel'
                     )}
@@ -187,18 +154,11 @@ export function EntryPaymentSection({
                   </div>
                 </dl>
               </div>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <QrPaymentActions canvasRef={qrCanvasRef} />
+              <div className="flex justify-center">
                 <Button type="button" variant="outline" onClick={handlePrint}>
                   <Printer className="h-4 w-4" />
                   {t('Pages.Event.EntriesManage.Detail.Payment.Print')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void handleShare()}
-                >
-                  <Share2 className="h-4 w-4" />
-                  {t('Pages.Event.EntriesManage.Detail.Payment.Share')}
                 </Button>
               </div>
             </>

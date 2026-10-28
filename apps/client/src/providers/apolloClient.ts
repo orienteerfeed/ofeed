@@ -1,3 +1,8 @@
+import {
+  refreshSession,
+  getSessionRevision,
+} from '@/stores/auth/session-manager';
+import { useAuthStore } from '@/stores/auth';
 // lib/apollo-client.ts
 import {
   ApolloClient,
@@ -61,8 +66,13 @@ type CloseableSocket = {
 export function buildWsClientOptions(
   wsUrl: string,
   getTokenFn: GetTokenFn,
+  renewToken?: (
+    force: boolean,
+    rejectedToken?: string | null
+  ) => Promise<string | null>
 ): ClientOptions {
   let activeSocket: CloseableSocket | null = null;
+  let refreshOnReconnect = false;
   let pongWaitTimer: ReturnType<typeof setTimeout> | undefined;
 
   return {
@@ -70,12 +80,38 @@ export function buildWsClientOptions(
     lazy: true,
     keepAlive: WS_KEEP_ALIVE_MS,
     retryAttempts: Number.POSITIVE_INFINITY,
-    shouldRetry: () => true,
-    connectionParams: () => {
-      const token = getTokenFn();
-      return token ? { Authorization: `Bearer ${token}` } : {};
+    retryWait: async retries => {
+      const delay = Math.min(30_000, 1000 * 2 ** Math.min(retries, 5));
+      await new Promise(resolve => setTimeout(resolve, delay));
     },
+    shouldRetry: () => true,
+    connectionParams: renewToken
+      ? async () => {
+          const previousToken = getTokenFn();
+          if (previousToken) {
+            try {
+              await renewToken(refreshOnReconnect, previousToken);
+              refreshOnReconnect = false;
+            } catch {
+              // Throwing from connectionParams becomes fatal 4005 in graphql-ws.
+              // Preserve credentials and let the server use retryable 4403 if expired.
+            }
+          }
+          const token = getTokenFn();
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        }
+      : () => {
+          const token = getTokenFn();
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        },
     on: {
+      closed: event => {
+        clearTimeout(pongWaitTimer);
+        activeSocket = null;
+        // 4403 is retryable. 4401 is a fatal protocol error in graphql-ws.
+        if ((event as { code?: number }).code === 4403)
+          refreshOnReconnect = true;
+      },
       connected: socket => {
         activeSocket = socket as CloseableSocket;
       },
@@ -98,19 +134,65 @@ export function buildWsClientOptions(
   };
 }
 
+export async function sessionGraphQLFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  const headers = new Headers(
+    init?.headers ?? (input instanceof Request ? input.headers : undefined)
+  );
+  if (headers.get('x-ofeed-session') === 'web') return fetch(input, init);
+  const token = await refreshSession();
+  const expectedRevision = getSessionRevision();
+  const checkSession = () => {
+    if (token && expectedRevision !== getSessionRevision())
+      throw new Error('Session changed during request');
+  };
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  const send = () =>
+    fetch(input instanceof Request ? input.clone() : input, {
+      ...init,
+      headers,
+    });
+  const response = await send();
+  checkSession();
+  let unauthenticated = response.status === 401;
+  if (
+    response.status === 200 &&
+    response.headers.get('content-type')?.includes('application/json')
+  ) {
+    const result = await response.clone().json();
+    unauthenticated =
+      result.errors?.some(
+        (error: { extensions?: { code?: string } }) =>
+          error.extensions?.code === 'UNAUTHENTICATED'
+      ) ?? false;
+  }
+  checkSession();
+  if (!unauthenticated || !token) return response;
+  const next = await refreshSession(true, token);
+  checkSession();
+  if (!next) return response;
+  headers.set('Authorization', `Bearer ${next}`);
+  const retried = await send();
+  checkSession();
+  return retried;
+}
+
 /** Creates ApolloLink chain: error -> auth -> split(WS/HTTP) */
-function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
+function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn) {
   // --- HTTP link
   const httpLink = new HttpLink({
     uri: urls.httpUrl,
     credentials: 'include',
+    fetch: sessionGraphQLFetch,
   });
 
   // --- Auth headers using SetContextLink
   // In Apollo Client 4, SetContextLink passes the current context object
   // (not an Operation) as the sole argument. Per-request headers set via
   // mutate({ context: { headers: {...} } }) arrive here already merged in.
-  const authLink = new SetContextLink((context) => {
+  const authLink = new SetContextLink(context => {
     const { headers = {} } = context as { headers?: Record<string, string> };
     const token = getToken();
     return {
@@ -144,11 +226,52 @@ function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
 
   // --- WS link (subscriptions) – only in browser
   let wsLink: ApolloLink | null = null;
+  let dispose = () => {};
 
   if (typeof window !== 'undefined') {
     const wsUrl = urls.wsUrl ?? toWsUrl(urls.httpUrl);
 
-    const wsClient = createClient(buildWsClientOptions(wsUrl, getToken));
+    let activeSocket: CloseableSocket | undefined;
+    let socketToken: string | null = null;
+    let unsubscribe: (() => void) | undefined;
+    const options = buildWsClientOptions(wsUrl, getToken, refreshSession);
+    const wsClient = createClient({
+      ...options,
+      connectionParams: async () => {
+        const params =
+          typeof options.connectionParams === 'function'
+            ? await options.connectionParams()
+            : options.connectionParams;
+        const authorization = params?.Authorization;
+        socketToken =
+          typeof authorization === 'string' &&
+          authorization.startsWith('Bearer ')
+            ? authorization.slice(7)
+            : null;
+        return params;
+      },
+      on: {
+        ...options.on,
+        connected: (socket, payload, wasRetry) => {
+          options.on?.connected?.(socket, payload, wasRetry);
+          activeSocket = socket as CloseableSocket;
+          unsubscribe ??= useAuthStore.subscribe((state, previous) => {
+            if (state.token !== previous.token)
+              activeSocket?.close(4205, 'Credentials changed');
+          });
+          if (getToken() !== socketToken)
+            activeSocket.close(4205, 'Credentials changed');
+        },
+        closed: event => {
+          activeSocket = undefined;
+          options.on?.closed?.(event);
+        },
+      },
+    });
+    dispose = () => {
+      unsubscribe?.();
+      void wsClient.dispose();
+    };
 
     wsLink = new GraphQLWsLink(wsClient);
   }
@@ -167,14 +290,14 @@ function createApolloLink(urls: ApolloUrls, getToken: GetTokenFn): ApolloLink {
         httpLink
       )
     : httpLink;
-  return ApolloLink.from([errorLink, authLink, splitLink]);
+  return { link: ApolloLink.from([errorLink, authLink, splitLink]), dispose };
 }
 
 export function createApolloClient(
   urls: ApolloUrls,
   getToken: GetTokenFn
 ): ApolloClient {
-  const link = createApolloLink(urls, getToken);
+  const { link, dispose } = createApolloLink(urls, getToken);
 
   const cache = new InMemoryCache({
     typePolicies: {
@@ -198,10 +321,16 @@ export function createApolloClient(
     },
   });
 
-  return new ApolloClient({
+  const client = new ApolloClient({
     link,
     cache,
   });
+  const stop = client.stop.bind(client);
+  client.stop = () => {
+    dispose();
+    stop();
+  };
+  return client;
 }
 
 const { httpUrl, wsUrl } = getGraphQLUrls();

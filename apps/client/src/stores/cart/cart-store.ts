@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { CartEntryItem, CartStore } from './types';
+import { isStartSlotInCart } from './cart-start-slots';
 
 const initialState = {
   items: [] as CartEntryItem[],
@@ -11,10 +12,21 @@ export const useCartStore = create<CartStore>()(
     set => ({
       ...initialState,
 
-      addItem: item => {
-        set(state => ({
-          items: [...state.items, { ...item, id: crypto.randomUUID() }],
-        }));
+      addItem: (item, options) => {
+        let added = false;
+        set(state => {
+          if (
+            options?.exclusiveStartSlot &&
+            isStartSlotInCart(state.items, item)
+          ) {
+            return state;
+          }
+          added = true;
+          return {
+            items: [...state.items, { ...item, id: crypto.randomUUID() }],
+          };
+        });
+        return added;
       },
 
       removeItem: id => {

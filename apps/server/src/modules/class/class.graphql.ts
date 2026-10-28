@@ -1,6 +1,7 @@
 import { builder } from '../../graphql/builder.js';
 
 import { rethrowAuthzOrError } from '../../graphql/errors.js';
+import { CLASSES_UPDATED } from '../../lib/pubsub.js';
 import { StartModeRef } from '../event/event.graphql-types.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 import { computeClassFee, type ComputedClassFee } from './class.fee.js';
@@ -89,12 +90,15 @@ export const ClassRef = builder.prismaObject('Class', {
     startWindowFrom: t.expose('startWindowFrom', { type: 'DateTime', nullable: true }),
     startWindowTo: t.expose('startWindowTo', { type: 'DateTime', nullable: true }),
     fee: t.float({
+      description: 'Base gross fee, before any late-entry surcharge.',
       nullable: true,
       select: { fee: true },
       resolve: (eventClass) => eventClass.fee?.toNumber() ?? null,
     }),
     lateEntryFeeDisabled: t.exposeBoolean('lateEntryFeeDisabled'),
     currentFee: t.float({
+      description:
+        'Current gross fee including lateEntryFeePercent after entriesCloseAt, unless lateEntryFeeDisabled.',
       nullable: true,
       select: FEE_SELECT,
       resolve: (eventClass) => resolveComputedFee(eventClass).currentFee,
@@ -232,5 +236,19 @@ builder.mutationFields((t) => ({
         message: `Class definitions loaded for ${result.updatedCount} classes`,
       };
     },
+  }),
+}));
+
+builder.subscriptionFields((t) => ({
+  /** Emits the event id whenever class settings of the event change. */
+  classesUpdated: t.string({
+    args: {
+      eventId: t.arg.string({ required: true }),
+    },
+    subscribe: (_root, args, context) =>
+      context.pubsub.asyncIterableIterator(CLASSES_UPDATED(args.eventId)) as AsyncIterable<{
+        classesUpdated: string;
+      }>,
+    resolve: (payload) => payload.classesUpdated,
   }),
 }));

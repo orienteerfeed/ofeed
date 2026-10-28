@@ -129,7 +129,7 @@ export function validateEntryForm(
     errors.card = 'CARD_INVALID';
   }
 
-  if (entryClass.startMode !== 'FreeStart' && !values.startTime) {
+  if (entryClass.startMode === 'StartList' && !values.startTime) {
     errors.startTime = 'START_TIME_REQUIRED';
   }
 

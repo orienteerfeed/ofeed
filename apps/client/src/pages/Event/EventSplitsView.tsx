@@ -37,6 +37,7 @@ export const EventSplitsView: React.FC<EventSplitsViewProps> = ({
       const classItem = event.classes.find(c => c.id === selectedClass);
       if (classItem) {
         const newSearchParams = new URLSearchParams(window.location.search);
+        if (newSearchParams.get('class') === classItem.name) return;
         newSearchParams.set('class', classItem.name);
 
         navigate({
@@ -77,6 +78,7 @@ export const EventSplitsView: React.FC<EventSplitsViewProps> = ({
         </Alert>
       ) : (
         <ClassIndividualSplit
+          key={`${event.id}:${selectedClass}`}
           t={t}
           event={splitEvent}
           selectedClass={selectedClass}

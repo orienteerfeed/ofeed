@@ -1,0 +1,155 @@
+/* Row order follows incoming results; browser scroll anchoring must not follow
+   a moved row. Keep these rules local to the live result views. */
+.results-viewport {
+  position: relative;
+  overflow-anchor: none;
+}
+
+.results-viewport [data-slot='table-container'],
+.results-viewport [data-result-scroll] {
+  overflow-anchor: none;
+}
+
+.results-viewport table {
+  table-layout: fixed;
+  min-width: 20rem;
+}
+
+.results-viewport thead {
+  position: relative;
+  z-index: 20;
+  background: var(--background);
+}
+
+.results-viewport th,
+.results-viewport td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.results-viewport td > div,
+.results-viewport td button {
+  max-width: 100%;
+}
+
+.results-viewport-splits table {
+  /* Explicit colgroup widths define the total width. */
+  min-width: 0;
+}
+
+.results-refresh-error {
+  position: absolute;
+  top: 0;
+  right: 0;
+  max-width: min(20rem, 80%);
+  z-index: 10;
+}
+
+.results-viewport:not(.results-viewport-splits) th:first-child {
+  width: 4rem;
+}
+
+.results-viewport:not(.results-viewport-splits) th:nth-child(2) {
+  width: 10rem;
+}
+
+@media (min-width: 640px) {
+  .results-viewport:not(.results-viewport-splits) table {
+    min-width: 40rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits) th:nth-child(2) {
+    width: 14rem;
+  }
+}
+
+/* Budget mobile columns independently of incoming data. Names take the
+   remaining space; numeric columns keep enough room for hour-long times.
+   Container units also handle results inside a narrow club panel. */
+.results-viewport:not(.results-viewport-splits) {
+  container-type: inline-size;
+}
+
+@media (max-width: 639px) {
+  .results-viewport:not(.results-viewport-splits) table {
+    --result-font-size: clamp(0.75rem, 3.2cqi, 0.8125rem);
+    --result-cell-padding: clamp(0.125rem, 0.7cqi, 0.25rem);
+    font-size: var(--result-font-size);
+  }
+
+  .results-viewport:not(.results-viewport-splits) :is(th, td) {
+    padding-inline: var(--result-cell-padding);
+    font-size: var(--result-font-size);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .results-viewport:not(.results-viewport-splits) th {
+    font-size: 0.6875rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits) th:first-child {
+    width: 2rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits) th:nth-child(2) {
+    width: auto;
+  }
+
+  .results-viewport [data-results-table='category'] th:nth-child(7),
+  .results-viewport [data-results-table='category'] th:nth-child(8),
+  .results-viewport [data-results-table='relay-leg'] th:nth-last-child(3),
+  .results-viewport [data-results-table='relay-leg'] th:last-child {
+    width: 4.5rem;
+  }
+
+  .results-viewport [data-results-table='category'] th:nth-child(9) {
+    width: 3.25rem;
+  }
+
+  .results-viewport [data-results-table='club'] th:nth-child(3),
+  .results-viewport [data-results-table='live'] th:nth-child(3) {
+    width: 3rem;
+  }
+
+  .results-viewport [data-results-table='club'] th:nth-child(5),
+  .results-viewport [data-results-table='club'] th:nth-child(6),
+  .results-viewport [data-results-table='live'] th:nth-child(6) {
+    width: 4.5rem;
+  }
+
+  .results-viewport [data-results-table='club'] th:last-child {
+    width: 2.75rem;
+  }
+
+  .results-viewport [data-results-table='live'] th:first-child {
+    width: 4rem;
+  }
+
+  .results-viewport [data-results-table='live'] th:nth-child(4) {
+    width: 1.75rem;
+  }
+
+  .results-viewport [data-results-table='relay'] th:nth-child(4),
+  .results-viewport [data-results-table='relay'] th:nth-child(6) {
+    width: 5rem;
+  }
+
+  .results-viewport [data-results-table='relay'] th:last-child {
+    width: 4.5rem;
+  }
+
+  .results-viewport [data-results-table='relay'] td:nth-child(6) > span {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .results-viewport [data-results-table='relay'] td:nth-child(4) > span.ml-1 {
+    display: block;
+    margin-left: 0;
+  }
+
+  .results-viewport:not(.results-viewport-splits) td .text-xs {
+    font-size: 0.6875rem;
+  }
+}

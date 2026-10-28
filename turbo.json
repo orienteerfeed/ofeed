@@ -6,12 +6,18 @@
     "PORT",
     "API_BASE_URL",
     "DATABASE_URL",
+    "ACCESS_JWT_KEY_FILE",
+    "ACCESS_JWT_ISSUER",
+    "ACCESS_JWT_AUDIENCE",
     "CLIENT_APP_URL",
     "CORS_ORIGIN",
     "CORS_METHODS",
     "CORS_HEADERS",
     "RATE_LIMIT_WINDOW_MS",
     "RATE_LIMIT_MAX",
+    "GRAPHQL_RATE_LIMIT_MAX",
+    "UPLOAD_RATE_LIMIT_MAX",
+    "SESSION_RATE_LIMIT_MAX",
     "VITE_BASE_URL",
     "VITE_API_BASE_URL",
     "VITE_OFEED_API_URL",
@@ -43,6 +49,7 @@
       "dependsOn": ["^type-check"]
     },
     "test": {
+      "env": ["PUNCH_TEST_DATABASE_URL", "SESSION_TEST_DATABASE_URL"],
       "dependsOn": ["^build", "^test"]
     },
     "test:watch": {

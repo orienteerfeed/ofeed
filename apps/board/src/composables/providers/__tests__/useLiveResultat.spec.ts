@@ -49,6 +49,7 @@ const TEST_COMPETITIONS_PARSED: CompetitionList = [
   {
     ...testBasicCompetition,
     timediff: 0,
+    timezone: 'Europe/Stockholm',
   },
 ]
 

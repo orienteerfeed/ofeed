@@ -1,4 +1,7 @@
 {{- if .Values.migrations.enabled }}
+{{- if not (has .Values.migrations.hook (list "PreSync" "Sync")) }}
+{{- fail "migrations.hook must be PreSync or Sync" }}
+{{- end }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -7,13 +10,12 @@ metadata:
     {{- include "ofeed.labels" . | nindent 4 }}
     app.kubernetes.io/component: migrate
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook: {{ .Values.migrations.hook | quote }}
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: {{ .Values.migrations.syncWave | quote }}
 spec:
   backoffLimit: {{ .Values.migrations.backoffLimit }}
   activeDeadlineSeconds: {{ .Values.migrations.activeDeadlineSeconds }}
-  ttlSecondsAfterFinished: 86400
   template:
     metadata:
       labels:
@@ -43,7 +45,7 @@ spec:
       {{- end }}
       containers:
         - name: migrate
-          image: "{{ .Values.ops.image.repository }}:{{ required "ops.image.tag is required" .Values.ops.image.tag }}"
+          image: {{ include "ofeed.image" (dict "image" .Values.ops.image "component" "ops" "requireDigests" .Values.requireImageDigests) | quote }}
           imagePullPolicy: {{ .Values.ops.image.pullPolicy }}
           securityContext:
             allowPrivilegeEscalation: false

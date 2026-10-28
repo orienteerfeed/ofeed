@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import { Resend, type Attachment } from 'resend';
 
 import env from '../config/env.js';
 
@@ -9,6 +9,7 @@ type SendEmailOptions = {
   text: string;
   subject: string;
   emailTo: string;
+  attachments?: Attachment[];
   onSuccess?: () => void;
   onError?: (error: unknown) => void;
 };
@@ -18,10 +19,11 @@ export const sendEmail = async ({
   text,
   subject,
   emailTo,
+  attachments,
   onSuccess = () => {},
   onError = () => {},
 }: SendEmailOptions) => {
-  const msg = getMailOptions({ html, text, subject, emailTo });
+  const msg = getMailOptions({ html, text, subject, emailTo, attachments });
 
   try {
     if (!resend) {
@@ -42,10 +44,11 @@ export const sendEmail = async ({
   }
 };
 
-const getMailOptions = ({ html, text, subject, emailTo }: SendEmailOptions) => ({
+const getMailOptions = ({ html, text, subject, emailTo, attachments }: SendEmailOptions) => ({
   to: emailTo,
   from: `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`,
   subject,
   text,
   html,
+  ...(attachments?.length ? { attachments } : {}),
 });

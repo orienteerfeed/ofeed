@@ -1,4 +1,9 @@
 import {
+  acceptSignin,
+  getDeviceMetadata,
+  withSessionLock,
+} from '@/stores/auth/session-manager';
+import {
   Card,
   CardContent,
   CardDescription,
@@ -15,7 +20,6 @@ import { useMutation } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
 import { ButtonWithSpinner } from '../../../components/molecules';
 import { Field } from '../../../components/organisms';
-import { useAuth } from '../../../hooks';
 import { AuthPageLayout } from '../../../templates';
 import { toast } from '../../../utils';
 
@@ -26,7 +30,8 @@ interface LoginFormValues {
 
 type SignInResponse = {
   signin: {
-    token: string;
+    accessToken: string;
+    expiresIn: number;
     user: {
       id: number;
       firstname: string;
@@ -38,12 +43,20 @@ type SignInResponse = {
     };
   };
 };
-type SignInVars = { input: { username: string; password: string } };
+type SignInVars = {
+  input: {
+    username: string;
+    password: string;
+    deviceId: string;
+    deviceName: string;
+  };
+};
 
 const SIGNIN_MUTATION = gql`
   mutation SignIn($input: LoginInput) {
     signin(input: $input) {
-      token
+      accessToken
+      expiresIn
       user {
         id
         firstname
@@ -60,7 +73,6 @@ const SIGNIN_MUTATION = gql`
 export const SignInPage = () => {
   const { t } = useTranslation(['translation', 'common']);
   const router = useRouter();
-  const { signin } = useAuth();
   const [doSignin, { loading: isLoadingMutation }] = useMutation<
     SignInResponse,
     SignInVars
@@ -108,22 +120,28 @@ export const SignInPage = () => {
     },
     onSubmit: async ({ value }) => {
       try {
-        const { data } = await doSignin({
-          variables: {
-            input: {
-              username: value.email,
-              password: value.password,
+        const { data } = await withSessionLock(() =>
+          doSignin({
+            variables: {
+              input: {
+                ...getDeviceMetadata(),
+                username: value.email,
+                password: value.password,
+              },
             },
-          },
-        });
+            context: {
+              headers: { 'X-Ofeed-Session': 'web' },
+            },
+          })
+        );
 
         const payload = data?.signin;
-        if (!payload?.token || !payload?.user) {
+        if (!payload?.accessToken || !payload?.user) {
           throw new Error('Missing signin payload');
         }
 
         // Save the token and user to the auth store
-        signin({ token: payload.token, user: payload.user });
+        acceptSignin(payload.accessToken, payload.user);
 
         // Redirect po úspěšném přihlášení
         router.navigate({ to: '/' });

@@ -28,9 +28,14 @@ import { Route as AuthVerifyEmailTokenRouteImport } from './routes/auth/verify-e
 import { Route as EEventIdIndexRouteImport } from './routes/e/$eventId/index'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
 import { Route as EventsEventIdEntriesRouteImport } from './routes/events/$eventId/entries'
+import { Route as EventsEventIdInsightsRouteImport } from './routes/events/$eventId/insights'
 import { Route as EventsEventIdReportRouteImport } from './routes/events/$eventId/report'
 import { Route as EventsEventIdSettingsRouteImport } from './routes/events/$eventId/settings'
 import { Route as EventsEventIdEntriesEntryIdRouteImport } from './routes/events/$eventId/entries_.$entryId'
+import { Route as EventsEventIdInsightsIndexRouteImport } from './routes/events/$eventId/insights.index'
+import { Route as EventsEventIdInsightsAnomaliesRouteImport } from './routes/events/$eventId/insights.anomalies'
+import { Route as EventsEventIdInsightsCardsRouteImport } from './routes/events/$eventId/insights.cards'
+import { Route as EventsEventIdInsightsPaymentsRouteImport } from './routes/events/$eventId/insights.payments'
 import { Route as EventsEventIdEntriesEntryIdEditRouteImport } from './routes/events/$eventId/entries_.$entryId_.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -128,6 +133,11 @@ const EventsEventIdEntriesRoute = EventsEventIdEntriesRouteImport.update({
   path: '/events/$eventId/entries',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdInsightsRoute = EventsEventIdInsightsRouteImport.update({
+  id: '/events/$eventId/insights',
+  path: '/events/$eventId/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsEventIdReportRoute = EventsEventIdReportRouteImport.update({
   id: '/events/$eventId/report',
   path: '/events/$eventId/report',
@@ -143,6 +153,30 @@ const EventsEventIdEntriesEntryIdRoute =
     id: '/events/$eventId/entries_/$entryId',
     path: '/events/$eventId/entries/$entryId',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const EventsEventIdInsightsIndexRoute =
+  EventsEventIdInsightsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => EventsEventIdInsightsRoute,
+  } as any)
+const EventsEventIdInsightsAnomaliesRoute =
+  EventsEventIdInsightsAnomaliesRouteImport.update({
+    id: '/anomalies',
+    path: '/anomalies',
+    getParentRoute: () => EventsEventIdInsightsRoute,
+  } as any)
+const EventsEventIdInsightsCardsRoute =
+  EventsEventIdInsightsCardsRouteImport.update({
+    id: '/cards',
+    path: '/cards',
+    getParentRoute: () => EventsEventIdInsightsRoute,
+  } as any)
+const EventsEventIdInsightsPaymentsRoute =
+  EventsEventIdInsightsPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => EventsEventIdInsightsRoute,
   } as any)
 const EventsEventIdEntriesEntryIdEditRoute =
   EventsEventIdEntriesEntryIdEditRouteImport.update({
@@ -169,11 +203,16 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
+  '/events/$eventId/insights': typeof EventsEventIdInsightsRouteWithChildren
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
+  '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
+  '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -199,6 +238,10 @@ export interface FileRoutesByTo {
   '/e/$eventId': typeof EEventIdIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
+  '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
+  '/events/$eventId/insights': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
 }
 export interface FileRoutesById {
@@ -220,11 +263,16 @@ export interface FileRoutesById {
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
+  '/events/$eventId/insights': typeof EventsEventIdInsightsRouteWithChildren
   '/events/$eventId/report': typeof EventsEventIdReportRoute
   '/events/$eventId/settings': typeof EventsEventIdSettingsRoute
   '/e/$eventId/': typeof EEventIdIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/events/$eventId/entries_/$entryId': typeof EventsEventIdEntriesEntryIdRoute
+  '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
+  '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
+  '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries_/$entryId_/edit': typeof EventsEventIdEntriesEntryIdEditRoute
 }
 export interface FileRouteTypes {
@@ -247,11 +295,16 @@ export interface FileRouteTypes {
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
     | '/events/$eventId/entries'
+    | '/events/$eventId/insights'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/e/$eventId/'
     | '/events/$eventId/'
     | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/insights/anomalies'
+    | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/payments'
+    | '/events/$eventId/insights/'
     | '/events/$eventId/entries/$entryId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -277,6 +330,10 @@ export interface FileRouteTypes {
     | '/e/$eventId'
     | '/events/$eventId'
     | '/events/$eventId/entries/$entryId'
+    | '/events/$eventId/insights/anomalies'
+    | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/payments'
+    | '/events/$eventId/insights'
     | '/events/$eventId/entries/$entryId/edit'
   id:
     | '__root__'
@@ -297,11 +354,16 @@ export interface FileRouteTypes {
     | '/auth/reset-password/$token'
     | '/auth/verify-email/$token'
     | '/events/$eventId/entries'
+    | '/events/$eventId/insights'
     | '/events/$eventId/report'
     | '/events/$eventId/settings'
     | '/e/$eventId/'
     | '/events/$eventId/'
     | '/events/$eventId/entries_/$entryId'
+    | '/events/$eventId/insights/anomalies'
+    | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/payments'
+    | '/events/$eventId/insights/'
     | '/events/$eventId/entries_/$entryId_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -323,6 +385,7 @@ export interface RootRouteChildren {
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
   AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
   EventsEventIdEntriesRoute: typeof EventsEventIdEntriesRoute
+  EventsEventIdInsightsRoute: typeof EventsEventIdInsightsRouteWithChildren
   EventsEventIdReportRoute: typeof EventsEventIdReportRoute
   EventsEventIdSettingsRoute: typeof EventsEventIdSettingsRoute
   EEventIdIndexRoute: typeof EEventIdIndexRoute
@@ -466,6 +529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdEntriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId/insights': {
+      id: '/events/$eventId/insights'
+      path: '/events/$eventId/insights'
+      fullPath: '/events/$eventId/insights'
+      preLoaderRoute: typeof EventsEventIdInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/$eventId/report': {
       id: '/events/$eventId/report'
       path: '/events/$eventId/report'
@@ -487,6 +557,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdEntriesEntryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId/insights/': {
+      id: '/events/$eventId/insights/'
+      path: '/'
+      fullPath: '/events/$eventId/insights/'
+      preLoaderRoute: typeof EventsEventIdInsightsIndexRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
+    '/events/$eventId/insights/anomalies': {
+      id: '/events/$eventId/insights/anomalies'
+      path: '/anomalies'
+      fullPath: '/events/$eventId/insights/anomalies'
+      preLoaderRoute: typeof EventsEventIdInsightsAnomaliesRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
+    '/events/$eventId/insights/cards': {
+      id: '/events/$eventId/insights/cards'
+      path: '/cards'
+      fullPath: '/events/$eventId/insights/cards'
+      preLoaderRoute: typeof EventsEventIdInsightsCardsRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
+    '/events/$eventId/insights/payments': {
+      id: '/events/$eventId/insights/payments'
+      path: '/payments'
+      fullPath: '/events/$eventId/insights/payments'
+      preLoaderRoute: typeof EventsEventIdInsightsPaymentsRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
     '/events/$eventId/entries_/$entryId_/edit': {
       id: '/events/$eventId/entries_/$entryId_/edit'
       path: '/events/$eventId/entries/$entryId/edit'
@@ -496,6 +594,25 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface EventsEventIdInsightsRouteChildren {
+  EventsEventIdInsightsAnomaliesRoute: typeof EventsEventIdInsightsAnomaliesRoute
+  EventsEventIdInsightsCardsRoute: typeof EventsEventIdInsightsCardsRoute
+  EventsEventIdInsightsPaymentsRoute: typeof EventsEventIdInsightsPaymentsRoute
+  EventsEventIdInsightsIndexRoute: typeof EventsEventIdInsightsIndexRoute
+}
+
+const EventsEventIdInsightsRouteChildren: EventsEventIdInsightsRouteChildren = {
+  EventsEventIdInsightsAnomaliesRoute: EventsEventIdInsightsAnomaliesRoute,
+  EventsEventIdInsightsCardsRoute: EventsEventIdInsightsCardsRoute,
+  EventsEventIdInsightsPaymentsRoute: EventsEventIdInsightsPaymentsRoute,
+  EventsEventIdInsightsIndexRoute: EventsEventIdInsightsIndexRoute,
+}
+
+const EventsEventIdInsightsRouteWithChildren =
+  EventsEventIdInsightsRoute._addFileChildren(
+    EventsEventIdInsightsRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -515,6 +632,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
   AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,
   EventsEventIdEntriesRoute: EventsEventIdEntriesRoute,
+  EventsEventIdInsightsRoute: EventsEventIdInsightsRouteWithChildren,
   EventsEventIdReportRoute: EventsEventIdReportRoute,
   EventsEventIdSettingsRoute: EventsEventIdSettingsRoute,
   EEventIdIndexRoute: EEventIdIndexRoute,

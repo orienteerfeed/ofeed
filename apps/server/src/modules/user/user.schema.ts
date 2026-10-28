@@ -2,10 +2,8 @@ import { z } from '@hono/zod-openapi';
 
 import { UserCardType } from '../../generated/prisma/enums.js';
 
-export const loginInputSchema = z.object({
-  username: z.string().max(255),
-  password: z.string().max(255),
-});
+export { sessionSigninSchema as loginInputSchema } from '@repo/shared';
+import { sessionSigninSchema as loginInputSchema } from '@repo/shared';
 
 export const userInputSchema = z.object({
   email: z.string().email().max(255),

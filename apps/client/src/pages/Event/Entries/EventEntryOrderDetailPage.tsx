@@ -49,6 +49,9 @@ import { toast } from '@/utils';
 
 import { formatEntryFee } from './EntryClassCard';
 import { EntryItemsTable } from './EntryItemsTable';
+import { EntryPaymentLedger } from './EntryPaymentLedger';
+import { useEntryPayments } from './entries.hooks';
+import { EntryPaymentDeadline } from '@/components/molecules/EntryPaymentDeadline';
 import { EntryPaymentSection } from './EntryPaymentSection';
 import { getEntryStatusBadgeVariant } from './entries.utils';
 import {
@@ -73,6 +76,11 @@ export function EventEntryOrderDetailPage() {
   });
   const { access } = useSearch({ from: '/events/$eventId/entries_/$entryId' });
   const hasSignedAccess = Boolean(access);
+  const { data: recordedPayments = [] } = useEntryPayments(
+    eventId,
+    entryId,
+    !hasSignedAccess
+  );
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<
     'REJECTED' | 'CANCELLED' | null
@@ -236,34 +244,36 @@ export function EventEntryOrderDetailPage() {
                     </TooltipContent>
                   </Tooltip>
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        disabled={pendingAction !== null}
-                        aria-label={t(
+                  {recordedPayments.length === 0 && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          disabled={pendingAction !== null}
+                          aria-label={t(
+                            entry.paid
+                              ? 'Pages.Event.EntriesManage.Actions.UnmarkPaid'
+                              : 'Pages.Event.EntriesManage.Actions.MarkPaid'
+                          )}
+                          onClick={() => void handlePaidChange(!entry.paid)}
+                        >
+                          {entry.paid ? (
+                            <BanknoteX className="h-4 w-4" />
+                          ) : (
+                            <Banknote className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t(
                           entry.paid
                             ? 'Pages.Event.EntriesManage.Actions.UnmarkPaid'
                             : 'Pages.Event.EntriesManage.Actions.MarkPaid'
                         )}
-                        onClick={() => void handlePaidChange(!entry.paid)}
-                      >
-                        {entry.paid ? (
-                          <BanknoteX className="h-4 w-4" />
-                        ) : (
-                          <Banknote className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t(
-                        entry.paid
-                          ? 'Pages.Event.EntriesManage.Actions.UnmarkPaid'
-                          : 'Pages.Event.EntriesManage.Actions.MarkPaid'
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
 
                   {entry.status === 'RECEIVED' && (
                     <Tooltip>
@@ -430,6 +440,7 @@ export function EventEntryOrderDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-1 text-sm">
+                <EntryPaymentDeadline entry={entry} />
                 <span className="font-medium">
                   {entry.contactFirstname} {entry.contactLastname}
                 </span>
@@ -543,6 +554,16 @@ export function EventEntryOrderDetailPage() {
                 qrPayment={entry.qrPayment}
               />
             ) : null}
+            {!hasSignedAccess && (
+              <EntryPaymentLedger
+                eventId={eventId}
+                entryId={entryId}
+                totalAmount={entry.totalAmount}
+                currency={entry.currency}
+                canRecord
+                onRecorded={refetch}
+              />
+            )}
           </div>
 
           <div className="flex flex-col gap-6">

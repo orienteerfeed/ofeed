@@ -14,11 +14,14 @@ function authzStatusToCode(statusCode: number): string {
 
 export const yoga = createYoga<{
   requestId?: string;
+  responseHeaders?: Headers;
 }>({
   schema,
   graphqlEndpoint: '/graphql',
-  context: async ({ request, requestId }): Promise<GraphQLContext> =>
-    createGraphQLContextFromRequest(request, requestId),
+  context: async ({ request, requestId, responseHeaders }): Promise<GraphQLContext> => ({
+    ...(await createGraphQLContextFromRequest(request, requestId)),
+    responseHeaders,
+  }),
   maskedErrors: {
     maskError(error: unknown, message: string, isDev?: boolean) {
       const graphqlError = error as GraphQLError;

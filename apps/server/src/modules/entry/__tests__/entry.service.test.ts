@@ -262,7 +262,24 @@ describe('generatePaymentReference', () => {
   });
 });
 
+describe('configured payment reference prefix', () => {
+  it.each(['7', '07', '99', '0'])('uses prefix %s with eight random digits', (prefix) => {
+    const reference = generatePaymentReference(NOW, prefix);
+    expect(reference.startsWith(prefix)).toBe(true);
+    expect(reference.slice(prefix.length)).toMatch(/^[0-9]{8}$/);
+    expect(reference.length).toBeLessThanOrEqual(10);
+  });
+  it.each([null, undefined, ''])('keeps year fallback for %j', (prefix) => {
+    expect(generatePaymentReference(NOW, prefix)).toMatch(/^26[0-9]{8}$/);
+  });
+  it.each(['123', 'ab'])('rejects invalid prefix %s defensively', (prefix) => {
+    expect(() => generatePaymentReference(NOW, prefix)).toThrow();
+  });
+});
+
 type PrismaStub = {
+  $queryRaw: ReturnType<typeof vi.fn>;
+  $transaction: ReturnType<typeof vi.fn>;
   user: { findUnique: ReturnType<typeof vi.fn> };
   event: { findUnique: ReturnType<typeof vi.fn> };
   entry: {
@@ -274,12 +291,16 @@ type PrismaStub = {
 };
 
 function makePrismaStub(): PrismaStub {
-  return {
+  const prisma: PrismaStub = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
+    $transaction: vi.fn(),
     user: { findUnique: vi.fn() },
     event: { findUnique: vi.fn() },
     entry: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     entryItem: { update: vi.fn() },
   };
+  prisma.$transaction.mockImplementation((callback) => callback(prisma));
+  return prisma;
 }
 
 const decimal = (value: number) => ({ toNumber: () => value });
@@ -448,6 +469,13 @@ describe('createEntryOrder', () => {
     expect(order.items[0].note).toBe('Bezlepková strava.');
   });
 
+  it('uses the event prefix for cash orders too', async () => {
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord({ paymentReferencePrefix: '81' }));
+    prisma.entry.create.mockResolvedValue(makeStoredEntry());
+    await run();
+    expect(prisma.entry.create.mock.calls[0][0].data.paymentReference).toMatch(/^81[0-9]{8}$/);
+  });
+
   it('returns a signed detail access token for a cash order', async () => {
     prisma.event.findUnique.mockResolvedValue(makeEventRecord());
     prisma.entry.create.mockResolvedValue(makeStoredEntry());
@@ -458,11 +486,17 @@ describe('createEntryOrder', () => {
     expect(hasEntryOrderAccess(order.detailAccessToken!, order.id, NOW)).toBe(true);
   });
 
-  it('returns QR Platba instructions only for a QR payment order', async () => {
+  it.each([
+    ['CZ6508000000192000145399', 'CZ6508000000192000145399'],
+    ['19-2000145399/0800', 'CZ6508000000192000145399'],
+    ['2201340123/2010', 'CZ8020100000002201340123'],
+  ])('returns QR Platba instructions with canonical IBAN for %s', async (account, iban) => {
     prisma.event.findUnique.mockResolvedValue(
       makeEventRecord({
-        bankAccountIban: 'CZ6508000000192000145399',
+        bankAccountIban: account,
         bankAccountName: 'OK Chrudim',
+        paymentReferencePrefix: '07',
+        entryPaymentLifetimeHours: 48,
         paymentMethods: [
           {
             type: 'QR_PAYMENT',
@@ -483,11 +517,15 @@ describe('createEntryOrder', () => {
     );
 
     const paymentReference = prisma.entry.create.mock.calls[0][0].data.paymentReference;
+    expect(paymentReference).toMatch(/^07[0-9]{8}$/);
+    expect(prisma.entry.create.mock.calls[0][0].data.paymentDueAt).toEqual(
+      new Date(NOW.getTime() + 48 * 3600000),
+    );
     expect(order.qrPayment).toEqual({
       payload:
-        `SPD*1.0*ACC:CZ6508000000192000145399*AM:100.00*CC:CZK*X-VS:${paymentReference}` +
+        `SPD*1.0*ACC:${iban}*AM:100.00*CC:CZK*X-VS:${paymentReference}` +
         '*X-KS:0308*MSG:OFeed QR payment - Novak Jan',
-      bankAccountIban: 'CZ6508000000192000145399',
+      bankAccountIban: iban,
       bankAccountName: 'OK Chrudim',
       amount: 100,
       currency: 'CZK',
@@ -588,8 +626,8 @@ describe('createEntryOrder', () => {
     await expect(run()).rejects.toThrow(/closed/);
   });
 
-  it('retries payment reference generation on a unique constraint collision', async () => {
-    prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+  it.each([null, '07'])('retries payment reference collisions with prefix %j', async (prefix) => {
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord({ paymentReferencePrefix: prefix }));
     prisma.entry.create
       .mockRejectedValueOnce({ code: 'P2002' })
       .mockResolvedValue(makeStoredEntry());
@@ -597,6 +635,10 @@ describe('createEntryOrder', () => {
     const order = await run();
 
     expect(prisma.entry.create).toHaveBeenCalledTimes(2);
+    for (const [args] of prisma.entry.create.mock.calls) {
+      expect(args.data.paymentReference.startsWith(prefix ?? '26')).toBe(true);
+      expect(args.data.paymentReference).toHaveLength(10);
+    }
     expect(order.id).toBe('entry-1');
   });
 });
@@ -607,7 +649,20 @@ describe('updateEntryOrderForGraphQL', () => {
       event: PrismaStub['event'] & { findUniqueOrThrow: ReturnType<typeof vi.fn> };
       entry: PrismaStub['entry'] & { findUnique: ReturnType<typeof vi.fn> };
     };
-    prisma.entry.findUnique = vi.fn().mockResolvedValue({ eventId: 'event-1', status: 'RECEIVED' });
+    Object.assign(prisma, {
+      $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry-1' }]),
+      $transaction: vi.fn(async (callback) => callback(prisma)),
+      entryPayment: {
+        count: vi.fn().mockResolvedValue(0),
+        aggregate: vi.fn().mockResolvedValue({ _sum: { amount: null } }),
+      },
+    });
+    prisma.entry.findUnique = vi.fn().mockResolvedValue({
+      id: 'entry-1',
+      eventId: 'event-1',
+      status: 'RECEIVED',
+      currency: 'CZK',
+    });
     prisma.event.findUnique.mockResolvedValue({ id: 'event-1', authorId: 7 });
     prisma.user.findUnique.mockResolvedValue({ role: 'USER' });
     prisma.event.findUniqueOrThrow = vi.fn().mockResolvedValue(
@@ -700,6 +755,7 @@ describe('processEntryOrder', () => {
       }),
       42,
       'OFFICE',
+      expect.objectContaining({ tx: prisma, reservationItemId: 1 }),
     );
     expect(prisma.entryItem.update).toHaveBeenCalledWith({
       where: { id: 1 },
@@ -732,5 +788,47 @@ describe('processEntryOrder', () => {
 
     expect(mockStoreCompetitor).not.toHaveBeenCalled();
     expect(prisma.entryItem.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('G19 exclusive start modes', () => {
+  it.each(['MassStart', 'WaveStart', 'PursuitStart'] as const)(
+    '%s allows two items with the same time without vacancies',
+    (startMode) => {
+      const items = priceEntryOrderItems(
+        [
+          makeItem({ startTime: SLOT_A.toISOString() }),
+          makeItem({ startTime: SLOT_A.toISOString() }),
+        ],
+        [makeClass({ startMode })],
+        makeContext(),
+      );
+      expect(items.map((item) => item.startTime)).toEqual([SLOT_A, SLOT_A]);
+    },
+  );
+
+  it('identifies a taken last slot as SLOT_TAKEN', () => {
+    expect(() =>
+      priceEntryOrderItems(
+        [makeItem({ startTime: SLOT_A.toISOString() })],
+        [makeClass({ startMode: 'StartList', slotStartTimes: [], pendingEntryCount: 1 })],
+        makeContext(),
+      ),
+    ).toThrow(expect.objectContaining({ statusCode: 409, errorCode: 'SLOT_TAKEN' }));
+  });
+
+  it('locks the event before reading availability even without an idempotency key', async () => {
+    const prisma = makePrismaStub();
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+    prisma.entry.create.mockResolvedValue(makeStoredEntry());
+    await createEntryOrder(
+      prisma as never,
+      { eventId: 'event-1', userId: null, now: NOW },
+      ORDER_INPUT,
+    );
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.event.findUnique.mock.invocationCallOrder[0],
+    );
   });
 });

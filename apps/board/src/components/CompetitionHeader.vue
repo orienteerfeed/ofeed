@@ -22,7 +22,7 @@ const isToolbarDisplayed = ref(false)
     <span class="tabular-nums">{{ nowFormatted }}</span>
     <span>{{ props.competition.name }}</span>
     <span></span>
-    <div class="absolute right-3 z-2 bg-header">
+    <div class="absolute right-3 z-2 flex items-center bg-header">
       <RouterLink data-testid="home-button" to="/">Home</RouterLink>
       <button
         @click="() => settingsStore.setSettingsDisplayed()"

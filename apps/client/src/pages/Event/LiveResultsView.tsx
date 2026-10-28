@@ -20,6 +20,7 @@ import {
   rankFeedRows,
 } from './live-feed.utils';
 import { MobileClubName } from './MobileClubName';
+import { ResultsViewport } from './ResultsViewport';
 import {
   formatResultListRank,
   getResultStatusDisplay,
@@ -100,7 +101,11 @@ const EventLiveResultsView = ({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <ResultsViewport
+      resetKey={search}
+      error={error}
+      className="flex flex-col gap-2"
+    >
       <div className="relative">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -137,7 +142,7 @@ const EventLiveResultsView = ({
       {visible.length > 0 && (
         <div className="border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto [&_table]:text-sm [&_th]:h-7 sm:[&_th]:h-8 [&_th]:px-1.5 sm:[&_th]:px-2 [&_th]:text-xs [&_td]:px-1.5 sm:[&_td]:px-2 [&_td]:py-0.5 sm:[&_td]:py-1 [&_td]:text-sm">
-            <Table>
+            <Table data-results-table="live">
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="h-8 px-2 text-xs">
@@ -298,6 +303,6 @@ const EventLiveResultsView = ({
           })}
         </Button>
       )}
-    </div>
+    </ResultsViewport>
   );
 };

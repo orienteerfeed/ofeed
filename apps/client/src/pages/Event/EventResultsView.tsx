@@ -22,7 +22,6 @@ import { useQuery, useSubscription } from '@apollo/client/react';
 import { useNavigate } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
 import { ChevronDown, Loader2, Radio, Trophy, Users } from 'lucide-react';
-import { motion } from 'motion/react';
 import React, {
   useCallback,
   useEffect,
@@ -36,6 +35,8 @@ import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
 import { LiveResultsView } from './LiveResultsView';
+import { ResultsViewport } from './ResultsViewport';
+import { useRetainedResultData } from './useRetainedResultData';
 import { MobileClubName } from './MobileClubName';
 import {
   compareByStatusPriorityThenName,
@@ -412,12 +413,21 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
     }
   }, [viewMode]);
 
-  const { data: organisationsData, loading: organisationsLoading } =
-    useQuery<OrganisationsResponse>(ORGANISATIONS, {
-      variables: { eventId: event.id },
-      pollInterval: 15000,
-      skip: viewMode !== 'club',
-    });
+  const {
+    data: incomingOrganisationsData,
+    loading: organisationsLoading,
+    error: organisationsError,
+  } = useQuery<OrganisationsResponse>(ORGANISATIONS, {
+    variables: { eventId: event.id },
+    pollInterval: 15000,
+    notifyOnNetworkStatusChange: false,
+    skip: viewMode !== 'club',
+  });
+
+  const organisationsData = useRetainedResultData(
+    event.id,
+    incomingOrganisationsData
+  );
 
   // Synchronize URL when selectedClass changes
   useEffect(() => {
@@ -439,10 +449,15 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
 
   return (
     <div className="flex flex-col h-full">
-      <WinnerNotification eventId={event.id} />
+      <WinnerNotification
+        eventId={event.id}
+        categoryNames={(event.classes ?? [])
+          .filter(c => !c.resultListMode || c.resultListMode === 'Default')
+          .map(c => c.name)}
+      />
       <div className="sticky top-0 z-10 bg-background border-b border-border pb-2 mb-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 p-0.5 bg-muted rounded-md">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1 p-0.5 bg-muted rounded-md">
             <Button
               variant={viewMode === 'category' ? 'default' : 'ghost'}
               size="sm"
@@ -629,6 +644,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
       )}
       {viewMode === 'category' && !isRelay && selectedClassId && (
         <CategoryResultsView
+          key={`${event.id}:${selectedClassId}`}
           t={t}
           eventId={event.id}
           classId={selectedClassId}
@@ -668,6 +684,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
       {/* Club View */}
       {viewMode === 'club' && (
         <ClubResultsView
+          key={`${event.id}:${selectedClubId}`}
           t={t}
           eventId={event.id}
           isRelay={isRelay}
@@ -675,6 +692,7 @@ export const EventResultsView = ({ t, event }: EventResultsViewProps) => {
           setSelectedClubId={setSelectedClubId}
           organisationsData={organisationsData}
           organisationsLoading={organisationsLoading}
+          organisationsError={organisationsError}
           onSelectClass={className => {
             setSelectedClass(className);
             setViewMode('category');
@@ -874,7 +892,7 @@ const CategoryResultsView = ({
     );
   }
 
-  if (error) {
+  if (error && competitors.length === 0) {
     return (
       <Alert severity="error" variant="outlined" title="Error loading results">
         {error.message}
@@ -897,9 +915,12 @@ const CategoryResultsView = ({
   }
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
+    <ResultsViewport
+      error={error}
+      className="border border-border rounded-lg overflow-hidden"
+    >
       <div className={mobileResultsTableClassName}>
-        <Table>
+        <Table data-results-table="category">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-8 px-2 text-xs">#</TableHead>
@@ -934,12 +955,8 @@ const CategoryResultsView = ({
             {competitors.map((competitor, index) => {
               const timeState = getCategoryTimeState(competitor);
               return (
-                <motion.tr
+                <tr
                   key={competitor.id}
-                  layout
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 100, damping: 15 }}
                   className={`h-9 ${
                     highlightedRows.includes(competitor.id)
                       ? 'bg-orange-200 dark:bg-orange-800'
@@ -1036,13 +1053,13 @@ const CategoryResultsView = ({
                         )}
                     </TableCell>
                   )}
-                </motion.tr>
+                </tr>
               );
             })}
           </TableBody>
         </Table>
       </div>
-    </div>
+    </ResultsViewport>
   );
 };
 
@@ -1056,6 +1073,7 @@ interface ClubResultsViewProps {
   setSelectedClubId: (clubId: number | null) => void;
   organisationsData: OrganisationsResponse | undefined;
   organisationsLoading: boolean;
+  organisationsError?: unknown;
   onSelectClass: (className: string) => void;
 }
 
@@ -1067,14 +1085,12 @@ const ClubResultsView = ({
   setSelectedClubId,
   organisationsData,
   organisationsLoading,
+  organisationsError,
   onSelectClass,
 }: ClubResultsViewProps) => {
-  const scrollPositionRef = useRef<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-
   // Fetch competitors for selected club with polling
   const {
-    data: competitorsData,
+    data: incomingCompetitorsData,
     loading: competitorsLoading,
     error: competitorsError,
   } = useQuery<CompetitorsByOrganisationResponse>(COMPETITORS_BY_ORGANISATION, {
@@ -1084,24 +1100,14 @@ const ClubResultsView = ({
       isRelay,
     },
     pollInterval: 15000,
+    notifyOnNetworkStatusChange: false,
     skip: !selectedClubId,
   });
 
-  // Save scroll position before re-render
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      scrollPositionRef.current = container.scrollTop;
-    }
-  });
-
-  // Restore scroll position after re-render
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container && scrollPositionRef.current > 0) {
-      container.scrollTop = scrollPositionRef.current;
-    }
-  });
+  const competitorsData = useRetainedResultData(
+    selectedClubId ?? undefined,
+    incomingCompetitorsData
+  );
 
   // Auto-select first organization if none selected
   useEffect(() => {
@@ -1436,7 +1442,7 @@ const ClubResultsView = ({
 
   const clubResults = processClubResults();
 
-  if (organisationsLoading) {
+  if (organisationsLoading && !organisationsData?.organisationNames) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -1460,232 +1466,238 @@ const ClubResultsView = ({
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="space-y-4 overflow-auto"
-      style={{ maxHeight: 'calc(100vh - 200px)' }} // Adjust based on your layout
-    >
-      {competitorsLoading && clubResults.length === 0 && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>{t('Pages.Event.Results.LoadingClubResults')}</span>
-        </div>
-      )}
+    <ResultsViewport error={competitorsError ?? organisationsError}>
+      <div
+        data-result-scroll
+        className="space-y-4 overflow-auto"
+        style={{ maxHeight: 'calc(100vh - 200px)' }}
+      >
+        {competitorsLoading && clubResults.length === 0 && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin mr-2" />
+            <span>{t('Pages.Event.Results.LoadingClubResults')}</span>
+          </div>
+        )}
 
-      {competitorsError && (
-        <div className="text-center py-8 text-destructive">
-          {t('Pages.Event.Results.ErrorLoadingClubResults', {
-            message: competitorsError.message,
-          })}
-        </div>
-      )}
+        {competitorsError && clubResults.length === 0 && (
+          <div className="text-center py-8 text-destructive">
+            {t('Pages.Event.Results.ErrorLoadingClubResults', {
+              message: competitorsError.message,
+            })}
+          </div>
+        )}
 
-      {/* Club Results */}
-      {clubResults.map(clubResult => {
-        // Relays fall back to the flat runner table while no team standing can be
-        // built yet (no team data in the feed at all).
-        const relaySections = isRelay
-          ? buildClubRelaySections(clubResult.clubId)
-          : [];
+        {/* Club Results */}
+        {clubResults.map(clubResult => {
+          // Relays fall back to the flat runner table while no team standing can be
+          // built yet (no team data in the feed at all).
+          const relaySections = isRelay
+            ? buildClubRelaySections(clubResult.clubId)
+            : [];
 
-        return (
-          <div key={clubResult.club} className="space-y-3">
-            <div className="flex items-center gap-3 px-2">
-              {clubResult.countryCode && (
-                <CountryFlag
-                  countryCode={clubResult.countryCode}
-                  className="w-8 h-6 shrink-0"
-                />
-              )}
-              <h3 className="text-lg font-bold truncate">{clubResult.club}</h3>
-              {clubResult.countryCode && clubResult.country && (
+          return (
+            <div key={clubResult.club} className="space-y-3">
+              <div className="flex items-center gap-3 px-2">
+                {clubResult.countryCode && (
+                  <CountryFlag
+                    countryCode={clubResult.countryCode}
+                    className="w-8 h-6 shrink-0"
+                  />
+                )}
+                <h3 className="text-lg font-bold truncate">
+                  {clubResult.club}
+                </h3>
+                {clubResult.countryCode && clubResult.country && (
+                  <Badge
+                    variant="outline"
+                    className="hidden sm:inline-flex text-xs shrink-0"
+                  >
+                    {clubResult.country}
+                  </Badge>
+                )}
                 <Badge
-                  variant="outline"
+                  variant="secondary"
                   className="hidden sm:inline-flex text-xs shrink-0"
                 >
-                  {clubResult.country}
+                  {clubResult.runners.length} runners
                 </Badge>
-              )}
-              <Badge
-                variant="secondary"
-                className="hidden sm:inline-flex text-xs shrink-0"
-              >
-                {clubResult.runners.length} runners
-              </Badge>
-            </div>
-
-            {relaySections.map(section => (
-              <div key={section.className} className="space-y-1">
-                <button
-                  type="button"
-                  onClick={() => onSelectClass(section.className)}
-                  className="inline-flex cursor-pointer rounded-sm px-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  title={section.className}
-                >
-                  <Badge
-                    variant="secondary"
-                    className="text-xs hover:bg-secondary/80"
-                  >
-                    {section.className}
-                  </Badge>
-                </button>
-                <RelayOverallView teams={section.teams} t={t} />
               </div>
-            ))}
 
-            {relaySections.length === 0 && (
-              <div className="border border-border rounded-lg overflow-hidden">
-                <div className={mobileResultsTableClassName}>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        {!isRelay && (
-                          <TableHead className="h-8 px-2 text-xs w-12">
-                            #
-                          </TableHead>
-                        )}
-                        <TableHead className="h-8 px-2 text-xs">Name</TableHead>
-                        <TableHead className="h-8 px-2 text-xs w-20">
-                          Class
-                        </TableHead>
-                        <TableHead className="h-8 px-2 text-xs w-20 hidden md:table-cell">
-                          Start
-                        </TableHead>
-                        <TableHead className="h-8 px-2 text-xs text-right w-24">
-                          Time
-                        </TableHead>
-                        {!isRelay && (
-                          <TableHead className="h-8 px-2 text-xs text-right w-20">
-                            Diff
-                          </TableHead>
-                        )}
-                        <TableHead className="h-8 px-2 text-xs w-20">
-                          Status
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {groupRunnersByClass(clubResult.runners).map(
-                        (classGroup, groupIndex) => (
-                          <React.Fragment key={classGroup.className}>
-                            {groupIndex > 0 && (
-                              <TableRow className="bg-muted/30">
-                                <TableCell
-                                  colSpan={isRelay ? 5 : 7}
-                                  className="p-0"
-                                >
-                                  <div className="h-px bg-border" />
-                                </TableCell>
-                              </TableRow>
-                            )}
+              {relaySections.map(section => (
+                <div key={section.className} className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => onSelectClass(section.className)}
+                    className="inline-flex cursor-pointer rounded-sm px-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    title={section.className}
+                  >
+                    <Badge
+                      variant="secondary"
+                      className="text-xs hover:bg-secondary/80"
+                    >
+                      {section.className}
+                    </Badge>
+                  </button>
+                  <RelayOverallView teams={section.teams} t={t} />
+                </div>
+              ))}
 
-                            {classGroup.runners.map((runner, index) => (
-                              <TableRow
-                                key={runner.id}
-                                className={`h-9 ${
-                                  index % 2 === 0
-                                    ? 'bg-background hover:bg-muted/30'
-                                    : 'bg-muted/20 hover:bg-muted/40'
-                                } ${runner.status !== 'OK' ? 'opacity-70' : ''}`}
-                              >
-                                {!isRelay && (
-                                  <TableCell className="px-2 py-1 text-sm font-bold">
-                                    {formatResultListRank(
-                                      runner.position,
-                                      runner.resultListMode
-                                    )}
+              {relaySections.length === 0 && (
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className={mobileResultsTableClassName}>
+                    <Table data-results-table="club">
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          {!isRelay && (
+                            <TableHead className="h-8 px-2 text-xs w-12">
+                              #
+                            </TableHead>
+                          )}
+                          <TableHead className="h-8 px-2 text-xs">
+                            Name
+                          </TableHead>
+                          <TableHead className="h-8 px-2 text-xs w-20">
+                            Class
+                          </TableHead>
+                          <TableHead className="h-8 px-2 text-xs w-20 hidden md:table-cell">
+                            Start
+                          </TableHead>
+                          <TableHead className="h-8 px-2 text-xs text-right w-24">
+                            Time
+                          </TableHead>
+                          {!isRelay && (
+                            <TableHead className="h-8 px-2 text-xs text-right w-20">
+                              Diff
+                            </TableHead>
+                          )}
+                          <TableHead className="h-8 px-2 text-xs w-20">
+                            Status
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {groupRunnersByClass(clubResult.runners).map(
+                          (classGroup, groupIndex) => (
+                            <React.Fragment key={classGroup.className}>
+                              {groupIndex > 0 && (
+                                <TableRow className="bg-muted/30">
+                                  <TableCell
+                                    colSpan={isRelay ? 5 : 7}
+                                    className="p-0"
+                                  >
+                                    <div className="h-px bg-border" />
                                   </TableCell>
-                                )}
-                                <TableCell className="px-2 py-1 text-sm font-medium">
-                                  <CompetitorName
-                                    competitor={{
-                                      firstname: runner.firstname,
-                                      lastname: runner.lastname,
-                                    }}
-                                  />
-                                </TableCell>
-                                <TableCell className="px-2 py-1">
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        onSelectClass(runner.class)
-                                      }
-                                      className="inline-flex cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                      title={runner.class}
-                                    >
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-xs hover:bg-secondary/80"
+                                </TableRow>
+                              )}
+
+                              {classGroup.runners.map((runner, index) => (
+                                <TableRow
+                                  key={runner.id}
+                                  className={`h-9 ${
+                                    index % 2 === 0
+                                      ? 'bg-background hover:bg-muted/30'
+                                      : 'bg-muted/20 hover:bg-muted/40'
+                                  } ${runner.status !== 'OK' ? 'opacity-70' : ''}`}
+                                >
+                                  {!isRelay && (
+                                    <TableCell className="px-2 py-1 text-sm font-bold">
+                                      {formatResultListRank(
+                                        runner.position,
+                                        runner.resultListMode
+                                      )}
+                                    </TableCell>
+                                  )}
+                                  <TableCell className="px-2 py-1 text-sm font-medium">
+                                    <CompetitorName
+                                      competitor={{
+                                        firstname: runner.firstname,
+                                        lastname: runner.lastname,
+                                      }}
+                                    />
+                                  </TableCell>
+                                  <TableCell className="px-2 py-1">
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          onSelectClass(runner.class)
+                                        }
+                                        className="inline-flex cursor-pointer rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        title={runner.class}
                                       >
-                                        {runner.class}
-                                      </Badge>
-                                    </button>
-                                    {runner.leg != null && (
-                                      <span className="whitespace-nowrap text-xs text-muted-foreground">
-                                        {t('Pages.Event.Live.Leg', {
-                                          leg: runner.leg,
-                                        })}
-                                      </span>
-                                    )}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-2 py-1 text-xs font-mono hidden md:table-cell">
-                                  {formatStartTime(runner.startTime)}
-                                </TableCell>
-                                <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
-                                  {shouldDisplayResultTimes(
-                                    runner.resultListMode
-                                  )
-                                    ? runner.time
-                                    : null}
-                                </TableCell>
-                                {!isRelay && (
-                                  <TableCell className="px-2 py-1 text-sm text-right font-mono">
-                                    {!shouldDisplayResultTimeLoss(
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs hover:bg-secondary/80"
+                                        >
+                                          {runner.class}
+                                        </Badge>
+                                      </button>
+                                      {runner.leg != null && (
+                                        <span className="whitespace-nowrap text-xs text-muted-foreground">
+                                          {t('Pages.Event.Live.Leg', {
+                                            leg: runner.leg,
+                                          })}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-2 py-1 text-xs font-mono hidden md:table-cell">
+                                    {formatStartTime(runner.startTime)}
+                                  </TableCell>
+                                  <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
+                                    {shouldDisplayResultTimes(
                                       runner.resultListMode
                                     )
-                                      ? null
-                                      : runner.loss && runner.loss > 0
-                                        ? `+${formatSecondsToTime(runner.loss)}`
-                                        : runner.loss === 0
-                                          ? '-'
-                                          : ''}
+                                      ? runner.time
+                                      : null}
                                   </TableCell>
-                                )}
-                                <TableCell className="px-2 py-1">
-                                  <span
-                                    className={`text-xs font-medium ${getStatusColor(runner.status)}`}
-                                  >
-                                    {getResultStatusLabel(runner.status)}
-                                  </span>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </React.Fragment>
-                        )
-                      )}
-                    </TableBody>
-                  </Table>
+                                  {!isRelay && (
+                                    <TableCell className="px-2 py-1 text-sm text-right font-mono">
+                                      {!shouldDisplayResultTimeLoss(
+                                        runner.resultListMode
+                                      )
+                                        ? null
+                                        : runner.loss && runner.loss > 0
+                                          ? `+${formatSecondsToTime(runner.loss)}`
+                                          : runner.loss === 0
+                                            ? '-'
+                                            : ''}
+                                    </TableCell>
+                                  )}
+                                  <TableCell className="px-2 py-1">
+                                    <span
+                                      className={`text-xs font-medium ${getStatusColor(runner.status)}`}
+                                    >
+                                      {getResultStatusLabel(runner.status)}
+                                    </span>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </React.Fragment>
+                          )
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+              )}
+            </div>
+          );
+        })}
 
-      {clubResults.length === 0 && !competitorsLoading && (
-        <Alert
-          severity="info"
-          variant="outlined"
-          title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
-        >
-          {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
-            view: t('Pages.Event.Alert.ViewClub'),
-          })}
-        </Alert>
-      )}
-    </div>
+        {clubResults.length === 0 && !competitorsLoading && (
+          <Alert
+            severity="info"
+            variant="outlined"
+            title={t('Pages.Event.Alert.EventDataNotAvailableTitle')}
+          >
+            {t('Pages.Event.Alert.EventDataNotAvailableMessage', {
+              view: t('Pages.Event.Alert.ViewClub'),
+            })}
+          </Alert>
+        )}
+      </div>
+    </ResultsViewport>
   );
 };
 
@@ -1868,7 +1880,7 @@ const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       <div className={mobileResultsTableClassName}>
-        <Table>
+        <Table data-results-table="relay">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-8 px-2 text-xs">#</TableHead>
@@ -2143,7 +2155,8 @@ const RelayResultsView = ({
     return () => clearInterval(interval);
   }, []);
 
-  const allCompetitors = data?.competitorsByClassUpdated ?? [];
+  const retainedData = useRetainedResultData(selectedClassId, data);
+  const allCompetitors = retainedData?.competitorsByClassUpdated ?? [];
 
   const maxLeg = useMemo(
     () => allCompetitors.reduce((max, c) => Math.max(max, c.leg ?? 0), 0),
@@ -2289,13 +2302,17 @@ const RelayResultsView = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <ResultsViewport
+      resetKey={`${selectedClassId}:${selectedTab}`}
+      error={hasContent ? error : undefined}
+      className="flex flex-col h-full"
+    >
       {/* Nested below the Cat/Club/Live switcher, which owns `top-0`.
           ponytail: fixed offset matched to that switcher's height; if the two ever
           overlap, hoist both control rows into one sticky wrapper. */}
       <div className="sticky top-[38px] z-[9] bg-background border-b border-border pb-2 mb-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 p-0.5 bg-muted rounded-md">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1 p-0.5 bg-muted rounded-md">
             {(() => {
               const courseLength =
                 currentClass?.course?.length ?? currentClass?.length ?? 0;
@@ -2378,7 +2395,7 @@ const RelayResultsView = ({
         </div>
       )}
 
-      {error && (
+      {error && !hasContent && (
         <Alert
           severity="error"
           variant="outlined"
@@ -2408,7 +2425,7 @@ const RelayResultsView = ({
         processedLegCompetitors.length > 0 && (
           <div className="border border-border rounded-lg overflow-hidden">
             <div className={mobileResultsTableClassName}>
-              <Table>
+              <Table data-results-table="relay-leg">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="h-8 px-2 text-xs">#</TableHead>
@@ -2440,16 +2457,8 @@ const RelayResultsView = ({
                   {processedLegCompetitors.map((competitor, index) => {
                     const timeState = getRelayLegTimeState(competitor);
                     return (
-                      <motion.tr
+                      <tr
                         key={competitor.id}
-                        layout
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 100,
-                          damping: 15,
-                        }}
                         className={`h-9 ${
                           index % 2 === 0
                             ? 'bg-background hover:bg-muted/30'
@@ -2522,7 +2531,7 @@ const RelayResultsView = ({
                             ? formatSignedLoss(competitor.loss)
                             : '-'}
                         </TableCell>
-                      </motion.tr>
+                      </tr>
                     );
                   })}
                 </TableBody>
@@ -2530,7 +2539,7 @@ const RelayResultsView = ({
             </div>
           </div>
         )}
-    </div>
+    </ResultsViewport>
   );
 };
 

@@ -1,4 +1,4 @@
-export const normalizeValue = (type, value) => {
+export const normalizeValue = (type: string, value: unknown) => {
   if (value === undefined || value === null) return null;
 
   switch (type) {
@@ -12,7 +12,7 @@ export const normalizeValue = (type, value) => {
       return null;
 
     case 'number':
-      return isNaN(value) ? null : Number(value); // Ensure it's a number
+      return isNaN(Number(value)) ? null : Number(value); // Ensure it's a number
 
     case 'string':
       return typeof value === 'string' ? value.trim() : String(value); // Trim and ensure it's a string

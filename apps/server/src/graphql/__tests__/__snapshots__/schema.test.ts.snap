@@ -1,9 +1,74 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Pothos GraphQL schema > matches the public schema snapshot 1`] = `
-"type AuthPayload {
-  token: String
+"type AnomalyCompetitor {
+  bibNumber: Int
+  card: Int
+  classId: Int!
+  className: String!
+  findings: [AnomalyFinding!]!
+  firstname: String!
+  id: Int!
+  lastname: String!
+  organisation: String
+  registration: String!
+  startMode: String!
+  startTime: String
+}
+
+type AnomalyCoverage {
+  classId: Int!
+  className: String!
+  evaluated: Int!
+  status: AnomalyCoverageStatus!
+  total: Int!
+  type: AnomalyType!
+}
+
+enum AnomalyCoverageStatus {
+  AMBIGUOUS_FIRST_CONTROL
+  EVALUATED
+  INSUFFICIENT_DATA
+  NO_COURSE
+  NO_RELIABLE_GRID
+  UNSUPPORTED_MODE
+}
+
+type AnomalyFinding {
+  controlCode: Int
+  differenceSeconds: Float
+  intervalSeconds: Float
+  medianSeconds: Float
+  nearestStartTime: String
+  phaseSeconds: Float
+  punchTimes: [String!]!
+  referenceCount: Int
+  splitSeconds: Float
+  type: AnomalyType!
+}
+
+enum AnomalyType {
+  FAST_FIRST_SPLIT
+  OFF_START_GRID
+  START_PUNCH
+}
+
+type AuthPayload {
+  accessToken: String!
+  expiresIn: Int!
   user: User
+}
+
+type CardInsightCompetitor {
+  bibNumber: Int
+  card: Int
+  classId: Int!
+  className: String!
+  firstname: String!
+  id: Int!
+  lastname: String!
+  organisation: String
+  registration: String!
 }
 
 input ChangeCurrentUserPasswordInput {
@@ -46,9 +111,15 @@ type Class {
   competitorsCount: Int!
   controlsCount: Int
   course: Course
+
+  """
+  Current gross fee including lateEntryFeePercent after entriesCloseAt, unless lateEntryFeeDisabled.
+  """
   currentFee: Float
   eventId: String!
   externalId: String
+
+  """Base gross fee, before any late-entry surcharge."""
   fee: Float
   feeNet: Float
   feeVat: Float
@@ -177,6 +248,22 @@ Custom DateTime scalar (backed by JS Date, serialized as ISO8601 string)
 """
 scalar DateTime
 
+type DeviceSession {
+  absoluteExpiresAt: DateTime!
+  createdAt: DateTime!
+  current: Boolean!
+  deviceId: String!
+  deviceName: String!
+  expiresAt: DateTime!
+  id: ID!
+  lastRefreshedAt: DateTime!
+}
+
+type DuplicateCardGroup {
+  card: Int!
+  competitors: [CardInsightCompetitor!]!
+}
+
 type Entry {
   addOnItems: [EntryAddOnItem!]!
   contactEmail: String!
@@ -189,6 +276,7 @@ type Entry {
   id: String!
   items: [EntryItem!]!
   paid: Boolean!
+  paymentDueAt: DateTime
   paymentMethod: PaymentMethodType
   paymentReference: String!
   qrPayment: QrPaymentInstruction
@@ -390,6 +478,16 @@ type EventAddOn {
   price: Float
 }
 
+type EventAnomalyInsight {
+  competitors: [AnomalyCompetitor!]!
+  coverage: [AnomalyCoverage!]!
+}
+
+type EventCardInsight {
+  duplicateCards: [DuplicateCardGroup!]!
+  missingCards: [CardInsightCompetitor!]!
+}
+
 type EventConnection {
   edges: [EventEdge!]!
   pageInfo: PageInfo!
@@ -534,9 +632,11 @@ input EventPaymentMethodInput {
 }
 
 type EventPaymentMethodSettings {
+  entryPaymentLifetimeHours: Int
   eventId: String!
   paymentCapabilities: EventPaymentCapabilities!
   paymentMethods: [EventPaymentMethod!]!
+  paymentReferencePrefix: String
 }
 
 enum EventPrimaryStatus {
@@ -628,6 +728,8 @@ type LeafletCoursePoint {
 }
 
 input LoginInput {
+  deviceId: String!
+  deviceName: String!
   password: password_String_NotNull_maxLength_255!
   username: username_String_NotNull_maxLength_255!
 }
@@ -660,11 +762,12 @@ type Mutation {
   markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
   requestPasswordReset(email: String!): ResetResponse!
   resendEmailVerification: ResetResponse!
-  resetPassword(newPassword: String!, token: String!): AuthPayload!
+  resetPassword(newPassword: String!, token: String!): ResetResponse!
+  revokeDevice(deviceId: String!): Boolean!
   saveCustomEventService(input: SaveCustomEventServiceInput!): EventServiceSetting!
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
-  signup(input: UserInput): ResponseMessage
+  signup(input: UserInput): ResetResponse
   updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventPaymentMethods(eventId: String!, input: UpdateEventPaymentMethodsInput!): EventPaymentMethodSettings!
@@ -674,7 +777,7 @@ type Mutation {
   updateStartSlotVacancy(input: UpdateStartSlotVacancyInput!): ClassStartSlotVacancy!
   updateSystemEventService(input: UpdateSystemEventServiceInput!): ResponseMessage!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
-  verifyEmail(token: String!): AuthPayload!
+  verifyEmail(token: String!): ResetResponse!
 }
 
 type Organisation {
@@ -751,11 +854,14 @@ type Query {
   courseLeafletPoints(classId: Int!): [LeafletCoursePoint!]!
   courseRadioControls(classId: Int!): [RadioCoursePoint!]!
   currencies: [Currency!]!
+  currentSessions: [DeviceSession!]!
   currentUser: User!
   currentUserCards: [UserCard!]!
   entryOrderById(accessToken: String, entryId: String!): Entry
   entryOrdersByEvent(eventId: String!): [Entry!]!
   event(id: String!): Event
+  eventAnomalyInsight(eventId: String!): EventAnomalyInsight!
+  eventCardInsight(eventId: String!): EventCardInsight!
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
   eventEntryAvailability(eventId: String!): EntryAvailability
@@ -904,6 +1010,7 @@ type StoreCompetitorResponse {
 
 type Subscription {
   _empty(nothing: String): String
+  classesUpdated(eventId: String!): String!
   competitorUpdated(eventId: String!): Competitor!
   competitorsByClassUpdated(classId: Int!): [Competitor!]
   splitCompetitorsByClassUpdated(classId: Int!): [Competitor!]
@@ -998,7 +1105,9 @@ input UpdateCurrentUserInput {
 input UpdateEventPaymentMethodsInput {
   bankAccountIban: String
   bankAccountName: String
+  entryPaymentLifetimeHours: Int
   paymentMethods: [EventPaymentMethodInput!]!
+  paymentReferencePrefix: String
 }
 
 input UpdateEventRentalCardInput {
@@ -1038,7 +1147,9 @@ type User {
   id: Int!
   lastname: lastname_String_NotNull_maxLength_255!
   organisation: organisation_String_maxLength_191
-  password: password_String_NotNull_maxLength_255!
+
+  """Always null. Passwords are never returned by the API."""
+  password: password_String_NotNull_maxLength_255
   role: UserRole!
   updatedAt: DateTime!
 }

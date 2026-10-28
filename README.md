@@ -11,6 +11,15 @@ OrienteerFeed (OFeed) is a monorepo web platform for orienteering event data, co
 
 [![](https://dcbadge.limes.pink/api/server/https://discord.gg/YWURC23tHZ)](https://discord.gg/YWURC23tHZ)
 
+## Development deployment
+
+Successful pushes to `develop` run CI and deploy the exact build to
+`https://dev.ofeed.live` with API at `https://api.dev.ofeed.live`. Publication
+uses image digests and a versioned Helm chart, then updates the GitOps
+`deploy/dev` branch. See [deployment setup](docs/DEPLOYMENT_ARGOCD.md) for the
+required SSH deploy key, read-only Argo CD token and environment prerequisites.
+Stable releases continue to use `main` and `vX.Y.Z` tags.
+
 ## How It Works
 
 This application is like a digital hub for all things related to orienteering events. It serves as a one-stop platform where you can get details about various events, the classes offered at these events, and the competitors participating in them. It provides these services through a web server and is capable of communicating using both RESTful APIs and GraphQL, which are two ways of fetching data from a server.
@@ -31,6 +40,13 @@ We are using [Weblate](https://hosted.weblate.org/projects/ofeed/) free localiza
 - Monorepo: pnpm workspaces + Turborepo
 - Shared: `@repo/shared` (shared schemas/types)
 
+## Documentation
+
+Start with the [documentation index](docs/README.md) for product scope,
+architecture decisions, feature specs, API contracts, development and operations.
+Agents start at [AGENTS.md](AGENTS.md); Claude Code imports the same entry point
+through [CLAUDE.md](CLAUDE.md).
+
 ## Repository Layout
 
 ```text
@@ -40,6 +56,7 @@ apps/
   server/    # Hono + Prisma API
 packages/
   shared/    # shared schemas/types
+  commentator/ # browser winner announcer (gong + voice) shared by client and board
 ```
 
 ## Requirements
@@ -122,6 +139,22 @@ Default local URLs:
 - Readiness: `http://localhost:3001/readyz`
 - Metrics (Prometheus): `http://localhost:3001/metrics`
 
+### UI testing with Playwright MCP
+
+The root `.mcp.json` configures Playwright MCP to connect to an existing Chromium
+browser at `http://localhost:9222`. Start the application with `pnpm dev` and
+launch Chrome with remote debugging enabled. On macOS:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9222 \
+  --user-data-dir="$HOME/.ofeed-playwright-chrome"
+```
+
+Reload the MCP configuration in your MCP client, then use the Playwright tools
+to open `http://localhost:3000` and test the UI. The separate Chrome profile
+persists browser state between sessions.
+
 ## Development Commands (Root)
 
 - `pnpm setup:dev` - bootstrap local dev environment
@@ -174,6 +207,16 @@ Default local URLs:
 - `pnpm e2e`
 
 ### Board (`apps/board`)
+
+Board URLs describe the complete display configuration. Parameters omitted from a
+link use application defaults, including showing all categories in their natural
+order; previously saved browser settings do not override the link. Changes made
+in the settings panel are reflected in the URL.
+
+Relay categories respect `Unordered` (alphabetical, without ranks, losses or
+pinned leaders) and `UnorderedNoTimes` (also hides team and leg times). The public
+event-detail API includes both `competitorsCount` and `teamsCount` per class so
+the board can hide empty individual and relay categories.
 
 - `pnpm dev`
 - `pnpm dev:win`
@@ -259,7 +302,7 @@ Docker Compose can also use a root `.env` only for Compose interpolation, for ex
 - `BOARD_HOST=board.orienteerfeed.com`
 - `TRAEFIK_CERT_RESOLVER=le`
 
-An example Compose-only file is provided as [`.env.example`](/Users/martinkrivda/Workspace/orienteerfeed/.env.example). Keep in mind that this root `.env` is optional and is meant for Docker/Traefik interpolation only, not for app runtime configuration.
+An example Compose-only file is provided as [`.env.example`](./.env.example). Keep in mind that this root `.env` is optional and is meant for Docker/Traefik interpolation only, not for app runtime configuration.
 
 ## Helm / k3s Deployment
 
@@ -383,3 +426,12 @@ v3.0. See [LICENSE](./LICENSE).
 Contributions are accepted under the terms of [CLA.md](./CLA.md). By 
 contributing, you agree that your contributions may be relicensed
 and used in commercial products and SaaS offerings.
+
+## Device-session authentication
+
+User signin requires device metadata and returns a 15-minute access JWT. Native
+REST clients rotate opaque refresh tokens; the web client renews through protected
+HttpOnly cookies. Production requires a Vault-delivered ES256 signing-key file.
+This changes the signin contract and invalidates legacy user tokens at cutover.
+See the [integration contract](docs/entry-api-integration.md) and
+[device-session operations](docs/ops/runbooks/device-sessions.md).

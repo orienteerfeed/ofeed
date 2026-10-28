@@ -1,8 +1,6 @@
 import { config } from '@/config';
 import { useAuthStore } from '@/stores/auth';
 
-const AUTH_STORAGE_KEY = 'ofeed-auth';
-
 function joinUrl(base: string, path: string) {
   return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 }
@@ -28,41 +26,6 @@ export function getGraphQLUrls() {
   return { httpUrl, wsUrl };
 }
 
-function getPersistedToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as {
-      state?: { token?: unknown };
-      token?: unknown;
-    };
-    const tokenFromState = parsed?.state?.token;
-    if (typeof tokenFromState === 'string' && tokenFromState.length > 0) {
-      return tokenFromState;
-    }
-
-    if (typeof parsed?.token === 'string' && parsed.token.length > 0) {
-      return parsed.token;
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-}
-
 export function getToken(): string | null {
-  const token = useAuthStore.getState().token;
-  if (token && token.length > 0) {
-    return token;
-  }
-
-  return getPersistedToken();
+  return useAuthStore.getState().token;
 }

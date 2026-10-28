@@ -1,3 +1,4 @@
+import { logoutSession } from '@/stores/auth/session-manager';
 import {
   Card,
   CardContent,
@@ -17,7 +18,6 @@ import {
   PasswordStrengthIndicator,
 } from '../../../components/molecules';
 import { Field } from '../../../components/organisms';
-import { useAuth } from '../../../hooks';
 import { AuthPageLayout } from '../../../templates';
 import { toast } from '../../../utils';
 
@@ -28,16 +28,8 @@ interface PasswordResetFormValues {
 
 type ResetPasswordResponse = {
   resetPassword: {
-    token: string;
-    user: {
-      id: number;
-      firstname: string;
-      lastname: string;
-      email: string;
-      role: 'USER' | 'ADMIN';
-      organisation?: string | null;
-      emergencyContact?: string | null;
-    };
+    success: boolean;
+    message?: string;
   };
 };
 type ResetPasswordVars = { token: string; newPassword: string };
@@ -46,16 +38,8 @@ type ResetPasswordVars = { token: string; newPassword: string };
 const RESET_PASSWORD_MUTATION = gql`
   mutation ResetPassword($token: String!, $newPassword: String!) {
     resetPassword(token: $token, newPassword: $newPassword) {
-      token
-      user {
-        id
-        firstname
-        lastname
-        email
-        role
-        organisation
-        emergencyContact
-      }
+      success
+      message
     }
   }
 `;
@@ -63,7 +47,6 @@ const RESET_PASSWORD_MUTATION = gql`
 export const ResetPasswordPage = () => {
   const { t } = useTranslation(['translation', 'common']);
   const router = useRouter();
-  const { signin } = useAuth();
   const { token } = useParams({ from: '/auth/reset-password/$token' });
   const [doResetPassword, { loading: isLoadingMutation }] = useMutation<
     ResetPasswordResponse,
@@ -153,15 +136,12 @@ export const ResetPasswordPage = () => {
         });
 
         const payload = data?.resetPassword;
-        if (!payload?.token || !payload?.user) {
+        if (!payload?.success) {
           throw new Error('Missing resetPassword payload');
         }
 
-        // Save the token and user to the auth store
-        signin({ token: payload.token, user: payload.user });
-
-        // Redirect after successful login
-        router.navigate({ to: '/' });
+        await logoutSession();
+        router.navigate({ to: '/auth/signin' });
       } catch (error: unknown) {
         console.error('Password reset error:', error);
         toast({

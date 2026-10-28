@@ -149,6 +149,9 @@ const envSchema = z.object({
   MYSQL_PORT: z.string().optional(),
 
   DATABASE_URL: z.string().default(DEFAULT_DATABASE_URL),
+  ACCESS_JWT_KEY_FILE: z.string().optional(),
+  ACCESS_JWT_ISSUER: z.string().default('ofeed'),
+  ACCESS_JWT_AUDIENCE: z.string().default('ofeed-user'),
   JWT_TOKEN_SECRET_KEY: z.string().default('change-me-in-production'),
   ENCRYPTION_SECRET_KEY: z.string().default(DEFAULT_ENCRYPTION_SECRET_KEY),
   ORIS_API_BASE_URL: z.string().url().default('https://oris.orientacnisporty.cz/API/'),
@@ -169,8 +172,11 @@ const envSchema = z.object({
       'Content-Type,Authorization,x-orienteerfeed-app-activate-user-url,x-ofeed-app-reset-password-url',
     ),
 
-  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
-  RATE_LIMIT_MAX: z.coerce.number().default(200),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(600),
+  GRAPHQL_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(600),
+  UPLOAD_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
+  SESSION_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
   MAP_TILE_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
   MAP_TILE_RATE_LIMIT_MAX: z.coerce.number().default(2000),
   MAP_TILE_SESSION_REQUIRED: booleanEnv(false),

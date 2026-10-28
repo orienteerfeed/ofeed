@@ -560,7 +560,7 @@ export function EventEntryOrderEditPage() {
                         </Label>
                       </div>
                     )}
-                    {cls && cls.startMode !== 'FreeStart' && (
+                    {cls && cls.startMode === 'StartList' && (
                       <div className="space-y-2">
                         <Label htmlFor={`start-time-${item.id}`}>
                           {t('Pages.Event.Entries.Form.StartTime')}

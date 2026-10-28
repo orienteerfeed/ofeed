@@ -31,6 +31,31 @@ describe('public event routes', () => {
     vi.clearAllMocks();
   });
 
+  it('includes team counts in event detail, including empty relay classes', async () => {
+    prismaMock.event.findUnique.mockResolvedValue({
+      id: 'relay-event',
+      name: 'Relay',
+      date: new Date('2026-10-20T00:00:00Z'),
+      discipline: 'Relay',
+      classes: [
+        { id: 1, name: 'H21', minAge: null, maxAge: null, _count: { competitors: 6, teams: 2 } },
+        { id: 2, name: 'D21', minAge: null, maxAge: null, _count: { competitors: 0, teams: 0 } },
+      ],
+    });
+    const app = new Hono();
+    app.route('/', publicEventRoutes as any);
+    const response = await app.request('http://localhost/relay-event');
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.results.data.classes).toEqual([
+      expect.objectContaining({ id: 1, competitorsCount: 6, teamsCount: 2 }),
+      expect.objectContaining({ id: 2, competitorsCount: 0, teamsCount: 0 }),
+    ]);
+    expect(
+      prismaMock.event.findUnique.mock.calls[0][0].select.classes.include._count.select,
+    ).toEqual({ competitors: true, teams: true });
+  });
+
   it('serves featured image for unpublished events when the image exists', async () => {
     prismaMock.event.findUnique.mockResolvedValue({
       featuredImageKey: 'events/test-event/featured-image.png',
