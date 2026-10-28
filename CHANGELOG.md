@@ -8,12 +8,27 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Restore missing entry class occupancy and remaining-place translations in all
+  six locales, fixing the client type check and untranslated card labels.
+- Deliver bank payment pushes to all registered devices in batches and expose
+  the connection transaction pagination cursor in OpenAPI.
+
 ### Changed
 
 - Compact public entry category cards into a two-column mobile grid and show
   remaining places, with occupancy and birth-year details in a tooltip.
 
 ### Added
+
+- Bank payment import: organizers register their Fio account, the desktop
+  collector reports incoming payments, and exact matches record bank-import
+  receipts that mark entry orders paid; unmatched payments can be resolved
+  manually.
+
+- Push notifications of matched, overpaid and unmatched bank payments to the
+  organizer's registered phones, switchable per status.
 
 - Optional event payment lifetime with automatic cancellation of unpaid received
   non-cash orders and deadline notices on checkout and entry detail.

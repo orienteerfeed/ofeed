@@ -13,6 +13,9 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [Bank payment import](bank-payment-import.md): client-reported Fio payments matched to entry orders (G24).
+- [Bank payment notifications](bank-payment-notifications.md): Expo push for matched and unmatched bank payments (G25).
+
 - [Entry payment expiry](entry-payment-expiry.md): optional lifetime and automatic cancellation of unpaid received non-cash orders.
 
 - [Anomaly analysis](anomaly-analysis.md): evidence-backed split and start checks; issue #164.

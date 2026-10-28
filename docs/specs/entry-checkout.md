@@ -13,6 +13,11 @@ does not itself mean payment was received or competitors were processed.
 
 ## Acceptance criteria
 
+- Entry class cards display localized occupancy and remaining places in all six
+  supported locales. Remaining places use locale-specific plurals, including
+  zero; negative availability displays zero. Translation keys must pass the
+  client type check. No API changes are required. Verify with the card component
+  tests using real locale resources and the workspace type check.
 - AC-01: `POST /rest/v1/events/{eventId}/entries` accepts schema-valid items.
   Registration/birth year is required only when a birth year must be resolved
   for an age-restricted class. `card` and `cardRental` may both be omitted.

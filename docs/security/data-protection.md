@@ -12,6 +12,8 @@ operator must approve those policies and document unresolved decisions.
 | Participants               | Name, registration, birth year, timing card, club, results/splits          | Publication is contextual; include minors and restricted splits in reviews |
 | Entry orders               | Contact identity, email, participant items, notes, fees, payment reference | Separate organizer access from public event data                           |
 | Emergency/contact metadata | User-provided contact information                                          | Minimize exposure and review field authorization                           |
+| Bank import                | Organizer IBAN, provider transaction ID, variable symbol, amount, currency, booking date, reporting device ID; linked entry order | No payer name, account or message; owner-only access; sync logs 90 days; transaction retention open (G24) |
+| Push notifications         | Expo push token, device ID, platform; queued status per bank transaction | Owner-only; token never returned; removed on unregister, `DeviceNotRegistered` or user deletion; outbox 30 days; Expo is a processor |
 | Timing ingestion           | Card, control, punch time, device ID, station serial, receipt times and author | JWT owner/admin ingestion; private raw ledger, removed with event deletion |
 | Imports and caches         | Federation registrations, XML/CSV payloads and import history              | Preserve provenance; public source does not remove privacy obligations     |
 | Operations                 | IP, user agent, request paths, errors and browser traces                   | Restrict sinks, redact sensitive fields and set retention                  |
@@ -56,6 +58,11 @@ re-copying sensitive values into logs.
 - Public-result/minor-data publication policy and federation cache
   refresh/removal.
 - Provider agreements, processing locations and breach response process.
+- Retention period and erasure-on-request semantics for bank transactions,
+  which link to immutable entry receipts
+  ([bank payment import](../specs/bank-payment-import.md)).
+- Processing agreement with Expo before enabling push notifications
+  ([G25](../specs/bank-payment-notifications.md)).
 
 Track these in owner-approved issues/specs. See [threat model](threat-model.md).
 

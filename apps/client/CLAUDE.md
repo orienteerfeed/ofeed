@@ -1,6 +1,6 @@
 # Client Guidelines
 
-Vite + React 19 client. See @package.json for stack and scripts; root `CLAUDE.md` for monorepo rules.
+Vite + React 19 client. See `package.json` for stack and scripts; root `CLAUDE.md` for monorepo rules.
 
 ## Architecture
 

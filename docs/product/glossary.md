@@ -27,6 +27,8 @@ for existing concepts. Translated UI labels belong in localization resources.
 | Startovné                        | Entry fee               | Class fee; the order item stores a price snapshot                                   |
 | Příplatek po termínu             | Late-entry surcharge    | `lateEntryFeePercent`, subject to class settings                                    |
 | Variabilní symbol                | Payment reference       | `paymentReference`: unique within an event                                          |
+| Bankovní spojení                 | Bank connection         | `BankConnection`: organizer's own account polled by the desktop collector           |
+| Bankovní pohyb                   | Bank transaction        | `BankTransaction`: client-reported incoming payment; matched by payment reference   |
 | Protokol změn                    | Change protocol         | `Protocol`: event change records, not a network protocol                            |
 | Výsledková tabule                | Event board             | Separate Vue app in `apps/board`                                                    |
 

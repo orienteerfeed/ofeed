@@ -82,6 +82,8 @@ function receipts(): EntryPaymentInsight[] {
     operatorId: 7,
     paidAt: '2026-10-25T09:00:00Z',
     recordedAt: '2026-10-26T10:00:00Z',
+    source: 'MANUAL' as const,
+    bankTransactionId: null,
     paymentReference: `26000000${i.toString().padStart(2, '0')}`,
     contactFirstname: 'Jan',
     contactLastname: `Contact-${i}`,

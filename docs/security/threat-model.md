@@ -38,6 +38,18 @@ Track unresolved findings in issues with an owner and severity. The current map
 does not establish residual-risk acceptance or a security response SLA. See
 [data protection](data-protection.md) and [operations](../ops/deployment.md).
 
+## Client-reported bank payments
+
+The desktop collector reports bank transactions under the organizer's JWT; the
+server cannot verify that the bank booked them (`trust = CLIENT_REPORTED`). A
+stolen organizer session or a modified desktop can therefore mark that
+organizer's own orders paid. Mitigations: server-issued payment references,
+exact currency, outstanding-amount classification, matching limited to the
+owner's events, TEST connections limited to demo events, immutable receipts with
+`source = BANK_IMPORT`, reporting device and receive time. The bank API token
+never reaches the server. Limits and a review queue are open
+([ADR 0007](../architecture/adr/0007-bank-payment-import.md)).
+
 ## Device sessions
 
 User access JWTs expire after 15 minutes and use ES256 with an explicit kid,
