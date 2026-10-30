@@ -372,7 +372,7 @@ describe('auth service passwordResetConfirm', () => {
     expect(prismaMock.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 77 },
-        data: { password: expect.any(String) },
+        data: { password: expect.any(String), passwordSet: true },
       }),
     );
     expect(prismaMock.passwordResetToken.updateMany).toHaveBeenCalledWith({

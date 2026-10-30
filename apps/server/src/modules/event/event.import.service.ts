@@ -84,7 +84,7 @@ const XML_PARSER = new Parser({ explicitArray: false, trim: true, mergeAttrs: tr
 const ORIS_DEFAULT_TIMEZONE = 'Europe/Prague';
 const EVENTOR_DEFAULT_TIMEZONE = 'Europe/Prague';
 
-const ORIS_API_BASE_URL = env.ORIS_API_BASE_URL || 'https://oris.orientacnisporty.cz/API/';
+const ORIS_API_BASE_URL = env.ORIS_API_BASE_URL || 'https://oris.ceskyorientak.cz/API/';
 const EVENTOR_API_BASE_URL = env.EVENTOR_API_BASE_URL || 'https://eventor.orienteering.sport/api';
 
 const ID_KEYS = [

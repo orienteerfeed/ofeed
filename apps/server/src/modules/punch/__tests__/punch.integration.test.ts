@@ -175,10 +175,11 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     });
     const radio = batch(-1, 120);
     await ingestPunches(client, auth, eventId, radio);
+    // A closed result ignores SRR; only the readout below may change it.
     expect(await competitor()).toMatchObject({
       status: 'Disqualified',
-      time: 120,
-      finishTime: at(120),
+      time: null,
+      finishTime: null,
     });
     const readout = batch(-1, 120, 'READOUT');
     readout.deviceId = 'readout';
@@ -215,6 +216,48 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
     await ingestPunches(client, auth, eventId, batch(0, 5));
     expect((await competitor()).startTime).toEqual(at(20));
   });
+  it('records finish times but keeps NotCompeting status for SRR and readout finishes', async () => {
+    await client.competitor.update({
+      where: { id: competitorId },
+      data: { status: 'NotCompeting' },
+    });
+    await ingestPunches(client, auth, eventId, batch(-1, 120));
+    expect(await competitor()).toMatchObject({ status: 'NotCompeting', time: 120 });
+    await ingestPunches(client, auth, eventId, batch(-1, 125, 'READOUT'));
+    expect(await competitor()).toMatchObject({
+      status: 'NotCompeting',
+      finishTime: at(125),
+      time: 125,
+    });
+    expect(await client.protocol.count({ where: { competitorId, type: 'status_change' } })).toBe(0);
+  });
+
+  it('keeps a closed result from late SRR punches but lets a readout correct it', async () => {
+    await client.competitor.update({
+      where: { id: competitorId },
+      data: { status: 'MissingPunch', finishTime: at(300), time: 290 },
+    });
+    await ingestPunches(client, auth, eventId, {
+      ...batch(31, 60),
+      punches: [...batch(31, 60).punches, ...batch(-1, 280).punches],
+    });
+    expect(await competitor()).toMatchObject({
+      status: 'MissingPunch',
+      finishTime: at(300),
+      time: 290,
+      splits: [],
+    });
+    expect(publishUpdatedCompetitors).not.toHaveBeenCalled();
+
+    await ingestPunches(client, auth, eventId, batch(-1, 270, 'READOUT'));
+    expect(await competitor()).toMatchObject({
+      status: 'OK',
+      finishTime: at(270),
+      time: 270,
+      splits: [],
+    });
+  });
+
   it('preserves configured vacancies when a shared-mode punch projects a start time', async () => {
     await client.competitor.update({ where: { id: competitorId }, data: { startTime: null } });
     await client.startSlotVacancy.create({ data: { classId, startTime: at(10) } });
@@ -500,7 +543,10 @@ describe.skipIf(!settings.url)('punch ingestion on disposable MariaDB', () => {
       splits: [{ controlCode: 31, time: 60 }],
     });
     expect(await client.punch.count({ where: { eventId, superseded: false } })).toBe(0);
+    // A late SRR punch does not touch the closed result; a readout one does.
     await ingestPunches(client, auth, eventId, batch(32, 100));
+    expect((await competitor()).splits).toHaveLength(1);
+    await ingestPunches(client, auth, eventId, batch(32, 100, 'READOUT'));
     expect((await competitor()).splits).toHaveLength(2);
   });
 

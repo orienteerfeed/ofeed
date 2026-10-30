@@ -58,6 +58,27 @@
         "NoDuplicates": "Keine doppelten Chips in dieser Auswahl.",
         "FullGroups": "Filter wählen ganze Gruppen aus. Alle Teilnehmer mit demselben Chip bleiben sichtbar, auch aus anderen Kategorien."
       },
+      "Entries": {
+        "Title": "Anmeldungen im Zeitverlauf",
+        "Description": "Wie die Anmeldungen von der Eröffnung über den Meldeschluss bis zum Wettkampf zugenommen haben, nach Tag und Kategorie.",
+        "Class": "Kategorie",
+        "Loading": "Anmeldungen werden geladen…",
+        "Stale": "Aktualisierung fehlgeschlagen. Die angezeigten Daten sind veraltet; Export und Druck sind deaktiviert.",
+        "Error": "Die Anmeldungen im Zeitverlauf konnten nicht geladen werden.",
+        "Empty": "In dieser Auswahl gibt es noch keine Anmeldungen.",
+        "Total": "Angemeldete Teilnehmende",
+        "FinalDaysShare": "In den letzten 3 Tagen vor Meldeschluss angemeldet",
+        "LateEntries": "Nachmeldungen",
+        "PeakDay": "Stärkster Tag",
+        "Cumulative": "Anmeldungen gesamt",
+        "Daily": "Neue Anmeldungen pro Tag",
+        "LateArea": "Der schattierte Bereich markiert Nachmeldungen nach dem Meldeschluss.",
+        "Date": "Datum",
+        "Opens": "Eröffnung",
+        "Closes": "Meldeschluss",
+        "Race": "Wettkampf",
+        "Table": "Tageswerte"
+      },
       "Anomalies": {
         "Title": "Anomalieanalyse",
         "Description": "Verdächtige erste Zwischenzeiten und Startzeiten prüfen.",
@@ -1920,6 +1941,34 @@
     "Error": "Gerätesitzungen konnten nicht aktualisiert werden.",
     "LogoutUnconfirmed": "Lokal abgemeldet. Der Widerruf auf dem Server wurde nicht bestätigt; stellen Sie die Verbindung wieder her.",
     "RevocationDelay": "Abgemeldete Geräte können ein vorhandenes Zugriffstoken noch bis zu 15 Minuten verwenden."
+  },
+  "Sso": {
+    "ContinueWith": "Weiter mit {{provider}}",
+    "StartFailed": "Anmeldung konnte nicht gestartet werden",
+    "Completing": "Anmeldung wird abgeschlossen…",
+    "FailedTitle": "Anmeldung fehlgeschlagen",
+    "LinkedTitle": "Konto verknüpft",
+    "BackToSignIn": "Zurück zur Anmeldung",
+    "BackToProfile": "Zurück zum Profil",
+    "Errors": {
+      "invalid_state": "Der Anmeldelink ist abgelaufen oder wurde in einem anderen Browser geöffnet. Bitte erneut versuchen.",
+      "provider_unavailable": "Der Anmeldeanbieter ist derzeit nicht erreichbar. Bitte später erneut versuchen.",
+      "email_in_use": "Ein Konto mit dieser E-Mail existiert bereits. Melden Sie sich mit Ihrem Passwort an und verknüpfen Sie den Anbieter im Profil.",
+      "email_required": "Der Anbieter hat keine E-Mail-Adresse übermittelt, daher kann kein Konto erstellt werden.",
+      "identity_taken": "Dieses externe Konto ist bereits mit einem anderen OFeed-Konto verknüpft.",
+      "account_inactive": "Dieses Konto ist inaktiv.",
+      "last_sign_in_method": "Legen Sie zuerst ein Passwort fest (über Passwort zurücksetzen), damit Sie sich nach dem Trennen noch anmelden können."
+    },
+    "Linked": {
+      "Title": "Verknüpfte Konten",
+      "Description": "Melden Sie sich mit einem externen Konto statt mit Ihrem Passwort an.",
+      "Link": "Verknüpfen",
+      "Unlink": "Trennen",
+      "LinkedSince": "Verknüpft seit {{date}}",
+      "NotLinked": "Nicht verknüpft",
+      "UnlinkSuccess": "Konto getrennt",
+      "UnlinkFailed": "Trennen fehlgeschlagen"
+    }
   },
   "EntryPaymentExpiry": {
     "Label": "Zahlungsfrist (Stunden)",

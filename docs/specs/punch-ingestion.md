@@ -30,7 +30,12 @@ split snapshots remain authoritative. No frontend or punch browsing API is added
 - READOUT timing takes precedence over SRR; within a source choose earliest
   start and earliest finish at or after start. Existing start is the fallback.
   SRR sets Finished from Inactive/Active/Finished only; READOUT sets OK even over
-  adjudication. Later SRR cannot downgrade a readout result.
+  adjudication, except NotCompeting, which no finish punch changes (times are
+  still recorded). Later SRR cannot downgrade a readout result.
+- A closed result (any status other than Inactive, Active, Finished or
+  NotCompeting, e.g. from an IOF XML ResultList, MOP or readout) is corrected
+  only by READOUT observations. SRR observations are still stored and assigned
+  but never change its timing, status or splits.
 - Competitor creation retries pending matches. `updateCompetitor`, IOF XML and
   MOP imports are authoritative over previously stored observations. Under the
   event lock they supersede assigned observations and pending observations for
@@ -41,7 +46,8 @@ split snapshots remain authoritative. No frontend or punch browsing API is added
 - Supplied splits replace the complete list, including an empty list. Omitting
   splits in `updateCompetitor` preserves existing splits. Timing changes survive
   reconciliation. Retries and source promotion never resurrect consumed punches;
-  genuinely new observations received after the write may apply.
+  genuinely new observations received after the write may apply, subject to
+  the closed-result rule above.
 - Punch application and field changes write Protocol atomically, attributed to
   the original receipt author. Publish competitorUpdated and class updates
   after commit, once per changed competitor/class. Pure retries do neither.

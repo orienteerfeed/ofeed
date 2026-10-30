@@ -97,6 +97,7 @@ const ingest = (raw: unknown = item, conn: BankConnection = connection) =>
 
 describe('bank transaction ingestion', () => {
   it('matches an exact outstanding amount and writes one bank-import receipt', async () => {
+    const matchedFrom = Date.now();
     await expect(ingest()).resolves.toEqual({
       providerTransactionId: '1148734530',
       status: 'MATCHED',
@@ -111,11 +112,14 @@ describe('bank transaction ingestion', () => {
       method: 'QR',
       source: 'BANK_IMPORT',
       currency: 'CZK',
-      paidAt: new Date('2026-10-20T00:00:00Z'),
       deviceId: DEVICE,
       operatorId: 7,
       bankTransactionId: 'bt-1',
     });
+    // The bank reports no time: paidAt is the server match time, not booking-day midnight.
+    const { paidAt } = db.entryPayment.create.mock.calls[0]![0].data as { paidAt: Date };
+    expect(paidAt.getTime()).toBeGreaterThanOrEqual(matchedFrom);
+    expect(paidAt.getTime()).toBeLessThanOrEqual(Date.now());
     expect(db.$queryRaw).toHaveBeenCalled(); // entry-row lock of the receipt ledger
   });
 

@@ -1315,6 +1315,37 @@
               }
             }
           ]
+        },
+        {
+          "name": "[GET] /rest/v1/auth/sso/providers - List enabled SSO providers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/auth/sso/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "auth", "sso", "providers"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('providers is an array of slugs', function () {",
+                  "  const providers = pm.response.json().results.data.providers;",
+                  "  pm.expect(providers).to.be.an('array');",
+                  "  providers.forEach((slug) => pm.expect(slug).to.be.a('string'));",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -2998,6 +3029,28 @@
               "script": {
                 "type": "text/javascript",
                 "exec": ["pm.test('Status is 422', function () { pm.response.to.have.status(422); });"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "[GET] /rest/v1/auth/sso/unknown/start - Reject unknown SSO provider",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rest/v1/auth/sso/unknown/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["rest", "v1", "auth", "sso", "unknown", "start"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status is 404', function () {", "  pm.response.to.have.status(404);", "});"]
               }
             }
           ]

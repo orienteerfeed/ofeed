@@ -21,6 +21,8 @@ export const entryPaymentRecordSchema = z.object({
   recordedAt: z.iso.datetime(),
   source: entryPaymentSourceSchema,
   bankTransactionId: z.string().nullable(),
+  /** Bank booking day (YYYY-MM-DD) for BANK_IMPORT receipts; the bank reports no time. */
+  bookingDate: z.iso.date().nullable(),
 });
 export type EntryPaymentRecord = z.infer<typeof entryPaymentRecordSchema>;
 

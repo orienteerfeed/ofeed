@@ -10,6 +10,20 @@ and this project adheres to
 
 ### Fixed
 
+- Keep ORIS SSO hidden and its start/callback routes unavailable until server-side
+  identity verification is implemented, even when credentials are configured.
+
+- Provisional radio placement stays after faster comparable finishers even when
+  earlier finishers have missing splits.
+- Entry insight charts, totals and exports stop at race day or today and exclude
+  entries beyond that cutoff.
+- Bank-import payments no longer show an invented time: `paidAt` is the
+  server match time, the bank booking day is returned as `bookingDate` and
+  shown date-only; existing bank receipts are migrated.
+- Late SRR punches no longer overwrite a closed result (IOF XML/MOP import or
+  readout); only a readout can still correct it.
+- Finish punches no longer change the status of NotCompeting competitors;
+  finish time and race time are still recorded.
 - Restore desktop entry category occupancy badges and birth-year ranges.
 - Restore missing entry class occupancy and remaining-place translations in all
   six locales, fixing the client type check and untranslated card labels.
@@ -18,11 +32,22 @@ and this project adheres to
 
 ### Changed
 
+- Default `ORIS_API_BASE_URL` is now `https://oris.ceskyorientak.cz/API/`.
 - Compact public entry category cards into a two-column mobile grid and show
   remaining places, with occupancy and birth-year details in a tooltip.
 
 ### Added
 
+- Groundwork for external sign-in (ORIS SSO now, Google/GitHub later):
+  `UserIdentity` model, `/rest/v1/auth/sso` start/callback/link routes, sign-in
+  and sign-up buttons and a profile "Linked accounts" card shown only for
+  providers with implemented identity exchange and configured credentials. ORIS
+  remains unavailable while its token verification call is pending its contract.
+- Entries-over-time insight: cumulative and daily competitor entries from the
+  opening to the race, with deadline markers, late entries and a class filter.
+- Radio (online split) controls: organisers mark them in Settings › Files.
+  Results show a column per radio control and place runners on course
+  provisionally by their last radio split.
 - Bank payment import: organizers register their Fio account, the desktop
   collector reports incoming payments, and exact matches record bank-import
   receipts that mark entry orders paid; unmatched payments can be resolved

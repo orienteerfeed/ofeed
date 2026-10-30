@@ -58,6 +58,27 @@
         "NoDuplicates": "Ve výběru nejsou duplicitní čipy.",
         "FullGroups": "Filtry vybírají celé skupiny. Zůstávají viditelní všichni závodníci se stejným čipem, včetně ostatních kategorií."
       },
+      "Entries": {
+        "Title": "Příjem přihlášek v čase",
+        "Description": "Jak přibývaly přihlášky od otevření přes uzávěrku až do závodu, po dnech a kategoriích.",
+        "Class": "Kategorie",
+        "Loading": "Načítám přihlášky…",
+        "Stale": "Obnovení se nezdařilo. Zobrazená data jsou zastaralá; export a tisk jsou vypnuté.",
+        "Error": "Příjem přihlášek se nepodařilo načíst.",
+        "Empty": "V tomto výběru zatím nejsou žádné přihlášky.",
+        "Total": "Přihlášení závodníci",
+        "FinalDaysShare": "Přihlášeno v posledních 3 dnech před uzávěrkou",
+        "LateEntries": "Dohlášky",
+        "PeakDay": "Nejsilnější den",
+        "Cumulative": "Přihlášky celkem",
+        "Daily": "Nové přihlášky za den",
+        "LateArea": "Šedá oblast označuje dohlášky přijaté po uzávěrce.",
+        "Date": "Datum",
+        "Opens": "Otevření",
+        "Closes": "Uzávěrka",
+        "Race": "Závod",
+        "Table": "Hodnoty po dnech"
+      },
       "Anomalies": {
         "Title": "Analýza anomálií",
         "Description": "Prověřte podezřelé první mezičasy a startovní časy.",
@@ -2159,6 +2180,34 @@
     "Error": "Relace zařízení se nepodařilo aktualizovat.",
     "LogoutUnconfirmed": "Odhlášení na tomto zařízení proběhlo. Odvolání na serveru nebylo potvrzeno; připojte se k dokončení odhlášení.",
     "RevocationDelay": "Odhlášená zařízení mohou používat stávající přístupový token až 15 minut."
+  },
+  "Sso": {
+    "ContinueWith": "Pokračovat přes {{provider}}",
+    "StartFailed": "Přihlášení se nepodařilo spustit",
+    "Completing": "Dokončuji přihlášení…",
+    "FailedTitle": "Přihlášení selhalo",
+    "LinkedTitle": "Účet propojen",
+    "BackToSignIn": "Zpět na přihlášení",
+    "BackToProfile": "Zpět na profil",
+    "Errors": {
+      "invalid_state": "Odkaz pro přihlášení vypršel nebo byl otevřen v jiném prohlížeči. Zkuste to znovu.",
+      "provider_unavailable": "Poskytovatel přihlášení teď není dostupný. Zkuste to později.",
+      "email_in_use": "Účet s tímto e-mailem už existuje. Přihlaste se heslem a poskytovatele propojte v profilu.",
+      "email_required": "Poskytovatel nesdílel e-mailovou adresu, účet proto nelze vytvořit.",
+      "identity_taken": "Tento externí účet je už propojen s jiným účtem OFeed.",
+      "account_inactive": "Tento účet není aktivní.",
+      "last_sign_in_method": "Nejdřív si nastavte heslo (přes obnovu hesla), abyste se mohli přihlásit i po odpojení."
+    },
+    "Linked": {
+      "Title": "Propojené účty",
+      "Description": "Přihlašujte se externím účtem místo hesla.",
+      "Link": "Propojit",
+      "Unlink": "Odpojit",
+      "LinkedSince": "Propojeno od {{date}}",
+      "NotLinked": "Nepropojeno",
+      "UnlinkSuccess": "Účet odpojen",
+      "UnlinkFailed": "Odpojení selhalo"
+    }
   },
   "EntryPaymentExpiry": {
     "Label": "Lhůta pro zaplacení (hodiny)",

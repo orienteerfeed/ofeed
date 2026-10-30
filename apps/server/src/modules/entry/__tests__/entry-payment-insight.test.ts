@@ -80,8 +80,38 @@ describe('received payment insights', () => {
           entry: {
             select: { paymentReference: true, contactFirstname: true, contactLastname: true },
           },
+          bankTransaction: { select: { bookingDate: true } },
         },
       }),
     );
+  });
+  it('returns the bank booking day for bank-import receipts only', async () => {
+    const prisma = db();
+    const receipt = {
+      id: 'receipt',
+      eventId: 'race',
+      entryId: 'order',
+      clientPaymentId: 'b42c66e5-98f7-4f1b-9fd6-0d436660b624',
+      amount: new Prisma.Decimal('490'),
+      currency: 'CZK',
+      method: 'QR',
+      deviceId: 'collector',
+      operatorId: 7,
+      paidAt: new Date('2026-10-26T07:12:00Z'),
+      recordedAt: new Date('2026-10-26T07:12:00Z'),
+      entry: { paymentReference: '2600000001', contactFirstname: 'Jan', contactLastname: 'Novák' },
+    };
+    prisma.entryPayment.findMany.mockResolvedValue([
+      {
+        ...receipt,
+        source: 'BANK_IMPORT',
+        bankTransaction: { bookingDate: new Date('2026-10-25T00:00:00Z') },
+      },
+      { ...receipt, id: 'cash', method: 'CASH', source: 'MANUAL', bankTransaction: null },
+    ] as never);
+    const [bank, cash] = await listPaymentInsights(prisma as never, auth, 'race');
+    expect(bank).toMatchObject({ bookingDate: '2026-10-25', paidAt: '2026-10-26T07:12:00.000Z' });
+    expect(bank).not.toHaveProperty('bankTransaction');
+    expect(cash).toMatchObject({ bookingDate: null });
   });
 });

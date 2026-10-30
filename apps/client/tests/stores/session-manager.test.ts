@@ -182,8 +182,8 @@ describe('browser session coordinator', () => {
       );
       for (let index = 0; index < 3; index++) {
         window.dispatchEvent(new Event('focus'));
-      expect(await manager.refreshSession()).toBe(previous);
-      await expect(manager.refreshSession(true)).rejects.toThrow();
+        expect(await manager.refreshSession()).toBe(previous);
+        await expect(manager.refreshSession(true)).rejects.toThrow();
       }
       await vi.advanceTimersByTimeAsync(delay - 1);
       expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -400,5 +400,45 @@ describe('browser session coordinator', () => {
     await manager.withSessionLock(async () => {});
     expect(fetchMock).not.toHaveBeenCalled();
     expect(store.getState().user?.id).toBe(user.id);
+  });
+  it('adopts the cookie from an external sign-in redirect despite an earlier logout marker', async () => {
+    localStorage.setItem('ofeed-session-disabled', '1');
+    window.history.replaceState(
+      {},
+      '',
+      '/auth/sso/callback?status=ok&mode=login'
+    );
+    const access = token();
+    fetchMock.mockImplementation(async (url: string) =>
+      String(url).endsWith('/graphql')
+        ? new Response(JSON.stringify({ data: { currentUser: user } }), {
+            headers: { 'Content-Type': 'application/json' },
+          })
+        : pairResponse(access)
+    );
+    try {
+      await manager.bootstrapSession();
+    } finally {
+      window.history.replaceState({}, '', '/');
+    }
+    expect(localStorage.getItem('ofeed-session-disabled')).toBeNull();
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'http://localhost:3001/rest/v1/auth/refresh'
+    );
+    expect(store.getState().token).toBe(access);
+  });
+  it('keeps the logout marker for an external sign-in error redirect', async () => {
+    localStorage.setItem('ofeed-session-disabled', '1');
+    window.history.replaceState(
+      {},
+      '',
+      '/auth/sso/callback?status=error&mode=login'
+    );
+    try {
+      manager.initializeSessionManager();
+    } finally {
+      window.history.replaceState({}, '', '/');
+    }
+    expect(localStorage.getItem('ofeed-session-disabled')).toBe('1');
   });
 });

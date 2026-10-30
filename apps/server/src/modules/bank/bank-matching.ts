@@ -110,7 +110,9 @@ async function settle(
       method: 'QR',
       amount: row.amount,
       currency: row.currency,
-      paidAt: row.bookingDate,
+      // The bank reports only the booking day, never a time. paidAt is the moment
+      // the server matched the payment; the day stays on the transaction.
+      paidAt: new Date(),
       deviceId: row.reportedByDeviceId,
       operatorId: ownerId,
       source: 'BANK_IMPORT',
