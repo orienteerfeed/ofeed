@@ -966,7 +966,14 @@ const CategoryResultsView = ({
       className="border border-border rounded-lg overflow-hidden"
     >
       <div className={mobileResultsTableClassName}>
-        <Table data-results-table="category">
+        <Table
+          data-results-table="category"
+          style={
+            {
+              '--radio-count': showTimes ? radioCodes.length : 0,
+            } as React.CSSProperties
+          }
+        >
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-8 px-2 text-xs">#</TableHead>
@@ -987,20 +994,30 @@ const CategoryResultsView = ({
                 radioCodes.map(code => (
                   <TableHead
                     key={code}
-                    className="h-8 px-2 text-right text-xs hidden md:table-cell"
+                    data-col="radio"
+                    className="h-8 px-2 text-right text-xs"
                   >
                     {code}
                   </TableHead>
                 ))}
-              <TableHead className="h-8 px-2 text-right text-xs">
+              <TableHead
+                data-col="time"
+                className="h-8 px-2 text-right text-xs"
+              >
                 <span className="sm:hidden">Time</span>
                 <span className="hidden sm:inline">Finish</span>
               </TableHead>
-              <TableHead className="h-8 px-2 text-xs text-right">
+              <TableHead
+                data-col="diff"
+                className="h-8 px-2 text-xs text-right"
+              >
                 Diff
               </TableHead>
               {showRanking && (
-                <TableHead className="h-8 w-px whitespace-nowrap px-1 text-right text-xs sm:px-2 lg:table-cell">
+                <TableHead
+                  data-col="points"
+                  className="h-8 w-px whitespace-nowrap px-1 text-right text-xs sm:px-2 lg:table-cell"
+                >
                   Points
                 </TableHead>
               )}
@@ -1064,13 +1081,13 @@ const CategoryResultsView = ({
                       return (
                         <TableCell
                           key={code}
-                          className="px-2 py-1 text-right text-xs font-mono hidden md:table-cell"
+                          className="px-2 py-1 text-right text-xs font-mono"
                         >
                           {radioTime !== undefined && (
                             <>
                               {formatSecondsToTime(radioTime)}
                               {radioRank !== undefined && (
-                                <span className="ml-1 text-muted-foreground">
+                                <span className="block text-muted-foreground sm:ml-1 sm:inline">
                                   ({radioRank})
                                 </span>
                               )}
