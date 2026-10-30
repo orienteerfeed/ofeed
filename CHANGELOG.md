@@ -8,10 +8,13 @@ and this project adheres to
 
 ## [Unreleased]
 
-### Fixed
+### Added
 
-- Keep ORIS SSO hidden and its start/callback routes unavailable until server-side
-  identity verification is implemented, even when credentials are configured.
+- ORIS SSO server-side identity verification (`ssoUser` call from the API
+  callback). The provider is enabled when `ORIS_SSO_ENABLED` is on and both
+  `ORIS_SSO_CLIENT_ID` and `ORIS_SSO_CLIENT_SECRET` are set.
+
+### Fixed
 
 - Provisional radio placement stays after faster comparable finishers even when
   earlier finishers have missing splits.

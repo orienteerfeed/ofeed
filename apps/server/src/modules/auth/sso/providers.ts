@@ -1,3 +1,5 @@
+import { z } from '@hono/zod-openapi';
+
 import type { IdentityProvider } from '../../../generated/prisma/client.js';
 import env from '../../../config/env.js';
 
@@ -23,10 +25,24 @@ export interface SsoProvider {
 // Flip to true only after ORIS confirms it verifies user email addresses.
 export const ORIS_EMAIL_VERIFIED = false;
 
+const ORIS_TIMEOUT_MS = 10_000;
+
+const orisUserSchema = z.object({
+  Status: z.string(),
+  Data: z
+    .object({
+      ID: z.union([z.number(), z.string()]),
+      FirstName: z.string().nullish(),
+      LastName: z.string().nullish(),
+      Email: z.string().nullish(),
+    })
+    .optional(),
+});
+
 const oris: SsoProvider = {
   id: 'ORIS',
-  // Keep discovery and routes unavailable until server-side identity exchange is implemented.
-  enabled: () => false,
+  enabled: () =>
+    env.ORIS_SSO_ENABLED && Boolean(env.ORIS_SSO_CLIENT_ID && env.ORIS_SSO_CLIENT_SECRET),
   authorizeUrl(state) {
     const url = new URL('/ssologin', env.ORIS_SSO_BASE_URL);
     url.searchParams.set('cid', env.ORIS_SSO_CLIENT_ID ?? '');
@@ -35,11 +51,33 @@ const oris: SsoProvider = {
   },
   async exchange(query, state) {
     if (!query.uid || !safeEqual(query.uid, state)) throw new SsoError('invalid_state');
-    // ponytail: the ORIS token verification call (method, POST params, response fields) is
-    // documented only in redirect.php; implement it here with a POST body so the secret
-    // never lands in a URL, map the ORIS person ID to providerUserId and set
-    // emailVerified: ORIS_EMAIL_VERIFIED.
-    throw new SsoError('provider_unavailable');
+    // Server-side verification; the secret travels only in the POST body. Only ID, name and
+    // email are read from the response (ClubMembers etc. are intentionally not stored).
+    const response = await fetch(new URL('/API', env.ORIS_SSO_BASE_URL), {
+      method: 'POST',
+      body: new URLSearchParams({
+        method: 'ssoUser',
+        format: 'json',
+        cid: env.ORIS_SSO_CLIENT_ID ?? '',
+        csc: env.ORIS_SSO_CLIENT_SECRET ?? '',
+        uid: state,
+      }),
+      signal: AbortSignal.timeout(ORIS_TIMEOUT_MS),
+    });
+    if (!response.ok) throw new SsoError('provider_unavailable');
+
+    const parsed = orisUserSchema.safeParse(await response.json());
+    if (!parsed.success || parsed.data.Status !== 'OK' || !parsed.data.Data) {
+      throw new SsoError('provider_unavailable');
+    }
+    const { ID, FirstName, LastName, Email } = parsed.data.Data;
+    return {
+      providerUserId: String(ID),
+      email: Email?.trim().toLowerCase() || undefined,
+      emailVerified: ORIS_EMAIL_VERIFIED,
+      firstname: FirstName || undefined,
+      lastname: LastName || undefined,
+    };
   },
 };
 

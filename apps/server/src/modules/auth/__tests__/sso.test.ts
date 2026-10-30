@@ -52,29 +52,70 @@ beforeEach(() => {
 });
 
 describe('SSO provider availability', () => {
-  it('keeps ORIS unavailable even when enabled with both credentials set', async () => {
-    expect(providers.listEnabledSsoProviders()).toEqual([]);
-    expect(providers.getSsoProvider('oris')).toBeNull();
+  it('lists ORIS only when enabled with both credentials set', async () => {
+    expect(providers.listEnabledSsoProviders()).toEqual(['oris']);
     const response = await authRoutes.request('http://localhost/sso/providers');
-    expect((await response.json()).results.data.providers).toEqual([]);
+    expect((await response.json()).results.data.providers).toEqual(['oris']);
     env.ORIS_SSO_CLIENT_SECRET = undefined;
     expect(providers.listEnabledSsoProviders()).toEqual([]);
     enableOris(false);
     expect(providers.listEnabledSsoProviders()).toEqual([]);
   });
 
-  it.each([true, false])(
-    'returns 404 for ORIS start and callback with enabled=%s',
-    async (enabled) => {
-      enableOris(enabled);
-      const start = await authRoutes.request(
-        `http://localhost/sso/oris/start?deviceId=${deviceId}&deviceName=Web`,
-      );
-      const callback = await authRoutes.request('http://localhost/sso/oris/callback?uid=x');
-      expect(start.status).toBe(404);
-      expect(callback.status).toBe(404);
-    },
-  );
+  it('returns 404 for ORIS start and callback when disabled', async () => {
+    enableOris(false);
+    const start = await authRoutes.request(
+      `http://localhost/sso/oris/start?deviceId=${deviceId}&deviceName=Web`,
+    );
+    const callback = await authRoutes.request('http://localhost/sso/oris/callback?uid=x');
+    expect(start.status).toBe(404);
+    expect(callback.status).toBe(404);
+  });
+});
+
+describe('ORIS exchange', () => {
+  const state = 'a'.repeat(32);
+  const oris = () => providers.getSsoProvider('oris')!;
+  const orisResponse = (body: unknown, init?: ResponseInit) =>
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(body, init));
+
+  it('posts credentials in the body and maps the ORIS user without trusting the email', async () => {
+    const fetchSpy = orisResponse({
+      Status: 'OK',
+      Data: { ID: 5186, FirstName: 'Jan', LastName: 'Novak', Email: ' Runner@Example.com ' },
+    });
+    await expect(oris().exchange({ uid: state }, state)).resolves.toEqual({
+      providerUserId: '5186',
+      email: 'runner@example.com',
+      emailVerified: providers.ORIS_EMAIL_VERIFIED,
+      firstname: 'Jan',
+      lastname: 'Novak',
+    });
+    const [url, init] = fetchSpy.mock.calls[0] ?? [];
+    expect(String(url)).not.toContain('client-secret');
+    expect(String(init?.body)).toContain('csc=client-secret');
+    expect(String(init?.body)).toContain(`uid=${state}`);
+    expect(String(init?.body)).toContain('method=ssoUser');
+  });
+
+  it('rejects a mismatched uid without calling ORIS', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    await expect(oris().exchange({ uid: 'forged' }, state)).rejects.toMatchObject({
+      code: 'invalid_state',
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a non-OK status', { Status: 'ERROR' }, undefined],
+    ['a missing Data block', { Status: 'OK' }, undefined],
+    ['an HTTP error', { Status: 'OK', Data: { ID: 1 } }, { status: 502 }],
+  ])('maps %s to provider_unavailable', async (_label, body, init) => {
+    orisResponse(body, init);
+    await expect(oris().exchange({ uid: state }, state)).rejects.toMatchObject({
+      code: 'provider_unavailable',
+    });
+  });
 });
 
 describe('SSO start and callback', () => {
