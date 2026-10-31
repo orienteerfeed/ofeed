@@ -1547,16 +1547,19 @@ export const deleteAllEventData = async (
   if (db === prisma)
     return eventPunchTransaction(prisma, eventId, (tx) => deleteAllEventData(eventId, tx));
   await lockPunchEvent(db, eventId);
-  if (await db.entryPayment.count({ where: { eventId } })) {
-    throw new ConflictError('Cannot delete event data containing payment receipts.');
-  }
   try {
     // Step 1: Delete competitors, protocols, splits
     await deleteEventCompetitorsAndProtocols(eventId, db);
 
-    // Step 1b: Delete entry orders (items, add-ons and status history cascade from Entry).
-    // EntryItem -> Class and EntryAddOnItem -> EventService are RESTRICT, so they must go
+    // Step 1b: Delete payment receipts, then entry orders (items, add-ons and status history
+    // cascade from Entry). EntryPayment -> Entry is RESTRICT, so receipts must go first;
+    // organizers explicitly allow wiping them with the event. Linked BankTransaction rows
+    // belong to the bank connection and are kept (their matchedEntryId is set to null).
+    // EntryItem -> Class and EntryAddOnItem -> EventService are RESTRICT, so entries must go
     // before classes and services.
+    await db.entryPayment.deleteMany({
+      where: { eventId: eventId },
+    });
     await db.entry.deleteMany({
       where: { eventId: eventId },
     });
@@ -1611,13 +1614,6 @@ export const deleteAllEventData = async (
     });
   } catch (err) {
     if (isPunchWriteConflict(err)) throw err;
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === 'P2003' &&
-      (await db.entryPayment.count({ where: { eventId } }))
-    ) {
-      throw new ConflictError('Cannot delete event data containing payment receipts.');
-    }
     console.error('Failed to delete all event data:', err);
     throw new DatabaseError('Error deleting all event data');
   }

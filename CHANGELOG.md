@@ -16,6 +16,8 @@ and this project adheres to
 
 ### Fixed
 
+- Deleting an event or all its data no longer fails with 409 "Cannot delete
+  event data containing payment receipts"; receipts are deleted with the event.
 - Provisional radio placement stays after faster comparable finishers even when
   earlier finishers have missing splits.
 - Entry insight charts, totals and exports stop at race day or today and exclude
