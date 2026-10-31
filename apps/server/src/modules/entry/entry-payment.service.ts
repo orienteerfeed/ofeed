@@ -8,12 +8,18 @@ import { AuthzError, requireEventOwnerOrAdmin, type AuthzAuthContext } from '../
 import { createEntryPaymentSchema, entryPaymentQuerySchema } from './entry-payment.schema.js';
 import { entryPaymentTransaction, reconcileEntryPaymentState } from './entry-payment-write.js';
 
-function serialize(payment: EntryPayment) {
+type PaymentRow = EntryPayment & { bankTransaction?: { bookingDate: Date } | null };
+
+// Bank receipts carry the bank's booking day (a date without time) next to paidAt.
+const withBookingDate = { bankTransaction: { select: { bookingDate: true } } } as const;
+
+function serialize({ bankTransaction, ...payment }: PaymentRow) {
   return {
     ...payment,
     amount: payment.amount.toNumber(),
     paidAt: payment.paidAt.toISOString(),
     recordedAt: payment.recordedAt.toISOString(),
+    bookingDate: bankTransaction ? bankTransaction.bookingDate.toISOString().slice(0, 10) : null,
   };
 }
 
@@ -34,6 +40,7 @@ export async function listPaymentInsights(
     where: { eventId },
     include: {
       entry: { select: { paymentReference: true, contactFirstname: true, contactLastname: true } },
+      ...withBookingDate,
     },
     orderBy: [{ paidAt: 'desc' }, { id: 'asc' }],
   });
@@ -53,7 +60,7 @@ export async function recordEntryPayment(
   const amount = new Prisma.Decimal(data.amount.toFixed(2));
   const paidAt = new Date(data.paidAt);
   const where = { eventId_clientPaymentId: { eventId, clientPaymentId: data.clientPaymentId } };
-  const replay = (existing: EntryPayment) => {
+  const replay = (existing: PaymentRow) => {
     if (
       existing.entryId !== entryId ||
       existing.method !== data.method ||
@@ -68,7 +75,7 @@ export async function recordEntryPayment(
   };
   try {
     return await entryPaymentTransaction(prisma, eventId, entryId, async (tx) => {
-      const existing = await tx.entryPayment.findUnique({ where });
+      const existing = await tx.entryPayment.findUnique({ where, include: withBookingDate });
       if (existing) return replay(existing);
       const entry = await tx.entry.findUniqueOrThrow({ where: { id: entryId } });
       if (entry.currency !== data.currency) {
@@ -83,7 +90,7 @@ export async function recordEntryPayment(
   } catch (cause) {
     // The unique index arbitrates simultaneous retries, including across entries/devices.
     if (cause instanceof Prisma.PrismaClientKnownRequestError && cause.code === 'P2002') {
-      const winner = await prisma.entryPayment.findUnique({ where });
+      const winner = await prisma.entryPayment.findUnique({ where, include: withBookingDate });
       if (winner) return replay(winner);
     }
     throw cause;
@@ -105,6 +112,7 @@ export async function listEntryPayments(
       ...(query.deviceId !== undefined ? { deviceId: query.deviceId } : {}),
       ...(query.since !== undefined ? { recordedAt: { gte: new Date(query.since) } } : {}),
     },
+    include: withBookingDate,
     orderBy: [{ recordedAt: 'asc' }, { id: 'asc' }],
   });
   return payments.map(serialize);

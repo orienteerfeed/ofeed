@@ -1,4 +1,5 @@
 import { DeviceSessions } from '@/components/organisms/DeviceSessions/DeviceSessions';
+import { LinkedAccounts } from '@/components/organisms/LinkedAccounts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1657,6 +1658,7 @@ export const ProfilePage = () => {
 
             <TabsContent value="security" className="space-y-4">
               <DeviceSessions />
+              <LinkedAccounts />
               <Card>
                 <CardHeader>
                   <CardTitle>

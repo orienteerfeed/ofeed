@@ -27,6 +27,14 @@ export function getDeviceMetadata() {
     deviceName: `${navigator.platform || 'Browser'} browser`.slice(0, 100),
   };
 }
+function isExternalSigninReturn() {
+  const params = new URLSearchParams(window.location.search);
+  return (
+    window.location.pathname === '/auth/sso/callback' &&
+    params.get('status') === 'ok' &&
+    params.get('mode') === 'login'
+  );
+}
 function revision() {
   return localStorage.getItem(REVISION_KEY);
 }
@@ -124,6 +132,11 @@ export function initializeSessionManager() {
   if (initialized || typeof window === 'undefined') return;
   initialized = true;
   localStorage.removeItem('ofeed-auth');
+  if (isExternalSigninReturn()) {
+    // The server just set a fresh refresh cookie; an older logout marker must not revoke it.
+    localStorage.setItem(REVISION_KEY, crypto.randomUUID());
+    localStorage.removeItem(DISABLED_KEY);
+  }
   if (!revision()) localStorage.setItem(REVISION_KEY, crypto.randomUUID());
   channel =
     typeof BroadcastChannel === 'undefined'

@@ -84,6 +84,7 @@ function receipts(): EntryPaymentInsight[] {
     recordedAt: '2026-10-26T10:00:00Z',
     source: 'MANUAL' as const,
     bankTransactionId: null,
+    bookingDate: null,
     paymentReference: `26000000${i.toString().padStart(2, '0')}`,
     contactFirstname: 'Jan',
     contactLastname: `Contact-${i}`,
@@ -98,7 +99,7 @@ beforeEach(() => {
 });
 
 describe('event insights UI', () => {
-  it('links to payment, timing-card and anomaly insights', () => {
+  it('links to anomaly, timing-card, entries and payment insights', () => {
     render(<EventInsightsPage />);
     expect(
       screen.getByRole('heading', { name: 'Insights', level: 1 })
@@ -110,6 +111,7 @@ describe('event insights UI', () => {
     ).toEqual([
       '/events/race/insights/anomalies',
       '/events/race/insights/cards',
+      '/events/race/insights/entries',
       '/events/race/insights/payments',
     ]);
   });

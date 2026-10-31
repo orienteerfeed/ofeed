@@ -192,6 +192,7 @@ describe('entry payment service', () => {
     ).toMatchObject([{ amount: 250, paidAt: '2026-10-25T09:00:00.000Z' }]);
     expect(db.entryPayment.findMany).toHaveBeenCalledWith({
       where: { eventId: 'race', deviceId: 'desk-1', recordedAt: { gte: new Date(since) } },
+      include: { bankTransaction: { select: { bookingDate: true } } },
       orderBy: [{ recordedAt: 'asc' }, { id: 'asc' }],
     });
   });

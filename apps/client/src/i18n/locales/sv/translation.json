@@ -58,6 +58,27 @@
         "NoDuplicates": "Inga dubbla chip i detta urval.",
         "FullGroups": "Filtren väljer hela grupper. Alla deltagare med samma chip visas, även från andra klasser."
       },
+      "Entries": {
+        "Title": "Anmälningar över tid",
+        "Description": "Hur anmälningarna växte från öppningen via anmälningsstoppet fram till tävlingen, per dag och klass.",
+        "Class": "Klass",
+        "Loading": "Laddar anmälningar…",
+        "Stale": "Uppdateringen misslyckades. Visade data är inaktuella; export och utskrift är avstängda.",
+        "Error": "Det gick inte att ladda anmälningar över tid.",
+        "Empty": "Inga anmälningar i det här urvalet ännu.",
+        "Total": "Anmälda deltagare",
+        "FinalDaysShare": "Anmälda de sista 3 dagarna före anmälningsstopp",
+        "LateEntries": "Efteranmälningar",
+        "PeakDay": "Mest intensiva dagen",
+        "Cumulative": "Anmälningar totalt",
+        "Daily": "Nya anmälningar per dag",
+        "LateArea": "Det skuggade området visar efteranmälningar som kommit in efter anmälningsstoppet.",
+        "Date": "Datum",
+        "Opens": "Öppnar",
+        "Closes": "Anmälningsstopp",
+        "Race": "Tävling",
+        "Table": "Dagliga värden"
+      },
       "Anomalies": {
         "Title": "Anomalianalys",
         "Description": "Granska misstänkta första sträcktider och starttider.",
@@ -2156,6 +2177,34 @@
     "Error": "Det gick inte att uppdatera enhetssessionerna.",
     "LogoutUnconfirmed": "Utloggad lokalt. Återkallelsen på servern kunde inte bekräftas; anslut igen för att slutföra utloggningen.",
     "RevocationDelay": "Återkallade enheter kan använda en befintlig åtkomsttoken i upp till 15 minuter."
+  },
+  "Sso": {
+    "ContinueWith": "Fortsätt med {{provider}}",
+    "StartFailed": "Det gick inte att starta inloggningen",
+    "Completing": "Slutför inloggningen…",
+    "FailedTitle": "Inloggningen misslyckades",
+    "LinkedTitle": "Konto kopplat",
+    "BackToSignIn": "Tillbaka till inloggning",
+    "BackToProfile": "Tillbaka till profilen",
+    "Errors": {
+      "invalid_state": "Inloggningslänken har gått ut eller öppnades i en annan webbläsare. Försök igen.",
+      "provider_unavailable": "Inloggningsleverantören är inte tillgänglig just nu. Försök igen senare.",
+      "email_in_use": "Det finns redan ett konto med den här e-postadressen. Logga in med ditt lösenord och koppla leverantören i din profil.",
+      "email_required": "Leverantören delade ingen e-postadress, så inget konto kan skapas.",
+      "identity_taken": "Det externa kontot är redan kopplat till ett annat OFeed-konto.",
+      "account_inactive": "Kontot är inaktivt.",
+      "last_sign_in_method": "Ange först ett lösenord (via lösenordsåterställning) så att du kan logga in efter frånkopplingen."
+    },
+    "Linked": {
+      "Title": "Kopplade konton",
+      "Description": "Logga in med ett externt konto i stället för ditt lösenord.",
+      "Link": "Koppla",
+      "Unlink": "Koppla från",
+      "LinkedSince": "Kopplat sedan {{date}}",
+      "NotLinked": "Inte kopplat",
+      "UnlinkSuccess": "Konto frånkopplat",
+      "UnlinkFailed": "Frånkopplingen misslyckades"
+    }
   },
   "EntryPaymentExpiry": {
     "Label": "Betalningsfrist (timmar)",

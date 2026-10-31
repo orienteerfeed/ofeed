@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  findCompetitorRadioSplits,
   findCompetitorsByCard,
   findCompetitorsByRegistration,
   findOrganisationNamesByEvent,
@@ -140,5 +141,58 @@ describe('findCompetitorsByRegistration', () => {
       },
       orderBy: [{ lastname: 'asc' }, { firstname: 'asc' }, { id: 'asc' }],
     });
+  });
+});
+
+describe('findCompetitorRadioSplits', () => {
+  const classWithCourse = (classId: number, controls: Array<{ code: string; radio: boolean }>) => ({
+    id: classId,
+    eventId: 'event-1',
+    course: {
+      courseControls: controls.map((control, index) => ({
+        sequence: index + 2,
+        legLength: null,
+        control: { ...control, latitude: null, longitude: null },
+      })),
+    },
+  });
+
+  it('loads only splits at numeric radio control codes of the class', async () => {
+    const prisma = {
+      class: {
+        findUnique: vi.fn().mockResolvedValue(
+          classWithCourse(9001, [
+            { code: '31', radio: false },
+            { code: '100', radio: true },
+            { code: 'F1', radio: true },
+            { code: '101', radio: true },
+            { code: '100', radio: true },
+          ]),
+        ),
+      },
+      split: { findMany: vi.fn().mockResolvedValue([{ id: 1, controlCode: 100, time: 600 }]) },
+    };
+
+    const splits = await findCompetitorRadioSplits(prisma as never, { id: 7, classId: 9001 });
+
+    expect(splits).toEqual([{ id: 1, controlCode: 100, time: 600 }]);
+    expect(prisma.split.findMany).toHaveBeenCalledWith({
+      where: { competitorId: 7, controlCode: { in: [100, 101] } },
+      orderBy: { time: 'asc' },
+    });
+  });
+
+  it('skips the split query when the class has no radio controls', async () => {
+    const prisma = {
+      class: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue(classWithCourse(9002, [{ code: '31', radio: false }])),
+      },
+      split: { findMany: vi.fn() },
+    };
+
+    expect(await findCompetitorRadioSplits(prisma as never, { id: 8, classId: 9002 })).toEqual([]);
+    expect(prisma.split.findMany).not.toHaveBeenCalled();
   });
 });

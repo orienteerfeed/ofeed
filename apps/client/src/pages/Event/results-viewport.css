@@ -62,6 +62,15 @@
   .results-viewport:not(.results-viewport-splits) th:nth-child(2) {
     width: 14rem;
   }
+
+  .results-viewport [data-results-table='category'] th[data-col='radio'] {
+    width: 6rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits)
+    [data-results-table='category'] {
+    min-width: calc(40rem + var(--radio-count, 0) * 6rem);
+  }
 }
 
 /* Budget mobile columns independently of incoming data. Names take the
@@ -96,15 +105,31 @@
     width: auto;
   }
 
-  .results-viewport [data-results-table='category'] th:nth-child(7),
-  .results-viewport [data-results-table='category'] th:nth-child(8),
+  .results-viewport [data-results-table='category'] th[data-col='time'],
+  .results-viewport [data-results-table='category'] th[data-col='diff'],
   .results-viewport [data-results-table='relay-leg'] th:nth-last-child(3),
   .results-viewport [data-results-table='relay-leg'] th:last-child {
     width: 4.5rem;
   }
 
-  .results-viewport [data-results-table='category'] th:nth-child(9) {
+  .results-viewport [data-results-table='category'] th[data-col='points'] {
     width: 3.25rem;
+  }
+
+  /* Radio cells stack the rank under the time. Below this floor the table
+     scrolls inside its container instead of shrinking past readability. */
+  .results-viewport [data-results-table='category'] th[data-col='radio'] {
+    width: 4rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits)
+    [data-results-table='category'] {
+    min-width: calc(20rem + var(--radio-count, 0) * 4rem);
+  }
+
+  /* Provisional radio ranks are parenthesised, e.g. "(12)". */
+  .results-viewport [data-results-table='category'] th:first-child {
+    width: 2.25rem;
   }
 
   .results-viewport [data-results-table='club'] th:nth-child(3),

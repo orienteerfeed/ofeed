@@ -24,6 +24,7 @@ import { Route as AuthSigninRouteImport } from './routes/auth/signin'
 import { Route as AuthSignupRouteImport } from './routes/auth/signup'
 import { Route as AdminRankingCzechRouteImport } from './routes/admin/ranking/czech'
 import { Route as AuthResetPasswordTokenRouteImport } from './routes/auth/reset-password/$token'
+import { Route as AuthSsoCallbackRouteImport } from './routes/auth/sso/callback'
 import { Route as AuthVerifyEmailTokenRouteImport } from './routes/auth/verify-email/$token'
 import { Route as EEventIdIndexRouteImport } from './routes/e/$eventId/index'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events/$eventId/index'
@@ -35,6 +36,7 @@ import { Route as EventsEventIdEntriesEntryIdRouteImport } from './routes/events
 import { Route as EventsEventIdInsightsIndexRouteImport } from './routes/events/$eventId/insights.index'
 import { Route as EventsEventIdInsightsAnomaliesRouteImport } from './routes/events/$eventId/insights.anomalies'
 import { Route as EventsEventIdInsightsCardsRouteImport } from './routes/events/$eventId/insights.cards'
+import { Route as EventsEventIdInsightsEntriesRouteImport } from './routes/events/$eventId/insights.entries'
 import { Route as EventsEventIdInsightsPaymentsRouteImport } from './routes/events/$eventId/insights.payments'
 import { Route as EventsEventIdEntriesEntryIdEditRouteImport } from './routes/events/$eventId/entries_.$entryId_.edit'
 
@@ -113,6 +115,11 @@ const AuthResetPasswordTokenRoute = AuthResetPasswordTokenRouteImport.update({
   path: '/auth/reset-password/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthSsoCallbackRoute = AuthSsoCallbackRouteImport.update({
+  id: '/auth/sso/callback',
+  path: '/auth/sso/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthVerifyEmailTokenRoute = AuthVerifyEmailTokenRouteImport.update({
   id: '/auth/verify-email/$token',
   path: '/auth/verify-email/$token',
@@ -172,6 +179,12 @@ const EventsEventIdInsightsCardsRoute =
     path: '/cards',
     getParentRoute: () => EventsEventIdInsightsRoute,
   } as any)
+const EventsEventIdInsightsEntriesRoute =
+  EventsEventIdInsightsEntriesRouteImport.update({
+    id: '/entries',
+    path: '/entries',
+    getParentRoute: () => EventsEventIdInsightsRoute,
+  } as any)
 const EventsEventIdInsightsPaymentsRoute =
   EventsEventIdInsightsPaymentsRouteImport.update({
     id: '/payments',
@@ -201,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/auth/sso/callback': typeof AuthSsoCallbackRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
   '/events/$eventId/insights': typeof EventsEventIdInsightsRouteWithChildren
@@ -211,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
   '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/entries': typeof EventsEventIdInsightsEntriesRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
@@ -231,6 +246,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/auth/sso/callback': typeof AuthSsoCallbackRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
   '/events/$eventId/report': typeof EventsEventIdReportRoute
@@ -240,6 +256,7 @@ export interface FileRoutesByTo {
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
   '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/entries': typeof EventsEventIdInsightsEntriesRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries/$entryId/edit': typeof EventsEventIdEntriesEntryIdEditRoute
@@ -261,6 +278,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/ranking/czech': typeof AdminRankingCzechRoute
   '/auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/auth/sso/callback': typeof AuthSsoCallbackRoute
   '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/events/$eventId/entries': typeof EventsEventIdEntriesRoute
   '/events/$eventId/insights': typeof EventsEventIdInsightsRouteWithChildren
@@ -271,6 +289,7 @@ export interface FileRoutesById {
   '/events/$eventId/entries_/$entryId': typeof EventsEventIdEntriesEntryIdRoute
   '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/entries': typeof EventsEventIdInsightsEntriesRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
   '/events/$eventId/entries_/$entryId_/edit': typeof EventsEventIdEntriesEntryIdEditRoute
@@ -293,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
+    | '/auth/sso/callback'
     | '/auth/verify-email/$token'
     | '/events/$eventId/entries'
     | '/events/$eventId/insights'
@@ -303,6 +323,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/entries/$entryId'
     | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/entries'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
     | '/events/$eventId/entries/$entryId/edit'
@@ -323,6 +344,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
+    | '/auth/sso/callback'
     | '/auth/verify-email/$token'
     | '/events/$eventId/entries'
     | '/events/$eventId/report'
@@ -332,6 +354,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/entries/$entryId'
     | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/entries'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights'
     | '/events/$eventId/entries/$entryId/edit'
@@ -352,6 +375,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/ranking/czech'
     | '/auth/reset-password/$token'
+    | '/auth/sso/callback'
     | '/auth/verify-email/$token'
     | '/events/$eventId/entries'
     | '/events/$eventId/insights'
@@ -362,6 +386,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/entries_/$entryId'
     | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/entries'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
     | '/events/$eventId/entries_/$entryId_/edit'
@@ -383,6 +408,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminRankingCzechRoute: typeof AdminRankingCzechRoute
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
+  AuthSsoCallbackRoute: typeof AuthSsoCallbackRoute
   AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
   EventsEventIdEntriesRoute: typeof EventsEventIdEntriesRoute
   EventsEventIdInsightsRoute: typeof EventsEventIdInsightsRouteWithChildren
@@ -501,6 +527,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/sso/callback': {
+      id: '/auth/sso/callback'
+      path: '/auth/sso/callback'
+      fullPath: '/auth/sso/callback'
+      preLoaderRoute: typeof AuthSsoCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/verify-email/$token': {
       id: '/auth/verify-email/$token'
       path: '/auth/verify-email/$token'
@@ -578,6 +611,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdInsightsCardsRouteImport
       parentRoute: typeof EventsEventIdInsightsRoute
     }
+    '/events/$eventId/insights/entries': {
+      id: '/events/$eventId/insights/entries'
+      path: '/entries'
+      fullPath: '/events/$eventId/insights/entries'
+      preLoaderRoute: typeof EventsEventIdInsightsEntriesRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
     '/events/$eventId/insights/payments': {
       id: '/events/$eventId/insights/payments'
       path: '/payments'
@@ -598,6 +638,7 @@ declare module '@tanstack/react-router' {
 interface EventsEventIdInsightsRouteChildren {
   EventsEventIdInsightsAnomaliesRoute: typeof EventsEventIdInsightsAnomaliesRoute
   EventsEventIdInsightsCardsRoute: typeof EventsEventIdInsightsCardsRoute
+  EventsEventIdInsightsEntriesRoute: typeof EventsEventIdInsightsEntriesRoute
   EventsEventIdInsightsPaymentsRoute: typeof EventsEventIdInsightsPaymentsRoute
   EventsEventIdInsightsIndexRoute: typeof EventsEventIdInsightsIndexRoute
 }
@@ -605,6 +646,7 @@ interface EventsEventIdInsightsRouteChildren {
 const EventsEventIdInsightsRouteChildren: EventsEventIdInsightsRouteChildren = {
   EventsEventIdInsightsAnomaliesRoute: EventsEventIdInsightsAnomaliesRoute,
   EventsEventIdInsightsCardsRoute: EventsEventIdInsightsCardsRoute,
+  EventsEventIdInsightsEntriesRoute: EventsEventIdInsightsEntriesRoute,
   EventsEventIdInsightsPaymentsRoute: EventsEventIdInsightsPaymentsRoute,
   EventsEventIdInsightsIndexRoute: EventsEventIdInsightsIndexRoute,
 }
@@ -630,6 +672,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminRankingCzechRoute: AdminRankingCzechRoute,
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
+  AuthSsoCallbackRoute: AuthSsoCallbackRoute,
   AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,
   EventsEventIdEntriesRoute: EventsEventIdEntriesRoute,
   EventsEventIdInsightsRoute: EventsEventIdInsightsRouteWithChildren,

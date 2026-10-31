@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatDateTime } from '@/lib/date';
+import { formatDate, formatDateTime } from '@/lib/date';
 import { toast } from '@/utils';
 
 import { formatEntryFee } from './EntryClassCard';
@@ -186,7 +186,10 @@ export function EntryPaymentLedger({
                       )}
                     </div>
                     <div className="text-muted-foreground">
-                      {formatDateTime(payment.paidAt)} · {payment.deviceId}
+                      {payment.bookingDate
+                        ? formatDate(payment.bookingDate)
+                        : formatDateTime(payment.paidAt)}{' '}
+                      · {payment.deviceId}
                     </div>
                   </div>
                   <strong>

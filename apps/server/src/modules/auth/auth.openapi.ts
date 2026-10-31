@@ -27,6 +27,13 @@ const oauthCredentialsRequestBodySchema = zodToOpenApiSchema(oauthCredentialsBod
 
 const authBase = AUTH_OPENAPI.basePath;
 
+const ssoProviderParam = {
+  name: 'provider',
+  in: 'path' as const,
+  required: true,
+  schema: { type: 'string' as const, enum: ['oris'] },
+};
+
 export const AUTH_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   [`${authBase}/signin`]: {
     post: {
@@ -192,6 +199,94 @@ export const AUTH_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         200: okJson('OAuth2 credentials generated', 'legacy-no-meta'),
         401: okJson('Unauthorized', 'legacy-no-meta'),
         422: okJson('Validation error', 'legacy-no-meta'),
+      },
+    },
+  },
+  [`${authBase}/sso/providers`]: {
+    get: {
+      tags: [AUTH_OPENAPI.tag],
+      operationId: 'authSsoProviders',
+      summary: 'List enabled external sign-in providers',
+      description:
+        'results.data.providers lists provider slugs (e.g. "oris"). A provider is listed only when it is enabled and its client credentials are configured.',
+      security: [],
+      responses: { 200: okJson('Enabled provider slugs') },
+    },
+  },
+  [`${authBase}/sso/identities`]: {
+    get: {
+      tags: [AUTH_OPENAPI.tag],
+      operationId: 'authSsoIdentities',
+      summary: 'List external identities linked to the current user',
+      security: bearerSecurity,
+      responses: { 200: okJson('Linked identities'), 401: okJson('Unauthorized') },
+    },
+  },
+  [`${authBase}/sso/{provider}/start`]: {
+    get: {
+      tags: [AUTH_OPENAPI.tag],
+      operationId: 'authSsoStart',
+      summary: 'Start external sign-in',
+      description:
+        'Sets a signed, single-use, 10-minute HttpOnly state cookie and returns results.data.authorizeUrl; the browser then navigates there. Call with credentials included. mode=link links the provider to the bearer user instead of signing in.',
+      security: [],
+      parameters: [
+        ssoProviderParam,
+        {
+          name: 'deviceId',
+          in: 'query' as const,
+          required: true,
+          schema: { type: 'string' as const, format: 'uuid' },
+        },
+        {
+          name: 'deviceName',
+          in: 'query' as const,
+          required: true,
+          schema: { type: 'string' as const, minLength: 1, maxLength: 100 },
+        },
+        {
+          name: 'mode',
+          in: 'query' as const,
+          required: false,
+          schema: { type: 'string' as const, enum: ['login', 'link'], default: 'login' },
+          description: 'link requires a bearer access token',
+        },
+      ],
+      responses: {
+        200: okJson('Provider authorize URL'),
+        401: okJson('Bearer token missing for link mode'),
+        404: okJson('Provider unknown or disabled'),
+        422: okJson('Validation error'),
+      },
+    },
+  },
+  [`${authBase}/sso/{provider}/callback`]: {
+    get: {
+      tags: [AUTH_OPENAPI.tag],
+      operationId: 'authSsoCallback',
+      summary: 'External sign-in redirect target',
+      description:
+        'Registered at the provider. Validates the state cookie, verifies the identity server-side and redirects (302) to CLIENT_APP_URL/auth/sso/callback?status=ok|error&mode=login|link&reason=<code>. On sign-in it sets the ofeed-refresh cookie; tokens never appear in URLs.',
+      security: [],
+      parameters: [ssoProviderParam],
+      responses: {
+        302: { description: 'Redirect to the client callback page' },
+        404: okJson('Provider unknown or disabled'),
+      },
+    },
+  },
+  [`${authBase}/sso/{provider}/link`]: {
+    delete: {
+      tags: [AUTH_OPENAPI.tag],
+      operationId: 'authSsoUnlink',
+      summary: 'Unlink an external identity from the current user',
+      security: bearerSecurity,
+      parameters: [ssoProviderParam],
+      responses: {
+        200: okJson('Identity unlinked'),
+        401: okJson('Unauthorized'),
+        404: okJson('Provider unknown or disabled'),
+        409: okJson('last_sign_in_method: the account has no password and no other identity'),
       },
     },
   },

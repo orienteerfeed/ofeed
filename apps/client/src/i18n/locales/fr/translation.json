@@ -58,6 +58,27 @@
         "NoDuplicates": "Aucune puce en double dans cette sélection.",
         "FullGroups": "Les filtres sélectionnent des groupes entiers. Tous les concurrents partageant une puce restent visibles, y compris dans les autres catégories."
       },
+      "Entries": {
+        "Title": "Inscriptions dans le temps",
+        "Description": "Comment les inscriptions ont progressé de l’ouverture à la clôture et à la course, par jour et par catégorie.",
+        "Class": "Catégorie",
+        "Loading": "Chargement des inscriptions…",
+        "Stale": "L’actualisation a échoué. Les données affichées sont obsolètes ; l’export et l’impression sont désactivés.",
+        "Error": "Impossible de charger les inscriptions dans le temps.",
+        "Empty": "Aucune inscription dans cette sélection pour le moment.",
+        "Total": "Concurrents inscrits",
+        "FinalDaysShare": "Inscrits dans les 3 derniers jours avant la clôture",
+        "LateEntries": "Inscriptions tardives",
+        "PeakDay": "Jour le plus chargé",
+        "Cumulative": "Total des inscriptions",
+        "Daily": "Nouvelles inscriptions par jour",
+        "LateArea": "La zone grisée indique les inscriptions tardives reçues après la clôture.",
+        "Date": "Date",
+        "Opens": "Ouverture",
+        "Closes": "Clôture",
+        "Race": "Course",
+        "Table": "Valeurs quotidiennes"
+      },
       "Anomalies": {
         "Title": "Analyse des anomalies",
         "Description": "Examiner les premiers temps intermédiaires et les départs suspects.",
@@ -1287,6 +1308,34 @@
     "Error": "Impossible de mettre à jour les sessions.",
     "LogoutUnconfirmed": "Déconnexion locale effectuée. La révocation sur le serveur n’a pas été confirmée ; reconnectez-vous pour terminer.",
     "RevocationDelay": "Les appareils révoqués peuvent utiliser un jeton d’accès existant pendant 15 minutes au maximum."
+  },
+  "Sso": {
+    "ContinueWith": "Continuer avec {{provider}}",
+    "StartFailed": "Impossible de démarrer la connexion",
+    "Completing": "Finalisation de la connexion…",
+    "FailedTitle": "Échec de la connexion",
+    "LinkedTitle": "Compte associé",
+    "BackToSignIn": "Retour à la connexion",
+    "BackToProfile": "Retour au profil",
+    "Errors": {
+      "invalid_state": "Le lien de connexion a expiré ou a été ouvert dans un autre navigateur. Veuillez réessayer.",
+      "provider_unavailable": "Le fournisseur de connexion n'est pas disponible pour le moment. Réessayez plus tard.",
+      "email_in_use": "Un compte avec cet e-mail existe déjà. Connectez-vous avec votre mot de passe et associez le fournisseur dans votre profil.",
+      "email_required": "Le fournisseur n'a pas partagé d'adresse e-mail, le compte ne peut donc pas être créé.",
+      "identity_taken": "Ce compte externe est déjà associé à un autre compte OFeed.",
+      "account_inactive": "Ce compte n'est pas actif.",
+      "last_sign_in_method": "Définissez d’abord un mot de passe (via la réinitialisation) pour pouvoir vous connecter après la dissociation."
+    },
+    "Linked": {
+      "Title": "Comptes associés",
+      "Description": "Connectez-vous avec un compte externe au lieu de votre mot de passe.",
+      "Link": "Associer",
+      "Unlink": "Dissocier",
+      "LinkedSince": "Associé depuis le {{date}}",
+      "NotLinked": "Non associé",
+      "UnlinkSuccess": "Compte dissocié",
+      "UnlinkFailed": "Échec de la dissociation"
+    }
   },
   "EntryPaymentExpiry": {
     "Label": "Délai de paiement (heures)",

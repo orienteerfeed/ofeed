@@ -42,6 +42,10 @@ export const PATHNAMES = {
     to: '/events/$eventId/insights/cards',
     params: { eventId } as const,
   }),
+  eventEntryInsight: (eventId: string) => ({
+    to: '/events/$eventId/insights/entries',
+    params: { eventId } as const,
+  }),
   eventPaymentInsight: (eventId: string) => ({
     to: '/events/$eventId/insights/payments',
     params: { eventId } as const,
@@ -75,6 +79,7 @@ export const PATHNAMES = {
   settings: () => ({ to: '/settings', params: {} as const }),
   signIn: () => ({ to: '/auth/signin', params: {} as const }),
   forgotPassword: () => ({ to: '/auth/forgot-password', params: {} as const }),
+  ssoCallback: () => ({ to: '/auth/sso/callback', params: {} as const }),
   verifyEmail: (token: string) => ({
     to: '/auth/verify-email/$token',
     params: { token } as const,

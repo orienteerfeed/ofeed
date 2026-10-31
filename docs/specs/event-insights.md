@@ -105,3 +105,39 @@ could not run because the Browser runtime reported no available browsers. These
 interactions are covered by component tests, including full filtered exports,
 print escaping, pagination, category links and refresh/retry states. No matching
 GitHub issue was found and no issue was created; the issue link remains pending.
+
+## Entries-over-time insight
+
+Status: implemented. Issue: pending.
+
+Shows how competitors were entered from the opening of entries through the
+deadline to the race, so the organiser sees the entry curve, last-minute entries
+and late entries.
+
+- Unit is the competitor: `EntryItem` with `actionKey = NEW_ENTRY`. Change
+  requests are not entries. Items of orders currently `CANCELLED` or `REJECTED`
+  are excluded entirely (also retroactively, from the day they were created).
+- Days are calendar days in the event timezone, including DST transitions.
+  A late entry is an item created after `entriesCloseAt`.
+- JWT owner/admin GraphQL `eventEntryTimeline(eventId: String!)` returns the
+  timezone, local dates `entriesOpenOn`, `entriesCloseOn` (nullable) and
+  `eventOn`, and `days` rows `{ date, classId, className, entries, lateEntries }`.
+  The service groups; the payload carries counts only, no personal data. Shared
+  Zod schema: `eventEntryTimelineSchema`.
+- The client sums the selected class (or all) and fills every day from the
+  opening (or first entry when unset) to the race day, cut at today, so the time
+  axis is linear. Rows after the earlier of race day and today are excluded from
+  the displayed series, totals, summary and exports, including when all entries
+  fall after that cutoff.
+- Summary: entered competitors, share of on-time entries made in the last 3 days
+  up to the deadline, late entries and the busiest day.
+- Charts: cumulative total as a step area with dashed markers for opening,
+  deadline and race day, and daily new entries as bars on the same time axis.
+  The late-entry period after the deadline is shaded. Two charts rather than one
+  with two y-axes. A daily table, CSV export and print give the same data.
+- Loading, empty and error states are distinct; a failed load never shows zeros.
+
+Tests: `entry-insight.service.test.ts` (authorization, local-day grouping across
+DST, late flag, status and action filter), `entry-timeline.utils.test.ts`
+(series, filters, summary, post-race and future rows beyond the cutoff) and
+`EntryInsight.test.tsx` (states and summary).

@@ -7,6 +7,7 @@ import {
   getEventFilesStatus,
   getEventImportStates,
   getLeafletCoursePointsByClassId,
+  getRadioControlCodesByClassId,
   getRadioControlsByClassId,
   updateControlRadioFlag,
   type EventFilesCoursesStatus,
@@ -175,6 +176,21 @@ builder.queryFields((t) => ({
       try {
         await assertClassCourseAccess(context.prisma, context.auth, args.classId as number);
         return await getRadioControlsByClassId(context.prisma, args.classId as number);
+      } catch (err: unknown) {
+        return rethrowAuthzOrError(err, 'Failed to load radio controls.');
+      }
+    },
+  }),
+  classRadioControlCodes: t.field({
+    type: ['String'],
+    description:
+      'Codes of the controls marked as radio (online split) controls on the class course, in course order. Public.',
+    args: {
+      classId: t.arg.int({ required: true }),
+    },
+    resolve: async (_root, args, context) => {
+      try {
+        return await getRadioControlCodesByClassId(context.prisma, args.classId as number);
       } catch (err: unknown) {
         return rethrowAuthzOrError(err, 'Failed to load radio controls.');
       }

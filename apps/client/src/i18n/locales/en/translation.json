@@ -58,6 +58,27 @@
         "NoDuplicates": "No duplicate cards in this selection.",
         "FullGroups": "Filters select whole groups. All competitors sharing a card remain visible, including those in other classes."
       },
+      "Entries": {
+        "Title": "Entries over time",
+        "Description": "How entries accumulated from the opening of entries to the deadline and the race, per day and class.",
+        "Class": "Class",
+        "Loading": "Loading entries…",
+        "Stale": "Refresh failed. Displayed data is out of date; export and print are disabled.",
+        "Error": "Could not load the entries over time.",
+        "Empty": "No entries in this selection yet.",
+        "Total": "Entered competitors",
+        "FinalDaysShare": "Entered in the last 3 days before the deadline",
+        "LateEntries": "Late entries",
+        "PeakDay": "Busiest day",
+        "Cumulative": "Total entries",
+        "Daily": "New entries per day",
+        "LateArea": "The shaded area marks late entries received after the deadline.",
+        "Date": "Date",
+        "Opens": "Opens",
+        "Closes": "Deadline",
+        "Race": "Race",
+        "Table": "Daily values"
+      },
       "Anomalies": {
         "Title": "Anomaly analysis",
         "Description": "Review suspicious first splits and start times.",
@@ -2155,6 +2176,34 @@
     "Error": "Unable to update device sessions.",
     "LogoutUnconfirmed": "Signed out locally. Server revocation could not be confirmed; reconnect to complete logout.",
     "RevocationDelay": "Revoked devices can use an existing access token for up to 15 minutes."
+  },
+  "Sso": {
+    "ContinueWith": "Continue with {{provider}}",
+    "StartFailed": "Could not start sign-in",
+    "Completing": "Completing sign-in…",
+    "FailedTitle": "Sign-in failed",
+    "LinkedTitle": "Account linked",
+    "BackToSignIn": "Back to sign in",
+    "BackToProfile": "Back to profile",
+    "Errors": {
+      "invalid_state": "The sign-in link expired or was opened in a different browser. Please try again.",
+      "provider_unavailable": "The sign-in provider is not available right now. Please try again later.",
+      "email_in_use": "An account with this email already exists. Sign in with your password and link this provider in your profile.",
+      "email_required": "The provider did not share an email address, so no account can be created.",
+      "identity_taken": "This external account is already linked to another OFeed account.",
+      "account_inactive": "This account is inactive.",
+      "last_sign_in_method": "Set a password first (via password reset) so you can still sign in after unlinking."
+    },
+    "Linked": {
+      "Title": "Linked accounts",
+      "Description": "Sign in with an external account instead of your password.",
+      "Link": "Link",
+      "Unlink": "Unlink",
+      "LinkedSince": "Linked since {{date}}",
+      "NotLinked": "Not linked",
+      "UnlinkSuccess": "Account unlinked",
+      "UnlinkFailed": "Unlinking failed"
+    }
   },
   "EntryPaymentExpiry": {
     "Label": "Payment deadline (hours)",

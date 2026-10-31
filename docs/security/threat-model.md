@@ -61,3 +61,14 @@ tokens remain valid until expiry, subject to the existing active-account check.
 Browser refresh is protected by HttpOnly/Secure/SameSite cookies, an exact Origin
 allowlist and a required custom header; access credentials stay in memory.
 See [G4](../specs/session-longevity.md) for acceptance criteria and limitations.
+
+## External sign-in
+
+The provider callback is a top-level navigation, so it cannot carry the Origin
+and custom-header checks of the session endpoints. A signed (HMAC), HttpOnly,
+SameSite=Lax, single-use state cookie with a 10-minute lifetime binds the
+callback to the browser that started it. The returned state is compared in
+constant time. Provider tokens are verified server-side with the client secret
+in a POST body. Accounts are auto-linked by email only when both the provider
+and ofeed have verified that email; otherwise an attacker could register the
+victim's email at the provider. See ADR 0008.

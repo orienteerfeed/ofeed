@@ -82,6 +82,16 @@ function getLocalDateTimeParts(date: Date, timeZone: string): LocalDateTimeParts
   };
 }
 
+/** Calendar date (YYYY-MM-DD) of an instant in an IANA timezone; null for an unknown zone. */
+export function formatLocalDate(date: Date, timeZone: string): string | null {
+  const parts = getLocalDateTimeParts(date, timeZone);
+  if (!parts) {
+    return null;
+  }
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`;
+}
+
 function getTimeZoneOffsetMs(date: Date, timeZone: string): number | null {
   const zoned = getLocalDateTimeParts(date, timeZone);
   if (!zoned) {
