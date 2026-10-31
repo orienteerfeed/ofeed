@@ -77,7 +77,7 @@
     "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@types/node": "^24.19.1",
+    "@types/node": "^24.19.2",
     "@types/qrcode": "^1.5.6",
     "@types/ws": "^8.18.2",
     "@types/xml2js": "^0.4.14",
@@ -86,8 +86,8 @@
     "prisma": "^7.10.0",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.71.1",
-    "vitest": "^4.1.11"
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^4.1.12"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
