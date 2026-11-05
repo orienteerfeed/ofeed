@@ -277,9 +277,14 @@ type Entry {
   id: String!
   items: [EntryItem!]!
   paid: Boolean!
+  paymentCount: Int!
   paymentDueAt: DateTime
   paymentMethod: PaymentMethodType
   paymentReference: String!
+  promoCode: String
+  promoDiscountAmount: Float
+  promoEligibleAmount: Float
+  promoPercent: Float
   qrPayment: QrPaymentInstruction
   status: EntryStatus!
   statusHistory: [EntryStatusHistory!]!
@@ -310,6 +315,7 @@ type EntryAvailability {
   entriesCloseAt: DateTime
   entriesOpenAt: DateTime
   entryActions: [EntryAction!]!
+  registrationFeeDiscounts: [RegistrationFeeDiscount!]!
   vatPayer: Boolean!
   vatRate: Float
 }
@@ -397,6 +403,7 @@ input EntryOrderUpdateItemInput {
   card: Int
   cardRental: Boolean!
   classId: Int!
+  entryItemId: Int
   firstname: String!
   lastname: String!
   license: String
@@ -404,6 +411,60 @@ input EntryOrderUpdateItemInput {
   organisation: String
   registration: String
   startTime: DateTime
+}
+
+type EntryPromoQuote {
+  code: String!
+  currency: String!
+  discountAmount: Float!
+  discountPercent: Float!
+  eligibleAmount: Float!
+  excludedItems: Int!
+  subtotal: Float!
+  totalAmount: Float!
+}
+
+input EntryPromoQuoteItemInput {
+  birthYear: Int
+  card: Int
+  cardRental: Boolean!
+  classId: Int!
+  firstname: String!
+  lastname: String!
+  license: String
+  note: String
+  organisation: String
+  registration: String
+  startTime: String
+}
+
+type EntryReportItem {
+  amount: Float!
+  card: Int
+  cardRental: Boolean!
+  classId: Int!
+  className: String!
+  firstname: String!
+  id: Int!
+  lastname: String!
+  organisation: String
+}
+
+type EntryReportOrder {
+  currency: String!
+  id: String!
+  items: [EntryReportItem!]!
+  legacyPaid: Boolean!
+  outstandingAmount: Float!
+  paid: Boolean!
+  paymentMethod: String
+  paymentReference: String!
+  promoCode: String
+  promoDiscountAmount: Float!
+  receivedAmount: Float!
+  receivedAt: String!
+  status: String!
+  totalAmount: Float!
 }
 
 enum EntryStatus {
@@ -529,7 +590,11 @@ type EventEntryTimeline {
   days: [EntryTimelineDay!]!
   entriesCloseOn: String
   entriesOpenOn: String
+  eventName: String
   eventOn: String!
+  location: String
+  orders: [EntryReportOrder!]
+  startAt: String
   timezone: String!
 }
 
@@ -697,6 +762,7 @@ type EventServiceSetting {
 type EventServiceSettings {
   eventId: String!
   lateEntryFeePercent: Float
+  registrationFeeDiscounts: [RegistrationFeeDiscount!]!
   services: [EventServiceSetting!]!
 }
 
@@ -755,11 +821,13 @@ type Mutation {
   _empty(nothing: String): String
   assignEntryItemRentalCard(cardNumber: Int!, entryItemId: Int!): Entry!
   changeCurrentUserPassword(input: ChangeCurrentUserPasswordInput!): ResetResponse!
+  classDelete(classId: Int!, eventId: String!): ResponseMessage!
   classFeeUpdate(input: UpdateClassFeeInput!): ResponseMessage!
   classUpdate(input: UpdateClassInput!): ResponseMessage!
   competitorCreate(input: StoreCompetitorInput!): StoreCompetitorResponse!
   competitorStatusChange(input: StatusChange!): ResponseMessage!
   competitorUpdate(input: UpdateCompetitorInput!): ResponseMessage!
+  createEventPromoCode(code: String!, discountPercent: Float!, eventId: String!): ResponseMessage!
   createEventRentalCard(input: CreateEventRentalCardInput!): EventRentalCard!
   createMeosEventBinding(eventId: String!): EventMeosBinding!
   createStartSlotVacancy(input: CreateStartSlotVacancyInput!): ClassStartSlotVacancy!
@@ -771,7 +839,7 @@ type Mutation {
   deleteMeosEventBinding(id: Int!): Boolean!
   deleteStartSlotVacancy(id: Int!): ResponseMessage!
   deleteUserCard(id: Int!): Boolean!
-  entryOrderPaidUpdate(entryId: String!, paid: Boolean!): Entry!
+  entryOrderPaidUpdate(deviceId: String, entryId: String!, paid: Boolean!): Entry!
   entryOrderProcess(entryId: String!): Entry!
   entryOrderStatusUpdate(entryId: String!, status: EntryStatus!): Entry!
   entryOrderUpdate(entryId: String!, input: EntryOrderUpdateInput!): Entry!
@@ -781,6 +849,7 @@ type Mutation {
   resendEmailVerification: ResetResponse!
   resetPassword(newPassword: String!, token: String!): ResetResponse!
   revokeDevice(deviceId: String!): Boolean!
+  revokeEventPromoCode(eventId: String!, id: String!): ResponseMessage!
   saveCustomEventService(input: SaveCustomEventServiceInput!): EventServiceSetting!
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
@@ -791,6 +860,7 @@ type Mutation {
   updateEventRentalCard(input: UpdateEventRentalCardInput!): EventRentalCard!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
   updateLateEntryFeePercent(eventId: String!, lateEntryFeePercent: Float): ResponseMessage!
+  updateRegistrationFeeDiscounts(eventId: String!, rules: [RegistrationFeeDiscountInput!]!): ResponseMessage!
   updateStartSlotVacancy(input: UpdateStartSlotVacancyInput!): ClassStartSlotVacancy!
   updateSystemEventService(input: UpdateSystemEventServiceInput!): ResponseMessage!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
@@ -837,6 +907,15 @@ enum PaymentMethodType {
   QR_PAYMENT
 }
 
+type PromoCode {
+  code: String!
+  createdAt: DateTime!
+  discountPercent: Float!
+  id: String!
+  revokedAt: DateTime
+  usageCount: Int!
+}
+
 enum ProtocolProcessedByType {
   INTEGRATION
   SYSTEM
@@ -881,6 +960,7 @@ type Query {
   currentUserCards: [UserCard!]!
   entryOrderById(accessToken: String, entryId: String!): Entry
   entryOrdersByEvent(eventId: String!): [Entry!]!
+  entryPromoQuote(code: String!, eventId: String!, items: [EntryPromoQuoteItemInput!]!): EntryPromoQuote!
   event(id: String!): Event
   eventAnomalyInsight(eventId: String!): EventAnomalyInsight!
   eventCardInsight(eventId: String!): EventCardInsight!
@@ -891,6 +971,7 @@ type Query {
   eventFilesStatus(eventId: String!): EventFilesStatus!
   eventImportStates(eventId: String!): [EventImportState!]!
   eventPaymentMethods(eventId: String!): EventPaymentMethodSettings!
+  eventPromoCodes(eventId: String!): [PromoCode!]!
   eventRentalCards(eventId: String!): [EventRentalCard!]!
   eventServiceSettings(eventId: String!): EventServiceSettings!
   events(input: EventsInput): EventConnection!
@@ -916,6 +997,18 @@ type RadioCoursePoint {
   legLength: Float
   longitude: Float
   sequence: Int!
+}
+
+type RegistrationFeeDiscount {
+  allowPromoCode: Boolean!
+  discountPercent: Float!
+  pattern: String!
+}
+
+input RegistrationFeeDiscountInput {
+  allowPromoCode: Boolean
+  discountPercent: Float!
+  pattern: String!
 }
 
 type ResetResponse {

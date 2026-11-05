@@ -47,10 +47,14 @@ import PATHNAMES from '@/lib/paths/pathnames';
 import { MainPageLayout } from '@/templates/MainPageLayout';
 import { toast } from '@/utils';
 
+import { getEntryPaymentDeviceId } from './entry-payment-client';
 import { formatEntryFee } from './EntryClassCard';
 import { EntryItemsTable } from './EntryItemsTable';
 import { EntryPaymentLedger } from './EntryPaymentLedger';
-import { useEntryPayments } from './entries.hooks';
+import {
+  useEntryPayments,
+  useRefreshEntryPaymentQueries,
+} from './entries.hooks';
 import { EntryPaymentDeadline } from '@/components/molecules/EntryPaymentDeadline';
 import { EntryPaymentSection } from './EntryPaymentSection';
 import { getEntryStatusBadgeVariant } from './entries.utils';
@@ -81,6 +85,7 @@ export function EventEntryOrderDetailPage() {
     entryId,
     !hasSignedAccess
   );
+  const refreshPayments = useRefreshEntryPaymentQueries();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<
     'REJECTED' | 'CANCELLED' | null
@@ -189,8 +194,25 @@ export function EventEntryOrderDetailPage() {
   const handlePaidChange = (paid: boolean) =>
     runAction(
       'paid',
-      () => paidUpdate({ variables: { entryId, paid } }),
-      t('Pages.Event.EntriesManage.Toast.PaidUpdated')
+      async () => {
+        await paidUpdate({
+          variables: {
+            entryId,
+            paid,
+            ...(paid && entry.paymentMethod === 'CASH'
+              ? {
+                  deviceId: getEntryPaymentDeviceId(),
+                }
+              : {}),
+          },
+        });
+        await refreshPayments(eventId, entryId);
+      },
+      t(
+        paid && entry.paymentMethod === 'CASH' && entry.totalAmount > 0
+          ? 'Pages.Event.EntriesManage.PaymentLedger.Recorded'
+          : 'Pages.Event.EntriesManage.Toast.PaidUpdated'
+      )
     );
 
   const handleProcess = () =>
@@ -244,7 +266,7 @@ export function EventEntryOrderDetailPage() {
                     </TooltipContent>
                   </Tooltip>
 
-                  {recordedPayments.length === 0 && (
+                  {recordedPayments.length === 0 && !entry.paymentCount && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -254,7 +276,9 @@ export function EventEntryOrderDetailPage() {
                           aria-label={t(
                             entry.paid
                               ? 'Pages.Event.EntriesManage.Actions.UnmarkPaid'
-                              : 'Pages.Event.EntriesManage.Actions.MarkPaid'
+                              : entry.paymentMethod === 'CASH'
+                                ? 'Pages.Event.EntriesManage.Actions.MarkCashPaid'
+                                : 'Pages.Event.EntriesManage.Actions.MarkPaid'
                           )}
                           onClick={() => void handlePaidChange(!entry.paid)}
                         >
@@ -269,7 +293,9 @@ export function EventEntryOrderDetailPage() {
                         {t(
                           entry.paid
                             ? 'Pages.Event.EntriesManage.Actions.UnmarkPaid'
-                            : 'Pages.Event.EntriesManage.Actions.MarkPaid'
+                            : entry.paymentMethod === 'CASH'
+                              ? 'Pages.Event.EntriesManage.Actions.MarkCashPaid'
+                              : 'Pages.Event.EntriesManage.Actions.MarkPaid'
                         )}
                       </TooltipContent>
                     </Tooltip>
@@ -545,6 +571,32 @@ export function EventEntryOrderDetailPage() {
               </CardContent>
             </Card>
 
+            {entry.promoCode && (
+              <Card>
+                <CardContent className="space-y-2 pt-6 text-sm">
+                  <p>
+                    {t('PromoCodes.Code')}: <strong>{entry.promoCode}</strong> (
+                    {entry.promoPercent}%)
+                  </p>
+                  <p>
+                    {t('PromoCodes.Subtotal')}:{' '}
+                    {formatEntryFee(
+                      entry.totalAmount + (entry.promoDiscountAmount ?? 0),
+                      entry.currency,
+                      i18n.language
+                    )}
+                  </p>
+                  <p>
+                    −
+                    {formatEntryFee(
+                      entry.promoDiscountAmount ?? 0,
+                      entry.currency,
+                      i18n.language
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
             {entry.paymentMethod !== 'CASH' ? (
               <EntryPaymentSection
                 eventName={entry.event.name}

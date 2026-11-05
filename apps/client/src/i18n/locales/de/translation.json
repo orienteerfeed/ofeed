@@ -77,7 +77,8 @@
         "Opens": "Eröffnung",
         "Closes": "Meldeschluss",
         "Race": "Wettkampf",
-        "Table": "Tageswerte"
+        "Table": "Tageswerte",
+        "Trend": "Linearer Trend"
       },
       "Anomalies": {
         "Title": "Anomalieanalyse",
@@ -990,7 +991,9 @@
           "Edit": "Bearbeiten",
           "EditUnavailable": "Das Bearbeiten von Anmeldungen ist noch nicht verfügbar.",
           "ExpandItems": "Positionen anzeigen",
-          "CollapseItems": "Positionen ausblenden"
+          "CollapseItems": "Positionen ausblenden",
+          "MarkCashPaid": "Barzahlung entgegennehmen",
+          "RecordConfirmedCash": "Bestätigte Barzahlung erfassen"
         },
         "RejectDialog": {
           "ConfirmTitle": "Reject this entry order?",
@@ -1043,6 +1046,7 @@
             "Title": "Zahlung",
             "Method": "Zahlungsmethode",
             "Account": "Kontonummer",
+            "Iban": "IBAN",
             "VariableSymbol": "Variables Symbol",
             "ConstantSymbol": "Konstantes Symbol",
             "RecipientMessage": "Nachricht an den Empfänger",
@@ -1222,6 +1226,7 @@
         "LegendSignificantDeviation": "Erhebliche Abweichung (>1.5σ)",
         "LoadingChart": "Zwischenzeiten-Diagramm wird geladen",
         "LoadingTimes": "Zwischenzeiten werden geladen",
+        "ShowClubs": "Vereine anzeigen",
         "ResetSort": "Sortierung zurücksetzen",
         "Runners": "Läufer",
         "RunnersCount_one": "{{count}} Läufer",
@@ -1338,6 +1343,18 @@
           "Services": "Services"
         },
         "Services": {
+          "RegistrationDiscounts": {
+            "Title": "Rabatte nach Registrierung",
+            "Description": "ABC* gilt für Registrierungen, die mit ABC beginnen; ? ersetzt ein Zeichen. Der höchste passende Rabatt gilt für das Startgeld einschließlich Zuschlägen und für die Chipleihe. Bei 100 % ist beides kostenlos. Gespeicherte Bestellungen werden nicht automatisch neu berechnet.",
+            "Pattern": "Registrierungsmuster",
+            "Percent": "Rabatt (%)",
+            "Free": "Kostenlos",
+            "Remove": "Regel entfernen",
+            "Add": "Regel hinzufügen",
+            "Save": "Rabatte speichern",
+            "Empty": "Noch keine Rabattregeln vorhanden.",
+            "Validation": "Muster mit 1–100 Zeichen eingeben: Buchstaben, Ziffern, Leerzeichen, _, -, * oder ?. Rabatt 0–100 % mit höchstens zwei Nachkommastellen; maximal 30 Regeln."
+          },
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
@@ -1612,8 +1629,18 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "LateEntryFeeDisabledTooltip": "Do not increase the fee for late entries.",
           "LateEntryFeeDisabledAria": "Do not increase the fee for late entries in class {{name}}",
+          "ActionsMenu": "Aktionen für Kategorie {{name}}",
           "BirthYearInvalid": "Bitte geben Sie ein gültiges Jahr ein (mind. 4 Stellen).",
-          "BirthYearRangeError": "Jahrgang von muss kleiner oder gleich Jahrgang bis sein."
+          "BirthYearRangeError": "Jahrgang von muss kleiner oder gleich Jahrgang bis sein.",
+          "Delete": {
+            "Action": "Löschen",
+            "Aria": "Kategorie {{name}} löschen",
+            "Title": "Kategorie „{{name}}“ löschen?",
+            "Description": "Diese Kategorie, ihre Teilnehmer, Teams, Ergebnisse, Zwischenzeiten, Stempel, Protokolle, Startzeiten und Meldepositionen werden dauerhaft gelöscht. Bestellungen mit ursprünglichen Beträgen und Zahlungen sowie gemeinsame Bahnen und Vereine bleiben erhalten. Zahlungen werden nicht erstattet. Diese Aktion kann nicht rückgängig gemacht werden.",
+            "Confirm": "Mit abhängigen Daten löschen",
+            "Success": "Die Kategorie und ihre abhängigen Daten wurden gelöscht.",
+            "Error": "Die Kategorie konnte nicht gelöscht werden."
+          }
         },
         "Files": {
           "StartList": "Startliste",
@@ -1861,7 +1888,7 @@
     "DragDrop": {
       "UploadIofXml": {
         "Title": "IOF-XML hochladen",
-        "Description": "Lade IOF-XML-Dateien mit Startlisten und Ergebnissen hoch."
+        "Description": "Lade eine IOF-XML-Datei mit Startliste, Bahnen oder Ergebnissen hoch. Der Dateityp wird automatisch erkannt."
       },
       "Toast": {
         "UploadSuccess": "Dateien erfolgreich hochgeladen!",
@@ -1878,6 +1905,7 @@
   },
   "Molecules": {
     "DragDrop": {
+      "FileUpload": "File upload",
       "ClickToUpload": "Klicken sie hier für upload",
       "Delete": "Löschen",
       "OrdDragAndDrop": "oder drag and drop",
@@ -1974,5 +2002,80 @@
     "Label": "Zahlungsfrist (Stunden)",
     "Help": "Leer = keine automatische Stornierung. 1–8760 Stunden ab Eingang einer neuen Anmeldung. Barzahlung ausgenommen. Bestehende Anmeldungen bleiben unverändert.",
     "Deadline": "Geht die Zahlung nicht bis {{date}} ein, wird diese Anmeldung automatisch storniert."
+  },
+  "PromoCodes": {
+    "Title": "Promocodes",
+    "Description": "Erstellen Sie einen prozentualen Rabatt für diese Veranstaltung. Codes sind bis zum Widerruf wiederverwendbar.",
+    "Code": "Promocode",
+    "Percent": "Rabatt (%)",
+    "Create": "Code erstellen",
+    "Empty": "Noch keine Promocodes.",
+    "Active": "Aktiv",
+    "Revoked": "Widerrufen",
+    "Uses": "Bestellungen mit Code: {{count}}",
+    "Copy": "Kopieren",
+    "Revoke": "Code widerrufen",
+    "RevokeDescription": "Dieser Code gilt nicht mehr für neue Bestellungen. Bestehende Bestellungen behalten ihren Rabatt.",
+    "Validation": "Geben Sie einen eindeutigen Code mit 3–40 Zeichen (A–Z, 0–9, _ oder -) und einen Rabatt über 0 bis 100 % mit höchstens zwei Nachkommastellen ein.",
+    "SaveError": "Code konnte nicht gespeichert werden. Prüfen Sie die Eindeutigkeit und versuchen Sie es erneut.",
+    "LoadError": "Promocodes konnten nicht geladen werden.",
+    "CopyError": "Code konnte nicht kopiert werden.",
+    "AllowCombination": "Mit Promocode kombinierbar",
+    "Apply": "Anwenden",
+    "Remove": "Entfernen",
+    "Checking": "Preis wird geprüft…",
+    "Invalid": "Der Promocode ist ungültig oder der Preis konnte nicht geprüft werden. Bitte erneut versuchen.",
+    "NoEligible": "Keine dieser Positionen ist für einen Promorabatt berechtigt.",
+    "Excluded": "Einige Positionen sind ausgeschlossen, da ihr Registrierungsrabatt keine Kombination erlaubt.",
+    "Subtotal": "Preis vor Promorabatt",
+    "Cancel": "Abbrechen"
+  },
+  "EntryReport": {
+    "FinancialSummary": "Finanzübersicht",
+    "Currency": "Währung",
+    "OrderTotal": "Bestellsumme",
+    "Received": "Eingegangene Zahlungen",
+    "Outstanding": "Offener Betrag",
+    "LegacyPaid": "Als bezahlt markiert ohne Beleg",
+    "PaidOrders": "Bezahlte Bestellungen",
+    "UnpaidOrders": "Unbezahlte Bestellungen",
+    "PaymentMethods": "Zahlungsart (Bestellungen)",
+    "Orders": "Bestellungen",
+    "PaymentMethod": "Zahlungsart",
+    "DailyOrders": "Meldungen und Bestellungen pro Tag",
+    "Date": "Datum",
+    "Competitors": "Teilnehmer",
+    "Categories": "Meldungen nach Kategorien",
+    "Class": "Kategorie",
+    "RaceDay": "Detail des Wettkampftages",
+    "ReceivedAt": "Eingegangen",
+    "Competitor": "Teilnehmer",
+    "Club": "Verein",
+    "Card": "Chip",
+    "Price": "Preis",
+    "Paid": "Bezahlt",
+    "PromoCode": "Promocode",
+    "Yes": "Ja",
+    "No": "Nein",
+    "Unknown": "Nicht angegeben",
+    "Excluded": "Stornierte / abgelehnte Bestellungen",
+    "FinanceAllClasses": "Die Finanzübersicht umfasst alle Kategorien im gewählten Zeitraum.",
+    "FinanceWholeOrders": "Die Finanzübersicht umfasst vollständige Bestellungen mit der gewählten Kategorie einschließlich weiterer Teilnehmer.",
+    "ReceiptNote": "Eingegangene Zahlungen basieren auf Belegen. Frühere Zahlungsmarkierungen ohne Beleg werden getrennt angezeigt. Stornierte und abgelehnte Bestellungen sind ausgeschlossen.",
+    "StartTime": "Veranstaltungsbeginn",
+    "RaceDayNote": "Kumulative Teilnehmermeldungen am Wettkampftag; Uhrzeiten in der Zeitzone der Veranstaltung.",
+    "NoRaceDayEntries": "Keine Meldungen am Wettkampftag in dieser Auswahl.",
+    "EntryList": "Meldeliste",
+    "PriceNote": "Der Preis enthält Chipmiete und den zugeteilten Promorabatt. Der Zahlungsstatus gilt für die gesamte Bestellung.",
+    "Partial": "Teilweise",
+    "Previous": "Zurück",
+    "Next": "Weiter",
+    "HiddenAfterRace": "Meldungen nach dem gewählten Zeitraum ausgeblendet",
+    "UntilRace": "Bis zum Wettkampftag oder heute",
+    "Location": "Veranstaltungsort",
+    "Filters": "Zeitraum und Umfang",
+    "PaymentReference": "Zahlungsreferenz",
+    "RaceStart": "Wettkampfstart",
+    "RaceStartNote": "Meldungen rechts vom Meilenstein gingen nach dem Wettkampfstart ein. Uhrzeiten in der Zeitzone der Veranstaltung."
   }
 }

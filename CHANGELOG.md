@@ -10,11 +10,41 @@ and this project adheres to
 
 ### Added
 
+- Event class settings can permanently delete a category and its dependent
+  competition data after confirmation, preserving shared entities and payments.
+
+- Expand the entry timeline report with order/payment summaries, race-day detail,
+  payment methods, category counts and paginated entry rows, with full CSV/print
+  exports limited to race day or today.
+
+- Event promo codes with percentage discounts, revocation, checkout price previews
+  and immutable applied-code records; registration discounts can opt into combining.
+
+- Configure registration-based discounts (for example `ABC*`) on entry fees
+  and card rental, including free entry, with server pricing and cart estimates.
+
 - ORIS SSO server-side identity verification (`ssoUser` call from the API
   callback). The provider is enabled when `ORIS_SSO_ENABLED` is on and both
   `ORIS_SSO_CLIENT_ID` and `ORIS_SSO_CLIENT_SECRET` are set.
 
 ### Fixed
+
+- Mobile category settings keep the navbar and tabs within the viewport while
+  allowing horizontal scrolling inside the category table.
+
+- Mobile live results reserve enough category column width to display complete
+  four-character class badges.
+
+- Club result tables use their full width when multiple categories are shown
+  and the Start column is hidden on mobile.
+
+- Entry-list cash confirmations refresh received-payment reports and identify the
+  desk; legacy paid cash without a receipt can be explicitly recorded. Reports
+  also pick up external POS receipts while visible and when returning to the tab.
+
+- Marking a cash entry paid now records its outstanding balance as a CASH receipt,
+  so manual cash settlements appear in payment reports without duplicate receipts
+  on repeated settlement. POS callers can supply an optional device identifier.
 
 - Deleting an event or all its data no longer fails with 409 "Cannot delete
   event data containing payment receipts"; receipts are deleted with the event.
@@ -36,6 +66,25 @@ and this project adheres to
   the connection transaction pagination cursor in OpenAPI.
 
 ### Changed
+
+- Active runners show their elapsed clock at the next unpassed online control,
+  moving to the finish column after the last recorded radio split.
+
+- Mobile category results with one online control stack finish time and loss
+  to fit the full table without horizontal scrolling.
+
+- Mobile split analysis uses narrower pinned names, optional clubs, tap-to-open
+  competitor details and compact sorting controls.
+
+- Mark the exact race start date/time on the cumulative entry chart and plot
+  actual receipt times so same-day entries after the start remain visible.
+
+- Entries-over-time cumulative chart uses a smooth curve and a class-filtered
+  linear trend.
+
+- Show Czech domestic bank account numbers alongside IBAN in entry payment details, printouts and payment notification emails.
+
+- Use one shared upload zone above event file status sections for start lists, courses and results, with a taller themed surface and centered File upload action.
 
 - Default `ORIS_API_BASE_URL` is now `https://oris.ceskyorientak.cz/API/`.
 - Compact public entry category cards into a two-column mobile grid and show

@@ -1,3 +1,4 @@
+import { registrationFeeDiscountsSchema, type RegistrationFeeDiscount } from '@repo/shared';
 import { ConflictError } from '../../exceptions/index.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Prisma } from '../../generated/prisma/client.js';
@@ -431,6 +432,7 @@ export interface EntryAvailabilityAddOn {
 }
 
 export interface EventEntryAvailability {
+  registrationFeeDiscounts: RegistrationFeeDiscount[];
   entriesOpenAt: Date | null;
   entriesCloseAt: Date | null;
   currency: { code: string; name: string };
@@ -468,6 +470,7 @@ export async function listEventEntryAvailability(
       vatPayer: true,
       vatRate: true,
       lateEntryFeePercent: true,
+      registrationFeeDiscounts: true,
       currency: { select: { iso4217Alpha3: true, name: true } },
       services: {
         select: {
@@ -603,6 +606,9 @@ export async function listEventEntryAvailability(
   });
 
   return {
+    registrationFeeDiscounts: registrationFeeDiscountsSchema.parse(
+      event.registrationFeeDiscounts ?? [],
+    ),
     entriesOpenAt: event.entriesOpenAt,
     entriesCloseAt: event.entriesCloseAt,
     currency: { code: event.currency.iso4217Alpha3, name: event.currency.name },

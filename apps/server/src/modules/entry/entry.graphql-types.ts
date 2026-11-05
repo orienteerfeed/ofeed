@@ -163,6 +163,7 @@ export const EntryRef = builder.prismaObject('Entry', {
     }),
     paymentDueAt: t.expose('paymentDueAt', { type: 'DateTime', nullable: true }),
     paid: t.exposeBoolean('paid'),
+    paymentCount: t.relationCount('payments'),
     paymentMethod: t.field({
       type: PaymentMethodTypeRef,
       nullable: true,
@@ -205,6 +206,22 @@ export const EntryRef = builder.prismaObject('Entry', {
     contactEmail: t.exposeString('contactEmail'),
     contactFirstname: t.exposeString('contactFirstname'),
     contactLastname: t.exposeString('contactLastname'),
+    promoCode: t.exposeString('promoCode', { nullable: true }),
+    promoPercent: t.float({
+      nullable: true,
+      select: { promoPercent: true },
+      resolve: (entry) => entry.promoPercent?.toNumber() ?? null,
+    }),
+    promoEligibleAmount: t.float({
+      nullable: true,
+      select: { promoEligibleAmount: true },
+      resolve: (entry) => entry.promoEligibleAmount?.toNumber() ?? null,
+    }),
+    promoDiscountAmount: t.float({
+      nullable: true,
+      select: { promoDiscountAmount: true },
+      resolve: (entry) => entry.promoDiscountAmount?.toNumber() ?? null,
+    }),
     totalAmount: t.float({
       select: { totalAmount: true },
       resolve: (entry) => entry.totalAmount.toNumber(),
