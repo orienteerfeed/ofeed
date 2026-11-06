@@ -29,6 +29,9 @@ and this project adheres to
 
 ### Fixed
 
+- Synchronize the board's Vue I18n 11 dependency and workspace lockfile for
+  frozen CI installs.
+
 - Restrict entry adjustment reasons to event staff and reject adjusted totals that
   exceed the database amount limit before saving.
 
