@@ -58,9 +58,11 @@ import {
   type TimeRanking,
 } from './result-ranking.utils';
 import {
+  buildRadioBestTimes,
   buildRadioRanks,
-  getLastRadio,
+  getProvisionalFinishTime,
   getRadioTime,
+  getRunningRadioCode,
   isProvisionallyPlaced,
   placeProvisional,
   type RadioSplit,
@@ -291,6 +293,8 @@ interface ProcessedCompetitor extends Competitor {
   loss?: number | undefined;
   /** Rank at each radio control the competitor has a time at, by code. */
   radioRankByCode?: Map<string, number>;
+  /** Positive loss to the best time at each radio control, by code. */
+  radioLossByCode?: Map<string, number>;
 }
 
 interface OrganisationsResponse {
@@ -865,6 +869,14 @@ const CategoryResultsView = ({
       };
     }
 
+    const provisionalFinishTime = getProvisionalFinishTime(competitor);
+    if (provisionalFinishTime !== undefined) {
+      return {
+        value: formatSecondsToTime(provisionalFinishTime),
+        className: '',
+      };
+    }
+
     if (competitor.time !== undefined && competitor.time !== null) {
       return { value: formatSecondsToTime(competitor.time), className: '' };
     }
@@ -968,6 +980,7 @@ const CategoryResultsView = ({
       <div className={mobileResultsTableClassName}>
         <Table
           data-results-table="category"
+          data-single-radio={showTimes && radioCodes.length === 1}
           style={
             {
               '--radio-count': showTimes ? radioCodes.length : 0,
@@ -1016,7 +1029,7 @@ const CategoryResultsView = ({
               {showRanking && (
                 <TableHead
                   data-col="points"
-                  className="h-8 w-px whitespace-nowrap px-1 text-right text-xs sm:px-2 lg:table-cell"
+                  className="h-8 whitespace-nowrap px-1 text-right text-xs sm:px-2 lg:table-cell"
                 >
                   Points
                 </TableHead>
@@ -1026,6 +1039,17 @@ const CategoryResultsView = ({
           <TableBody>
             {competitors.map((competitor, index) => {
               const timeState = getCategoryTimeState(competitor);
+              const runningRadioCode = getRunningRadioCode(
+                competitor,
+                radioCodes,
+                currentTime
+              );
+              const lossDisplay =
+                !showTimeLoss || runningRadioCode !== undefined
+                  ? null
+                  : competitor.loss && competitor.loss > 0
+                    ? `+${formatSecondsToTime(competitor.loss)}`
+                    : '-';
               return (
                 <tr
                   key={competitor.id}
@@ -1078,45 +1102,68 @@ const CategoryResultsView = ({
                     radioCodes.map(code => {
                       const radioTime = getRadioTime(competitor, code);
                       const radioRank = competitor.radioRankByCode?.get(code);
+                      const radioLoss = competitor.radioLossByCode?.get(code);
                       return (
                         <TableCell
                           key={code}
+                          data-col="radio"
                           className="px-2 py-1 text-right text-xs font-mono"
                         >
-                          {radioTime !== undefined && (
-                            <>
-                              {formatSecondsToTime(radioTime)}
-                              {radioRank !== undefined && (
-                                <span className="block text-muted-foreground sm:ml-1 sm:inline">
-                                  ({radioRank})
+                          {runningRadioCode === code ? (
+                            <span
+                              data-running-time
+                              className={timeState.className}
+                            >
+                              {timeState.value}
+                            </span>
+                          ) : (
+                            radioTime !== undefined && (
+                              <div className="leading-tight">
+                                <span className="font-medium">
+                                  {formatSecondsToTime(radioTime)}
                                 </span>
-                              )}
-                            </>
+                                {radioRank !== undefined && (
+                                  <span className="ml-1 text-[0.625rem] font-normal text-muted-foreground">
+                                    ({radioRank})
+                                  </span>
+                                )}
+                                <span className="block text-[0.625rem] font-normal text-muted-foreground md:ml-1 md:inline">
+                                  {`+${formatSecondsToTime(radioLoss ?? 0)}`}
+                                </span>
+                              </div>
+                            )
                           )}
                         </TableCell>
                       );
                     })}
                   <TableCell
+                    data-col="time"
                     className={`px-2 py-1 text-right font-mono text-sm ${timeState.className}`}
                   >
-                    {!showTimes ? null : timeState.hideOnDesktop ? (
+                    {!showTimes ||
+                    runningRadioCode !==
+                      undefined ? null : timeState.hideOnDesktop ? (
                       <>
                         <span className="md:hidden">{timeState.value}</span>
                         <span className="hidden md:inline">&nbsp;</span>
                       </>
+                    ) : competitor.status === 'Active' ? (
+                      <span data-running-time>{timeState.value}</span>
                     ) : (
                       timeState.value
                     )}
+                    <span className="single-radio-loss text-[0.625rem] font-normal text-muted-foreground">
+                      {lossDisplay}
+                    </span>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
-                    {!showTimeLoss
-                      ? null
-                      : competitor.loss && competitor.loss > 0
-                        ? `+${formatSecondsToTime(competitor.loss)}`
-                        : '-'}
+                  <TableCell
+                    data-col="diff"
+                    className="px-2 py-1 text-sm text-right font-mono font-bold"
+                  >
+                    {lossDisplay}
                   </TableCell>
                   {showRanking && (
-                    <TableCell className="w-px whitespace-nowrap px-1 py-1 text-right text-xs sm:px-2 lg:table-cell">
+                    <TableCell className="whitespace-nowrap px-1 py-1 text-right text-xs sm:px-2 lg:table-cell">
                       {competitor.rankingPoints !== undefined &&
                         competitor.rankingPoints !== null && (
                           <Tooltip
@@ -1673,17 +1720,6 @@ const ClubResultsView = ({
                         {groupRunnersByClass(clubResult.runners).map(
                           (classGroup, groupIndex) => (
                             <React.Fragment key={classGroup.className}>
-                              {groupIndex > 0 && (
-                                <TableRow className="bg-muted/30">
-                                  <TableCell
-                                    colSpan={isRelay ? 5 : 7}
-                                    className="p-0"
-                                  >
-                                    <div className="h-px bg-border" />
-                                  </TableCell>
-                                </TableRow>
-                              )}
-
                               {classGroup.runners.map((runner, index) => (
                                 <TableRow
                                   key={runner.id}
@@ -1691,7 +1727,11 @@ const ClubResultsView = ({
                                     index % 2 === 0
                                       ? 'bg-background hover:bg-muted/30'
                                       : 'bg-muted/20 hover:bg-muted/40'
-                                  } ${runner.status !== 'OK' ? 'opacity-70' : ''}`}
+                                  } ${runner.status !== 'OK' ? 'opacity-70' : ''} ${
+                                    groupIndex > 0 && index === 0
+                                      ? '[&>td]:border-t-2 [&>td]:border-border'
+                                      : ''
+                                  }`}
                                 >
                                   {!isRelay && (
                                     <TableCell className="px-2 py-1 text-sm font-bold">
@@ -2725,15 +2765,26 @@ const calculatePositions = (
     finishedRunners.map(r => ({ id: r.id, time: r.time }))
   );
   const radioRanks = buildRadioRanks(runners, radioCodes);
+  const radioBestTimes = buildRadioBestTimes(runners, radioCodes);
 
   const withRadioRanks = (runner: ProcessedCompetitor): ProcessedCompetitor => {
     if (radioCodes.length === 0) return runner;
     const radioRankByCode = new Map<string, number>();
+    const radioLossByCode = new Map<string, number>();
     for (const [code, rankByCompetitor] of radioRanks) {
       const rank = rankByCompetitor.get(runner.id);
       if (rank !== undefined) radioRankByCode.set(code, rank);
+      const radioTime = getRadioTime(runner, code);
+      const bestRadioTime = radioBestTimes.get(code);
+      if (
+        radioTime !== undefined &&
+        bestRadioTime !== undefined &&
+        radioTime > bestRadioTime
+      ) {
+        radioLossByCode.set(code, radioTime - bestRadioTime);
+      }
     }
-    return { ...runner, radioRankByCode };
+    return { ...runner, radioRankByCode, radioLossByCode };
   };
 
   const rankRunner = (runner: Competitor): ProcessedCompetitor => {
@@ -2752,21 +2803,6 @@ const calculatePositions = (
 
     // Non-finished běžci
     const statusDisplay = getResultStatusDisplay(runner.status);
-
-    // Provisional place at the last radio control passed, e.g. "(3)".
-    const lastRadio = isProvisionallyPlaced(runner, radioCodes)
-      ? getLastRadio(runner, radioCodes)
-      : undefined;
-    const radioRank = lastRadio
-      ? radioRanks.get(lastRadio.code)?.get(runner.id)
-      : undefined;
-    if (radioRank !== undefined) {
-      return {
-        ...runner,
-        position: `(${radioRank})`,
-        positionTooltip: statusDisplay.tooltip,
-      };
-    }
 
     return {
       ...runner,

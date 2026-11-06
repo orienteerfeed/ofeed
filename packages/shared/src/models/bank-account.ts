@@ -52,3 +52,13 @@ export function normalizeBankAccountIban(value: string): string | null {
   const numeric = rearranged.replace(/[A-Z]/g, letter => String(letter.charCodeAt(0) - 55));
   return modulo97(numeric) === 1 ? compact : null;
 }
+
+/** Format a valid Czech IBAN/account as [prefix-]account/bank; otherwise null. */
+export function formatCzechBankAccount(value: string): string | null {
+  const iban = normalizeBankAccountIban(value);
+  if (!iban?.startsWith('CZ')) return null;
+  const bank = iban.slice(4, 8);
+  const prefix = iban.slice(8, 14).replace(/^0+/, '');
+  const account = iban.slice(14).replace(/^0+/, '');
+  return `${prefix ? `${prefix}-` : ''}${account}/${bank}`;
+}

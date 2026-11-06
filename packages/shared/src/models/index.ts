@@ -10,6 +10,7 @@ export * from './event.js';
 export * from './oauth.js';
 export * from './organisation.js';
 export * from './payment-method.js';
+export { formatCzechBankAccount } from './bank-account.js';
 export * from './protocol.js';
 export * from './ranking-czech.js';
 export * from './registration.js';
@@ -22,3 +23,6 @@ export * from './user.js';
 export * from './card-insight.js';
 export * from './entry-timeline.js';
 export * from './anomaly-insight.js';
+export * from './registration-fee-discount.js';
+
+export * from './promo-code.js';

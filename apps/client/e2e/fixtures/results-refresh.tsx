@@ -25,6 +25,14 @@ const view = new URLSearchParams(location.search).get('view') ?? 'splits';
 const stickyHeaders = new URLSearchParams(location.search).has('sticky');
 const isRelay = view === 'relay';
 const compactResults = new URLSearchParams(location.search).has('compact');
+const multipleClasses = new URLSearchParams(location.search).has(
+  'multipleClasses'
+);
+const radioProgress = new URLSearchParams(location.search).has('radioProgress');
+const showRadio = new URLSearchParams(location.search).has('radio');
+const longRadio = new URLSearchParams(location.search).has('longRadio');
+const pendingResults = new URLSearchParams(location.search).has('pending');
+const noRadioFinish = new URLSearchParams(location.search).has('noRadioFinish');
 const codes = Array.from({ length: 20 }, (_, i) => String(31 + i));
 const runner = (id: number) => ({
   __typename: 'Competitor',
@@ -39,10 +47,24 @@ const runner = (id: number) => ({
   organisationId: 1,
   organisation: 'Test club',
   card: '',
-  startTime: '2026-10-27T10:00:00Z',
-  finishTime: '2026-10-27T11:00:00Z',
-  time: compactResults ? 3600 + id * 90 : 1800 + id * 10,
-  status: 'OK',
+  startTime:
+    radioProgress && id === 2
+      ? new Date(Date.now() - 600_000).toISOString()
+      : '2026-10-27T10:00:00Z',
+  finishTime:
+    noRadioFinish && id === 3 ? '2026-10-27T10:30:30Z' : '2026-10-27T11:00:00Z',
+  time:
+    (noRadioFinish && id === 3) || (radioProgress && id === 2)
+      ? null
+      : compactResults
+        ? 3600 + id * 90
+        : 1800 + id * 10,
+  status:
+    (pendingResults || radioProgress) && id === 2
+      ? 'Active'
+      : pendingResults && id === 3
+        ? 'Finished'
+        : 'OK',
   updatedAt: '2026-10-27T11:00:00Z',
   lateStart: false,
   note: null,
@@ -55,11 +77,28 @@ const runner = (id: number) => ({
   team: isRelay
     ? { id: Math.ceil(id / 2), name: `Team ${Math.ceil(id / 2)}` }
     : null,
-  class: { id: 1, name: 'H21', resultListMode: null },
+  class: {
+    id: multipleClasses && id % 2 === 0 ? 2 : 1,
+    name:
+      multipleClasses && id % 2 === 0
+        ? 'D21'
+        : compactResults && view === 'live'
+          ? 'D35C'
+          : 'H21',
+    resultListMode: null,
+  },
   splits: codes.map((controlCode, index) => ({
     controlCode,
-    time: (index + 1) * 60 + id,
+    time: (index + 1) * (compactResults && view === 'splits' ? 3600 : 60) + id,
   })),
+  radioSplits:
+    radioProgress && id === 2
+      ? []
+      : codes.map((controlCode, index) => ({
+          controlCode: Number(controlCode),
+          time:
+            (index + 1) * (longRadio ? 3600 : 60) + id * (longRadio ? 90 : 1),
+        })),
 });
 let runners = Array.from({ length: 80 }, (_, i) => runner(i + 1));
 let hold = false;
@@ -118,20 +157,28 @@ const client = new ApolloClient({
                     reason: revoked ? 'DISABLED' : 'PUBLISHED',
                   },
                 }
-              : name === 'SplitCourseDistances'
-                ? { splitCourseDistances: null }
-                : name === 'OrganisationNames'
-                  ? { organisationNames: organisations }
-                  : name === 'CompetitorsByOrganisation'
-                    ? {
-                        competitorsByOrganisation: runners.map(row => ({
-                          ...row,
-                          class: { ...row.class, competitors: runners },
-                        })),
-                      }
-                    : name === 'ResultFeedByEvent'
-                      ? { resultFeedByEvent: runners }
-                      : {};
+              : name === 'ClassRadioControlCodes'
+                ? {
+                    classRadioControlCodes: radioProgress
+                      ? ['31', '32']
+                      : showRadio
+                        ? ['31']
+                        : [],
+                  }
+                : name === 'SplitCourseDistances'
+                  ? { splitCourseDistances: null }
+                  : name === 'OrganisationNames'
+                    ? { organisationNames: organisations }
+                    : name === 'CompetitorsByOrganisation'
+                      ? {
+                          competitorsByOrganisation: runners.map(row => ({
+                            ...row,
+                            class: { ...row.class, competitors: runners },
+                          })),
+                        }
+                      : name === 'ResultFeedByEvent'
+                        ? { resultFeedByEvent: runners }
+                        : {};
           observer.next({ data });
           observer.complete();
         };
@@ -146,6 +193,7 @@ export interface FixtureControls {
   hold: () => void;
   release: (error?: boolean) => void;
   update: () => void;
+  advanceRadio: (passed: number, status?: string) => void;
   revoke: () => Promise<unknown>;
   counts: Record<string, number>;
 }
@@ -163,6 +211,24 @@ window.resultsRefresh = {
     fail = error;
     pending.splice(0).forEach(respond => respond());
     fail = false;
+  },
+  advanceRadio: (passed, status = 'Active') => {
+    runners = runners.map(row =>
+      row.id === '2'
+        ? {
+            ...row,
+            status,
+            time: status === 'OK' ? 650 : null,
+            radioSplits: codes.slice(0, passed).map((code, index) => ({
+              controlCode: Number(code),
+              time: (index + 1) * 300,
+            })),
+          }
+        : row
+    );
+    subscriptions.get('CompetitorsByClassUpdated')?.({
+      competitorsByClassUpdated: runners,
+    });
   },
   update: () => {
     runners = [

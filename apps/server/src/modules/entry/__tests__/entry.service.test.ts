@@ -32,6 +32,7 @@ import {
   type EntryOrderClassInfo,
   type EntryOrderPricingContext,
 } from '../entry.service.js';
+import { quoteEntryPromoCode } from '../promo-code.service.js';
 import { hasEntryOrderAccess } from '../entry-public-access.js';
 
 const NOW = new Date('2026-07-02T10:00:00.000Z');
@@ -97,6 +98,33 @@ describe('getEventEntryStats', () => {
 });
 
 describe('priceEntryOrderItems', () => {
+  it('discounts the surcharged fee and rental with the same percentage', () => {
+    const [item] = priceEntryOrderItems(
+      [makeItem({ cardRental: true })],
+      [makeClass()],
+      makeContext({
+        lateEntryFeePercent: 50,
+        registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 20 }],
+      }),
+    );
+    expect(item.fee).toBe(120);
+    expect(item.cardRentalFee).toBe(40);
+    expect(computeEntryOrderTotal([item])).toBe(160);
+  });
+
+  it('makes both entry and rental free at 100 percent', () => {
+    const [item] = priceEntryOrderItems(
+      [makeItem({ cardRental: true })],
+      [makeClass()],
+      makeContext({
+        registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 100 }],
+      }),
+    );
+    expect(item.fee).toBe(0);
+    expect(item.cardRentalFee).toBe(0);
+    expect(computeEntryOrderTotal([item])).toBe(0);
+  });
+
   it('prices a plain FreeStart item with the class fee', () => {
     const [priced] = priceEntryOrderItems([makeItem()], [makeClass()], makeContext());
 
@@ -454,6 +482,104 @@ describe('createEntryOrder', () => {
     );
   });
 
+  it('loads registration rules and stores the server-calculated discounted fee', async () => {
+    prisma.event.findUnique.mockResolvedValue(
+      makeEventRecord({ registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 25 }] }),
+    );
+    prisma.entry.create.mockResolvedValue(makeStoredEntry());
+    await run();
+    const args = prisma.entry.create.mock.calls[0][0];
+    expect(args.data.totalAmount).toBe(75);
+    expect(args.data.items.create[0].fee).toBe(75);
+  });
+
+  it('applies promo after registration discounts and records snapshots', async () => {
+    const promo = { id: 'promo-1', code: 'SUMMER', discountPercent: decimal(20), revokedAt: null };
+    Object.assign(prisma, { promoCode: { findUnique: vi.fn().mockResolvedValue(promo) } });
+    prisma.event.findUnique.mockResolvedValue(
+      makeEventRecord({
+        registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 25, allowPromoCode: true }],
+      }),
+    );
+    prisma.entry.create.mockResolvedValue(makeStoredEntry());
+    await createEntryOrder(
+      prisma as never,
+      { eventId: 'event-1', userId: null, now: NOW },
+      { ...ORDER_INPUT, promoCode: 'summer' },
+    );
+    expect(prisma.entry.create.mock.calls[0][0].data).toMatchObject({
+      totalAmount: 60,
+      promoCodeId: 'promo-1',
+      promoCode: 'SUMMER',
+      promoEligibleAmount: 75,
+      promoDiscountAmount: 15,
+    });
+    expect(prisma.entry.create.mock.calls[0][0].data.items.create[0]).toMatchObject({
+      fee: 75,
+      registrationDiscountPercent: 25,
+      allowPromoCode: true,
+    });
+    prisma.event.findUnique.mockResolvedValue(
+      makeEventRecord({
+        entriesCloseAt: null,
+        registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 25, allowPromoCode: true }],
+      }),
+    );
+    const quote = await quoteEntryPromoCode(
+      prisma as never,
+      'event-1',
+      'summer',
+      ORDER_INPUT.items,
+    );
+    expect(quote).toMatchObject({
+      subtotal: 75,
+      eligibleAmount: 75,
+      discountAmount: 15,
+      totalAmount: 60,
+      currency: 'CZK',
+    });
+  });
+
+  it.each([null, { revokedAt: NOW }])(
+    'rejects invalid/revoked promo without creating an order',
+    async (promo) => {
+      Object.assign(prisma, { promoCode: { findUnique: vi.fn().mockResolvedValue(promo) } });
+      prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+      await expect(
+        createEntryOrder(
+          prisma as never,
+          { eventId: 'event-1', userId: null, now: NOW },
+          { ...ORDER_INPUT, promoCode: 'SUMMER' },
+        ),
+      ).rejects.toThrow('PROMO_INVALID');
+      expect(prisma.entry.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects promo when all registration-discounted items prohibit combining', async () => {
+    Object.assign(prisma, {
+      promoCode: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'p',
+          code: 'SUMMER',
+          discountPercent: decimal(20),
+          revokedAt: null,
+        }),
+      },
+    });
+    prisma.event.findUnique.mockResolvedValue(
+      makeEventRecord({ registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 25 }] }),
+    );
+    await expect(
+      createEntryOrder(
+        prisma as never,
+        { eventId: 'event-1', userId: null, now: NOW },
+        { ...ORDER_INPUT, promoCode: 'SUMMER' },
+      ),
+    ).rejects.toThrow('PROMO_NO_ELIGIBLE_ITEMS');
+    expect(prisma.entry.create).not.toHaveBeenCalled();
+  });
+
   it('persists an optional note for an individual entry item', async () => {
     prisma.event.findUnique.mockResolvedValue(makeEventRecord());
     prisma.entry.create.mockResolvedValue(
@@ -650,7 +776,7 @@ describe('createEntryOrder', () => {
 });
 
 describe('updateEntryOrderForGraphQL', () => {
-  it('allows an event owner to correct an order after public entries close', async () => {
+  it('allows an event owner to correct an order after public entries close using current discounts', async () => {
     const prisma = makePrismaStub() as PrismaStub & {
       event: PrismaStub['event'] & { findUniqueOrThrow: ReturnType<typeof vi.fn> };
       entry: PrismaStub['entry'] & { findUnique: ReturnType<typeof vi.fn> };
@@ -674,6 +800,7 @@ describe('updateEntryOrderForGraphQL', () => {
     prisma.event.findUniqueOrThrow = vi.fn().mockResolvedValue(
       makeEventRecord({
         entriesCloseAt: new Date('2026-07-01T00:00:00.000Z'),
+        registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 50 }],
         paymentMethods: [
           {
             type: 'CASH',
@@ -698,10 +825,34 @@ describe('updateEntryOrderForGraphQL', () => {
         data: expect.objectContaining({
           contactEmail: 'jan@example.com',
           paymentMethod: 'CASH',
+          totalAmount: 50,
         }),
       }),
     );
     expect(mockRematchEntryBankTransactions).toHaveBeenCalledWith(prisma, 'entry-1');
+    // Even after revocation, edits use the saved promo percentage and original registration rule.
+    prisma.entry.findUnique.mockResolvedValue({
+      id: 'entry-1',
+      eventId: 'event-1',
+      status: 'RECEIVED',
+      currency: 'CZK',
+      promoPercent: decimal(20),
+      items: [{ id: 123, registrationDiscountPercent: decimal(25), allowPromoCode: true }],
+    });
+    await updateEntryOrderForGraphQL(
+      prisma as never,
+      { isAuthenticated: true, type: 'jwt', userId: 7 } as never,
+      {
+        entryId: 'entry-1',
+        ...ORDER_INPUT,
+        items: [{ ...ORDER_INPUT.items[0]!, entryItemId: 123 }],
+      },
+    );
+    expect(prisma.entry.update.mock.calls.at(-1)![0].data).toMatchObject({
+      totalAmount: 60,
+      promoEligibleAmount: 75,
+      promoDiscountAmount: 15,
+    });
   });
 });
 

@@ -1,12 +1,14 @@
 import { classUpdateInputSchema } from '@repo/shared';
+import { z } from 'zod';
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
-import { ValidationError } from '../../exceptions/index.js';
+import { NotFoundError, ValidationError } from '../../exceptions/index.js';
 import { publishClassesUpdated } from '../../lib/pubsub.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { Sex } from '../../generated/prisma/enums.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
+import { eventPunchTransaction } from '../punch/punch-write.js';
 import {
   ExternalImportError,
   buildEventorUrl,
@@ -17,6 +19,56 @@ import {
 
 export type ClassFindUniqueSelection = Omit<Prisma.ClassFindUniqueArgs, 'where'>;
 export type ClassFindManySelection = Omit<Prisma.ClassFindManyArgs, 'where'>;
+
+const classDeleteInputSchema = z.object({
+  eventId: z.string().refine((value) => value.trim().length > 0),
+  classId: z.number().int().positive(),
+});
+
+/** Delete only class-owned data; parent orders and shared event entities remain. */
+export async function deleteClassForGraphQL(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  eventId: string,
+  classId: number,
+) {
+  if (!classDeleteInputSchema.safeParse({ eventId, classId }).success) {
+    throw new ValidationError('A valid event and positive class ID are required.');
+  }
+  await requireEventOwnerOrAdmin(prisma, auth, eventId);
+
+  await eventPunchTransaction(prisma, eventId, async (tx) => {
+    const classes = await tx.$queryRaw<Array<{ id: number }>>`
+      SELECT id FROM Class WHERE id = ${classId} AND eventId = ${eventId} FOR UPDATE
+    `;
+    if (!classes.length) throw new NotFoundError('Class not found for this event.');
+
+    const classScope = { classId, class: { eventId } };
+    const competitorScope = { competitor: classScope };
+    // Delete observations before their projections; receipt children cascade.
+    await tx.punch.deleteMany({
+      where: {
+        eventId,
+        OR: [competitorScope, { split: competitorScope }],
+      },
+    });
+    await tx.protocol.deleteMany({ where: { eventId, ...competitorScope } });
+    await tx.split.deleteMany({ where: competitorScope });
+    await tx.entryItem.deleteMany({ where: { ...classScope, entry: { eventId } } });
+    await tx.competitor.deleteMany({ where: classScope });
+    // Defensive cleanup of members assigned to a team from another class.
+    await tx.competitor.updateMany({
+      where: { team: classScope },
+      data: { teamId: null },
+    });
+    await tx.team.deleteMany({ where: classScope });
+    await tx.startSlotVacancy.deleteMany({ where: classScope });
+    await tx.class.delete({ where: { id: classId, eventId } });
+  });
+
+  publishClassesUpdated(eventId);
+  return { message: 'Class and dependent data deleted' };
+}
 
 export function findClassById(
   prisma: AppPrismaClient,

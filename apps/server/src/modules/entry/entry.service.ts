@@ -3,6 +3,11 @@ import crypto from 'node:crypto';
 
 import {
   PAYMENT_REFERENCE_RANDOM_LENGTH,
+  applyRegistrationFeeDiscount,
+  resolveRegistrationDiscount,
+  computePromoDiscount,
+  registrationFeeDiscountsSchema,
+  type RegistrationFeeDiscount,
   checkClassEligibility,
   createEntryOrderInputSchema,
   createQrPaymentInstruction,
@@ -32,7 +37,11 @@ import { availablePaymentMethodsForEvent } from '../event/event-payment-methods.
 import { loadLockedCardNumbers } from '../event/event-rental-cards.service.js';
 import { storeCompetitor } from '../event/event.service.js';
 import { rematchEntryBankTransactions } from '../bank/bank-matching.js';
-import { entryPaymentTransaction, reconcileEntryPaymentState } from './entry-payment-write.js';
+import {
+  entryPaymentTransaction,
+  reconcileEntryPaymentState,
+  createEntryPaymentInTransaction,
+} from './entry-payment-write.js';
 import { createEntryOrderAccessToken } from './entry-public-access.js';
 import { notifyEntryOrderProcessed, notifyEntryOrderReceived } from './entry.email.js';
 
@@ -78,10 +87,12 @@ export interface EntryOrderPricingContext {
   now: Date;
   entriesCloseAt: Date | null;
   lateEntryFeePercent: number | null;
+  registrationFeeDiscounts?: RegistrationFeeDiscount[];
   vatPayer: boolean;
   vatRate: number | null;
   defaultStartMode: StartMode;
   cardRental: { enabled: boolean; price: number | null };
+  snapshots?: Map<number, { discountPercent: number; allowPromoCode: boolean }>;
 }
 
 export interface PricedEntryOrderItem {
@@ -98,6 +109,8 @@ export interface PricedEntryOrderItem {
   startTime: Date | null;
   fee: number;
   cardRentalFee: number | null;
+  registrationDiscountPercent?: number;
+  allowPromoCode?: boolean;
 }
 
 function round2(value: number): number {
@@ -123,6 +136,9 @@ export function priceEntryOrderItems(
   const referenceYear = context.now.getFullYear();
 
   return items.map((item) => {
+    const snapshot = context.snapshots?.get(item.entryItemId ?? -1);
+    const rules = snapshot ? [{ pattern: '*', ...snapshot }] : context.registrationFeeDiscounts;
+    const pricingRegistration = snapshot ? 'SNAPSHOT' : item.registration;
     const cls = classById.get(item.classId);
     if (!cls) {
       throw new ValidationError(`Class with ID ${item.classId} does not exist in this event.`);
@@ -188,7 +204,9 @@ export function priceEntryOrderItems(
     if (item.cardRental && !context.cardRental.enabled) {
       throw new ValidationError('Card rental is not available for this event.');
     }
-    const cardRentalFee = item.cardRental ? (context.cardRental.price ?? 0) : null;
+    const cardRentalFee = item.cardRental
+      ? applyRegistrationFeeDiscount(context.cardRental.price ?? 0, pricingRegistration, rules)
+      : null;
 
     const { currentFee } = computeClassFee({
       baseFee: cls.fee,
@@ -201,6 +219,9 @@ export function priceEntryOrderItems(
     });
 
     return {
+      registrationDiscountPercent: resolveRegistrationDiscount(pricingRegistration, rules)
+        .discountPercent,
+      allowPromoCode: resolveRegistrationDiscount(pricingRegistration, rules).allowPromoCode,
       classId: cls.id,
       firstname: item.firstname,
       lastname: item.lastname,
@@ -212,7 +233,7 @@ export function priceEntryOrderItems(
       card: item.card ?? null,
       cardRental: item.cardRental,
       startTime,
-      fee: currentFee ?? 0,
+      fee: applyRegistrationFeeDiscount(currentFee ?? 0, pricingRegistration, rules),
       cardRentalFee,
     };
   });
@@ -252,6 +273,10 @@ type EntryWithItems = {
   contactEmail: string;
   contactFirstname: string;
   contactLastname: string;
+  promoCode?: string | null;
+  promoPercent?: { toNumber(): number } | null;
+  promoEligibleAmount?: { toNumber(): number } | null;
+  promoDiscountAmount?: { toNumber(): number } | null;
   totalAmount: { toNumber(): number };
   currency: string;
   paymentDueAt?: Date | null;
@@ -291,6 +316,10 @@ export function serializeEntryOrder(entry: EntryWithItems) {
     contactEmail: entry.contactEmail,
     contactFirstname: entry.contactFirstname,
     contactLastname: entry.contactLastname,
+    promoCode: entry.promoCode ?? null,
+    promoPercent: entry.promoPercent?.toNumber() ?? null,
+    promoEligibleAmount: entry.promoEligibleAmount?.toNumber() ?? null,
+    promoDiscountAmount: entry.promoDiscountAmount?.toNumber() ?? null,
     totalAmount: entry.totalAmount.toNumber(),
     currency: entry.currency,
     paymentDueAt: entry.paymentDueAt ?? null,
@@ -356,31 +385,13 @@ function resolvePaymentLinkLanguage(value: string | undefined): string {
   return match ? match[0].toLowerCase() : 'cs';
 }
 
-/**
- * Create an entry order (Entry + EntryItems) for a non-relay event. Validates
- * the entry window, class capacity, age eligibility, start slot selection and
- * card rental availability; prices are computed server-side from the current
- * class fees. Competitors are NOT created here — that happens later in
- * {@link processEntryOrder} once the order is approved.
- */
-export async function createEntryOrder(
+/** Load the current event snapshot and use the same pricing for quotes and creation. */
+export async function priceCurrentEntryOrder(
   prisma: AppPrismaClient | Prisma.TransactionClient,
-  context: CreateEntryOrderContext,
-  input: CreateEntryOrderInput,
-  transaction?: CreateTransaction,
-): Promise<CreatedEntryOrder> {
-  if (!transaction) {
-    const effects: CreateTransaction['afterCommit'] = [];
-    const result = await eventPunchTransaction(prisma as AppPrismaClient, context.eventId, (tx) => {
-      effects.length = 0;
-      return createEntryOrder(tx, context, input, { tx, afterCommit: effects });
-    });
-    for (const effect of effects) await effect();
-    return result;
-  }
-  const { eventId, userId } = context;
-  const now = context.now ?? new Date();
-
+  eventId: string,
+  input: Pick<CreateEntryOrderInput, 'items'>,
+  now = new Date(),
+) {
   const classIds = [...new Set(input.items.map((item) => item.classId))];
 
   const event = await prisma.event.findUnique({
@@ -399,6 +410,7 @@ export async function createEntryOrder(
       vatPayer: true,
       vatRate: true,
       lateEntryFeePercent: true,
+      registrationFeeDiscounts: true,
       currency: { select: { iso4217Alpha3: true } },
       ofeedPaymentAvailable: true,
       entryPaymentLifetimeHours: true,
@@ -496,6 +508,9 @@ export async function createEntryOrder(
       now,
       entriesCloseAt: event.entriesCloseAt,
       lateEntryFeePercent: event.lateEntryFeePercent?.toNumber() ?? null,
+      registrationFeeDiscounts: registrationFeeDiscountsSchema.parse(
+        event.registrationFeeDiscounts ?? [],
+      ),
       vatPayer: event.vatPayer,
       vatRate: event.vatRate?.toNumber() ?? null,
       defaultStartMode: event.defaultStartMode,
@@ -506,7 +521,40 @@ export async function createEntryOrder(
     },
   );
 
-  const totalAmount = computeEntryOrderTotal(pricedItems);
+  return { event, pricedItems };
+}
+
+/**
+ * Create an entry order (Entry + EntryItems) for a non-relay event. Validates
+ * the entry window, class capacity, age eligibility, start slot selection and
+ * card rental availability; prices are computed server-side from the current
+ * class fees. Competitors are NOT created here — that happens later in
+ * {@link processEntryOrder} once the order is approved.
+ */
+export async function createEntryOrder(
+  prisma: AppPrismaClient | Prisma.TransactionClient,
+  context: CreateEntryOrderContext,
+  input: CreateEntryOrderInput,
+  transaction?: CreateTransaction,
+): Promise<CreatedEntryOrder> {
+  if (!transaction) {
+    const effects: CreateTransaction['afterCommit'] = [];
+    const result = await eventPunchTransaction(prisma as AppPrismaClient, context.eventId, (tx) => {
+      effects.length = 0;
+      return createEntryOrder(tx, context, input, { tx, afterCommit: effects });
+    });
+    for (const effect of effects) await effect();
+    return result;
+  }
+  const { eventId, userId } = context;
+  const now = context.now ?? new Date();
+
+  const { event, pricedItems } = await priceCurrentEntryOrder(prisma, eventId, input, now);
+  const { resolvePromoCode } = await import('./promo-code.service.js');
+  const promo = input.promoCode ? await resolvePromoCode(prisma, eventId, input.promoCode) : null;
+  const discount = computePromoDiscount(pricedItems, promo?.discountPercent.toNumber() ?? 0);
+  if (promo && discount.eligibleAmount <= 0) throw new ValidationError('PROMO_NO_ELIGIBLE_ITEMS');
+  const totalAmount = discount.totalAmount;
   const currency = event.currency.iso4217Alpha3;
 
   const selectedPaymentMethod = availablePaymentMethodsForEvent({
@@ -572,9 +620,20 @@ export async function createEntryOrder(
           contactFirstname: input.contactFirstname,
           contactLastname: input.contactLastname,
           totalAmount,
+          ...(promo
+            ? {
+                promoCodeId: promo.id,
+                promoCode: promo.code,
+                promoPercent: promo.discountPercent,
+                promoEligibleAmount: discount.eligibleAmount,
+                promoDiscountAmount: discount.discountAmount,
+              }
+            : {}),
           currency,
           items: {
             create: pricedItems.map((item) => ({
+              registrationDiscountPercent: item.registrationDiscountPercent,
+              allowPromoCode: item.allowPromoCode,
               classId: item.classId,
               firstname: item.firstname,
               lastname: item.lastname,
@@ -671,10 +730,27 @@ async function updateEntryOrderInTransaction(
   }
   const entry = await prisma.entry.findUnique({
     where: { id: input.entryId },
-    select: { id: true, eventId: true, status: true, currency: true },
+    select: {
+      id: true,
+      eventId: true,
+      status: true,
+      currency: true,
+      promoPercent: true,
+      items: true,
+    },
   });
   if (!entry) throw new NotFoundError(`Entry order ${input.entryId} does not exist.`);
   const { userId } = await requireEventOwnerOrAdmin(prisma, auth, entry.eventId);
+  const identified = input.items.flatMap((item) =>
+    item.entryItemId === undefined ? [] : [item.entryItemId],
+  );
+  if (
+    new Set(identified).size !== identified.length ||
+    identified.some((id) => !(entry.items ?? []).some((item) => item.id === id))
+  ) {
+    throw new ValidationError('Invalid existing entry item identity.');
+  }
+
   if (TERMINAL_ENTRY_STATUSES.has(entry.status)) {
     throw new ConflictError('A terminal entry order can no longer be edited.');
   }
@@ -691,6 +767,7 @@ async function updateEntryOrderInTransaction(
       vatPayer: true,
       vatRate: true,
       lateEntryFeePercent: true,
+      registrationFeeDiscounts: true,
       currency: { select: { iso4217Alpha3: true } },
       ofeedPaymentAvailable: true,
       bankAccountIban: true,
@@ -773,9 +850,23 @@ async function updateEntryOrderInTransaction(
       ]),
     })),
     {
+      snapshots: new Map(
+        (entry.items ?? [])
+          .filter((item) => item.registrationDiscountPercent !== null)
+          .map((item) => [
+            item.id,
+            {
+              discountPercent: item.registrationDiscountPercent!.toNumber(),
+              allowPromoCode: item.allowPromoCode,
+            },
+          ]),
+      ),
       now,
       entriesCloseAt: event.entriesCloseAt,
       lateEntryFeePercent: event.lateEntryFeePercent?.toNumber() ?? null,
+      registrationFeeDiscounts: registrationFeeDiscountsSchema.parse(
+        event.registrationFeeDiscounts ?? [],
+      ),
       vatPayer: event.vatPayer,
       vatRate: event.vatRate?.toNumber() ?? null,
       defaultStartMode: event.defaultStartMode,
@@ -785,6 +876,7 @@ async function updateEntryOrderInTransaction(
       },
     },
   );
+  const discount = computePromoDiscount(items, entry.promoPercent?.toNumber() ?? 0);
   const hasPayments = await prisma.entryPayment.count({
     where: { eventId: entry.eventId, entryId: entry.id },
   });
@@ -798,7 +890,13 @@ async function updateEntryOrderInTransaction(
       contactFirstname: input.contactFirstname,
       contactLastname: input.contactLastname,
       paymentMethod: input.paymentMethod,
-      totalAmount: computeEntryOrderTotal(items),
+      totalAmount: discount.totalAmount,
+      ...(entry.promoPercent
+        ? {
+            promoEligibleAmount: discount.eligibleAmount,
+            promoDiscountAmount: discount.discountAmount,
+          }
+        : {}),
       currency: event.currency.iso4217Alpha3,
       items: { deleteMany: {}, create: items },
     },
@@ -901,26 +999,65 @@ export interface UpdateEntryOrderPaidInput {
   paid: boolean;
   /** Event owner/admin who recorded the payment change. */
   changedById?: number | null;
+  deviceId?: string;
 }
 
-/** Update the payment flag without changing the lifecycle status, and append an audit entry. */
+/** Settle CASH balances into receipts; retain legacy non-cash flags without changing lifecycle status. */
 export async function updateEntryOrderPaid(
   prisma: AppPrismaClient,
   input: UpdateEntryOrderPaidInput,
 ): Promise<SerializedEntryOrder> {
+  if (input.deviceId !== undefined && (!input.deviceId.trim() || input.deviceId.length > 191))
+    throw new ValidationError('Invalid payment device ID.');
   return entryPaymentTransaction(prisma, input.eventId, input.entryId, async (tx) => {
-    if (
-      await tx.entryPayment.count({ where: { eventId: input.eventId, entryId: input.entryId } })
-    ) {
+    const receiptCount = await tx.entryPayment.count({
+      where: { eventId: input.eventId, entryId: input.entryId },
+    });
+    if (!input.paid && receiptCount)
       throw new ConflictError('Paid status is managed by payment receipts for this entry.');
-    }
     const entry = await tx.entry.findFirst({
       where: { id: input.entryId, eventId: input.eventId },
-      select: { id: true },
+      select: { id: true, paymentMethod: true, totalAmount: true, currency: true },
     });
-    if (!entry) {
+    if (!entry)
       throw new NotFoundError(`Entry order ${input.entryId} does not exist for this event.`);
-    }
+    if (input.paid && entry.paymentMethod === 'CASH') {
+      const totals = await tx.entryPayment.aggregate({
+        where: { eventId: input.eventId, entryId: input.entryId },
+        _sum: { amount: true },
+      });
+      const remaining = entry.totalAmount.minus(totals._sum.amount ?? 0);
+      if (remaining.greaterThan(0)) {
+        if (!input.changedById)
+          throw new ValidationError('An authenticated payment operator is required.');
+        await createEntryPaymentInTransaction(tx, {
+          eventId: input.eventId,
+          entryId: input.entryId,
+          clientPaymentId: crypto.randomUUID(),
+          method: 'CASH',
+          amount: remaining,
+          currency: entry.currency,
+          paidAt: new Date(),
+          deviceId: input.deviceId?.trim() ?? 'server:entry-paid-update',
+          operatorId: input.changedById,
+        });
+        return serializeEntryOrder(
+          await tx.entry.findUniqueOrThrow({ where: { id: entry.id }, include: entryInclude }),
+        );
+      }
+      if (receiptCount) {
+        await reconcileEntryPaymentState(
+          tx,
+          input.eventId,
+          input.entryId,
+          input.changedById ?? null,
+        );
+        return serializeEntryOrder(
+          await tx.entry.findUniqueOrThrow({ where: { id: entry.id }, include: entryInclude }),
+        );
+      }
+    } else if (receiptCount)
+      throw new ConflictError('Paid status is managed by payment receipts for this entry.');
 
     const updated = await tx.entry.update({
       where: { id: entry.id },
@@ -1122,6 +1259,7 @@ export async function entryOrderStatusUpdateForGraphQL(
 export interface EntryOrderPaidUpdateForGraphQLInput {
   entryId: string;
   paid: boolean;
+  deviceId?: string;
 }
 
 export async function entryOrderPaidUpdateForGraphQL(
@@ -1146,6 +1284,7 @@ export async function entryOrderPaidUpdateForGraphQL(
     eventId: entry.eventId,
     entryId: input.entryId,
     paid: input.paid,
+    deviceId: input.deviceId,
     changedById: userId,
   });
 }

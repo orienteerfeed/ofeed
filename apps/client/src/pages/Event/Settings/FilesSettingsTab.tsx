@@ -19,10 +19,13 @@ import { DragDropFile } from '@/components/organisms';
 import { formatDateTimeSeconds, getLocaleKey } from '@/lib/date';
 import { toast } from '@/utils';
 
-const IOF_XML_V3 = 'IOF XML v3';
-
 const SOURCE_LABELS: Record<string, string> = {
   IOF_XML: 'IOF XML',
+  MEOS: 'MeOS MOP',
+};
+
+const IMPORT_FORMAT_LABELS: Record<string, string> = {
+  IOF_XML: 'IOF XML v3',
   MEOS: 'MeOS MOP',
 };
 
@@ -199,15 +202,12 @@ const ImportStateMeta = ({
 
 interface FileSectionProps {
   t: TFunction;
-  eventId: string;
   title: string;
   available: boolean;
-  format?: string;
   helper?: string;
   disabled?: boolean;
   disabledHint?: string;
   importState?: EventImportStateEntry | null;
-  onUploaded: () => void;
 }
 
 const StatusIcon = ({ available, t }: { available: boolean; t: TFunction }) => {
@@ -229,15 +229,12 @@ const StatusIcon = ({ available, t }: { available: boolean; t: TFunction }) => {
 
 const FileSection = ({
   t,
-  eventId,
   title,
   available,
-  format,
   helper,
   disabled = false,
   disabledHint,
   importState,
-  onUploaded,
 }: FileSectionProps) => (
   <Card className={disabled ? 'opacity-60' : undefined}>
     <CardHeader>
@@ -262,11 +259,12 @@ const FileSection = ({
             </CardDescription>
           </div>
         </div>
-        {format ? (
-          <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            {format}
-          </span>
-        ) : null}
+        <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          {importState
+            ? (IMPORT_FORMAT_LABELS[importState.sourceType] ??
+              importState.sourceType)
+            : IMPORT_FORMAT_LABELS.IOF_XML}
+        </span>
       </div>
     </CardHeader>
     <CardContent className="space-y-3">
@@ -277,13 +275,7 @@ const FileSection = ({
         <p className="text-sm text-muted-foreground">
           {disabledHint ?? t('Pages.Event.Settings.Files.CoursesDisabledHint')}
         </p>
-      ) : (
-        <DragDropFile
-          eventId={eventId}
-          hideHeader
-          onUploadSuccess={onUploaded}
-        />
-      )}
+      ) : null}
       {importState ? <ImportStateMeta importState={importState} /> : null}
     </CardContent>
   </Card>
@@ -385,10 +377,10 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
     { variables: { eventId } }
   );
 
-  const { data: importStatesData } = useQuery<EventImportStatesData>(
-    GET_EVENT_IMPORT_STATES,
-    { variables: { eventId } }
-  );
+  const { data: importStatesData, refetch: refetchImportStates } =
+    useQuery<EventImportStatesData>(GET_EVENT_IMPORT_STATES, {
+      variables: { eventId },
+    });
 
   const status = data?.eventFilesStatus;
 
@@ -412,6 +404,7 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
 
   const handleUploaded = () => {
     void refetch();
+    void refetchImportStates();
   };
 
   if (loading && !data) {
@@ -439,26 +432,26 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
 
   return (
     <div className="space-y-6">
-      <FileSection
-        t={t}
+      <DragDropFile
         eventId={eventId}
-        title={t('Pages.Event.Settings.Files.StartList')}
-        format={IOF_XML_V3}
-        available={status.startList.available}
-        importState={findImportState('StartList')}
-        onUploaded={handleUploaded}
+        hideHeader
+        onUploadSuccess={handleUploaded}
       />
 
       <FileSection
         t={t}
-        eventId={eventId}
+        title={t('Pages.Event.Settings.Files.StartList')}
+        available={status.startList.available}
+        importState={findImportState('StartList')}
+      />
+
+      <FileSection
+        t={t}
         title={t('Pages.Event.Settings.Files.Courses')}
-        format={IOF_XML_V3}
         helper={t('Pages.Event.Settings.Files.CoursesHelper')}
         available={status.courses.available}
         disabled={coursesUploadLocked}
         importState={findImportState('CourseData')}
-        onUploaded={handleUploaded}
       />
 
       <RadioControlsSection
@@ -471,12 +464,9 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
 
       <FileSection
         t={t}
-        eventId={eventId}
         title={t('Pages.Event.Settings.Files.Results')}
-        format={IOF_XML_V3}
         available={status.results.available}
         importState={findImportState('ResultList')}
-        onUploaded={handleUploaded}
       />
     </div>
   );
