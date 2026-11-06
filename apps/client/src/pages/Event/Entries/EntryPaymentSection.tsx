@@ -1,4 +1,8 @@
-import type { PaymentMethodType, QrPaymentInstruction } from '@repo/shared';
+import {
+  formatCzechBankAccount,
+  type PaymentMethodType,
+  type QrPaymentInstruction,
+} from '@repo/shared';
 import { Printer, QrCode, WalletCards } from 'lucide-react';
 import { useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -43,10 +47,21 @@ export function EntryPaymentSection({
   const paymentMethodName = paymentMethod
     ? t(`Pages.Checkout.PaymentMethods.Methods.${paymentMethod}`)
     : t('Pages.Event.EntriesManage.Detail.PaymentMethod.NotSpecified');
+  const domesticAccount = qrPayment
+    ? formatCzechBankAccount(qrPayment.bankAccountIban)
+    : null;
   const paymentRows: Array<[string, string]> = qrPayment
     ? [
+        ...(domesticAccount
+          ? [
+              [
+                t('Pages.Event.EntriesManage.Detail.Payment.Account'),
+                domesticAccount,
+              ] as [string, string],
+            ]
+          : []),
         [
-          t('Pages.Event.EntriesManage.Detail.Payment.Account'),
+          t('Pages.Event.EntriesManage.Detail.Payment.Iban'),
           qrPayment.bankAccountIban,
         ],
         [

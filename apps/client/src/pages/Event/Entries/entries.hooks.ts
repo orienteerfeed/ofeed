@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import {
   entryOrderSchema,
   availableEventPaymentMethodSchema,
@@ -18,8 +19,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApi } from '@/hooks/useApi';
 import { ENDPOINTS } from '@/lib/api/endpoints';
 
+import {
+  entryPaymentsKey,
+  refreshEntryPaymentQueries,
+} from './entry-payment-client';
+
 interface EnvelopeData<T> {
   data: T;
+}
+
+export function useRefreshEntryPaymentQueries() {
+  const queryClient = useQueryClient();
+  return useCallback(
+    (eventId: string, entryId: string) =>
+      refreshEntryPaymentQueries(queryClient, eventId, entryId),
+    [queryClient]
+  );
 }
 
 export function useEntryPayments(
@@ -29,7 +44,7 @@ export function useEntryPayments(
 ) {
   const api = useApi();
   return useQuery<EntryPaymentRecord[]>({
-    queryKey: ['events', eventId, 'entries', entryId, 'payments'],
+    queryKey: entryPaymentsKey(eventId, entryId),
     queryFn: async () => {
       const response = await api.get<EnvelopeData<unknown>>(
         ENDPOINTS.eventPayments(eventId, { entryId })
@@ -56,11 +71,8 @@ export function useRecordEntryPayment() {
       );
       return entryPaymentRecordSchema.parse(response.data);
     },
-    onSuccess: (_payment, { eventId, entryId }) => {
-      queryClient.invalidateQueries({
-        queryKey: ['events', eventId, 'entries', entryId, 'payments'],
-      });
-    },
+    onSuccess: (_payment, { eventId, entryId }) =>
+      refreshEntryPaymentQueries(queryClient, eventId, entryId),
   });
 }
 

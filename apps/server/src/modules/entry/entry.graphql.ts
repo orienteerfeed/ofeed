@@ -19,6 +19,7 @@ import { hasEntryOrderAccess } from './entry-public-access.js';
 
 const EntryOrderUpdateItemInputRef = builder.inputType('EntryOrderUpdateItemInput', {
   fields: (t) => ({
+    entryItemId: t.int({ required: false }),
     classId: t.int({ required: true }),
     firstname: t.string({ required: true }),
     lastname: t.string({ required: true }),
@@ -113,6 +114,7 @@ builder.mutationFields((t) => ({
         contactLastname: args.input.contactLastname,
         paymentMethod: args.input.paymentMethod,
         items: args.input.items.map((item) => ({
+          entryItemId: item.entryItemId ?? undefined,
           classId: item.classId,
           firstname: item.firstname,
           lastname: item.lastname,
@@ -168,11 +170,13 @@ builder.mutationFields((t) => ({
     args: {
       entryId: t.arg.string({ required: true }),
       paid: t.arg.boolean({ required: true }),
+      deviceId: t.arg.string({ required: false }),
     },
     resolve: async (query, _root, args, context) => {
       await entryOrderPaidUpdateForGraphQL(context.prisma, context.auth, {
         entryId: args.entryId,
         paid: args.paid,
+        deviceId: args.deviceId ?? undefined,
       }).catch((err: unknown) => rethrowEntryWriteError(err, 'Failed to update entry payment'));
 
       return context.prisma.entry.findUniqueOrThrow({
