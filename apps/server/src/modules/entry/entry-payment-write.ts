@@ -59,3 +59,13 @@ export async function reconcileEntryPaymentState(
     },
   });
 }
+
+/** Caller holds the entry lock; receipt and derived payment state commit together. */
+export async function createEntryPaymentInTransaction(
+  tx: Prisma.TransactionClient,
+  data: Prisma.EntryPaymentUncheckedCreateInput,
+) {
+  const payment = await tx.entryPayment.create({ data });
+  await reconcileEntryPaymentState(tx, data.eventId, data.entryId, data.operatorId);
+  return payment;
+}

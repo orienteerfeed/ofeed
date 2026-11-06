@@ -42,6 +42,9 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 - [Entry checkout](entry-checkout.md): baseline of existing checkout behavior.
 
+- [Registration fee discounts](registration-fee-discounts.md): registration patterns
+  that discount entry fees and card rental.
+
 ## Historical designs
 
 Existing [designs](../superpowers/specs/) remain at their original paths, with
@@ -50,3 +53,7 @@ not proof every planned step shipped. New specs go in this directory; when
 superseding an old design, link both records and explain the changed behavior.
 
 - [Session longevity](session-longevity.md): rotating device sessions and automatic browser renewal.
+
+- [Entry promo codes](entry-promo-codes.md): event-scoped percentage codes, revocation and auditable order discounts.
+
+- [Class deletion](class-deletion.md): delete one category and its dependent competition data.

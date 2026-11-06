@@ -2,6 +2,7 @@ import type { EventEntryTimeline } from '@repo/shared';
 import { describe, expect, it } from 'vitest';
 import {
   addDays,
+  addEntryTimelineTrend,
   buildEntryTimeline,
   entryTimelineClasses,
   summarizeEntryTimeline,
@@ -180,4 +181,67 @@ describe('entry timeline', () => {
       peak: null,
     });
   });
+});
+
+describe('entry timeline linear trend', () => {
+  const point = (date: string, total: number) => ({
+    date,
+    total,
+    entries: total,
+    lateEntries: 0,
+  });
+  it('fits using elapsed days and preserves actual counts', () => {
+    const points = [
+      point('2026-03-01', 1),
+      point('2026-03-03', 5),
+      point('2026-03-05', 9),
+    ];
+    expect(addEntryTimelineTrend(points).map(value => value.trend)).toEqual([
+      1, 5, 9,
+    ]);
+    expect(points[0]).not.toHaveProperty('trend');
+  });
+  it('fits all visible points and clamps negative estimated counts to zero', () => {
+    const result = addEntryTimelineTrend([
+      point('2026-03-01', 0),
+      point('2026-03-02', 0),
+      point('2026-03-03', 9),
+    ]);
+    expect(result.map(value => value.trend)).toEqual([0, 3, 7.5]);
+  });
+  it('omits an undefined trend with fewer than two dates and handles constant totals', () => {
+    expect(addEntryTimelineTrend([])).toEqual([]);
+    expect(
+      addEntryTimelineTrend([point('2026-03-01', 2)])[0]!.trend
+    ).toBeNull();
+    expect(
+      addEntryTimelineTrend([
+        point('2026-03-01', 2),
+        point('2026-03-02', 2),
+      ]).map(value => value.trend)
+    ).toEqual([2, 2]);
+  });
+  it('recomputes for the selected class within the existing cutoff', () => {
+    const selected = buildEntryTimeline(timeline(), '1', '2026-03-04');
+    const all = buildEntryTimeline(timeline(), '', '2026-03-04');
+    const trend = addEntryTimelineTrend(selected);
+    expect(trend).toHaveLength(selected.length);
+    expect(trend.at(-1)!.date).toBe('2026-03-04');
+    expect(trend.at(-1)!.trend).not.toBe(
+      addEntryTimelineTrend(all).at(-1)!.trend
+    );
+  });
+});
+
+it('fits the cumulative trend against receipt instants within a day', () => {
+  const points = [0, 1, 2].map(hour => ({
+    date: '2026-11-01',
+    time: hour * 3600000,
+    total: hour * 2,
+    entries: 2,
+    lateEntries: 0,
+  }));
+  expect(
+    addEntryTimelineTrend(points, point => point.time).map(point => point.trend)
+  ).toEqual([0, 2, 4]);
 });
