@@ -108,7 +108,7 @@ describe('assignEntryItemRentalCardForGraphQL', () => {
 
   it.each(['PROCESSED', 'REJECTED', 'CANCELLED'] as const)(
     'rejects when the entry order is already %s',
-    async status => {
+    async (status) => {
       const prisma = createPrismaMock();
       prisma.entryItem.findUnique.mockResolvedValueOnce(
         makeItem({ entry: { id: 'entry-1', eventId: 'event-1', status } }),

@@ -28,7 +28,12 @@ import { ConflictError, NotFoundError, ValidationError } from '../../exceptions/
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { EntryStatus } from '../../generated/prisma/enums.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
-import { AuthzError, requireEventOwnerOrAdmin } from '../../utils/authz.js';
+import {
+  AuthzError,
+  ensureEventOwnerOrAdmin,
+  requireEventOwnerOrAdmin,
+  type AuthzAuthContext,
+} from '../../utils/authz.js';
 import { isRelayDiscipline } from '../../utils/relay.js';
 import { eventPunchTransaction } from '../punch/punch-write.js';
 import { computeClassCapacity, requiresStartSlot } from '../class/class.capacity.js';
@@ -92,7 +97,11 @@ export interface EntryOrderPricingContext {
   vatRate: number | null;
   defaultStartMode: StartMode;
   cardRental: { enabled: boolean; price: number | null };
-  snapshots?: Map<number, { discountPercent: number; allowPromoCode: boolean }>;
+  /** Stored registration pricing of existing items, keyed by EntryItem.id. */
+  snapshots?: Map<
+    number,
+    { registration: string | null; discountPercent: number; allowPromoCode: boolean }
+  >;
 }
 
 export interface PricedEntryOrderItem {
@@ -117,6 +126,16 @@ function round2(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+const normalizeRegistration = (value: string | null | undefined) =>
+  (value ?? '').trim().toUpperCase();
+
+/** Apply the signed manual order adjustment; the payable total may never be negative. */
+export function applyPriceAdjustment(total: number, adjustment: number | null | undefined): number {
+  const adjusted = round2(total + (adjustment ?? 0));
+  if (adjusted < 0) throw new ValidationError('PRICE_ADJUSTMENT_NEGATIVE_TOTAL');
+  return adjusted;
+}
+
 /**
  * Validate and price entry order items against class snapshots. Pure — no DB
  * access — so the whole business rule set is directly unit-testable.
@@ -136,8 +155,22 @@ export function priceEntryOrderItems(
   const referenceYear = context.now.getFullYear();
 
   return items.map((item) => {
-    const snapshot = context.snapshots?.get(item.entryItemId ?? -1);
-    const rules = snapshot ? [{ pattern: '*', ...snapshot }] : context.registrationFeeDiscounts;
+    const stored = context.snapshots?.get(item.entryItemId ?? -1);
+    // A changed registration must be repriced with the current rules.
+    const snapshot =
+      stored &&
+      normalizeRegistration(stored.registration) === normalizeRegistration(item.registration)
+        ? stored
+        : undefined;
+    const rules = snapshot
+      ? [
+          {
+            pattern: '*',
+            discountPercent: snapshot.discountPercent,
+            allowPromoCode: snapshot.allowPromoCode,
+          },
+        ]
+      : context.registrationFeeDiscounts;
     const pricingRegistration = snapshot ? 'SNAPSHOT' : item.registration;
     const cls = classById.get(item.classId);
     if (!cls) {
@@ -277,6 +310,8 @@ type EntryWithItems = {
   promoPercent?: { toNumber(): number } | null;
   promoEligibleAmount?: { toNumber(): number } | null;
   promoDiscountAmount?: { toNumber(): number } | null;
+  priceAdjustment?: { toNumber(): number } | null;
+  priceAdjustmentReason?: string | null;
   totalAmount: { toNumber(): number };
   currency: string;
   paymentDueAt?: Date | null;
@@ -320,6 +355,8 @@ export function serializeEntryOrder(entry: EntryWithItems) {
     promoPercent: entry.promoPercent?.toNumber() ?? null,
     promoEligibleAmount: entry.promoEligibleAmount?.toNumber() ?? null,
     promoDiscountAmount: entry.promoDiscountAmount?.toNumber() ?? null,
+    priceAdjustment: entry.priceAdjustment?.toNumber() ?? null,
+    priceAdjustmentReason: entry.priceAdjustmentReason ?? null,
     totalAmount: entry.totalAmount.toNumber(),
     currency: entry.currency,
     paymentDueAt: entry.paymentDueAt ?? null,
@@ -365,6 +402,8 @@ const entryInclude = {
 export interface CreateEntryOrderContext {
   eventId: string;
   userId: number | null;
+  /** Caller auth; required (event owner/admin) only when the input carries a priceAdjustment. */
+  auth?: AuthzAuthContext | null;
   now?: Date;
   /** Browser language used only for a custom payment provider's URL variable. */
   paymentLinkLanguage?: string;
@@ -549,12 +588,26 @@ export async function createEntryOrder(
   const { eventId, userId } = context;
   const now = context.now ?? new Date();
 
+  // The create endpoint is public; only event staff may change the computed price.
+  const priceAdjustment = input.priceAdjustment || null;
+  let priceAdjustedById: number | null = null;
+  if (input.priceAdjustment !== undefined) {
+    const message = 'Price adjustment requires the event owner or an admin.';
+    ({ userId: priceAdjustedById } = await ensureEventOwnerOrAdmin(prisma, context.auth, eventId, {
+      unauthenticatedStatus: 403,
+      unauthenticatedMessage: message,
+      invalidBasicStatus: 403,
+      invalidBasicMessage: message,
+      forbiddenMessage: message,
+    }));
+  }
+
   const { event, pricedItems } = await priceCurrentEntryOrder(prisma, eventId, input, now);
   const { resolvePromoCode } = await import('./promo-code.service.js');
   const promo = input.promoCode ? await resolvePromoCode(prisma, eventId, input.promoCode) : null;
   const discount = computePromoDiscount(pricedItems, promo?.discountPercent.toNumber() ?? 0);
   if (promo && discount.eligibleAmount <= 0) throw new ValidationError('PROMO_NO_ELIGIBLE_ITEMS');
-  const totalAmount = discount.totalAmount;
+  const totalAmount = applyPriceAdjustment(discount.totalAmount, priceAdjustment);
   const currency = event.currency.iso4217Alpha3;
 
   const selectedPaymentMethod = availablePaymentMethodsForEvent({
@@ -627,6 +680,13 @@ export async function createEntryOrder(
                 promoPercent: promo.discountPercent,
                 promoEligibleAmount: discount.eligibleAmount,
                 promoDiscountAmount: discount.discountAmount,
+              }
+            : {}),
+          ...(priceAdjustment !== null
+            ? {
+                priceAdjustment,
+                priceAdjustmentReason: input.priceAdjustmentReason,
+                priceAdjustedById,
               }
             : {}),
           currency,
@@ -707,11 +767,24 @@ export async function getEventEntryStats(prisma: AppPrismaClient, eventId: strin
   return { entriesCount, changesCount };
 }
 
+/**
+ * Order edit input. Price adjustment: undefined keeps the stored value (reapplied to
+ * the recomputed total), null clears it, a number replaces it.
+ */
+export type UpdateEntryOrderInput = Omit<
+  CreateEntryOrderInput,
+  'priceAdjustment' | 'priceAdjustmentReason'
+> & {
+  entryId: string;
+  priceAdjustment?: number | null;
+  priceAdjustmentReason?: string | null;
+};
+
 /** Revalidates and reprices every mutable field of an existing order. */
 export async function updateEntryOrderForGraphQL(
   prisma: AppPrismaClient,
   auth: GraphQLAuthContext,
-  input: CreateEntryOrderInput & { entryId: string },
+  input: UpdateEntryOrderInput,
 ): Promise<void> {
   const eventId = await findEntryEventId(prisma, input.entryId);
   await requireEventOwnerOrAdmin(prisma, auth, eventId);
@@ -723,9 +796,14 @@ export async function updateEntryOrderForGraphQL(
 async function updateEntryOrderInTransaction(
   prisma: Prisma.TransactionClient,
   auth: GraphQLAuthContext,
-  input: CreateEntryOrderInput & { entryId: string },
+  input: UpdateEntryOrderInput,
 ): Promise<void> {
-  if (!createEntryOrderInputSchema.safeParse(input).success) {
+  const parsed = createEntryOrderInputSchema.safeParse({
+    ...input,
+    priceAdjustment: input.priceAdjustment ?? undefined,
+    priceAdjustmentReason: input.priceAdjustmentReason ?? undefined,
+  });
+  if (!parsed.success) {
     throw new ValidationError('The submitted entry order is invalid.');
   }
   const entry = await prisma.entry.findUnique({
@@ -736,6 +814,7 @@ async function updateEntryOrderInTransaction(
       status: true,
       currency: true,
       promoPercent: true,
+      priceAdjustment: true,
       items: true,
     },
   });
@@ -856,6 +935,7 @@ async function updateEntryOrderInTransaction(
           .map((item) => [
             item.id,
             {
+              registration: item.registration,
               discountPercent: item.registrationDiscountPercent!.toNumber(),
               allowPromoCode: item.allowPromoCode,
             },
@@ -877,6 +957,11 @@ async function updateEntryOrderInTransaction(
     },
   );
   const discount = computePromoDiscount(items, entry.promoPercent?.toNumber() ?? 0);
+  const keepAdjustment = input.priceAdjustment === undefined;
+  const priceAdjustment = keepAdjustment
+    ? entry.priceAdjustment?.toNumber() ?? null
+    : parsed.data.priceAdjustment || null;
+  const totalAmount = applyPriceAdjustment(discount.totalAmount, priceAdjustment);
   const hasPayments = await prisma.entryPayment.count({
     where: { eventId: entry.eventId, entryId: entry.id },
   });
@@ -890,7 +975,15 @@ async function updateEntryOrderInTransaction(
       contactFirstname: input.contactFirstname,
       contactLastname: input.contactLastname,
       paymentMethod: input.paymentMethod,
-      totalAmount: discount.totalAmount,
+      totalAmount,
+      ...(keepAdjustment
+        ? {}
+        : {
+            priceAdjustment,
+            priceAdjustmentReason:
+              priceAdjustment === null ? null : parsed.data.priceAdjustmentReason ?? null,
+            priceAdjustedById: priceAdjustment === null ? null : userId,
+          }),
       ...(entry.promoPercent
         ? {
             promoEligibleAmount: discount.eligibleAmount,

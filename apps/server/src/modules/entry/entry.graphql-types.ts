@@ -222,6 +222,12 @@ export const EntryRef = builder.prismaObject('Entry', {
       select: { promoDiscountAmount: true },
       resolve: (entry) => entry.promoDiscountAmount?.toNumber() ?? null,
     }),
+    priceAdjustment: t.float({
+      nullable: true,
+      select: { priceAdjustment: true },
+      resolve: (entry) => entry.priceAdjustment?.toNumber() ?? null,
+    }),
+    priceAdjustmentReason: t.exposeString('priceAdjustmentReason', { nullable: true }),
     totalAmount: t.float({
       select: { totalAmount: true },
       resolve: (entry) => entry.totalAmount.toNumber(),

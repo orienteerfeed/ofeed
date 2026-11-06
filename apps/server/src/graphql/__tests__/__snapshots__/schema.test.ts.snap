@@ -281,6 +281,8 @@ type Entry {
   paymentDueAt: DateTime
   paymentMethod: PaymentMethodType
   paymentReference: String!
+  priceAdjustment: Float
+  priceAdjustmentReason: String
   promoCode: String
   promoDiscountAmount: Float
   promoEligibleAmount: Float
@@ -396,6 +398,16 @@ input EntryOrderUpdateInput {
   contactLastname: String!
   items: [EntryOrderUpdateItemInput!]!
   paymentMethod: PaymentMethodType!
+
+  """
+  Signed manual order price correction (negative = discount). Omit to keep the stored value, null to clear it, a number to set it.
+  """
+  priceAdjustment: Float
+
+  """
+  Required (1-191 chars) when priceAdjustment is set to a non-zero number.
+  """
+  priceAdjustmentReason: String
 }
 
 input EntryOrderUpdateItemInput {
