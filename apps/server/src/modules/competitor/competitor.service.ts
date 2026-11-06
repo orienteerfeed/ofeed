@@ -21,6 +21,7 @@ import {
   assertSplitPublicationAccessible,
   assertSplitPublicationAccessibleForCompetitor,
 } from '../event/split-publication.service.js';
+import { getRadioControlCodesByClassId } from '../course/course.service.js';
 import { flattenOrganisation, organisationSelect } from '../event/organisation.helpers.js';
 import type {
   CompetitorsByOrganisationInput,
@@ -386,6 +387,61 @@ export async function findCompetitorSplits(
 
   return prisma.split.findMany({
     where: { competitorId: competitor.id },
+    orderBy: { time: 'asc' },
+  });
+}
+
+// ponytail: short-lived per-class cache of radio codes so one subscription push
+// does not reload the course for every competitor; the splits themselves are
+// still one query per competitor (as `findCompetitorSplits`), batch with a
+// dataloader if large classes make that measurable.
+const RADIO_CODES_CACHE_TTL_MS = 5_000;
+const radioCodesCache = new Map<number, { expiresAt: number; codes: Promise<number[]> }>();
+
+function getCachedRadioControlCodes(prisma: AppPrismaClient, classId: number): Promise<number[]> {
+  const now = Date.now();
+  const cached = radioCodesCache.get(classId);
+  if (cached && cached.expiresAt > now) {
+    return cached.codes;
+  }
+
+  // Split.controlCode is numeric; non-numeric control codes can never match a split.
+  const codes = getRadioControlCodesByClassId(prisma, classId).then((radioCodes) =>
+    radioCodes.map(Number).filter(Number.isInteger),
+  );
+  codes.catch(() => {
+    // Only drop our own entry; a newer load may already have replaced it.
+    if (radioCodesCache.get(classId)?.codes === codes) {
+      radioCodesCache.delete(classId);
+    }
+  });
+  for (const [cachedClassId, entry] of radioCodesCache) {
+    if (entry.expiresAt <= now) radioCodesCache.delete(cachedClassId);
+  }
+  radioCodesCache.set(classId, { expiresAt: now + RADIO_CODES_CACHE_TTL_MS, codes });
+  return codes;
+}
+
+/**
+ * Splits at the radio (online) controls of the competitor's class. Public on
+ * purpose: marking a control as radio is the organiser's decision to publish
+ * those times live, so the split publication gate does not apply here.
+ */
+export async function findCompetitorRadioSplits(
+  prisma: AppPrismaClient,
+  competitor: { id: number; classId?: number | null },
+) {
+  if (typeof competitor.classId !== 'number') {
+    return [];
+  }
+
+  const codes = await getCachedRadioControlCodes(prisma, competitor.classId);
+  if (codes.length === 0) {
+    return [];
+  }
+
+  return prisma.split.findMany({
+    where: { competitorId: competitor.id, controlCode: { in: codes } },
     orderBy: { time: 'asc' },
   });
 }

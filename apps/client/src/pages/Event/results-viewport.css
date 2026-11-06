@@ -33,9 +33,32 @@
   max-width: 100%;
 }
 
+.results-viewport-splits {
+  --split-rank-width: 48px;
+  --split-name-width: 192px;
+  --split-data-width: 128px;
+}
+
 .results-viewport-splits table {
   /* Explicit colgroup widths define the total width. */
   min-width: 0;
+}
+
+/* Share responsive colgroup widths with SplitTable. Keep
+   header cells inside the translated thead so both scroll axes stay aligned. */
+.results-viewport-splits :is(th, td):nth-child(-n + 2) {
+  position: sticky;
+  z-index: 10;
+  background: var(--background);
+}
+
+.results-viewport-splits :is(th, td):first-child {
+  left: 0;
+}
+
+.results-viewport-splits :is(th, td):nth-child(2) {
+  left: var(--split-rank-width);
+  box-shadow: 2px 0 4px -2px var(--muted-foreground);
 }
 
 .results-refresh-error {
@@ -54,6 +77,13 @@
   width: 10rem;
 }
 
+/* The ranking badge needs a real column budget. `w-px` makes a fixed-layout
+   table allocate only one pixel on desktop, clipping the value at the right
+   edge when all desktop metadata columns are visible. */
+.results-viewport [data-results-table='category'] th[data-col='points'] {
+  width: 4.5rem;
+}
+
 @media (min-width: 640px) {
   .results-viewport:not(.results-viewport-splits) table {
     min-width: 40rem;
@@ -61,6 +91,28 @@
 
   .results-viewport:not(.results-viewport-splits) th:nth-child(2) {
     width: 14rem;
+  }
+
+  .results-viewport [data-results-table='category'] th[data-col='radio'] {
+    width: 6rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits)
+    [data-results-table='category'] {
+    min-width: calc(40rem + var(--radio-count, 0) * 6rem);
+  }
+}
+
+/* Desktop radio cells show time, rank and loss on a single line. Reserve the
+   full budget in both the column and the table's scrolling minimum width. */
+@media (min-width: 768px) {
+  .results-viewport [data-results-table='category'] th[data-col='radio'] {
+    width: 12rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits)
+    [data-results-table='category'] {
+    min-width: calc(40rem + var(--radio-count, 0) * 12rem);
   }
 }
 
@@ -72,6 +124,16 @@
 }
 
 @media (max-width: 639px) {
+  .results-viewport-splits {
+    --split-rank-width: 32px;
+    --split-name-width: 112px;
+    --split-data-width: 96px;
+  }
+
+  .results-viewport-splits table[data-show-clubs='true'] {
+    --split-name-width: 192px;
+  }
+
   .results-viewport:not(.results-viewport-splits) table {
     --result-font-size: clamp(0.75rem, 3.2cqi, 0.8125rem);
     --result-cell-padding: clamp(0.125rem, 0.7cqi, 0.25rem);
@@ -96,20 +158,40 @@
     width: auto;
   }
 
-  .results-viewport [data-results-table='category'] th:nth-child(7),
-  .results-viewport [data-results-table='category'] th:nth-child(8),
+  .results-viewport [data-results-table='category'] th[data-col='time'],
+  .results-viewport [data-results-table='category'] th[data-col='diff'],
   .results-viewport [data-results-table='relay-leg'] th:nth-last-child(3),
   .results-viewport [data-results-table='relay-leg'] th:last-child {
     width: 4.5rem;
   }
 
-  .results-viewport [data-results-table='category'] th:nth-child(9) {
+  .results-viewport [data-results-table='category'] th[data-col='points'] {
     width: 3.25rem;
   }
 
-  .results-viewport [data-results-table='club'] th:nth-child(3),
-  .results-viewport [data-results-table='live'] th:nth-child(3) {
+  /* Radio cells stack the rank under the time. Below this floor the table
+     scrolls inside its container instead of shrinking past readability. */
+  .results-viewport [data-results-table='category'] th[data-col='radio'] {
+    width: 4rem;
+  }
+
+  .results-viewport:not(.results-viewport-splits)
+    [data-results-table='category'] {
+    min-width: calc(20rem + var(--radio-count, 0) * 4rem);
+  }
+
+  /* Provisional radio ranks are parenthesised, e.g. "(12)". */
+  .results-viewport [data-results-table='category'] th:first-child {
+    width: 2.25rem;
+  }
+
+  .results-viewport [data-results-table='club'] th:nth-child(3) {
     width: 3rem;
+  }
+
+  /* Include badge and cell padding for four-character category names. */
+  .results-viewport [data-results-table='live'] th:nth-child(3) {
+    width: 4rem;
   }
 
   .results-viewport [data-results-table='club'] th:nth-child(5),
@@ -151,5 +233,56 @@
 
   .results-viewport:not(.results-viewport-splits) td .text-xs {
     font-size: 0.6875rem;
+  }
+}
+
+/* Preserve the separate desktop loss column. Mobile one-radio results share
+   finish time/loss vertically to leave usable space for competitor names. */
+.single-radio-loss {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .results-viewport:not(.results-viewport-splits)
+    [data-results-table='category'][data-single-radio='true'] {
+    min-width: 0;
+  }
+
+  .results-viewport [data-single-radio='true'] [data-col='diff'] {
+    display: none;
+  }
+
+  /* Contain MobileClubName's invisible absolute text-measurement span. */
+  .results-viewport [data-single-radio='true'] td:nth-child(2) {
+    position: relative;
+  }
+
+  .results-viewport [data-single-radio='true'] .single-radio-loss {
+    display: block;
+    line-height: 1.25;
+  }
+
+  .results-viewport [data-single-radio='true'] th[data-col='time'] {
+    width: 5.25rem;
+  }
+
+  .results-viewport [data-single-radio='true'] th[data-col='radio'] {
+    width: 4.5rem;
+  }
+
+  .results-viewport [data-single-radio='true'] td[data-col='radio'] > div {
+    white-space: normal;
+  }
+
+  .results-viewport [data-single-radio='true'] td[data-col='radio'] span {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .results-viewport
+    [data-single-radio='true']
+    td[data-col='radio']
+    span:last-child {
+    display: block;
   }
 }

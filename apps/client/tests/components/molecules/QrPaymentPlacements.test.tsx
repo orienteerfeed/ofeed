@@ -35,6 +35,62 @@ const payment: QrPaymentInstruction = {
 afterEach(() => vi.restoreAllMocks());
 
 describe('QR payment action placements', () => {
+  it.each([
+    ['CZ6508000000192000145399', '19-2000145399/0800'],
+    ['CZ8020100000002201340123', '2201340123/2010'],
+    ['DE89370400440532013000', null],
+  ])(
+    'shows a domestic account alongside %s when available',
+    (iban, domestic) => {
+      render(
+        <EntryPaymentSection
+          eventName="Test event"
+          paymentMethod="QR_PAYMENT"
+          totalAmount={250}
+          currency="CZK"
+          qrPayment={{ ...payment, bankAccountIban: iban }}
+        />
+      );
+      expect(screen.getByText(iban)).toBeInTheDocument();
+      if (domestic) expect(screen.getByText(domestic)).toBeInTheDocument();
+      else
+        expect(
+          screen.queryByText('Pages.Event.EntriesManage.Detail.Payment.Account')
+        ).not.toBeInTheDocument();
+    }
+  );
+
+  it('includes both Czech account and IBAN in printed payment details', () => {
+    const write = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(
+      'data:image/png;base64,test'
+    );
+    vi.spyOn(window, 'open').mockReturnValue({
+      document: { write, close: vi.fn() },
+      focus: vi.fn(),
+      print: vi.fn(),
+    } as unknown as Window);
+    render(
+      <EntryPaymentSection
+        eventName="Test event"
+        paymentMethod="QR_PAYMENT"
+        totalAmount={250}
+        currency="CZK"
+        qrPayment={payment}
+      />
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Pages.Event.EntriesManage.Detail.Payment.Print',
+      })
+    );
+    expect(write).toHaveBeenCalledWith(
+      expect.stringContaining('19-2000145399/0800')
+    );
+    expect(write).toHaveBeenCalledWith(
+      expect.stringContaining(payment.bankAccountIban)
+    );
+  });
   it.each(['checkout', 'entry-detail'])(
     'downloads the rendered payment QR in %s',
     placement => {

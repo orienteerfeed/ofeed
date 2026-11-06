@@ -194,7 +194,7 @@ export const EventSettingsPage = () => {
   return (
     <MainPageLayout t={t}>
       <div className="container mx-auto px-4 py-6">
-        <div className="grid items-start gap-8">
+        <div className="grid min-w-0 grid-cols-1 items-start gap-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <BackLink to={`/events/${eventId}`} />
             <div className="sm:ml-auto">
@@ -230,8 +230,10 @@ export const EventSettingsPage = () => {
             ]}
             value={activeTab}
             onValueChange={handleTabChange}
-            className="space-y-6"
+            className="min-w-0 max-w-full space-y-6"
             listClassName="grid w-full grid-cols-4 max-w-xl"
+            triggerClassName="min-w-0 px-1 text-xs sm:px-3 sm:text-sm"
+            contentClassName="min-w-0 max-w-full"
           >
             <GeneralSettingsTab
               key="general"

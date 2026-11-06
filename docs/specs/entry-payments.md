@@ -2,7 +2,7 @@
 
 - Status: implemented
 - Issue: G5 proposal supplied in the task; GitHub issue link pending
-- Decision: [0004](../architecture/adr/0004-entry-payment-ledger.md)
+- Decisions: [0004](../architecture/adr/0004-entry-payment-ledger.md), [cash settlement 0009](../architecture/adr/0009-cash-paid-settlement.md)
 
 ## Goal
 
@@ -52,17 +52,22 @@ changes append the existing payment-state audit history with the authenticated
 operator.
 
 The first receipt recalculates historical manual flags too: a partial first
-receipt can change true to false. No historical receipts are fabricated. The
-legacy manual paid mutation remains available only for entries without receipts;
-otherwise it returns a conflict (GraphQL `extensions.code: CONFLICT`). Identical
+receipt can change true to false. No historical receipts are fabricated. For non-cash orders the
+legacy manual paid mutation remains available only without receipts; otherwise it
+returns GraphQL `extensions.code: CONFLICT`. For CASH, paid=true settles the
+outstanding balance as described below; receipt-backed paid=false still conflicts. Identical
 payment retries do not change status or append audit records. Receipt insertion,
 paid-state changes and audit history commit or roll back together. Writers use
 Read Committed transactions with an entry-row lock and bounded retries for
 transient write conflicts.
 
-An entry with receipts cannot be deleted (including via event cascade),
-preventing accidental loss of the cash ledger. Event reset/deletion reports 409
-before destructive work; foreign keys also protect against competing inserts.
+An entry with receipts cannot be deleted individually or via a raw event
+cascade (RESTRICT foreign key). Event reset and event deletion are the explicit
+exception: the organizer or admin may wipe all event data, so
+`deleteAllEventData` removes the event's receipts before its entries. Linked
+bank transactions belong to the bank connection and are kept with a null
+`matchedEntryId`. Receipts are erased irreversibly; export the closing report
+first (GDPR/retention: the ledger is gone once the event is deleted).
 Operator ID is an immutable identity snapshot, retained even if the user account
 is removed; it contains no contact details. Device IDs identify a reporting
 desk, not an authorization credential. Currency must match the entry snapshot;
@@ -81,3 +86,60 @@ Vitest and server type checks. The opt-in `entry-payment.integration.test.ts`
 suite verifies physical uniqueness, foreign keys, concurrent
 receipts/retries/legacy updates/repricing and rollback on a disposable local
 MariaDB database. See the [testing guide](../dev/testing.md).
+
+
+## Mark a cash entry paid (2026-11-03)
+
+Explicitly marking a CASH order paid now records its positive outstanding amount
+as an immutable CASH receipt at the current server time. Preserve the existing
+GraphQL mutation; add optional deviceId (1–191 nonblank characters). Old callers
+use the explicit fallback device `server:entry-paid-update`; authenticated operator
+identity is always required for a new receipt. A full/overpaid cash order is an
+idempotent no-op, including concurrent repeats under the existing entry-row lock.
+Partial receipts are retained and only the balance is collected. Zero-value orders
+can be marked paid without a zero-value receipt. Receipt-backed unpaid toggles
+remain rejected; refunds and receipt deletion are outside this change. Non-cash
+manual flags retain their existing behavior. No historical receipts are backfilled.
+
+The UI labels cash settlement explicitly, supplies its configured payment device
+or browser device ID, and refreshes the receipt list after success. Both payment
+insights and the extended entry report use the newly stored receipt. POS clients
+may keep the old paid=true call for cash settlement, optionally adding deviceId.
+For offline/exact amount/paidAt/clientPaymentId, continue using POST payments,
+which already derives paid status. Do not submit both a paid=true settlement and
+an explicit POST receipt for the same physical cash payment. No migration.
+Tests cover cash amount/currency/operator/device/time, partial/full/zero balances,
+repeated/concurrent settlement, rejected reversal, non-cash compatibility and
+report inclusion. Shared receipt insertion/reconciliation remains transactional.
+
+
+Cash settlement verification (2026-11-03): 250 relevant server tests passed,
+including receipt/report inclusion, partial/full/free/legacy settlement, operator
+and device validation, repeat suppression and reversal rejection. Twelve opt-in
+database scenarios were skipped without disposable database URLs; the cash
+concurrency regression is included in that suite. Full client suite passed 408
+tests across 53 files. Isolated Chromium confirmed device forwarding and receipt
+refresh in the entry detail using fixture API responses; no real cash receipts
+were created. Client/server types (including GraphQL), focused lint and whitespace
+checks passed. No new database migration.
+
+
+## Entry-list and POS report synchronization (2026-11-04)
+
+The entry-list paid action uses the same cash settlement mutation as entry detail,
+with configured desk/browser device attribution and cash-specific wording. Both
+GraphQL settlement and REST receipt insertion invalidate entry receipts and the
+received-payment report cache. The payment report refreshes every 15 seconds only
+while visible and on return to the tab, so external ofeed-desk writes appear too.
+Keep all CASH/QR receipts in the same report; never derive income from flags.
+Existing historical flags without receipts remain outside actual receipt totals.
+Tests cover list action/device propagation, cache refresh across both write paths,
+external POS refresh, and combined CASH/QR report totals. No schema migration.
+
+
+Expose Entry.paymentCount in GraphQL. In the entry list, a legacy CASH paid flag
+with zero receipts offers an explicit Record confirmed cash action, preserving
+paid=true while recording the missing receipt at confirmation time. This is a
+user action, not automatic historical backfill. Receipt-backed fully paid orders
+no longer offer an invalid paid=false action. Mutation responses return the count
+so the list removes settlement actions immediately after a successful receipt.

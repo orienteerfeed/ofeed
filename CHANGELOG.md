@@ -8,8 +8,57 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Event class settings can permanently delete a category and its dependent
+  competition data after confirmation, preserving shared entities and payments.
+
+- Expand the entry timeline report with order/payment summaries, race-day detail,
+  payment methods, category counts and paginated entry rows, with full CSV/print
+  exports limited to race day or today.
+
+- Event promo codes with percentage discounts, revocation, checkout price previews
+  and immutable applied-code records; registration discounts can opt into combining.
+
+- Configure registration-based discounts (for example `ABC*`) on entry fees
+  and card rental, including free entry, with server pricing and cart estimates.
+
+- ORIS SSO server-side identity verification (`ssoUser` call from the API
+  callback). The provider is enabled when `ORIS_SSO_ENABLED` is on and both
+  `ORIS_SSO_CLIENT_ID` and `ORIS_SSO_CLIENT_SECRET` are set.
+
 ### Fixed
 
+- Mobile category settings keep the navbar and tabs within the viewport while
+  allowing horizontal scrolling inside the category table.
+
+- Mobile live results reserve enough category column width to display complete
+  four-character class badges.
+
+- Club result tables use their full width when multiple categories are shown
+  and the Start column is hidden on mobile.
+
+- Entry-list cash confirmations refresh received-payment reports and identify the
+  desk; legacy paid cash without a receipt can be explicitly recorded. Reports
+  also pick up external POS receipts while visible and when returning to the tab.
+
+- Marking a cash entry paid now records its outstanding balance as a CASH receipt,
+  so manual cash settlements appear in payment reports without duplicate receipts
+  on repeated settlement. POS callers can supply an optional device identifier.
+
+- Deleting an event or all its data no longer fails with 409 "Cannot delete
+  event data containing payment receipts"; receipts are deleted with the event.
+- Provisional radio placement stays after faster comparable finishers even when
+  earlier finishers have missing splits.
+- Entry insight charts, totals and exports stop at race day or today and exclude
+  entries beyond that cutoff.
+- Bank-import payments no longer show an invented time: `paidAt` is the
+  server match time, the bank booking day is returned as `bookingDate` and
+  shown date-only; existing bank receipts are migrated.
+- Late SRR punches no longer overwrite a closed result (IOF XML/MOP import or
+  readout); only a readout can still correct it.
+- Finish punches no longer change the status of NotCompeting competitors;
+  finish time and race time are still recorded.
 - Restore desktop entry category occupancy badges and birth-year ranges.
 - Restore missing entry class occupancy and remaining-place translations in all
   six locales, fixing the client type check and untranslated card labels.
@@ -18,11 +67,41 @@ and this project adheres to
 
 ### Changed
 
+- Active runners show their elapsed clock at the next unpassed online control,
+  moving to the finish column after the last recorded radio split.
+
+- Mobile category results with one online control stack finish time and loss
+  to fit the full table without horizontal scrolling.
+
+- Mobile split analysis uses narrower pinned names, optional clubs, tap-to-open
+  competitor details and compact sorting controls.
+
+- Mark the exact race start date/time on the cumulative entry chart and plot
+  actual receipt times so same-day entries after the start remain visible.
+
+- Entries-over-time cumulative chart uses a smooth curve and a class-filtered
+  linear trend.
+
+- Show Czech domestic bank account numbers alongside IBAN in entry payment details, printouts and payment notification emails.
+
+- Use one shared upload zone above event file status sections for start lists, courses and results, with a taller themed surface and centered File upload action.
+
+- Default `ORIS_API_BASE_URL` is now `https://oris.ceskyorientak.cz/API/`.
 - Compact public entry category cards into a two-column mobile grid and show
   remaining places, with occupancy and birth-year details in a tooltip.
 
 ### Added
 
+- Groundwork for external sign-in (ORIS SSO now, Google/GitHub later):
+  `UserIdentity` model, `/rest/v1/auth/sso` start/callback/link routes, sign-in
+  and sign-up buttons and a profile "Linked accounts" card shown only for
+  providers with implemented identity exchange and configured credentials. ORIS
+  remains unavailable while its token verification call is pending its contract.
+- Entries-over-time insight: cumulative and daily competitor entries from the
+  opening to the race, with deadline markers, late entries and a class filter.
+- Radio (online split) controls: organisers mark them in Settings › Files.
+  Results show a column per radio control and place runners on course
+  provisionally by their last radio split.
 - Bank payment import: organizers register their Fio account, the desktop
   collector reports incoming payments, and exact matches record bank-import
   receipts that mark entry orders paid; unmatched payments can be resolved

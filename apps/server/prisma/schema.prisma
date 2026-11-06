@@ -198,6 +198,8 @@ model User {
   organisation             String?
   emergencyContact         String?                   @db.VarChar(255)
   password                 String                    @db.VarChar(255)
+  // False for accounts created through external sign-in until a password is set via reset.
+  passwordSet              Boolean                   @default(true)
   active                   Boolean                   @default(false)
   emailVerifiedAt          DateTime?
   deletedAt                DateTime?
@@ -214,6 +216,7 @@ model User {
   oAuthRefreshToken        OAuthRefreshToken[]
   deviceSessions           DeviceSession[]
   passwordResetTokens      PasswordResetToken[]
+  identities               UserIdentity[]
   entries                  Entry[]
   entryStatusChanges       EntryStatusHistory[]
   bankConnections          BankConnection[]
@@ -260,6 +263,7 @@ model Currency {
 }
 
 model Event {
+  promoCodes                   PromoCode[]
   punches                      Punch[]
   punchReceipts                PunchReceipt[]
   id                           String                         @id @default(cuid())
@@ -293,6 +297,7 @@ model Event {
   vatPayer                     Boolean                        @default(false)
   vatRate                      Decimal?                       @db.Decimal(5, 2)
   lateEntryFeePercent          Decimal?                       @db.Decimal(5, 2)
+  registrationFeeDiscounts     Json?
   ofeedPaymentAvailable        Boolean                        @default(false)
   entryPaymentLifetimeHours    Int?
   paymentReferencePrefix       String?                        @db.VarChar(2)
@@ -418,34 +423,57 @@ model EventRentalCard {
   @@index([eventId], map: "EventRentalCard_event_idx")
 }
 
+// Event-scoped reusable codes. Revocation preserves existing order snapshots.
+model PromoCode {
+  id              String    @id @default(cuid())
+  event           Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId         String
+  code            String    @db.VarChar(40)
+  discountPercent Decimal   @db.Decimal(5, 2)
+  createdAt       DateTime  @default(now())
+  createdById     Int       @db.UnsignedInt
+  revokedAt       DateTime?
+  revokedById     Int?      @db.UnsignedInt
+  entries         Entry[]
+
+  @@unique([eventId, code])
+  @@unique([eventId, id])
+}
+
 // An entry order: a batch of competitor entries submitted through the public
 // entry shop. Competitors are propagated into `Competitor` only after the
 // order is approved and processed (see EntryItem.competitorId).
 model Entry {
-  id               String                  @id @default(cuid())
-  event            Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId          String
-  status           EntryStatus             @default(RECEIVED)
-  paid             Boolean                 @default(false)
-  paymentMethod    EventPaymentMethodType?
+  promoCodeId         String?
+  appliedPromoCode    PromoCode?              @relation(fields: [eventId, promoCodeId], references: [eventId, id])
+  promoCode           String?                 @db.VarChar(40)
+  promoPercent        Decimal?                @db.Decimal(5, 2)
+  promoEligibleAmount Decimal?                @db.Decimal(10, 2)
+  promoDiscountAmount Decimal?                @db.Decimal(10, 2)
+  id                  String                  @id @default(cuid())
+  event               Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId             String
+  status              EntryStatus             @default(RECEIVED)
+  paid                Boolean                 @default(false)
+  paymentMethod       EventPaymentMethodType?
   // Variable symbol used to pair incoming payments; unique per event.
-  paymentDueAt     DateTime?
-  paymentReference String                  @db.VarChar(10)
-  user             User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId           Int?                    @db.UnsignedInt
-  contactEmail     String                  @db.VarChar(254)
-  contactFirstname String                  @db.VarChar(191)
-  contactLastname  String                  @db.VarChar(191)
-  totalAmount      Decimal                 @db.Decimal(10, 2)
+  paymentDueAt        DateTime?
+  paymentReference    String                  @db.VarChar(10)
+  user                User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId              Int?                    @db.UnsignedInt
+  contactEmail        String                  @db.VarChar(254)
+  contactFirstname    String                  @db.VarChar(191)
+  contactLastname     String                  @db.VarChar(191)
+  totalAmount         Decimal                 @db.Decimal(10, 2)
   // ISO 4217 alpha-3 snapshot of the event currency at order time.
-  currency         String                  @db.Char(3)
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
-  items            EntryItem[]
-  addOnItems       EntryAddOnItem[]
-  statusHistory    EntryStatusHistory[]
-  payments         EntryPayment[]
-  bankTransactions BankTransaction[]
+  currency            String                  @db.Char(3)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  items               EntryItem[]
+  addOnItems          EntryAddOnItem[]
+  statusHistory       EntryStatusHistory[]
+  payments            EntryPayment[]
+  bankTransactions    BankTransaction[]
 
   @@unique([eventId, id], map: "Entry_event_id_uq")
   @@unique([eventId, paymentReference], map: "Entry_event_payment_reference_uq")
@@ -647,34 +675,36 @@ model BankPaymentNotification {
 // A single competitor entry inside an entry order. Fee amounts are snapshots
 // taken at order time so later fee changes never alter a submitted order.
 model EntryItem {
-  id            Int                @id @default(autoincrement()) @db.UnsignedInt
-  entry         Entry              @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  entryId       String
-  class         Class              @relation(fields: [classId], references: [id])
-  classId       Int                @db.UnsignedInt
-  firstname     String
-  lastname      String
-  registration  String?            @db.VarChar(10)
-  birthYear     Int?               @db.UnsignedSmallInt
-  organisation  String?            @db.VarChar(191)
-  license       String?            @db.Char(1)
-  note          String?            @db.Text
-  card          Int?               @db.UnsignedInt
-  cardRental    Boolean            @default(false)
+  registrationDiscountPercent Decimal?           @db.Decimal(5, 2)
+  allowPromoCode              Boolean            @default(true)
+  id                          Int                @id @default(autoincrement()) @db.UnsignedInt
+  entry                       Entry              @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId                     String
+  class                       Class              @relation(fields: [classId], references: [id])
+  classId                     Int                @db.UnsignedInt
+  firstname                   String
+  lastname                    String
+  registration                String?            @db.VarChar(10)
+  birthYear                   Int?               @db.UnsignedSmallInt
+  organisation                String?            @db.VarChar(191)
+  license                     String?            @db.Char(1)
+  note                        String?            @db.Text
+  card                        Int?               @db.UnsignedInt
+  cardRental                  Boolean            @default(false)
   // Requested start time; must match a StartSlotVacancy for StartList classes.
-  startTime     DateTime?
-  fee           Decimal            @db.Decimal(10, 2)
-  cardRentalFee Decimal?           @db.Decimal(10, 2)
+  startTime                   DateTime?
+  fee                         Decimal            @db.Decimal(10, 2)
+  cardRentalFee               Decimal?           @db.Decimal(10, 2)
   // What this item is: a new registration, or a requested change against an
   // already-submitted one (see EntryItemActionKey).
-  actionKey     EntryItemActionKey @default(NEW_ENTRY)
+  actionKey                   EntryItemActionKey @default(NEW_ENTRY)
   // Snapshot of the field(s) `actionKey` replaced (e.g. `{ "card": 123456 }`
   // for CARD_CHANGE); shape depends on actionKey. Null for NEW_ENTRY.
-  previousValue Json?
-  competitor    Competitor?        @relation(fields: [competitorId], references: [id], onDelete: SetNull)
-  competitorId  Int?               @db.UnsignedInt
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  previousValue               Json?
+  competitor                  Competitor?        @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+  competitorId                Int?               @db.UnsignedInt
+  createdAt                   DateTime           @default(now())
+  updatedAt                   DateTime           @updatedAt
 
   @@index([entryId], map: "EntryItem_entry_idx")
   @@index([classId], map: "EntryItem_class_idx")
@@ -1150,6 +1180,28 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+enum IdentityProvider {
+  ORIS
+  GOOGLE
+  GITHUB
+}
+
+// External sign-in identity (ORIS SSO, OAuth). Removed on account anonymization.
+model UserIdentity {
+  id             String           @id @default(cuid())
+  userId         Int              @db.UnsignedInt
+  provider       IdentityProvider
+  providerUserId String           @db.VarChar(191)
+  email          String?          @db.VarChar(255)
+  createdAt      DateTime         @default(now())
+  lastLoginAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId], map: "UserIdentity_provider_subject_uq")
+  @@unique([userId, provider], map: "UserIdentity_user_provider_uq")
 }
 
 enum Sex {

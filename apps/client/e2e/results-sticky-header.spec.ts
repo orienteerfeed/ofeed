@@ -57,6 +57,22 @@ for (const width of [1280, 390]) {
           });
         });
         expect(aligned).toBe(true);
+        if (view === 'splits') {
+          const pinned = await table.evaluate(element => {
+            const left = element.parentElement!.getBoundingClientRect().left;
+            const row = element.querySelector('tbody tr')!;
+            return [0, 1].map(index =>
+              Math.abs(
+                row.children[index]!.getBoundingClientRect().left -
+                  left -
+                  (index === 0
+                    ? 0
+                    : row.children[0]!.getBoundingClientRect().width)
+              )
+            );
+          });
+          for (const offset of pinned) expect(offset).toBeLessThanOrEqual(1);
+        }
         await navbar.evaluate(element => {
           element.style.height = '80px';
         });

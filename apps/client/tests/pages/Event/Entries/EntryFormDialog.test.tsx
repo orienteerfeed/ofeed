@@ -63,6 +63,8 @@ vi.mock('react-i18next', () => ({
         'Pages.Event.Entries.Form.ClearForm': 'Clear form',
         'Pages.Event.Entries.Form.AddToCart': 'Add to cart',
         'Pages.Event.Entries.Form.Title': 'Entry',
+        'Pages.Event.Entries.Form.Description': 'Entry fee: {{fee}}',
+        'Pages.Event.Entries.Form.CardRentalWithPrice': 'Rental: {{price}}',
         'Pages.Event.Entries.Form.StartTime': 'Start time',
         'Pages.Event.Entries.Form.StartTimePlaceholder': 'Select a start time',
         'Pages.Event.Entries.Form.DescriptionFree':
@@ -177,6 +179,85 @@ describe('EntryFormDialog', () => {
     authState.isAuthenticated = false;
     authState.user = null;
   });
+
+  it.each([
+    [25, 75, 37.5],
+    [100, 0, 0],
+  ])(
+    'previews and adds discounted entry and rental fees at %s percent',
+    async (discountPercent, fee, rentalFee) => {
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MockedProvider
+            mocks={[
+              {
+                request: {
+                  query: COMPETITORS_BY_REGISTRATION,
+                  variables: { eventId: 'event-1', registration: 'CHC9501' },
+                },
+                result: { data: { competitorsByRegistration: [] } },
+              },
+              {
+                request: {
+                  query: COMPETITORS_BY_CARD,
+                  variables: { eventId: 'event-1', card: 8123456 },
+                },
+                result: { data: { competitorsByCard: [] } },
+              },
+            ]}
+          >
+            <EntryFormDialog
+              open
+              onOpenChange={vi.fn()}
+              entryClass={{
+                ...entryClass,
+                fee: { amount: 100, net: 100, vat: 0 },
+              }}
+              availability={{
+                ...availability,
+                registrationFeeDiscounts: [
+                  { pattern: 'CHC*', discountPercent },
+                ],
+                entryActions: [
+                  { key: 'CARD_RENTAL', enabled: true, price: 50 },
+                ],
+              }}
+              eventId="event-1"
+              eventName="Test event"
+              eventSportId={1}
+            />
+          </MockedProvider>
+        </QueryClientProvider>
+      );
+      const input = (name: string) =>
+        document.querySelector<HTMLInputElement>(`input[name="${name}"]`)!;
+      for (const [name, value] of [
+        ['firstname', 'Jan'],
+        ['lastname', 'Novak'],
+        ['registration', 'CHC9501'],
+      ]) {
+        fireEvent.change(input(name!), { target: { value } });
+      }
+      expect(screen.getByText(/Entry fee:/)).toHaveTextContent(String(fee));
+      const rental = screen.getByRole('checkbox');
+      expect(rental).toHaveAccessibleName(new RegExp(String(rentalFee)));
+      fireEvent.click(rental);
+      fireEvent.click(screen.getByRole('button', { name: 'Add to cart' }));
+      await waitFor(() =>
+        expect(addCartItemMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            registration: 'CHC9501',
+            fee,
+            cardRentalFee: rentalFee,
+          }),
+          { exclusiveStartSlot: false }
+        )
+      );
+    }
+  );
 
   it('hides cart slots and offers them again after removing the cart item', async () => {
     useCartStore

@@ -58,6 +58,28 @@
         "NoDuplicates": "Inga dubbla chip i detta urval.",
         "FullGroups": "Filtren väljer hela grupper. Alla deltagare med samma chip visas, även från andra klasser."
       },
+      "Entries": {
+        "Title": "Anmälningar över tid",
+        "Description": "Hur anmälningarna växte från öppningen via anmälningsstoppet fram till tävlingen, per dag och klass.",
+        "Class": "Klass",
+        "Loading": "Laddar anmälningar…",
+        "Stale": "Uppdateringen misslyckades. Visade data är inaktuella; export och utskrift är avstängda.",
+        "Error": "Det gick inte att ladda anmälningar över tid.",
+        "Empty": "Inga anmälningar i det här urvalet ännu.",
+        "Total": "Anmälda deltagare",
+        "FinalDaysShare": "Anmälda de sista 3 dagarna före anmälningsstopp",
+        "LateEntries": "Efteranmälningar",
+        "PeakDay": "Mest intensiva dagen",
+        "Cumulative": "Anmälningar totalt",
+        "Daily": "Nya anmälningar per dag",
+        "LateArea": "Det skuggade området visar efteranmälningar som kommit in efter anmälningsstoppet.",
+        "Date": "Datum",
+        "Opens": "Öppnar",
+        "Closes": "Anmälningsstopp",
+        "Race": "Tävling",
+        "Table": "Dagliga värden",
+        "Trend": "Linjär trend"
+      },
       "Anomalies": {
         "Title": "Anomalianalys",
         "Description": "Granska misstänkta första sträcktider och starttider.",
@@ -791,7 +813,9 @@
           "Edit": "Redigera",
           "EditUnavailable": "Det går ännu inte att redigera anmälningar.",
           "ExpandItems": "Visa rader",
-          "CollapseItems": "Dölj rader"
+          "CollapseItems": "Dölj rader",
+          "MarkCashPaid": "Ta emot kontantbetalning",
+          "RecordConfirmedCash": "Registrera bekräftad kontantbetalning"
         },
         "RejectDialog": {
           "ConfirmTitle": "Reject this entry order?",
@@ -844,6 +868,7 @@
             "Title": "Betalning",
             "Method": "Betalningsmetod",
             "Account": "Kontonummer",
+            "Iban": "IBAN",
             "VariableSymbol": "Variabel symbol",
             "ConstantSymbol": "Konstant symbol",
             "RecipientMessage": "Meddelande till mottagaren",
@@ -907,6 +932,18 @@
           "Services": "Services"
         },
         "Services": {
+          "RegistrationDiscounts": {
+            "Title": "Rabatter efter registrering",
+            "Description": "ABC* matchar registreringar som börjar med ABC; ? ersätter ett tecken. Den högsta matchande rabatten gäller startavgiften inklusive tillägg och hyrbrickan. Vid 100 % är båda gratis. Sparade beställningar räknas inte om automatiskt.",
+            "Pattern": "Registreringsmönster",
+            "Percent": "Rabatt (%)",
+            "Free": "Gratis",
+            "Remove": "Ta bort regel",
+            "Add": "Lägg till regel",
+            "Save": "Spara rabatter",
+            "Empty": "Inga rabattregler har konfigurerats.",
+            "Validation": "Ange ett mönster med 1–100 tecken: bokstäver, siffror, mellanslag, _, -, * eller ?. Rabatt 0–100 % med högst två decimaler; högst 30 regler."
+          },
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
@@ -1181,8 +1218,18 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "LateEntryFeeDisabledTooltip": "Do not increase the fee for late entries.",
           "LateEntryFeeDisabledAria": "Do not increase the fee for late entries in class {{name}}",
+          "ActionsMenu": "Åtgärder för klassen {{name}}",
           "BirthYearInvalid": "Ange ett giltigt år (min. 4 siffror).",
-          "BirthYearRangeError": "Födelseår från måste vara mindre än eller lika med födelseår till."
+          "BirthYearRangeError": "Födelseår från måste vara mindre än eller lika med födelseår till.",
+          "Delete": {
+            "Action": "Ta bort",
+            "Aria": "Ta bort klassen {{name}}",
+            "Title": "Ta bort klassen ”{{name}}”?",
+            "Description": "Klassen, dess deltagare, lag, resultat, sträcktider, stämplingar, protokoll, starttider och anmälningsrader tas bort permanent. Beställningar, deras ursprungliga belopp och betalningar samt delade banor och föreningar behålls. Inga betalningar återbetalas. Åtgärden kan inte ångras.",
+            "Confirm": "Ta bort med beroende data",
+            "Success": "Klassen och dess beroende data har tagits bort.",
+            "Error": "Det gick inte att ta bort klassen."
+          }
         },
         "Files": {
           "StartList": "Startlista",
@@ -1304,6 +1351,7 @@
         }
       },
       "Splits": {
+        "ShowClubs": "Visa klubbar",
         "ChartTitle": "Loppets utveckling (tapp mot ledaren)",
         "ChartTitleFastest": "Loppets utveckling (tapp mot bästa tid)",
         "CompareTo": "Jämför med",
@@ -1992,7 +2040,7 @@
     "DragDrop": {
       "UploadIofXml": {
         "Title": "Ladda upp IOF XML",
-        "Description": "Ladda upp IOF XML-filer med start- och resultatlistor."
+        "Description": "Ladda upp en IOF XML-fil med startlista, banor eller resultat. Filtypen identifieras automatiskt."
       },
       "Toast": {
         "UploadSuccess": "Filerna har laddats upp!",
@@ -2056,6 +2104,7 @@
   },
   "Molecules": {
     "DragDrop": {
+      "FileUpload": "File upload",
       "ClickToUpload": "Klicka för att ladda upp",
       "Delete": "Radera",
       "OrdDragAndDrop": "eller dra och släpp",
@@ -2157,9 +2206,112 @@
     "LogoutUnconfirmed": "Utloggad lokalt. Återkallelsen på servern kunde inte bekräftas; anslut igen för att slutföra utloggningen.",
     "RevocationDelay": "Återkallade enheter kan använda en befintlig åtkomsttoken i upp till 15 minuter."
   },
+  "Sso": {
+    "ContinueWith": "Fortsätt med {{provider}}",
+    "StartFailed": "Det gick inte att starta inloggningen",
+    "Completing": "Slutför inloggningen…",
+    "FailedTitle": "Inloggningen misslyckades",
+    "LinkedTitle": "Konto kopplat",
+    "BackToSignIn": "Tillbaka till inloggning",
+    "BackToProfile": "Tillbaka till profilen",
+    "Errors": {
+      "invalid_state": "Inloggningslänken har gått ut eller öppnades i en annan webbläsare. Försök igen.",
+      "provider_unavailable": "Inloggningsleverantören är inte tillgänglig just nu. Försök igen senare.",
+      "email_in_use": "Det finns redan ett konto med den här e-postadressen. Logga in med ditt lösenord och koppla leverantören i din profil.",
+      "email_required": "Leverantören delade ingen e-postadress, så inget konto kan skapas.",
+      "identity_taken": "Det externa kontot är redan kopplat till ett annat OFeed-konto.",
+      "account_inactive": "Kontot är inaktivt.",
+      "last_sign_in_method": "Ange först ett lösenord (via lösenordsåterställning) så att du kan logga in efter frånkopplingen."
+    },
+    "Linked": {
+      "Title": "Kopplade konton",
+      "Description": "Logga in med ett externt konto i stället för ditt lösenord.",
+      "Link": "Koppla",
+      "Unlink": "Koppla från",
+      "LinkedSince": "Kopplat sedan {{date}}",
+      "NotLinked": "Inte kopplat",
+      "UnlinkSuccess": "Konto frånkopplat",
+      "UnlinkFailed": "Frånkopplingen misslyckades"
+    }
+  },
   "EntryPaymentExpiry": {
     "Label": "Betalningsfrist (timmar)",
     "Help": "Tomt = ingen automatisk avbokning. 1–8760 timmar efter att en ny anmälan tagits emot. Kontantbetalning undantas. Befintliga anmälningar påverkas inte.",
     "Deadline": "Om betalningen inte har kommit in senast {{date}} avbokas anmälan automatiskt."
+  },
+  "PromoCodes": {
+    "Title": "Kampanjkoder",
+    "Description": "Skapa en procentrabatt för detta evenemang. Koder kan användas flera gånger tills de återkallas.",
+    "Code": "Kampanjkod",
+    "Percent": "Rabatt (%)",
+    "Create": "Skapa kod",
+    "Empty": "Inga kampanjkoder ännu.",
+    "Active": "Aktiv",
+    "Revoked": "Återkallad",
+    "Uses": "Beställningar med koden: {{count}}",
+    "Copy": "Kopiera",
+    "Revoke": "Återkalla kod",
+    "RevokeDescription": "Koden fungerar inte längre för nya beställningar. Befintliga beställningar behåller sin rabatt.",
+    "Validation": "Ange en unik kod med 3–40 tecken (A–Z, 0–9, _ eller -) och en rabatt större än 0 och högst 100 %, med högst två decimaler.",
+    "SaveError": "Koden kunde inte sparas. Kontrollera att den är unik och försök igen.",
+    "LoadError": "Kampanjkoderna kunde inte laddas.",
+    "CopyError": "Koden kunde inte kopieras.",
+    "AllowCombination": "Tillåt kombination med kampanjkod",
+    "Apply": "Använd",
+    "Remove": "Ta bort",
+    "Checking": "Kontrollerar pris…",
+    "Invalid": "Koden är ogiltig eller priset kunde inte kontrolleras. Kontrollera koden och försök igen.",
+    "NoEligible": "Ingen av dessa poster är berättigad till kampanjrabatt.",
+    "Excluded": "Vissa poster är undantagna eftersom deras registreringsrabatt inte tillåter kombination.",
+    "Subtotal": "Pris före kampanjrabatt",
+    "Cancel": "Avbryt"
+  },
+  "EntryReport": {
+    "FinancialSummary": "Ekonomisk översikt",
+    "Currency": "Valuta",
+    "OrderTotal": "Beställningssumma",
+    "Received": "Mottagna betalningar",
+    "Outstanding": "Kvar att betala",
+    "LegacyPaid": "Markerad betald utan kvitto",
+    "PaidOrders": "Betalda beställningar",
+    "UnpaidOrders": "Obetalda beställningar",
+    "PaymentMethods": "Betalningsmetod (beställningar)",
+    "Orders": "Beställningar",
+    "PaymentMethod": "Betalningsmetod",
+    "DailyOrders": "Anmälningar och beställningar per dag",
+    "Date": "Datum",
+    "Competitors": "Deltagare",
+    "Categories": "Anmälningar per klass",
+    "Class": "Klass",
+    "RaceDay": "Tävlingsdagens detaljer",
+    "ReceivedAt": "Mottagen",
+    "Competitor": "Deltagare",
+    "Club": "Klubb",
+    "Card": "Bricka",
+    "Price": "Pris",
+    "Paid": "Betald",
+    "PromoCode": "Kampanjkod",
+    "Yes": "Ja",
+    "No": "Nej",
+    "Unknown": "Ej angivet",
+    "Excluded": "Avbrutna / avvisade beställningar",
+    "FinanceAllClasses": "Ekonomin omfattar alla klasser under den valda perioden.",
+    "FinanceWholeOrders": "Ekonomin omfattar hela beställningar med den valda klassen, inklusive övriga deltagare.",
+    "ReceiptNote": "Mottagna betalningar bygger på kvitton. Äldre betalmarkeringar utan kvitto visas separat. Avbrutna och avvisade beställningar ingår inte i summorna.",
+    "StartTime": "Evenemangets start",
+    "RaceDayNote": "Ackumulerade deltagaranmälningar under tävlingsdagen; tider i evenemangets tidszon.",
+    "NoRaceDayEntries": "Inga anmälningar för detta urval på tävlingsdagen.",
+    "EntryList": "Anmälningslista",
+    "PriceNote": "Priset inkluderar brickhyra och fördelad kampanjrabatt. Betalstatus gäller hela beställningen.",
+    "Partial": "Delvis",
+    "Previous": "Föregående",
+    "Next": "Nästa",
+    "HiddenAfterRace": "Anmälningar dolda efter den valda perioden",
+    "UntilRace": "Till tävlingsdagen eller idag",
+    "Location": "Plats",
+    "Filters": "Period och omfattning",
+    "PaymentReference": "Betalningsreferens",
+    "RaceStart": "Tävlingsstart",
+    "RaceStartNote": "Anmälningar till höger om markören togs emot efter tävlingsstarten. Tider i evenemangets tidszon."
   }
 }
