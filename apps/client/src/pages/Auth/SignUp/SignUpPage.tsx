@@ -18,6 +18,7 @@ import {
   PasswordStrengthIndicator,
 } from '../../../components/molecules';
 import { Field } from '../../../components/organisms';
+import { SsoButtons } from '../../../components/organisms/SsoButtons';
 import { AuthPageLayout } from '../../../templates';
 import { toast } from '../../../utils';
 
@@ -365,6 +366,8 @@ export const SignUpPage = () => {
                 ? t('Pages.Auth.SignUpPage.CreatingAccount')
                 : t('Pages.Auth.SignUpPage.CreateAccount')}
             </ButtonWithSpinner>
+
+            <SsoButtons />
 
             <p className="text-center text-sm text-muted-foreground">
               {t('Pages.Auth.SignUpPage.AlreadyHaveAnAccount')}{' '}

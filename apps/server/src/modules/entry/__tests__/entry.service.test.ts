@@ -3,9 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockStoreCompetitor = vi.hoisted(() => vi.fn());
 const mockNotifyEntryOrderReceived = vi.hoisted(() => vi.fn());
 const mockNotifyEntryOrderProcessed = vi.hoisted(() => vi.fn());
+const mockRematchEntryBankTransactions = vi.hoisted(() => vi.fn());
 
 vi.mock('../../event/event.service.js', () => ({
   storeCompetitor: mockStoreCompetitor,
+}));
+
+vi.mock('../../bank/bank-matching.js', () => ({
+  rematchEntryBankTransactions: mockRematchEntryBankTransactions,
 }));
 
 vi.mock('../entry.email.js', () => ({
@@ -484,6 +489,7 @@ describe('createEntryOrder', () => {
 
     expect(order.detailAccessToken).toEqual(expect.any(String));
     expect(hasEntryOrderAccess(order.detailAccessToken!, order.id, NOW)).toBe(true);
+    expect(mockRematchEntryBankTransactions).toHaveBeenCalledWith(expect.anything(), order.id);
   });
 
   it.each([
@@ -695,6 +701,7 @@ describe('updateEntryOrderForGraphQL', () => {
         }),
       }),
     );
+    expect(mockRematchEntryBankTransactions).toHaveBeenCalledWith(prisma, 'entry-1');
   });
 });
 

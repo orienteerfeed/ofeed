@@ -33,6 +33,8 @@ erDiagram
 | Checkout            | `Entry`, `EntryItem`, `EntryAddOnItem`, `EntryStatusHistory`; item prices are snapshots, payment reference is unique per event    |
 | Availability        | `StartSlotVacancy` plus occupied competitor times and pending entry reservations; a vacancy row alone does not prove availability |
 | Payments and rental | `EventPaymentMethod`, `EventService`, `EventRentalCard`; timing-card rental is separate from payment-method selection             |
+| Bank import         | `BankConnection`, `BankTransaction`, `BankSyncLog`; a match writes an `EntryPayment` with `source = BANK_IMPORT`, unique per bank transaction |
+| Push                | `PushDevice`, `BankPaymentNotification` (outbox, unique per transaction and status), `User.bankPushStatuses` |
 | Courses             | `Course`, `Control`, `CourseControl`, `CourseMap`; imports preserve unresolved control codes                                      |
 | Federation cache    | `Registration`, `Club`, sync-state and Czech ranking models; cache provenance must be preserved                                   |
 | Integration history | `Protocol`, `EventImportState`, `EventExternalResultsSyncState`, `EventMeosBinding`, `EventPassword`                              |

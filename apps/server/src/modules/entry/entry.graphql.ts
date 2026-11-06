@@ -5,6 +5,8 @@ import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { PaymentMethodTypeRef } from '../event/event-payment-methods.graphql-types.js';
 
+import { EventEntryTimelineRef } from './entry-insight.graphql-types.js';
+import { getEventEntryTimeline } from './entry-insight.service.js';
 import { EntryRef, EntryStatusRef } from './entry.graphql-types.js';
 import {
   assignEntryItemRentalCardForGraphQL,
@@ -41,6 +43,12 @@ const EntryOrderUpdateInputRef = builder.inputType('EntryOrderUpdateInput', {
 });
 
 builder.queryFields((t) => ({
+  eventEntryTimeline: t.field({
+    type: EventEntryTimelineRef,
+    args: { eventId: t.arg.string({ required: true }) },
+    resolve: (_root, args, context) =>
+      getEventEntryTimeline(context.prisma, context.auth, args.eventId),
+  }),
   entryOrdersByEvent: t.prismaField({
     type: [EntryRef],
     args: {

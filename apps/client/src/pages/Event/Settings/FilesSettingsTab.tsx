@@ -1,7 +1,8 @@
 import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
 import { CheckCircle2, Circle, Copy, Lock } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -11,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { DragDropFile } from '@/components/organisms';
 import { formatDateTimeSeconds, getLocaleKey } from '@/lib/date';
@@ -286,8 +289,95 @@ const FileSection = ({
   </Card>
 );
 
-// Prepared for future development of online split controls.
-// Backend/data flow stays intact, but the UI is intentionally hidden until the feature is ready.
+interface RadioControlsSectionProps {
+  t: TFunction;
+  eventId: string;
+  coursesAvailable: boolean;
+  controls: RadioControl[];
+  onRefetch: () => Promise<unknown>;
+}
+
+const RadioControlsSection = ({
+  t,
+  eventId,
+  coursesAvailable,
+  controls,
+  onRefetch,
+}: RadioControlsSectionProps) => {
+  const [updateRadioFlag] = useMutation(UPDATE_CONTROL_RADIO_FLAG);
+  // Stays disabled until the refetched status shows the saved flag, so the
+  // checkbox never flips back to the stale value in between.
+  const [saving, setSaving] = useState(false);
+  const selectedCount = controls.filter(control => control.radio).length;
+
+  const handleToggle = async (control: RadioControl, radio: boolean) => {
+    setSaving(true);
+    try {
+      await updateRadioFlag({
+        variables: { eventId, controlId: control.id, radio },
+      });
+      await onRefetch();
+    } catch (error) {
+      console.error('Failed to update radio control flag:', error);
+      toast({
+        title: t('Pages.Event.Settings.Files.RadioControls.SaveError'),
+        variant: 'error',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {t('Pages.Event.Settings.Files.RadioControls.Title')}
+        </CardTitle>
+        <CardDescription>
+          {t('Pages.Event.Settings.Files.RadioControls.Helper')}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {!coursesAvailable ? (
+          <p className="text-sm text-muted-foreground">
+            {t('Pages.Event.Settings.Files.RadioControls.NoCourseData')}
+          </p>
+        ) : controls.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {t('Pages.Event.Settings.Files.RadioControls.NoControls')}
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-3">
+              {controls.map(control => {
+                const inputId = `radio-control-${control.id}`;
+                return (
+                  <div key={control.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={inputId}
+                      checked={control.radio}
+                      disabled={saving}
+                      onCheckedChange={checked =>
+                        void handleToggle(control, checked === true)
+                      }
+                    />
+                    <Label htmlFor={inputId}>{control.code}</Label>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t('Pages.Event.Settings.Files.RadioControls.Selected', {
+                count: selectedCount,
+              })}
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
   const { data, loading, error, refetch } = useQuery<EventFilesStatusData>(
@@ -371,18 +461,13 @@ export const FilesSettingsTab = ({ t, eventId }: FilesSettingsTabProps) => {
         onUploaded={handleUploaded}
       />
 
-      {/*
-        Prepared for future development of online split controls.
-        Keep the backend/data flow intact, but hide this UI until the feature is ready.
-
-        <RadioControlsSection
-          t={t}
-          eventId={eventId}
-          coursesAvailable={status.courses.available}
-          controls={status.radioControls}
-          onRefetch={handleUploaded}
-        />
-      */}
+      <RadioControlsSection
+        t={t}
+        eventId={eventId}
+        coursesAvailable={status.courses.available}
+        controls={status.radioControls}
+        onRefetch={refetch}
+      />
 
       <FileSection
         t={t}

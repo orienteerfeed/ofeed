@@ -38,4 +38,8 @@ export const entryPaymentRecordSchema = z.object({
   deviceId: z.string(),
   operatorId: z.number().int(),
   recordedAt: z.iso.datetime(),
+  source: z.enum(['MANUAL', 'BANK_IMPORT']),
+  bankTransactionId: z.string().nullable(),
+  /** Bank booking day (YYYY-MM-DD) for BANK_IMPORT receipts; the bank reports no time. */
+  bookingDate: z.iso.date().nullable(),
 });

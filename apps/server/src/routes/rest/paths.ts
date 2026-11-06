@@ -1,3 +1,8 @@
+import {
+  BANK_CONNECTION_OPENAPI,
+  BANK_TRANSACTION_OPENAPI,
+} from '../../modules/bank/bank.openapi.js';
+import { DEVICES_OPENAPI } from '../../modules/devices/devices.openapi.js';
 import { ADMIN_OPENAPI } from '../../modules/admin/admin.openapi.js';
 import { AUTH_OPENAPI } from '../../modules/auth/auth.openapi.js';
 import { EVENT_OPENAPI } from '../../modules/event/event.openapi.js';
@@ -10,6 +15,9 @@ import { USER_OPENAPI } from '../../modules/user/user.openapi.js';
 export const REST_ROUTE_PATHS = {
   admin: ADMIN_OPENAPI.basePath,
   auth: AUTH_OPENAPI.basePath,
+  bankConnections: BANK_CONNECTION_OPENAPI.basePath,
+  bankTransactions: BANK_TRANSACTION_OPENAPI.basePath,
+  devices: DEVICES_OPENAPI.basePath,
   events: EVENT_OPENAPI.basePath,
   map: MAP_OPENAPI.basePath,
   meos: MEOS_OPENAPI.basePath,

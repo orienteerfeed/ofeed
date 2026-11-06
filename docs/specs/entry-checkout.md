@@ -13,6 +13,17 @@ does not itself mean payment was received or competitors were processed.
 
 ## Acceptance criteria
 
+- On desktop (the existing `sm` card breakpoint and above), entry class cards
+  show an occupancy badge (competitor count / maximum capacity) beside the name
+  and the localized birth-year range at the bottom left, alongside remaining
+  places on the right. Omit the range when both bounds are unset; show an
+  ellipsis for a missing bound. Keep the compact mobile layout and tooltip.
+  No API changes. Verify card tests and visually check both viewport sizes.
+- Entry class cards display localized occupancy and remaining places in all six
+  supported locales. Remaining places use locale-specific plurals, including
+  zero; negative availability displays zero. Translation keys must pass the
+  client type check. No API changes are required. Verify with the card component
+  tests using real locale resources and the workspace type check.
 - AC-01: `POST /rest/v1/events/{eventId}/entries` accepts schema-valid items.
   Registration/birth year is required only when a birth year must be resolved
   for an age-restricted class. `card` and `cardRental` may both be omitted.

@@ -38,6 +38,18 @@ Track unresolved findings in issues with an owner and severity. The current map
 does not establish residual-risk acceptance or a security response SLA. See
 [data protection](data-protection.md) and [operations](../ops/deployment.md).
 
+## Client-reported bank payments
+
+The desktop collector reports bank transactions under the organizer's JWT; the
+server cannot verify that the bank booked them (`trust = CLIENT_REPORTED`). A
+stolen organizer session or a modified desktop can therefore mark that
+organizer's own orders paid. Mitigations: server-issued payment references,
+exact currency, outstanding-amount classification, matching limited to the
+owner's events, TEST connections limited to demo events, immutable receipts with
+`source = BANK_IMPORT`, reporting device and receive time. The bank API token
+never reaches the server. Limits and a review queue are open
+([ADR 0007](../architecture/adr/0007-bank-payment-import.md)).
+
 ## Device sessions
 
 User access JWTs expire after 15 minutes and use ES256 with an explicit kid,
@@ -49,3 +61,14 @@ tokens remain valid until expiry, subject to the existing active-account check.
 Browser refresh is protected by HttpOnly/Secure/SameSite cookies, an exact Origin
 allowlist and a required custom header; access credentials stay in memory.
 See [G4](../specs/session-longevity.md) for acceptance criteria and limitations.
+
+## External sign-in
+
+The provider callback is a top-level navigation, so it cannot carry the Origin
+and custom-header checks of the session endpoints. A signed (HMAC), HttpOnly,
+SameSite=Lax, single-use state cookie with a 10-minute lifetime binds the
+callback to the browser that started it. The returned state is compared in
+constant time. Provider tokens are verified server-side with the client secret
+in a POST body. Accounts are auto-linked by email only when both the provider
+and ofeed have verified that email; otherwise an attacker could register the
+victim's email at the provider. See ADR 0008.

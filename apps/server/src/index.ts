@@ -11,6 +11,9 @@ import { createGracefulShutdown } from './lib/graceful-shutdown.js';
 import { logger } from './lib/logging.js';
 
 import { startIdempotencyCleanup } from './modules/idempotency/idempotency-cleanup.js';
+import { startBankSyncLogCleanup } from './modules/bank/bank-sync-log-cleanup.js';
+import { startBankPushDelivery } from './modules/bank/bank-push-delivery.js';
+import { createExpoPushSender } from './modules/bank/expo-push.js';
 
 import app from './app.js';
 
@@ -37,6 +40,14 @@ const httpServer = server as unknown as HttpServer;
 const stopIdempotencyCleanup = startIdempotencyCleanup(prisma, (error) => {
   logger.error('Idempotency response cleanup failed', { error });
 });
+const stopBankSyncLogCleanup = startBankSyncLogCleanup(prisma, (error) => {
+  logger.error('Bank sync log cleanup failed', { error });
+});
+const stopBankPushDelivery = startBankPushDelivery(
+  prisma,
+  createExpoPushSender(env.EXPO_ACCESS_TOKEN || undefined),
+  (error) => logger.error('Bank push delivery failed', { error }),
+);
 const disposeGraphQLWebSocket = attachGraphQLWebSocketServer(httpServer);
 const gracefulShutdown = createGracefulShutdown({
   server: httpServer,
@@ -45,6 +56,8 @@ const gracefulShutdown = createGracefulShutdown({
     await stopSessionCleanup();
     await stopEntryExpiry();
     await stopIdempotencyCleanup();
+    await stopBankSyncLogCleanup();
+    await stopBankPushDelivery();
     await disposeGraphQLWebSocket();
   },
   prisma,
