@@ -59,7 +59,8 @@ Responses include entry ID, method, amount, currency, device, operator and both
 timestamps. Deduplicate overlapping incremental reads by receipt ID. Compute totals
 by currency and method. A full query is authoritative for closing; incremental
 queries are not a change-stream cursor and clients should overlap their reads.
-Event deletion/reset returns 409 when receipts exist. See the
+Event deletion/reset also permanently deletes the event's receipts; download
+the closing dataset first. See the
 [payment spec](specs/entry-payments.md) and the running `/doc` for exact schemas.
 
 ## Received payment insights

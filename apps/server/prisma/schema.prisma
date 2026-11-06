@@ -198,6 +198,8 @@ model User {
   organisation             String?
   emergencyContact         String?                   @db.VarChar(255)
   password                 String                    @db.VarChar(255)
+  // False for accounts created through external sign-in until a password is set via reset.
+  passwordSet              Boolean                   @default(true)
   active                   Boolean                   @default(false)
   emailVerifiedAt          DateTime?
   deletedAt                DateTime?
@@ -214,6 +216,7 @@ model User {
   oAuthRefreshToken        OAuthRefreshToken[]
   deviceSessions           DeviceSession[]
   passwordResetTokens      PasswordResetToken[]
+  identities               UserIdentity[]
   entries                  Entry[]
   entryStatusChanges       EntryStatusHistory[]
   bankConnections          BankConnection[]
@@ -1150,6 +1153,28 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+enum IdentityProvider {
+  ORIS
+  GOOGLE
+  GITHUB
+}
+
+// External sign-in identity (ORIS SSO, OAuth). Removed on account anonymization.
+model UserIdentity {
+  id             String           @id @default(cuid())
+  userId         Int              @db.UnsignedInt
+  provider       IdentityProvider
+  providerUserId String           @db.VarChar(191)
+  email          String?          @db.VarChar(255)
+  createdAt      DateTime         @default(now())
+  lastLoginAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId], map: "UserIdentity_provider_subject_uq")
+  @@unique([userId, provider], map: "UserIdentity_user_provider_uq")
 }
 
 enum Sex {

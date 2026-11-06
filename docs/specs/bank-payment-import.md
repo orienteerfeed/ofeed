@@ -38,8 +38,16 @@ outstanding amount, writes a receipt and the order becomes paid.
 - [ ] AC-05: Matching follows the rules below; a matching VS without the right
       currency never writes a receipt.
 - [ ] AC-06: A match writes exactly one `EntryPayment` (method `QR`, source
-      `BANK_IMPORT`, `paidAt` = booking date, operator = connection owner,
-      `deviceId` = reporting device) and recomputes paid status atomically.
+      `BANK_IMPORT`, operator = connection owner, `deviceId` = reporting
+      device) and recomputes paid status atomically. The bank reports only a
+      booking day, never a time: `paidAt` is the instant the server matched
+      the payment (automatically or manually), and the booking day stays on
+      `BankTransaction.bookingDate` (`@db.Date`). Payment responses expose it
+      as `bookingDate` (`YYYY-MM-DD`, null for manual receipts). Clients show
+      only that date for bank receipts and file them under that day in
+      date filters; they never display a time for them. Migration
+      `20261030120000_bank_payment_paid_at` moves existing bank receipts from
+      the booking-day midnight to their `recordedAt`.
 - [ ] AC-07: TEST connections and SIMULATED items match demo events only.
       SIMULATED on a LIVE connection is `INVALID`.
 - [ ] AC-08: UNMATCHED or AMBIGUOUS transactions can be matched manually to an
