@@ -77,7 +77,8 @@
         "Opens": "Otevření",
         "Closes": "Uzávěrka",
         "Race": "Závod",
-        "Table": "Hodnoty po dnech"
+        "Table": "Hodnoty po dnech",
+        "Trend": "Lineární trend"
       },
       "Anomalies": {
         "Title": "Analýza anomálií",
@@ -814,7 +815,9 @@
           "Edit": "Upravit",
           "EditUnavailable": "Úprava přihlášek zatím není dostupná.",
           "ExpandItems": "Zobrazit položky",
-          "CollapseItems": "Skrýt položky"
+          "CollapseItems": "Skrýt položky",
+          "MarkCashPaid": "Přijmout platbu v hotovosti",
+          "RecordConfirmedCash": "Zapsat potvrzenou hotovost"
         },
         "RejectDialog": {
           "ConfirmTitle": "Zamítnout tuto přihlášku?",
@@ -867,6 +870,7 @@
             "Title": "Platba",
             "Method": "Způsob platby",
             "Account": "Číslo účtu",
+            "Iban": "IBAN",
             "VariableSymbol": "Variabilní symbol",
             "ConstantSymbol": "Konstantní symbol",
             "RecipientMessage": "Zpráva pro příjemce",
@@ -930,6 +934,18 @@
           "Services": "Služby"
         },
         "Services": {
+          "RegistrationDiscounts": {
+            "Title": "Slevy podle registrace",
+            "Description": "Vzor ABC* platí pro registrace začínající ABC; ? zastupuje jeden znak. Nejvyšší shodná sleva se uplatní na startovné včetně příplatku i na půjčení čipu. Sleva 100 % znamená obojí zdarma. Uložené objednávky se automaticky nepřepočítají.",
+            "Pattern": "Vzor registrace",
+            "Percent": "Sleva (%)",
+            "Free": "Zdarma",
+            "Remove": "Odstranit pravidlo",
+            "Add": "Přidat pravidlo",
+            "Save": "Uložit slevy",
+            "Empty": "Zatím nejsou nastavená žádná pravidla.",
+            "Validation": "Zadej vzor (1–100 znaků: písmena, číslice, mezera, _, -, * nebo ?) a slevu 0–100 % s nejvýše dvěma desetinnými místy. Nejvýše 30 pravidel."
+          },
           "Title": "Služby",
           "Description": "Nastav služby nabízené u této akce, sazby a navýšení startovného pro pozdní přihlášky.",
           "PaymentMethods": {
@@ -1204,8 +1220,18 @@
           "MaxCompetitorsOverCapacityTooltip": "Počet přihlášených závodníků ({{count}}) překračuje nastavený limit. Upravte limit nebo odeberte závodníky.",
           "LateEntryFeeDisabledTooltip": "Startovné nezvýšit pro pozdní přihlášky.",
           "LateEntryFeeDisabledAria": "Nezvyšovat startovné pro pozdní přihlášky v kategorii {{name}}",
+          "ActionsMenu": "Akce pro kategorii {{name}}",
           "BirthYearInvalid": "Zadejte platný rok (min. 4 číslice).",
-          "BirthYearRangeError": "Ročník od musí být menší nebo roven ročníku do."
+          "BirthYearRangeError": "Ročník od musí být menší nebo roven ročníku do.",
+          "Delete": {
+            "Action": "Smazat",
+            "Aria": "Smazat kategorii {{name}}",
+            "Title": "Smazat kategorii „{{name}}“?",
+            "Description": "Trvale smažete kategorii, její závodníky, týmy, výsledky, mezičasy, průchody kontrolami, protokoly, startovní časy a položky přihlášek. Objednávky, jejich původní částky a platby i sdílené tratě a oddíly zůstanou zachovány. Nejde o vrácení platby. Tuto akci nelze vrátit zpět.",
+            "Confirm": "Smazat včetně závislých dat",
+            "Success": "Kategorie a její závislá data byly smazány.",
+            "Error": "Kategorii se nepodařilo smazat."
+          }
         },
         "Files": {
           "StartList": "Startovní listina",
@@ -1343,6 +1369,7 @@
         "LegendSignificantDeviation": "Zvýšená odchylka (>1.5σ)",
         "LoadingChart": "Načítám graf mezičasů",
         "LoadingTimes": "Načítám mezičasy",
+        "ShowClubs": "Zobrazit oddíly",
         "ResetSort": "Resetovat řazení",
         "Runners": "Závodníci",
         "RunnersCount_one": "{{count}} závodník",
@@ -2009,7 +2036,7 @@
     "DragDrop": {
       "UploadIofXml": {
         "Title": "Nahrát IOF XML",
-        "Description": "Nahrát IOF XML soubory se startovkami a výsledky."
+        "Description": "Nahraj IOF XML soubor se startovní listinou, tratěmi nebo výsledky. Typ souboru rozpoznáme automaticky."
       },
       "Toast": {
         "UploadSuccess": "Soubory úspěšně nahrány!",
@@ -2048,6 +2075,7 @@
   },
   "Molecules": {
     "DragDrop": {
+      "FileUpload": "File upload",
       "ClickToUpload": "Pro nahrání klikni",
       "Delete": "Smazat",
       "OrdDragAndDrop": "nebo drag & drop",
@@ -2213,5 +2241,80 @@
     "Label": "Lhůta pro zaplacení (hodiny)",
     "Help": "Prázdné = bez automatického storna. 1–8760 hodin od přijetí nové přihlášky. Neplatí pro hotovost. Změna neovlivní existující přihlášky.",
     "Deadline": "Pokud nebude platba připsána do {{date}}, přihláška bude automaticky stornována."
+  },
+  "PromoCodes": {
+    "Title": "Promo kódy",
+    "Description": "Vytvořte procentuální slevu pro tuto akci. Kód lze opakovaně používat až do revokace.",
+    "Code": "Promo kód",
+    "Percent": "Sleva (%)",
+    "Create": "Vytvořit kód",
+    "Empty": "Zatím nejsou vytvořené žádné promo kódy.",
+    "Active": "Aktivní",
+    "Revoked": "Revokovaný",
+    "Uses": "Použito v přihláškách: {{count}}",
+    "Copy": "Kopírovat",
+    "Revoke": "Revokovat kód",
+    "RevokeDescription": "Kód už nepůjde použít pro nové přihlášky. Existující přihlášky si zachovají slevu.",
+    "Validation": "Zadejte unikátní kód o 3–40 znacích (A–Z, 0–9, _ nebo -) a slevu větší než 0 a nejvýše 100 % se dvěma desetinnými místy.",
+    "SaveError": "Kód nelze uložit. Ověřte jeho unikátnost a zkuste to znovu.",
+    "LoadError": "Promo kódy se nepodařilo načíst.",
+    "CopyError": "Kód se nepodařilo zkopírovat.",
+    "AllowCombination": "Lze kombinovat s promo kódem",
+    "Apply": "Použít",
+    "Remove": "Odstranit",
+    "Checking": "Ověřuji cenu…",
+    "Invalid": "Promo kód není platný nebo cenu nelze ověřit. Zkontrolujte kód a zkuste to znovu.",
+    "NoEligible": "Na tyto položky nelze uplatnit promo slevu.",
+    "Excluded": "Na některé položky se promo sleva nevztahuje, protože jejich registrační sleva kombinaci neumožňuje.",
+    "Subtotal": "Cena před promo slevou",
+    "Cancel": "Zrušit"
+  },
+  "EntryReport": {
+    "FinancialSummary": "Finanční souhrn",
+    "Currency": "Měna",
+    "OrderTotal": "Cena objednávek",
+    "Received": "Přijaté platby",
+    "Outstanding": "Zbývá uhradit",
+    "LegacyPaid": "Zaplaceno bez platebního dokladu",
+    "PaidOrders": "Zaplacené objednávky",
+    "UnpaidOrders": "Nezaplacené objednávky",
+    "PaymentMethods": "Způsob platby (objednávky)",
+    "Orders": "Objednávky",
+    "PaymentMethod": "Způsob platby",
+    "DailyOrders": "Přihlášky a objednávky po dnech",
+    "Date": "Datum",
+    "Competitors": "Závodníci",
+    "Categories": "Přihlášky podle kategorií",
+    "Class": "Kategorie",
+    "RaceDay": "Detail dne konání",
+    "ReceivedAt": "Přihlášeno",
+    "Competitor": "Závodník",
+    "Club": "Oddíl",
+    "Card": "Čip",
+    "Price": "Cena",
+    "Paid": "Zaplaceno",
+    "PromoCode": "Promo kód",
+    "Yes": "Ano",
+    "No": "Ne",
+    "Unknown": "Neuvedeno",
+    "Excluded": "Zrušené / zamítnuté objednávky",
+    "FinanceAllClasses": "Finance zahrnují všechny kategorie ve zvoleném období.",
+    "FinanceWholeOrders": "Finance zahrnují celé objednávky obsahující vybranou kategorii, včetně jejich dalších závodníků.",
+    "ReceiptNote": "Přijaté platby vycházejí z platebních dokladů. Historické označení zaplaceno bez dokladu je uvedeno zvlášť. Zrušené a zamítnuté objednávky nejsou v součtech.",
+    "StartTime": "Začátek akce",
+    "RaceDayNote": "Kumulativní počet závodníků přihlášených během dne konání; časy v časovém pásmu akce.",
+    "NoRaceDayEntries": "V den konání nejsou ve výběru žádné přihlášky.",
+    "EntryList": "Seznam přihlášek",
+    "PriceNote": "Cena zahrnuje zapůjčení čipu a přidělený podíl promo slevy. Stav platby platí pro celou objednávku.",
+    "Partial": "Částečně",
+    "Previous": "Předchozí",
+    "Next": "Další",
+    "HiddenAfterRace": "Přihlášky skryté za koncem období",
+    "UntilRace": "Do dne závodu nebo do dneška",
+    "Location": "Místo konání",
+    "Filters": "Období a rozsah",
+    "PaymentReference": "Variabilní symbol",
+    "RaceStart": "Start závodu",
+    "RaceStartNote": "Dohlášky napravo od milníku byly přijaty po startu závodu. Časy jsou v časovém pásmu akce."
   }
 }
