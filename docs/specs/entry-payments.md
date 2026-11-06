@@ -60,9 +60,13 @@ paid-state changes and audit history commit or roll back together. Writers use
 Read Committed transactions with an entry-row lock and bounded retries for
 transient write conflicts.
 
-An entry with receipts cannot be deleted (including via event cascade),
-preventing accidental loss of the cash ledger. Event reset/deletion reports 409
-before destructive work; foreign keys also protect against competing inserts.
+An entry with receipts cannot be deleted individually or via a raw event
+cascade (RESTRICT foreign key). Event reset and event deletion are the explicit
+exception: the organizer or admin may wipe all event data, so
+`deleteAllEventData` removes the event's receipts before its entries. Linked
+bank transactions belong to the bank connection and are kept with a null
+`matchedEntryId`. Receipts are erased irreversibly; export the closing report
+first (GDPR/retention: the ledger is gone once the event is deleted).
 Operator ID is an immutable identity snapshot, retained even if the user account
 is removed; it contains no contact details. Device IDs identify a reporting
 desk, not an authorization credential. Currency must match the entry snapshot;

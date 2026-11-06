@@ -3,6 +3,7 @@ import type { EntryPaymentInsight } from '@repo/shared';
 import {
   filterPaymentInsights,
   insightCsv,
+  paymentDay,
   paymentLocalDate,
   summarizePaymentInsights,
   type PaymentInsightFilters,
@@ -31,6 +32,7 @@ const receipt = (
   recordedAt: '2026-10-26T10:00:00Z',
   source: 'MANUAL',
   bankTransactionId: null,
+  bookingDate: null,
   paymentReference: '2600000001',
   contactFirstname: 'Jan',
   contactLastname: 'Novák',
@@ -129,5 +131,23 @@ describe('payment insights', () => {
     ).toBe(
       '\uFEFF"\'=1+1";"\' +cmd";"\'@SUM(A1)";"\'-1";"\'\tcmd";"a;""b\nc"\r\n"0.29"'
     );
+  });
+  it('dates bank imports by the booking day, not the server match time', () => {
+    const bank = receipt({
+      method: 'QR',
+      source: 'BANK_IMPORT',
+      bankTransactionId: 'bt-1',
+      bookingDate: '2026-10-24',
+      paidAt: '2026-10-26T07:00:00Z',
+    });
+    expect(paymentDay(bank, 'Europe/Prague')).toBe('2026-10-24');
+    expect(paymentDay(receipt(), 'Europe/Prague')).toBe('2026-10-25');
+    expect(
+      filterPaymentInsights(
+        [bank, receipt()],
+        { ...filters, from: '2026-10-24', to: '2026-10-24' },
+        'Europe/Prague'
+      ).map(payment => payment.source)
+    ).toEqual(['BANK_IMPORT']);
   });
 });

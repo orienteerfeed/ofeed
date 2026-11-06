@@ -37,6 +37,7 @@ import {
   FilesSettingsTab,
   GET_EVENT_FILES_STATUS,
   GET_EVENT_IMPORT_STATES,
+  UPDATE_CONTROL_RADIO_FLAG,
 } from '@/pages/Event/Settings/FilesSettingsTab';
 
 const t = ((key: string) => key) as never;
@@ -166,7 +167,7 @@ describe('FilesSettingsTab', () => {
     expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(3);
   });
 
-  it('keeps the online split controls section hidden for future development', async () => {
+  it('shows the online split controls with their radio flags', async () => {
     render(
       <MockedProvider mocks={[statusMock(), importStatesMock()]}>
         <FilesSettingsTab t={t} eventId="event-1" />
@@ -175,10 +176,73 @@ describe('FilesSettingsTab', () => {
 
     await screen.findByText('Pages.Event.Settings.Files.StartList');
     expect(
-      screen.queryByText('Pages.Event.Settings.Files.RadioControls.Title')
-    ).not.toBeInTheDocument();
+      screen.getByText('Pages.Event.Settings.Files.RadioControls.Title')
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('100')).toHaveAttribute(
+      'data-state',
+      'unchecked'
+    );
+    expect(screen.getByLabelText('101')).toHaveAttribute(
+      'data-state',
+      'checked'
+    );
+  });
+
+  it('asks for course data before online split controls can be set', async () => {
+    render(
+      <MockedProvider
+        mocks={[statusMock({ coursesAvailable: false }), importStatesMock()]}
+      >
+        <FilesSettingsTab t={t} eventId="event-1" />
+      </MockedProvider>
+    );
+
+    await screen.findByText(
+      'Pages.Event.Settings.Files.RadioControls.NoCourseData'
+    );
     expect(screen.queryByLabelText('100')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('101')).not.toBeInTheDocument();
+  });
+
+  it('saves the radio flag and refetches status when a control is toggled', async () => {
+    const updateResult = vi.fn(() => ({
+      data: {
+        updateControlRadioFlag: { __typename: 'Control', id: 101, radio: true },
+      },
+    }));
+
+    render(
+      <MockedProvider
+        mocks={[
+          statusMock(),
+          importStatesMock(),
+          {
+            request: {
+              query: UPDATE_CONTROL_RADIO_FLAG,
+              variables: { eventId: 'event-1', controlId: 101, radio: true },
+            },
+            result: updateResult,
+          },
+          statusMock({
+            radioControls: [
+              { id: 101, code: '100', type: 'CONTROL', radio: true },
+              { id: 102, code: '101', type: 'CONTROL', radio: true },
+            ],
+          }),
+        ]}
+      >
+        <FilesSettingsTab t={t} eventId="event-1" />
+      </MockedProvider>
+    );
+
+    fireEvent.click(await screen.findByLabelText('100'));
+
+    await waitFor(() => expect(updateResult).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(screen.getByLabelText('100')).toHaveAttribute(
+        'data-state',
+        'checked'
+      )
+    );
   });
 
   it('refetches status after a successful upload', async () => {

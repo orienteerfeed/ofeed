@@ -37,6 +37,12 @@ export const ENDPOINTS = {
     `${apiPrefix}/auth/generate-oauth2-credentials`,
   revokeOAuth2Credentials: (): string =>
     `${apiPrefix}/auth/revoke-oauth2-credentials`,
+  ssoProviders: (): string => `${apiPrefix}/auth/sso/providers`,
+  ssoIdentities: (): string => `${apiPrefix}/auth/sso/identities`,
+  ssoStart: (provider: string, params: QueryParams): string =>
+    `${apiPrefix}/auth/sso/${encodeURIComponent(provider)}/start${qs(params)}`,
+  ssoUnlink: (provider: string): string =>
+    `${apiPrefix}/auth/sso/${encodeURIComponent(provider)}/link`,
 
   // My events endpoints
   myEvents: (params?: PaginationParams): string =>
