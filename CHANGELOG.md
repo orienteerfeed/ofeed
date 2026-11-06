@@ -29,6 +29,9 @@ and this project adheres to
 
 ### Fixed
 
+- Restrict entry adjustment reasons to event staff and reject adjusted totals that
+  exceed the database amount limit before saving.
+
 - Mobile category settings keep the navbar and tabs within the viewport while
   allowing horizontal scrolling inside the category table.
 

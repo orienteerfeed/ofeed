@@ -133,6 +133,9 @@ const normalizeRegistration = (value: string | null | undefined) =>
 export function applyPriceAdjustment(total: number, adjustment: number | null | undefined): number {
   const adjusted = round2(total + (adjustment ?? 0));
   if (adjusted < 0) throw new ValidationError('PRICE_ADJUSTMENT_NEGATIVE_TOTAL');
+  if (!Number.isFinite(adjusted) || adjusted > 99_999_999.99) {
+    throw new ValidationError('PRICE_ADJUSTMENT_TOTAL_OVERFLOW');
+  }
   return adjusted;
 }
 

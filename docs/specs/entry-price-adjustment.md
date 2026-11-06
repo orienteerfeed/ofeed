@@ -34,12 +34,17 @@ CASH receipt.
   envelope. Orders without the field stay public.
 - [x] AC-03: a negative resulting total is rejected with 422
   `PRICE_ADJUSTMENT_NEGATIVE_TOTAL` (REST `errors`, GraphQL error message).
+- [x] AC-09: computed totals above DECIMAL(10,2) maximum 99 999 999.99 are
+  rejected before persistence with 422 `PRICE_ADJUSTMENT_TOTAL_OVERFLOW`, including edits
+  that retain an existing adjustment. The exact maximum remains valid.
 - [x] AC-04: GraphQL `entryOrderUpdate` input `EntryOrderUpdateInput` accepts
   `priceAdjustment: Float` and `priceAdjustmentReason: String`. Omitted → keep the
   stored adjustment and reapply it to the recomputed total; `null` → clear; number →
   replace (reason required when non-zero). Same negative-total rule.
 - [x] AC-05: `priceAdjustment` / `priceAdjustmentReason` (nullable) are exposed on
   GraphQL `Entry`, the REST create response and the shared `entryOrderSchema`.
+  GraphQL reasons return null unless the caller independently has event owner/admin
+  access; a public order token alone never grants access to the reason.
 - [x] AC-06: `entryOrderPaidUpdate` settles the adjusted total (the existing logic
   uses `totalAmount`).
 - [x] AC-07: entry report line prices (`eventEntryTimeline` items) allocate the
@@ -83,6 +88,8 @@ CASH receipt.
   edit keep/set/clear, mark-paid receipt equals the adjusted total, snapshot reuse vs
   changed registration, report allocation.
 - `apps/server/src/config/__tests__/openapi-doc.test.ts`, GraphQL schema snapshot.
+- Regression coverage: signed-token reason visibility for anonymous/non-staff and
+  staff callers; overflow rejection on create/edit and exact-limit acceptance.
 - Commands: `pnpm --filter @repo/shared build`, `pnpm --filter ./apps/server
   type-check`, `pnpm --filter ./apps/server type-check:graphql`, `pnpm --filter
   ./apps/client type-check`, server Vitest on `src/modules/entry src/graphql src/config

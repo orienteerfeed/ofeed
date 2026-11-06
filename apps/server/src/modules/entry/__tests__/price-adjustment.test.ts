@@ -275,6 +275,29 @@ describe('entry order price adjustment', () => {
     expect(applyPriceAdjustment(150, -150)).toBe(0);
   });
 
+  it('rejects overflowing totals before create or edit and accepts the exact limit', async () => {
+    const { stub } = makeDatabase();
+    const response = await post(OWNER, {
+      ...order,
+      priceAdjustment: 99_999_999.99,
+      priceAdjustmentReason: 'Extra charge',
+    });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({ errors: 'PRICE_ADJUSTMENT_TOTAL_OVERFLOW' });
+    expect(stub.entry.create).not.toHaveBeenCalled();
+    expect(applyPriceAdjustment(150, 99_999_849.99)).toBe(99_999_999.99);
+
+    await post(OWNER, order);
+    await expect(
+      updateEntryOrderForGraphQL(
+        stub as never,
+        auth,
+        editInput({ priceAdjustment: 99_999_999.99, priceAdjustmentReason: 'Extra charge' }),
+      ),
+    ).rejects.toThrow('PRICE_ADJUSTMENT_TOTAL_OVERFLOW');
+    expect(stub.entry.update).not.toHaveBeenCalled();
+  });
+
   it('keeps, replaces and clears the adjustment on edit, and settles the adjusted total', async () => {
     const { stub, entry, payments } = makeDatabase();
     await post(OWNER, { ...order, priceAdjustment: -50, priceAdjustmentReason: 'Helper' });
