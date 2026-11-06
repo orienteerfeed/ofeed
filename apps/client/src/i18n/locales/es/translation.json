@@ -58,6 +58,27 @@
         "NoDuplicates": "No hay chips duplicados en esta selección.",
         "FullGroups": "Los filtros seleccionan grupos completos. Se muestran todos los participantes con el mismo chip, incluso de otras categorías."
       },
+      "Entries": {
+        "Title": "Inscripciones en el tiempo",
+        "Description": "Cómo crecieron las inscripciones desde la apertura hasta el cierre y la carrera, por día y categoría.",
+        "Class": "Categoría",
+        "Loading": "Cargando inscripciones…",
+        "Stale": "No se pudo actualizar. Los datos mostrados están desactualizados; la exportación y la impresión están desactivadas.",
+        "Error": "No se pudieron cargar las inscripciones en el tiempo.",
+        "Empty": "Todavía no hay inscripciones en esta selección.",
+        "Total": "Corredores inscritos",
+        "FinalDaysShare": "Inscritos en los últimos 3 días antes del cierre",
+        "LateEntries": "Inscripciones tardías",
+        "PeakDay": "Día con más inscripciones",
+        "Cumulative": "Inscripciones totales",
+        "Daily": "Nuevas inscripciones por día",
+        "LateArea": "El área sombreada marca las inscripciones tardías recibidas después del cierre.",
+        "Date": "Fecha",
+        "Opens": "Apertura",
+        "Closes": "Cierre",
+        "Race": "Carrera",
+        "Table": "Valores diarios"
+      },
       "Anomalies": {
         "Title": "Análisis de anomalías",
         "Description": "Revisa primeros parciales y horas de salida sospechosos.",
@@ -2155,6 +2176,34 @@
     "Error": "No se pudieron actualizar las sesiones.",
     "LogoutUnconfirmed": "Sesión cerrada localmente. No se pudo confirmar la revocación en el servidor; vuelva a conectarse.",
     "RevocationDelay": "Los dispositivos revocados pueden usar un token de acceso existente durante un máximo de 15 minutos."
+  },
+  "Sso": {
+    "ContinueWith": "Continuar con {{provider}}",
+    "StartFailed": "No se pudo iniciar el inicio de sesión",
+    "Completing": "Completando el inicio de sesión…",
+    "FailedTitle": "Error al iniciar sesión",
+    "LinkedTitle": "Cuenta vinculada",
+    "BackToSignIn": "Volver a iniciar sesión",
+    "BackToProfile": "Volver al perfil",
+    "Errors": {
+      "invalid_state": "El enlace de inicio de sesión caducó o se abrió en otro navegador. Inténtalo de nuevo.",
+      "provider_unavailable": "El proveedor de inicio de sesión no está disponible ahora. Inténtalo más tarde.",
+      "email_in_use": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña y vincula el proveedor en tu perfil.",
+      "email_required": "El proveedor no compartió un correo electrónico, por lo que no se puede crear la cuenta.",
+      "identity_taken": "Esta cuenta externa ya está vinculada a otra cuenta de OFeed.",
+      "account_inactive": "Esta cuenta está inactiva.",
+      "last_sign_in_method": "Primero establece una contraseña (con el restablecimiento de contraseña) para poder iniciar sesión tras desvincular."
+    },
+    "Linked": {
+      "Title": "Cuentas vinculadas",
+      "Description": "Inicia sesión con una cuenta externa en lugar de tu contraseña.",
+      "Link": "Vincular",
+      "Unlink": "Desvincular",
+      "LinkedSince": "Vinculada desde {{date}}",
+      "NotLinked": "No vinculada",
+      "UnlinkSuccess": "Cuenta desvinculada",
+      "UnlinkFailed": "Error al desvincular"
+    }
   },
   "EntryPaymentExpiry": {
     "Label": "Plazo de pago (horas)",

@@ -23,3 +23,4 @@ inventing approvers. Link replacement records in both directions.
 - [0006](0006-device-sessions.md): proposed rotating device sessions and Vault-managed access signing keys.
 
 - [0007](0007-bank-payment-import.md): proposed client-reported bank payments written to the entry receipt ledger.
+- [0008](0008-external-identity-providers.md): proposed external identity providers (ORIS SSO, OAuth) with a signed state cookie and identity table.

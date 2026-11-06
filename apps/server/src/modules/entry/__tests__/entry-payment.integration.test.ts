@@ -246,22 +246,27 @@ describe.skipIf(!settings.url)('entry payments on disposable MariaDB', () => {
     expect(await listEntryPayments(client, auth, eventId, { deviceId: 'desk-2' })).toHaveLength(1);
     expect(await listEntryPayments(client, auth, eventId, { deviceId: 'missing' })).toEqual([]);
   });
-  it('blocks entry deletion, event cascade and event reset while preserving data', async () => {
+  it('blocks single entry deletion and raw event cascade while receipts exist', async () => {
     await pay();
     await expect(client.entry.delete({ where: { id: entryId } })).rejects.toThrow();
     // Remove unrelated restrictive class FKs inside the same transaction, so
-    // this assertion specifically proves that event cascades preserve receipts.
+    // this assertion specifically proves that a raw event cascade preserves receipts.
     await expect(
       client.$transaction(async (tx) => {
         await tx.class.deleteMany({ where: { eventId } });
         await tx.event.delete({ where: { id: eventId } });
       }),
     ).rejects.toMatchObject({ code: 'P2003' });
-    await expect(deleteAllEventData(eventId, client)).rejects.toThrow(
-      'containing payment receipts',
-    );
     expect(await client.class.count({ where: { eventId } })).toBe(1);
     expect(await client.entryPayment.count({ where: { eventId } })).toBe(1);
+  });
+  it('deletes receipts, entries and classes on event data reset', async () => {
+    await pay();
+    await deleteAllEventData(eventId, client);
+    expect(await client.entryPayment.count({ where: { eventId } })).toBe(0);
+    expect(await client.entry.count({ where: { eventId } })).toBe(0);
+    expect(await client.class.count({ where: { eventId } })).toBe(0);
+    // afterEach deletes the event row, proving nothing restrictive is left behind.
   });
   it('enforces entry/event consistency at the database boundary', async () => {
     await expect(

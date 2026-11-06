@@ -154,7 +154,12 @@ const envSchema = z.object({
   ACCESS_JWT_AUDIENCE: z.string().default('ofeed-user'),
   JWT_TOKEN_SECRET_KEY: z.string().default('change-me-in-production'),
   ENCRYPTION_SECRET_KEY: z.string().default(DEFAULT_ENCRYPTION_SECRET_KEY),
-  ORIS_API_BASE_URL: z.string().url().default('https://oris.orientacnisporty.cz/API/'),
+  ORIS_API_BASE_URL: z.string().url().default('https://oris.ceskyorientak.cz/API/'),
+  // ORIS SSO is enabled only when both credentials are set. Inject the secret from Vault.
+  ORIS_SSO_ENABLED: booleanEnv(true),
+  ORIS_SSO_BASE_URL: z.string().url().default('https://oris.ceskyorientak.cz'),
+  ORIS_SSO_CLIENT_ID: z.string().optional(),
+  ORIS_SSO_CLIENT_SECRET: z.string().optional(),
   EVENTOR_API_BASE_URL: z.string().url().default('https://eventor.orienteering.sport/api'),
   EVENTOR_API_KEY: z.string().optional(),
   MAPY_API_KEY: z.string().optional(),

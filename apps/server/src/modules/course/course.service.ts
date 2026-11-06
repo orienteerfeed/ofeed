@@ -186,6 +186,19 @@ export async function getRadioControlsByClassId(
 }
 
 /**
+ * Public view of a class's radio controls: codes only, in course order.
+ * Coordinates stay owner-only (`courseRadioControls`) so the map does not leak.
+ */
+export async function getRadioControlCodesByClassId(
+  prisma: AppPrismaClient,
+  classId: number,
+): Promise<string[]> {
+  const points = await getRadioControlsByClassId(prisma, classId);
+  // A butterfly or loop can pass the same radio control twice; one column per code.
+  return [...new Set(points.map((point) => point.code))];
+}
+
+/**
  * Natural sort comparator for control codes: numeric codes ascend by value
  * (so 2 < 10 < 100), and any non-numeric codes are listed after the numeric
  * ones, ordered lexicographically among themselves.

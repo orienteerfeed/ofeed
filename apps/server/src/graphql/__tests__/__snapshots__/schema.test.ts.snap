@@ -172,6 +172,7 @@ type Competitor {
   note: String
   organisation: String
   organisationId: Int
+  radioSplits: [Split!]!
   rankingPoints: Int
   rankingReferenceValue: Int
   registration: String!
@@ -421,6 +422,14 @@ type EntryStatusHistory {
   status: EntryStatus
 }
 
+type EntryTimelineDay {
+  classId: Int!
+  className: String!
+  date: String!
+  entries: Int!
+  lateEntries: Int!
+}
+
 type Event {
   authorId: Int
   classes: [Class!]
@@ -514,6 +523,14 @@ type EventEdge {
 enum EventEntriesStatus {
   CLOSED
   OPEN
+}
+
+type EventEntryTimeline {
+  days: [EntryTimelineDay!]!
+  entriesCloseOn: String
+  entriesOpenOn: String
+  eventOn: String!
+  timezone: String!
 }
 
 type EventFilesCoursesStatus {
@@ -842,6 +859,11 @@ type Query {
   changelogByEvent(classId: Int, eventId: String!, origin: String, since: DateTime): [Changelog!]
   classById(id: Int!): Class!
   classCompetitorStartTimes(classId: Int!): [ClassCompetitorStartTime!]!
+
+  """
+  Codes of the controls marked as radio (online split) controls on the class course, in course order. Public.
+  """
+  classRadioControlCodes(classId: Int!): [String!]!
   classStartSlotVacancies(classId: Int!): [ClassStartSlotVacancy!]!
   competitorById(id: Int!): Competitor!
   competitorSplits(competitorId: Int!): [Split!]
@@ -865,6 +887,7 @@ type Query {
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
   eventEntryAvailability(eventId: String!): EntryAvailability
+  eventEntryTimeline(eventId: String!): EventEntryTimeline!
   eventFilesStatus(eventId: String!): EventFilesStatus!
   eventImportStates(eventId: String!): [EventImportState!]!
   eventPaymentMethods(eventId: String!): EventPaymentMethodSettings!

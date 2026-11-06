@@ -89,6 +89,14 @@ export function EventPaymentInsightPage() {
       dateStyle: 'short',
       timeStyle: 'medium',
     }).format(new Date(instant));
+  // Bank imports show the booking day only; any time of day would be invented.
+  const paidOn = (payment: { paidAt: string; bookingDate: string | null }) =>
+    payment.bookingDate
+      ? new Intl.DateTimeFormat(i18n.language, {
+          timeZone: 'UTC',
+          dateStyle: 'short',
+        }).format(new Date(`${payment.bookingDate}T00:00:00Z`))
+      : time(payment.paidAt);
   const methodName = (method: string) =>
     method === 'CASH'
       ? t('Pages.Insights.Cash')
@@ -107,7 +115,7 @@ export function EventPaymentInsightPage() {
     t('Pages.Insights.RecordedAt'),
   ];
   const exportRow = (payment: (typeof filtered)[number]) => [
-    time(payment.paidAt),
+    paidOn(payment),
     payment.paymentReference,
     `${payment.contactFirstname} ${payment.contactLastname}`,
     methodName(payment.method),
@@ -364,7 +372,7 @@ export function EventPaymentInsightPage() {
                           .map(payment => (
                             <TableRow key={payment.id}>
                               <TableCell className="whitespace-nowrap">
-                                {time(payment.paidAt)}
+                                {paidOn(payment)}
                               </TableCell>
                               <TableCell>
                                 <Link

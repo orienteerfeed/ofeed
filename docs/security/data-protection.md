@@ -13,6 +13,7 @@ operator must approve those policies and document unresolved decisions.
 | Entry orders               | Contact identity, email, participant items, notes, fees, payment reference | Separate organizer access from public event data                           |
 | Emergency/contact metadata | User-provided contact information                                          | Minimize exposure and review field authorization                           |
 | Bank import                | Organizer IBAN, provider transaction ID, variable symbol, amount, currency, booking date, reporting device ID; linked entry order | No payer name, account or message; owner-only access; sync logs 90 days; transaction retention open (G24) |
+| External identities        | Provider (ORIS/Google/GitHub), provider subject ID, provider email, link and last sign-in time | Owner-only; deleted on account anonymization; provider secrets from Vault, never logged |
 | Push notifications         | Expo push token, device ID, platform; queued status per bank transaction | Owner-only; token never returned; removed on unregister, `DeviceNotRegistered` or user deletion; outbox 30 days; Expo is a processor |
 | Timing ingestion           | Card, control, punch time, device ID, station serial, receipt times and author | JWT owner/admin ingestion; private raw ledger, removed with event deletion |
 | Imports and caches         | Federation registrations, XML/CSV payloads and import history              | Preserve provenance; public source does not remove privacy obligations     |
@@ -74,3 +75,12 @@ until the family's 90-day absolute deadline for reuse detection. A bounded
 background job removes expired families and their generations. Raw refresh
 credentials and signing-key bundles must not enter logs or backups of source
 artifacts. Database backup retention remains subject to the operator policy above.
+
+## External identities
+
+Linked sign-in identities (`UserIdentity`) store the provider, the provider's
+subject ID, the email reported by the provider and link/last-sign-in times. They
+are removed when the account is anonymized. The short-lived SSO state cookie
+holds only a random state, installation metadata and mode. The provider client
+secret is server-only configuration injected from Vault. See
+[external sign-in](../specs/external-sign-in.md).

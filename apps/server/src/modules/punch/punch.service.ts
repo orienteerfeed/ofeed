@@ -22,6 +22,14 @@ type Observation = Punch & { receipts: PunchReceipt[] };
 
 export class PunchConflictError extends Error {}
 
+/** Statuses of a race still in progress; any other status is a closed result. */
+const SRR_APPLICABLE_STATUSES = new Set<ResultStatus>([
+  'Inactive',
+  'Active',
+  'Finished',
+  'NotCompeting',
+]);
+
 function preferredReceipt(punch: Observation): PunchReceipt {
   return punch.receipts.find((receipt) => receipt.source === 'READOUT') ?? punch.receipts[0];
 }
@@ -49,10 +57,15 @@ async function projectCompetitor(
     where: { id: competitorId },
     include: { class: { include: { event: { select: { defaultStartMode: true } } } } },
   });
-  const punches = await tx.punch.findMany({
+  const observations = await tx.punch.findMany({
     where: { competitorId, superseded: false },
     include: { receipts: { orderBy: { id: 'asc' } } },
   });
+  // A closed result (IOF XML/MOP import or readout) is only ever corrected by a
+  // readout; late SRR observations stay in the ledger without being applied.
+  const punches = SRR_APPLICABLE_STATUSES.has(competitor.status)
+    ? observations
+    : observations.filter((punch) => preferredReceipt(punch).source === 'READOUT');
   if (punches.length === 0) return;
   const startPunch = earliest(punches, 0);
   const startTime = startPunch?.punchTime ?? competitor.startTime;
@@ -60,7 +73,12 @@ async function projectCompetitor(
   const finishTime = finishPunch?.punchTime ?? competitor.finishTime;
   const time = finishTime ? elapsedSeconds(finishTime, startTime) : competitor.time;
   let status: ResultStatus = competitor.status;
-  if (finishPunch && finishPunch.appliedSource !== preferredReceipt(finishPunch).source) {
+  // NotCompeting is an organiser decision; finish punches still record times but never reclassify it.
+  if (
+    status !== 'NotCompeting' &&
+    finishPunch &&
+    finishPunch.appliedSource !== preferredReceipt(finishPunch).source
+  ) {
     if (preferredReceipt(finishPunch).source === 'READOUT') status = 'OK';
     else if (['Inactive', 'Active', 'Finished'].includes(status)) status = 'Finished';
   }

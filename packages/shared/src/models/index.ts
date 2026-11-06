@@ -20,4 +20,5 @@ export * from './system-message.js';
 export * from './team.js';
 export * from './user.js';
 export * from './card-insight.js';
+export * from './entry-timeline.js';
 export * from './anomaly-insight.js';

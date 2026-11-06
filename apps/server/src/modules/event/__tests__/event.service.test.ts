@@ -4,7 +4,7 @@ const prismaMock = vi.hoisted(() => ({
   $queryRaw: vi.fn().mockResolvedValue([]),
   $transaction: vi.fn(),
   punch: { updateMany: vi.fn() },
-  entryPayment: { count: vi.fn().mockResolvedValue(0) },
+  entryPayment: { deleteMany: vi.fn() },
   competitor: {
     findFirst: vi.fn(),
     findMany: vi.fn(),
@@ -189,6 +189,17 @@ describe('event.service event data deletion', () => {
     );
     expect(prismaMock.entry.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
       prismaMock.eventService.deleteMany.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('deletes payment receipts before entry orders with all event data', async () => {
+    await deleteAllEventData('event-1');
+
+    expect(prismaMock.entryPayment.deleteMany).toHaveBeenCalledWith({
+      where: { eventId: 'event-1' },
+    });
+    expect(prismaMock.entryPayment.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+      prismaMock.entry.deleteMany.mock.invocationCallOrder[0],
     );
   });
 
