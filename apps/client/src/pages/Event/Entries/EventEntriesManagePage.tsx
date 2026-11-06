@@ -43,6 +43,8 @@ import { useEvent } from '@/hooks';
 import { formatDate, formatDateTime, getLocaleKey } from '@/lib/date';
 import type { EntryStatus } from '@repo/shared';
 
+import { getEntryPaymentDeviceId } from './entry-payment-client';
+import { useRefreshEntryPaymentQueries } from './entries.hooks';
 import { formatEntryFee } from './EntryClassCard';
 import { EntryItemsTable } from './EntryItemsTable';
 import {
@@ -144,6 +146,7 @@ export function EventEntriesManagePage() {
   const { eventId } = useParams({ from: '/events/$eventId/entries' });
   const { event } = useEvent(eventId);
   const localeKey = getLocaleKey(i18n.language);
+  const refreshPayments = useRefreshEntryPaymentQueries();
 
   const { data, loading, error, refetch } = useQuery<
     EntryOrdersByEventData,
@@ -562,10 +565,25 @@ export function EventEntriesManagePage() {
   const handlePaidChange = async (entryId: string, paid: boolean) => {
     setPendingEntryId(entryId);
     try {
-      await paidUpdate({ variables: { entryId, paid } });
+      const entry = data?.entryOrdersByEvent.find(
+        order => order.id === entryId
+      );
+      const cashSettlement = paid && entry?.paymentMethod === 'CASH';
+      await paidUpdate({
+        variables: {
+          entryId,
+          paid,
+          ...(cashSettlement ? { deviceId: getEntryPaymentDeviceId() } : {}),
+        },
+      });
+      await refreshPayments(eventId, entryId);
       toast({
         title: t('Operations.Success', { ns: 'common' }),
-        description: t('Pages.Event.EntriesManage.Toast.PaidUpdated'),
+        description: t(
+          cashSettlement && entry.totalAmount > 0
+            ? 'Pages.Event.EntriesManage.PaymentLedger.Recorded'
+            : 'Pages.Event.EntriesManage.Toast.PaidUpdated'
+        ),
       });
     } catch (mutationError) {
       toast({
@@ -768,6 +786,23 @@ export function EventEntriesManagePage() {
             const isPending = pendingEntryId === entry.id;
             const isExpanded = !collapsedIds.has(entry.id);
             const hasMissingCard = entry.items.some(item => item.card === null);
+            const hasReceipts = (entry.paymentCount ?? 0) > 0;
+            const recordConfirmedCash =
+              entry.paymentMethod === 'CASH' &&
+              entry.paid &&
+              entry.paymentCount === 0 &&
+              entry.totalAmount > 0;
+            const canChangePaid =
+              !['REJECTED', 'CANCELLED'].includes(entry.status) &&
+              (!hasReceipts || (entry.paymentMethod === 'CASH' && !entry.paid));
+            const paidActionLabel = recordConfirmedCash
+              ? 'Pages.Event.EntriesManage.Actions.RecordConfirmedCash'
+              : entry.paid
+                ? 'Pages.Event.EntriesManage.Actions.UnmarkPaid'
+                : entry.paymentMethod === 'CASH'
+                  ? 'Pages.Event.EntriesManage.Actions.MarkCashPaid'
+                  : 'Pages.Event.EntriesManage.Actions.MarkPaid';
+
             const canEdit = !['PROCESSED', 'REJECTED', 'CANCELLED'].includes(
               entry.status
             );
@@ -869,20 +904,18 @@ export function EventEntriesManagePage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {entry.status !== 'REJECTED' &&
-                          entry.status !== 'CANCELLED' && (
-                            <DropdownMenuItem
-                              onSelect={() =>
-                                void handlePaidChange(entry.id, !entry.paid)
-                              }
-                            >
-                              {t(
-                                entry.paid
-                                  ? 'Pages.Event.EntriesManage.Actions.UnmarkPaid'
-                                  : 'Pages.Event.EntriesManage.Actions.MarkPaid'
-                              )}
-                            </DropdownMenuItem>
-                          )}
+                        {canChangePaid && (
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              void handlePaidChange(
+                                entry.id,
+                                recordConfirmedCash || !entry.paid
+                              )
+                            }
+                          >
+                            {t(paidActionLabel)}
+                          </DropdownMenuItem>
+                        )}
                         {entry.status === 'RECEIVED' && (
                           <DropdownMenuItem
                             disabled={hasMissingCard}

@@ -2,6 +2,7 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import {
   registrationPattern,
+  applyRegistrationFeeDiscount,
   type EntryAvailabilityClass,
   type EventEntryAvailability,
   type RegistrationLookupItem,
@@ -245,9 +246,17 @@ export function EntryFormDialog({
             : {}),
           cardRental: value.cardRental,
           ...(value.startTime ? { startTime: value.startTime } : {}),
-          fee: entryClass.fee?.amount ?? 0,
+          fee: applyRegistrationFeeDiscount(
+            entryClass.fee?.amount ?? 0,
+            registration,
+            availability.registrationFeeDiscounts
+          ),
           cardRentalFee: value.cardRental
-            ? (cardRentalAction?.price ?? null)
+            ? applyRegistrationFeeDiscount(
+                cardRentalAction?.price ?? 0,
+                registration,
+                availability.registrationFeeDiscounts
+              )
             : null,
         },
         { exclusiveStartSlot: entryClass.startMode === 'StartList' }
@@ -545,7 +554,11 @@ export function EntryFormDialog({
                 {entryClass.fee
                   ? t('Pages.Event.Entries.Form.Description', {
                       fee: formatEntryFee(
-                        entryClass.fee.amount,
+                        applyRegistrationFeeDiscount(
+                          entryClass.fee.amount,
+                          registrationValue,
+                          availability.registrationFeeDiscounts
+                        ),
                         currencyCode,
                         i18n.language
                       ),
@@ -695,7 +708,11 @@ export function EntryFormDialog({
                     cardRentalAction?.price != null
                       ? t('Pages.Event.Entries.Form.CardRentalWithPrice', {
                           price: formatEntryFee(
-                            cardRentalAction.price,
+                            applyRegistrationFeeDiscount(
+                              cardRentalAction.price,
+                              registrationValue,
+                              availability.registrationFeeDiscounts
+                            ),
                             currencyCode,
                             i18n.language
                           ),
