@@ -2,7 +2,7 @@ import { builder } from '../../graphql/builder.js';
 import { organisationSelect } from '../event/organisation.helpers.js';
 import { SplitRef } from '../split/split.graphql-types.js';
 
-import { findCompetitorSplits } from './competitor.service.js';
+import { findCompetitorRadioSplits, findCompetitorSplits } from './competitor.service.js';
 
 type FlatOrganisationShape = {
   organisation?: string | { name?: string | null; shortName?: string | null } | null;
@@ -109,6 +109,15 @@ export const CompetitorRef = builder.prismaObject('Competitor', {
       },
       resolve: (competitor, _args, context) =>
         findCompetitorSplits(context.prisma, context.auth, competitor),
+    }),
+    radioSplits: t.field({
+      type: [SplitRef],
+      select: {
+        id: true,
+        classId: true,
+      },
+      resolve: (competitor, _args, context) =>
+        findCompetitorRadioSplits(context.prisma, competitor),
     }),
   }),
 });

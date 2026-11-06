@@ -22,6 +22,17 @@ export function paymentLocalDate(instant: string, timezone: string): string {
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
+/**
+ * The day a payment belongs to: the bank booking day for bank imports (the bank
+ * reports no time), otherwise paidAt in the event timezone.
+ */
+export function paymentDay(
+  payment: Pick<EntryPaymentInsight, 'paidAt' | 'bookingDate'>,
+  timezone: string
+): string {
+  return payment.bookingDate ?? paymentLocalDate(payment.paidAt, timezone);
+}
+
 export function filterPaymentInsights(
   payments: EntryPaymentInsight[],
   filters: PaymentInsightFilters,
@@ -31,9 +42,7 @@ export function filterPaymentInsights(
   return payments
     .filter(payment => {
       const day =
-        filters.from || filters.to
-          ? paymentLocalDate(payment.paidAt, timezone)
-          : '';
+        filters.from || filters.to ? paymentDay(payment, timezone) : '';
       return (
         (!filters.from || day >= filters.from) &&
         (!filters.to || day <= filters.to) &&

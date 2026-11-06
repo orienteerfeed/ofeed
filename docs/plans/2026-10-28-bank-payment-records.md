@@ -16,6 +16,9 @@ Spec: [bank payment import](../specs/bank-payment-import.md). ADR:
 - [ ] Add `EXPO_ACCESS_TOKEN=` to `apps/server/.env.example` (file is
       read-protected for the agent).
 - [ ] Web follow-up: label `BANK_IMPORT` receipts "paid by bank import".
+- [x] G24 fix: `paidAt` = server match time, booking day exposed as
+      `bookingDate` and shown date-only; data migration
+      `20261030120000_bank_payment_paid_at`.
 
 ## Checks (PR 1)
 

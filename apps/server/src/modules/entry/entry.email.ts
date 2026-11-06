@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 import type { Attachment } from 'resend';
 
-import type { PaymentMethodType, QrPaymentInstruction } from '@repo/shared';
+import {
+  formatCzechBankAccount,
+  type PaymentMethodType,
+  type QrPaymentInstruction,
+} from '@repo/shared';
 
 import env from '../../config/env.js';
 import { logger } from '../../lib/logging.js';
@@ -151,6 +155,7 @@ async function paymentSection(
         };
       }
 
+      const domesticAccount = formatCzechBankAccount(qrPayment.bankAccountIban);
       let qrCode: Attachment | undefined;
       try {
         const content = await QRCode.toBuffer(qrPayment.payload, {
@@ -183,6 +188,7 @@ async function paymentSection(
           ...(qrPayment.bankAccountName
             ? [{ label: 'Název účtu', value: qrPayment.bankAccountName }]
             : []),
+          ...(domesticAccount ? [{ label: 'Číslo účtu', value: domesticAccount }] : []),
           { label: 'IBAN', value: qrPayment.bankAccountIban },
           { label: 'Konstantní symbol', value: qrPayment.constantSymbol },
           { label: 'Zpráva pro příjemce', value: qrPayment.recipientMessage },

@@ -57,6 +57,16 @@ import {
   type TimedEntry,
   type TimeRanking,
 } from './result-ranking.utils';
+import {
+  buildRadioBestTimes,
+  buildRadioRanks,
+  getProvisionalFinishTime,
+  getRadioTime,
+  getRunningRadioCode,
+  isProvisionallyPlaced,
+  placeProvisional,
+  type RadioSplit,
+} from './radio-ranking.utils';
 import { WinnerNotification } from './WinnerNotifications';
 
 const CLUB_SHEET_MIN_HEIGHT = 200;
@@ -149,9 +159,22 @@ const COMPETITORS_BY_CLASS_UPDATED = gql`
         id
         name
       }
+      radioSplits {
+        controlCode
+        time
+      }
     }
   }
 `;
+
+const CLASS_RADIO_CONTROL_CODES = gql`
+  query ClassRadioControlCodes($classId: Int!) {
+    classRadioControlCodes(classId: $classId)
+  }
+`;
+
+const NO_RADIO_CODES: readonly string[] = [];
+const RADIO_CODES_POLL_INTERVAL_MS = 60_000;
 
 const ORGANISATIONS = gql`
   query OrganisationNames($eventId: String!) {
@@ -227,6 +250,10 @@ interface CompetitorsByClassUpdatedResponse {
   competitorsByClassUpdated: Competitor[];
 }
 
+interface ClassRadioControlCodesResponse {
+  classRadioControlCodes: string[];
+}
+
 interface EventResultsViewProps {
   t: TFunction;
   event: Event;
@@ -257,12 +284,17 @@ interface Competitor {
   leg?: number;
   teamId?: number;
   team?: { id: number; name: string } | null;
+  radioSplits?: RadioSplit[] | null;
 }
 
 interface ProcessedCompetitor extends Competitor {
   position?: number | string | undefined;
   positionTooltip?: string | undefined;
   loss?: number | undefined;
+  /** Rank at each radio control the competitor has a time at, by code. */
+  radioRankByCode?: Map<string, number>;
+  /** Positive loss to the best time at each radio control, by code. */
+  radioLossByCode?: Map<string, number>;
 }
 
 interface OrganisationsResponse {
@@ -757,6 +789,20 @@ const CategoryResultsView = ({
       }
     );
 
+  // Polled so radio controls marked or unmarked during the race reach open views.
+  const { data: radioCodesData, error: radioCodesError } =
+    useQuery<ClassRadioControlCodesResponse>(CLASS_RADIO_CONTROL_CODES, {
+      variables: { classId },
+      pollInterval: RADIO_CODES_POLL_INTERVAL_MS,
+    });
+  const radioCodes = radioCodesData?.classRadioControlCodes ?? NO_RADIO_CODES;
+
+  useEffect(() => {
+    if (radioCodesError) {
+      console.error('Failed to load radio controls:', radioCodesError);
+    }
+  }, [radioCodesError]);
+
   useEffect(() => {
     onLoadingChange?.(loading);
   }, [loading, onLoadingChange]);
@@ -792,11 +838,15 @@ const CategoryResultsView = ({
       }
 
       // Process and set competitors
-      const processed = processCompetitors(newCompetitors, resultListMode);
+      const processed = processCompetitors(
+        newCompetitors,
+        resultListMode,
+        radioCodes
+      );
       setCompetitors(processed);
       previousCompetitorsRef.current = newCompetitors;
     }
-  }, [data, resultListMode]);
+  }, [data, resultListMode, radioCodes]);
 
   useEffect(() => {
     onCompetitorsCountChange?.(competitors.length);
@@ -816,6 +866,14 @@ const CategoryResultsView = ({
           : '-',
         className: 'text-muted-foreground',
         hideOnDesktop: Boolean(competitor.startTime),
+      };
+    }
+
+    const provisionalFinishTime = getProvisionalFinishTime(competitor);
+    if (provisionalFinishTime !== undefined) {
+      return {
+        value: formatSecondsToTime(provisionalFinishTime),
+        className: '',
       };
     }
 
@@ -920,7 +978,15 @@ const CategoryResultsView = ({
       className="border border-border rounded-lg overflow-hidden"
     >
       <div className={mobileResultsTableClassName}>
-        <Table data-results-table="category">
+        <Table
+          data-results-table="category"
+          data-single-radio={showTimes && radioCodes.length === 1}
+          style={
+            {
+              '--radio-count': showTimes ? radioCodes.length : 0,
+            } as React.CSSProperties
+          }
+        >
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-8 px-2 text-xs">#</TableHead>
@@ -937,15 +1003,34 @@ const CategoryResultsView = ({
               <TableHead className="h-8 px-2 text-xs hidden md:table-cell">
                 Start
               </TableHead>
-              <TableHead className="h-8 px-2 text-right text-xs">
+              {showTimes &&
+                radioCodes.map(code => (
+                  <TableHead
+                    key={code}
+                    data-col="radio"
+                    className="h-8 px-2 text-right text-xs"
+                  >
+                    {code}
+                  </TableHead>
+                ))}
+              <TableHead
+                data-col="time"
+                className="h-8 px-2 text-right text-xs"
+              >
                 <span className="sm:hidden">Time</span>
                 <span className="hidden sm:inline">Finish</span>
               </TableHead>
-              <TableHead className="h-8 px-2 text-xs text-right">
+              <TableHead
+                data-col="diff"
+                className="h-8 px-2 text-xs text-right"
+              >
                 Diff
               </TableHead>
               {showRanking && (
-                <TableHead className="h-8 w-px whitespace-nowrap px-1 text-right text-xs sm:px-2 lg:table-cell">
+                <TableHead
+                  data-col="points"
+                  className="h-8 whitespace-nowrap px-1 text-right text-xs sm:px-2 lg:table-cell"
+                >
                   Points
                 </TableHead>
               )}
@@ -954,6 +1039,17 @@ const CategoryResultsView = ({
           <TableBody>
             {competitors.map((competitor, index) => {
               const timeState = getCategoryTimeState(competitor);
+              const runningRadioCode = getRunningRadioCode(
+                competitor,
+                radioCodes,
+                currentTime
+              );
+              const lossDisplay =
+                !showTimeLoss || runningRadioCode !== undefined
+                  ? null
+                  : competitor.loss && competitor.loss > 0
+                    ? `+${formatSecondsToTime(competitor.loss)}`
+                    : '-';
               return (
                 <tr
                   key={competitor.id}
@@ -1002,27 +1098,72 @@ const CategoryResultsView = ({
                       formatTimeToHms(competitor.startTime)}
                     {competitor.lateStart && <span title="Late start">⚠️</span>}
                   </TableCell>
+                  {showTimes &&
+                    radioCodes.map(code => {
+                      const radioTime = getRadioTime(competitor, code);
+                      const radioRank = competitor.radioRankByCode?.get(code);
+                      const radioLoss = competitor.radioLossByCode?.get(code);
+                      return (
+                        <TableCell
+                          key={code}
+                          data-col="radio"
+                          className="px-2 py-1 text-right text-xs font-mono"
+                        >
+                          {runningRadioCode === code ? (
+                            <span
+                              data-running-time
+                              className={timeState.className}
+                            >
+                              {timeState.value}
+                            </span>
+                          ) : (
+                            radioTime !== undefined && (
+                              <div className="leading-tight">
+                                <span className="font-medium">
+                                  {formatSecondsToTime(radioTime)}
+                                </span>
+                                {radioRank !== undefined && (
+                                  <span className="ml-1 text-[0.625rem] font-normal text-muted-foreground">
+                                    ({radioRank})
+                                  </span>
+                                )}
+                                <span className="block text-[0.625rem] font-normal text-muted-foreground md:ml-1 md:inline">
+                                  {`+${formatSecondsToTime(radioLoss ?? 0)}`}
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   <TableCell
+                    data-col="time"
                     className={`px-2 py-1 text-right font-mono text-sm ${timeState.className}`}
                   >
-                    {!showTimes ? null : timeState.hideOnDesktop ? (
+                    {!showTimes ||
+                    runningRadioCode !==
+                      undefined ? null : timeState.hideOnDesktop ? (
                       <>
                         <span className="md:hidden">{timeState.value}</span>
                         <span className="hidden md:inline">&nbsp;</span>
                       </>
+                    ) : competitor.status === 'Active' ? (
+                      <span data-running-time>{timeState.value}</span>
                     ) : (
                       timeState.value
                     )}
+                    <span className="single-radio-loss text-[0.625rem] font-normal text-muted-foreground">
+                      {lossDisplay}
+                    </span>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-sm text-right font-mono font-bold">
-                    {!showTimeLoss
-                      ? null
-                      : competitor.loss && competitor.loss > 0
-                        ? `+${formatSecondsToTime(competitor.loss)}`
-                        : '-'}
+                  <TableCell
+                    data-col="diff"
+                    className="px-2 py-1 text-sm text-right font-mono font-bold"
+                  >
+                    {lossDisplay}
                   </TableCell>
                   {showRanking && (
-                    <TableCell className="w-px whitespace-nowrap px-1 py-1 text-right text-xs sm:px-2 lg:table-cell">
+                    <TableCell className="whitespace-nowrap px-1 py-1 text-right text-xs sm:px-2 lg:table-cell">
                       {competitor.rankingPoints !== undefined &&
                         competitor.rankingPoints !== null && (
                           <Tooltip
@@ -1579,17 +1720,6 @@ const ClubResultsView = ({
                         {groupRunnersByClass(clubResult.runners).map(
                           (classGroup, groupIndex) => (
                             <React.Fragment key={classGroup.className}>
-                              {groupIndex > 0 && (
-                                <TableRow className="bg-muted/30">
-                                  <TableCell
-                                    colSpan={isRelay ? 5 : 7}
-                                    className="p-0"
-                                  >
-                                    <div className="h-px bg-border" />
-                                  </TableCell>
-                                </TableRow>
-                              )}
-
                               {classGroup.runners.map((runner, index) => (
                                 <TableRow
                                   key={runner.id}
@@ -1597,7 +1727,11 @@ const ClubResultsView = ({
                                     index % 2 === 0
                                       ? 'bg-background hover:bg-muted/30'
                                       : 'bg-muted/20 hover:bg-muted/40'
-                                  } ${runner.status !== 'OK' ? 'opacity-70' : ''}`}
+                                  } ${runner.status !== 'OK' ? 'opacity-70' : ''} ${
+                                    groupIndex > 0 && index === 0
+                                      ? '[&>td]:border-t-2 [&>td]:border-border'
+                                      : ''
+                                  }`}
                                 >
                                   {!isRelay && (
                                     <TableCell className="px-2 py-1 text-sm font-bold">
@@ -2546,7 +2680,8 @@ const RelayResultsView = ({
 // Helper functions for data processing
 const processCompetitors = (
   competitors: Competitor[],
-  resultListMode?: string | null
+  resultListMode?: string | null,
+  radioCodes: readonly string[] = NO_RADIO_CODES
 ): ProcessedCompetitor[] => {
   // Unordered modes: keep the status-priority grouping, but sort alphabetically
   // within each status group instead of by race time.
@@ -2598,11 +2733,30 @@ const processCompetitors = (
     return startTimeDiff;
   });
 
-  return calculatePositions(sortedCompetitors);
+  // Runners on course with a radio split are slotted among the finishers by
+  // their time at the last radio control they have passed.
+  const okCompetitors = sortedCompetitors.filter(c => c.status === 'OK');
+  const provisionalCompetitors = sortedCompetitors.filter(c =>
+    isProvisionallyPlaced(c, radioCodes)
+  );
+  const remainingCompetitors = sortedCompetitors.filter(
+    c => c.status !== 'OK' && !isProvisionallyPlaced(c, radioCodes)
+  );
+
+  return calculatePositions(
+    [
+      ...placeProvisional(okCompetitors, provisionalCompetitors, radioCodes),
+      ...remainingCompetitors,
+    ],
+    radioCodes
+  );
 };
 
 // Refactored calculatePositions function with proper TypeScript types
-const calculatePositions = (runners: Competitor[]): ProcessedCompetitor[] => {
+const calculatePositions = (
+  runners: Competitor[],
+  radioCodes: readonly string[] = NO_RADIO_CODES
+): ProcessedCompetitor[] => {
   const finishedRunners = runners.filter(
     (runner): runner is Competitor & { time: number } =>
       runner.status === 'OK' && runner.time !== undefined
@@ -2610,8 +2764,30 @@ const calculatePositions = (runners: Competitor[]): ProcessedCompetitor[] => {
   const { rankById, bestTime } = rankByTime(
     finishedRunners.map(r => ({ id: r.id, time: r.time }))
   );
+  const radioRanks = buildRadioRanks(runners, radioCodes);
+  const radioBestTimes = buildRadioBestTimes(runners, radioCodes);
 
-  return runners.map((runner): ProcessedCompetitor => {
+  const withRadioRanks = (runner: ProcessedCompetitor): ProcessedCompetitor => {
+    if (radioCodes.length === 0) return runner;
+    const radioRankByCode = new Map<string, number>();
+    const radioLossByCode = new Map<string, number>();
+    for (const [code, rankByCompetitor] of radioRanks) {
+      const rank = rankByCompetitor.get(runner.id);
+      if (rank !== undefined) radioRankByCode.set(code, rank);
+      const radioTime = getRadioTime(runner, code);
+      const bestRadioTime = radioBestTimes.get(code);
+      if (
+        radioTime !== undefined &&
+        bestRadioTime !== undefined &&
+        radioTime > bestRadioTime
+      ) {
+        radioLossByCode.set(code, radioTime - bestRadioTime);
+      }
+    }
+    return { ...runner, radioRankByCode, radioLossByCode };
+  };
+
+  const rankRunner = (runner: Competitor): ProcessedCompetitor => {
     const position = rankById.get(runner.id);
 
     if (position !== undefined) {
@@ -2633,5 +2809,7 @@ const calculatePositions = (runners: Competitor[]): ProcessedCompetitor[] => {
       position: statusDisplay.emoji,
       positionTooltip: statusDisplay.tooltip,
     };
-  });
+  };
+
+  return runners.map(runner => withRadioRanks(rankRunner(runner)));
 };

@@ -365,7 +365,10 @@ export const passwordResetConfirm = async (token: string, newPassword: string) =
       data: { usedAt: new Date() },
     });
     if (consumed.count !== 1) throw new ValidationError('Password reset token invalid or expired.');
-    await tx.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+    await tx.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword, passwordSet: true },
+    });
     await revokeUserSessions(tx, user.id, 'password_reset');
   });
   return { success: true, message: 'Password reset. Sign in to continue.' };

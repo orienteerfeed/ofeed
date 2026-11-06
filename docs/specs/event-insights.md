@@ -25,7 +25,8 @@ Historical manual paid flags do not fabricate receipts.
 CSV and print include all filtered rows in their displayed order, summaries,
 event name, active filters, timezone and generation time. Escape CSV text and
 neutralize spreadsheet formulas. Loading, empty and error states are distinct;
-failed loads do not show a zero-money report. Refresh is explicit.
+failed loads do not show a zero-money report. Received payments refresh explicitly,
+on focus and every 15 seconds while visible to include external POS writes.
 
 ## API
 
@@ -105,3 +106,126 @@ could not run because the Browser runtime reported no available browsers. These
 interactions are covered by component tests, including full filtered exports,
 print escaping, pagination, category links and refresh/retry states. No matching
 GitHub issue was found and no issue was created; the issue link remains pending.
+
+## Entries-over-time insight
+
+Status: implemented. Issue: pending.
+
+Shows how competitors were entered from the opening of entries through the
+deadline to the race, so the organiser sees the entry curve, last-minute entries
+and late entries.
+
+- Unit is the competitor: `EntryItem` with `actionKey = NEW_ENTRY`. Change
+  requests are not entries. Items of orders currently `CANCELLED` or `REJECTED`
+  are excluded entirely (also retroactively, from the day they were created).
+- Days are calendar days in the event timezone, including DST transitions.
+  A late entry belongs to an order originally received after `entriesCloseAt`.
+- JWT owner/admin GraphQL `eventEntryTimeline(eventId: String!)` returns the
+  timezone, local dates `entriesOpenOn`, `entriesCloseOn` (nullable) and
+  `eventOn`, and `days` rows `{ date, classId, className, entries, lateEntries }`.
+  The service groups daily counts and provides owner/admin-only extended order rows (including personal data). Shared
+  Zod schema: `eventEntryTimelineSchema`.
+- The client sums the selected class (or all) and fills every day from the
+  opening (or first entry when unset) to the race day, cut at today, so the time
+  axis is linear. Rows after the earlier of race day and today are excluded from
+  the displayed series, totals, summary and exports, including when all entries
+  fall after that cutoff.
+- Summary: entered competitors, share of on-time entries made in the last 3 days
+  up to the deadline, late entries and the busiest day.
+- Charts: cumulative total as a monotone cubic spline area with dashed markers for opening,
+  deadline and race day, and daily new entries as bars on the same time axis.
+  Add a dashed linear-regression trend to the cumulative chart with a localized
+  legend and tooltip. Fit the visible cumulative receipt-time points, recomputing for the selected class; no future extrapolation.
+  Clamp negative fitted counts to zero and omit the trend for fewer than two days.
+  Actual counts, summaries, daily bars and exports remain unchanged.
+  The late-entry period after the deadline is shaded. Two charts rather than one
+  with two y-axes. A daily table, CSV export and print give the same data.
+- Loading, empty and error states are distinct; a failed load never shows zeros.
+
+Tests: `entry-insight.service.test.ts` (authorization, local-day grouping across
+DST, late flag, status and action filter), `entry-timeline.utils.test.ts`
+(series, filters, summary, post-race and future rows beyond the cutoff) and
+`EntryInsight.test.tsx` (states and summary).
+
+
+### Spline and trend verification (2026-11-03)
+
+Cumulative chart now uses monotone cubic interpolation and a dashed least-squares
+trend, with localized legend/tooltips in all six languages. Seventeen focused
+entry timeline and page tests passed, together with client type checking and
+focused ESLint. Regression tests cover exact fits, zero-clamping, constant and
+insufficient data, category filtering and the existing time cutoff. Isolated
+Chromium checks verified a cubic SVG curve, dashed trend and no horizontal
+overflow at 1280px and 390px using fixture API responses; screenshots inspected.
+No API or database changes.
+
+
+## Extended entry report (reference PDF, 2026-11-03)
+
+Status: implemented. Reference: user-supplied report_cmvrzq1k8000007qwzfbiuq99.pdf.
+Issue: pending; environment policy previously rejected issue creation.
+
+Extend the existing entry insight with competitor/order counts, actual receipts,
+outstanding balances, paid/unpaid and cancelled/rejected order counts, checkout
+payment-method breakdown, race-day cumulative detail, daily and category counts
+of competitors and distinct orders, and a paginated entry list (received time,
+name, class, club, card, payment method, discounted item price and order paid state).
+Keep spline/trend, existing summaries, timezone handling and owner/admin JWT access.
+
+Receipt amounts are authoritative, partial receipts reduce balances, overpayments
+remain visible in received totals, and mixed currencies stay separate. Legacy paid
+flags without receipts are shown separately, never fabricated as receipts. Allocate
+order promo discount to eligible line items proportionally in cents with stable
+largest-remainder rounding. Financial totals always use stored order totals.
+Cancelled/rejected orders are excluded from counts/money/charts/list and counted
+separately. Receipt history and database records remain unchanged.
+
+All views/CSV/print use the same period and category selection. Default cutoff is
+race day or today, without an option to include later entries; explain hidden
+records. Financial scope for category selection is explicitly labelled. Use order
+creation time as received time (editing items must not move the original order).
+Print includes all rows and chart snapshots, metadata, filters and generation time;
+CSV includes all matching rows regardless of page. Escape all exports. All six locales.
+No migrations. Shared additive payload and GraphQL types must remain aligned.
+Tests cover receipt/legacy/partial/promo/mixed-currency math, exclusions, timezone,
+race-day series, distinct-order counts, filters, pagination-independent export,
+access control and render/browser checks on mobile and desktop.
+
+
+### Extended report verification (2026-11-03)
+
+Full client suite passed: 404 tests in 52 files with one worker. After final print
+layout changes, all 25 focused timeline/report/page tests passed again. Nine
+server report/pricing/schema tests passed. Shared build/types, client/server
+TypeScript (including strict GraphQL profile), focused ESLint and whitespace
+checks passed. GraphQL schema snapshot regenerated through tests.
+
+Isolated Chromium checks at 1280px and 390px used synthetic data matching the
+reference counts (94 competitors, 76 valid orders, two excluded orders). Verified
+category filtering and whole-order finance scope, pagination, full CSV export,
+all five charts in print and the final competitor beyond the visible page.
+Rendered and visually reviewed all six pages of the test print PDF; repeating
+headers, complete rows and chart colours were verified. Test currencies/prices
+were synthetic; no real entries, receipts or source PDF were changed.
+
+Defaults: whole matching orders for category financial summaries; period ends
+at race day/today; the after-race switch was removed at the user’s request. No new migration or runtime
+configuration. Existing pending promo-code schema changes remain separate.
+
+
+### Exact start milestone on the cumulative chart
+
+Use a numeric timestamp axis and actual order receipt instants for the cumulative
+curve, grouping simultaneous orders and retaining category/period exclusions.
+Mark the configured event start instant with its localized date and time, and
+shade the in-race portion so entries after midnight/start remain distinguishable.
+The visible range still ends on race day or today. Preserve the smooth curve,
+linear trend, daily bars, summaries and exports. Tests cover same-day entries
+before/after start, simultaneous orders, timezone boundaries and end-of-day cutoff.
+
+
+Exact-start verification: numeric receipt-time series preserves before/after
+midnight entries and simultaneous order counts; two new regression tests pass.
+Isolated Chromium confirmed a 00:00 start marker on the cumulative chart in
+both desktop/mobile layouts and in the print output. The report still excludes
+entries after race day; daily summaries and exports are unchanged.

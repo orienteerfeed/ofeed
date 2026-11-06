@@ -628,6 +628,7 @@ export async function anonymizeCurrentUserAccount(
     }
 
     await tx.passwordResetToken.deleteMany({ where: { userId } });
+    await tx.userIdentity.deleteMany({ where: { userId } });
 
     await tx.userCard.deleteMany({ where: { userId } });
 

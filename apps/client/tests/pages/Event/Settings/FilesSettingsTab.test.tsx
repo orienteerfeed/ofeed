@@ -37,6 +37,7 @@ import {
   FilesSettingsTab,
   GET_EVENT_FILES_STATUS,
   GET_EVENT_IMPORT_STATES,
+  UPDATE_CONTROL_RADIO_FLAG,
 } from '@/pages/Event/Settings/FilesSettingsTab';
 
 const t = ((key: string) => key) as never;
@@ -126,7 +127,7 @@ describe('FilesSettingsTab', () => {
       configurable: true,
     });
   });
-  it('renders all three sections; courses upload is locked until startlist or results exist', async () => {
+  it('renders all three sections and one shared uploader before course prerequisites exist', async () => {
     render(
       <MockedProvider mocks={[statusMock(), importStatesMock()]}>
         <FilesSettingsTab t={t} eventId="event-1" />
@@ -145,14 +146,15 @@ describe('FilesSettingsTab', () => {
     expect(
       screen.getByText('Pages.Event.Settings.Files.Results')
     ).toBeInTheDocument();
-    // Courses upload is locked (no startlist/results yet) → only start list + results buttons.
-    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(2);
+    // The shared uploader stays available while the course prerequisite is explained.
+    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(1);
+    expect(screen.getAllByText('IOF XML v3')).toHaveLength(3);
     expect(
       screen.getByText('Pages.Event.Settings.Files.CoursesDisabledHint')
     ).toBeInTheDocument();
   });
 
-  it('shows courses upload once the start list is available', async () => {
+  it('keeps exactly one uploader once the start list is available', async () => {
     render(
       <MockedProvider
         mocks={[statusMock({ startListAvailable: true }), importStatesMock()]}
@@ -162,11 +164,11 @@ describe('FilesSettingsTab', () => {
     );
 
     await screen.findByText('Pages.Event.Settings.Files.StartList');
-    // All three sections have an upload button.
-    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(3);
+    // Uploading remains centralized after the prerequisite is met.
+    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(1);
   });
 
-  it('keeps the online split controls section hidden for future development', async () => {
+  it('shows the online split controls with their radio flags', async () => {
     render(
       <MockedProvider mocks={[statusMock(), importStatesMock()]}>
         <FilesSettingsTab t={t} eventId="event-1" />
@@ -175,10 +177,73 @@ describe('FilesSettingsTab', () => {
 
     await screen.findByText('Pages.Event.Settings.Files.StartList');
     expect(
-      screen.queryByText('Pages.Event.Settings.Files.RadioControls.Title')
-    ).not.toBeInTheDocument();
+      screen.getByText('Pages.Event.Settings.Files.RadioControls.Title')
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('100')).toHaveAttribute(
+      'data-state',
+      'unchecked'
+    );
+    expect(screen.getByLabelText('101')).toHaveAttribute(
+      'data-state',
+      'checked'
+    );
+  });
+
+  it('asks for course data before online split controls can be set', async () => {
+    render(
+      <MockedProvider
+        mocks={[statusMock({ coursesAvailable: false }), importStatesMock()]}
+      >
+        <FilesSettingsTab t={t} eventId="event-1" />
+      </MockedProvider>
+    );
+
+    await screen.findByText(
+      'Pages.Event.Settings.Files.RadioControls.NoCourseData'
+    );
     expect(screen.queryByLabelText('100')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('101')).not.toBeInTheDocument();
+  });
+
+  it('saves the radio flag and refetches status when a control is toggled', async () => {
+    const updateResult = vi.fn(() => ({
+      data: {
+        updateControlRadioFlag: { __typename: 'Control', id: 101, radio: true },
+      },
+    }));
+
+    render(
+      <MockedProvider
+        mocks={[
+          statusMock(),
+          importStatesMock(),
+          {
+            request: {
+              query: UPDATE_CONTROL_RADIO_FLAG,
+              variables: { eventId: 'event-1', controlId: 101, radio: true },
+            },
+            result: updateResult,
+          },
+          statusMock({
+            radioControls: [
+              { id: 101, code: '100', type: 'CONTROL', radio: true },
+              { id: 102, code: '101', type: 'CONTROL', radio: true },
+            ],
+          }),
+        ]}
+      >
+        <FilesSettingsTab t={t} eventId="event-1" />
+      </MockedProvider>
+    );
+
+    fireEvent.click(await screen.findByLabelText('100'));
+
+    await waitFor(() => expect(updateResult).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(screen.getByLabelText('100')).toHaveAttribute(
+        'data-state',
+        'checked'
+      )
+    );
   });
 
   it('refetches status after a successful upload', async () => {
@@ -188,6 +253,7 @@ describe('FilesSettingsTab', () => {
           statusMock(),
           importStatesMock(),
           statusMock({ startListAvailable: true }),
+          importStatesMock(),
         ]}
       >
         <FilesSettingsTab t={t} eventId="event-1" />
@@ -246,6 +312,7 @@ describe('FilesSettingsTab', () => {
     const metaRow = hashBtn.parentElement!;
     expect(metaRow).toHaveTextContent('organizer@example.com');
     expect(metaRow).toHaveTextContent('42');
+    expect(screen.getAllByText('IOF XML v3')).toHaveLength(3);
   });
 
   it('shows a MeOS MOP import state on the start list and results sections, not on courses', async () => {
@@ -286,6 +353,9 @@ describe('FilesSettingsTab', () => {
     );
     // Start list + results show the newer MOP state; courses show nothing.
     expect(hashButtons).toHaveLength(2);
+    // Both badges follow MeOS; courses retain the IOF XML format.
+    expect(screen.getAllByText('MeOS MOP')).toHaveLength(2);
+    expect(screen.getAllByText('IOF XML v3')).toHaveLength(1);
     hashButtons.forEach(btn => {
       expect(btn).toHaveTextContent('bbbbbbbb…');
       expect(btn.parentElement).toHaveTextContent('MeOS MOP');
