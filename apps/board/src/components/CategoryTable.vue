@@ -9,6 +9,7 @@ import {
   useAthletes,
   useUnfinishedAthletes,
   useFinishedAthletes,
+  isNotCompetingFinished,
 } from '@/composables/useAthletes'
 import { useSettingStore } from '@/stores/settings'
 import { useScrollColumnItem } from '@/composables/scrollColumn/useScrollColumn'
@@ -42,9 +43,10 @@ const effectiveCategory = computed(() => ({
 
 const athletesCount = computed(() => {
   const { finished, unfinished } = athletes.value
-  // DNS can no longer change the results, so it counts as done (like in relays).
+  // DNS and MS can no longer change the results, so they count as done (like in relays).
   const dnsCount = unfinished.filter(
-    (a) => a.status === AthleteStatus.DidNotStart
+    (a) =>
+      a.status === AthleteStatus.DidNotStart || isNotCompetingFinished(a)
   ).length
   return {
     finished: finished.length + dnsCount,
