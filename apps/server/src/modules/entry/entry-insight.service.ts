@@ -37,6 +37,7 @@ export async function getEventEntryTimeline(
       totalAmount: true,
       promoCode: true,
       promoDiscountAmount: true,
+      priceAdjustment: true,
       payments: { select: { amount: true, currency: true } },
       items: {
         where: { actionKey: 'NEW_ENTRY' },
@@ -68,6 +69,7 @@ export async function getEventEntryTimeline(
         allowPromoCode: item.allowPromoCode,
       })),
       order.promoDiscountAmount?.toNumber() ?? 0,
+      order.priceAdjustment?.toNumber() ?? 0,
     );
     const receivedCents = order.payments
       .filter((payment) => payment.currency === order.currency)

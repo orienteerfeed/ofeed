@@ -444,36 +444,41 @@ model PromoCode {
 // entry shop. Competitors are propagated into `Competitor` only after the
 // order is approved and processed (see EntryItem.competitorId).
 model Entry {
-  promoCodeId         String?
-  appliedPromoCode    PromoCode?              @relation(fields: [eventId, promoCodeId], references: [eventId, id])
-  promoCode           String?                 @db.VarChar(40)
-  promoPercent        Decimal?                @db.Decimal(5, 2)
-  promoEligibleAmount Decimal?                @db.Decimal(10, 2)
-  promoDiscountAmount Decimal?                @db.Decimal(10, 2)
-  id                  String                  @id @default(cuid())
-  event               Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId             String
-  status              EntryStatus             @default(RECEIVED)
-  paid                Boolean                 @default(false)
-  paymentMethod       EventPaymentMethodType?
+  promoCodeId           String?
+  appliedPromoCode      PromoCode?              @relation(fields: [eventId, promoCodeId], references: [eventId, id])
+  promoCode             String?                 @db.VarChar(40)
+  promoPercent          Decimal?                @db.Decimal(5, 2)
+  promoEligibleAmount   Decimal?                @db.Decimal(10, 2)
+  promoDiscountAmount   Decimal?                @db.Decimal(10, 2)
+  // Manual operator correction applied after promo; negative = discount, positive = extra charge.
+  priceAdjustment       Decimal?                @db.Decimal(10, 2)
+  priceAdjustmentReason String?                 @db.VarChar(191)
+  // Plain user ID snapshot (like PromoCode.createdById): who last set the adjustment.
+  priceAdjustedById     Int?                    @db.UnsignedInt
+  id                    String                  @id @default(cuid())
+  event                 Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId               String
+  status                EntryStatus             @default(RECEIVED)
+  paid                  Boolean                 @default(false)
+  paymentMethod         EventPaymentMethodType?
   // Variable symbol used to pair incoming payments; unique per event.
-  paymentDueAt        DateTime?
-  paymentReference    String                  @db.VarChar(10)
-  user                User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId              Int?                    @db.UnsignedInt
-  contactEmail        String                  @db.VarChar(254)
-  contactFirstname    String                  @db.VarChar(191)
-  contactLastname     String                  @db.VarChar(191)
-  totalAmount         Decimal                 @db.Decimal(10, 2)
+  paymentDueAt          DateTime?
+  paymentReference      String                  @db.VarChar(10)
+  user                  User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId                Int?                    @db.UnsignedInt
+  contactEmail          String                  @db.VarChar(254)
+  contactFirstname      String                  @db.VarChar(191)
+  contactLastname       String                  @db.VarChar(191)
+  totalAmount           Decimal                 @db.Decimal(10, 2)
   // ISO 4217 alpha-3 snapshot of the event currency at order time.
-  currency            String                  @db.Char(3)
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
-  items               EntryItem[]
-  addOnItems          EntryAddOnItem[]
-  statusHistory       EntryStatusHistory[]
-  payments            EntryPayment[]
-  bankTransactions    BankTransaction[]
+  currency              String                  @db.Char(3)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  items                 EntryItem[]
+  addOnItems            EntryAddOnItem[]
+  statusHistory         EntryStatusHistory[]
+  payments              EntryPayment[]
+  bankTransactions      BankTransaction[]
 
   @@unique([eventId, id], map: "Entry_event_id_uq")
   @@unique([eventId, paymentReference], map: "Entry_event_payment_reference_uq")
@@ -1420,17 +1425,17 @@ enum PunchSource {
 }
 
 model DeviceSession {
-  id                String   @id @default(uuid()) @db.VarChar(36)
-  userId            Int      @db.UnsignedInt
-  deviceId          String   @db.VarChar(36)
-  deviceName        String   @db.VarChar(100)
-  createdAt         DateTime @default(now())
-  lastRefreshedAt   DateTime @default(now())
+  id                String                @id @default(uuid()) @db.VarChar(36)
+  userId            Int                   @db.UnsignedInt
+  deviceId          String                @db.VarChar(36)
+  deviceName        String                @db.VarChar(100)
+  createdAt         DateTime              @default(now())
+  lastRefreshedAt   DateTime              @default(now())
   expiresAt         DateTime
   absoluteExpiresAt DateTime
   revokedAt         DateTime?
-  revocationReason  String?  @db.VarChar(32)
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revocationReason  String?               @db.VarChar(32)
+  user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   generations       SessionRefreshToken[]
 
   @@index([userId, deviceId])
@@ -1438,13 +1443,13 @@ model DeviceSession {
 }
 
 model SessionRefreshToken {
-  id           String   @id @default(uuid()) @db.VarChar(36)
-  familyId     String   @db.VarChar(36)
-  tokenHash    String   @unique @db.Char(64)
-  generation   Int
-  consumedAt   DateTime?
-  replacementId String? @db.VarChar(36)
-  family       DeviceSession @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  id            String        @id @default(uuid()) @db.VarChar(36)
+  familyId      String        @db.VarChar(36)
+  tokenHash     String        @unique @db.Char(64)
+  generation    Int
+  consumedAt    DateTime?
+  replacementId String?       @db.VarChar(36)
+  family        DeviceSession @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   @@unique([familyId, generation])
 }
