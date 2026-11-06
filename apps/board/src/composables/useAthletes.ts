@@ -47,7 +47,8 @@ export function useAthletes({
         if (
           athlete.status === AthleteStatus.NotStarted ||
           athlete.status === AthleteStatus.Running ||
-          athlete.status === AthleteStatus.DidNotStart
+          athlete.status === AthleteStatus.DidNotStart ||
+          athlete.status === AthleteStatus.NotCompeting
         ) {
           athletes.unfinished.push(athlete)
         } else {
@@ -143,9 +144,6 @@ function formatFinishedAthletes(
           loss: calculateLoss(leaderRow, athlete),
         }
       }
-      if (athlete.status === AthleteStatus.NotCompeting) {
-        return { ...athlete, time: formatTimeOrienteering(athlete.timeSeconds) }
-      }
       return athlete
     }),
   ]
@@ -175,10 +173,27 @@ export function useUnfinishedAthletes(athletes: Ref<ClassifyAthletes>) {
   return unfinishedAthletes
 }
 
+/** MS who already have a time have run; before that they are in the start list as usual. */
+export function isNotCompetingFinished(athlete: RawAthlete) {
+  return athlete.status === AthleteStatus.NotCompeting && athlete.timeSeconds > 0
+}
+
+// Running / not started (incl. MS yet to finish) first, finished MS, DNS last.
+function unfinishedGroup(athlete: RawAthlete) {
+  if (athlete.status === AthleteStatus.DidNotStart) return 2
+  if (isNotCompetingFinished(athlete)) return 1
+  return 0
+}
+
 function unfinishedAthleteSortFunction(a: RawAthlete, b: RawAthlete) {
-  const aIsDNS = a.status === AthleteStatus.DidNotStart
-  const bIsDNS = b.status === AthleteStatus.DidNotStart
-  if (aIsDNS !== bIsDNS) return aIsDNS ? 1 : -1
+  const groupDiff = unfinishedGroup(a) - unfinishedGroup(b)
+  if (groupDiff) return groupDiff
+  if (unfinishedGroup(a) === 1) {
+    return (
+      a.timeSeconds - b.timeSeconds ||
+      a.surname.localeCompare(b.surname, undefined, { sensitivity: 'base' })
+    )
+  }
   if (a.startTime && b.startTime) return a.startTime > b.startTime ? 1 : -1
   if (a.status !== b.status) return a.status - b.status
   return a.surname < b.surname ? -1 : 1

@@ -27,7 +27,17 @@ and this project adheres to
   callback). The provider is enabled when `ORIS_SSO_ENABLED` is on and both
   `ORIS_SSO_CLIENT_ID` and `ORIS_SSO_CLIENT_SECRET` are set.
 
+### Changed
+
+- Board: not-competing (MS/NC) athletes stay in the start list marked after the
+  name (`(MS)` in Czech, `(NC)` otherwise, or a unicorn with emojis on). Once
+  they have a time they move below running athletes and before DNS, sorted by
+  time, without a rank or loss.
+
 ### Fixed
+
+- Board: rows with an `updatedAt` in the future are no longer permanently
+  highlighted as recently updated.
 
 - Mobile category settings keep the navbar and tabs within the viewport while
   allowing horizontal scrolling inside the category table.
