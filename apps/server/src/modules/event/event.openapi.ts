@@ -761,7 +761,12 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         'net excludes VAT and vat is the VAT component. The surcharge uses event.lateEntryFeePercent ' +
         'after entriesCloseAt unless class.lateEntryFeeDisabled is true (base 100 plus 50% = amount 150). ' +
         'GraphQL eventClasses.fee is the base amount as Float; currentFee, feeNet and feeVat are separate Float fields. ' +
-        'Slots contain each unoccupied, unreserved class/time once. No authentication required.',
+        'Slots contain each unoccupied, unreserved class/time once. ' +
+        'registrationFeeDiscounts lists the event registration discount rules ' +
+        '({pattern, discountPercent, allowPromoCode?}; pattern is a case-insensitive whole-string ' +
+        'wildcard with * and ?). The highest matching discountPercent applies to the entry fee and ' +
+        'card rental; the server reprices every order, so the list is informational for previews. ' +
+        'No authentication required.',
       security: [],
       parameters: [eventIdParam],
       responses: {
@@ -821,12 +826,18 @@ export const EVENT_OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
         'displaying or printing the payload discloses the contact name. ' +
         'The public event statusSummary.entriesConfigured is true when at least one of entriesOpenAt or entriesCloseAt is set. ' +
         'When both are unset, creation returns 409 with "Entries are not configured for this event." ' +
-        'An unavailable payment method returns 422 during payment-method validation. Null class fees are treated as zero.',
+        'An unavailable payment method returns 422 during payment-method validation. Null class fees are treated as zero. ' +
+        'Optional priceAdjustment (signed, two decimals, |value| <= 99999999.99; negative = discount, ' +
+        'positive = extra charge) is added to the total after promo discounts; a non-zero value requires ' +
+        'priceAdjustmentReason (1-191 chars, 422 otherwise). Sending priceAdjustment (including 0) requires ' +
+        'a bearer token of the event owner or an admin, otherwise 403. A resulting negative total returns ' +
+        '422 PRICE_ADJUSTMENT_NEGATIVE_TOTAL. Zero is stored as no adjustment (null).',
       security: [],
       parameters: [eventIdParam, idempotencyKeyParam],
       requestBody: jsonBody(createEntryOrderRequestBodySchema),
       responses: {
         201: dataResponse('Entry order created', createdEntryResponseSchema),
+        403: okJson('priceAdjustment sent without event owner/admin authentication'),
         404: okJson('Event not found'),
         409: okJson(
           'Entries not configured, entries closed, class full, start slot unavailable (errorCode SLOT_TAKEN), or Idempotency-Key body mismatch',

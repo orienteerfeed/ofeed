@@ -837,7 +837,14 @@ describe('updateEntryOrderForGraphQL', () => {
       status: 'RECEIVED',
       currency: 'CZK',
       promoPercent: decimal(20),
-      items: [{ id: 123, registrationDiscountPercent: decimal(25), allowPromoCode: true }],
+      items: [
+        {
+          id: 123,
+          registration: 'CHC9501',
+          registrationDiscountPercent: decimal(25),
+          allowPromoCode: true,
+        },
+      ],
     });
     await updateEntryOrderForGraphQL(
       prisma as never,

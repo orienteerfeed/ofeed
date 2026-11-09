@@ -57,3 +57,5 @@ superseding an old design, link both records and explain the changed behavior.
 - [Entry promo codes](entry-promo-codes.md): event-scoped percentage codes, revocation and auditable order discounts.
 
 - [Class deletion](class-deletion.md): delete one category and its dependent competition data.
+
+- [Entry price adjustment](entry-price-adjustment.md): owner/admin signed order price correction for on-site orders.
