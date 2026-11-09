@@ -27,80 +27,6 @@ and this project adheres to
   callback). The provider is enabled when `ORIS_SSO_ENABLED` is on and both
   `ORIS_SSO_CLIENT_ID` and `ORIS_SSO_CLIENT_SECRET` are set.
 
-### Fixed
-
-- Align Vitest helpers and client TanStack runtime dependencies with their peer
-  requirements so workspace peer checks pass.
-
-- Synchronize the board's Vue I18n 11 dependency and workspace lockfile for
-  frozen CI installs.
-
-- Restrict entry adjustment reasons to event staff and reject adjusted totals that
-  exceed the database amount limit before saving.
-
-- Mobile category settings keep the navbar and tabs within the viewport while
-  allowing horizontal scrolling inside the category table.
-
-- Mobile live results reserve enough category column width to display complete
-  four-character class badges.
-
-- Club result tables use their full width when multiple categories are shown
-  and the Start column is hidden on mobile.
-
-- Entry-list cash confirmations refresh received-payment reports and identify the
-  desk; legacy paid cash without a receipt can be explicitly recorded. Reports
-  also pick up external POS receipts while visible and when returning to the tab.
-
-- Marking a cash entry paid now records its outstanding balance as a CASH receipt,
-  so manual cash settlements appear in payment reports without duplicate receipts
-  on repeated settlement. POS callers can supply an optional device identifier.
-
-- Deleting an event or all its data no longer fails with 409 "Cannot delete
-  event data containing payment receipts"; receipts are deleted with the event.
-- Provisional radio placement stays after faster comparable finishers even when
-  earlier finishers have missing splits.
-- Entry insight charts, totals and exports stop at race day or today and exclude
-  entries beyond that cutoff.
-- Bank-import payments no longer show an invented time: `paidAt` is the
-  server match time, the bank booking day is returned as `bookingDate` and
-  shown date-only; existing bank receipts are migrated.
-- Late SRR punches no longer overwrite a closed result (IOF XML/MOP import or
-  readout); only a readout can still correct it.
-- Finish punches no longer change the status of NotCompeting competitors;
-  finish time and race time are still recorded.
-- Restore desktop entry category occupancy badges and birth-year ranges.
-- Restore missing entry class occupancy and remaining-place translations in all
-  six locales, fixing the client type check and untranslated card labels.
-- Deliver bank payment pushes to all registered devices in batches and expose
-  the connection transaction pagination cursor in OpenAPI.
-
-### Changed
-
-- Active runners show their elapsed clock at the next unpassed online control,
-  moving to the finish column after the last recorded radio split.
-
-- Mobile category results with one online control stack finish time and loss
-  to fit the full table without horizontal scrolling.
-
-- Mobile split analysis uses narrower pinned names, optional clubs, tap-to-open
-  competitor details and compact sorting controls.
-
-- Mark the exact race start date/time on the cumulative entry chart and plot
-  actual receipt times so same-day entries after the start remain visible.
-
-- Entries-over-time cumulative chart uses a smooth curve and a class-filtered
-  linear trend.
-
-- Show Czech domestic bank account numbers alongside IBAN in entry payment details, printouts and payment notification emails.
-
-- Use one shared upload zone above event file status sections for start lists, courses and results, with a taller themed surface and centered File upload action.
-
-- Default `ORIS_API_BASE_URL` is now `https://oris.ceskyorientak.cz/API/`.
-- Compact public entry category cards into a two-column mobile grid and show
-  remaining places, with occupancy and birth-year details in a tooltip.
-
-### Added
-
 - Groundwork for external sign-in (ORIS SSO now, Google/GitHub later):
   `UserIdentity` model, `/rest/v1/auth/sso` start/callback/link routes, sign-in
   and sign-up buttons and a profile "Linked accounts" card shown only for
@@ -159,6 +85,36 @@ and this project adheres to
 
 ### Changed
 
+- Board: not-competing (MS/NC) athletes stay in the start list marked after the
+  name (`(MS)` in Czech, `(NC)` otherwise, or a unicorn with emojis on). Once
+  they have a time they move below running athletes and before DNS, sorted by
+  time in default mode or alphabetically in unordered modes, without a rank or
+  loss. Completed MS/NC remain visible with the start list hidden; the no-times
+  result mode hides their times.
+
+- Active runners show their elapsed clock at the next unpassed online control,
+  moving to the finish column after the last recorded radio split.
+
+- Mobile category results with one online control stack finish time and loss
+  to fit the full table without horizontal scrolling.
+
+- Mobile split analysis uses narrower pinned names, optional clubs, tap-to-open
+  competitor details and compact sorting controls.
+
+- Mark the exact race start date/time on the cumulative entry chart and plot
+  actual receipt times so same-day entries after the start remain visible.
+
+- Entries-over-time cumulative chart uses a smooth curve and a class-filtered
+  linear trend.
+
+- Show Czech domestic bank account numbers alongside IBAN in entry payment details, printouts and payment notification emails.
+
+- Use one shared upload zone above event file status sections for start lists, courses and results, with a taller themed surface and centered File upload action.
+
+- Default `ORIS_API_BASE_URL` is now `https://oris.ceskyorientak.cz/API/`.
+- Compact public entry category cards into a two-column mobile grid and show
+  remaining places, with occupancy and birth-year details in a tooltip.
+
 - Home-grid event cards with open entries now offer a localized entry action
   that opens the event detail and scrolls directly to the entries section.
 
@@ -174,9 +130,58 @@ and this project adheres to
 - Standardized production Node images on Node 24.15.0 Bookworm slim and moved
   client router devtools to development-only dependencies.
 
-### Removed
-
 ### Fixed
+
+- Align Vitest helpers and client TanStack runtime dependencies with their peer
+  requirements so workspace peer checks pass.
+
+- Synchronize the board's Vue I18n 11 dependency and workspace lockfile for
+  frozen CI installs.
+
+- Restrict entry adjustment reasons to event staff and reject adjusted totals that
+  exceed the database amount limit before saving.
+
+- Board: completed MS/NC athletes remain visible when the start list is hidden
+  and respect alphabetical result modes and hidden result times.
+
+- Board: rows with an `updatedAt` in the future are no longer permanently
+  highlighted as recently updated.
+
+- Mobile category settings keep the navbar and tabs within the viewport while
+  allowing horizontal scrolling inside the category table.
+
+- Mobile live results reserve enough category column width to display complete
+  four-character class badges.
+
+- Club result tables use their full width when multiple categories are shown
+  and the Start column is hidden on mobile.
+
+- Entry-list cash confirmations refresh received-payment reports and identify the
+  desk; legacy paid cash without a receipt can be explicitly recorded. Reports
+  also pick up external POS receipts while visible and when returning to the tab.
+
+- Marking a cash entry paid now records its outstanding balance as a CASH receipt,
+  so manual cash settlements appear in payment reports without duplicate receipts
+  on repeated settlement. POS callers can supply an optional device identifier.
+
+- Deleting an event or all its data no longer fails with 409 "Cannot delete
+  event data containing payment receipts"; receipts are deleted with the event.
+- Provisional radio placement stays after faster comparable finishers even when
+  earlier finishers have missing splits.
+- Entry insight charts, totals and exports stop at race day or today and exclude
+  entries beyond that cutoff.
+- Bank-import payments no longer show an invented time: `paidAt` is the
+  server match time, the bank booking day is returned as `bookingDate` and
+  shown date-only; existing bank receipts are migrated.
+- Late SRR punches no longer overwrite a closed result (IOF XML/MOP import or
+  readout); only a readout can still correct it.
+- Finish punches no longer change the status of NotCompeting competitors;
+  finish time and race time are still recorded.
+- Restore desktop entry category occupancy badges and birth-year ranges.
+- Restore missing entry class occupancy and remaining-place translations in all
+  six locales, fixing the client type check and untranslated card labels.
+- Deliver bank payment pushes to all registered devices in batches and expose
+  the connection transaction pagination cursor in OpenAPI.
 
 - Restore compact mobile result tables that fit phone displays, with bounded
   responsive typography and horizontal scrolling only on very narrow screens.
@@ -239,6 +244,10 @@ and this project adheres to
 - Installed `wget` in the API image so Docker Compose healthchecks can run.
 - Pre-created client and board `runtime-config.js` files owned by the Nginx
   runtime user so startup scripts can write them without permission errors.
+
+### Removed
+
+
 
 ## [1.3.1] - 2026-05-05
 
