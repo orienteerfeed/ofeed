@@ -132,6 +132,9 @@ and this project adheres to
 
 ### Fixed
 
+- Restore server type checking by explicitly returning the required OAuth access
+  token field from `saveToken`.
+
 - Align Vitest helpers and client TanStack runtime dependencies with their peer
   requirements so workspace peer checks pass.
 

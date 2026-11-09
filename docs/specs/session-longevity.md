@@ -45,3 +45,13 @@ restore a session while an event query is pending, switch users and log out with
 cached/pending data, rotate a token without restarting queries, and exercise
 StrictMode cleanup. Run the focused provider and session-manager client tests
 plus client type checking. Browser acceptance requires a running API and account.
+
+## OAuth model type compatibility
+
+The OAuth client token model must satisfy the OAuth server's `saveToken`
+contract during workspace type checking. Its returned object explicitly includes
+`accessToken` alongside the original token attributes, client and resolved user.
+Optional refresh tokens and custom attributes remain preserved; an unresolved
+user still returns `null`. This is a type compatibility fix with no API or data
+model changes. Validate with workspace type checking and the server auth route
+tests.
