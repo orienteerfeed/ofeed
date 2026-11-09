@@ -207,7 +207,39 @@ eligible amount, discount, final total, currency and excluded-item count. Owner/
 operations `eventPromoCodes`, `createEventPromoCode` and `revokeEventPromoCode`
 manage immutable event codes. Revocation affects future submissions only.
 GraphQL order edits accept optional `entryItemId` to preserve pricing snapshots
-of existing items; omitted IDs identify new items. No expiry or usage limit.
+of existing items whose registration is unchanged; a changed registration or an
+omitted ID uses the current rules. No expiry or usage limit.
+
+## Manual price adjustment (event staff)
+
+Create accepts optional `priceAdjustment` (signed, two decimals,
+|value| ≤ 99999999.99; negative = discount, positive = extra charge) and
+`priceAdjustmentReason` (trimmed, 1–191 characters, required when the adjustment is
+non-zero). The adjustment is added after the promo discount:
+`totalAmount = round2(promoTotal + priceAdjustment)`. Sending `priceAdjustment` on the
+otherwise public create endpoint requires a bearer token of the event owner or an
+admin; anonymous and other users get 403. A negative total returns 422 with
+`errors: "PRICE_ADJUSTMENT_NEGATIVE_TOTAL"`. Zero is stored as no adjustment.
+
+GraphQL `entryOrderUpdate(entryId, input: EntryOrderUpdateInput)` accepts
+`priceAdjustment: Float` and `priceAdjustmentReason: String`: omit the field to keep
+the stored adjustment (reapplied to the recomputed total), send `null` to clear it, or
+a number to replace it. Orders expose nullable `priceAdjustment` and
+`priceAdjustmentReason` (GraphQL `Entry`, REST create response). Marking a CASH order
+paid writes a receipt for the adjusted balance. Item fees stay unadjusted; report line
+prices distribute the adjustment so they sum to `totalAmount`. See the
+[specification](specs/entry-price-adjustment.md).
+
+```graphql
+mutation AdjustEntryPrice($entryId: String!, $input: EntryOrderUpdateInput!) {
+  entryOrderUpdate(entryId: $entryId, input: $input) {
+    id
+    totalAmount
+    priceAdjustment
+    priceAdjustmentReason
+  }
+}
+```
 
 ## Cash settlement from web / ofeed-desk
 

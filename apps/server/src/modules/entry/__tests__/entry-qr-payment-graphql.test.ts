@@ -51,3 +51,45 @@ describe('entry detail QR payment account formats', () => {
     });
   });
 });
+
+describe('entry adjustment reason visibility', () => {
+  it.each([
+    [null, 'USER', 1, null],
+    [2, 'USER', 1, null],
+    [1, 'USER', 1, 'Internal reason'],
+    [2, 'ADMIN', 1, 'Internal reason'],
+  ])(
+    'checks staff access independently of the public token (%s, %s)',
+    async (userId, role, authorId, reason) => {
+      const result = await graphql({
+        schema,
+        source: `query($access: String!) {
+        entryOrderById(entryId: "entry-1", accessToken: $access) {
+          id priceAdjustmentReason
+        }
+      }`,
+        variableValues: {
+          access: createEntryOrderAccessToken('entry-1', new Date(Date.now() + 60_000)),
+        },
+        contextValue: {
+          auth: userId === null ? undefined : { isAuthenticated: true, type: 'jwt', userId },
+          prisma: {
+            entry: {
+              findUnique: vi.fn().mockResolvedValue({
+                id: 'entry-1',
+                eventId: 'event-1',
+                priceAdjustmentReason: 'Internal reason',
+              }),
+            },
+            event: { findUnique: vi.fn().mockResolvedValue({ authorId }) },
+            user: { findUnique: vi.fn().mockResolvedValue({ role }) },
+          },
+        },
+      });
+      expect(result.errors).toBeUndefined();
+      expect(result.data).toEqual({
+        entryOrderById: { id: 'entry-1', priceAdjustmentReason: reason },
+      });
+    },
+  );
+});

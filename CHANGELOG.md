@@ -132,6 +132,15 @@ and this project adheres to
 
 ### Fixed
 
+- Align Vitest helpers and client TanStack runtime dependencies with their peer
+  requirements so workspace peer checks pass.
+
+- Synchronize the board's Vue I18n 11 dependency and workspace lockfile for
+  frozen CI installs.
+
+- Restrict entry adjustment reasons to event staff and reject adjusted totals that
+  exceed the database amount limit before saving.
+
 - Board: completed MS/NC athletes remain visible when the start list is hidden
   and respect alphabetical result modes and hidden result times.
 
