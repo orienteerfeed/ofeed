@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 
 import { useTimeHelpers } from '@/composables/useTimeHelpers'
 import { AthleteStatus } from '@/types/category'
-import type { AthleteWithStats } from '@/types/category'
+import type { AthleteWithStats, ResultMode } from '@/types/category'
 import { formatTimeOrienteering } from '@/utils/dateTime'
 import { rowGridColumns } from '@/utils/tableLayout'
 import { isNotCompetingFinished } from '@/composables/useAthletes'
@@ -18,6 +18,7 @@ const props = defineProps<{
   showClub?: boolean
   showRegistration?: boolean
   showEmojis: boolean
+  resultMode?: ResultMode
   timezone?: string
 }>()
 
@@ -45,7 +46,9 @@ const isRunning = computed(() => {
 // A finished MS shows the run time instead of the start time.
 const startTimeFormatted = computed(() =>
   isNC.value
-    ? formatTimeOrienteering(props.data.timeSeconds).slice(0, 8)
+    ? props.resultMode === 'UnorderedNoTimes'
+      ? ''
+      : formatTimeOrienteering(props.data.timeSeconds).slice(0, 8)
     : startTimeFormatter(props.data.startTime, props.timezone)
 )
 
@@ -83,11 +86,15 @@ const gridStyle = computed(() => ({
         ` ${showEmojis ? ncLabel : `(${ncLabel})`}`
       }}</template></span
     >
-    <span v-if="showRegistration" class="whitespace-nowrap">{{ data.registration }}</span>
-    <span v-if="!isCompact">{{ data.card }}</span>
-    <span v-if="isClubShown" class="text-ellipsis overflow-hidden whitespace-nowrap">{{
-      data.club
+    <span v-if="showRegistration" class="whitespace-nowrap">{{
+      data.registration
     }}</span>
+    <span v-if="!isCompact">{{ data.card }}</span>
+    <span
+      v-if="isClubShown"
+      class="text-ellipsis overflow-hidden whitespace-nowrap"
+      >{{ data.club }}</span
+    >
     <!-- TODO tabular-nums not nice override, special monospace font? -->
     <span class="text-right" v-if="isDNS">DNS</span>
     <span

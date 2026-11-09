@@ -148,7 +148,7 @@ function formatFinishedAthletes(
     }),
   ]
 
-  const okCount = allRows.filter(a => a.status === AthleteStatus.Ok).length
+  const okCount = allRows.filter((a) => a.status === AthleteStatus.Ok).length
   const effectivePinned = Math.min(pinnedCount, okCount)
   return {
     pinnedRows: allRows.slice(0, effectivePinned),
@@ -162,11 +162,16 @@ function calculateLoss(leadItem: RawAthlete, compareItem: RawAthlete) {
   return formatTimeOrienteering(lossSeconds)
 }
 
-export function useUnfinishedAthletes(athletes: Ref<ClassifyAthletes>) {
+export function useUnfinishedAthletes(
+  athletes: Ref<ClassifyAthletes>,
+  resultMode: Ref<ResultMode> = ref('Default')
+) {
   const unfinishedAthletes = computed(() => {
     if (!athletes.value.unfinished.length) return []
     const athletesCopy = [...athletes.value.unfinished]
-    athletesCopy.sort(unfinishedAthleteSortFunction)
+    athletesCopy.sort((a, b) =>
+      unfinishedAthleteSortFunction(a, b, resultMode.value)
+    )
     return athletesCopy
   })
 
@@ -175,7 +180,9 @@ export function useUnfinishedAthletes(athletes: Ref<ClassifyAthletes>) {
 
 /** MS who already have a time have run; before that they are in the start list as usual. */
 export function isNotCompetingFinished(athlete: RawAthlete) {
-  return athlete.status === AthleteStatus.NotCompeting && athlete.timeSeconds > 0
+  return (
+    athlete.status === AthleteStatus.NotCompeting && athlete.timeSeconds > 0
+  )
 }
 
 // Running / not started (incl. MS yet to finish) first, finished MS, DNS last.
@@ -185,10 +192,15 @@ function unfinishedGroup(athlete: RawAthlete) {
   return 0
 }
 
-function unfinishedAthleteSortFunction(a: RawAthlete, b: RawAthlete) {
+function unfinishedAthleteSortFunction(
+  a: RawAthlete,
+  b: RawAthlete,
+  resultMode: ResultMode
+) {
   const groupDiff = unfinishedGroup(a) - unfinishedGroup(b)
   if (groupDiff) return groupDiff
   if (unfinishedGroup(a) === 1) {
+    if (resultMode !== 'Default') return unorderedAthleteSortFunction(a, b)
     return (
       a.timeSeconds - b.timeSeconds ||
       a.surname.localeCompare(b.surname, undefined, { sensitivity: 'base' })
