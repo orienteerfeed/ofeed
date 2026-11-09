@@ -29,6 +29,9 @@ and this project adheres to
 
 ### Fixed
 
+- Align Vitest helpers and client TanStack runtime dependencies with their peer
+  requirements so workspace peer checks pass.
+
 - Synchronize the board's Vue I18n 11 dependency and workspace lockfile for
   frozen CI installs.
 
