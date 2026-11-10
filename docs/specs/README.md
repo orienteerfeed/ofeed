@@ -13,6 +13,9 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [GHCR image retention](ghcr-image-retention.md): weekly cleanup retaining the
+  five newest images per application package.
+
 - [External sign-in](external-sign-in.md): ORIS SSO and future OAuth providers with explicit or verified-email account linking.
 - [Bank payment import](bank-payment-import.md): client-reported Fio payments matched to entry orders (G24).
 - [Bank payment notifications](bank-payment-notifications.md): Expo push for matched and unmatched bank payments (G25).

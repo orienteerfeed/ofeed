@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Weekly and manually triggered GHCR cleanup retains the five newest images per
+  application package and removes older images and unused manifests.
+
 - Event class settings can permanently delete a category and its dependent
   competition data after confirmation, preserving shared entities and payments.
 
