@@ -1,4 +1,6 @@
+import { promoCodeSchema } from './promo-code.js';
 import { z } from 'zod';
+import { registrationFeeDiscountsSchema } from './registration-fee-discount.js';
 
 import { dateLikeSchema, sexSchema, type Sex } from './common.js';
 import { paymentMethodTypeSchema, qrPaymentInstructionSchema } from './payment-method.js';
@@ -148,6 +150,7 @@ export function checkClassEligibility(
 
 export const entryOrderItemInputSchema = z
   .object({
+    entryItemId: z.number().int().positive().optional(),
     classId: z.number().int().positive(),
     firstname: z.string().trim().min(1).max(191),
     lastname: z.string().trim().min(1).max(191),
@@ -185,13 +188,32 @@ export const entryOrderItemInputSchema = z
 
 export type EntryOrderItemInput = z.infer<typeof entryOrderItemInputSchema>;
 
-export const createEntryOrderInputSchema = z.object({
-  contactEmail: z.string().trim().email().max(254),
-  contactFirstname: z.string().trim().min(1).max(191),
-  contactLastname: z.string().trim().min(1).max(191),
-  paymentMethod: paymentMethodTypeSchema,
-  items: z.array(entryOrderItemInputSchema).min(1).max(50),
-});
+/** Signed manual order price correction: negative = discount, positive = extra charge. */
+export const priceAdjustmentSchema = z.number().multipleOf(0.01).min(-99999999.99).max(99999999.99);
+export const priceAdjustmentReasonSchema = z.string().trim().min(1).max(191);
+
+export const createEntryOrderInputSchema = z
+  .object({
+    promoCode: promoCodeSchema.optional(),
+    contactEmail: z.string().trim().email().max(254),
+    contactFirstname: z.string().trim().min(1).max(191),
+    contactLastname: z.string().trim().min(1).max(191),
+    paymentMethod: paymentMethodTypeSchema,
+    items: z.array(entryOrderItemInputSchema).min(1).max(50),
+    /** Event owner/admin only. Applied to the order total after promo discounts. */
+    priceAdjustment: priceAdjustmentSchema.optional(),
+    /** Required when priceAdjustment is non-zero. */
+    priceAdjustmentReason: priceAdjustmentReasonSchema.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.priceAdjustment && value.priceAdjustmentReason === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'A reason is required for a non-zero price adjustment.',
+        path: ['priceAdjustmentReason'],
+      });
+    }
+  });
 
 export type CreateEntryOrderInput = z.infer<typeof createEntryOrderInputSchema>;
 
@@ -260,6 +282,12 @@ export const entryOrderSchema = z.object({
   contactEmail: z.string(),
   contactFirstname: z.string(),
   contactLastname: z.string(),
+  promoCode: z.string().nullable().optional(),
+  promoPercent: z.number().nullable().optional(),
+  promoEligibleAmount: z.number().nullable().optional(),
+  promoDiscountAmount: z.number().nullable().optional(),
+  priceAdjustment: z.number().nullable().optional(),
+  priceAdjustmentReason: z.string().nullable().optional(),
   totalAmount: z.number(),
   currency: z.string(),
   paymentDueAt: dateLikeSchema.nullable().optional(),
@@ -324,6 +352,7 @@ export const entryAvailabilityActionSchema = z.object({
 });
 
 export const eventEntryAvailabilitySchema = z.object({
+  registrationFeeDiscounts: registrationFeeDiscountsSchema.optional(),
   entriesOpenAt: dateLikeSchema.nullable(),
   entriesCloseAt: dateLikeSchema.nullable(),
   currency: z.object({ code: z.string(), name: z.string() }),

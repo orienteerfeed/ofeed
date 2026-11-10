@@ -1,3 +1,4 @@
+import { registrationFeeDiscountsSchema, type RegistrationFeeDiscount } from '@repo/shared';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { ValidationError } from '../../exceptions/index.js';
 import type { GraphQLAuthContext } from '../../graphql/context.types.js';
@@ -78,6 +79,7 @@ export type EventServiceSetting = {
 export type EventServiceSettings = {
   eventId: string;
   lateEntryFeePercent: number | null;
+  registrationFeeDiscounts: RegistrationFeeDiscount[];
   services: EventServiceSetting[];
 };
 
@@ -176,6 +178,7 @@ export async function listEventServiceSettings(
     select: {
       id: true,
       lateEntryFeePercent: true,
+      registrationFeeDiscounts: true,
       services: { orderBy: [{ systemKey: 'asc' }, { id: 'asc' }] },
     },
   });
@@ -195,6 +198,9 @@ export async function listEventServiceSettings(
   return {
     eventId: event.id,
     lateEntryFeePercent: event.lateEntryFeePercent?.toNumber() ?? null,
+    registrationFeeDiscounts: registrationFeeDiscountsSchema.parse(
+      event.registrationFeeDiscounts ?? [],
+    ),
     services: [
       ...SYSTEM_SERVICE_DEFAULTS.map((defaults) => {
         const stored = systemByKey.get(defaults.systemKey);
@@ -326,4 +332,22 @@ export async function deleteCustomEventServiceForGraphQL(
 
   await prisma.eventService.delete({ where: { id } });
   return { message: 'Event service deleted' };
+}
+
+export async function updateRegistrationFeeDiscountsForGraphQL(
+  prisma: AppPrismaClient,
+  auth: GraphQLAuthContext,
+  eventId: string,
+  rules: unknown,
+): Promise<{ message: string }> {
+  await requireEventOwnerOrAdmin(prisma, auth, eventId);
+  const parsed = registrationFeeDiscountsSchema.safeParse(rules);
+  if (!parsed.success) {
+    throw new ValidationError('Invalid registration fee discount rules.');
+  }
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { registrationFeeDiscounts: parsed.data },
+  });
+  return { message: 'Registration fee discounts updated.' };
 }

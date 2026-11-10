@@ -49,9 +49,7 @@ const OAuthRequest = OAuth2Server.Request;
 const OAuthResponse = OAuth2Server.Response;
 
 const oauth = new OAuth2Server({
-  model: oauth2Model as OAuth2Server.ClientCredentialsModel &
-    OAuth2Server.PasswordModel &
-    OAuth2Server.RefreshTokenModel,
+  model: oauth2Model,
 });
 
 function formatZodError(error: z.ZodError) {

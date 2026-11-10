@@ -7,6 +7,7 @@ import {
 
 import { EntryItemActionKey, EntryStatus } from '../../generated/prisma/enums.js';
 import { builder } from '../../graphql/builder.js';
+import { isAuthzError, requireEventOwnerOrAdmin } from '../../utils/authz.js';
 import { PaymentMethodTypeRef } from '../event/event-payment-methods.graphql-types.js';
 
 /**
@@ -163,6 +164,7 @@ export const EntryRef = builder.prismaObject('Entry', {
     }),
     paymentDueAt: t.expose('paymentDueAt', { type: 'DateTime', nullable: true }),
     paid: t.exposeBoolean('paid'),
+    paymentCount: t.relationCount('payments'),
     paymentMethod: t.field({
       type: PaymentMethodTypeRef,
       nullable: true,
@@ -205,6 +207,40 @@ export const EntryRef = builder.prismaObject('Entry', {
     contactEmail: t.exposeString('contactEmail'),
     contactFirstname: t.exposeString('contactFirstname'),
     contactLastname: t.exposeString('contactLastname'),
+    promoCode: t.exposeString('promoCode', { nullable: true }),
+    promoPercent: t.float({
+      nullable: true,
+      select: { promoPercent: true },
+      resolve: (entry) => entry.promoPercent?.toNumber() ?? null,
+    }),
+    promoEligibleAmount: t.float({
+      nullable: true,
+      select: { promoEligibleAmount: true },
+      resolve: (entry) => entry.promoEligibleAmount?.toNumber() ?? null,
+    }),
+    promoDiscountAmount: t.float({
+      nullable: true,
+      select: { promoDiscountAmount: true },
+      resolve: (entry) => entry.promoDiscountAmount?.toNumber() ?? null,
+    }),
+    priceAdjustment: t.float({
+      nullable: true,
+      select: { priceAdjustment: true },
+      resolve: (entry) => entry.priceAdjustment?.toNumber() ?? null,
+    }),
+    priceAdjustmentReason: t.string({
+      nullable: true,
+      select: { priceAdjustmentReason: true, eventId: true },
+      resolve: async (entry, _args, context) => {
+        try {
+          await requireEventOwnerOrAdmin(context.prisma, context.auth, entry.eventId);
+          return entry.priceAdjustmentReason;
+        } catch (error) {
+          if (isAuthzError(error)) return null;
+          throw error;
+        }
+      },
+    }),
     totalAmount: t.float({
       select: { totalAmount: true },
       resolve: (entry) => entry.totalAmount.toNumber(),

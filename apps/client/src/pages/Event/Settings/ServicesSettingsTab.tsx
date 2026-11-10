@@ -1,3 +1,5 @@
+import { PromoCodeSettings } from './PromoCodeSettings';
+import { RegistrationFeeDiscountSettings } from './RegistrationFeeDiscountSettings';
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
@@ -985,6 +987,9 @@ export const ServicesSettingsTab = ({
           </Table>
         </div>
       </section>
+
+      <RegistrationFeeDiscountSettings eventId={eventId} />
+      <PromoCodeSettings eventId={eventId} />
 
       <PaymentMethodsSettings t={t} eventId={eventId} />
 

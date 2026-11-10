@@ -105,3 +105,29 @@ export function summarizeEntryTimeline(
       : null,
   };
 }
+
+/** Least-squares trend over displayed time points; never predicts future entries. */
+export function addEntryTimelineTrend<T extends EntryTimelinePoint>(
+  points: T[],
+  timeOf: (point: T) => number = point => Date.parse(`${point.date}T00:00:00Z`)
+): (T & { trend: number | null })[] {
+  if (points.length < 2)
+    return points.map(point => ({ ...point, trend: null }));
+  const origin = timeOf(points[0]!);
+  const days = points.map(point => (timeOf(point) - origin) / 86_400_000);
+  const meanX = days.reduce((sum, day) => sum + day, 0) / points.length;
+  const meanY =
+    points.reduce((sum, point) => sum + point.total, 0) / points.length;
+  const variance = days.reduce((sum, day) => sum + (day - meanX) ** 2, 0);
+  if (variance === 0) return points.map(point => ({ ...point, trend: null }));
+  const slope =
+    points.reduce(
+      (sum, point, index) =>
+        sum + (days[index]! - meanX) * (point.total - meanY),
+      0
+    ) / variance;
+  return points.map((point, index) => ({
+    ...point,
+    trend: Math.max(0, meanY + slope * (days[index]! - meanX)),
+  }));
+}

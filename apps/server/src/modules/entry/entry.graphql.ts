@@ -19,6 +19,7 @@ import { hasEntryOrderAccess } from './entry-public-access.js';
 
 const EntryOrderUpdateItemInputRef = builder.inputType('EntryOrderUpdateItemInput', {
   fields: (t) => ({
+    entryItemId: t.int({ required: false }),
     classId: t.int({ required: true }),
     firstname: t.string({ required: true }),
     lastname: t.string({ required: true }),
@@ -39,6 +40,16 @@ const EntryOrderUpdateInputRef = builder.inputType('EntryOrderUpdateInput', {
     contactLastname: t.string({ required: true }),
     paymentMethod: t.field({ type: PaymentMethodTypeRef, required: true }),
     items: t.field({ type: [EntryOrderUpdateItemInputRef], required: true }),
+    priceAdjustment: t.float({
+      required: false,
+      description:
+        'Signed manual order price correction (negative = discount). Omit to keep the stored ' +
+        'value, null to clear it, a number to set it.',
+    }),
+    priceAdjustmentReason: t.string({
+      required: false,
+      description: 'Required (1-191 chars) when priceAdjustment is set to a non-zero number.',
+    }),
   }),
 });
 
@@ -112,7 +123,10 @@ builder.mutationFields((t) => ({
         contactFirstname: args.input.contactFirstname,
         contactLastname: args.input.contactLastname,
         paymentMethod: args.input.paymentMethod,
+        priceAdjustment: args.input.priceAdjustment,
+        priceAdjustmentReason: args.input.priceAdjustmentReason,
         items: args.input.items.map((item) => ({
+          entryItemId: item.entryItemId ?? undefined,
           classId: item.classId,
           firstname: item.firstname,
           lastname: item.lastname,
@@ -168,11 +182,13 @@ builder.mutationFields((t) => ({
     args: {
       entryId: t.arg.string({ required: true }),
       paid: t.arg.boolean({ required: true }),
+      deviceId: t.arg.string({ required: false }),
     },
     resolve: async (query, _root, args, context) => {
       await entryOrderPaidUpdateForGraphQL(context.prisma, context.auth, {
         entryId: args.entryId,
         paid: args.paid,
+        deviceId: args.deviceId ?? undefined,
       }).catch((err: unknown) => rethrowEntryWriteError(err, 'Failed to update entry payment'));
 
       return context.prisma.entry.findUniqueOrThrow({

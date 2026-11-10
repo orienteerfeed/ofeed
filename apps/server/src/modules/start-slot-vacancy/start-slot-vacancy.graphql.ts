@@ -1,3 +1,4 @@
+import { RegistrationFeeDiscountRef } from '../event/event-services.graphql-types.js';
 import { builder } from '../../graphql/builder.js';
 import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
@@ -107,6 +108,9 @@ const EntryAvailabilityRef = builder
   .objectRef<EventEntryAvailability>('EntryAvailability')
   .implement({
     fields: (t) => ({
+      registrationFeeDiscounts: t.expose('registrationFeeDiscounts', {
+        type: [RegistrationFeeDiscountRef],
+      }),
       entriesOpenAt: t.expose('entriesOpenAt', { type: 'DateTime', nullable: true }),
       entriesCloseAt: t.expose('entriesCloseAt', { type: 'DateTime', nullable: true }),
       currency: t.field({
