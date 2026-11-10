@@ -77,7 +77,8 @@
         "Opens": "Ouverture",
         "Closes": "Clôture",
         "Race": "Course",
-        "Table": "Valeurs quotidiennes"
+        "Table": "Valeurs quotidiennes",
+        "Trend": "Tendance linéaire"
       },
       "Anomalies": {
         "Title": "Analyse des anomalies",
@@ -280,6 +281,7 @@
         }
       },
       "Splits": {
+        "ShowClubs": "Afficher les clubs",
         "Competitor": "Concurrent",
         "TooltipCriticalDeviation": "Écart critique : +{{time}} ({{deviation}}σ)",
         "TooltipCumulativeTimeAt": "Temps cumulé au poste {{controlCode}}",
@@ -301,6 +303,18 @@
           "Services": "Services"
         },
         "Services": {
+          "RegistrationDiscounts": {
+            "Title": "Réductions selon l’immatriculation",
+            "Description": "ABC* correspond aux immatriculations commençant par ABC ; ? remplace un caractère. La réduction la plus élevée s’applique aux frais avec majorations et à la location de puce. Avec 100 %, les deux sont gratuits. Les commandes enregistrées ne sont pas recalculées automatiquement.",
+            "Pattern": "Motif d’immatriculation",
+            "Percent": "Réduction (%)",
+            "Free": "Gratuit",
+            "Remove": "Supprimer la règle",
+            "Add": "Ajouter une règle",
+            "Save": "Enregistrer les réductions",
+            "Empty": "Aucune règle de réduction configurée.",
+            "Validation": "Saisissez un motif de 1 à 100 caractères : lettres, chiffres, espace, _, -, * ou ?. Réduction de 0 à 100 % avec deux décimales au maximum ; 30 règles maximum."
+          },
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
@@ -575,8 +589,18 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "LateEntryFeeDisabledTooltip": "Do not increase the fee for late entries.",
           "LateEntryFeeDisabledAria": "Do not increase the fee for late entries in class {{name}}",
+          "ActionsMenu": "Actions pour la catégorie {{name}}",
           "BirthYearInvalid": "Entrez une année valide (min. 4 chiffres).",
-          "BirthYearRangeError": "L'année de début doit être inférieure ou égale à l'année de fin."
+          "BirthYearRangeError": "L'année de début doit être inférieure ou égale à l'année de fin.",
+          "Delete": {
+            "Action": "Supprimer",
+            "Aria": "Supprimer la catégorie {{name}}",
+            "Title": "Supprimer la catégorie « {{name}} » ?",
+            "Description": "Cette catégorie, ses concurrents, équipes, résultats, temps intermédiaires, pointages, protocoles, créneaux de départ et éléments d’inscription seront définitivement supprimés. Les commandes, leurs montants initiaux et paiements, les parcours et organisations partagés seront conservés. Aucun paiement ne sera remboursé. Cette action est irréversible.",
+            "Confirm": "Supprimer avec les données liées",
+            "Success": "La catégorie et ses données liées ont été supprimées.",
+            "Error": "Impossible de supprimer la catégorie."
+          }
         },
         "Files": {
           "StartList": "Liste de départ",
@@ -965,7 +989,9 @@
           "Edit": "Modifier",
           "EditUnavailable": "La modification des inscriptions n’est pas encore disponible.",
           "ExpandItems": "Afficher les éléments",
-          "CollapseItems": "Masquer les éléments"
+          "CollapseItems": "Masquer les éléments",
+          "MarkCashPaid": "Recevoir le paiement en espèces",
+          "RecordConfirmedCash": "Enregistrer le paiement en espèces confirmé"
         },
         "RejectDialog": {
           "ConfirmTitle": "Reject this entry order?",
@@ -1018,6 +1044,7 @@
             "Title": "Paiement",
             "Method": "Mode de paiement",
             "Account": "Numéro de compte",
+            "Iban": "IBAN",
             "VariableSymbol": "Symbole variable",
             "ConstantSymbol": "Symbole constant",
             "RecipientMessage": "Message au destinataire",
@@ -1275,7 +1302,7 @@
     "DragDrop": {
       "UploadIofXml": {
         "Title": "Téléverser un fichier IOF XML",
-        "Description": "Téléversez des fichiers IOF XML contenant les listes de départ et les résultats."
+        "Description": "Importez un fichier IOF XML contenant une liste de départ, des parcours ou des résultats. Le type de fichier est détecté automatiquement."
       },
       "Toast": {
         "UploadSuccess": "Fichiers téléversés avec succès !",
@@ -1341,5 +1368,80 @@
     "Label": "Délai de paiement (heures)",
     "Help": "Vide = aucune annulation automatique. 1–8760 heures après réception d’une nouvelle inscription. Espèces exclues. Les inscriptions existantes restent inchangées.",
     "Deadline": "Si le paiement n’est pas reçu avant le {{date}}, cette inscription sera automatiquement annulée."
+  },
+  "PromoCodes": {
+    "Title": "Codes promotionnels",
+    "Description": "Créez une remise en pourcentage pour cet événement. Les codes sont réutilisables jusqu’à leur révocation.",
+    "Code": "Code promotionnel",
+    "Percent": "Remise (%)",
+    "Create": "Créer un code",
+    "Empty": "Aucun code promotionnel pour le moment.",
+    "Active": "Actif",
+    "Revoked": "Révoqué",
+    "Uses": "Inscriptions utilisant le code : {{count}}",
+    "Copy": "Copier",
+    "Revoke": "Révoquer le code",
+    "RevokeDescription": "Ce code ne sera plus utilisable pour les nouvelles inscriptions. Les inscriptions existantes conserveront leur remise.",
+    "Validation": "Saisissez un code unique de 3 à 40 caractères (A–Z, 0–9, _ ou -) et une remise supérieure à 0 et au plus égale à 100 %, avec deux décimales maximum.",
+    "SaveError": "Impossible d’enregistrer le code. Vérifiez son unicité et réessayez.",
+    "LoadError": "Impossible de charger les codes promotionnels.",
+    "CopyError": "Impossible de copier le code.",
+    "AllowCombination": "Autoriser le cumul avec un code promotionnel",
+    "Apply": "Appliquer",
+    "Remove": "Supprimer",
+    "Checking": "Vérification du prix…",
+    "Invalid": "Le code est invalide ou le prix n’a pas pu être vérifié. Vérifiez le code et réessayez.",
+    "NoEligible": "Aucun de ces éléments ne peut bénéficier d’une remise promotionnelle.",
+    "Excluded": "Certains éléments sont exclus car leur remise d’inscription ne permet pas le cumul.",
+    "Subtotal": "Prix avant remise promotionnelle",
+    "Cancel": "Annuler"
+  },
+  "EntryReport": {
+    "FinancialSummary": "Synthèse financière",
+    "Currency": "Devise",
+    "OrderTotal": "Total des commandes",
+    "Received": "Paiements reçus",
+    "Outstanding": "Solde à payer",
+    "LegacyPaid": "Marqué payé sans reçu",
+    "PaidOrders": "Commandes payées",
+    "UnpaidOrders": "Commandes impayées",
+    "PaymentMethods": "Mode de paiement (commandes)",
+    "Orders": "Commandes",
+    "PaymentMethod": "Mode de paiement",
+    "DailyOrders": "Inscriptions et commandes par jour",
+    "Date": "Date",
+    "Competitors": "Participants",
+    "Categories": "Inscriptions par catégorie",
+    "Class": "Catégorie",
+    "RaceDay": "Détail du jour de course",
+    "ReceivedAt": "Inscription reçue",
+    "Competitor": "Participant",
+    "Club": "Club",
+    "Card": "Puce",
+    "Price": "Prix",
+    "Paid": "Payé",
+    "PromoCode": "Code promotionnel",
+    "Yes": "Oui",
+    "No": "Non",
+    "Unknown": "Non précisé",
+    "Excluded": "Commandes annulées / rejetées",
+    "FinanceAllClasses": "Les finances couvrent toutes les catégories de la période sélectionnée.",
+    "FinanceWholeOrders": "Les finances couvrent les commandes complètes contenant la catégorie sélectionnée, y compris leurs autres participants.",
+    "ReceiptNote": "Les paiements reçus proviennent des reçus. Les anciens statuts payés sans reçu sont indiqués séparément. Les commandes annulées et rejetées sont exclues des totaux.",
+    "StartTime": "Début de l’événement",
+    "RaceDayNote": "Participants inscrits cumulés pendant le jour de course ; horaires dans le fuseau de l’événement.",
+    "NoRaceDayEntries": "Aucune inscription dans cette sélection le jour de course.",
+    "EntryList": "Liste des inscriptions",
+    "PriceNote": "Le prix inclut la location de puce et la part attribuée de la remise promotionnelle. Le statut de paiement concerne toute la commande.",
+    "Partial": "Partiel",
+    "Previous": "Précédent",
+    "Next": "Suivant",
+    "HiddenAfterRace": "Inscriptions masquées après la période sélectionnée",
+    "UntilRace": "Jusqu’au jour de course ou à aujourd’hui",
+    "Location": "Lieu",
+    "Filters": "Période et portée",
+    "PaymentReference": "Référence de paiement",
+    "RaceStart": "Départ de la course",
+    "RaceStartNote": "Les inscriptions à droite du repère ont été reçues après le départ. Horaires dans le fuseau de l’événement."
   }
 }

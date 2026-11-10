@@ -89,6 +89,21 @@ describe('openapi doc', () => {
     });
     expect(fee.nullable).toBe(true);
     expect(availability.description).toContain('lateEntryFeePercent');
+    const availabilityData =
+      availability.responses['200'].content['application/json'].schema.properties.results.properties
+        .data;
+    expect(availabilityData.properties.registrationFeeDiscounts.items.properties).toMatchObject({
+      pattern: { type: 'string' },
+      discountPercent: { type: 'number' },
+      allowPromoCode: { type: 'boolean' },
+    });
+    expect(availability.description).toContain('registrationFeeDiscounts');
+    const body = create.requestBody.content['application/json'].schema;
+    expect(body.properties.priceAdjustment).toMatchObject({ type: 'number' });
+    expect(body.properties.priceAdjustmentReason).toMatchObject({ type: 'string', maxLength: 191 });
+    expect(body.required ?? []).not.toContain('priceAdjustment');
+    expect(create.responses['403']).toBeDefined();
+    expect(create.description).toContain('PRICE_ADJUSTMENT_NEGATIVE_TOTAL');
   });
 
   it('documents attributed payment receipts, retry behavior and closing filters', async () => {

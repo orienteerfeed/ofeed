@@ -9,6 +9,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "*"
@@ -51,6 +52,7 @@ updates:
     directory: "/apps/client"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "*"
@@ -93,6 +95,7 @@ updates:
     directory: "/apps/server"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "*"
@@ -135,6 +138,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "*"
@@ -144,6 +148,7 @@ updates:
     directory: "/apps/client"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "*"
@@ -153,6 +158,7 @@ updates:
     directory: "/apps/server"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "*"

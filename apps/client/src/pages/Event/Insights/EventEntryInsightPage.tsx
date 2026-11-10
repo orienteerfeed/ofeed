@@ -1,10 +1,18 @@
+import { fromZonedTime } from 'date-fns-tz';
+import {
+  entryReportExportSections,
+  entryPaymentMethodName,
+  type EntryReportLabel,
+} from './entry-report-format';
 import { useParams } from '@tanstack/react-router';
 import { Download, Printer, RefreshCw } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Area,
-  AreaChart,
+  ComposedChart,
+  Line,
+  Legend,
   Bar,
   BarChart,
   CartesianGrid,
@@ -31,9 +39,15 @@ import { useEvent } from '@/hooks/useEvent';
 import PATHNAMES from '@/lib/paths/pathnames';
 import { MainPageLayout } from '@/templates/MainPageLayout';
 import { toast } from '@/utils';
-import { cardInsightPrintHtml } from './card-insight.utils';
+import { entryReportPrintHtml } from './entry-report-print';
+import {
+  buildEntryReport,
+  buildEntryCumulativeCurve,
+} from './entry-report.utils';
+import { EntryReportSummary, EntryReportDetails } from './EntryReportDetails';
 import {
   addDays,
+  addEntryTimelineTrend,
   buildEntryTimeline,
   entryTimelineClasses,
   summarizeEntryTimeline,
@@ -55,6 +69,8 @@ export function EventEntryInsightPage() {
   } = useEvent(eventId);
   const query = useEntryTimeline(eventId);
   const [classId, setClassId] = useState('');
+  const reportContainer = useRef<HTMLElement>(null);
+  const financialsForAllClasses = false;
   const timeline =
     query.data?.eventEntryTimeline ?? query.previousData?.eventEntryTimeline;
   const timezone = timeline?.timezone ?? event?.timezone ?? 'UTC';
@@ -62,6 +78,29 @@ export function EventEntryInsightPage() {
   const points = useMemo(
     () => (timeline ? buildEntryTimeline(timeline, classId, today) : []),
     [timeline, classId, today]
+  );
+  const report = useMemo(
+    () =>
+      timeline?.orders
+        ? buildEntryReport(timeline, classId, today, financialsForAllClasses)
+        : undefined,
+    [timeline, classId, today]
+  );
+  const dailyPoints = useMemo(
+    () =>
+      points.map(point => ({
+        ...point,
+        orders: report?.days.find(day => day.date === point.date)?.orders ?? 0,
+      })),
+    [points, report]
+  );
+  const cumulativePoints = useMemo(
+    () => buildEntryCumulativeCurve(report, points, timezone, Date.now()),
+    [report, points, timezone]
+  );
+  const chartPoints = useMemo(
+    () => addEntryTimelineTrend(cumulativePoints, point => point.time),
+    [cumulativePoints]
   );
   const classes = useMemo(
     () => (timeline ? entryTimelineClasses(timeline) : []),
@@ -77,6 +116,8 @@ export function EventEntryInsightPage() {
   const e = (key: keyof typeof en.Pages.Insights.Entries) =>
     t(`Pages.Insights.Entries.${key}`);
 
+  const r = (key: EntryReportLabel) => t(`EntryReport.${key}`);
+
   const dayFormat = new Intl.DateTimeFormat(i18n.language, {
     day: 'numeric',
     month: 'numeric',
@@ -90,6 +131,29 @@ export function EventEntryInsightPage() {
     dayFormat.format(new Date(`${date}T00:00:00Z`));
   const formatLongDay = (date: string) =>
     longDayFormat.format(new Date(`${date}T00:00:00Z`));
+  const dateTimeFormat = new Intl.DateTimeFormat(i18n.language, {
+    timeZone: timezone,
+    day: 'numeric',
+    month: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const startTime = timeline?.startAt
+    ? Date.parse(timeline.startAt)
+    : undefined;
+  const firstTime = cumulativePoints[0]?.time;
+  const lastTime = cumulativePoints.at(-1)?.time;
+  const showStart =
+    startTime !== undefined &&
+    firstTime !== undefined &&
+    lastTime !== undefined &&
+    startTime >= firstTime &&
+    startTime <= lastTime;
+  const startLabel = showStart
+    ? `${r('RaceStart')} · ${dateTimeFormat.format(startTime)}`
+    : '';
+  const atMidnight = (date: string) =>
+    fromZonedTime(`${date}T00:00:00`, timezone).getTime();
   const percentFormat = new Intl.NumberFormat(i18n.language, {
     style: 'percent',
     maximumFractionDigits: 0,
@@ -124,7 +188,34 @@ export function EventEntryInsightPage() {
     }).format(new Date());
     return [
       [
-        [e('Title'), event?.name ?? ''],
+        [e('Title'), timeline?.eventName ?? event?.name ?? ''],
+        [r('Location'), timeline?.location ?? ''],
+        [
+          r('StartTime'),
+          timeline?.startAt
+            ? new Intl.DateTimeFormat(i18n.language, {
+                timeZone: timezone,
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              }).format(new Date(timeline.startAt))
+            : '',
+        ],
+        [r('Filters'), r('UntilRace')],
+        ...(report
+          ? [
+              [r('Orders'), report.orders],
+              [r('Excluded'), report.cancelled],
+              [r('HiddenAfterRace'), report.hiddenEntries],
+              [
+                r('FinancialSummary'),
+                r(
+                  !classId || financialsForAllClasses
+                    ? 'FinanceAllClasses'
+                    : 'FinanceWholeOrders'
+                ),
+              ],
+            ]
+          : []),
         [t('Pages.Insights.Generated'), generated],
         [t('Pages.Insights.Timezone'), timezone],
         [
@@ -136,14 +227,33 @@ export function EventEntryInsightPage() {
         [e('LateEntries'), summary.lateEntries],
       ],
       [
-        [e('Date'), e('Daily'), e('LateEntries'), e('Cumulative')],
+        [e('Table')],
+        [
+          e('Date'),
+          e('Daily'),
+          ...(report ? [r('Orders')] : []),
+          e('LateEntries'),
+          e('Cumulative'),
+        ],
         ...points.map(point => [
           point.date,
           point.entries,
+          ...(report
+            ? [report.days.find(day => day.date === point.date)?.orders ?? 0]
+            : []),
           point.lateEntries,
           point.total,
         ]),
       ],
+      ...(report
+        ? entryReportExportSections(
+            report,
+            r,
+            i18n.language,
+            timezone,
+            method => entryPaymentMethodName(method, t)
+          ).filter(section => section[0]?.[0] !== r('DailyOrders'))
+        : []),
     ];
   };
   const download = () => {
@@ -171,19 +281,37 @@ export function EventEntryInsightPage() {
     }
     popup.opener = null;
     popup.document.write(
-      cardInsightPrintHtml(e('Title'), i18n.language, exportSections())
+      entryReportPrintHtml(
+        e('Title'),
+        i18n.language,
+        exportSections().filter(section => section[0]?.[0] !== r('RaceDay')),
+        reportContainer.current,
+        r('FinancialSummary')
+      )
     );
     popup.document.close();
     popup.focus();
-    popup.print();
+    void Promise.all(
+      [...popup.document.images].map(image =>
+        image.decode().catch(() => undefined)
+      )
+    ).then(() => popup.print());
   };
 
   const tooltip = (
     <RechartsTooltip
       labelFormatter={label => formatLongDay(String(label))}
       formatter={(value, name) => [
-        typeof value === 'number' ? value : Number(value ?? 0),
-        name === 'total' ? e('Cumulative') : e('Daily'),
+        new Intl.NumberFormat(i18n.language, {
+          maximumFractionDigits: 1,
+        }).format(Number(value ?? 0)),
+        name === 'orders'
+          ? r('Orders')
+          : name === 'trend'
+            ? e('Trend')
+            : name === 'total'
+              ? e('Cumulative')
+              : e('Daily'),
       ]}
     />
   );
@@ -206,24 +334,12 @@ export function EventEntryInsightPage() {
         ifOverflow="extendDomain"
       />
     ) : null;
-  const markerLines = markers.map(([date, label]) => (
-    <ReferenceLine
-      key={label}
-      x={date}
-      className="stroke-muted-foreground"
-      strokeDasharray="4 4"
-      label={{
-        value: label,
-        position: 'insideTopLeft',
-        className: 'fill-muted-foreground text-xs',
-      }}
-    />
-  ));
 
   return (
     <MainPageLayout t={t}>
       <section
         className="container mx-auto space-y-6 px-4 py-6"
+        ref={reportContainer}
         aria-busy={query.loading || eventLoading}
       >
         <BackLink to={PATHNAMES.eventInsights(eventId).url}>
@@ -232,7 +348,20 @@ export function EventEntryInsightPage() {
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">{e('Title')}</h1>
-            <p className="text-muted-foreground">{event?.name}</p>
+            <p className="text-muted-foreground">
+              {timeline?.eventName ?? event?.name}
+            </p>
+            {timeline?.startAt && (
+              <p className="text-sm text-muted-foreground">
+                {new Intl.DateTimeFormat(i18n.language, {
+                  timeZone: timezone,
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                }).format(new Date(timeline.startAt))}{' '}
+                · {timezone}
+                {timeline.location ? ` · ${timeline.location}` : ''}
+              </p>
+            )}
             <p className="mt-2 text-sm text-muted-foreground">
               {e('Description')}
             </p>
@@ -274,6 +403,11 @@ export function EventEntryInsightPage() {
             </select>
           </div>
         </div>
+        {report && report.hiddenEntries > 0 && (
+          <p role="status" className="rounded-lg border p-3 text-sm">
+            {r('HiddenAfterRace')}: <strong>{report.hiddenEntries}</strong>
+          </p>
+        )}
         {(query.loading || eventLoading) && <p role="status">{e('Loading')}</p>}
         {failed && (
           <div
@@ -315,11 +449,19 @@ export function EventEntryInsightPage() {
                 </div>
               ))}
             </dl>
+            {report && (
+              <EntryReportSummary
+                report={report}
+                classSelected={!!classId}
+                financialsForAllClasses={financialsForAllClasses}
+              />
+            )}
             {summary.total === 0 ? (
               <p role="status">{e('Empty')}</p>
             ) : (
               <>
                 <section
+                  data-entry-report-chart="cumulative"
                   aria-labelledby="entry-cumulative-title"
                   className="space-y-2"
                 >
@@ -331,26 +473,81 @@ export function EventEntryInsightPage() {
                   </h2>
                   <div style={{ height: CHART_HEIGHT }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={points}
-                        margin={{ top: 24, right: 16, left: 0, bottom: 0 }}
+                      <ComposedChart
+                        data={chartPoints}
+                        margin={{ top: 30, right: 20, left: 0, bottom: 0 }}
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
                           className="stroke-border/60"
                           vertical={false}
                         />
-                        {xAxis}
+                        <XAxis
+                          dataKey="time"
+                          type="number"
+                          domain={['dataMin', 'dataMax']}
+                          tickFormatter={value =>
+                            dateTimeFormat.format(Number(value))
+                          }
+                          tickLine={false}
+                          axisLine={false}
+                          minTickGap={32}
+                        />
                         <YAxis
                           allowDecimals={false}
                           tickLine={false}
                           axisLine={false}
                         />
-                        {tooltip}
-                        {lateArea}
-                        {markerLines}
+                        <RechartsTooltip
+                          labelFormatter={value =>
+                            dateTimeFormat.format(Number(value))
+                          }
+                          formatter={(value, name) => [
+                            new Intl.NumberFormat(i18n.language, {
+                              maximumFractionDigits: 1,
+                            }).format(Number(value ?? 0)),
+                            name === 'trend' ? e('Trend') : e('Cumulative'),
+                          ]}
+                        />
+                        {lateFrom &&
+                          inRange(lateFrom) &&
+                          lastTime !== undefined && (
+                            <ReferenceArea
+                              x1={atMidnight(lateFrom)}
+                              x2={lastTime}
+                              className="fill-muted"
+                              fillOpacity={0.6}
+                            />
+                          )}
+                        {showStart && (
+                          <ReferenceArea
+                            x1={startTime}
+                            x2={lastTime}
+                            fill="var(--color-chart-2)"
+                            fillOpacity={0.08}
+                          />
+                        )}
+                        {markers
+                          .filter(
+                            ([date]) =>
+                              date !== timeline?.eventOn &&
+                              atMidnight(date) !== startTime
+                          )
+                          .map(([date, label]) => (
+                            <ReferenceLine
+                              key={label}
+                              x={atMidnight(date)}
+                              className="stroke-muted-foreground"
+                              strokeDasharray="4 4"
+                              label={{
+                                value: label,
+                                position: 'insideTopLeft',
+                                className: 'fill-muted-foreground text-xs',
+                              }}
+                            />
+                          ))}
                         <Area
-                          type="stepAfter"
+                          type="monotoneX"
                           dataKey="total"
                           stroke="var(--color-chart-1)"
                           strokeWidth={2}
@@ -358,11 +555,52 @@ export function EventEntryInsightPage() {
                           fillOpacity={0.18}
                           isAnimationActive={false}
                         />
-                      </AreaChart>
+                        {points.length >= 2 && (
+                          <Line
+                            type="linear"
+                            dataKey="trend"
+                            stroke="var(--color-chart-2)"
+                            strokeWidth={2}
+                            strokeDasharray="6 4"
+                            dot={false}
+                            activeDot={false}
+                            isAnimationActive={false}
+                            legendType="plainline"
+                          />
+                        )}
+                        <Legend
+                          formatter={value =>
+                            value === 'trend' ? e('Trend') : e('Cumulative')
+                          }
+                        />
+                        {showStart && (
+                          <ReferenceLine
+                            x={startTime}
+                            stroke="var(--color-destructive)"
+                            strokeWidth={2}
+                            strokeDasharray="5 3"
+                            label={{
+                              value: startLabel,
+                              position:
+                                startTime! > (firstTime! + lastTime!) / 2
+                                  ? 'insideTopRight'
+                                  : 'insideTopLeft',
+                              fill: 'var(--color-destructive)',
+                              fontSize: 10,
+                            }}
+                          />
+                        )}
+                      </ComposedChart>
                     </ResponsiveContainer>
                   </div>
+                  {showStart && (
+                    <p className="text-sm text-muted-foreground">
+                      <strong>{startLabel}</strong> — {r('RaceStartNote')}
+                    </p>
+                  )}
                 </section>
                 <section
+                  data-entry-report-chart="daily"
                   aria-labelledby="entry-daily-title"
                   className="space-y-2"
                 >
@@ -372,7 +610,7 @@ export function EventEntryInsightPage() {
                   <div style={{ height: DAILY_CHART_HEIGHT }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
-                        data={points}
+                        data={dailyPoints}
                         margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
                       >
                         <CartesianGrid
@@ -388,6 +626,21 @@ export function EventEntryInsightPage() {
                         />
                         {tooltip}
                         {lateArea}
+                        {report && (
+                          <Legend
+                            formatter={value =>
+                              value === 'orders' ? r('Orders') : e('Daily')
+                            }
+                          />
+                        )}
+                        {report && (
+                          <Bar
+                            dataKey="orders"
+                            fill="var(--color-chart-2)"
+                            radius={[4, 4, 0, 0]}
+                            isAnimationActive={false}
+                          />
+                        )}
                         <Bar
                           dataKey="entries"
                           fill="var(--color-chart-1)"
@@ -414,6 +667,11 @@ export function EventEntryInsightPage() {
                         <TableHead className="text-right">
                           {e('Daily')}
                         </TableHead>
+                        {report && (
+                          <TableHead className="text-right">
+                            {r('Orders')}
+                          </TableHead>
+                        )}
                         <TableHead className="text-right">
                           {e('LateEntries')}
                         </TableHead>
@@ -431,6 +689,13 @@ export function EventEntryInsightPage() {
                             <TableCell className="text-right">
                               {point.entries}
                             </TableCell>
+                            {report && (
+                              <TableCell className="text-right">
+                                {report.days.find(
+                                  day => day.date === point.date
+                                )?.orders ?? 0}
+                              </TableCell>
+                            )}
                             <TableCell className="text-right">
                               {point.lateEntries}
                             </TableCell>
@@ -443,6 +708,14 @@ export function EventEntryInsightPage() {
                   </Table>
                 </details>
               </>
+            )}
+            {report && (
+              <EntryReportDetails
+                key={classId}
+                report={report}
+                timezone={timezone}
+                startAt={timeline?.startAt}
+              />
             )}
           </>
         )}

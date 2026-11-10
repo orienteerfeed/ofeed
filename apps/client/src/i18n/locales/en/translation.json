@@ -77,7 +77,8 @@
         "Opens": "Opens",
         "Closes": "Deadline",
         "Race": "Race",
-        "Table": "Daily values"
+        "Table": "Daily values",
+        "Trend": "Linear trend"
       },
       "Anomalies": {
         "Title": "Anomaly analysis",
@@ -812,7 +813,9 @@
           "Edit": "Edit",
           "EditUnavailable": "Editing entry orders is not available yet.",
           "ExpandItems": "Show items",
-          "CollapseItems": "Hide items"
+          "CollapseItems": "Hide items",
+          "MarkCashPaid": "Receive cash payment",
+          "RecordConfirmedCash": "Record confirmed cash payment"
         },
         "RejectDialog": {
           "ConfirmTitle": "Reject this entry order?",
@@ -865,6 +868,7 @@
             "Title": "Payment",
             "Method": "Payment method",
             "Account": "Account number",
+            "Iban": "IBAN",
             "VariableSymbol": "Variable symbol",
             "ConstantSymbol": "Constant symbol",
             "RecipientMessage": "Message for recipient",
@@ -928,6 +932,18 @@
           "Services": "Services"
         },
         "Services": {
+          "RegistrationDiscounts": {
+            "Title": "Discounts by registration",
+            "Description": "ABC* matches registrations starting with ABC; ? matches one character. The highest matching discount applies to the entry fee including surcharges and to card rental. A 100% discount makes both free. Saved orders are not automatically repriced.",
+            "Pattern": "Registration pattern",
+            "Percent": "Discount (%)",
+            "Free": "Free entry",
+            "Remove": "Remove rule",
+            "Add": "Add rule",
+            "Save": "Save discounts",
+            "Empty": "No discount rules configured yet.",
+            "Validation": "Enter a pattern (1–100 characters: letters, digits, space, _, -, * or ?) and a 0–100% discount with at most two decimal places. Maximum 30 rules."
+          },
           "Title": "Services",
           "Description": "Configure services offered by this event, their prices, and late-entry fee increase.",
           "PaymentMethods": {
@@ -1202,8 +1218,18 @@
           "MaxCompetitorsOverCapacityTooltip": "The number of registered competitors ({{count}}) exceeds the configured limit. Adjust the limit or remove competitors.",
           "LateEntryFeeDisabledTooltip": "Do not increase the fee for late entries.",
           "LateEntryFeeDisabledAria": "Do not increase the fee for late entries in class {{name}}",
+          "ActionsMenu": "Actions for class {{name}}",
           "BirthYearInvalid": "Enter a valid year (min. 4 digits).",
-          "BirthYearRangeError": "Birth year from must be less than or equal to birth year to."
+          "BirthYearRangeError": "Birth year from must be less than or equal to birth year to.",
+          "Delete": {
+            "Action": "Delete",
+            "Aria": "Delete class {{name}}",
+            "Title": "Delete class “{{name}}”?",
+            "Description": "Permanently delete this class, its competitors, teams, results, splits, control punches, protocols, start slots and entry items. Orders, their original amounts and payments, shared courses and organisations remain. This does not refund payments. This action cannot be undone.",
+            "Confirm": "Delete with dependent data",
+            "Success": "The class and its dependent data were deleted.",
+            "Error": "Failed to delete the class."
+          }
         },
         "Files": {
           "StartList": "Start list",
@@ -1341,6 +1367,7 @@
         "LegendSignificantDeviation": "Significant deviation (>1.5σ)",
         "LoadingChart": "Loading split chart",
         "LoadingTimes": "Loading split times",
+        "ShowClubs": "Show clubs",
         "ResetSort": "Reset sort",
         "Runners": "Runners",
         "RunnersCount_one": "{{count}} runner",
@@ -2004,7 +2031,7 @@
     "DragDrop": {
       "UploadIofXml": {
         "Title": "Upload IOF XML",
-        "Description": "Upload IOF XML files with start lists and results."
+        "Description": "Upload an IOF XML file with a start list, courses or results. The file type is detected automatically."
       },
       "Toast": {
         "UploadSuccess": "Files uploaded successfully!",
@@ -2043,6 +2070,7 @@
   },
   "Molecules": {
     "DragDrop": {
+      "FileUpload": "File upload",
       "ClickToUpload": "Click to upload",
       "Delete": "Delete",
       "OrdDragAndDrop": "or drag and drop",
@@ -2209,5 +2237,80 @@
     "Label": "Payment deadline (hours)",
     "Help": "Empty = no automatic cancellation. 1–8760 hours after a new order is received. Cash is excluded. Existing orders are unaffected.",
     "Deadline": "If payment is not received by {{date}}, this order will be automatically cancelled."
+  },
+  "PromoCodes": {
+    "Title": "Promo codes",
+    "Description": "Create a percentage discount for this event. Codes can be reused until revoked.",
+    "Code": "Promo code",
+    "Percent": "Discount (%)",
+    "Create": "Create code",
+    "Empty": "No promo codes yet.",
+    "Active": "Active",
+    "Revoked": "Revoked",
+    "Uses": "Orders using code: {{count}}",
+    "Copy": "Copy",
+    "Revoke": "Revoke code",
+    "RevokeDescription": "This code will no longer work for new orders. Existing orders keep their discount.",
+    "Validation": "Enter a unique 3–40 character code (A–Z, 0–9, _ or -) and a discount greater than 0 and at most 100%, with up to two decimal places.",
+    "SaveError": "Unable to save code. Check that it is unique and try again.",
+    "LoadError": "Unable to load promo codes.",
+    "CopyError": "Unable to copy code.",
+    "AllowCombination": "Allow combining with a promo code",
+    "Apply": "Apply",
+    "Remove": "Remove",
+    "Checking": "Checking price…",
+    "Invalid": "The promo code is invalid or the price could not be checked. Check the code and try again.",
+    "NoEligible": "None of these items are eligible for a promo discount.",
+    "Excluded": "Some items are excluded because their registration discount does not allow combining with a promo code.",
+    "Subtotal": "Price before promo discount",
+    "Cancel": "Cancel"
+  },
+  "EntryReport": {
+    "FinancialSummary": "Financial summary",
+    "Currency": "Currency",
+    "OrderTotal": "Order total",
+    "Received": "Received payments",
+    "Outstanding": "Outstanding balance",
+    "LegacyPaid": "Marked paid without receipt",
+    "PaidOrders": "Paid orders",
+    "UnpaidOrders": "Unpaid orders",
+    "PaymentMethods": "Payment method (orders)",
+    "Orders": "Orders",
+    "PaymentMethod": "Payment method",
+    "DailyOrders": "Entries and orders per day",
+    "Date": "Date",
+    "Competitors": "Competitors",
+    "Categories": "Entries by class",
+    "Class": "Class",
+    "RaceDay": "Race-day detail",
+    "ReceivedAt": "Received at",
+    "Competitor": "Competitor",
+    "Club": "Club",
+    "Card": "Card",
+    "Price": "Price",
+    "Paid": "Paid",
+    "PromoCode": "Promo code",
+    "Yes": "Yes",
+    "No": "No",
+    "Unknown": "Not specified",
+    "Excluded": "Cancelled / rejected orders",
+    "FinanceAllClasses": "Finances cover all classes in the selected period.",
+    "FinanceWholeOrders": "Finances cover whole orders containing the selected class, including their other competitors.",
+    "ReceiptNote": "Received payments come from receipts. Historical paid flags without receipts are shown separately. Cancelled and rejected orders are excluded from totals.",
+    "StartTime": "Event start",
+    "RaceDayNote": "Cumulative competitors entered during race day; times use the event timezone.",
+    "NoRaceDayEntries": "No entries in this selection on race day.",
+    "EntryList": "Entry list",
+    "PriceNote": "Price includes card rental and the allocated promo discount. Payment status applies to the whole order.",
+    "Partial": "Partial",
+    "Previous": "Previous",
+    "Next": "Next",
+    "HiddenAfterRace": "Entries hidden beyond the selected period",
+    "UntilRace": "Through race day or today",
+    "Location": "Location",
+    "Filters": "Period and scope",
+    "PaymentReference": "Payment reference",
+    "RaceStart": "Race start",
+    "RaceStartNote": "Entries to the right of the milestone were received after the race started. Times use the event timezone."
   }
 }
