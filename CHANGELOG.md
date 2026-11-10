@@ -88,6 +88,9 @@ and this project adheres to
 
 ### Changed
 
+- CI validation uses Node.js 24 actions and an explicit Ubuntu 24.04 runner to
+  avoid deprecated action runtimes and automatic operating-system migration.
+
 - Board: not-competing (MS/NC) athletes stay in the start list marked after the
   name (`(MS)` in Czech, `(NC)` otherwise, or a unicorn with emojis on). Once
   they have a time they move below running athletes and before DNS, sorted by
