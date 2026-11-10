@@ -50,6 +50,28 @@ const qrPayment = {
 };
 
 describe('entry email notifications', () => {
+  it.each(['CASH', 'QR_PAYMENT', 'CUSTOM_PAYMENT_LINK', 'OFEED_PAYMENT'] as const)(
+    'confirms a free %s order without asking for payment',
+    async (method) => {
+      await notifyEntryOrderReceived({ ...order, totalAmount: 0 }, event, {
+        method,
+        qrPayment,
+        paymentUrl: 'https://pay.example.test',
+      });
+      expect(qrCodeMock.toBuffer).not.toHaveBeenCalled();
+      expect(ejsMock.renderFile).toHaveBeenNthCalledWith(
+        1,
+        expect.any(String),
+        expect.objectContaining({
+          payment: null,
+          paragraphs: expect.arrayContaining([
+            'Objednávka je zdarma. Platba není potřeba a objednávka je označena jako zaplacená.',
+          ]),
+        }),
+      );
+      expect(sendEmailMock.mock.calls[0]![0].attachments).toBeUndefined();
+    },
+  );
   beforeEach(() => {
     ejsMock.renderFile.mockReset();
     ejsMock.renderFile.mockResolvedValue('<html>email</html>');

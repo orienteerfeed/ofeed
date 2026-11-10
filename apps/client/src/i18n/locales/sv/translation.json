@@ -1962,6 +1962,7 @@
       }
     },
     "Checkout": {
+      "NoPaymentRequired": "Den här beställningen är gratis. Ingen betalning krävs och beställningen är markerad som betald.",
       "Title": "Anmälningskorg",
       "CartAriaLabel": "Anmälningskorg ({{count}})",
       "EmptyCart": "Din anmälningskorg är tom.",

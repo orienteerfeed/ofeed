@@ -1188,6 +1188,7 @@
       }
     },
     "Checkout": {
+      "NoPaymentRequired": "Cette commande est gratuite. Aucun paiement n’est requis et la commande est marquée comme payée.",
       "Title": "Panier d’inscriptions",
       "CartAriaLabel": "Panier d’inscriptions ({{count}})",
       "EmptyCart": "Votre panier d’inscriptions est vide.",

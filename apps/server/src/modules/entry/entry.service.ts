@@ -611,6 +611,7 @@ export async function createEntryOrder(
   const discount = computePromoDiscount(pricedItems, promo?.discountPercent.toNumber() ?? 0);
   if (promo && discount.eligibleAmount <= 0) throw new ValidationError('PROMO_NO_ELIGIBLE_ITEMS');
   const totalAmount = applyPriceAdjustment(discount.totalAmount, priceAdjustment);
+  const paymentRequired = totalAmount > 0;
   const currency = event.currency.iso4217Alpha3;
 
   const selectedPaymentMethod = availablePaymentMethodsForEvent({
@@ -621,12 +622,38 @@ export async function createEntryOrder(
     throw new ValidationError('The selected payment method is not available for this event.');
   }
 
+  // Match the public registration lookup scope. Never trust a license supplied
+  // by an entrant (including values left in older carts).
+  const registrations = [
+    ...new Set(pricedItems.map((item) => normalizeRegistration(item.registration))),
+  ].filter(Boolean);
+  const registeredAthletes = registrations.length
+    ? await prisma.registration.findMany({
+        where: {
+          source: 'ORIS',
+          sport: 'OB',
+          year: now.getFullYear(),
+          registration: { in: registrations },
+        },
+        select: { registration: true, license: true },
+      })
+    : [];
+  const licenseByRegistration = new Map(
+    registeredAthletes.map((athlete) => [
+      normalizeRegistration(athlete.registration),
+      athlete.license,
+    ]),
+  );
+  for (const item of pricedItems) {
+    item.license = licenseByRegistration.get(normalizeRegistration(item.registration)) ?? null;
+  }
+
   const maxAttempts = 5;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const paymentReference = generatePaymentReference(now, event.paymentReferencePrefix);
     try {
       const qrPayment =
-        input.paymentMethod === 'QR_PAYMENT' && event.bankAccountIban
+        paymentRequired && input.paymentMethod === 'QR_PAYMENT' && event.bankAccountIban
           ? createQrPaymentInstruction({
               bankAccountIban: event.bankAccountIban,
               bankAccountName: event.bankAccountName,
@@ -637,12 +664,12 @@ export async function createEntryOrder(
             })
           : null;
 
-      if (input.paymentMethod === 'QR_PAYMENT' && !qrPayment) {
+      if (paymentRequired && input.paymentMethod === 'QR_PAYMENT' && !qrPayment) {
         throw new ValidationError('QR Payment requires a bank account.');
       }
 
       const paymentUrl =
-        input.paymentMethod === 'CUSTOM_PAYMENT_LINK'
+        paymentRequired && input.paymentMethod === 'CUSTOM_PAYMENT_LINK'
           ? (() => {
               const template = event.paymentMethods.find(
                 (method) => method.type === 'CUSTOM_PAYMENT_LINK',
@@ -665,6 +692,7 @@ export async function createEntryOrder(
         data: {
           eventId,
           status: 'RECEIVED',
+          paid: !paymentRequired,
           paymentDueAt:
             input.paymentMethod !== 'CASH' && totalAmount > 0 && event.entryPaymentLifetimeHours
               ? new Date(now.getTime() + event.entryPaymentLifetimeHours * 3600000)
@@ -713,7 +741,12 @@ export async function createEntryOrder(
             })),
           },
           statusHistory: {
-            create: { status: 'RECEIVED', changedById: userId },
+            create: paymentRequired
+              ? { status: 'RECEIVED', changedById: userId }
+              : [
+                  { status: 'RECEIVED', changedById: userId },
+                  { status: null, paymentState: true, changedById: userId },
+                ],
           },
         },
         include: entryInclude,
@@ -962,7 +995,7 @@ async function updateEntryOrderInTransaction(
   const discount = computePromoDiscount(items, entry.promoPercent?.toNumber() ?? 0);
   const keepAdjustment = input.priceAdjustment === undefined;
   const priceAdjustment = keepAdjustment
-    ? entry.priceAdjustment?.toNumber() ?? null
+    ? (entry.priceAdjustment?.toNumber() ?? null)
     : parsed.data.priceAdjustment || null;
   const totalAmount = applyPriceAdjustment(discount.totalAmount, priceAdjustment);
   const hasPayments = await prisma.entryPayment.count({
@@ -984,7 +1017,7 @@ async function updateEntryOrderInTransaction(
         : {
             priceAdjustment,
             priceAdjustmentReason:
-              priceAdjustment === null ? null : parsed.data.priceAdjustmentReason ?? null,
+              priceAdjustment === null ? null : (parsed.data.priceAdjustmentReason ?? null),
             priceAdjustedById: priceAdjustment === null ? null : userId,
           }),
       ...(entry.promoPercent

@@ -1962,6 +1962,7 @@
       }
     },
     "Checkout": {
+      "NoPaymentRequired": "This order is free. No payment is required and the order is marked as paid.",
       "Title": "Entry checkout",
       "CartAriaLabel": "Entry cart ({{count}})",
       "EmptyCart": "Your entry cart is empty.",

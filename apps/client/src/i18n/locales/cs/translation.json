@@ -1967,6 +1967,7 @@
       }
     },
     "Checkout": {
+      "NoPaymentRequired": "Objednávka je zdarma. Platba není potřeba a objednávka je označena jako zaplacená.",
       "Title": "Košík přihlášek",
       "CartAriaLabel": "Košík přihlášek ({{count}})",
       "EmptyCart": "Košík přihlášek je prázdný.",

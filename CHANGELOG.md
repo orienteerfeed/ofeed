@@ -8,6 +8,17 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Confirm zero-total entry orders as paid for every payment method without QR,
+  cash or online payment requests in checkout, entry detail and email.
+
+- Automatically select card rental for an empty entry card number and deselect
+  it for a filled number, only when the event offers card rental.
+
+- Remove license selection from public entries and resolve the competitor's
+  license server-side from the matching cached federation registration.
+
 ### Added
 
 - Weekly and manually triggered GHCR cleanup retains the five newest images per

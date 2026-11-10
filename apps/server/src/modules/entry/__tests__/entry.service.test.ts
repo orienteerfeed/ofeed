@@ -315,6 +315,7 @@ type PrismaStub = {
   $transaction: ReturnType<typeof vi.fn>;
   user: { findUnique: ReturnType<typeof vi.fn> };
   event: { findUnique: ReturnType<typeof vi.fn> };
+  registration: { findMany: ReturnType<typeof vi.fn> };
   entry: {
     create: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
@@ -329,6 +330,7 @@ function makePrismaStub(): PrismaStub {
     $transaction: vi.fn(),
     user: { findUnique: vi.fn() },
     event: { findUnique: vi.fn() },
+    registration: { findMany: vi.fn().mockResolvedValue([]) },
     entry: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     entryItem: { update: vi.fn() },
   };
@@ -482,6 +484,47 @@ describe('createEntryOrder', () => {
     );
   });
 
+  it.each([
+    { registration: ' chc9501 ', cached: 'A', supplied: 'C', expected: 'A' },
+    { registration: 'CHC9501', cached: 'B', supplied: undefined, expected: 'B' },
+    { registration: 'CHC9501', cached: null, supplied: 'C', expected: null },
+    { registration: 'CHC9501', cached: undefined, supplied: 'C', expected: null },
+    { registration: undefined, cached: undefined, supplied: 'C', expected: null },
+  ])(
+    'resolves license from registrations: %j',
+    async ({ registration, cached, supplied, expected }) => {
+      prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+      prisma.entry.create.mockResolvedValue(makeStoredEntry());
+      prisma.registration.findMany.mockResolvedValue(
+        cached === undefined ? [] : [{ registration: 'CHC9501', license: cached }],
+      );
+
+      await createEntryOrder(
+        prisma as never,
+        { eventId: 'event-1', userId: null, now: NOW },
+        {
+          ...ORDER_INPUT,
+          items: [makeItem({ registration, birthYear: 1995, license: supplied })],
+        },
+      );
+
+      if (registration) {
+        expect(prisma.registration.findMany).toHaveBeenCalledWith({
+          where: {
+            source: 'ORIS',
+            sport: 'OB',
+            year: 2026,
+            registration: { in: ['CHC9501'] },
+          },
+          select: { registration: true, license: true },
+        });
+      } else {
+        expect(prisma.registration.findMany).not.toHaveBeenCalled();
+      }
+      expect(prisma.entry.create.mock.calls[0][0].data.items.create[0].license).toBe(expected);
+    },
+  );
+
   it('loads registration rules and stores the server-calculated discounted fee', async () => {
     prisma.event.findUnique.mockResolvedValue(
       makeEventRecord({ registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 25 }] }),
@@ -491,6 +534,124 @@ describe('createEntryOrder', () => {
     const args = prisma.entry.create.mock.calls[0][0];
     expect(args.data.totalAmount).toBe(75);
     expect(args.data.items.create[0].fee).toBe(75);
+  });
+
+  it.each(['CASH', 'QR_PAYMENT', 'CUSTOM_PAYMENT_LINK', 'OFEED_PAYMENT'] as const)(
+    'marks a fully discounted %s order paid without payment instructions or receipts',
+    async (paymentMethod) => {
+      prisma.event.findUnique.mockResolvedValue(
+        makeEventRecord({
+          registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 100 }],
+          bankAccountIban: 'CZ6508000000192000145399',
+          ofeedPaymentAvailable: true,
+          entryPaymentLifetimeHours: 24,
+          paymentMethods: [
+            {
+              type: paymentMethod,
+              enabled: true,
+              position: 0,
+              displayName: 'Online payment',
+              paymentLinkTemplate:
+                'https://pay.example/?amount=#amount#&currency=#currency#&vs=#paymentreference#&email=#email#&lang=#language#',
+            },
+          ],
+        }),
+      );
+      prisma.entry.create.mockResolvedValue(
+        makeStoredEntry({
+          paid: true,
+          totalAmount: decimal(0),
+          paymentMethod,
+        }),
+      );
+      const order = await createEntryOrder(
+        prisma as never,
+        { eventId: 'event-1', userId: null, now: NOW },
+        { ...ORDER_INPUT, paymentMethod, items: [makeItem({ cardRental: true, card: undefined })] },
+      );
+      const { data } = prisma.entry.create.mock.calls[0][0];
+      expect(data).toMatchObject({
+        paid: true,
+        status: 'RECEIVED',
+        totalAmount: 0,
+        paymentDueAt: null,
+        statusHistory: {
+          create: [
+            { status: 'RECEIVED', changedById: null },
+            { status: null, paymentState: true, changedById: null },
+          ],
+        },
+      });
+      expect(data.items.create[0]).toMatchObject({ fee: 0, cardRentalFee: 0 });
+      expect(data).not.toHaveProperty('payments');
+      expect(order).toMatchObject({ paid: true, totalAmount: 0, status: 'RECEIVED' });
+      expect(order.qrPayment).toBeUndefined();
+      expect(order.paymentUrl).toBeUndefined();
+      expect(mockNotifyEntryOrderReceived).toHaveBeenCalledWith(
+        expect.objectContaining({ paid: true, totalAmount: 0 }),
+        expect.anything(),
+        { method: paymentMethod, qrPayment: null, paymentUrl: undefined },
+      );
+    },
+  );
+
+  it('marks an order in a free class paid without discounts', async () => {
+    const event = makeEventRecord();
+    prisma.event.findUnique.mockResolvedValue({
+      ...event,
+      classes: event.classes.map((cls) => ({ ...cls, fee: decimal(0) })),
+    });
+    prisma.entry.create.mockResolvedValue(makeStoredEntry({ paid: true, totalAmount: decimal(0) }));
+    await run();
+    expect(prisma.entry.create.mock.calls[0][0].data).toMatchObject({ paid: true, totalAmount: 0 });
+  });
+
+  it('marks an order paid when the staff adjustment reduces the final total to zero', async () => {
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord({ authorId: 7 }));
+    prisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+    prisma.entry.create.mockResolvedValue(makeStoredEntry({ paid: true, totalAmount: decimal(0) }));
+    await createEntryOrder(
+      prisma as never,
+      {
+        eventId: 'event-1',
+        userId: 7,
+        now: NOW,
+        auth: { isAuthenticated: true, type: 'jwt', userId: 7 },
+      },
+      { ...ORDER_INPUT, priceAdjustment: -100, priceAdjustmentReason: 'Volunteer' },
+    );
+    expect(prisma.entry.create.mock.calls[0][0].data).toMatchObject({
+      paid: true,
+      totalAmount: 0,
+      priceAdjustment: -100,
+      paymentDueAt: null,
+    });
+  });
+
+  it('marks an order paid when a promo code reduces the final total to zero', async () => {
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+    Object.assign(prisma, {
+      promoCode: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'promo-1',
+          code: 'FREE',
+          discountPercent: decimal(100),
+          revokedAt: null,
+        }),
+      },
+    });
+    prisma.entry.create.mockResolvedValue(makeStoredEntry({ paid: true, totalAmount: decimal(0) }));
+    await createEntryOrder(
+      prisma as never,
+      { eventId: 'event-1', userId: null, now: NOW },
+      { ...ORDER_INPUT, promoCode: 'FREE' },
+    );
+    expect(prisma.entry.create.mock.calls[0][0].data).toMatchObject({
+      paid: true,
+      totalAmount: 0,
+      promoDiscountAmount: 100,
+      paymentDueAt: null,
+    });
   });
 
   it('applies promo after registration discounts and records snapshots', async () => {
@@ -653,6 +814,7 @@ describe('createEntryOrder', () => {
     expect(prisma.entry.create.mock.calls[0][0].data.paymentDueAt).toEqual(
       new Date(NOW.getTime() + 48 * 3600000),
     );
+    expect(prisma.entry.create.mock.calls[0][0].data.paid).toBe(false);
     expect(order.qrPayment).toEqual({
       payload:
         `SPD*1.0*ACC:${iban}*AM:100.00*CC:CZK*X-VS:${paymentReference}` +
@@ -899,7 +1061,9 @@ describe('processEntryOrder', () => {
       makeStoredEntry({
         status: 'APPROVED',
         event: makeEventRecord(),
-        items: [{ ...makeStoredEntry().items[0], note: 'Potřebuji bezlepkovou stravu.' }],
+        items: [
+          { ...makeStoredEntry().items[0], license: 'A', note: 'Potřebuji bezlepkovou stravu.' },
+        ],
       }),
     );
     mockStoreCompetitor.mockResolvedValue({ message: 'ok', competitor: { id: 555 } });
@@ -916,6 +1080,7 @@ describe('processEntryOrder', () => {
         lastname: 'Novak',
         registration: 'CHC9501',
         note: 'Potřebuji bezlepkovou stravu.',
+        license: 'A',
         card: 8123456,
       }),
       42,

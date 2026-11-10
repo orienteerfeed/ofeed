@@ -597,7 +597,7 @@ export function EventEntryOrderDetailPage() {
                 </CardContent>
               </Card>
             )}
-            {entry.paymentMethod !== 'CASH' ? (
+            {entry.totalAmount === 0 || entry.paymentMethod !== 'CASH' ? (
               <EntryPaymentSection
                 eventName={entry.event.name}
                 paymentMethod={entry.paymentMethod}

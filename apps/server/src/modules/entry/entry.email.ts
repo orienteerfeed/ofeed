@@ -249,7 +249,8 @@ export async function notifyEntryOrderReceived(
   const details = orderDetails(order, event);
   const entrantName = `${order.contactFirstname} ${order.contactLastname}`.trim();
   const detailUrl = entryDetailUrl(order, event);
-  const paymentDetails = await paymentSection(payment, detailUrl);
+  const paymentDetails =
+    order.totalAmount === 0 ? undefined : await paymentSection(payment, detailUrl);
 
   await sendEntryEmail({
     emailTo: order.contactEmail,
@@ -259,6 +260,9 @@ export async function notifyEntryOrderReceived(
     paragraphs: [
       'Potvrzujeme přijetí vaší přihlášky. Pořadatel ji nyní zpracuje.',
       'Tento e-mail slouží jako potvrzení o přijetí objednávky.',
+      ...(order.totalAmount === 0
+        ? ['Objednávka je zdarma. Platba není potřeba a objednávka je označena jako zaplacená.']
+        : []),
     ],
     details,
     payment: paymentDetails,

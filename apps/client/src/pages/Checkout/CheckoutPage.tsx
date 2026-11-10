@@ -121,7 +121,7 @@ function CustomPaymentLinkInstructions({ paymentUrl }: { paymentUrl: string }) {
   );
 }
 
-function CompletedOrderCard({
+export function CompletedOrderCard({
   completedOrder,
 }: {
   completedOrder: CompletedOrder;
@@ -158,16 +158,28 @@ function CompletedOrderCard({
           </span>
           <span>{order.items.length}</span>
         </div>
-        {order.qrPayment ? (
+        {order.totalAmount === 0 && (
+          <p
+            role="status"
+            className="rounded-md bg-green-50 p-3 text-green-800 dark:bg-green-950 dark:text-green-200"
+          >
+            {t('Pages.Checkout.NoPaymentRequired')}
+          </p>
+        )}
+        {order.totalAmount > 0 && order.qrPayment ? (
           <QrPaymentInstructions payment={order.qrPayment} />
         ) : null}
-        {order.paymentMethod === 'CASH' && order.detailAccessToken ? (
+        {order.totalAmount > 0 &&
+        order.paymentMethod === 'CASH' &&
+        order.detailAccessToken ? (
           <CashPaymentInstructions
             order={order}
             detailAccessToken={order.detailAccessToken}
           />
         ) : null}
-        {order.paymentMethod === 'CUSTOM_PAYMENT_LINK' && order.paymentUrl ? (
+        {order.totalAmount > 0 &&
+        order.paymentMethod === 'CUSTOM_PAYMENT_LINK' &&
+        order.paymentUrl ? (
           <CustomPaymentLinkInstructions paymentUrl={order.paymentUrl} />
         ) : null}
       </CardContent>
@@ -405,7 +417,11 @@ export const CheckoutPage = () => {
               {t('Pages.Checkout.SuccessTitle')}
             </h1>
             <p className="text-muted-foreground">
-              {t('Pages.Checkout.SuccessDescription')}
+              {t(
+                completedOrders.every(({ order }) => order.totalAmount === 0)
+                  ? 'Pages.Checkout.NoPaymentRequired'
+                  : 'Pages.Checkout.SuccessDescription'
+              )}
             </p>
           </div>
           {completedOrders.map(completedOrder => (

@@ -1803,6 +1803,7 @@
       }
     },
     "Checkout": {
+      "NoPaymentRequired": "Diese Bestellung ist kostenlos. Es ist keine Zahlung erforderlich und die Bestellung ist als bezahlt markiert.",
       "Title": "Anmelde-Warenkorb",
       "CartAriaLabel": "Anmelde-Warenkorb ({{count}})",
       "EmptyCart": "Dein Anmelde-Warenkorb ist leer.",

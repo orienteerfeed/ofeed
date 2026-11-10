@@ -144,7 +144,9 @@ const heldSlot = {
   cardRentalFee: null,
 } satisfies Omit<CartEntryItem, 'id'>;
 
-function renderIntervalForm() {
+function renderIntervalForm(
+  entryActions: EventEntryAvailability['entryActions'] = []
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -155,7 +157,7 @@ function renderIntervalForm() {
           open
           onOpenChange={vi.fn()}
           entryClass={intervalClass}
-          availability={availability}
+          availability={{ ...availability, entryActions }}
           eventId="event-1"
           eventName="Test event"
           eventSportId={1}
@@ -179,6 +181,62 @@ describe('EntryFormDialog', () => {
     authState.isAuthenticated = false;
     authState.user = null;
   });
+
+  it('does not offer a license input', () => {
+    renderIntervalForm();
+    expect(screen.queryByLabelText('License')).not.toBeInTheDocument();
+    expect(document.querySelector('[name="license"]')).toBeNull();
+  });
+
+  it('selects rental for an empty card and deselects it when a card is entered', () => {
+    renderIntervalForm([{ key: 'CARD_RENTAL', enabled: true, price: 50 }]);
+    const card =
+      document.querySelector<HTMLInputElement>('input[name="card"]')!;
+    const rental = screen.getByRole('checkbox');
+    expect(rental).toBeChecked();
+    fireEvent.change(card, { target: { value: '8123456' } });
+    expect(rental).not.toBeChecked();
+    expect(card).toHaveValue('8123456');
+    fireEvent.change(card, { target: { value: '   ' } });
+    expect(rental).toBeChecked();
+    fireEvent.change(card, { target: { value: '123' } });
+    fireEvent.click(rental);
+    expect(card).toHaveValue('');
+    expect(rental).toBeChecked();
+    fireEvent.change(card, { target: { value: '456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear form' }));
+    expect(card).toHaveValue('');
+    expect(rental).toBeChecked();
+  });
+
+  it.each([
+    { actions: [] },
+    { actions: [{ key: 'CARD_RENTAL', enabled: false, price: 50 }] },
+  ] satisfies { actions: EventEntryAvailability['entryActions'] }[])(
+    'does not request rental when the event does not offer it (%j)',
+    async ({ actions }) => {
+      renderIntervalForm([...actions]);
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      for (const [name, value] of Object.entries({
+        firstname: 'Jan',
+        lastname: 'Novak',
+        birthYear: '1995',
+        card: '8123456',
+      })) {
+        fireEvent.change(document.querySelector(`input[name="${name}"]`)!, {
+          target: { value },
+        });
+      }
+      fireEvent.change(slotSelect(), { target: { value: SLOT_A } });
+      fireEvent.click(screen.getByRole('button', { name: 'Add to cart' }));
+      await waitFor(() =>
+        expect(addCartItemMock).toHaveBeenCalledWith(
+          expect.objectContaining({ cardRental: false, cardRentalFee: null }),
+          { exclusiveStartSlot: true }
+        )
+      );
+    }
+  );
 
   it.each([
     [25, 75, 37.5],
@@ -244,7 +302,7 @@ describe('EntryFormDialog', () => {
       expect(screen.getByText(/Entry fee:/)).toHaveTextContent(String(fee));
       const rental = screen.getByRole('checkbox');
       expect(rental).toHaveAccessibleName(new RegExp(String(rentalFee)));
-      fireEvent.click(rental);
+      expect(rental).toBeChecked();
       fireEvent.click(screen.getByRole('button', { name: 'Add to cart' }));
       await waitFor(() =>
         expect(addCartItemMock).toHaveBeenCalledWith(
@@ -256,6 +314,7 @@ describe('EntryFormDialog', () => {
           { exclusiveStartSlot: false }
         )
       );
+      expect(addCartItemMock.mock.calls[0]![0]).not.toHaveProperty('license');
     }
   );
 
@@ -591,7 +650,10 @@ describe('EntryFormDialog', () => {
             open
             onOpenChange={vi.fn()}
             entryClass={entryClass}
-            availability={availability}
+            availability={{
+              ...availability,
+              entryActions: [{ key: 'CARD_RENTAL', enabled: true, price: 50 }],
+            }}
             eventId="event-1"
             eventName="Test event"
             eventSportId={1}
@@ -608,6 +670,7 @@ describe('EntryFormDialog', () => {
       expect(input('lastname')).toHaveValue('Novak');
       expect(input('organisation')).toHaveValue('KOB Test');
       expect(input('card')).toHaveValue('8123456');
+      expect(screen.getByRole('checkbox')).not.toBeChecked();
     });
   });
 });

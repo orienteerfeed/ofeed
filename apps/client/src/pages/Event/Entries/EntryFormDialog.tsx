@@ -18,7 +18,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/atoms';
+import { Button, Checkbox } from '@/components/atoms';
 import { Field } from '@/components/organisms';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -203,7 +203,10 @@ export function EntryFormDialog({
   );
 
   const form = useForm({
-    defaultValues: EMPTY_ENTRY_FORM_VALUES,
+    defaultValues: {
+      ...EMPTY_ENTRY_FORM_VALUES,
+      cardRental: cardRentalEnabled,
+    },
     validators: {
       onChange: ({ value }) => {
         if (!entryClass) return undefined;
@@ -236,9 +239,6 @@ export function EntryFormDialog({
           ...(birthYear !== null ? { birthYear } : {}),
           ...(value.organisation.trim()
             ? { organisation: value.organisation.trim() }
-            : {}),
-          ...(value.license.trim()
-            ? { license: value.license.trim().toUpperCase() }
             : {}),
           ...(value.note.trim() ? { note: value.note.trim() } : {}),
           ...(value.card.trim()
@@ -281,19 +281,13 @@ export function EntryFormDialog({
     if (item.lastname) form.setFieldValue('lastname', item.lastname);
     if (item.organisation)
       form.setFieldValue('organisation', item.organisation);
-    if (item.license) form.setFieldValue('license', item.license);
     if (item.birthYear !== null) {
       form.setFieldValue('birthYear', String(item.birthYear));
     }
     // Only present for a registration-code lookup (never for a card-number
     // lookup) — see registrationLookupItemSchema. Don't overwrite a card the
-    // user already typed in by hand, and skip it entirely when chip rental
-    // is checked (the card field is cleared/disabled in that case).
-    if (
-      item.card !== null &&
-      !form.state.values.cardRental &&
-      !form.state.values.card
-    ) {
+    // user already typed in by hand. A matched card turns rental off.
+    if (item.card !== null && !form.state.values.card.trim()) {
       form.setFieldValue('card', String(item.card));
     }
   };
@@ -333,7 +327,7 @@ export function EntryFormDialog({
       form.setFieldValue('organisation', currentUser.organisation);
     }
 
-    if (form.state.values.cardRental || form.state.values.card.trim()) {
+    if (form.state.values.card.trim()) {
       return;
     }
 
@@ -415,13 +409,10 @@ export function EntryFormDialog({
     .map(formatExistingCompetitor)
     .join(', ');
 
-  // Renting a chip and entering an own card number are mutually exclusive —
-  // clear whatever the user had typed into Card number once rental is checked.
+  // Keep rental in sync with manual input as well as profile/registration prefill.
   useEffect(() => {
-    if (cardRentalChecked) {
-      form.setFieldValue('card', '');
-    }
-  }, [cardRentalChecked, form]);
+    form.setFieldValue('cardRental', cardRentalEnabled && !cardValue.trim());
+  }, [cardRentalEnabled, cardValue, form]);
 
   const formErrors = useStore(form.store, state => state.errors);
   const crossFieldCodes = new Set<EntryFormErrorCode>();
@@ -641,13 +632,6 @@ export function EntryFormDialog({
                   form={form}
                   label={t('Pages.Event.Entries.Form.Organisation')}
                 />
-                <Field
-                  form={form}
-                  name="license"
-                  label={t('Pages.Event.Entries.Form.License')}
-                  placeholder="A"
-                  autoCapitalize="characters"
-                />
                 {debouncedRegistration &&
                   competitorsWithSameRegistration.length > 0 && (
                     <Alert className="border-amber-300 bg-amber-50 text-amber-950 sm:col-span-2 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
@@ -700,26 +684,38 @@ export function EntryFormDialog({
               </div>
 
               {cardRentalEnabled && (
-                <Field
-                  form={form}
-                  name="cardRental"
-                  type="checkbox"
-                  label={
-                    cardRentalAction?.price != null
-                      ? t('Pages.Event.Entries.Form.CardRentalWithPrice', {
-                          price: formatEntryFee(
-                            applyRegistrationFeeDiscount(
-                              cardRentalAction.price,
-                              registrationValue,
-                              availability.registrationFeeDiscounts
-                            ),
-                            currencyCode,
-                            i18n.language
-                          ),
-                        })
-                      : t('Pages.Event.Entries.Form.CardRentalFree')
-                  }
-                />
+                <form.Field name="cardRental">
+                  {field => (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="entry-card-rental"
+                        name="cardRental"
+                        checked={field.state.value}
+                        onCheckedChange={(
+                          checked: boolean | 'indeterminate'
+                        ) => {
+                          field.handleChange(checked === true);
+                          if (checked === true) form.setFieldValue('card', '');
+                        }}
+                      />
+                      <Label htmlFor="entry-card-rental">
+                        {cardRentalAction?.price != null
+                          ? t('Pages.Event.Entries.Form.CardRentalWithPrice', {
+                              price: formatEntryFee(
+                                applyRegistrationFeeDiscount(
+                                  cardRentalAction.price,
+                                  registrationValue,
+                                  availability.registrationFeeDiscounts
+                                ),
+                                currencyCode,
+                                i18n.language
+                              ),
+                            })
+                          : t('Pages.Event.Entries.Form.CardRentalFree')}
+                      </Label>
+                    </div>
+                  )}
+                </form.Field>
               )}
 
               <form.Field name="note">

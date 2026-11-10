@@ -130,7 +130,11 @@ export function EntryPaymentSection({
           </span>
           <span className="font-medium">{paymentMethodName}</span>
         </div>
-        {paymentMethod === 'QR_PAYMENT' ? (
+        {totalAmount === 0 ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            {t('Pages.Checkout.NoPaymentRequired')}
+          </p>
+        ) : paymentMethod === 'QR_PAYMENT' ? (
           qrPayment ? (
             <>
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">

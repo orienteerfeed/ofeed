@@ -189,7 +189,12 @@ export const EntryRef = builder.prismaObject('Entry', {
         },
       },
       resolve: (entry) => {
-        if (entry.paymentMethod !== 'QR_PAYMENT' || !entry.event.bankAccountIban) return null;
+        if (
+          entry.totalAmount.toNumber() === 0 ||
+          entry.paymentMethod !== 'QR_PAYMENT' ||
+          !entry.event.bankAccountIban
+        )
+          return null;
         const iban = normalizeBankAccountIban(entry.event.bankAccountIban);
         if (!iban) return null;
 

@@ -81,6 +81,11 @@ For items in `POST /rest/v1/events/{eventId}/entries`:
   Registration uses three letters followed by four digits, for example `ABC9501`.
 - `card` and `cardRental` are optional. Omitting `cardRental` defaults it to false.
   When `cardRental` is true, card rental must be enabled for the event.
+- On creation, `license` is resolved server-side from the cached ORIS registration
+  for OB and the current year, using the normalized `registration` number. The
+  submitted `license` value is ignored. Missing matches or licenses produce null;
+  processing the order copies the stored license to the competitor. The same
+  behavior applies to GraphQL order creation.
 
 Normal field validation and class age, capacity, start-slot and rental availability
 checks still apply. Invalid input returns 422.
@@ -95,6 +100,15 @@ closed entry window, a full class or an unavailable start slot. Availability is 
 snapshot; creation can still reject a slot that another request has since taken.
 
 ## Fees and the late-entry surcharge
+
+If the final server-calculated order total is zero, creation immediately stores
+`paid: true` with an initial paid-state audit entry, regardless of the selected
+available payment method. The order remains `RECEIVED` for organizer processing.
+No zero-value receipt is recorded, no payment deadline is set, and the create
+response omits `qrPayment` and `paymentUrl`. GraphQL detail returns null QR
+instructions for zero-total orders. Confirmation emails and the web UI state
+that no payment is needed. Positive totals retain normal payment handling.
+Existing historical paid flags are not automatically changed.
 
 | Surface | Field | Shape and meaning |
 | --- | --- | --- |

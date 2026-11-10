@@ -1963,6 +1963,7 @@
       }
     },
     "Checkout": {
+      "NoPaymentRequired": "Este pedido es gratuito. No se requiere ningún pago y el pedido está marcado como pagado.",
       "Title": "Carrito de inscripciones",
       "CartAriaLabel": "Carrito de inscripciones ({{count}})",
       "EmptyCart": "Tu carrito de inscripciones está vacío.",
