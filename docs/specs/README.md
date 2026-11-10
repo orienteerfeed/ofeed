@@ -13,6 +13,9 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [CI action runtimes](ci-action-runtimes.md): Node.js 24 validation actions and
+  an explicit Ubuntu 24.04 runner.
+
 - [GHCR image retention](ghcr-image-retention.md): weekly cleanup retaining the
   five newest images per application package.
 
