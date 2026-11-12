@@ -109,6 +109,7 @@ describe('event insights UI', () => {
         .getAllByRole('link', { name: 'Open insight' })
         .map(link => link.getAttribute('href'))
     ).toEqual([
+      '/events/race/insights/devices',
       '/events/race/insights/anomalies',
       '/events/race/insights/cards',
       '/events/race/insights/entries',

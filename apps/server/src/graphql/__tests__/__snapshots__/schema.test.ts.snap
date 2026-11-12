@@ -677,6 +677,18 @@ enum EventLifecycleStatus {
   UPCOMING
 }
 
+type EventLiveStatus {
+  brokerProfiles: [String!]!
+  devices: [LiveDeviceStatus!]!
+  monitoringStartedAt: String
+  monitoringUntil: String
+  sessionError: String
+  sessionState: String!
+  sessionUntil: String
+  yarocAvailable: Boolean!
+  yarocSettings: EventYarocSettings!
+}
+
 type EventMeosBinding {
   createdAt: DateTime!
   eventId: String!
@@ -799,6 +811,15 @@ type EventStatusSummary {
   resultsOfficialCheckedAt: DateTime
 }
 
+type EventYarocSettings {
+  brokerProfile: String!
+  checkCode: Int!
+  finishCode: Int!
+  hours: Float!
+  meshtasticChannel: String
+  startCode: Int!
+}
+
 input EventsInput {
   after: String
   filter: EventFilter
@@ -820,6 +841,60 @@ type LeafletCoursePoint {
   radio: Boolean!
   sequence: Int!
   type: String!
+}
+
+type LiveDeviceHistory {
+  outages: [LiveDeviceOutage!]!
+  samples: [LiveDeviceSample!]!
+}
+
+type LiveDeviceOutage {
+  endedAt: String
+  kind: String!
+  startedAt: String!
+}
+
+type LiveDeviceRegistration {
+  deviceId: ID!
+  token: String!
+}
+
+type LiveDeviceSample {
+  batteryPercent: Float
+  count: Int!
+  gsmRsrpDbm: Float
+  gsmSnrDb: Float
+  loraRssiDbm: Float
+  loraSnrDb: Float
+  maxGapMs: Int!
+  minute: String!
+}
+
+type LiveDeviceStatus {
+  batteryPercent: Float
+  errorMessage: String
+  gsmRsrpDbm: Float
+  gsmRssiDbm: Float
+  gsmSnrDb: Float
+  id: ID!
+  intervalSeconds: Int!
+  lastPunchAt: String
+  lastSeenAt: String
+  latitude: Float
+  longitude: Float
+  loraRssiDbm: Float
+  loraSnrDb: Float
+  macAddress: String
+  name: String!
+  positionAt: String
+  revoked: Boolean!
+  signalBars: Int
+  sourceType: String!
+  status: String!
+  uploadBytes: Float
+  uploadCompletedAt: String
+  uploadDurationMs: Float
+  uploadState: String
 }
 
 input LoginInput {
@@ -857,21 +932,29 @@ type Mutation {
   entryOrderUpdate(entryId: String!, input: EntryOrderUpdateInput!): Entry!
   loadClassDefinitionsFromExternalSystem(eventId: String!): ResponseMessage!
   markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
+  registerLiveDevice(eventId: String!, intervalSeconds: Int, macAddress: String, name: String!, sourceType: String!): LiveDeviceRegistration!
   requestPasswordReset(email: String!): ResetResponse!
   resendEmailVerification: ResetResponse!
   resetPassword(newPassword: String!, token: String!): ResetResponse!
   revokeDevice(deviceId: String!): Boolean!
   revokeEventPromoCode(eventId: String!, id: String!): ResponseMessage!
+  revokeLiveDevice(deviceId: String!, eventId: String!): Boolean!
+  rotateLiveDeviceToken(deviceId: String!, eventId: String!): LiveDeviceRegistration!
   saveCustomEventService(input: SaveCustomEventServiceInput!): EventServiceSetting!
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
   signup(input: UserInput): ResetResponse
+  startLiveMonitoring(eventId: String!, hours: Int): Boolean!
+  startYaroc(brokerProfile: String, checkCode: Int!, eventId: String!, finishCode: Int!, hours: Int, meshtasticChannel: String, startCode: Int!): Boolean!
+  stopYaroc(eventId: String!): Boolean!
   updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventPaymentMethods(eventId: String!, input: UpdateEventPaymentMethodsInput!): EventPaymentMethodSettings!
   updateEventRentalCard(input: UpdateEventRentalCardInput!): EventRentalCard!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
+  updateEventYarocSettings(brokerProfile: String, checkCode: Int!, eventId: String!, finishCode: Int!, hours: Int, meshtasticChannel: String, startCode: Int!): Boolean!
   updateLateEntryFeePercent(eventId: String!, lateEntryFeePercent: Float): ResponseMessage!
+  updateLiveDeviceInterval(deviceId: String!, eventId: String!, intervalSeconds: Int!): Boolean!
   updateRegistrationFeeDiscounts(eventId: String!, rules: [RegistrationFeeDiscountInput!]!): ResponseMessage!
   updateStartSlotVacancy(input: UpdateStartSlotVacancyInput!): ClassStartSlotVacancy!
   updateSystemEventService(input: UpdateSystemEventServiceInput!): ResponseMessage!
@@ -978,10 +1061,12 @@ type Query {
   eventCardInsight(eventId: String!): EventCardInsight!
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
+  eventDeviceHistory(deviceId: String!, eventId: String!, from: String!, to: String!): LiveDeviceHistory!
   eventEntryAvailability(eventId: String!): EntryAvailability
   eventEntryTimeline(eventId: String!): EventEntryTimeline!
   eventFilesStatus(eventId: String!): EventFilesStatus!
   eventImportStates(eventId: String!): [EventImportState!]!
+  eventLiveStatus(eventId: String!): EventLiveStatus!
   eventPaymentMethods(eventId: String!): EventPaymentMethodSettings!
   eventPromoCodes(eventId: String!): [PromoCode!]!
   eventRentalCards(eventId: String!): [EventRentalCard!]!
@@ -1141,6 +1226,7 @@ type Subscription {
   classesUpdated(eventId: String!): String!
   competitorUpdated(eventId: String!): Competitor!
   competitorsByClassUpdated(classId: Int!): [Competitor!]
+  eventLiveStatusChanged(eventId: String!): EventLiveStatus!
   splitCompetitorsByClassUpdated(classId: Int!): [Competitor!]
   winnerUpdated(eventId: String!): WinnerNotification
 }

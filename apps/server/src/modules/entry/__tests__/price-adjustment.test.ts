@@ -95,6 +95,7 @@ function makeDatabase(role = 'USER') {
     $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry-1' }]),
     $transaction: vi.fn(),
     user: { findUnique: vi.fn().mockResolvedValue({ role }) },
+    registration: { findMany: vi.fn().mockResolvedValue([]) },
     event: {
       findUnique: vi.fn().mockResolvedValue(eventRecord()),
       findUniqueOrThrow: vi.fn().mockResolvedValue(eventRecord()),

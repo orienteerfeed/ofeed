@@ -8,7 +8,10 @@ import { eventBankTransactionRoutes } from '../bank/bank.routes.js';
 import publicEventRoutes from './event.public.routes.js';
 import secureEventRoutes from './event.secure.routes.js';
 
+import liveStatusRoutes from '../live-status/live-status.routes.js';
+
 const router = createRouter();
+router.route('/', liveStatusRoutes);
 
 // Event routes
 // Unsecure public routes

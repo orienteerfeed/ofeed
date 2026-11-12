@@ -26,3 +26,5 @@ export * from './anomaly-insight.js';
 export * from './registration-fee-discount.js';
 
 export * from './promo-code.js';
+
+export * from './live-status.js';

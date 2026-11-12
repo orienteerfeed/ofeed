@@ -435,3 +435,13 @@ HttpOnly cookies. Production requires a Vault-delivered ES256 signing-key file.
 This changes the signin contract and invalidates legacy user tokens at cutover.
 See the [integration contract](docs/entry-api-integration.md) and
 [device-session operations](docs/ops/runbooks/device-sessions.md).
+
+### Device telemetry
+
+Event owners and admins configure devices/YAROC in Event settings → Devices & radios,
+and use Insights → Device status for read-only monitoring. QuickEvent/oChecklist
+self-register using the event password on a successful IOF upload, first heartbeat
+or explicit registration request. Start monitoring (24 hours by default, maximum 72), and inspect 30-day telemetry.
+See [the live device status contract](docs/specs/live-device-status.md).
+For local notification fan-out run `docker compose -f compose.redis.yaml up -d`
+and set the server-only `REDIS_URL`. MariaDB stores the durable status/history.

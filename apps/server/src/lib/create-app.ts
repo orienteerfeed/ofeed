@@ -233,6 +233,8 @@ export default function createApp() {
       allowHeaders: [
         ...(env.CORS_HEADERS?.split(',') ?? ['Content-Type', 'Authorization']),
         'Idempotency-Key',
+        'X-OFeed-Source-Type',
+        'X-OFeed-Source-Id',
         'X-Ofeed-Session',
       ],
       credentials: true,

@@ -13,6 +13,8 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [Live device status](live-device-status.md): private device telemetry and YAROC radio reception.
+
 - [CI action runtimes](ci-action-runtimes.md): Node.js 24 validation actions and
   an explicit Ubuntu 24.04 runner.
 

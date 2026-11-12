@@ -248,8 +248,51 @@ export async function ingestPunches(
 ): Promise<PunchResult[]> {
   if (!auth?.isAuthenticated || auth.type !== 'jwt') throw new AuthzError('User JWT required', 401);
   const { userId } = await requireEventOwnerOrAdmin(client, auth, eventId);
+  return ingestAuthorizedPunches(client, userId!, eventId, input);
+}
+
+export async function ingestYarocPunches(
+  client: AppPrismaClient,
+  eventId: string,
+  owner: string,
+  generation: number,
+  input: PunchBatch,
+): Promise<PunchResult[]> {
+  const session = await client.yarocSession.findUniqueOrThrow({ where: { eventId } });
+  await requireEventOwnerOrAdmin(
+    client,
+    { isAuthenticated: true, type: 'jwt', userId: session.authorId },
+    eventId,
+  );
+  return ingestAuthorizedPunches(client, session.authorId, eventId, input, { owner, generation });
+}
+async function ingestAuthorizedPunches(
+  client: AppPrismaClient,
+  userId: number,
+  eventId: string,
+  input: PunchBatch,
+  fence?: { owner: string; generation: number },
+): Promise<PunchResult[]> {
   const batch = punchBatchSchema.parse(input);
   const { results, changes } = await eventPunchTransaction(client, eventId, async (tx) => {
+    if (fence) {
+      await tx.$queryRaw`SELECT eventId FROM YarocSession WHERE eventId = ${eventId} FOR UPDATE`;
+      const active = await tx.yarocSession.findUniqueOrThrow({ where: { eventId } });
+      const device = await tx.liveDevice.findUnique({
+        where: { id: batch.deviceId.replace(/^yaroc:/, '') },
+      });
+      if (!device || device.eventId !== eventId || device.revokedAt)
+        throw new Error('YAROC device revoked');
+      if (
+        active.owner !== fence.owner ||
+        active.generation !== fence.generation ||
+        !active.leaseUntil ||
+        active.leaseUntil <= new Date() ||
+        active.until <= new Date() ||
+        active.state === 'stopped'
+      )
+        throw new Error('YAROC lease lost');
+    }
     const results: Array<{ clientPunchId: string; punchId: number; duplicate: boolean }> = [];
     let newReceipts = false;
     for (const item of batch.punches) {
@@ -264,7 +307,7 @@ export async function ingestPunches(
         if (
           existing.source !== batch.source ||
           existing.stationSerial !== (item.stationSerial ?? null) ||
-          existing.receivedAt.getTime() !== receivedAt.getTime() ||
+          (!fence && existing.receivedAt.getTime() !== receivedAt.getTime()) ||
           existing.punch.card !== item.card ||
           existing.punch.controlCode !== item.controlCode ||
           existing.punch.punchTime.getTime() !== punchTime.getTime()

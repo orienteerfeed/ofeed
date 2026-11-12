@@ -26,3 +26,5 @@ inventing approvers. Link replacement records in both directions.
 - [0008](0008-external-identity-providers.md): proposed external identity providers (ORIS SSO, OAuth) with a signed state cookie and identity table.
 
 - [0009](0009-cash-paid-settlement.md): proposed explicit cash settlement through the legacy paid mutation, preserving immutable receipts.
+
+- [0010](0010-live-device-telemetry.md): proposed durable device telemetry and Redis notification fan-out.

@@ -41,6 +41,8 @@ describe('Pothos GraphQL schema', () => {
         'entryOrderById',
         'entryOrdersByEvent',
         'event',
+        'eventDeviceHistory',
+        'eventLiveStatus',
         'eventAnomalyInsight',
         'eventCardInsight',
         'eventEntryTimeline',
@@ -73,6 +75,14 @@ describe('Pothos GraphQL schema', () => {
     expect(sorted(Object.keys(schema.getMutationType()?.getFields() ?? {}))).toEqual(
       sorted([
         '_empty',
+        'registerLiveDevice',
+        'rotateLiveDeviceToken',
+        'revokeLiveDevice',
+        'startLiveMonitoring',
+        'updateLiveDeviceInterval',
+        'updateEventYarocSettings',
+        'startYaroc',
+        'stopYaroc',
         'assignEntryItemRentalCard',
         'changeCurrentUserPassword',
         'classDelete',
@@ -125,6 +135,7 @@ describe('Pothos GraphQL schema', () => {
     expect(sorted(Object.keys(schema.getSubscriptionType()?.getFields() ?? {}))).toEqual(
       sorted([
         '_empty',
+        'eventLiveStatusChanged',
         'classesUpdated',
         'competitorUpdated',
         'competitorsByClassUpdated',

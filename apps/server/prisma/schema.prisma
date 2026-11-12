@@ -263,6 +263,10 @@ model Currency {
 }
 
 model Event {
+  yarocSettings                Json?
+  liveDevices                  LiveDevice[]
+  liveMonitoring               LiveMonitoring?
+  yarocSession                 YarocSession?
   promoCodes                   PromoCode[]
   punches                      Punch[]
   punchReceipts                PunchReceipt[]
@@ -1452,4 +1456,86 @@ model SessionRefreshToken {
   family        DeviceSession @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   @@unique([familyId, generation])
+}
+
+model LiveMonitoring {
+  eventId   String    @id
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  checkedAt DateTime? @db.DateTime(3)
+  startedAt DateTime  @db.DateTime(3)
+  until     DateTime  @db.DateTime(3)
+}
+
+model LiveDevice {
+  id              String                 @id @default(uuid()) @db.VarChar(36)
+  eventId         String
+  event           Event                  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name            String                 @db.VarChar(100)
+  sourceType      String                 @db.VarChar(20)
+  sourceId        String?                @db.VarChar(36)
+  macAddress      String?                @db.VarChar(12)
+  intervalSeconds Int                    @default(10)
+  tokenHash       String?                @unique @db.Char(64)
+  revokedAt       DateTime?              @db.DateTime(3)
+  lastSeenAt      DateTime?              @db.DateTime(3)
+  measuredAt      DateTime?              @db.DateTime(3)
+  metrics         Json
+  version         Int                    @default(0)
+  samples         LiveDeviceSample[]
+  messages        LiveHeartbeatReceipt[]
+  outages         LiveDeviceOutage[]
+
+  @@unique([eventId, sourceType, sourceId])
+  @@unique([eventId, name])
+  @@unique([eventId, macAddress])
+}
+
+model LiveDeviceSample {
+  deviceId String     @db.VarChar(36)
+  device   LiveDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  minute   DateTime   @db.DateTime(3)
+  count    Int
+  firstAt  DateTime   @db.DateTime(3)
+  lastAt   DateTime   @db.DateTime(3)
+  maxGapMs Int        @default(0)
+  metrics  Json
+  minimum  Json
+  maximum  Json
+
+  @@id([deviceId, minute])
+  @@index([minute])
+}
+
+model LiveHeartbeatReceipt {
+  deviceId   String     @db.VarChar(36)
+  device     LiveDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  messageId  String     @db.VarChar(36)
+  receivedAt DateTime   @db.DateTime(3)
+
+  @@id([deviceId, messageId])
+  @@index([receivedAt])
+}
+
+model LiveDeviceOutage {
+  id        String     @id @default(uuid()) @db.VarChar(36)
+  deviceId  String     @db.VarChar(36)
+  device    LiveDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  kind      String     @default("offline") @db.VarChar(10)
+  startedAt DateTime   @db.DateTime(3)
+  endedAt   DateTime?  @db.DateTime(3)
+
+  @@unique([deviceId, startedAt])
+}
+
+model YarocSession {
+  eventId    String    @id
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  authorId   Int       @db.UnsignedInt
+  until      DateTime  @db.DateTime(3)
+  settings   Json
+  owner      String?   @db.VarChar(36)
+  generation Int       @default(0)
+  leaseUntil DateTime? @db.DateTime(3)
+  state      String    @db.VarChar(20)
+  error      String?   @db.VarChar(500)
 }

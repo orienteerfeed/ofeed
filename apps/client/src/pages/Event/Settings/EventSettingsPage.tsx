@@ -1,3 +1,4 @@
+import { EventDeviceSettingsPanel } from '../Insights/EventDeviceInsightPage';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
@@ -79,11 +80,13 @@ export const EventSettingsPage = () => {
   const activeTab =
     search.tab === 'classes'
       ? 'classes'
-      : search.tab === 'services'
-        ? 'services'
-        : search.tab === 'files'
-          ? 'files'
-          : 'general';
+      : search.tab === 'devices'
+        ? 'devices'
+        : search.tab === 'services'
+          ? 'services'
+          : search.tab === 'files'
+            ? 'files'
+            : 'general';
 
   const [password, setPassword] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string | undefined>(undefined);
@@ -224,6 +227,10 @@ export const EventSettingsPage = () => {
                 label: t('Pages.Event.Settings.Tabs.Classes'),
               },
               {
+                value: 'devices',
+                label: t('Pages.Event.Settings.Tabs.Devices'),
+              },
+              {
                 value: 'services',
                 label: t('Pages.Event.Settings.Tabs.Services'),
               },
@@ -231,7 +238,7 @@ export const EventSettingsPage = () => {
             value={activeTab}
             onValueChange={handleTabChange}
             className="min-w-0 max-w-full space-y-6"
-            listClassName="grid w-full grid-cols-4 max-w-xl"
+            listClassName="grid w-full grid-cols-5 max-w-2xl"
             triggerClassName="min-w-0 px-1 text-xs sm:px-3 sm:text-sm"
             contentClassName="min-w-0 max-w-full"
           >
@@ -257,6 +264,7 @@ export const EventSettingsPage = () => {
               externalSource={data.event.externalSource ?? null}
               externalEventId={data.event.externalEventId ?? null}
             />
+            <EventDeviceSettingsPanel key="devices" eventId={eventId} />
             <ServicesSettingsTab
               key="services"
               t={t}

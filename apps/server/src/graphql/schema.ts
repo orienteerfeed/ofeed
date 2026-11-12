@@ -1,3 +1,4 @@
+import '../modules/live-status/live-status.graphql.js';
 import './scalars/date.scalar.js';
 import './scalars/date-time.scalar.js';
 import './scalars/constraint-scalars.js';

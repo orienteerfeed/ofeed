@@ -1,3 +1,5 @@
+import { registerUploadSource } from '../live-status/live-status.external.js';
+import type { LiveMetrics } from '@repo/shared';
 import { z } from '@hono/zod-openapi';
 import { DOMParser } from '@xmldom/xmldom';
 import { isRelayDiscipline } from '../../utils/relay.js';
@@ -75,6 +77,7 @@ type UploadedFile = MultipartFile;
 type UploadLogLevel = 'info' | 'warn' | 'error';
 type CompressionType = 'none' | 'gzip' | 'zlib' | 'deflate' | 'unknown';
 type UploadContext = {
+  req?: { header: (name: string) => string | undefined };
   get: <K extends keyof AppBindings['Variables']>(key: K) => AppBindings['Variables'][K];
   json: (body: unknown, status?: number) => Response;
 };
@@ -246,8 +249,8 @@ const validateIofXml = async (
               typeof error === 'string'
                 ? error
                 : error && typeof error === 'object' && 'message' in error
-                  ? String(error.message)
-                  : 'Validation error',
+                ? String(error.message)
+                : 'Validation error',
             type: 'schema',
           }))
         : [
@@ -437,11 +440,11 @@ async function upsertClass(
   const classAttr = classDetails.ATTR ?? {};
   const hasMaxNumberOfCompetitorsAttr = hasOwnProperty(classAttr, 'maxNumberOfCompetitors');
   const incomingMaxNumberOfCompetitors = hasMaxNumberOfCompetitorsAttr
-    ? (getIofIntegerValue(classAttr.maxNumberOfCompetitors) ?? null)
+    ? getIofIntegerValue(classAttr.maxNumberOfCompetitors) ?? null
     : undefined;
   const maxNumberOfCompetitors = hasMaxNumberOfCompetitorsAttr
     ? incomingMaxNumberOfCompetitors
-    : (existingClass?.maxNumberOfCompetitors ?? options.derivedMaxNumberOfCompetitors ?? null);
+    : existingClass?.maxNumberOfCompetitors ?? options.derivedMaxNumberOfCompetitors ?? null;
 
   const hasResultListModeAttr = hasOwnProperty(classAttr, 'resultListMode');
   const incomingResultListMode = hasResultListModeAttr
@@ -449,7 +452,7 @@ async function upsertClass(
     : undefined;
   const resultListMode = hasResultListModeAttr
     ? incomingResultListMode
-    : (existingClass?.resultListMode ?? null);
+    : existingClass?.resultListMode ?? null;
 
   const extensionRecord = getClassStartExtensionRecord(classDetails.Extensions);
   const startWindowRecord = getClassStartExtensionRecord(extensionRecord?.StartWindow);
@@ -462,13 +465,13 @@ async function upsertClass(
   );
   const startMode = hasStartModeExtension
     ? parsedClassStartExtension.startMode
-    : (existingClass?.startMode ?? null);
+    : existingClass?.startMode ?? null;
   const startWindowFrom = hasStartWindowFrom
     ? parsedClassStartExtension.startWindowFrom
-    : (existingClass?.startWindowFrom ?? null);
+    : existingClass?.startWindowFrom ?? null;
   const startWindowTo = hasStartWindowTo
     ? parsedClassStartExtension.startWindowTo
-    : (existingClass?.startWindowTo ?? null);
+    : existingClass?.startWindowTo ?? null;
 
   if (!existingClass) {
     const dbClassInsert = await prisma.class.create({
@@ -812,9 +815,7 @@ async function processClassStarts(
       if (isRelayDiscipline(dbResponseEvent.discipline)) {
         const firstCourseEl =
           (classStart.TeamStart as Array<Record<string, any>> | undefined)?.[0]
-            ?.TeamMemberStart?.[0]
-            ?.Start?.[0]
-            ?.Course?.[0] ?? null;
+            ?.TeamMemberStart?.[0]?.Start?.[0]?.Course?.[0] ?? null;
         if (firstCourseEl) {
           relayCourseId = await upsertEmbeddedCourse(eventId, firstCourseEl);
         }
@@ -975,9 +976,7 @@ async function processClassResults(
       if (isRelayDiscipline(dbResponseEvent.discipline)) {
         const firstCourseEl =
           (classResult.TeamResult as Array<Record<string, any>> | undefined)?.[0]
-            ?.TeamMemberResult?.[0]
-            ?.Result?.[0]
-            ?.Course?.[0] ?? null;
+            ?.TeamMemberResult?.[0]?.Result?.[0]?.Course?.[0] ?? null;
         if (firstCourseEl) {
           relayCourseId = await upsertEmbeddedCourse(eventId, firstCourseEl);
         }
@@ -1104,6 +1103,42 @@ async function processClassResults(
     },
   );
   return [...updatedClasses];
+}
+
+/** Observe successful imports without changing their responses. */
+async function noteSuccessfulApplicationUpload(
+  c: UploadContext,
+  eventId: string,
+  creator?: string | null,
+  rawHash?: string,
+  metrics?: LiveMetrics,
+) {
+  try {
+    const auth = c.get('authContext');
+    if (!auth?.isAuthenticated || auth.type !== 'eventBasic' || auth.eventId !== eventId) return;
+    const sourceType = c.req?.header('X-OFeed-Source-Type');
+    if (!creator && !sourceType && rawHash)
+      creator = (
+        await prisma.eventImportState.findFirst({
+          where: { eventId, rawHash, sourceType: 'IOF_XML' },
+          select: { creator: true },
+        })
+      )?.creator;
+    await registerUploadSource(
+      prisma,
+      auth,
+      eventId,
+      creator,
+      sourceType,
+      c.req?.header('X-OFeed-Source-Id'),
+      metrics,
+    );
+  } catch (error) {
+    logUploadEvent(c, 'warn', 'Successful upload: auxiliary device registration failed', {
+      eventId,
+      error: error instanceof Error ? { name: error.name, message: error.message } : String(error),
+    });
+  }
 }
 
 /**
@@ -1236,6 +1271,11 @@ async function handleIofXmlUpload(
         stage: 'skipped-identical',
         rawHash,
         detectedPayloadType,
+      });
+      await noteSuccessfulApplicationUpload(c, eventId, undefined, rawHash, {
+        uploadState: 'skipped',
+        uploadBytes: file.size,
+        uploadCompletedAt: new Date().toISOString(),
       });
       return c.json(
         success('OK', { data: 'Skipped: identical upload already processed', skipped: true }, 200),
@@ -1570,6 +1610,11 @@ async function handleIofXmlUpload(
     eventName,
   });
 
+  await noteSuccessfulApplicationUpload(c, eventId, iofRootMeta.creator, undefined, {
+    uploadState: 'completed',
+    uploadBytes: file.size,
+    uploadCompletedAt: new Date().toISOString(),
+  });
   return c.json(success('OK', { data: 'Iof xml uploaded successfully: ' + eventName }, 200), 200);
 }
 
@@ -1831,8 +1876,8 @@ export function registerUploadRoutes(router: AppOpenAPI) {
           typeof processedRankingData === 'string'
             ? processedRankingData
             : Array.isArray(processedRankingData)
-              ? { processedItems: processedRankingData.length }
-              : processedRankingData,
+            ? { processedItems: processedRankingData.length }
+            : processedRankingData,
       });
       return c.json(
         success(
@@ -1871,4 +1916,5 @@ export const parseXmlForTesting = {
   loadSplitCache,
   processClassResults,
   processClassStarts,
+  noteSuccessfulApplicationUpload,
 };

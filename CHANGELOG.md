@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Fixed
 
+- Validate YAROC receiver actions against current configuration, registered radios
+  and server availability; disable unavailable actions and prevent duplicate requests.
+
 - Confirm zero-total entry orders as paid for every payment method without QR,
   cash or online payment requests in checkout, entry detail and email.
 
@@ -20,6 +23,18 @@ and this project adheres to
   license server-side from the matching cached federation registration.
 
 ### Added
+
+- Automatic generic IOF and authenticated MeOS MOP source monitoring, including
+  import state, received payload size and processing duration. Device settings
+  register only radio units; the device insight uses shared navigation and UI components.
+
+- Event settings for devices and persistent YAROC configuration; QuickEvent and
+  oChecklist self-register through event-password authentication on successful
+  uploads, heartbeats or an explicit registration endpoint. Existing upload and
+  bearer-heartbeat contracts remain supported.
+
+- Private device status insight with scoped heartbeat tokens, 30-day telemetry
+  history, outage intervals and optional YAROC 0.1.3 radio reception.
 
 - Weekly and manually triggered GHCR cleanup retains the five newest images per
   application package and removes older images and unused manifests.

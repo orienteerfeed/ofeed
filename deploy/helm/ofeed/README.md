@@ -106,3 +106,14 @@ Production will not start without valid ES256 keys. Configure exact same-site
 web/API origins for browser refresh cookies. See the
 [device-session runbook](../../../docs/ops/runbooks/device-sessions.md) for the
 coordinated legacy-token cutover, staged key rotation, and outage behavior.
+
+## Live device status
+
+Set `api.env.REDIS_URL` for a private external Redis service (or inject it
+through `api.envFrom`/Vault when credentials are included). Redis is not
+installed by this chart. Two API replicas need the same Redis to deliver live
+result and device notifications. Missing Redis degrades to device snapshot
+polling; SQL ingestion remains available. Do not put Redis credentials in public
+frontend configuration. Native YAROC needs Linux glibc x64/arm64 and a
+functional @lukasp47/yaroc 0.1.3 artifact. Published 0.1.3 currently lacks its
+entrypoints; verify native import before enabling reception.
