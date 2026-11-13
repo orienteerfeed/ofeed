@@ -62,7 +62,7 @@
     "graphql-subscriptions": "^3.0.0",
     "graphql-ws": "^6.3.0",
     "graphql-yoga": "^5.24.4",
-    "hono": "^4.13.13",
+    "hono": "^4.13.16",
     "hono-rate-limiter": "^0.5.4",
     "jsonwebtoken": "^9.0.3",
     "pino": "^10.4.0",
