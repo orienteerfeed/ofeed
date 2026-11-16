@@ -13,6 +13,12 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [System radio devices](system-radio-devices.md): reusable admin-managed YAROC/Meshtastic inventory and isolated event collection; issue #435.
+
+- [User notifications](user-notifications.md): persistent owner inbox for new entry orders and received payments; issue #293.
+- [Competitor favorites](competitor-favorites.md): guest/account stars, event Favorites tab and transactional spectator inbox updates; issue #293.
+- [Registration follows](registration-follows.md): cross-event athlete identity, profile management, pause/resume and cancellation; issue #293.
+
 - [Live device status](live-device-status.md): private device telemetry and YAROC radio reception.
 
 - [CI action runtimes](ci-action-runtimes.md): Node.js 24 validation actions and

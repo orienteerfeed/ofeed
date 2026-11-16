@@ -28,7 +28,12 @@ function mockDb() {
   const tx = {
     $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry-1' }]),
     user: { findUnique: vi.fn().mockResolvedValue({ role: 'USER' }) },
-    event: { findUnique: vi.fn().mockResolvedValue({ authorId: 7 }) },
+    event: {
+      findUnique: vi
+        .fn()
+        .mockResolvedValue({ authorId: 7, name: 'Race', author: { deletedAt: null } }),
+    },
+    userNotification: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     entry: {
       findUniqueOrThrow: vi
         .fn()
@@ -95,6 +100,16 @@ describe('entry payment service', () => {
     });
     expect(db.entryPayment.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ operatorId: 7, eventId: 'race', entryId: 'entry-1' }),
+    });
+    expect(db.userNotification.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          userId: 7,
+          kind: 'ENTRY_PAYMENT_RECEIVED',
+          sourceKey: 'payment:receipt-1',
+        }),
+      ],
+      skipDuplicates: true,
     });
     expect(db.entry.update).toHaveBeenCalledWith({
       where: { id: 'entry-1' },

@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminDevicesRouteImport } from './routes/admin/devices'
 import { Route as AdminEventsRouteImport } from './routes/admin/events'
 import { Route as AdminRegistrationsRouteImport } from './routes/admin/registrations'
 import { Route as AdminSystemMessagesRouteImport } from './routes/admin/system-messages'
@@ -61,6 +63,11 @@ const MyEventsRoute = MyEventsRouteImport.update({
   path: '/my-events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -69,6 +76,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDevicesRoute = AdminDevicesRouteImport.update({
+  id: '/admin/devices',
+  path: '/admin/devices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminEventsRoute = AdminEventsRouteImport.update({
@@ -210,7 +222,9 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/admin/devices': typeof AdminDevicesRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
@@ -243,7 +257,9 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/admin/devices': typeof AdminDevicesRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
@@ -276,7 +292,9 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/admin/devices': typeof AdminDevicesRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
@@ -311,7 +329,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/my-events'
+    | '/notifications'
     | '/profile'
+    | '/admin/devices'
     | '/admin/events'
     | '/admin/registrations'
     | '/admin/system-messages'
@@ -344,7 +364,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/my-events'
+    | '/notifications'
     | '/profile'
+    | '/admin/devices'
     | '/admin/events'
     | '/admin/registrations'
     | '/admin/system-messages'
@@ -376,7 +398,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/my-events'
+    | '/notifications'
     | '/profile'
+    | '/admin/devices'
     | '/admin/events'
     | '/admin/registrations'
     | '/admin/system-messages'
@@ -410,7 +434,9 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CheckoutRoute: typeof CheckoutRoute
   MyEventsRoute: typeof MyEventsRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  AdminDevicesRoute: typeof AdminDevicesRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminRegistrationsRoute: typeof AdminRegistrationsRoute
   AdminSystemMessagesRoute: typeof AdminSystemMessagesRoute
@@ -463,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -475,6 +508,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/devices': {
+      id: '/admin/devices'
+      path: '/admin/devices'
+      fullPath: '/admin/devices'
+      preLoaderRoute: typeof AdminDevicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/events': {
@@ -683,7 +723,9 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CheckoutRoute: CheckoutRoute,
   MyEventsRoute: MyEventsRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  AdminDevicesRoute: AdminDevicesRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminRegistrationsRoute: AdminRegistrationsRoute,
   AdminSystemMessagesRoute: AdminSystemMessagesRoute,

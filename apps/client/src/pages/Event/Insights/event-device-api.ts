@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import type { LiveMetrics, YarocSettings } from '@repo/shared';
 
-export const FIELDS = `devices { id name sourceType revoked status macAddress intervalSeconds lastSeenAt lastPunchAt uploadState uploadBytes uploadCompletedAt uploadDurationMs batteryPercent gsmRsrpDbm gsmSnrDb loraRssiDbm loraSnrDb signalBars latitude longitude positionAt errorMessage } yarocSettings { hours checkCode startCode finishCode brokerProfile meshtasticChannel } yarocAvailable sessionUntil brokerProfiles monitoringStartedAt monitoringUntil sessionState sessionError`;
+export const FIELDS = `devices { id name sourceType revoked systemDevice currentlyAssigned status macAddress intervalSeconds lastSeenAt lastPunchAt uploadState uploadBytes uploadCompletedAt uploadDurationMs batteryPercent gsmRsrpDbm gsmSnrDb loraRssiDbm loraSnrDb signalBars latitude longitude positionAt errorMessage } yarocSettings { hours checkCode startCode finishCode brokerProfile meshtasticChannel } yarocAvailable sessionUntil brokerProfiles monitoringStartedAt monitoringUntil sessionState sessionError systemSessionState systemSessionUntil systemSessionError`;
 export const LIVE_STATUS = gql`query EventLiveStatus($eventId: String!) { eventLiveStatus(eventId: $eventId) { ${FIELDS} } }`;
 export const UPDATES = gql`subscription EventLiveStatusChanged($eventId: String!) { eventLiveStatusChanged(eventId: $eventId) { ${FIELDS} } }`;
 export const HISTORY = gql`
@@ -135,6 +135,8 @@ export const ROTATE = gql`
 `;
 export type Device = LiveMetrics & {
   revoked: boolean;
+  systemDevice?: boolean;
+  currentlyAssigned?: boolean;
   id: string;
   name: string;
   sourceType: string;
@@ -145,6 +147,9 @@ export type Device = LiveMetrics & {
 };
 export type Status = {
   yarocAvailable: boolean;
+  systemSessionState?: string;
+  systemSessionUntil?: string | null;
+  systemSessionError?: string | null;
   sessionUntil: string | null;
   yarocSettings: Omit<YarocSettings, 'meshtasticChannel'> & {
     meshtasticChannel: string | null;

@@ -1,4 +1,6 @@
 import { restartMonitoring } from './live-status.monitoring.js';
+import { ensureMonitoring } from './live-status.monitoring.js';
+import { changeManualLiveDevice } from './live-status.management.js';
 import { builder } from '../../graphql/builder.js';
 import {
   authorizeLive,
@@ -19,6 +21,8 @@ const DeviceRef = builder.objectRef<Device>('LiveDeviceStatus').implement({
     name: t.exposeString('name'),
     sourceType: t.exposeString('sourceType'),
     revoked: t.exposeBoolean('revoked'),
+    systemDevice: t.exposeBoolean('systemDevice'),
+    currentlyAssigned: t.exposeBoolean('currentlyAssigned'),
     status: t.exposeString('status'),
     macAddress: t.exposeString('macAddress', { nullable: true }),
     intervalSeconds: t.exposeInt('intervalSeconds'),
@@ -64,6 +68,9 @@ const StatusRef = builder
       monitoringUntil: t.exposeString('monitoringUntil', { nullable: true }),
       sessionState: t.exposeString('sessionState'),
       sessionError: t.exposeString('sessionError', { nullable: true }),
+      systemSessionState: t.exposeString('systemSessionState'),
+      systemSessionUntil: t.exposeString('systemSessionUntil', { nullable: true }),
+      systemSessionError: t.exposeString('systemSessionError', { nullable: true }),
     }),
   });
 type History = Awaited<ReturnType<typeof deviceHistory>>;
@@ -148,11 +155,10 @@ builder.mutationFields((t) => ({
     resolve: async (_, a, c) => {
       await authorizeLive(c.prisma, c.auth, a.eventId);
       const token = randomBytes(32).toString('base64url');
-      const changed = await c.prisma.liveDevice.updateMany({
-        where: { id: a.deviceId, eventId: a.eventId },
-        data: { tokenHash: tokenHash(token), revokedAt: null },
+      await changeManualLiveDevice(c.prisma, a.eventId, a.deviceId, {
+        tokenHash: tokenHash(token),
+        revokedAt: null,
       });
-      if (!changed.count) throw new Error('Device not found');
       return { deviceId: a.deviceId, token };
     },
   }),
@@ -160,9 +166,9 @@ builder.mutationFields((t) => ({
     args: { eventId: t.arg.string({ required: true }), deviceId: t.arg.string({ required: true }) },
     resolve: async (_, a, c) => {
       await authorizeLive(c.prisma, c.auth, a.eventId);
-      await c.prisma.liveDevice.updateMany({
-        where: { id: a.deviceId, eventId: a.eventId },
-        data: { tokenHash: null, revokedAt: new Date() },
+      await changeManualLiveDevice(c.prisma, a.eventId, a.deviceId, {
+        tokenHash: null,
+        revokedAt: new Date(),
       });
       await notifyLiveStatus(a.eventId);
       return true;
@@ -177,11 +183,7 @@ builder.mutationFields((t) => ({
     resolve: async (_, a, c) => {
       await authorizeLive(c.prisma, c.auth, a.eventId);
       const intervalSeconds = liveIntervalSchema.parse(a.intervalSeconds);
-      const result = await c.prisma.liveDevice.updateMany({
-        where: { id: a.deviceId, eventId: a.eventId },
-        data: { intervalSeconds },
-      });
-      if (!result.count) throw new Error('Device not found');
+      await changeManualLiveDevice(c.prisma, a.eventId, a.deviceId, { intervalSeconds });
       await notifyLiveStatus(a.eventId);
       return true;
     },
@@ -193,7 +195,20 @@ builder.mutationFields((t) => ({
       const { hours } = monitoringSchema.parse({ hours: a.hours ?? 24 });
       const now = new Date();
       const until = new Date(+now + hours * 3600_000);
-      await restartMonitoring(c.prisma, a.eventId, now, until);
+      await c.prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM Event WHERE id = ${a.eventId} FOR UPDATE`;
+        const active = await tx.yarocSession.findMany({
+          where: { eventId: a.eventId, state: { in: ['starting', 'running'] }, until: { gt: now } },
+        });
+        if (active.length)
+          await ensureMonitoring(
+            tx,
+            a.eventId,
+            now,
+            new Date(Math.max(+until, ...active.map((session) => +session.until))),
+          );
+        else await restartMonitoring(tx, a.eventId, now, until);
+      });
       await notifyLiveStatus(a.eventId);
       return true;
     },

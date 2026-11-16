@@ -4,21 +4,46 @@ This is an engineering inventory and review checklist. It does not establish a
 legal basis, privacy notice, data-processing agreement or GDPR compliance. The
 operator must approve those policies and document unresolved decisions.
 
+## User notification inbox
+
+Personal inbox messages store recipient and internal event/order IDs, event
+name, item count or received amount/currency/method, and creation/read
+timestamps. They do not store contact emails, payer details or order access
+tokens. Access requires the recipient's user JWT and current event ownership.
+Read and unread messages expire after 90 days and are erased on account
+anonymization or deletion.
+
+Competitor favorites store a user's selection of competitors until removal or
+account/competitor deletion. Guest selections stay in the browser and are not
+silently merged into an account. Spectator messages include the competitor's
+public name, status, result time or published radio split and are accessible
+only while the recipient follows the competitor and the event remains public.
+They never include hidden course splits. Classes without result times suppress
+times and radio messages at creation. Order/payment messages retain owner
+authorization.
+
+Registration follows store the selected registration, issuer, name snapshot,
+pause state and timestamps until cancellation or account erasure. They survive
+event deletion so following persists across races. The profile endpoints require
+the recipient's JWT and cannot manage another user's preferences. Cancellation
+removes matching event selections; paused records keep history and suppress new
+message generation. Undeclared issuers stay separate from known issuers.
+
 ## Personal data inventory
 
-| Area                       | Examples                                                                   | Handling considerations                                                    |
-| -------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Accounts                   | Name, email, credentials, verification and reset tokens                    | Restrict access; never expose password hashes or token values              |
-| Participants               | Name, registration, birth year, timing card, club, results/splits          | Publication is contextual; include minors and restricted splits in reviews |
-| Entry orders               | Contact identity, email, participant items, notes, fees, payment reference | Separate organizer access from public event data                           |
-| Emergency/contact metadata | User-provided contact information                                          | Minimize exposure and review field authorization                           |
-| Bank import                | Organizer IBAN, provider transaction ID, variable symbol, amount, currency, booking date, reporting device ID; linked entry order | No payer name, account or message; owner-only access; sync logs 90 days; transaction retention open (G24) |
-| External identities        | Provider (ORIS/Google/GitHub), provider subject ID, provider email, link and last sign-in time | Owner-only; deleted on account anonymization; provider secrets from Vault, never logged |
-| Push notifications         | Expo push token, device ID, platform; queued status per bank transaction | Owner-only; token never returned; removed on unregister, `DeviceNotRegistered` or user deletion; outbox 30 days; Expo is a processor |
-| Timing ingestion           | Card, control, punch time, device ID, station serial, receipt times and author | JWT owner/admin ingestion; private raw ledger, removed with event deletion |
-| Imports and caches         | Federation registrations, XML/CSV payloads and import history              | Preserve provenance; public source does not remove privacy obligations     |
-| Operations                 | IP, user agent, request paths, errors and browser traces                   | Restrict sinks, redact sensitive fields and set retention                  |
-| Storage/backups            | Uploaded assets, snapshots, database backups                               | Access control, deletion propagation and restore policy                    |
+| Area                       | Examples                                                                                                                          | Handling considerations                                                                                                              |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Accounts                   | Name, email, credentials, verification and reset tokens                                                                           | Restrict access; never expose password hashes or token values                                                                        |
+| Participants               | Name, registration, birth year, timing card, club, results/splits                                                                 | Publication is contextual; include minors and restricted splits in reviews                                                           |
+| Entry orders               | Contact identity, email, participant items, notes, fees, payment reference                                                        | Separate organizer access from public event data                                                                                     |
+| Emergency/contact metadata | User-provided contact information                                                                                                 | Minimize exposure and review field authorization                                                                                     |
+| Bank import                | Organizer IBAN, provider transaction ID, variable symbol, amount, currency, booking date, reporting device ID; linked entry order | No payer name, account or message; owner-only access; sync logs 90 days; transaction retention open (G24)                            |
+| External identities        | Provider (ORIS/Google/GitHub), provider subject ID, provider email, link and last sign-in time                                    | Owner-only; deleted on account anonymization; provider secrets from Vault, never logged                                              |
+| Push notifications         | Expo push token, device ID, platform; queued status per bank transaction                                                          | Owner-only; token never returned; removed on unregister, `DeviceNotRegistered` or user deletion; outbox 30 days; Expo is a processor |
+| Timing ingestion           | Card, control, punch time, device ID, station serial, receipt times and author                                                    | JWT owner/admin ingestion; private raw ledger, removed with event deletion                                                           |
+| Imports and caches         | Federation registrations, XML/CSV payloads and import history                                                                     | Preserve provenance; public source does not remove privacy obligations                                                               |
+| Operations                 | IP, user agent, request paths, errors and browser traces                                                                          | Restrict sinks, redact sensitive fields and set retention                                                                            |
+| Storage/backups            | Uploaded assets, snapshots, database backups                                                                                      | Access control, deletion propagation and restore policy                                                                              |
 
 Exact fields and relationships are in the
 [Prisma schema](../../apps/server/prisma/schema.prisma). This inventory must be
@@ -59,8 +84,8 @@ re-copying sensitive values into logs.
 - Public-result/minor-data publication policy and federation cache
   refresh/removal.
 - Provider agreements, processing locations and breach response process.
-- Retention period and erasure-on-request semantics for bank transactions,
-  which link to immutable entry receipts
+- Retention period and erasure-on-request semantics for bank transactions, which
+  link to immutable entry receipts
   ([bank payment import](../specs/bank-payment-import.md)).
 - Processing agreement with Expo before enabling push notifications
   ([G25](../specs/bank-payment-notifications.md)).
@@ -70,11 +95,22 @@ Track these in owner-approved issues/specs. See [threat model](threat-model.md).
 ## Device-session retention
 
 Device sessions store installation UUID/name, creation and last-refresh times,
-expiry, revocation reason and SHA-256 refresh-token hashes. Consumed hashes remain
-until the family's 90-day absolute deadline for reuse detection. A bounded
-background job removes expired families and their generations. Raw refresh
-credentials and signing-key bundles must not enter logs or backups of source
-artifacts. Database backup retention remains subject to the operator policy above.
+expiry, revocation reason and SHA-256 refresh-token hashes. Consumed hashes
+remain until the family's 90-day absolute deadline for reuse detection. A
+bounded background job removes expired families and their generations. Raw
+refresh credentials and signing-key bundles must not enter logs or backups of
+source artifacts. Database backup retention remains subject to the operator
+policy above.
+
+## System radio inventory
+
+System radio units store names, MAC/node IDs, server-managed broker profile
+names and connection channels. Assignments record event, timestamps and
+administrator IDs. Event owners can see only their event-local device
+status/history, never another assignment or broker credentials. Reassignment
+retains event-local history under its existing retention policy; it does not
+move observations between events. Archive preserves inventory identity and does
+not release the MAC reservation.
 
 ## External identities
 

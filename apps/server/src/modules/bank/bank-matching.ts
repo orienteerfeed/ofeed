@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { enqueueUserNotification } from '../notifications/notifications.write.js';
 
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { ConflictError, NotFoundError, ValidationError } from '../../exceptions/index.js';
@@ -102,7 +103,7 @@ async function settle(
     where: { id: row.id },
     data: { matchingStatus: status, matchedEntryId: entry.id, matchedAmount: row.amount },
   });
-  await tx.entryPayment.create({
+  const receipt = await tx.entryPayment.create({
     data: {
       eventId: entry.eventId,
       entryId: entry.id,
@@ -120,6 +121,14 @@ async function settle(
     },
   });
   await reconcileEntryPaymentState(tx, entry.eventId, entry.id, ownerId);
+  await enqueueUserNotification(tx, entry.eventId, {
+    kind: 'ENTRY_PAYMENT_RECEIVED',
+    entryId: entry.id,
+    paymentId: receipt.id,
+    amount: receipt.amount,
+    currency: receipt.currency,
+    method: receipt.method,
+  });
   return updated;
 }
 

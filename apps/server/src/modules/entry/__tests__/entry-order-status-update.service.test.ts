@@ -284,3 +284,8 @@ describe('updateEntryOrderStatus', () => {
     ).rejects.toThrow('Entry order entry-1 does not exist for this event.');
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

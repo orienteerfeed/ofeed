@@ -63,6 +63,15 @@ export function DeviceStatusTable({
                 >
                   {d.name}
                 </Button>
+                {d.systemDevice && (
+                  <Badge variant="secondary" className="ml-2">
+                    {label(
+                      d.currentlyAssigned
+                        ? 'SystemDevice'
+                        : 'PreviouslyAssigned'
+                    )}
+                  </Badge>
+                )}
                 <small className="block text-muted-foreground">
                   {d.sourceType === 'uploader'
                     ? label('OtherApp')

@@ -20,12 +20,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  DeviceSelect,
+  DeviceNumberPreset,
+  normalizeRadioId,
+} from '@/components/molecules/DeviceSettingsControls';
 
 import { DeviceTelemetryCharts } from './DeviceTelemetryCharts';
 import { DeviceStatusTable } from './DeviceStatusTable';
@@ -46,40 +44,6 @@ import {
 } from './event-device-api';
 
 export { LIVE_STATUS } from './event-device-api';
-
-function DeviceSelect({
-  id,
-  label,
-  value,
-  onChange,
-  items,
-  disabled = false,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  items: { value: string; label: string }[];
-  disabled?: boolean;
-}) {
-  return (
-    <div className="grid gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger id={id}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {items.map(item => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 
 export function EventDeviceInsightPage() {
   const { eventId } = useParams({ from: '/events/$eventId/insights/devices' });
@@ -155,6 +119,7 @@ function EventDevicePanel({
   const [sourceType, setSource] = useState('yaroc');
   const [macAddress, setMac] = useState('');
   const [interval, setInterval] = useState(60);
+  const [monitoringHours, setMonitoringHours] = useState(24);
   const [hours, setHours] = useState(24);
   const [checkCode, setCheck] = useState(3);
   const [startCode, setStart] = useState(1);
@@ -229,6 +194,29 @@ function EventDevicePanel({
     event?.timezone
   );
   const stateReady = !!status && !query.error;
+  const normalizedMac = normalizeRadioId(macAddress, sourceType);
+  const automaticName = `${sourceType === 'meshtastic' ? 'Meshtastic' : 'YAROC'} ${normalizedMac}`;
+  const registration = registerLiveDeviceSchema.safeParse({
+    name: name.trim() || automaticName,
+    sourceType,
+    macAddress: normalizedMac,
+    intervalSeconds: interval,
+  });
+  const validMac = new RegExp(
+    `^[a-f0-9]{${sourceType === 'yaroc' ? 12 : 8}}$`
+  ).test(normalizedMac);
+  const showChannel =
+    sourceType === 'meshtastic' ||
+    !!channel ||
+    !!status?.yarocSettings?.meshtasticChannel ||
+    status?.devices.some(
+      device => device.sourceType === 'meshtastic' && !device.revoked
+    );
+  const presets = {
+    locale: i18n.language,
+    customLabel: label('CustomValue'),
+    recommendedLabel: label('Recommended'),
+  };
   async function currentActions() {
     const fresh = await query.refetch();
     return yarocActionState(
@@ -359,47 +347,33 @@ function EventDevicePanel({
                 {label('RadioDevices')}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {label('RegistrationHelp')}
+              </p>
               <form
                 className="grid gap-3 md:grid-cols-2"
                 onSubmit={e => {
                   e.preventDefault();
                   void perform(async () => {
-                    if (
-                      !registerLiveDeviceSchema.safeParse({
-                        name,
-                        sourceType,
-                        macAddress: macAddress || undefined,
-                        intervalSeconds: interval,
-                      }).success
-                    )
+                    if (!registration.success)
                       throw new Error(label('InvalidDevice'));
                     const result = await register({
                       variables: {
                         eventId,
-                        name,
-                        sourceType,
-                        macAddress: macAddress || null,
-                        intervalSeconds: interval,
+                        ...registration.data,
                       },
                     });
                     setSecret(result.data?.registerLiveDevice.token ?? '');
                     setName('');
+                    setMac('');
                   });
                 }}
               >
-                <label className="block space-y-2 text-sm font-medium">
-                  {label('Name')}
-                  <Input
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    required
-                    maxLength={100}
-                  />
-                </label>
                 <DeviceSelect
                   id="device-source"
-                  label={label('Source')}
+                  disabled={pending}
+                  label={label('UnitType')}
                   value={sourceType}
                   onChange={value => {
                     setSource(value);
@@ -413,22 +387,80 @@ function EventDevicePanel({
                 <label className="block space-y-2 text-sm font-medium">
                   MAC
                   <Input
+                    aria-label="MAC"
                     value={macAddress}
+                    disabled={pending}
                     onChange={e => setMac(e.target.value)}
                     required={['yaroc', 'meshtastic'].includes(sourceType)}
+                    placeholder={
+                      sourceType === 'yaroc' ? 'AA:BB:CC:DD:EE:FF' : '!deadbeef'
+                    }
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    aria-describedby="device-mac-help"
+                    aria-invalid={!!macAddress && !validMac}
                   />
+                  <span
+                    id="device-mac-help"
+                    className="block text-xs font-normal text-muted-foreground"
+                  >
+                    {label(
+                      sourceType === 'yaroc'
+                        ? 'YarocMacHelp'
+                        : 'MeshtasticMacHelp'
+                    )}
+                  </span>
+                  {macAddress && !validMac && (
+                    <span
+                      role="alert"
+                      className="block text-xs text-destructive"
+                    >
+                      {label(
+                        sourceType === 'yaroc'
+                          ? 'InvalidYarocMac'
+                          : 'InvalidMeshtasticMac'
+                      )}
+                    </span>
+                  )}
                 </label>
                 <label className="block space-y-2 text-sm font-medium">
-                  {label('Interval')}
+                  {label('OptionalName')}
                   <Input
-                    type="number"
-                    min={5}
-                    max={3600}
-                    value={interval}
-                    onChange={e => setInterval(Number(e.target.value))}
+                    value={name}
+                    disabled={pending}
+                    onChange={e => setName(e.target.value)}
+                    placeholder={
+                      validMac ? automaticName : label('AutomaticName')
+                    }
+                    maxLength={100}
                   />
                 </label>
-                <Button disabled={pending} type="submit">
+                <details className="space-y-3 rounded-md border p-3 md:col-span-2">
+                  <summary className="cursor-pointer text-sm font-medium">
+                    {label('AdvancedDevice')}
+                  </summary>
+                  <DeviceNumberPreset
+                    {...presets}
+                    id="device-interval"
+                    label={label('Interval')}
+                    value={interval}
+                    onChange={setInterval}
+                    presets={[10, 30, 60, 120, 300]}
+                    recommended={60}
+                    min={5}
+                    max={3600}
+                    unit="second"
+                    disabled={pending}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {label('IntervalHelp')}
+                  </p>
+                </details>
+                <Button
+                  disabled={pending || !stateReady || !registration.success}
+                  type="submit"
+                >
                   {label('Register')}
                 </Button>
               </form>
@@ -437,8 +469,14 @@ function EventDevicePanel({
           {secret && (
             <Alert role="status">
               <AlertDescription className="space-y-3">
-                <p>{label('TokenOnce')}</p>
-                <code className="break-all">{secret}</code>
+                <p>{label('RadioTokenHelp')}</p>
+                <details className="space-y-3">
+                  <summary className="cursor-pointer font-medium">
+                    {label('OptionalToken')}
+                  </summary>
+                  <p>{label('TokenOnce')}</p>
+                  <code className="block break-all">{secret}</code>
+                </details>
                 <Button variant="outline" onClick={() => setSecret('')}>
                   {label('Dismiss')}
                 </Button>
@@ -447,41 +485,30 @@ function EventDevicePanel({
           )}
           <Card>
             <CardHeader>
-              <CardTitle>{label('Monitoring')}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-6 sm:flex-row sm:items-end">
-              <div className="w-full space-y-2 sm:max-w-sm">
-                <Label htmlFor="monitoring-hours">{label('Hours')}</Label>
-                <Input
-                  id="monitoring-hours"
-                  disabled={pending || actions.active}
-                  type="number"
-                  min={1}
-                  max={72}
-                  value={hours}
-                  onChange={e => setHours(Number(e.target.value))}
-                />
-              </div>
-              <Button
-                className="w-full shrink-0 sm:w-auto"
-                disabled={pending}
-                onClick={() =>
-                  void perform(() => {
-                    if (!monitoringSchema.safeParse({ hours }).success)
-                      throw new Error(label('Action_InvalidSettings'));
-                    return monitor({ variables: { eventId, hours } });
-                  })
-                }
-              >
-                {label('Monitor')}
-              </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>YAROC</CardTitle>
+              <CardTitle>{label('OwnReception')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
+              <p className="text-sm text-muted-foreground">
+                {label('ReceptionHelp')}
+              </p>
+              <div className="max-w-sm">
+                <DeviceNumberPreset
+                  {...presets}
+                  id="reception-hours"
+                  label={label('ReceptionHours')}
+                  value={hours}
+                  onChange={setHours}
+                  presets={[6, 12, 24, 48, 72]}
+                  recommended={24}
+                  min={1}
+                  max={72}
+                  unit="hour"
+                  disabled={pending || actions.active}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {label('CodesHelp')}
+              </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 {[
                   { title: 'Check', value: checkCode, set: setCheck },
@@ -504,31 +531,48 @@ function EventDevicePanel({
                   </div>
                 ))}
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="yaroc-meshtastic-channel">
-                  {label('Channel')}
-                </Label>
-                <Input
-                  id="yaroc-meshtastic-channel"
+              {showChannel && (
+                <div className="grid gap-2">
+                  <Label htmlFor="yaroc-meshtastic-channel">
+                    {label('Channel')}
+                  </Label>
+                  <Input
+                    id="yaroc-meshtastic-channel"
+                    disabled={pending || actions.active}
+                    value={channel}
+                    onChange={e => setChannel(e.target.value)}
+                    aria-describedby="yaroc-channel-help"
+                    maxLength={100}
+                  />
+                  <p
+                    id="yaroc-channel-help"
+                    className="text-sm text-muted-foreground"
+                  >
+                    {label('ChannelHelp')}
+                  </p>
+                </div>
+              )}
+              <details className="space-y-3 rounded-md border p-3">
+                <summary className="cursor-pointer text-sm font-medium">
+                  {label('AdvancedReception')}
+                </summary>
+                <DeviceSelect
+                  id="yaroc-broker"
                   disabled={pending || actions.active}
-                  value={channel}
-                  onChange={e => setChannel(e.target.value)}
+                  label={label('Broker')}
+                  value={brokerProfile}
+                  onChange={setBrokerProfile}
+                  items={(status?.brokerProfiles ?? ['default']).map(value => ({
+                    value,
+                    label: value === 'default' ? label('DefaultBroker') : value,
+                  }))}
                 />
-              </div>
-              <DeviceSelect
-                id="yaroc-broker"
-                disabled={pending || actions.active}
-                label={label('Broker')}
-                value={brokerProfile}
-                onChange={setBrokerProfile}
-                items={(status?.brokerProfiles ?? ['default']).map(value => ({
-                  value,
-                  label: value,
-                }))}
-              />
-              <p className="text-sm text-muted-foreground">
-                {label('PublicBroker')}
-              </p>
+                {brokerProfile === 'default' && (
+                  <p className="text-sm text-muted-foreground">
+                    {label('PublicBroker')}
+                  </p>
+                )}
+              </details>
               <div className="flex flex-wrap gap-3" aria-busy={pending}>
                 <Button
                   variant="outline"
@@ -571,6 +615,56 @@ function EventDevicePanel({
               )}
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>{label('Monitoring')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {label('MonitoringHelp')}
+              </p>
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
+                <div className="w-full space-y-2 sm:max-w-sm">
+                  <DeviceNumberPreset
+                    {...presets}
+                    id="monitoring-hours"
+                    label={label('Hours')}
+                    disabled={pending}
+                    min={1}
+                    max={72}
+                    value={monitoringHours}
+                    onChange={setMonitoringHours}
+                    presets={[6, 12, 24, 48, 72]}
+                    recommended={24}
+                    unit="hour"
+                  />
+                </div>
+                <Button
+                  className="w-full shrink-0 sm:w-auto"
+                  disabled={
+                    pending ||
+                    !stateReady ||
+                    !monitoringSchema.safeParse({ hours: monitoringHours })
+                      .success
+                  }
+                  onClick={() =>
+                    void perform(() => {
+                      if (
+                        !monitoringSchema.safeParse({ hours: monitoringHours })
+                          .success
+                      )
+                        throw new Error(label('Action_InvalidSettings'));
+                      return monitor({
+                        variables: { eventId, hours: monitoringHours },
+                      });
+                    })
+                  }
+                >
+                  {label('Monitor')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
       {status?.devices.length === 0 && (
@@ -580,8 +674,49 @@ function EventDevicePanel({
           </CardContent>
         </Card>
       )}
+      {manage &&
+        status?.devices.some(
+          device => device.systemDevice && device.currentlyAssigned
+        ) && (
+          <Card>
+            <CardHeader>
+              <CardTitle role="heading" aria-level={3}>
+                {label('SystemDevices')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {label('SystemDevicesHelp')}
+              </p>
+              <p>
+                {label('SystemCollection')}:{' '}
+                {label(`Session_${status.systemSessionState ?? 'stopped'}`)} ·{' '}
+                {time(status.systemSessionUntil)}
+              </p>
+              {status.systemSessionError && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    {status.systemSessionError}
+                  </AlertDescription>
+                </Alert>
+              )}
+              <DeviceStatusTable
+                devices={status.devices.filter(
+                  device => device.systemDevice && device.currentlyAssigned
+                )}
+                selected={selected}
+                onSelect={setSelected}
+                label={label}
+                time={time}
+                locale={i18n.language}
+              />
+            </CardContent>
+          </Card>
+        )}
       <DeviceStatusTable
-        devices={status?.devices ?? []}
+        devices={(status?.devices ?? []).filter(
+          device => !manage || !device.systemDevice
+        )}
         selected={selected}
         onSelect={setSelected}
         label={label}
@@ -594,7 +729,12 @@ function EventDevicePanel({
             <CardTitle className="break-words">{chosen.name}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {mode === 'settings' && (
+            {mode === 'settings' && chosen.systemDevice && (
+              <p className="text-sm text-muted-foreground">
+                {label('SystemDevicesHelp')}
+              </p>
+            )}
+            {mode === 'settings' && !chosen.systemDevice && (
               <>
                 <label className="block space-y-2 text-sm font-medium">
                   {label('Interval')}

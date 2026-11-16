@@ -141,7 +141,7 @@ describe.skipIf(!url)('live status on disposable MariaDB', () => {
       });
       expect(await db.punchReceipt.count({ where: { eventId: event.id } })).toBe(1);
       await db.yarocSession.update({
-        where: { eventId: event.id },
+        where: { eventId_scope: { eventId: event.id, scope: 'event' } },
         data: { owner: 'worker-b', generation: 3 },
       });
       await expect(ingestYarocPunches(db, event.id, 'worker-a', 2, punch)).rejects.toThrow(

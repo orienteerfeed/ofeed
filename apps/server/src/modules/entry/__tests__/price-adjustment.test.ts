@@ -435,3 +435,8 @@ describe('entry report line prices with a price adjustment', () => {
     ).toEqual([5]);
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

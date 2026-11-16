@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode, AnchorHTMLAttributes } from 'react';
 import en from '@/i18n/locales/en/translation.json';
@@ -126,6 +126,7 @@ import {
 } from '@/pages/Event/Insights/EventDeviceInsightPage';
 describe('device insight', () => {
   beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
     state.devices = [];
     state.failed = false;
     state.nativeAvailable = true;
@@ -222,7 +223,7 @@ describe('device insight', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Save YAROC configuration' })
     );
-    await vi.waitFor(() => expect(state.mutation).toHaveBeenCalledOnce());
+    await waitFor(() => expect(state.mutation).toHaveBeenCalledOnce());
     expect(state.mutation).toHaveBeenCalledWith({
       variables: { eventId: 'race', ...state.settings, checkCode: 84 },
     });
@@ -295,7 +296,7 @@ describe('device insight', () => {
     const start = screen.getByRole('button', { name: 'Start YAROC reception' });
     fireEvent.click(start);
     fireEvent.click(start);
-    await vi.waitFor(() => expect(state.mutation).toHaveBeenCalledOnce());
+    await waitFor(() => expect(state.mutation).toHaveBeenCalledOnce());
     expect(state.mutation).toHaveBeenCalledWith({
       variables: { eventId: 'race', ...state.settings },
     });
@@ -326,7 +327,7 @@ describe('device insight', () => {
     expect(stop).toBeEnabled();
     fireEvent.click(stop);
     fireEvent.click(stop);
-    await vi.waitFor(() => expect(state.mutation).toHaveBeenCalledOnce());
+    await waitFor(() => expect(state.mutation).toHaveBeenCalledOnce());
     expect(state.mutation).toHaveBeenCalledWith({
       variables: { eventId: 'race' },
     });
@@ -334,7 +335,7 @@ describe('device insight', () => {
   it('registers a device and displays its token only after explicit management', async () => {
     render(<EventDeviceSettingsPanel eventId="race" />);
     expect(screen.queryByText('device-secret')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Name'), {
+    fireEvent.change(screen.getByLabelText('Name (optional)'), {
       target: { value: 'Radio 1' },
     });
     fireEvent.change(screen.getByLabelText('MAC'), {
@@ -353,5 +354,157 @@ describe('device insight', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss token' }));
     expect(screen.queryByText('device-secret')).not.toBeInTheDocument();
+  });
+  it('normalizes pasted YAROC addresses and creates a name when left blank', async () => {
+    render(<EventDeviceSettingsPanel eventId="race" />);
+    const register = screen.getByRole('button', { name: 'Register device' });
+    expect(register).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('MAC'), {
+      target: { value: ' DE:AD:BE:EF:12:34 ' },
+    });
+    expect(
+      screen.getByPlaceholderText('YAROC deadbeef1234')
+    ).toBeInTheDocument();
+    expect(register).toBeEnabled();
+    fireEvent.click(register);
+    await waitFor(() =>
+      expect(state.mutation).toHaveBeenCalledWith({
+        variables: {
+          eventId: 'race',
+          name: 'YAROC deadbeef1234',
+          sourceType: 'yaroc',
+          macAddress: 'deadbeef1234',
+          intervalSeconds: 60,
+        },
+      })
+    );
+    await waitFor(() => expect(screen.getByLabelText('MAC')).toHaveValue(''));
+    expect(screen.getByText(/does not require a token/)).toBeVisible();
+    expect(screen.getByText('device-secret')).not.toBeVisible();
+    fireEvent.click(
+      screen.getByText('Optional token for an external heartbeat integration')
+    );
+    expect(screen.getByText('device-secret')).toBeVisible();
+  });
+  it('accepts Meshtastic node IDs and reveals the matching channel help', async () => {
+    render(<EventDeviceSettingsPanel eventId="race" />);
+    expect(
+      screen.queryByLabelText('Meshtastic channel')
+    ).not.toBeInTheDocument();
+    fireEvent.keyDown(screen.getByLabelText('Device type'), { key: 'Enter' });
+    fireEvent.click(screen.getByRole('option', { name: 'Meshtastic' }));
+    expect(screen.getByLabelText('Meshtastic channel')).toBeVisible();
+    fireEvent.change(screen.getByLabelText('MAC'), {
+      target: { value: '!DEADBEEF' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Register device' }));
+    await waitFor(() =>
+      expect(state.mutation).toHaveBeenCalledWith({
+        variables: {
+          eventId: 'race',
+          name: 'Meshtastic deadbeef',
+          sourceType: 'meshtastic',
+          macAddress: 'deadbeef',
+          intervalSeconds: 60,
+        },
+      })
+    );
+  });
+  it('keeps a saved channel editable even without a Meshtastic fleet', () => {
+    state.settings = {
+      hours: 7,
+      checkCode: 3,
+      startCode: 1,
+      finishCode: 2,
+      brokerProfile: 'default',
+      meshtasticChannel: 'club',
+    };
+    render(<EventDeviceSettingsPanel eventId="race" />);
+    expect(screen.getByLabelText('Meshtastic channel')).toHaveValue('club');
+    fireEvent.change(screen.getByLabelText('Meshtastic channel'), {
+      target: { value: '' },
+    });
+    expect(screen.getByLabelText('Meshtastic channel')).toBeVisible();
+    expect(
+      screen.getByLabelText(
+        'Reception duration (hours, maximum 72) — Custom value'
+      )
+    ).toHaveValue(7);
+    expect(
+      screen.getByLabelText('Monitoring duration (hours, maximum 72)')
+    ).toHaveTextContent('24 hours');
+  });
+  it('supports presets and custom durations without changing reception settings', async () => {
+    state.settings = {
+      hours: 24,
+      checkCode: 3,
+      startCode: 1,
+      finishCode: 2,
+      brokerProfile: 'default',
+      meshtasticChannel: null,
+    };
+    render(<EventDeviceSettingsPanel eventId="race" />);
+    const duration = screen.getByLabelText(
+      'Monitoring duration (hours, maximum 72)'
+    );
+    fireEvent.keyDown(duration, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('option', { name: '12 hours' }));
+    expect(duration).toHaveTextContent('12 hours');
+    expect(
+      screen.getByRole('button', { name: 'Save YAROC configuration' })
+    ).toBeDisabled();
+    fireEvent.keyDown(duration, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('option', { name: 'Custom value' }));
+    const custom = screen.getByLabelText(
+      'Monitoring duration (hours, maximum 72) — Custom value'
+    );
+    fireEvent.change(custom, { target: { value: 7 } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start monitoring' }));
+    await waitFor(() =>
+      expect(state.mutation).toHaveBeenCalledWith({
+        variables: { eventId: 'race', hours: 7 },
+      })
+    );
+    fireEvent.change(custom, { target: { value: 73 } });
+    expect(
+      screen.getByRole('button', { name: 'Start monitoring' })
+    ).toBeDisabled();
+    expect(
+      screen.getByLabelText('Reception duration (hours, maximum 72)')
+    ).toHaveTextContent('24 hours');
+  }, 15000);
+  it('shows automatically assigned system radios without owner management controls', () => {
+    state.devices = [
+      {
+        id: 'system-radio',
+        name: 'Platform radio',
+        sourceType: 'yaroc',
+        macAddress: 'deadbeef1234',
+        intervalSeconds: 60,
+        revoked: false,
+        status: 'waiting',
+        lastSeenAt: null,
+        systemDevice: true,
+        currentlyAssigned: true,
+      },
+    ];
+    render(<EventDeviceSettingsPanel eventId="race" />);
+    expect(
+      screen.getByRole('heading', { name: 'System devices' })
+    ).toBeVisible();
+    expect(screen.getByText('System device', { exact: true })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Platform radio' }));
+    expect(
+      screen.queryByRole('button', { name: 'Revoke device' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Rotate token' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Start YAROC reception' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Stop reception' })
+    ).toBeDisabled();
   });
 });

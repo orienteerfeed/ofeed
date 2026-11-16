@@ -14,6 +14,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
+import { FavoriteCompetitorButton } from './FavoriteCompetitorButton';
 import {
   compareByFinishDesc,
   matchesLiveFeedQuery,
@@ -212,7 +213,10 @@ const EventLiveResultsView = ({
                       </TableCell>
                       <TableCell className="px-2 py-1 text-sm font-medium">
                         <div className="flex flex-col">
-                          <CompetitorName competitor={row} />
+                          <div className="flex min-w-0 items-center gap-1">
+                            <FavoriteCompetitorButton competitorId={row.id} />
+                            <CompetitorName competitor={row} />
+                          </div>
                           <MobileClubName
                             clubName={row.organisation ?? ''}
                             referenceText={mobileClubWidthReference}

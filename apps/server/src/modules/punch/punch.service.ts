@@ -1,3 +1,4 @@
+import { sessionWhere, assertRadioFence, type RadioScope } from '../yaroc/yaroc.session.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Punch, PunchReceipt, ResultStatus } from '../../generated/prisma/client.js';
 import { resolveEffectiveStartMode } from '@repo/shared';
@@ -173,7 +174,7 @@ async function projectCompetitor(
   // Attribute each field to the observation responsible for it.
   for (const change of fieldChanges) {
     const observation =
-      change.type === 'start_time_change' ? startPunch : (finishPunch ?? startPunch);
+      change.type === 'start_time_change' ? startPunch : finishPunch ?? startPunch;
     const receipt = preferredReceipt(observation ?? punches[0]);
     await createCompetitorProtocolEntries(tx, {
       eventId,
@@ -257,41 +258,47 @@ export async function ingestYarocPunches(
   owner: string,
   generation: number,
   input: PunchBatch,
+  scope: RadioScope = 'event',
 ): Promise<PunchResult[]> {
-  const session = await client.yarocSession.findUniqueOrThrow({ where: { eventId } });
+  const session = await client.yarocSession.findUniqueOrThrow({
+    where: sessionWhere(eventId, scope),
+  });
   await requireEventOwnerOrAdmin(
     client,
     { isAuthenticated: true, type: 'jwt', userId: session.authorId },
     eventId,
   );
-  return ingestAuthorizedPunches(client, session.authorId, eventId, input, { owner, generation });
+  return ingestAuthorizedPunches(client, session.authorId, eventId, input, {
+    owner,
+    generation,
+    scope,
+  });
 }
 async function ingestAuthorizedPunches(
   client: AppPrismaClient,
   userId: number,
   eventId: string,
   input: PunchBatch,
-  fence?: { owner: string; generation: number },
+  fence?: { owner: string; generation: number; scope?: RadioScope },
 ): Promise<PunchResult[]> {
   const batch = punchBatchSchema.parse(input);
   const { results, changes } = await eventPunchTransaction(client, eventId, async (tx) => {
     if (fence) {
-      await tx.$queryRaw`SELECT eventId FROM YarocSession WHERE eventId = ${eventId} FOR UPDATE`;
-      const active = await tx.yarocSession.findUniqueOrThrow({ where: { eventId } });
-      const device = await tx.liveDevice.findUnique({
-        where: { id: batch.deviceId.replace(/^yaroc:/, '') },
-      });
-      if (!device || device.eventId !== eventId || device.revokedAt)
-        throw new Error('YAROC device revoked');
+      const active = await assertRadioFence(
+        tx,
+        eventId,
+        batch.deviceId.replace(/^yaroc:/, ''),
+        fence,
+      );
       if (
-        active.owner !== fence.owner ||
-        active.generation !== fence.generation ||
-        !active.leaseUntil ||
-        active.leaseUntil <= new Date() ||
-        active.until <= new Date() ||
-        active.state === 'stopped'
+        fence.scope === 'system' &&
+        batch.punches.some(
+          (punch) =>
+            new Date(punch.punchTime) < active.startedAt ||
+            new Date(punch.punchTime) > new Date(Date.now() + 60_000),
+        )
       )
-        throw new Error('YAROC lease lost');
+        throw new Error('Punch outside current system collection window');
     }
     const results: Array<{ clientPunchId: string; punchId: number; duplicate: boolean }> = [];
     let newReceipts = false;

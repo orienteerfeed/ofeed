@@ -34,6 +34,7 @@ import React, { useMemo, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { CompetitorName } from './CompetitorName';
+import { FavoriteCompetitorButton } from './FavoriteCompetitorButton';
 import { ResultsViewport } from './ResultsViewport';
 import {
   getResultStatusDisplay,
@@ -832,36 +833,39 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
       </TableCell>
 
       <TableCell>
-        <div className="flex flex-col min-w-0">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                aria-label={fullName}
-                className="sm:hidden min-h-11 w-full text-left font-medium rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
-              >
+        <div className="flex items-start gap-1">
+          <FavoriteCompetitorButton competitorId={competitor.id} />
+          <div className="flex flex-col min-w-0">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={fullName}
+                  className="sm:hidden min-h-11 w-full text-left font-medium rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <CompetitorName competitor={competitor} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-64 whitespace-normal">
+                <p className="font-medium break-words">{fullName}</p>
+                <p className="text-sm text-muted-foreground break-words">
+                  {competitor.organisation}
+                </p>
+              </PopoverContent>
+            </Popover>
+            <div className="hidden sm:flex items-center gap-2">
+              <User className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+              <span className="font-medium truncate">
                 <CompetitorName competitor={competitor} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-64 whitespace-normal">
-              <p className="font-medium break-words">{fullName}</p>
-              <p className="text-sm text-muted-foreground break-words">
-                {competitor.organisation}
-              </p>
-            </PopoverContent>
-          </Popover>
-          <div className="hidden sm:flex items-center gap-2">
-            <User className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-            <span className="font-medium truncate">
-              <CompetitorName competitor={competitor} />
+              </span>
+            </div>
+            <span
+              title={competitor.organisation}
+              className={`${showClubs ? 'block' : 'hidden'} sm:block truncate text-xs text-muted-foreground`}
+            >
+              {competitor.organisation}
             </span>
           </div>
-          <span
-            title={competitor.organisation}
-            className={`${showClubs ? 'block' : 'hidden'} sm:block truncate text-xs text-muted-foreground`}
-          >
-            {competitor.organisation}
-          </span>
         </div>
       </TableCell>
 

@@ -41,7 +41,9 @@ export function yarocActionState(
   const radios =
     status?.devices.filter(
       device =>
-        ['yaroc', 'meshtastic'].includes(device.sourceType) && !device.revoked
+        ['yaroc', 'meshtastic'].includes(device.sourceType) &&
+        !device.revoked &&
+        !device.systemDevice
     ) ?? [];
   if (status && !radios.length) startIssues.push('NoRadioDevices');
   if (

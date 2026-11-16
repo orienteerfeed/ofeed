@@ -1,3 +1,6 @@
+import { sessionWhere, type RadioScope } from './yaroc.session.js';
+import { systemRadioCollectionSchema } from '@repo/shared';
+import { expireSystemCollections } from '../system-radio/system-radio.service.js';
 import { brokerProfiles } from './yaroc.config.js';
 import { activeYaroc } from '../live-status/live-status.metrics.js';
 import { createHash } from 'node:crypto';
@@ -67,6 +70,7 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
     busy = true;
     try {
       const now = new Date();
+      await expireSystemCollections(db, now);
       await db.yarocSession.updateMany({
         where: { until: { lte: now }, state: { in: ['starting', 'running'] } },
         data: { state: 'stopped', owner: null, leaseUntil: null, generation: { increment: 1 } },
@@ -77,16 +81,22 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
       for (const [id, local] of clients)
         if (
           !sessions.some(
-            (s) => s.eventId === id && s.owner === workerId && s.generation === local.generation,
+            (s) =>
+              `${s.eventId}/${s.scope}` === id &&
+              s.owner === workerId &&
+              s.generation === local.generation,
           )
         ) {
           local.client.stop();
           clients.delete(id);
         }
       for (const session of sessions) {
+        const scope = session.scope as RadioScope;
+        const key = `${session.eventId}/${scope}`;
         const claimed = await db.yarocSession.updateMany({
           where: {
             eventId: session.eventId,
+            scope,
             generation: session.generation,
             OR: [{ owner: workerId }, { leaseUntil: null }, { leaseUntil: { lt: now } }],
           },
@@ -97,9 +107,9 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
           },
         });
         if (!claimed.count) continue;
-        if (clients.has(session.eventId)) continue;
+        if (clients.has(key)) continue;
         const owned = await db.yarocSession.findUniqueOrThrow({
-          where: { eventId: session.eventId },
+          where: sessionWhere(session.eventId, scope),
         });
         try {
           const { MqttClient } = await loadYaroc();
@@ -107,31 +117,74 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
             where: {
               eventId: session.eventId,
               revokedAt: null,
+              systemDeviceId: scope === 'system' ? { not: null } : null,
+              ...(scope === 'system'
+                ? {
+                    systemDevice: {
+                      currentAssignment: { eventId: session.eventId, endedAt: null },
+                    },
+                  }
+                : {}),
               sourceType: { in: ['yaroc', 'meshtastic'] },
             },
+            include: { systemDevice: true },
           });
           if (!devices.length) throw new Error('No active radio units remain');
           for (const device of devices) registerLiveDeviceSchema.parse(device);
           const event = await db.event.findUniqueOrThrow({ where: { id: session.eventId } });
-          const settings = yarocSettingsSchema.parse(session.settings);
-          const client = new MqttClient(
-            devices.map((d) => ({ name: d.name, macAddress: d.macAddress! })),
-            [
-              {
-                ...brokerProfiles()[settings.brokerProfile],
-                meshtasticChannel: settings.meshtasticChannel,
-              },
-            ],
+          const settings =
+            scope === 'system'
+              ? systemRadioCollectionSchema.parse(session.settings)
+              : yarocSettingsSchema.parse(session.settings);
+          const timezone =
             z.object({ timezoneOffset: z.string().optional() }).parse(session.settings)
-              .timezoneOffset ?? timezoneOffset(event.timezone, now),
-          );
+              .timezoneOffset ?? timezoneOffset(event.timezone, now);
+          const groups = new Map<
+            string,
+            { devices: typeof devices; profile: string; channel?: string }
+          >();
+          for (const device of devices) {
+            const profile =
+              scope === 'system'
+                ? device.systemDevice!.brokerProfile
+                : yarocSettingsSchema.parse(settings).brokerProfile;
+            const channel =
+              scope === 'system'
+                ? device.systemDevice!.meshtasticChannel ?? undefined
+                : yarocSettingsSchema.parse(settings).meshtasticChannel;
+            const groupKey = JSON.stringify([profile, channel]);
+            if (!groups.has(groupKey)) groups.set(groupKey, { devices: [], profile, channel });
+            groups.get(groupKey)!.devices.push(device);
+          }
+          const nativeClients: NativeClient[] = [];
+          try {
+            for (const group of groups.values())
+              nativeClients.push(
+                new MqttClient(
+                  group.devices.map((d) => ({ name: d.name, macAddress: d.macAddress! })),
+                  [{ ...brokerProfiles()[group.profile], meshtasticChannel: group.channel }],
+                  timezone,
+                ),
+              );
+          } catch (error) {
+            for (const native of nativeClients) native.stop();
+            throw error;
+          }
+          const client: NativeClient = {
+            start: (callback) => {
+              for (const native of nativeClients) native.start(callback);
+            },
+            stop: () => {
+              for (const native of nativeClients) native.stop();
+            },
+          };
           const local = {
             client,
             generation: owned.generation,
             queue: Promise.resolve(),
             pending: 0,
           };
-          clients.set(session.eventId, local);
+          clients.set(key, local);
           client.start((error, raw) => {
             if (error) {
               report(error);
@@ -145,6 +198,7 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
                 .updateMany({
                   where: {
                     eventId: session.eventId,
+                    scope,
                     owner: workerId,
                     generation: owned.generation,
                   },
@@ -158,7 +212,7 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
             local.queue = local.queue
               .then(async () => {
                 const active = await db.yarocSession.findUniqueOrThrow({
-                  where: { eventId: session.eventId },
+                  where: sessionWhere(session.eventId, scope),
                 });
                 if (
                   active.owner !== workerId ||
@@ -171,6 +225,7 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
                 const incoming = parsed.data;
                 const fence = {
                   eventId: session.eventId,
+                  scope,
                   owner: workerId,
                   generation: owned.generation,
                 };
@@ -188,6 +243,12 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
                     )
                       continue;
                     const p = log.punch;
+                    if (
+                      scope === 'system' &&
+                      (new Date(p.time) < owned.startedAt ||
+                        new Date(p.time) > new Date(Date.now() + 60_000))
+                    )
+                      continue;
                     const code =
                       p.code === settings.checkCode
                         ? -2
@@ -196,21 +257,28 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
                         : p.code === settings.finishCode
                         ? -1
                         : p.code;
-                    await ingestYarocPunches(db, session.eventId, workerId, owned.generation, {
-                      source: 'SRR',
-                      deviceId: `yaroc:${device.id}`,
-                      punches: [
-                        {
-                          clientPunchId: stablePunchId(
-                            `${device.id}/${p.card}/${code}/${new Date(p.time).toISOString()}`,
-                          ),
-                          card: p.card,
-                          controlCode: code,
-                          punchTime: new Date(p.time).toISOString(),
-                          receivedAt: new Date().toISOString(),
-                        },
-                      ],
-                    });
+                    await ingestYarocPunches(
+                      db,
+                      session.eventId,
+                      workerId,
+                      owned.generation,
+                      {
+                        source: 'SRR',
+                        deviceId: `yaroc:${device.id}`,
+                        punches: [
+                          {
+                            clientPunchId: stablePunchId(
+                              `${device.id}/${p.card}/${code}/${new Date(p.time).toISOString()}`,
+                            ),
+                            card: p.card,
+                            controlCode: code,
+                            punchTime: new Date(p.time).toISOString(),
+                            receivedAt: new Date().toISOString(),
+                          },
+                        ],
+                      },
+                      scope,
+                    );
                     await ingestHeartbeat(
                       db,
                       device.id,
@@ -279,6 +347,7 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
                 await db.yarocSession.updateMany({
                   where: {
                     eventId: session.eventId,
+                    scope,
                     owner: workerId,
                     generation: owned.generation,
                   },
@@ -296,14 +365,24 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
               });
           });
           await db.yarocSession.updateMany({
-            where: { eventId: session.eventId, owner: workerId, generation: owned.generation },
+            where: {
+              eventId: session.eventId,
+              scope,
+              owner: workerId,
+              generation: owned.generation,
+            },
             data: { state: 'running', error: null },
           });
           await notifyLiveStatus(session.eventId);
         } catch (error) {
           report(error);
           await db.yarocSession.updateMany({
-            where: { eventId: session.eventId, owner: workerId, generation: owned.generation },
+            where: {
+              eventId: session.eventId,
+              scope,
+              owner: workerId,
+              generation: owned.generation,
+            },
             data: {
               state: 'error',
               error: 'YAROC native startup failed; verify the installed 0.1.3 package',

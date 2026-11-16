@@ -14,7 +14,8 @@ type AdminPageLayoutProps = {
     | 'events'
     | 'systemMessages'
     | 'ranking'
-    | 'registrations';
+    | 'registrations'
+    | 'devices';
   breadcrumbs: Array<{
     label: string;
     to?: string;

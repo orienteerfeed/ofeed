@@ -30,3 +30,20 @@ generated contracts or copy production data into examples.
 
 See [entry integration](../entry-api-integration.md) and
 [GraphQL architecture](../GRAPHQL_ARCHITECTURE.md).
+
+The [personal notification inbox](../specs/user-notifications.md) uses
+[shared notification contracts](../../packages/shared/src/notifications.ts) and
+[feature GraphQL operations](../../apps/server/src/modules/notifications/notifications.graphql.ts).
+All operations derive the recipient from the user JWT; event passwords cannot
+access an inbox.
+
+[Competitor favorites](../specs/competitor-favorites.md) add private selection
+queries/mutations and a bounded event-scoped public competitor selection query.
+Competitor notification kinds carry nullable `competitorId`, name, status,
+result time and radio data; `entryId` is nullable for these messages. See the
+[favorite GraphQL module](../../apps/server/src/modules/favorites/favorites.graphql.ts).
+
+The [registration-follow extension](../specs/registration-follows.md) adds
+`myAthleteFollows`, `setAthleteFollowPaused` and `removeAthleteFollow` for account
+preferences. Identity combines normalized registration and its issuer; paused
+preferences remain selected but do not receive new competitor messages.

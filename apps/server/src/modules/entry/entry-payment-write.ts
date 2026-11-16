@@ -1,4 +1,5 @@
 import type { AppPrismaClient } from '../../db/prisma-client.js';
+import { enqueueUserNotification } from '../notifications/notifications.write.js';
 import { NotFoundError } from '../../exceptions/index.js';
 import { Prisma } from '../../generated/prisma/client.js';
 
@@ -66,6 +67,14 @@ export async function createEntryPaymentInTransaction(
   data: Prisma.EntryPaymentUncheckedCreateInput,
 ) {
   const payment = await tx.entryPayment.create({ data });
+  await enqueueUserNotification(tx, payment.eventId, {
+    kind: 'ENTRY_PAYMENT_RECEIVED',
+    entryId: payment.entryId,
+    paymentId: payment.id,
+    amount: payment.amount,
+    currency: payment.currency,
+    method: payment.method,
+  });
   await reconcileEntryPaymentState(tx, data.eventId, data.entryId, data.operatorId);
   return payment;
 }

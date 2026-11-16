@@ -1,4 +1,5 @@
 import { startLiveBus, stopLiveBus } from './modules/live-status/live-status.bus.js';
+import { startNotificationWorker } from './modules/notifications/notifications.worker.js';
 import { startLiveMaintenance } from './modules/live-status/live-status.worker.js';
 import { startYarocWorker } from './modules/yaroc/yaroc.worker.js';
 import { startEntryExpiry } from './modules/entry/entry-expiry.js';
@@ -21,6 +22,9 @@ import { createExpoPushSender } from './modules/bank/expo-push.js';
 import app from './app.js';
 
 void startLiveBus(env.REDIS_URL);
+const stopNotificationWorker = startNotificationWorker(prisma, (error) =>
+  logger.error('Notification worker failed', { error }),
+);
 const stopLiveMaintenance = startLiveMaintenance(prisma, (error) =>
   logger.error('Live maintenance failed', { error }),
 );
@@ -63,6 +67,7 @@ const gracefulShutdown = createGracefulShutdown({
   server: httpServer,
   disposeGraphQLWebSocket: async () => {
     await stopLiveMaintenance();
+    await stopNotificationWorker();
     await stopYarocWorker();
     await stopLiveBus();
     clearInterval(accessKeyTimer);

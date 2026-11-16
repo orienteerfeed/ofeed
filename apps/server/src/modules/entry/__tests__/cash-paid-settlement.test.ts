@@ -26,7 +26,12 @@ function database(initialPaid = false, initialReceipt = 0, total = 250) {
   const db = {
     $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry' }]),
     $transaction: vi.fn(),
-    event: { findUnique: vi.fn().mockResolvedValue({ authorId: 7 }) },
+    event: {
+      findUnique: vi
+        .fn()
+        .mockResolvedValue({ authorId: 7, name: 'Race', author: { deletedAt: null } }),
+    },
+    userNotification: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     user: { findUnique: vi.fn().mockResolvedValue({ role: 'USER' }) },
     entry: {
       findFirst: vi.fn().mockImplementation(async () => entry),

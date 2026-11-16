@@ -1,5 +1,9 @@
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { Prisma } from '../../generated/prisma/client.js';
+import {
+  captureFavoriteCompetitors,
+  enqueueFavoriteChanges,
+} from '../favorites/favorites.notifications.js';
 
 export type PunchTx = Prisma.TransactionClient;
 export type PunchChanges = Map<number, number>;
@@ -27,7 +31,10 @@ export async function eventPunchTransaction<T>(
       return await client.$transaction(
         async (tx) => {
           await lockPunchEvent(tx, eventId);
-          return operation(tx);
+          const favorites = await captureFavoriteCompetitors(tx, eventId);
+          const result = await operation(tx);
+          await enqueueFavoriteChanges(tx, eventId, favorites);
+          return result;
         },
         {
           isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,

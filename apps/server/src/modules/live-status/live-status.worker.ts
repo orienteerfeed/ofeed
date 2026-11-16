@@ -1,5 +1,6 @@
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import { notifyLiveStatus } from './live-status.bus.js';
+import { sessionActive, sessionWhere } from '../yaroc/yaroc.session.js';
 export function startLiveMaintenance(db: AppPrismaClient, report: (error: unknown) => void) {
   let busy = false,
     nextCleanup = 0;
@@ -26,11 +27,48 @@ export function startLiveMaintenance(db: AppPrismaClient, report: (error: unknow
             : value.startedAt;
         });
         const unknown = +now - +previous > 15_000;
-        const devices = await db.liveDevice.findMany({
+        let devices = await db.liveDevice.findMany({
           where: { eventId: m.eventId, revokedAt: null, lastSeenAt: { not: null } },
         });
+        if (devices.some((device) => device.systemDeviceId)) {
+          const session = await db.yarocSession.findUnique({
+            where: sessionWhere(m.eventId, 'system'),
+          });
+          if (!sessionActive(session, now)) {
+            await db.liveDeviceOutage.updateMany({
+              where: {
+                endedAt: null,
+                device: { eventId: m.eventId, systemDeviceId: { not: null } },
+              },
+              data: { endedAt: session?.until && session.until < now ? session.until : now },
+            });
+            devices = devices.filter((device) => !device.systemDeviceId);
+          } else {
+            devices = devices.filter(
+              (device) =>
+                !device.systemDeviceId ||
+                (device.lastSeenAt && device.lastSeenAt >= session!.startedAt),
+            );
+          }
+        }
         if (unknown)
           for (const d of devices) {
+            if (d.systemDeviceId) {
+              await db.$transaction(async (tx) => {
+                await tx.$queryRaw`SELECT id FROM Event WHERE id = ${m.eventId} FOR UPDATE`;
+                const session = await tx.yarocSession.findUnique({
+                  where: sessionWhere(m.eventId, 'system'),
+                });
+                if (!sessionActive(session, now)) return;
+                const startedAt = new Date(Math.max(+previous, +session!.startedAt));
+                await tx.liveDeviceOutage.upsert({
+                  where: { deviceId_startedAt: { deviceId: d.id, startedAt } },
+                  create: { deviceId: d.id, startedAt, endedAt: now, kind: 'unknown' },
+                  update: { endedAt: now },
+                });
+              });
+              continue;
+            }
             await db.liveDeviceOutage.upsert({
               where: { deviceId_startedAt: { deviceId: d.id, startedAt: previous } },
               create: { deviceId: d.id, startedAt: previous, endedAt: now, kind: 'unknown' },
@@ -44,6 +82,16 @@ export function startLiveMaintenance(db: AppPrismaClient, report: (error: unknow
             d.lastSeenAt >= m.startedAt
           ) {
             await db.$transaction(async (tx) => {
+              if (d.systemDeviceId) {
+                await tx.$queryRaw`SELECT id FROM Event WHERE id = ${m.eventId} FOR UPDATE`;
+                if (
+                  !sessionActive(
+                    await tx.yarocSession.findUnique({ where: sessionWhere(m.eventId, 'system') }),
+                    now,
+                  )
+                )
+                  return;
+              }
               await tx.$queryRaw`SELECT id FROM LiveDevice WHERE id = ${d.id} FOR UPDATE`;
               const current = await tx.liveDevice.findUniqueOrThrow({ where: { id: d.id } });
               if (current.lastSeenAt?.getTime() !== d.lastSeenAt?.getTime()) return;

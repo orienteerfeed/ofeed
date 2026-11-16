@@ -4,6 +4,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { createClient } from 'redis';
 import { cachedTelemetry, startLiveBus, stopLiveBus } from '../live-status.bus.js';
 import { pubsub } from '../../../lib/pubsub.js';
+import { notificationTopic } from '../../notifications/notifications.service.js';
 const url = process.env.LIVE_STATUS_TEST_REDIS_URL;
 if (url) {
   const parsed = new URL(url);
@@ -16,8 +17,26 @@ describe.skipIf(!url)('live status Redis transport', () => {
     await stopLiveBus();
     if (external.isOpen) external.destroy();
   });
+  it('fans personal inbox hints across replicas without notification contents', async () => {
+    if (!external.isOpen) await external.connect();
+    await startLiveBus(url);
+    await vi.waitFor(async () => {
+      const counts = await external.sendCommand(['PUBSUB', 'NUMSUB', 'ofeed:results']);
+      expect(Number(counts[1])).toBeGreaterThan(0);
+    });
+    const topic = notificationTopic(293);
+    const listener = pubsub.asyncIterableIterator<boolean>(topic);
+    const pending = listener.next();
+    await external.publish(
+      'ofeed:results',
+      JSON.stringify({ origin: 'other-api', topic, payload: serialize(true).toString('base64') }),
+    );
+    expect((await pending).value).toBe(true);
+    await listener.return?.();
+    await stopLiveBus();
+  });
   it('version-checks cached telemetry, transports Date payloads and falls back to SQL', async () => {
-    await external.connect();
+    if (!external.isOpen) await external.connect();
     await startLiveBus(url);
     const eventId = randomUUID(),
       deviceId = randomUUID();

@@ -28,3 +28,7 @@ inventing approvers. Link replacement records in both directions.
 - [0009](0009-cash-paid-settlement.md): proposed explicit cash settlement through the legacy paid mutation, preserving immutable receipts.
 
 - [0010](0010-live-device-telemetry.md): proposed durable device telemetry and Redis notification fan-out.
+- [0011](0011-user-notification-inbox.md): proposed transactional personal inbox with recoverable live invalidations.
+- [0012](0012-competitor-favorite-notifications.md): proposed event-scoped favorites and transactional result notifications.
+- [0013](0013-registration-follows.md): proposed cross-event registration follows with profile management and pause state.
+- [0014](0014-system-radio-devices.md): proposed system radio inventory, assignment history and isolated collection scopes.

@@ -3,6 +3,41 @@
 Status: implemented; real native reception acceptance blocked by the published package. Issue: link pending; no issue number invented.
 ADR: [Live telemetry](../architecture/adr/0010-live-device-telemetry.md).
 
+## Guided device settings (2026-11-13)
+
+Issue: [#435](https://github.com/orienteerfeed/ofeed/issues/435).
+Goal: configure radio reception without requiring users to understand MQTT or
+type routine timing values. Preserve the existing GraphQL and validation contracts.
+
+Acceptance criteria:
+
+- Offer duration and heartbeat interval presets, retaining custom integer values
+  and existing saved values. Monitoring and reception use independent form values;
+  starting reception still starts monitoring for the reception duration, as before.
+- Accept pasted YAROC MACs with colon/hyphen separators and Meshtastic IDs with
+  an optional `!` prefix; normalize before validation and mutation. Keep exact
+  12/8 hexadecimal length checks and reject malformed values.
+- A blank device name uses the device type and normalized ID. A custom name is
+  preserved. Show the proposed name and format help before registration.
+- Move registration interval and broker configuration into accessible advanced
+  sections. Explain that interval controls availability detection, not transmission.
+- Show Meshtastic channel only when a non-revoked Meshtastic device exists, that
+  type is selected, or a channel is already configured. Explain that it must match
+  the unit's channel; do not invent discoverable channels or radio presets.
+- Explain special station codes and the inherited event timezone. Preserve active
+  reception locks, disabled-action reasons, custom broker profiles and hidden values.
+- Radio reception requires no heartbeat token setup. Keep optional token access in
+  an advanced section, rather than presenting it as a required onboarding step.
+
+Validation: client suite 467 tests passed; focused lint and client TypeScript passed.
+Four browser scenarios passed at 1280px and 390px using installed Chrome (the
+Playwright-pinned Chromium is unavailable). The browser fixture uses real settings
+components with deterministic GraphQL transport; it does not validate native reception.
+
+Tests: component regressions for normalized IDs, automatic names, presets/custom
+values, independent durations, conditional channel fields and existing start/stop
+preconditions. Run client tests, focused lint/types and a browser check when available.
+
 ## Goal and acceptance
 
 Owner/admin-only Insights device dashboard, 30-day minute telemetry and outage history,

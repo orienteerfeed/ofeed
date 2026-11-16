@@ -1,4 +1,7 @@
 import '../modules/live-status/live-status.graphql.js';
+import '../modules/system-radio/system-radio.graphql.js';
+import '../modules/notifications/notifications.graphql.js';
+import '../modules/favorites/favorites.graphql.js';
 import './scalars/date.scalar.js';
 import './scalars/date-time.scalar.js';
 import './scalars/constraint-scalars.js';

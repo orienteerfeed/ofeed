@@ -16,6 +16,9 @@ describe('Pothos GraphQL schema', () => {
     expect(sorted(Object.keys(schema.getQueryType()?.getFields() ?? {}))).toEqual(
       sorted([
         '_empty',
+        'adminSystemRadios',
+        'adminSystemRadioEvents',
+        'adminSystemRadioCollection',
         'activeSystemMessages',
         'changelogByEvent',
         'classById',
@@ -58,6 +61,10 @@ describe('Pothos GraphQL schema', () => {
         'eventsBySport',
         'eventsByUser',
         'myEvents',
+        'myNotifications',
+        'myEventFavoriteCompetitorIds',
+        'myAthleteFollows',
+        'eventFavoriteCompetitors',
         'organisationNames',
         'organisations',
         'resultFeedByEvent',
@@ -75,7 +82,18 @@ describe('Pothos GraphQL schema', () => {
     expect(sorted(Object.keys(schema.getMutationType()?.getFields() ?? {}))).toEqual(
       sorted([
         '_empty',
+        'saveSystemRadioDevice',
+        'archiveSystemRadioDevice',
+        'assignSystemRadioDevice',
+        'saveSystemRadioCollection',
+        'startSystemRadioCollection',
+        'stopSystemRadioCollection',
         'registerLiveDevice',
+        'markNotificationRead',
+        'markAllNotificationsRead',
+        'setCompetitorFavorite',
+        'setAthleteFollowPaused',
+        'removeAthleteFollow',
         'rotateLiveDeviceToken',
         'revokeLiveDevice',
         'startLiveMonitoring',
@@ -141,6 +159,7 @@ describe('Pothos GraphQL schema', () => {
         'competitorsByClassUpdated',
         'splitCompetitorsByClassUpdated',
         'winnerUpdated',
+        'myNotificationsChanged',
       ]),
     );
   });

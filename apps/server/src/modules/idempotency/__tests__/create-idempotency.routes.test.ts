@@ -256,3 +256,8 @@ it('treats differently cased keys as independent operations', async () => {
   expect(mocks.competitor).toHaveBeenCalledTimes(2);
   expect(rows.size).toBe(2);
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

@@ -42,3 +42,8 @@ describe('entry expiry', () => {
       });
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

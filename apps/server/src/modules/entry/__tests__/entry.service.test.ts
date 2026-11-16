@@ -315,6 +315,7 @@ type PrismaStub = {
   $transaction: ReturnType<typeof vi.fn>;
   user: { findUnique: ReturnType<typeof vi.fn> };
   event: { findUnique: ReturnType<typeof vi.fn> };
+  userNotification: { createMany: ReturnType<typeof vi.fn> };
   registration: { findMany: ReturnType<typeof vi.fn> };
   entry: {
     create: ReturnType<typeof vi.fn>;
@@ -326,10 +327,11 @@ type PrismaStub = {
 
 function makePrismaStub(): PrismaStub {
   const prisma: PrismaStub = {
-    $queryRaw: vi.fn().mockResolvedValue([]),
+    $queryRaw: vi.fn().mockResolvedValue([{ deletedAt: null }]),
     $transaction: vi.fn(),
     user: { findUnique: vi.fn() },
     event: { findUnique: vi.fn() },
+    userNotification: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     registration: { findMany: vi.fn().mockResolvedValue([]) },
     entry: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     entryItem: { update: vi.fn() },
@@ -444,12 +446,25 @@ describe('createEntryOrder', () => {
     );
 
   it('creates an order with server-side prices and a payment reference', async () => {
-    prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+    prisma.event.findUnique.mockResolvedValue(
+      makeEventRecord({ name: 'Race', authorId: 7, author: { deletedAt: null } }),
+    );
     prisma.entry.create.mockResolvedValue(makeStoredEntry());
 
     const order = await run({ userId: 7 });
 
     expect(prisma.entry.create).toHaveBeenCalledTimes(1);
+    expect(prisma.userNotification.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          userId: 7,
+          kind: 'ENTRY_ORDER_RECEIVED',
+          sourceKey: 'order:entry-1',
+          itemCount: 1,
+        }),
+      ],
+      skipDuplicates: true,
+    });
     const createArgs = prisma.entry.create.mock.calls[0][0];
     expect(createArgs.data).toMatchObject({
       eventId: 'event-1',
@@ -1162,3 +1177,8 @@ describe('G19 exclusive start modes', () => {
     );
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

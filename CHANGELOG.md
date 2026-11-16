@@ -10,6 +10,10 @@ and this project adheres to
 
 ### Fixed
 
+- Simplify radio device settings with duration/interval presets, pasted MAC and
+  node ID support, automatic names and advanced connection options. Keep monitoring
+  and reception duration edits separate. Refs #435.
+
 - Validate YAROC receiver actions against current configuration, registered radios
   and server availability; disable unavailable actions and prevent duplicate requests.
 
@@ -23,6 +27,20 @@ and this project adheres to
   license server-side from the matching cached federation registration.
 
 ### Added
+
+- Admin-managed system radio inventory with reusable event assignments, independent
+  system reception, preserved event history and read-only owner visibility. Refs #435.
+
+- Profile management of registration-based competitor follows across events,
+  including pause/resume, cancellation and migration of existing saved selections.
+  Refs #293.
+
+- Event-scoped competitor favorites with stars, a Favorites tab, account or local
+  browser persistence, and inbox updates for observed start/radio/finish/readout
+  and result corrections. Refs #293.
+
+- Persistent user notification inbox for new entry orders and received payments,
+  with live updates, read state, paginated history and 90-day retention. Refs #293.
 
 - Automatic generic IOF and authenticated MeOS MOP source monitoring, including
   import state, received payload size and processing duration. Device settings

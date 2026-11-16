@@ -44,6 +44,9 @@ moving them and breaking external links.
 - [Argo CD deployment](DEPLOYMENT_ARGOCD.md)
 - [Helm / k3s deployment](DEPLOYMENT_K3S.md)
 - [Winner notifications](winner-notifications.md)
+- [User notification inbox](specs/user-notifications.md)
+- [Competitor favorites](specs/competitor-favorites.md)
+- [Registration follows and profile management](specs/registration-follows.md)
 - [Historical feature designs](superpowers/specs/) and
   [working plans](superpowers/plans/)
 - [IOF XML schema reference](agent-context/IOF.xsd)

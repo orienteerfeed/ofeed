@@ -1,4 +1,5 @@
 import type { CreateTransaction } from '../idempotency/create-idempotency.js';
+import { enqueueUserNotification } from '../notifications/notifications.write.js';
 import crypto from 'node:crypto';
 
 import {
@@ -750,6 +751,11 @@ export async function createEntryOrder(
           },
         },
         include: entryInclude,
+      });
+      await enqueueUserNotification(transaction.tx, eventId, {
+        kind: 'ENTRY_ORDER_RECEIVED',
+        entryId: entry.id,
+        itemCount: pricedItems.length,
       });
       // A bank payment may have been reported before the order existed.
       await rematchEntryBankTransactions(prisma, entry.id);

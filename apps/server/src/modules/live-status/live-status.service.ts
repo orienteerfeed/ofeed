@@ -1,3 +1,10 @@
+import {
+  sessionWhere,
+  assertRadioFence,
+  lockRadioInventory,
+  sessionActive,
+  type RadioScope,
+} from '../yaroc/yaroc.session.js';
 import { yarocNativeAvailable } from '../yaroc/yaroc.native.js';
 import { brokerProfiles } from '../yaroc/yaroc.config.js';
 import { heartbeats } from './live-status.metrics.js';
@@ -38,22 +45,37 @@ export async function authorizeLive(
 export async function registerDevice(db: AppPrismaClient, eventId: string, input: unknown) {
   const data = registerLiveDeviceSchema.parse(input);
   const token = randomBytes(32).toString('base64url');
-  const device = await db.liveDevice.create({
-    data: { ...data, eventId, metrics: {}, tokenHash: tokenHash(token) },
+  const device = await db.$transaction(async (tx) => {
+    if (data.macAddress) {
+      await lockRadioInventory(tx);
+      if (await tx.systemRadioDevice.findUnique({ where: { macAddress: data.macAddress } }))
+        throw new AuthzError('Device ID is reserved for a system device', 409);
+    }
+    return tx.liveDevice.create({
+      data: { ...data, eventId, metrics: {}, tokenHash: tokenHash(token) },
+    });
   });
   return { device, token };
 }
 export async function snapshot(db: AppPrismaClient, eventId: string) {
-  const [devices, monitoring, session, event, yarocAvailable] = await Promise.all([
+  const [devices, monitoring, session, event, yarocAvailable, systemSession] = await Promise.all([
     db.liveDevice.findMany({
       where: { eventId },
       orderBy: { name: 'asc' },
       omit: { metrics: true },
+      include: {
+        systemDevice: {
+          select: {
+            currentAssignment: { select: { eventId: true, liveDeviceId: true, endedAt: true } },
+          },
+        },
+      },
     }),
     db.liveMonitoring.findUnique({ where: { eventId } }),
-    db.yarocSession.findUnique({ where: { eventId } }),
+    db.yarocSession.findUnique({ where: sessionWhere(eventId) }),
     db.event.findUniqueOrThrow({ where: { id: eventId }, select: { yarocSettings: true } }),
     yarocNativeAvailable(),
+    db.yarocSession.findUnique({ where: sessionWhere(eventId, 'system') }),
   ]);
   return {
     yarocSettings: yarocSettingsSchema.parse(
@@ -66,6 +88,13 @@ export async function snapshot(db: AppPrismaClient, eventId: string) {
     monitoringUntil: monitoring?.until.toISOString() ?? null,
     sessionState: session?.state ?? 'stopped',
     sessionError: session?.error ?? null,
+    systemSessionState: sessionActive(systemSession)
+      ? systemSession!.state
+      : systemSession?.state === 'error'
+        ? 'error'
+        : 'stopped',
+    systemSessionUntil: systemSession?.until.toISOString() ?? null,
+    systemSessionError: systemSession?.error ?? null,
     devices: await Promise.all(
       devices.map(async (d) => {
         const metrics = await cachedTelemetry(eventId, d.id, d.version, () =>
@@ -76,21 +105,31 @@ export async function snapshot(db: AppPrismaClient, eventId: string) {
         );
         return {
           id: d.id,
+          systemDevice: !!d.systemDeviceId,
+          currentlyAssigned:
+            !!d.systemDeviceId &&
+            d.systemDevice?.currentAssignment?.eventId === eventId &&
+            d.systemDevice.currentAssignment.liveDeviceId === d.id &&
+            !d.systemDevice.currentAssignment.endedAt,
           name: d.name,
           revoked: d.revokedAt !== null,
           sourceType: d.sourceType,
           macAddress: d.macAddress,
           intervalSeconds: d.intervalSeconds,
           lastSeenAt: d.lastSeenAt?.toISOString() ?? null,
-          status: d.revokedAt
-            ? 'stopped'
-            : liveConnectionStatus(
-                d.lastSeenAt && monitoring && d.lastSeenAt >= monitoring.startedAt
-                  ? d.lastSeenAt
-                  : null,
-                d.intervalSeconds,
-                monitoring?.until ?? null,
-              ),
+          status:
+            d.revokedAt || (d.systemDeviceId && !sessionActive(systemSession))
+              ? 'stopped'
+              : liveConnectionStatus(
+                  d.lastSeenAt &&
+                    monitoring &&
+                    d.lastSeenAt >=
+                      (d.systemDeviceId ? systemSession!.startedAt : monitoring.startedAt)
+                    ? d.lastSeenAt
+                    : null,
+                  d.intervalSeconds,
+                  monitoring?.until ?? null,
+                ),
           ...currentMetrics(metrics),
         };
       }),
@@ -102,7 +141,7 @@ export async function ingestHeartbeat(
   deviceId: string,
   input: Heartbeat,
   activityAt?: Date,
-  fence?: { eventId: string; owner: string; generation: number },
+  fence?: { eventId: string; owner: string; generation: number; scope?: RadioScope },
 ) {
   const message = heartbeatSchema.parse(input);
   const receivedAt = new Date();
@@ -111,17 +150,7 @@ export async function ingestHeartbeat(
     throw new RangeError('Measurement is in the future');
   const result = await db.$transaction(async (tx) => {
     if (fence) {
-      await tx.$queryRaw`SELECT eventId FROM YarocSession WHERE eventId = ${fence.eventId} FOR UPDATE`;
-      const active = await tx.yarocSession.findUniqueOrThrow({ where: { eventId: fence.eventId } });
-      if (
-        active.owner !== fence.owner ||
-        active.generation !== fence.generation ||
-        active.until <= receivedAt ||
-        !active.leaseUntil ||
-        active.leaseUntil <= receivedAt ||
-        active.state === 'stopped'
-      )
-        throw new Error('YAROC lease lost');
+      await assertRadioFence(tx, fence.eventId, deviceId, fence, receivedAt);
     }
     await tx.$queryRaw`SELECT id FROM LiveDevice WHERE id = ${deviceId} FOR UPDATE`;
     const device = await tx.liveDevice.findUniqueOrThrow({ where: { id: deviceId } });
