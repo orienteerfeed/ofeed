@@ -2533,5 +2533,30 @@
     "LocalSource": "Registreringskälla saknas",
     "ConfirmTitle": "Sluta följa deltagaren?",
     "ConfirmDescription": "Sluta följa {{name}} ({{registration}}) i alla tävlingar med samma registreringskälla. Du kan följa deltagaren igen från resultaten."
+  },
+  "Billing": {
+    "Name": "Namn / företagsnamn",
+    "Street": "Gata och nummer",
+    "City": "Ort",
+    "PostalCode": "Postnummer",
+    "Country": "Land",
+    "CompanyId": "Organisationsnummer",
+    "VatId": "Momsnummer",
+    "OrganizerTitle": "Arrangörsuppgifter",
+    "PayerTitle": "Betalarens fakturauppgifter",
+    "UsePayer": "Ange fakturauppgifter",
+    "Save": "Spara",
+    "Saved": "Uppgifterna sparade",
+    "Failed": "Åtgärden misslyckades",
+    "Invalid": "Ange namn och fullständig adress; arrangören behöver också organisationsnummer.",
+    "Loading": "Laddar…",
+    "Download": "Ladda ner avräkning som PDF",
+    "AresVerified": "Verifierat i ARES",
+    "AresLoading": "Söker i ARES…",
+    "AresEmpty": "Ingen organisation hittades i ARES. Du kan fylla i uppgifterna manuellt.",
+    "AresFailed": "ARES är inte tillgängligt just nu. Du kan fylla i uppgifterna manuellt.",
+    "AresHint": "Sök på organisationsnamn eller ange ett tjeckiskt företags-ID med åtta siffror.",
+    "AresResults": "Organisationer i ARES",
+    "CountriesFailed": "Kunde inte läsa in länder. Ladda om sidan."
   }
 }

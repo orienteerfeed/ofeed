@@ -1,3 +1,4 @@
+import type { BillingDetails } from '@repo/shared';
 import { gql } from '@apollo/client';
 import type {
   EntryItemActionKey,
@@ -46,6 +47,7 @@ export interface EntryOrderRow {
   paymentMethod: PaymentMethodType | null;
   paymentReference: string;
   userId: number | null;
+  payerDetails?: BillingDetails | null;
   contactEmail: string;
   contactFirstname: string;
   contactLastname: string;
@@ -166,6 +168,7 @@ export interface EntryOrderDetail extends EntryOrderRow {
     id: string;
     name: string;
     date: string;
+    settlementEnabled?: boolean;
     organizer: string | null;
     vatPayer: boolean;
     vatRate: number | null;
@@ -203,6 +206,15 @@ export const ENTRY_ORDER_BY_ID = gql`
         recipientMessage
       }
       userId
+      payerDetails {
+        name
+        street
+        city
+        postalCode
+        country
+        companyId
+        vatId
+      }
       contactEmail
       contactFirstname
       contactLastname
@@ -235,6 +247,7 @@ export const ENTRY_ORDER_BY_ID = gql`
         id
         name
         date
+        settlementEnabled
         organizer
         vatPayer
         vatRate

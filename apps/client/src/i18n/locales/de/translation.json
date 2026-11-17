@@ -2297,5 +2297,30 @@
     "LocalSource": "Registrierungsquelle nicht angegeben",
     "ConfirmTitle": "Diesem Teilnehmer nicht mehr folgen?",
     "ConfirmDescription": "{{name}} ({{registration}}) in allen Veranstaltungen derselben Registrierungsquelle nicht mehr folgen. Sie können später in den Ergebnissen erneut folgen."
+  },
+  "Billing": {
+    "Name": "Name / Firmenname",
+    "Street": "Straße und Hausnummer",
+    "City": "Ort",
+    "PostalCode": "Postleitzahl",
+    "Country": "Land",
+    "CompanyId": "Firmennummer",
+    "VatId": "USt-IdNr.",
+    "OrganizerTitle": "Veranstalterdaten",
+    "PayerTitle": "Rechnungsdaten des Zahlers",
+    "UsePayer": "Rechnungsdaten eingeben",
+    "Save": "Speichern",
+    "Saved": "Daten gespeichert",
+    "Failed": "Vorgang fehlgeschlagen",
+    "Invalid": "Name und vollständige Adresse eingeben; der Veranstalter benötigt eine Firmennummer.",
+    "Loading": "Laden…",
+    "Download": "Abrechnung als PDF herunterladen",
+    "AresVerified": "In ARES verifiziert",
+    "AresLoading": "ARES wird durchsucht…",
+    "AresEmpty": "Keine Organisation in ARES gefunden. Sie können die Angaben manuell eingeben.",
+    "AresFailed": "ARES ist derzeit nicht verfügbar. Sie können die Angaben manuell eingeben.",
+    "AresHint": "Nach Organisationsname suchen oder eine achtstellige tschechische Unternehmens-ID eingeben.",
+    "AresResults": "ARES-Organisationen",
+    "CountriesFailed": "Die Länderliste konnte nicht geladen werden. Bitte laden Sie die Seite neu."
   }
 }

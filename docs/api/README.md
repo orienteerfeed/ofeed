@@ -47,3 +47,19 @@ The [registration-follow extension](../specs/registration-follows.md) adds
 `myAthleteFollows`, `setAthleteFollowPaused` and `removeAthleteFollow` for account
 preferences. Identity combines normalized registration and its issuer; paused
 preferences remain selected but do not receive new competitor messages.
+
+## Entry settlements
+
+Optional `payerDetails` on entry creation/update follows the shared billing-details
+Zod contract. Owner/admin GraphQL operations `eventSettlementSettings` and
+`updateEventSettlementSettings` configure event organizer details and enablement;
+`entryOrderPayerUpdate` corrects payer details without repricing processed entries.
+GET `/rest/v1/events/{eventId}/entries/{entryId}/settlement.pdf` returns a current
+private PDF attachment for processed entries with settlement enabled. Authenticate
+with an event owner/admin JWT or the existing entry-specific `access` token.
+See [feature spec](../specs/entry-settlement-pdf.md) and code-owned OpenAPI.
+
+Organizer ARES lookup uses owner/admin-protected `searchOrganizerAres(eventId, name)`
+and `organizerAres(eventId, companyId)` GraphQL queries. Organizer output adds
+optional `aresVerifiedAt` (server-generated on save after matching ARES); input
+never accepts verification metadata. Club codes are removed from organizer contracts.

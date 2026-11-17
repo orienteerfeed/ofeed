@@ -74,6 +74,26 @@ type AuthPayload {
   user: User
 }
 
+type BillingDetails {
+  city: String!
+  companyId: String
+  country: String!
+  name: String!
+  postalCode: String!
+  street: String!
+  vatId: String
+}
+
+input BillingDetailsInput {
+  city: String!
+  companyId: String
+  country: String!
+  name: String!
+  postalCode: String!
+  street: String!
+  vatId: String
+}
+
 type CardInsightCompetitor {
   bibNumber: Int
   card: Int
@@ -292,6 +312,7 @@ type Entry {
   id: String!
   items: [EntryItem!]!
   paid: Boolean!
+  payerDetails: BillingDetails
   paymentCount: Int!
   paymentDueAt: DateTime
   paymentMethod: PaymentMethodType
@@ -412,6 +433,7 @@ input EntryOrderUpdateInput {
   contactFirstname: String!
   contactLastname: String!
   items: [EntryOrderUpdateItemInput!]!
+  payerDetails: BillingDetailsInput
   paymentMethod: PaymentMethodType!
 
   """
@@ -552,6 +574,7 @@ type Event {
   relay: Boolean!
   resultsOfficialAt: DateTime
   resultsOfficialManuallySetAt: DateTime
+  settlementEnabled: Boolean!
   slug: String
   splitPublicationAt: DateTime
   splitPublicationMode: SplitPublicationMode!
@@ -817,6 +840,11 @@ enum EventServiceSystemKey {
   START_TIME_CHANGE
 }
 
+type EventSettlementSettings {
+  enabled: Boolean!
+  organizer: OrganizerDetails
+}
+
 type EventStatusSummary {
   entries: EventEntriesStatus!
   entriesConfigured: Boolean!
@@ -949,6 +977,7 @@ type Mutation {
   deleteStartSlotVacancy(id: Int!): ResponseMessage!
   deleteUserCard(id: Int!): Boolean!
   entryOrderPaidUpdate(deviceId: String, entryId: String!, paid: Boolean!): Entry!
+  entryOrderPayerUpdate(entryId: String!, payer: BillingDetailsInput): Entry!
   entryOrderProcess(entryId: String!): Entry!
   entryOrderStatusUpdate(entryId: String!, status: EntryStatus!): Entry!
   entryOrderUpdate(entryId: String!, input: EntryOrderUpdateInput!): Entry!
@@ -982,6 +1011,7 @@ type Mutation {
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventPaymentMethods(eventId: String!, input: UpdateEventPaymentMethodsInput!): EventPaymentMethodSettings!
   updateEventRentalCard(input: UpdateEventRentalCardInput!): EventRentalCard!
+  updateEventSettlementSettings(enabled: Boolean!, eventId: String!, organizer: OrganizerDetailsInput): EventSettlementSettings!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
   updateEventYarocSettings(brokerProfile: String, checkCode: Int!, eventId: String!, finishCode: Int!, hours: Int, meshtasticChannel: String, startCode: Int!): Boolean!
   updateLateEntryFeePercent(eventId: String!, lateEntryFeePercent: Float): ResponseMessage!
@@ -1027,6 +1057,27 @@ type OrganisationName {
   countryCode: String
   id: Int!
   name: String!
+}
+
+type OrganizerDetails {
+  aresVerifiedAt: String
+  city: String!
+  companyId: String!
+  country: String!
+  name: String!
+  postalCode: String!
+  street: String!
+  vatId: String
+}
+
+input OrganizerDetailsInput {
+  city: String!
+  companyId: String!
+  country: String!
+  name: String!
+  postalCode: String!
+  street: String!
+  vatId: String
 }
 
 type PageInfo {
@@ -1123,6 +1174,7 @@ type Query {
   eventPromoCodes(eventId: String!): [PromoCode!]!
   eventRentalCards(eventId: String!): [EventRentalCard!]!
   eventServiceSettings(eventId: String!): EventServiceSettings!
+  eventSettlementSettings(eventId: String!): EventSettlementSettings!
   events(input: EventsInput): EventConnection!
   eventsBySport(sportId: Int!): [Event!]
   eventsByUser(userId: Int!): [Event!]
@@ -1132,9 +1184,11 @@ type Query {
   myNotifications(after: String, first: Int = 20): NotificationPage!
   organisationNames(eventId: String!): [OrganisationName!]!
   organisations(eventId: String!): [Organisation!]!
+  organizerAres(companyId: String!, eventId: String!): OrganizerDetails
   resultFeedByEvent(eventId: String!): [Competitor!]!
   searchEvents(query: String!): [Event]!
   searchOrganisationNames(eventId: String!, q: String!): [OrganisationName!]!
+  searchOrganizerAres(eventId: String!, name: String!): [OrganizerDetails!]!
   splitCourseDistances(classId: Int!): SplitCourseDistances
   splitPublicationStatus(classId: Int!): SplitPublicationStatus!
   sport(id: Int!): Sport

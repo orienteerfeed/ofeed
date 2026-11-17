@@ -1,3 +1,8 @@
+import { billingDetailsSchema } from '@repo/shared';
+import {
+  BillingDetailsFields,
+  emptyBillingDetails,
+} from '@/components/molecules/BillingDetailsFields';
 import type { EntryOrder, PaymentMethodType } from '@repo/shared';
 import { useForm, useStore } from '@tanstack/react-form';
 import { Link } from '@tanstack/react-router';
@@ -325,6 +330,8 @@ export const CheckoutPage = () => {
 
   const form = useForm({
     defaultValues: {
+      payerEnabled: false,
+      payerDetails: emptyBillingDetails,
       email: user?.email ?? '',
       firstname: user?.firstname ?? '',
       lastname: user?.lastname ?? '',
@@ -332,6 +339,13 @@ export const CheckoutPage = () => {
     onSubmit: async ({ value }) => {
       if (groups.length === 0 || isSubmitting) return;
 
+      const payer = billingDetailsSchema
+        .nullable()
+        .safeParse(value.payerEnabled ? value.payerDetails : null);
+      if (!payer.success) {
+        toast({ title: t('Billing.Invalid'), variant: 'error' });
+        return;
+      }
       setIsSubmitting(true);
       try {
         for (const group of groups) {
@@ -351,6 +365,7 @@ export const CheckoutPage = () => {
             eventId: group.eventId,
             paymentLinkLanguage: i18n.language,
             order: {
+              payerDetails: payer.data,
               contactEmail: value.email.trim(),
               contactFirstname: value.firstname.trim(),
               contactLastname: value.lastname.trim(),
@@ -600,6 +615,38 @@ export const CheckoutPage = () => {
                         t('Pages.Checkout.Form.Errors.LastnameRequired')
                       )}
                     />
+                  </div>
+                  <div className="space-y-3 sm:col-span-2">
+                    <form.Field name="payerEnabled">
+                      {field => (
+                        <label className="flex gap-2">
+                          <input
+                            type="checkbox"
+                            checked={field.state.value}
+                            onChange={e => field.handleChange(e.target.checked)}
+                          />
+                          {t('Billing.UsePayer')}
+                        </label>
+                      )}
+                    </form.Field>
+                    <form.Subscribe
+                      selector={state => state.values.payerEnabled}
+                    >
+                      {enabled =>
+                        enabled ? (
+                          <form.Field name="payerDetails">
+                            {field => (
+                              <BillingDetailsFields
+                                form={form}
+                                countryFieldName="payerDetails.country"
+                                value={field.state.value}
+                                onChange={field.handleChange}
+                              />
+                            )}
+                          </form.Field>
+                        ) : null
+                      }
+                    </form.Subscribe>
                   </div>
                   <ButtonWithSpinner
                     type="submit"

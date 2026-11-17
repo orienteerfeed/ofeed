@@ -112,6 +112,7 @@ function buildPublicImageUrl(key: string | null | undefined, eventId: string | n
 export const EventRef = builder.prismaObject('Event', {
   findUnique: (event) => ({ id: event.id }),
   fields: (t) => ({
+    settlementEnabled: t.exposeBoolean('settlementEnabled'),
     id: t.exposeString('id'),
     slug: t.exposeString('slug', { nullable: true }),
     sportId: t.exposeInt('sportId'),

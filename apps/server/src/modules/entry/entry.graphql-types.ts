@@ -1,3 +1,5 @@
+import { billingDetailsSchema } from '@repo/shared';
+import { BillingDetailsRef } from './billing.graphql-types.js';
 import {
   createQrPaymentInstruction,
   normalizeBankAccountIban,
@@ -209,6 +211,13 @@ export const EntryRef = builder.prismaObject('Entry', {
       },
     }),
     userId: t.exposeInt('userId', { nullable: true }),
+    payerDetails: t.field({
+      type: BillingDetailsRef,
+      nullable: true,
+      select: { payerDetails: true },
+      resolve: (entry) =>
+        entry.payerDetails === null ? null : billingDetailsSchema.parse(entry.payerDetails),
+    }),
     contactEmail: t.exposeString('contactEmail'),
     contactFirstname: t.exposeString('contactFirstname'),
     contactLastname: t.exposeString('contactLastname'),

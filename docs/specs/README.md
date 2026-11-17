@@ -13,6 +13,8 @@ same change as the code. A spec defines intent and acceptance criteria; the
 
 ## Current specs
 
+- [Entry settlement PDF](entry-settlement-pdf.md): organizer/payer details and protected current PDF settlement with processed-email attachment.
+
 - [System radio devices](system-radio-devices.md): reusable admin-managed YAROC/Meshtastic inventory and isolated event collection; issue #435.
 
 - [User notifications](user-notifications.md): persistent owner inbox for new entry orders and received payments; issue #293.

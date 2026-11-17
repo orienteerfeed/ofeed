@@ -1,3 +1,5 @@
+import { EntryPayerCard } from './EntryPayerCard';
+import { EntrySettlementDownload } from './EntrySettlementDownload';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Link, useParams, useSearch } from '@tanstack/react-router';
 import {
@@ -596,6 +598,20 @@ export function EventEntryOrderDetailPage() {
                   </p>
                 </CardContent>
               </Card>
+            )}
+            {!hasSignedAccess && (
+              <EntryPayerCard
+                entryId={entryId}
+                payer={entry.payerDetails ?? null}
+                onSaved={refetch}
+              />
+            )}
+            {entry.status === 'PROCESSED' && entry.event.settlementEnabled && (
+              <EntrySettlementDownload
+                eventId={eventId}
+                entryId={entryId}
+                {...(access ? { access } : {})}
+              />
             )}
             {entry.totalAmount === 0 || entry.paymentMethod !== 'CASH' ? (
               <EntryPaymentSection

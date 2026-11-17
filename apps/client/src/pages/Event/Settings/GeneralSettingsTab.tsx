@@ -1,3 +1,4 @@
+import { EventSettlementCard } from './EventSettlementCard';
 import { config } from '@/config';
 import { formatDate } from '@/lib/utils';
 import { TFunction } from 'i18next';
@@ -35,13 +36,17 @@ export const GeneralSettingsTab = ({
   onEventDataDeleted,
   refetch,
 }: GeneralSettingsTabProps) => {
-  const apiEventsEndpoint = new URL(ENDPOINTS.events(), config.BASE_API_URL).href;
+  const apiEventsEndpoint = new URL(ENDPOINTS.events(), config.BASE_API_URL)
+    .href;
 
   return (
     <div className="grid items-start gap-8">
       <div className="columns-1 md:columns-2 xl:columns-3 gap-6 space-y-6">
         <div className="break-inside-avoid">
           <EventInfoCard t={t} initialData={initialData} />
+        </div>
+        <div className="break-inside-avoid">
+          <EventSettlementCard eventId={eventId} />
         </div>
         <div className="break-inside-avoid">
           <EventPublishingScheduleCard
@@ -100,7 +105,11 @@ export const GeneralSettingsTab = ({
           />
         </div>
         <div className="break-inside-avoid">
-          <DangerZoneCard t={t} eventId={eventId} onEventDataDeleted={onEventDataDeleted} />
+          <DangerZoneCard
+            t={t}
+            eventId={eventId}
+            onEventDataDeleted={onEventDataDeleted}
+          />
         </div>
         <div className="break-inside-avoid">
           <TroubleShootingCard t={t} />

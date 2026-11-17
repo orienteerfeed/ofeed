@@ -49,6 +49,7 @@ type EntryEmailTemplateInput = {
   preheader: string;
   paragraphs: string[];
   details: EmailDetail[];
+  attachments?: Attachment[];
   payment?: EntryEmailPaymentSection;
   entryDetailUrl?: string;
 };
@@ -227,7 +228,14 @@ async function sendEntryEmail(input: EntryEmailTemplateInput): Promise<void> {
       text: notificationText(input),
       subject: input.subject,
       emailTo: input.emailTo,
-      ...(input.payment?.qrCode ? { attachments: [input.payment.qrCode] } : {}),
+      ...(input.attachments?.length || input.payment?.qrCode
+        ? {
+            attachments: [
+              ...(input.attachments ?? []),
+              ...(input.payment?.qrCode ? [input.payment.qrCode] : []),
+            ],
+          }
+        : {}),
       onSuccess: () => logger.info('Entry notification email sent', { action: 'entry-email' }),
       onError: (error) =>
         logger.error('Failed to send entry notification email', { action: 'entry-email', error }),
@@ -288,13 +296,30 @@ export async function notifyEntryOrderReceived(
 export async function notifyEntryOrderProcessed(
   order: EntryEmailOrder,
   event: EntryEmailEvent,
+  settlement?: { filename: string; content: Buffer } | null,
 ): Promise<void> {
   await sendEntryEmail({
     emailTo: order.contactEmail,
     recipientName: `${order.contactFirstname} ${order.contactLastname}`.trim(),
     subject: `OFeed – přihláška zpracována: ${event.name}`,
     preheader: `Vaše přihláška na závod ${event.name} byla zpracována.`,
-    paragraphs: ['Vaše přihláška byla pořadatelem zpracována a závodníci byli zařazeni do závodu.'],
+    paragraphs: [
+      'Vaše přihláška byla pořadatelem zpracována a závodníci byli zařazeni do závodu.',
+      ...(settlement === null
+        ? ['PDF vyúčtování se nepodařilo přiložit. Zkuste jej stáhnout v detailu přihlášky.']
+        : []),
+    ],
+    ...(settlement
+      ? {
+          attachments: [
+            {
+              filename: settlement.filename,
+              content: settlement.content.toString('base64'),
+              contentType: 'application/pdf',
+            },
+          ],
+        }
+      : {}),
     details: orderDetails(order, event),
     entryDetailUrl: entryDetailUrl(order, event),
   });

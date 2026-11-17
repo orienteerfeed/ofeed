@@ -2,6 +2,7 @@ import { createRouter } from '../../lib/create-app.js';
 import { requireAuth } from '../../middlewares/require-jwt.js';
 
 import punchRoutes from '../punch/punch.routes.js';
+import entrySettlementRoutes from '../entry/entry-settlement.routes.js';
 import entryPaymentRoutes from '../entry/entry-payment.routes.js';
 import { eventBankTransactionRoutes } from '../bank/bank.routes.js';
 
@@ -16,6 +17,7 @@ router.route('/', liveStatusRoutes);
 // Event routes
 // Unsecure public routes
 router.route('/', publicEventRoutes);
+router.route('/', entrySettlementRoutes);
 
 // Verify user authentication
 router.use('*', requireAuth);

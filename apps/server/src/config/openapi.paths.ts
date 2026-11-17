@@ -1,3 +1,4 @@
+import { ENTRY_SETTLEMENT_OPENAPI_PATHS } from '../modules/entry/entry-settlement.openapi.js';
 import { LIVE_STATUS_OPENAPI_PATHS } from '../modules/live-status/live-status.openapi.js';
 import { PUNCH_OPENAPI_PATHS } from '../modules/punch/punch.openapi.js';
 import { ENTRY_PAYMENT_OPENAPI_PATHS } from '../modules/entry/entry-payment.openapi.js';
@@ -46,6 +47,7 @@ export const OPENAPI_TAGS = [
 
 export const OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
   ...LIVE_STATUS_OPENAPI_PATHS,
+  ...ENTRY_SETTLEMENT_OPENAPI_PATHS,
   '/doc': {
     get: {
       tags: ['Index'],
