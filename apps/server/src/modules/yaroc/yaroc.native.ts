@@ -12,7 +12,7 @@ export async function loadYaroc() {
     };
   } catch {
     throw new Error(
-      'YAROC 0.1.3 native entrypoint unavailable. Install a functional Linux distribution before starting reception.',
+      'YAROC 0.1.4 native entrypoint unavailable. Install the optional package for a supported platform before starting reception.',
     );
   }
 }

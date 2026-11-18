@@ -94,6 +94,6 @@
     "seed": "tsx prisma/seed.ts"
   },
   "optionalDependencies": {
-    "@lukasp47/yaroc": "0.1.3"
+    "@lukasp47/yaroc": "0.1.4"
   }
 }

@@ -10,6 +10,10 @@ and this project adheres to
 
 ### Fixed
 
+- Upgrade optional YAROC reception to 0.1.4 with a working main package loader,
+  macOS ARM64 binaries and corrected MQTT timezone offsets. Keep DST-crossing
+  sessions blocked until IANA-aware decoding is supported upstream. Refs #435.
+
 - Simplify radio device settings with duration/interval presets, pasted MAC and
   node ID support, automatic names and advanced connection options. Keep monitoring
   and reception duration edits separate. Refs #435.

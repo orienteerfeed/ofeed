@@ -160,3 +160,21 @@ Browser lifecycle regressions are in `apps/client/e2e/system-devices.spec.ts`,
 with real admin/event components and a deterministic GraphQL fixture. They cover
 desktop and mobile registration, assignment, start/stop, reuse, archive/restore
 and readonly event controls. They do not start a native receiver.
+
+## Native YAROC package acceptance
+
+Install optional dependencies on a supported platform, then run this suite
+directly so cached task output cannot stand in for native acceptance:
+
+```bash
+TZ=UTC YAROC_NATIVE_TEST=1 pnpm --filter ./apps/server exec vitest run src/modules/yaroc/__tests__/yaroc.native.integration.test.ts --maxWorkers=1
+TZ=Europe/Prague YAROC_NATIVE_TEST=1 pnpm --filter ./apps/server exec vitest run src/modules/yaroc/__tests__/yaroc.native.integration.test.ts --maxWorkers=1
+```
+
+The test loads the normal `@lukasp47/yaroc` entry point and sends a fixed
+reference SPORTident packet through a minimal localhost MQTT fixture. It
+verifies both +02:00 and -05:00 as actual UTC instants, start/stop cleanup, and
+the current rejection of IANA timezone names. It does not use production brokers
+or hardware. Default tests skip this suite; opting in on an unsupported/missing
+native install fails rather than silently skipping. Current runtime acceptance
+covers macOS ARM64 and Linux ARM64 on Node.js 24.15.0.

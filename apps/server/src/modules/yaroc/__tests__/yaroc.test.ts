@@ -14,8 +14,9 @@ describe('YAROC adapter boundaries', () => {
     expect(stablePunchId('device/123/31/2026-07-01T12:00:00Z')).toBe(id);
     expect(stablePunchId('device/123/32/2026-07-01T12:00:00Z')).not.toBe(id);
   });
-  it('reports an unavailable native distribution without crashing importers', async () => {
-    // Current npm 0.1.3 is incomplete. Skip this assertion once upstream republishes functional artifacts.
+  it('keeps native loading optional while requiring the MqttClient export when available', async () => {
+    // Unsupported platforms/installs without optional dependencies still load the API.
+    // Supported native reception is verified separately by the opt-in integration suite.
     const result = await loadYaroc().catch((e: unknown) => e);
     if (result instanceof Error) expect(result.message).toContain('native entrypoint unavailable');
     else expect(result).toHaveProperty('MqttClient');

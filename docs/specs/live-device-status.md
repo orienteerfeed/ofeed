@@ -1,7 +1,24 @@
 # Live device status and YAROC
 
-Status: implemented; real native reception acceptance blocked by the published package. Issue: link pending; no issue number invented.
+Status: implemented; native 0.1.4 verified on macOS ARM64 and Linux ARM64. Issue: https://github.com/orienteerfeed/ofeed/issues/435.
 ADR: [Live telemetry](../architecture/adr/0010-live-device-telemetry.md).
+
+## YAROC 0.1.4 acceptance (2026-11-17)
+
+Issue: [#435](https://github.com/orienteerfeed/ofeed/issues/435). Upgrade the
+pinned optional dependency to 0.1.4 after verifying its published main
+loader/declarations, platform artifacts and MQTT punch timezone handling. Keep
+lazy native loading and explicit startup failure on unsupported/incomplete
+installations.
+
+Validate the normal package entry point, start/stop and local MQTT punch
+decoding with +02:00 and -05:00 under differing process timezones. Run on macOS
+ARM64 and Linux ARM64 where available; distinguish archive inspection from
+runtime validation for other platforms. Preserve fixed-offset conversion and
+DST-crossing rejection unless the published receiver explicitly supports IANA
+timezones. IANA reception requires upstream support for per-punch dates and
+ambiguous/nonexistent DST times; it is not implemented by merely passing an IANA
+string or changing process TZ.
 
 ## Guided device settings (2026-11-13)
 
@@ -41,7 +58,7 @@ preconditions. Run client tests, focused lint/types and a browser check when ava
 ## Goal and acceptance
 
 Owner/admin-only Insights device dashboard, 30-day minute telemetry and outage history,
-external event/device-scoped heartbeat tokens and YAROC 0.1.3 radio ingestion.
+external event/device-scoped heartbeat tokens and YAROC 0.1.4 radio ingestion.
 REST is external ingest; GraphQL is first-party read/control. MariaDB is durable;
 Redis is notification/cache infrastructure. Default monitoring is 24h, maximum 72h.
 Online <=2 heartbeat intervals; delayed <=4; offline thereafter. Missing measurements
@@ -58,16 +75,18 @@ GraphQL eventLiveStatus/eventDeviceHistory and management mutations require owne
 Subscriptions are notifications; snapshot polling every 30s reconciles lost notifications.
 YAROC uses existing SRR punch projection, stable identities, author attribution and
 DB fencing leases. A stopped client is never reused. DST-crossing sessions are rejected.
-Published npm 0.1.3 currently lacks entrypoints: native startup must fail explicitly
-without disabling API or external heartbeat ingest. No substitute version/build is implied.
+The published 0.1.4 main package includes its loader and declarations. Native startup
+must fail explicitly on unsupported/incomplete installs without disabling the API
+or external heartbeat ingest. No substitute version/build is implied.
 Public EMQX traffic is unauthenticated and MAC allowlisting is not sender authentication.
 
 ## Validation
 
 Test schemas, device authorization, deduplication, timing boundaries, expiry,
 minute aggregation, retention, lease takeover, SRR/readout precedence, subscriptions,
-Insights navigation and graphs. Real native smoke test requires a functional 0.1.3
-artifact on Linux, fake source deadbeef1234 and +02:00. No production migration/deploy.
+Insights navigation and graphs. Opt-in native tests use the published 0.1.4 main
+entry point, a localhost-only MQTT fixture, fake source deadbeef1234 and offsets
++02:00/-05:00. No production migration/deploy.
 
 ## Implementation and validation notes
 
@@ -85,8 +104,12 @@ worker fencing, receipt replay, metric cache versions and cross-process notifica
 payloads with Date preservation. SQL migrations were applied only to a disposable DB.
 Interactive browser verification could not run: Browser discovery returned no browsers.
 
-Pending release checks: functional Linux native 0.1.3 import and public-broker fake
-punch smoke test, maintainer issue link and ADR review. External producer applications
+Native acceptance (2026-11-17): main entry import, local MQTT punch decoding and
+fixed offsets verified on macOS ARM64 under UTC/Europe/Prague process zones, and
+on Linux ARM64. IANA names are explicitly rejected by 0.1.4. Linux x64 and Windows
+x64 published artifacts were inspected, without runtime acceptance.
+Pending release checks: deployment architecture and real hardware/broker acceptance,
+and ADR review. External producer applications
 must implement the documented heartbeat API in their own repositories.
 
 ## Settings and automatic application registration (2026-11-11)

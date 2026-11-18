@@ -115,9 +115,9 @@ silently adopted.
 The schema migration adds `YarocSession.scope` and changes its primary key to
 `(eventId, scope)`. Stop existing receivers before migration and update all
 server replicas before using system collection; do not run old and new workers
-together. Real reception still requires a functional native package and correct
-timezone handling; these administration changes do not repair the upstream
-artifact.
+together. Native 0.1.4 main-package loading, local MQTT decoding and
+fixed-offset handling have been verified on macOS ARM64 and Linux ARM64. Real
+hardware and broker acceptance remains a deployment check.
 
 ### Personal units
 
@@ -137,19 +137,30 @@ when it matches the units. Starting reception also starts monitoring for its
 duration; monitoring can otherwise be started separately without radio
 reception.
 
-YAROC is a lazy optional dependency pinned to 0.1.3. Its currently published npm
-archive contains only package.json. Real reception is blocked until a functional
-artifact is available. Linux glibc x64/arm64 are supported targets, not native
-macOS. Do not silently substitute another version. The radio stream uses QoS 0;
-SQL deduplication protects committed retries but cannot recover packets lost
-before server receipt. Buffer/retry at the sending application when possible.
+YAROC is a lazy optional dependency pinned to 0.1.4. Its main package includes
+the loader and type declarations, selecting optional native packages for Linux
+glibc x64/arm64, macOS ARM64 or Windows x64. Do not install with optional
+dependencies disabled. macOS ARM64 and Linux ARM64 main-entry imports and local
+MQTT punches have been runtime-verified; Linux x64/Windows x64 artifacts were
+inspected only. Unsupported platforms remain unavailable without disabling the
+rest of the API. The radio stream uses QoS 0; SQL deduplication protects
+committed retries but cannot recover packets lost before server receipt.
+Buffer/retry at the sending application when possible.
 
 Server administrators may set `YAROC_BROKER_PROFILES` to a JSON object of named
 profiles with `url`, `port`, optional `username`/`password` and `keepAliveSecs`.
 Only profile names are exposed to authorized users. Profiles must use a
-transport supported by YAROC; 0.1.3 does not expose TLS configuration. An
+transport supported by YAROC; 0.1.4 does not expose TLS configuration. An
 authenticated plain TCP broker requires a trusted network or an appropriate
 transport proxy.
+
+The event stores an IANA timezone (for example `Europe/Prague`). YAROC 0.1.4
+accepts a fixed offset, not IANA names; OFeed converts the event zone at session
+start and stores that offset for the whole reception window. Sessions crossing a
+daylight-saving offset transition remain rejected. Supporting such races
+requires upstream IANA-aware decoding using the punch date, plus a defined
+policy for ambiguous/repeated and nonexistent local times and delayed punches.
+Changing the server process timezone is not a replacement for that support.
 
 ## Automatic generic and MeOS import monitoring
 
