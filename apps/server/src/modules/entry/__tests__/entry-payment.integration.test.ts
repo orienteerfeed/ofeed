@@ -181,15 +181,21 @@ describe.skipIf(!settings.url)('entry payments on disposable MariaDB', () => {
     const rows = await client.entry.findMany({ where: { eventId } });
     expect(rows.filter((r) => r.paid)).toHaveLength(1);
   });
-  it('serializes a manual paid update racing the first partial receipt', async () => {
-    await Promise.allSettled([
-      pay(100),
+  it('serializes repeated cash settlement and collects a partial balance once', async () => {
+    await pay(100);
+    await Promise.all([
+      updateEntryOrderPaid(client, { eventId, entryId, paid: true, changedById: userId }),
       updateEntryOrderPaid(second, { eventId, entryId, paid: true, changedById: userId }),
     ]);
-    expect((await entry()).paid).toBe(false);
-    await expect(updateEntryOrderPaid(client, { eventId, entryId, paid: true })).rejects.toThrow(
-      'managed by payment receipts',
-    );
+    expect((await entry()).paid).toBe(true);
+    const receipts = await client.entryPayment.findMany({ where: { eventId, entryId } });
+    expect(receipts).toHaveLength(2);
+    expect(receipts.reduce((sum, receipt) => sum + receipt.amount.toNumber(), 0)).toBe(300);
+    await updateEntryOrderPaid(client, { eventId, entryId, paid: true, changedById: userId });
+    expect(await client.entryPayment.count({ where: { eventId, entryId } })).toBe(2);
+    await expect(
+      updateEntryOrderPaid(client, { eventId, entryId, paid: false, changedById: userId }),
+    ).rejects.toThrow('managed by payment receipts');
   });
   it('recalculates after repricing and serializes concurrent receipt/order edits', async () => {
     await pay(250);

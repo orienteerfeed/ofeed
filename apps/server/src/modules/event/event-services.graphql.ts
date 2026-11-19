@@ -1,12 +1,17 @@
 import { builder } from '../../graphql/builder.js';
 import { rethrowAuthzOrError } from '../../graphql/errors.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
-import { EventServiceSystemKeyRef } from './event-services.graphql-types.js';
+import {
+  RegistrationFeeDiscountRef,
+  RegistrationFeeDiscountInputRef,
+  EventServiceSystemKeyRef,
+} from './event-services.graphql-types.js';
 import {
   deleteCustomEventServiceForGraphQL,
   listEventServiceSettings,
   saveCustomEventServiceForGraphQL,
   updateLateEntryFeePercentForGraphQL,
+  updateRegistrationFeeDiscountsForGraphQL,
   updateSystemEventServiceForGraphQL,
   type EventServiceSetting,
   type EventServiceSettings,
@@ -36,6 +41,9 @@ const EventServiceSettingsRef = builder
   .implement({
     fields: (t) => ({
       eventId: t.exposeString('eventId'),
+      registrationFeeDiscounts: t.expose('registrationFeeDiscounts', {
+        type: [RegistrationFeeDiscountRef],
+      }),
       lateEntryFeePercent: t.exposeFloat('lateEntryFeePercent', { nullable: true }),
       services: t.expose('services', { type: [EventServiceSettingRef] }),
     }),
@@ -74,6 +82,22 @@ builder.queryFields((t) => ({
 }));
 
 builder.mutationFields((t) => ({
+  updateRegistrationFeeDiscounts: t.field({
+    type: ResponseMessageRef,
+    args: {
+      eventId: t.arg.string({ required: true }),
+      rules: t.arg({ type: [RegistrationFeeDiscountInputRef], required: true }),
+    },
+    resolve: (_root, args, context) =>
+      updateRegistrationFeeDiscountsForGraphQL(
+        context.prisma,
+        context.auth,
+        args.eventId,
+        args.rules.map((rule) => ({ ...rule, allowPromoCode: rule.allowPromoCode ?? false })),
+      ).catch((err: unknown) =>
+        rethrowAuthzOrError(err, 'Failed to update registration fee discounts'),
+      ),
+  }),
   updateLateEntryFeePercent: t.field({
     type: ResponseMessageRef,
     args: {

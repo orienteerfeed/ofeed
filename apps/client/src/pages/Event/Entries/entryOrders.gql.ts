@@ -42,12 +42,17 @@ export interface EntryOrderRow {
   eventId: string;
   status: EntryStatus;
   paid: boolean;
+  paymentCount?: number;
   paymentMethod: PaymentMethodType | null;
   paymentReference: string;
   userId: number | null;
   contactEmail: string;
   contactFirstname: string;
   contactLastname: string;
+  promoCode?: string | null;
+  promoPercent?: number | null;
+  promoEligibleAmount?: number | null;
+  promoDiscountAmount?: number | null;
   totalAmount: number;
   currency: string;
   paymentDueAt?: string | null;
@@ -103,6 +108,7 @@ export const ENTRY_ORDERS_BY_EVENT = gql`
       eventId
       status
       paid
+      paymentCount
       paymentDueAt
       paymentMethod
       paymentReference
@@ -111,6 +117,10 @@ export const ENTRY_ORDERS_BY_EVENT = gql`
       contactFirstname
       contactLastname
       totalAmount
+      promoCode
+      promoPercent
+      promoEligibleAmount
+      promoDiscountAmount
       currency
       createdAt
       updatedAt
@@ -178,6 +188,7 @@ export const ENTRY_ORDER_BY_ID = gql`
       eventId
       status
       paid
+      paymentCount
       paymentDueAt
       paymentMethod
       paymentReference
@@ -196,6 +207,10 @@ export const ENTRY_ORDER_BY_ID = gql`
       contactFirstname
       contactLastname
       totalAmount
+      promoCode
+      promoPercent
+      promoEligibleAmount
+      promoDiscountAmount
       currency
       createdAt
       updatedAt
@@ -254,19 +269,26 @@ export interface EntryOrderPaidUpdateResponse {
   entryOrderPaidUpdate: {
     id: string;
     paid: boolean;
+    paymentCount?: number;
   };
 }
 
 export interface EntryOrderPaidUpdateVariables {
   entryId: string;
   paid: boolean;
+  deviceId?: string;
 }
 
 export const ENTRY_ORDER_PAID_UPDATE = gql`
-  mutation EntryOrderPaidUpdate($entryId: String!, $paid: Boolean!) {
-    entryOrderPaidUpdate(entryId: $entryId, paid: $paid) {
+  mutation EntryOrderPaidUpdate(
+    $entryId: String!
+    $paid: Boolean!
+    $deviceId: String
+  ) {
+    entryOrderPaidUpdate(entryId: $entryId, paid: $paid, deviceId: $deviceId) {
       id
       paid
+      paymentCount
     }
   }
 `;

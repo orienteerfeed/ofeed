@@ -9,6 +9,7 @@ import {
   useAthletes,
   useUnfinishedAthletes,
   useFinishedAthletes,
+  isNotCompetingFinished,
 } from '@/composables/useAthletes'
 import { useSettingStore } from '@/stores/settings'
 import { useScrollColumnItem } from '@/composables/scrollColumn/useScrollColumn'
@@ -26,7 +27,9 @@ const { scrollItemRef, stickyRef, contentRef, isActive } = useScrollColumnItem(
   props.category.name
 )
 
-const fetchEnabled = computed(() => isActive.value || settingsStore.areSettingsDisplayed)
+const fetchEnabled = computed(
+  () => isActive.value || settingsStore.areSettingsDisplayed
+)
 const { status, athletes, areAvailable, courseInfo } = useAthletes({
   competition: props.competition,
   category: props.category,
@@ -42,9 +45,9 @@ const effectiveCategory = computed(() => ({
 
 const athletesCount = computed(() => {
   const { finished, unfinished } = athletes.value
-  // DNS can no longer change the results, so it counts as done (like in relays).
+  // DNS and MS can no longer change the results, so they count as done (like in relays).
   const dnsCount = unfinished.filter(
-    (a) => a.status === AthleteStatus.DidNotStart
+    (a) => a.status === AthleteStatus.DidNotStart || isNotCompetingFinished(a)
   ).length
   return {
     finished: finished.length + dnsCount,
@@ -57,10 +60,22 @@ const finishedAthletes = useFinishedAthletes(
   computed(() => settingsStore.pinnedCount),
   computed(() => props.category.resultMode ?? 'Default')
 )
-const unfinishedAthletes = useUnfinishedAthletes(athletes)
+const unfinishedAthletes = useUnfinishedAthletes(
+  athletes,
+  computed(() => props.category.resultMode ?? 'Default')
+)
+const visibleUnfinishedAthletes = computed(() =>
+  unfinishedAthletes.value.filter(
+    (athlete) =>
+      settingsStore.showUnfinishedAthletes || isNotCompetingFinished(athlete)
+  )
+)
 
 watchEffect(() => {
-  settingsStore.updateCategoryCount(props.category.name, athletesCount.value.full)
+  settingsStore.updateCategoryCount(
+    props.category.name,
+    athletesCount.value.full
+  )
 })
 </script>
 
@@ -76,7 +91,10 @@ watchEffect(() => {
       <div
         v-if="finishedAthletes.pinnedRows.length"
         class="w-full text-3xl font-bold bg-white"
-        :class="{ 'border-b-2 border-gray-600 border-dashed': finishedAthletes.restRows.length }"
+        :class="{
+          'border-b-2 border-gray-600 border-dashed':
+            finishedAthletes.restRows.length,
+        }"
       >
         <TableFinishedRow
           v-for="(row, index) in finishedAthletes.pinnedRows"
@@ -108,21 +126,20 @@ watchEffect(() => {
           :awarded-places="category.awardedPlaces"
         >
         </TableFinishedRow>
-        <template v-if="settingsStore.showUnfinishedAthletes">
-          <TableUnfinishedRow
-            v-for="(row, index) in unfinishedAthletes"
-            :data="row"
-            :key="index"
-            :is-even="index % 2 === 0"
-            :is-visible="isActive"
-            :is-compact="settingsStore.compactMode"
-            :show-club="settingsStore.showClub"
-            :show-registration="settingsStore.showRegistration"
-            :show-emojis="settingsStore.showEmojis"
-            :timezone="competition.timezone"
-          >
-          </TableUnfinishedRow>
-        </template>
+        <TableUnfinishedRow
+          v-for="(row, index) in visibleUnfinishedAthletes"
+          :data="row"
+          :key="row.id"
+          :is-even="index % 2 === 0"
+          :is-visible="isActive"
+          :is-compact="settingsStore.compactMode"
+          :show-club="settingsStore.showClub"
+          :show-registration="settingsStore.showRegistration"
+          :show-emojis="settingsStore.showEmojis"
+          :timezone="competition.timezone"
+          :result-mode="category.resultMode"
+        >
+        </TableUnfinishedRow>
       </div>
     </div>
     <div

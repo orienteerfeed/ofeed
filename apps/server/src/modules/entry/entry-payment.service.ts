@@ -6,7 +6,7 @@ import { ConflictError, ValidationError } from '../../exceptions/index.js';
 import { Prisma, type EntryPayment } from '../../generated/prisma/client.js';
 import { AuthzError, requireEventOwnerOrAdmin, type AuthzAuthContext } from '../../utils/authz.js';
 import { createEntryPaymentSchema, entryPaymentQuerySchema } from './entry-payment.schema.js';
-import { entryPaymentTransaction, reconcileEntryPaymentState } from './entry-payment-write.js';
+import { entryPaymentTransaction, createEntryPaymentInTransaction } from './entry-payment-write.js';
 
 type PaymentRow = EntryPayment & { bankTransaction?: { bookingDate: Date } | null };
 
@@ -81,10 +81,14 @@ export async function recordEntryPayment(
       if (entry.currency !== data.currency) {
         throw new ValidationError('Payment currency must match the entry currency.');
       }
-      const payment = await tx.entryPayment.create({
-        data: { ...data, amount, paidAt, eventId, entryId, operatorId: userId },
+      const payment = await createEntryPaymentInTransaction(tx, {
+        ...data,
+        amount,
+        paidAt,
+        eventId,
+        entryId,
+        operatorId: userId,
       });
-      await reconcileEntryPaymentState(tx, eventId, entryId, userId);
       return { payment: serialize(payment), created: true };
     });
   } catch (cause) {

@@ -43,6 +43,17 @@ describe('listEventEntryAvailability', () => {
     await expect(listEventEntryAvailability(prisma as never, 'missing-id')).resolves.toBeNull();
   });
 
+  it('exposes registration discounts for public checkout estimates', async () => {
+    const rules = [{ pattern: 'CHC*', discountPercent: 100 }];
+    const prisma = {
+      event: {
+        findUnique: vi.fn().mockResolvedValue(makeEvent({ registrationFeeDiscounts: rules })),
+      },
+    };
+    const result = await listEventEntryAvailability(prisma as never, 'event-1');
+    expect(result?.registrationFeeDiscounts).toEqual(rules);
+  });
+
   it('maps event-level metadata correctly', async () => {
     const prisma = {
       event: { findUnique: vi.fn().mockResolvedValue(makeEvent()) },

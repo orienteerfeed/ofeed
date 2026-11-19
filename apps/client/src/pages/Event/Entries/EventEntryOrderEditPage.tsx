@@ -1,7 +1,10 @@
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import type { PaymentMethodType } from '@repo/shared';
+import {
+  applyRegistrationFeeDiscount,
+  type PaymentMethodType,
+} from '@repo/shared';
 import { AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -274,6 +277,7 @@ export function EventEntryOrderEditPage() {
             contactLastname: contact.lastname.trim(),
             paymentMethod: contact.paymentMethod,
             items: items.map(item => ({
+              entryItemId: /^\d+$/.test(item.id) ? Number(item.id) : undefined,
               classId: item.classId,
               firstname: item.firstname.trim(),
               lastname: item.lastname.trim(),
@@ -550,7 +554,11 @@ export function EventEntryOrderEditPage() {
                                 'Pages.Event.Entries.Form.CardRentalWithPrice',
                                 {
                                   price: formatEntryFee(
-                                    cardRentalAction.price,
+                                    applyRegistrationFeeDiscount(
+                                      cardRentalAction.price,
+                                      item.registration,
+                                      availability.registrationFeeDiscounts
+                                    ),
                                     availability.currency.code,
                                     i18n.language
                                   ),

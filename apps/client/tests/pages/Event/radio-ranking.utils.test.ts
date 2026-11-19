@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildRadioBestTimes,
   buildRadioRanks,
   getLastRadio,
+  getProvisionalFinishTime,
   getRadioTime,
+  getRunningRadioCode,
   isProvisionallyPlaced,
   placeProvisional,
   type RadioRankedCompetitor,
@@ -25,6 +28,64 @@ const runner = (
 const codes = ['100', '101'];
 
 describe('radio ranking', () => {
+  it('derives Finished duration from timestamps when the timing feed has no result time', () => {
+    const finished = {
+      ...runner('finished', 'Finished'),
+      startTime: '2026-11-05T10:00:00Z',
+      finishTime: '2026-11-05T10:20:00Z',
+    };
+    expect(getProvisionalFinishTime(finished)).toBe(1200);
+    expect(getProvisionalFinishTime({ ...finished, time: 1100 })).toBe(1100);
+    expect(
+      getProvisionalFinishTime({ ...finished, finishTime: 'invalid' })
+    ).toBeUndefined();
+    const ok: RadioRankedCompetitor[] = [{ ...runner('ok', 'OK'), time: 1300 }];
+    expect(placeProvisional(ok, [finished], []).map(row => row.id)).toEqual([
+      'finished',
+      'ok',
+    ]);
+  });
+  it('places Finished by finish time before readout, even without radio splits', () => {
+    const ok = [
+      { ...runner('ok1', 'OK'), time: 1000 },
+      { ...runner('ok2', 'OK'), time: 1200 },
+    ];
+    const pending = {
+      ...runner('pending', 'Finished', { 100: 9999 }),
+      time: 1100,
+    };
+    expect(isProvisionallyPlaced(pending, [])).toBe(true);
+    expect(placeProvisional(ok, [pending], codes).map(row => row.id)).toEqual([
+      'ok1',
+      'pending',
+      'ok2',
+    ]);
+    expect(
+      placeProvisional(ok, [{ ...pending, time: 1000 }], []).map(row => row.id)
+    ).toEqual(['ok1', 'pending', 'ok2']);
+    expect(
+      isProvisionallyPlaced({ ...pending, time: 0, radioSplits: [] }, [])
+    ).toBe(true);
+  });
+
+  it('finds the best time at each control from the ranked runners only', () => {
+    expect(
+      buildRadioBestTimes(
+        [
+          runner('ok', 'OK', { 100: 300, 101: 620 }),
+          runner('active', 'Active', { 100: 280, 101: 610 }),
+          runner('dsq', 'Disqualified', { 100: 120, 101: 500 }),
+        ],
+        codes
+      )
+    ).toEqual(
+      new Map([
+        ['100', 280],
+        ['101', 610],
+      ])
+    );
+  });
+
   it('ranks every OK, Active and Finished runner at each radio control, ties shared', () => {
     const ranks = buildRadioRanks(
       [
@@ -138,5 +199,106 @@ describe('radio ranking', () => {
     expect(getRadioTime(runner('a', 'Active', { 31: 420 }), 'F1')).toBe(
       undefined
     );
+  });
+});
+
+describe('running radio clock column', () => {
+  const now = Date.parse('2026-11-05T10:10:00Z');
+  const active = {
+    ...runner('active', 'Active'),
+    startTime: '2026-11-05T10:00:00Z',
+  };
+  it('moves through missing radios in course order and then to finish', () => {
+    expect(getRunningRadioCode(active, ['101', '100'], now)).toBe('101');
+    expect(
+      getRunningRadioCode(
+        { ...active, radioSplits: [{ controlCode: 101, time: 300 }] },
+        ['101', '100'],
+        now
+      )
+    ).toBe('100');
+    expect(
+      getRunningRadioCode(
+        {
+          ...active,
+          radioSplits: [
+            { controlCode: 100, time: 500 },
+            { controlCode: 101, time: 300 },
+          ],
+        },
+        ['101', '100'],
+        now
+      )
+    ).toBeUndefined();
+    expect(getRunningRadioCode(active, [], now)).toBeUndefined();
+  });
+  it('handles numeric codes, missing/invalid times and earlier gaps', () => {
+    const competitor = {
+      ...active,
+      radioSplits: [
+        { controlCode: 100, time: 0 },
+        { controlCode: 101, time: 200 },
+      ],
+    };
+    expect(getRunningRadioCode(competitor, ['0100', '101'], now)).toBe('0100');
+    for (const time of [null, undefined, -1]) {
+      expect(
+        getRunningRadioCode(
+          {
+            ...competitor,
+            radioSplits: [
+              { controlCode: 100, ...(time === undefined ? {} : { time }) },
+            ],
+          },
+          codes,
+          now
+        )
+      ).toBe('100');
+    }
+    expect(
+      getRunningRadioCode(
+        { ...competitor, radioSplits: [{ controlCode: 100, time: 100 }] },
+        ['0100', '101'],
+        now
+      )
+    ).toBe('101');
+  });
+  it('keeps countdowns and invalid starts at finish and never moves non-Active clocks', () => {
+    for (const startTime of [
+      null,
+      undefined,
+      '',
+      'invalid',
+      '2026-11-05T10:11:00Z',
+    ]) {
+      expect(
+        getRunningRadioCode(
+          {
+            ...runner('active', 'Active'),
+            ...(startTime === undefined ? {} : { startTime }),
+          },
+          codes,
+          now
+        )
+      ).toBeUndefined();
+    }
+    for (const status of [
+      'OK',
+      'Finished',
+      'Inactive',
+      'DidNotStart',
+      'Disqualified',
+    ]) {
+      expect(
+        getRunningRadioCode({ ...active, status }, codes, now)
+      ).toBeUndefined();
+    }
+    expect(
+      getRunningRadioCode(
+        { ...active, startTime: new Date(now).toISOString() },
+        codes,
+        now
+      )
+    ).toBe('100');
   });
 });

@@ -2,7 +2,8 @@ import type { EntryOrder, PaymentMethodType } from '@repo/shared';
 import { useForm, useStore } from '@tanstack/react-form';
 import { Link } from '@tanstack/react-router';
 import { CheckCircle2, ExternalLink, ShoppingCart, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CheckoutPromoCode, type PromoSelection } from './CheckoutPromoCode';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -120,7 +121,7 @@ function CustomPaymentLinkInstructions({ paymentUrl }: { paymentUrl: string }) {
   );
 }
 
-function CompletedOrderCard({
+export function CompletedOrderCard({
   completedOrder,
 }: {
   completedOrder: CompletedOrder;
@@ -157,16 +158,28 @@ function CompletedOrderCard({
           </span>
           <span>{order.items.length}</span>
         </div>
-        {order.qrPayment ? (
+        {order.totalAmount === 0 && (
+          <p
+            role="status"
+            className="rounded-md bg-green-50 p-3 text-green-800 dark:bg-green-950 dark:text-green-200"
+          >
+            {t('Pages.Checkout.NoPaymentRequired')}
+          </p>
+        )}
+        {order.totalAmount > 0 && order.qrPayment ? (
           <QrPaymentInstructions payment={order.qrPayment} />
         ) : null}
-        {order.paymentMethod === 'CASH' && order.detailAccessToken ? (
+        {order.totalAmount > 0 &&
+        order.paymentMethod === 'CASH' &&
+        order.detailAccessToken ? (
           <CashPaymentInstructions
             order={order}
             detailAccessToken={order.detailAccessToken}
           />
         ) : null}
-        {order.paymentMethod === 'CUSTOM_PAYMENT_LINK' && order.paymentUrl ? (
+        {order.totalAmount > 0 &&
+        order.paymentMethod === 'CUSTOM_PAYMENT_LINK' &&
+        order.paymentUrl ? (
           <CustomPaymentLinkInstructions paymentUrl={order.paymentUrl} />
         ) : null}
       </CardContent>
@@ -289,6 +302,19 @@ export const CheckoutPage = () => {
   const removeItem = useRemoveCartItem();
   const createOrder = useCreateEntryOrder();
 
+  const [promos, setPromos] = useState<Record<string, PromoSelection>>({});
+  const updatePromo = useCallback(
+    (eventId: string, value: PromoSelection, quoteUpdate = false) => {
+      setPromos(current =>
+        quoteUpdate && current[eventId]?.code !== value.code
+          ? current
+          : JSON.stringify(current[eventId]) === JSON.stringify(value)
+            ? current
+            : { ...current, [eventId]: value }
+      );
+    },
+    []
+  );
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<
@@ -309,6 +335,14 @@ export const CheckoutPage = () => {
       setIsSubmitting(true);
       try {
         for (const group of groups) {
+          const promo = promos[group.eventId];
+          if (
+            promo?.code &&
+            (!promo.ready ||
+              promo.fingerprint !==
+                JSON.stringify(group.items.map(toOrderItem)))
+          )
+            return;
           const paymentMethod = paymentMethods[group.eventId];
           if (!paymentMethod) {
             throw new Error(t('Pages.Checkout.PaymentMethods.NoneAvailable'));
@@ -320,6 +354,7 @@ export const CheckoutPage = () => {
               contactEmail: value.email.trim(),
               contactFirstname: value.firstname.trim(),
               contactLastname: value.lastname.trim(),
+              ...(promo?.code ? { promoCode: promo.code } : {}),
               paymentMethod,
               items: group.items.map(toOrderItem),
             },
@@ -339,7 +374,13 @@ export const CheckoutPage = () => {
       } catch (error) {
         toast({
           title: t('Pages.Checkout.OrderErrorToast'),
-          ...(error instanceof Error ? { description: error.message } : {}),
+          ...(error instanceof Error
+            ? {
+                description: error.message.includes('PROMO_')
+                  ? t('PromoCodes.Invalid')
+                  : error.message,
+              }
+            : {}),
           variant: 'error',
         });
       } finally {
@@ -376,7 +417,11 @@ export const CheckoutPage = () => {
               {t('Pages.Checkout.SuccessTitle')}
             </h1>
             <p className="text-muted-foreground">
-              {t('Pages.Checkout.SuccessDescription')}
+              {t(
+                completedOrders.every(({ order }) => order.totalAmount === 0)
+                  ? 'Pages.Checkout.NoPaymentRequired'
+                  : 'Pages.Checkout.SuccessDescription'
+              )}
             </p>
           </div>
           {completedOrders.map(completedOrder => (
@@ -484,16 +529,24 @@ export const CheckoutPage = () => {
                     </div>
                   ))}
                   <Separator />
-                  <div className="flex justify-between font-semibold">
-                    <span>{t('Pages.Checkout.Total')}</span>
-                    <span>
-                      {formatEntryFee(
-                        group.total,
-                        group.currencyCode,
-                        i18n.language
-                      )}
-                    </span>
-                  </div>
+                  {!promos[group.eventId]?.code && (
+                    <div className="flex justify-between font-semibold">
+                      <span>{t('Pages.Checkout.Total')}</span>
+                      <span>
+                        {formatEntryFee(
+                          group.total,
+                          group.currencyCode,
+                          i18n.language
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  <CheckoutPromoCode
+                    eventId={group.eventId}
+                    items={group.items.map(toOrderItem)}
+                    selection={promos[group.eventId]}
+                    onChange={updatePromo}
+                  />
                   <CheckoutPaymentMethodField
                     eventId={group.eventId}
                     value={paymentMethods[group.eventId]}
@@ -555,6 +608,15 @@ export const CheckoutPage = () => {
                     disabled={
                       !canSubmit ||
                       !hasPaymentMethodForEveryEvent ||
+                      groups.some(group => {
+                        const promo = promos[group.eventId];
+                        return (
+                          !!promo?.code &&
+                          (!promo.ready ||
+                            promo.fingerprint !==
+                              JSON.stringify(group.items.map(toOrderItem)))
+                        );
+                      }) ||
                       isSubmitting
                     }
                   >

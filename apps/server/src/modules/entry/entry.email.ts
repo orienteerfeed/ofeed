@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 import type { Attachment } from 'resend';
 
-import type { PaymentMethodType, QrPaymentInstruction } from '@repo/shared';
+import {
+  formatCzechBankAccount,
+  type PaymentMethodType,
+  type QrPaymentInstruction,
+} from '@repo/shared';
 
 import env from '../../config/env.js';
 import { logger } from '../../lib/logging.js';
@@ -151,6 +155,7 @@ async function paymentSection(
         };
       }
 
+      const domesticAccount = formatCzechBankAccount(qrPayment.bankAccountIban);
       let qrCode: Attachment | undefined;
       try {
         const content = await QRCode.toBuffer(qrPayment.payload, {
@@ -183,6 +188,7 @@ async function paymentSection(
           ...(qrPayment.bankAccountName
             ? [{ label: 'Název účtu', value: qrPayment.bankAccountName }]
             : []),
+          ...(domesticAccount ? [{ label: 'Číslo účtu', value: domesticAccount }] : []),
           { label: 'IBAN', value: qrPayment.bankAccountIban },
           { label: 'Konstantní symbol', value: qrPayment.constantSymbol },
           { label: 'Zpráva pro příjemce', value: qrPayment.recipientMessage },
@@ -243,7 +249,8 @@ export async function notifyEntryOrderReceived(
   const details = orderDetails(order, event);
   const entrantName = `${order.contactFirstname} ${order.contactLastname}`.trim();
   const detailUrl = entryDetailUrl(order, event);
-  const paymentDetails = await paymentSection(payment, detailUrl);
+  const paymentDetails =
+    order.totalAmount === 0 ? undefined : await paymentSection(payment, detailUrl);
 
   await sendEntryEmail({
     emailTo: order.contactEmail,
@@ -253,6 +260,9 @@ export async function notifyEntryOrderReceived(
     paragraphs: [
       'Potvrzujeme přijetí vaší přihlášky. Pořadatel ji nyní zpracuje.',
       'Tento e-mail slouží jako potvrzení o přijetí objednávky.',
+      ...(order.totalAmount === 0
+        ? ['Objednávka je zdarma. Platba není potřeba a objednávka je označena jako zaplacená.']
+        : []),
     ],
     details,
     payment: paymentDetails,

@@ -179,6 +179,8 @@ export const oauth2Model = {
 
     return {
       ...token,
+      // Omit<Token, 'client' | 'user'> loses named fields through Token's index signature.
+      accessToken: token.accessToken,
       client,
       user: tokenUser,
     };

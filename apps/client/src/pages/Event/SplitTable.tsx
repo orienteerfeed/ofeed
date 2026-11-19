@@ -3,6 +3,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,8 +33,7 @@ import {
 import React, { useMemo, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
-import { MobileClubName } from './MobileClubName';
+import { CompetitorName } from './CompetitorName';
 import { ResultsViewport } from './ResultsViewport';
 import {
   getResultStatusDisplay,
@@ -377,6 +381,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
   courseControlCodes,
 }) => {
   const { t } = useTranslation();
+  const [showClubs, setShowClubs] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: 'position',
     direction: 'asc',
@@ -476,14 +481,6 @@ export const SplitTable: React.FC<SplitTableProps> = ({
   const visibleCompetitors = sortedAndProcessedCompetitors.filter(
     c => !['Active', 'Inactive', 'Finished'].includes(c.status)
   );
-  const mobileClubWidthReference = visibleCompetitors.reduce(
-    (longest, competitor) => {
-      const name = getMobileCompetitorName(competitor);
-      return name.length > longest.length ? name : longest;
-    },
-    ''
-  );
-
   // Sort handler
   const handleSort = (field: SortField) => {
     setSortConfig(current => {
@@ -591,9 +588,9 @@ export const SplitTable: React.FC<SplitTableProps> = ({
       <TooltipProvider>
         <Card className="w-full">
           {/* Sorting Controls */}
-          <div className="p-4 border-b bg-muted/20 flex items-center justify-between">
+          <div className="p-2 sm:p-4 border-b bg-muted/20 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="hidden sm:inline text-sm text-muted-foreground">
                 {t('Pages.Event.Splits.SortedBy')}
               </span>
               <Badge variant="secondary" className="font-medium">
@@ -607,32 +604,50 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                 })}
               </Badge>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetSorting}
-              className="h-8 gap-1"
-            >
-              <RotateCcw className="h-3 w-3" />
-              {t('Pages.Event.Splits.ResetSort')}
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="sm:hidden h-9"
+                aria-pressed={showClubs}
+                onClick={() => setShowClubs(value => !value)}
+              >
+                {t('Pages.Event.Splits.ShowClubs')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={t('Pages.Event.Splits.ResetSort')}
+                onClick={resetSorting}
+                className="h-8 gap-1"
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span className="hidden sm:inline">
+                  {t('Pages.Event.Splits.ResetSort')}
+                </span>
+              </Button>
+            </div>
           </div>
 
           <div data-result-scroll className={mobileResultsTableClassName}>
             <Table
+              data-show-clubs={showClubs}
               style={{
-                width: `${48 + 192 + 96 + 96 + (controlCodes.length + 1) * 128}px`,
+                width: `calc(var(--split-rank-width) + var(--split-name-width) + 192px + ${controlCodes.length + 1} * var(--split-data-width))`,
               }}
             >
               <colgroup>
-                <col style={{ width: 48 }} />
-                <col style={{ width: 192 }} />
+                <col style={{ width: 'var(--split-rank-width)' }} />
+                <col style={{ width: 'var(--split-name-width)' }} />
                 <col style={{ width: 96 }} />
                 <col style={{ width: 96 }} />
                 {controlCodes.map((_, index) => (
-                  <col key={index} style={{ width: 128 }} />
+                  <col
+                    key={index}
+                    style={{ width: 'var(--split-data-width)' }}
+                  />
                 ))}
-                <col style={{ width: 128 }} />
+                <col style={{ width: 'var(--split-data-width)' }} />
               </colgroup>
               <TableHeader>
                 <TableRow className="bg-muted/50">
@@ -642,7 +657,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleSort('position')}
-                      className="h-8 font-medium hover:bg-muted"
+                      className="h-8 px-0 sm:px-3 font-medium hover:bg-muted"
                     >
                       <span className="mr-1">#</span>
                       {getSortIcon('position')}
@@ -726,7 +741,7 @@ export const SplitTable: React.FC<SplitTableProps> = ({
                     legLosses={legLosses}
                     competitorLossStats={competitorLossStats}
                     splitPositions={splitPositions}
-                    mobileClubWidthReference={mobileClubWidthReference}
+                    showClubs={showClubs}
                   />
                 ))}
               </TableBody>
@@ -781,7 +796,7 @@ interface CompetitorRowProps {
     };
   };
   splitPositions: SplitPositionData;
-  mobileClubWidthReference: string;
+  showClubs: boolean;
 }
 
 const CompetitorRow: React.FC<CompetitorRowProps> = ({
@@ -792,10 +807,11 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
   legLosses,
   competitorLossStats,
   splitPositions,
-  mobileClubWidthReference,
+  showClubs,
 }) => {
   const { t } = useTranslation();
   const competitorStats = competitorLossStats[competitor.id];
+  const fullName = `${competitor.lastname} ${competitor.firstname}`.trim();
 
   return (
     <TableRow className="group hover:bg-muted/30 transition-colors">
@@ -817,17 +833,35 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
 
       <TableCell>
         <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={fullName}
+                className="sm:hidden min-h-11 w-full text-left font-medium rounded-sm focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <CompetitorName competitor={competitor} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 whitespace-normal">
+              <p className="font-medium break-words">{fullName}</p>
+              <p className="text-sm text-muted-foreground break-words">
+                {competitor.organisation}
+              </p>
+            </PopoverContent>
+          </Popover>
+          <div className="hidden sm:flex items-center gap-2">
             <User className="w-3 h-3 text-muted-foreground flex-shrink-0" />
             <span className="font-medium truncate">
               <CompetitorName competitor={competitor} />
             </span>
           </div>
-          <MobileClubName
-            clubName={competitor.organisation}
-            referenceText={mobileClubWidthReference}
-            className="mt-0.5 block truncate text-xs text-muted-foreground"
-          />
+          <span
+            title={competitor.organisation}
+            className={`${showClubs ? 'block' : 'hidden'} sm:block truncate text-xs text-muted-foreground`}
+          >
+            {competitor.organisation}
+          </span>
         </div>
       </TableCell>
 
@@ -880,7 +914,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                 <TooltipTrigger asChild>
                   <div
                     className={`
-                      font-mono text-sm px-1.5 py-1 rounded border font-medium sm:px-2 sm:py-1.5
+                      flex flex-wrap items-baseline justify-center gap-x-1 font-mono text-sm whitespace-normal tabular-nums px-1.5 py-1 rounded border font-medium sm:px-2 sm:py-1.5
                       transition-colors
                       ${
                         isBestLeg
@@ -893,7 +927,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                   >
                     {legTime ? formatSecondsToTime(legTime) : '-'}
                     {legPosition && (
-                      <span className="text-xs opacity-70 ml-1">
+                      <span className="text-xs whitespace-nowrap opacity-70">
                         ({legPosition})
                       </span>
                     )}
@@ -941,7 +975,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                 <TooltipTrigger asChild>
                   <div
                     className={`
-                      font-mono text-sm px-1.5 py-1 rounded border sm:px-2 sm:py-1.5
+                      flex flex-wrap items-baseline justify-center gap-x-1 font-mono text-sm whitespace-normal tabular-nums px-1.5 py-1 rounded border sm:px-2 sm:py-1.5
                       transition-colors
                       ${
                         isBestSplit
@@ -954,7 +988,7 @@ const CompetitorRow: React.FC<CompetitorRowProps> = ({
                       ? formatSecondsToTime(competitor.splits[index].time)
                       : '-'}
                     {splitPosition && (
-                      <span className="text-xs opacity-70 ml-1">
+                      <span className="text-xs whitespace-nowrap opacity-70">
                         ({splitPosition})
                       </span>
                     )}

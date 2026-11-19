@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { TFunction } from 'i18next';
-import { Clock, RefreshCw } from 'lucide-react';
+import { Clock, MoreHorizontal, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import {
@@ -14,6 +14,12 @@ import {
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/molecules';
 import { AppDataTable } from '@/components/organisms';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Tooltip,
   TooltipContent,
@@ -56,6 +62,14 @@ export const EVENT_CLASSES = gql`
 export const CLASS_UPDATE = gql`
   mutation ClassUpdate($input: UpdateClassInput!) {
     classUpdate(input: $input) {
+      message
+    }
+  }
+`;
+
+export const CLASS_DELETE = gql`
+  mutation ClassDelete($eventId: String!, $classId: Int!) {
+    classDelete(eventId: $eventId, classId: $classId) {
       message
     }
   }
@@ -148,6 +162,7 @@ export const ClassesSettingsTab = ({
     }
   );
   const [classUpdate] = useMutation(CLASS_UPDATE);
+  const [classDelete] = useMutation(CLASS_DELETE);
   const [loadClassDefinitions, { loading: loadingClassDefinitions }] =
     useMutation(LOAD_CLASS_DEFINITIONS_FROM_EXTERNAL_SYSTEM);
 
@@ -155,6 +170,56 @@ export const ClassesSettingsTab = ({
   const committedRowsRef = useRef<ClassRow[]>([]);
   const [startTimesClass, setStartTimesClass] = useState<ClassRow | null>(null);
   const [confirmLoadOpen, setConfirmLoadOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ClassRow | null>(null);
+  const [deletingClass, setDeletingClass] = useState(false);
+  const deletingRef = useRef(false);
+
+  const handleDelete = async () => {
+    if (!deleteTarget || deletingRef.current) return;
+    deletingRef.current = true;
+    setDeletingClass(true);
+    const classId = deleteTarget.id;
+    setDeleteTarget(null);
+    try {
+      await classDelete({
+        variables: { eventId, classId },
+        update: cache => {
+          cache.updateQuery<EventClassesData>(
+            { query: EVENT_CLASSES, variables: { eventId } },
+            current =>
+              current
+                ? {
+                    ...current,
+                    eventClasses:
+                      current.eventClasses?.filter(row => row.id !== classId) ??
+                      null,
+                  }
+                : current
+          );
+        },
+      });
+      setRows(current => current.filter(row => row.id !== classId));
+      committedRowsRef.current = committedRowsRef.current.filter(
+        row => row.id !== classId
+      );
+      setStartTimesClass(current => (current?.id === classId ? null : current));
+      toast({
+        title: t('Operations.Success', { ns: 'common' }),
+        description: t('Pages.Event.Settings.Classes.Delete.Success'),
+      });
+      // A refresh failure must not report an already committed deletion as failed.
+      await refetch().catch(() => undefined);
+    } catch {
+      toast({
+        title: t('Operations.Error', { ns: 'common' }),
+        description: t('Pages.Event.Settings.Classes.Delete.Error'),
+        variant: 'error',
+      });
+    } finally {
+      deletingRef.current = false;
+      setDeletingClass(false);
+    }
+  };
 
   useEffect(() => {
     if (data?.eventClasses) {
@@ -308,7 +373,7 @@ export const ClassesSettingsTab = ({
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 w-full space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -762,22 +827,66 @@ export const ClassesSettingsTab = ({
               />
             </TableCell>
 
-            <TableCell>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                disabled={row.startMode === 'FreeStart'}
-                onClick={() => setStartTimesClass(row)}
-              >
-                <Clock className="h-4 w-4" />
-                {t('Pages.Event.Settings.Classes.StartTimes.Open')}
-              </Button>
+            <TableCell className="whitespace-nowrap">
+              <div className="flex flex-nowrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  disabled={row.startMode === 'FreeStart'}
+                  onClick={() => setStartTimesClass(row)}
+                >
+                  <Clock className="h-4 w-4" />
+                  {t('Pages.Event.Settings.Classes.StartTimes.Open')}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 shrink-0 p-0"
+                      disabled={deletingClass}
+                      aria-label={t(
+                        'Pages.Event.Settings.Classes.ActionsMenu',
+                        { name: row.name }
+                      )}
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onSelect={() => setDeleteTarget(row)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {t('Pages.Event.Settings.Classes.Delete.Action')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </TableCell>
           </TableRow>
         )}
       />
 
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={open => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={t('Pages.Event.Settings.Classes.Delete.Title', {
+          name: deleteTarget?.name ?? '',
+        })}
+        description={t('Pages.Event.Settings.Classes.Delete.Description')}
+        confirmText={t('Pages.Event.Settings.Classes.Delete.Confirm')}
+        cancelText={t('Operations.Cancel', { ns: 'common' })}
+        variant="destructive"
+        onConfirm={() => {
+          void handleDelete();
+        }}
+      />
       <ClassStartTimesDialog
         t={t}
         classId={startTimesClass?.id ?? null}

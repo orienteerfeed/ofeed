@@ -32,7 +32,8 @@ const RECENCY_TIME_SECONDS = 5 * 60
 const isRecent = computed(() => {
   if (!props.data.updatedAt) return false
   const secondsFromUpdate = differenceInSeconds(now.value, props.data.updatedAt)
-  return secondsFromUpdate < RECENCY_TIME_SECONDS
+  // A future updatedAt (clock skew, bad data) must not keep the row highlighted.
+  return secondsFromUpdate >= 0 && secondsFromUpdate < RECENCY_TIME_SECONDS
 })
 
 const bgColor = computed(() =>

@@ -16,6 +16,7 @@ import {
 
 import { ConflictError, NotFoundError, ValidationError } from '../../exceptions/index.js';
 import { getJwtNumericUserId } from '../../middlewares/require-jwt.js';
+import { isAuthzError } from '../../utils/authz.js';
 
 import { validateEventConnection } from './event.connection.service.js';
 import { listEventEntryAvailability } from '../start-slot-vacancy/start-slot-vacancy.service.js';
@@ -713,6 +714,7 @@ export function registerPublicEventRoutes(router) {
             {
               eventId,
               userId: getJwtNumericUserId(c) ?? null,
+              auth: c.get('authContext'),
               paymentLinkLanguage: c.req.header('accept-language'),
             },
             parsedBody.data,
@@ -720,6 +722,10 @@ export function registerPublicEventRoutes(router) {
           );
           return c.json(success('Entry order created', { data: entryOrder }, 201), 201);
         } catch (err) {
+          if (isAuthzError(err)) {
+            const status = err.statusCode === 404 ? 404 : err.statusCode === 401 ? 401 : 403;
+            return c.json(error(err.message, status), status);
+          }
           if (err instanceof ValidationError) {
             return c.json(validation(err.message, 422), 422);
           }

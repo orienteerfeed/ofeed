@@ -67,8 +67,44 @@ does not itself mean payment was received or competitors were processed.
   including its base path. Dev, production and local instances use their own
   frontend host; API hosts and request Host headers do not determine asset URLs.
   No additional environment variable is required.
+- AC-12: The public entry dialog has no license field and sends no chosen
+  license. On order creation the server resolves each normalized registration
+  number against the same ORIS/OB/current-year cache used by the dialog lookup.
+  Store the matching license on the entry item and copy it to `Competitor` when
+  processing the order. Missing registrations, unmatched numbers and matches
+  without a license store null. Ignore caller-supplied licenses on creation,
+  including older carts. Existing staff order editing remains available.
+  This is a user-requested correction; no GitHub issue was supplied.
 
 ## Edge cases and API
+
+Orders with a final server-calculated total of zero (including discounts and
+staff price adjustments) are created with `paid: true` for every available
+payment method. Keep `RECEIVED` status and the normal organizer processing flow;
+record the initial paid state in status history without a zero-value receipt.
+Do not generate QR/payment-link instructions or a payment deadline. Checkout,
+entry detail and the confirmation email explicitly confirm that no payment is
+required. Positive totals retain the normal payment flow. No schema change or
+automatic historical paid-state backfill is included. This is a user-requested
+correction; no GitHub issue was supplied.
+
+Test free and fully discounted orders across payment methods, paid history,
+absence of payment instructions/receipts, emails, GraphQL detail and client
+confirmation. Retain positive-total payment regressions.
+
+Verification on 2026-11-10: 134 focused server tests and the full client suite
+(436 tests) passed, along with client/server types, GraphQL types, focused lint
+and formatting. Coverage includes free classes, registration/promo discounts,
+staff adjustment to zero, all four payment methods and positive-total QR
+behavior. Browser verification could not run because no browser was connected.
+
+When the event enables `CARD_RENTAL`, the entry dialog automatically checks
+rental for an empty (including whitespace-only) card number and unchecks it
+when a value is entered or prefilled from the profile or registration. Clearing
+the form restores rental. Manually selecting rental clears an existing card.
+Events without enabled rental never automatically request it. The API is
+unchanged. Verify these transitions, prefill and the cart rental fee in component
+tests. This is a user-requested correction; no GitHub issue was supplied.
 
 Class eligibility, unavailable rental, closed/not-yet-open entries, missing
 class, full capacity and a concurrently taken start slot require explicit
@@ -77,6 +113,11 @@ the integration contract for response shapes and fee details, and the code-owned
 [API sources](../api/README.md) for exact fields.
 
 ## Test plan
+
+For automatic licenses, verify the dialog has no license input or cart value,
+creation uses the cached license even when a caller submits another value,
+missing/unmatched registrations produce null, and processing copies the stored
+license to the competitor. No database schema or API shape change is required.
 
 Run existing entry validation, service and OpenAPI contract suites:
 

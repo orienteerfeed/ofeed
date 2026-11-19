@@ -160,4 +160,16 @@ describe('CategoryTableHeader', () => {
     })
     expect(container.firstChild).not.toHaveClass('bg-highlight')
   })
+
+  it('does not highlight an athlete with updatedAt in the future', () => {
+    const athlete: AthleteWithStats = {
+      ...TEST_RUNNER,
+      updatedAt: new Date(Date.now() + 60 * 60 * 1000),
+    }
+
+    const { container } = render(CategoryTableFinishedRow, {
+      props: { isEven: false, data: athlete, isCompact: false, showEmojis: true },
+    })
+    expect(container.firstChild).not.toHaveClass('bg-highlight')
+  })
 })

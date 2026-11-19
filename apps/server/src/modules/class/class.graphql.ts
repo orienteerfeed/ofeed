@@ -6,6 +6,7 @@ import { StartModeRef } from '../event/event.graphql-types.js';
 import { ResponseMessageRef } from '../graphql/graphql.graphql-types.js';
 import { computeClassFee, type ComputedClassFee } from './class.fee.js';
 import {
+  deleteClassForGraphQL,
   findClassById,
   findEventClasses,
   findEventClassesByIds,
@@ -186,6 +187,17 @@ const UpdateClassInputRef = builder.inputType('UpdateClassInput', {
 });
 
 builder.mutationFields((t) => ({
+  classDelete: t.field({
+    type: ResponseMessageRef,
+    args: {
+      eventId: t.arg.string({ required: true }),
+      classId: t.arg.int({ required: true }),
+    },
+    resolve: (_root, args, context) =>
+      deleteClassForGraphQL(context.prisma, context.auth, args.eventId, args.classId).catch(
+        (err: unknown) => rethrowAuthzOrError(err, 'Failed to delete class'),
+      ),
+  }),
   classFeeUpdate: t.field({
     type: ResponseMessageRef,
     args: {

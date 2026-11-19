@@ -1,0 +1,29 @@
+name: Clean up GHCR images
+
+on:
+  schedule:
+    - cron: "30 3 * * 0"
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+concurrency:
+  group: cleanup-ghcr
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Keep the latest five images per package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Delete old images and unused manifests
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          owner: orienteerfeed
+          packages: ofeed/server,ofeed/client,ofeed/board,ofeed/ops
+          keep-n-tagged: 5
+          delete-untagged: true
+          validate: true
+          dry-run: false

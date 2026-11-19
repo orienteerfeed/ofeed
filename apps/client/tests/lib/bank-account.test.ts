@@ -2,11 +2,30 @@ import { describe, expect, it } from 'vitest';
 import {
   bankAccountIbanSchema,
   createQrPaymentInstruction,
+  formatCzechBankAccount,
   normalizeBankAccountIban,
   updateEventPaymentMethodsInputSchema,
 } from '@repo/shared';
 
 describe('bank account normalization (#601)', () => {
+  it.each([
+    ['CZ6508000000192000145399', '19-2000145399/0800'],
+    ['cz65 0800 0000 1920 0014 5399', '19-2000145399/0800'],
+    ['CZ8020100000002201340123', '2201340123/2010'],
+    ['CZ3308000000000000000019', '19/0800'],
+    ['000019-2000145399/0800', '19-2000145399/0800'],
+    ['GB82WEST12345698765432', null],
+    ['DE89370400440532013000', null],
+    ['CZ8120100000002201340123', null],
+    ['', null],
+  ])('formats %j as a Czech domestic account: %s', (input, domestic) => {
+    expect(formatCzechBankAccount(input)).toBe(domestic);
+    if (domestic) {
+      expect(normalizeBankAccountIban(domestic)).toBe(
+        normalizeBankAccountIban(input)
+      );
+    }
+  });
   it.each([
     ['2201340123/2010', 'CZ8020100000002201340123'],
     ['000000-2201340123/2010', 'CZ8020100000002201340123'],

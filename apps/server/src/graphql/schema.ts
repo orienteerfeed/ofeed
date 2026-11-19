@@ -20,6 +20,7 @@ import '../modules/system-message/system-message.graphql.js';
 import '../modules/start-slot-vacancy/start-slot-vacancy.graphql.js';
 import '../modules/course/course.graphql.js';
 import '../modules/entry/entry.graphql.js';
+import '../modules/entry/promo-code.graphql.js';
 
 import { builder } from './builder.js';
 

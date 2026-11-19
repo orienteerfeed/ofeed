@@ -6,6 +6,7 @@
     "title": "Akce nemá k dispozici žádná data",
     "description": "Pro zobrazení výsledků zatím nejsou dostupná žádná data. Zkus to prosím později nebo se informuj u pořadatele."
   },
+  "notCompeting": "MS",
   "loading": "Načítání dat",
   "error": "Při načítání dat došlo k chybě, zkuste to znovu",
   "settings": {

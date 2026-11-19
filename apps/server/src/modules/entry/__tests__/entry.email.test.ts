@@ -50,6 +50,28 @@ const qrPayment = {
 };
 
 describe('entry email notifications', () => {
+  it.each(['CASH', 'QR_PAYMENT', 'CUSTOM_PAYMENT_LINK', 'OFEED_PAYMENT'] as const)(
+    'confirms a free %s order without asking for payment',
+    async (method) => {
+      await notifyEntryOrderReceived({ ...order, totalAmount: 0 }, event, {
+        method,
+        qrPayment,
+        paymentUrl: 'https://pay.example.test',
+      });
+      expect(qrCodeMock.toBuffer).not.toHaveBeenCalled();
+      expect(ejsMock.renderFile).toHaveBeenNthCalledWith(
+        1,
+        expect.any(String),
+        expect.objectContaining({
+          payment: null,
+          paragraphs: expect.arrayContaining([
+            'Objednávka je zdarma. Platba není potřeba a objednávka je označena jako zaplacená.',
+          ]),
+        }),
+      );
+      expect(sendEmailMock.mock.calls[0]![0].attachments).toBeUndefined();
+    },
+  );
   beforeEach(() => {
     ejsMock.renderFile.mockReset();
     ejsMock.renderFile.mockResolvedValue('<html>email</html>');
@@ -156,12 +178,17 @@ describe('entry email notifications', () => {
             ),
           },
           details: expect.arrayContaining([
+            expect.objectContaining({ label: 'Číslo účtu', value: '19-2000145399/0800' }),
             expect.objectContaining({ label: 'IBAN', value: 'CZ6508000000192000145399' }),
           ]),
         }),
       }),
     );
     const entrantMail = sendEmailMock.mock.calls[0]![0];
+    expect(entrantMail.html).toContain('19-2000145399/0800');
+    expect(entrantMail.html).toContain(qrPayment.bankAccountIban);
+    expect(entrantMail.text).toContain('Číslo účtu: 19-2000145399/0800');
+    expect(entrantMail.text).toContain(`IBAN: ${qrPayment.bankAccountIban}`);
     const paymentLink = entrantMail.html.match(
       /<a href="([^"]+)"[^>]*>Zobrazit platební údaje<\/a>/,
     );
@@ -208,7 +235,21 @@ describe('entry email notifications', () => {
     expect(mail.html).not.toContain('alt="QR kód pro platbu"');
     expect(mail.html).not.toContain('cid:');
     expect(mail.html).toContain(qrPayment.bankAccountIban);
+    expect(mail.html).toContain('19-2000145399/0800');
     expect(mail.html).toContain('Zobrazit platební údaje');
     expect(mail.text).toContain(order.detailAccessToken);
+  });
+
+  it('keeps foreign IBANs without adding a Czech account number', async () => {
+    await notifyEntryOrderReceived(order, event, {
+      method: 'QR_PAYMENT',
+      qrPayment: { ...qrPayment, bankAccountIban: 'DE89370400440532013000' },
+    });
+    const payment = ejsMock.renderFile.mock.calls[0]![1].payment;
+    expect(payment.details).toContainEqual({ label: 'IBAN', value: 'DE89370400440532013000' });
+    expect(payment.details.some((detail: { label: string }) => detail.label === 'Číslo účtu')).toBe(
+      false,
+    );
+    expect(sendEmailMock.mock.calls[0]![0].text).not.toContain('Číslo účtu:');
   });
 });

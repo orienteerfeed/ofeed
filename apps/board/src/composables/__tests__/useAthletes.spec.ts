@@ -155,6 +155,7 @@ describe('useAthletes', () => {
         AthleteStatus.Running,
         AthleteStatus.NotStarted,
         AthleteStatus.DidNotStart,
+        AthleteStatus.NotCompeting,
       ]
 
       expect(result.status.value).toEqual('success')
@@ -321,40 +322,6 @@ describe('useAthletes', () => {
       }
     })
 
-    it('should return not competing athletes with correct time and correctly sorted before disqualified (without time)', () => {
-      const athletes = ref<ClassifyAthletes>({
-        finished: [
-          {
-            ...TestFinishedAthlete,
-            timeSeconds: 60 + 1,
-            id: '3',
-            status: AthleteStatus.Disqualified,
-          },
-          {
-            ...TestFinishedAthlete,
-            timeSeconds: 60 + 1,
-            id: '2',
-          },
-          {
-            ...TestFinishedAthlete,
-            timeSeconds: 60 + 1,
-            id: '1',
-            status: AthleteStatus.NotCompeting,
-          },
-        ],
-        unfinished: [],
-      })
-
-      const finishedAthletes = useFinishedAthletes(athletes)
-      expect(finishedAthletes.value.pinnedRows[0].id).toEqual('2')
-      expect(finishedAthletes.value.pinnedRows[0].time).toEqual('1:01')
-      expect(finishedAthletes.value.pinnedRows[0].rank).toEqual(1)
-      expect(finishedAthletes.value.restRows[0].id).toEqual('1')
-      expect(finishedAthletes.value.restRows[0].time).toEqual('1:01')
-      expect(finishedAthletes.value.restRows[0].rank).not.toEqual(2)
-      expect(finishedAthletes.value.restRows[1].id).toEqual('3')
-      expect(finishedAthletes.value.restRows[1].time).toBeUndefined()
-    })
 
     describe('unordered result modes', () => {
       const athletes = ref<ClassifyAthletes>({
@@ -482,6 +449,63 @@ describe('useAthletes', () => {
         expect(unfinishedAthletes.value[1].status).toEqual(AthleteStatus.NotStarted)
         expect(unfinishedAthletes.value[2].status).toEqual(AthleteStatus.DidNotStart)
         expect(unfinishedAthletes.value[3].status).toEqual(AthleteStatus.DidNotStart)
+      })
+
+      it('should keep MS without a time in the start list and sort finished MS by time below running and before DNS', () => {
+        const now = new Date()
+        const athletes = ref<ClassifyAthletes>({
+          unfinished: [
+            {
+              ...TestUnfinishedAthlete,
+              id: 'dns',
+              status: AthleteStatus.DidNotStart,
+              startTime: now,
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'ms-slow',
+              status: AthleteStatus.NotCompeting,
+              timeSeconds: 300,
+              startTime: now,
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'ms-fast',
+              status: AthleteStatus.NotCompeting,
+              timeSeconds: 200,
+              startTime: addMinutes(now, 1),
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'ms-not-finished',
+              status: AthleteStatus.NotCompeting,
+              timeSeconds: 0,
+              startTime: addMinutes(now, 7),
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'notstarted',
+              status: AthleteStatus.NotStarted,
+              startTime: addMinutes(now, 9),
+            },
+            {
+              ...TestUnfinishedAthlete,
+              id: 'running',
+              status: AthleteStatus.Running,
+              startTime: addMinutes(now, 5),
+            },
+          ],
+          finished: [],
+        })
+        const unfinishedAthletes = useUnfinishedAthletes(athletes)
+        expect(unfinishedAthletes.value.map((a) => a.id)).toEqual([
+          'running',
+          'ms-not-finished',
+          'notstarted',
+          'ms-fast',
+          'ms-slow',
+          'dns',
+        ])
       })
     })
   })

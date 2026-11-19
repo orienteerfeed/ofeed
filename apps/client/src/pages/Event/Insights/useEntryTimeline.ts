@@ -5,6 +5,35 @@ import type { EventEntryTimeline } from '@repo/shared';
 export const EVENT_ENTRY_TIMELINE = gql`
   query EventEntryTimeline($eventId: String!) {
     eventEntryTimeline(eventId: $eventId) {
+      eventName
+      location
+      startAt
+      orders {
+        id
+        receivedAt
+        status
+        paymentReference
+        paymentMethod
+        currency
+        totalAmount
+        receivedAmount
+        outstandingAmount
+        legacyPaid
+        paid
+        promoCode
+        promoDiscountAmount
+        items {
+          id
+          classId
+          className
+          firstname
+          lastname
+          organisation
+          card
+          cardRental
+          amount
+        }
+      }
       timezone
       entriesOpenOn
       entriesCloseOn

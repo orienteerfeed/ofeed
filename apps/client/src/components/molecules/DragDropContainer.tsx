@@ -196,7 +196,9 @@ export const DragDropContainer = ({
   const onDragLeave: React.DragEventHandler<HTMLDivElement> = e => {
     e.preventDefault();
     e.stopPropagation();
-    setDragging(false);
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+      setDragging(false);
+    }
   };
 
   const onInputChange: React.ChangeEventHandler<HTMLInputElement> = e => {
@@ -214,16 +216,31 @@ export const DragDropContainer = ({
     <>
       {/* Drop zone */}
       <div
+        role="button"
+        tabIndex={isUploading ? -1 : 0}
+        aria-label={t('Molecules.DragDrop.FileUpload')}
+        aria-disabled={isUploading}
+        aria-busy={isUploading}
+        onClick={() => {
+          if (!isUploading) fileRef.current?.click();
+        }}
+        onKeyDown={event => {
+          if (event.target !== event.currentTarget) return;
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            if (!isUploading) fileRef.current?.click();
+          }
+        }}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         className={cn(
-          'mt-4 flex items-center justify-center rounded-md border-2 py-5 text-center',
+          'group flex min-h-44 items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
           isUploading
-            ? 'cursor-not-allowed border-dashed border-[#e0e0e0] opacity-70'
+            ? 'cursor-not-allowed border-border bg-muted/30 opacity-60'
             : dragging
-              ? 'border-[#2B92EC] bg-[#EDF2FF]'
-              : 'border-dashed border-[#e0e0e0]',
+              ? 'cursor-pointer border-primary bg-primary/5'
+              : 'cursor-pointer border-border bg-muted/20 hover:border-primary/50 hover:bg-muted/50',
           className
         )}
       >
@@ -231,38 +248,31 @@ export const DragDropContainer = ({
           {isUploading ? (
             <>
               <Loader2
-                className="mb-2 h-5 w-5 animate-spin text-gray-400"
+                className="mb-3 size-6 animate-spin text-muted-foreground"
                 aria-hidden
               />
               <span
                 role="status"
                 aria-live="polite"
-                className="text-[12px] font-normal text-gray-500 dark:text-gray-400"
+                className="text-sm font-medium text-muted-foreground"
               >
                 {t('Molecules.DragDrop.Processing')}
               </span>
             </>
           ) : (
             <>
-              <div className="mb-2 text-gray-400">
-                <Upload className="h-5 w-5" aria-hidden />
+              <div className="mb-3 flex size-12 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors group-hover:text-foreground">
+                <Upload className="size-5" aria-hidden />
               </div>
-
-              <div className="text-[12px] font-normal text-gray-500 dark:text-gray-400">
-                <button
-                  type="button"
-                  className="cursor-pointer text-[#4070f4] underline-offset-2 hover:underline"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {t('Molecules.DragDrop.ClickToUpload')}
-                </button>{' '}
-                {t('Molecules.DragDrop.OrDragAndDrop')}
-              </div>
-
-              <div className="text-[10px] font-normal text-gray-500 dark:text-gray-400">
-                {t('Molecules.DragDrop.SupportedFormats')}{' '}
-                {formats.join(', ').toUpperCase()}
-              </div>
+              <span className="text-sm font-medium text-foreground">
+                {t('Molecules.DragDrop.FileUpload')}
+              </span>
+              {formats.length > 0 && (
+                <span className="mt-1 text-xs text-muted-foreground">
+                  {t('Molecules.DragDrop.SupportedFormats')}{' '}
+                  {formats.join(', ').toUpperCase()}
+                </span>
+              )}
             </>
           )}
         </div>
@@ -271,7 +281,9 @@ export const DragDropContainer = ({
           ref={fileRef}
           className="hidden"
           type="file"
-          multiple
+          aria-label={t('Molecules.DragDrop.FileUpload')}
+          onClick={event => event.stopPropagation()}
+          multiple={count !== 1}
           accept={accept}
           onChange={onInputChange}
           disabled={isUploading}

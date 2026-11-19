@@ -17,6 +17,26 @@ Workflows: [CI](../../.github/workflows/ci.yaml),
 [release](../../.github/workflows/release.yaml),
 [release images](../../.github/workflows/publish-images-ghcr.yaml).
 
+## Container image retention
+
+[GHCR cleanup](../../.github/workflows/cleanup-ghcr.yaml) runs every Sunday at
+03:30 UTC and supports manual dispatch from Actions. After successful cleanup,
+each of `ofeed/server`, `ofeed/client`, `ofeed/board` and `ofeed/ops` keeps only
+its five newest tagged images across development and release versions. Unused
+untagged images are removed; platform manifests and attestations for retained
+multi-architecture images are preserved. GHCR may therefore show more than five
+individual manifest entries per package.
+
+The workflow uses `GITHUB_TOKEN` with `packages: write`. Grant the repository
+**Admin** under **Package settings → Manage Actions access** for all four
+packages. The schedule runs from the default branch and performs real deletion.
+
+Deployed digests and release tags have no exemption: an environment more than
+five builds behind may lose the ability to pull its image after cleanup. Update
+the environment or export required images before they fall outside retention.
+Check the cleanup logs and multi-architecture validation warnings after each run.
+See the [retention specification](../specs/ghcr-image-retention.md).
+
 ## Deployment invariants
 
 - Use explicit image tags/digests; do not deploy a moving `latest` tag.

@@ -1,7 +1,8 @@
 # QR payment bank account formats
 
 - Status: implemented
-- Issue: [#601 — Bank account setup issue](https://github.com/orienteerfeed/ofeed/issues/601)
+- Issue:
+  [#601 — Bank account setup issue](https://github.com/orienteerfeed/ofeed/issues/601)
 - Related: [entry checkout](entry-checkout.md)
 
 ## Goal
@@ -11,6 +12,12 @@ Payment, and always generate QR Platba ACC in electronic IBAN form.
 
 ## Acceptance criteria
 
+- In entry-order payment details (including print) and the entrant's payment
+  notification (HTML and plain text), show the Czech domestic account alongside
+  IBAN. Omit a zero prefix and strip account/prefix padding; preserve the
+  four-digit bank code. Foreign or invalid IBANs must not produce a fabricated
+  domestic account. Use the same validated conversion on client and server; QR
+  payloads and stored IBANs remain unchanged.
 - Accept `2201340123/2010` and convert it to `CZ8020100000002201340123`.
 - Support optional Czech prefixes (`19-2000145399/0800`), leading zeroes,
   surrounding/grouping whitespace, and lowercase/spaced IBAN input.
@@ -30,9 +37,9 @@ Payment, and always generate QR Platba ACC in electronic IBAN form.
 
 ## Algorithm and references
 
-Use bank code (4 digits) + prefix (6 digits) + account (10 digits) for Czech BBAN;
-compute `98 - mod97(BBAN + 123500)` for CZ check digits. Keep numeric parts as
-strings to preserve zeroes and calculate remainders incrementally.
+Use bank code (4 digits) + prefix (6 digits) + account (10 digits) for Czech
+BBAN; compute `98 - mod97(BBAN + 123500)` for CZ check digits. Keep numeric
+parts as strings to preserve zeroes and calculate remainders incrementally.
 
 - [ČNB IBAN calculator](https://www.cnb.cz/cs/platebni-styk/iban/kalkulator-iban-ceska-republika/)
 - [ČNB IBAN structure and example](https://www.cnb.cz/cs/platebni-styk/iban/iban-mezinarodni-cislo-uctu/index.html)
@@ -56,3 +63,10 @@ checkout and email tests plus 6 GraphQL detail/schema tests. Mobile WebKit with
 mocked GraphQL responses verified domestic/prefixed/foreign input, canonical
 save/reload and invalid-input blocking. No live bank transfer or production
 database migration was performed.
+
+Domestic display extension (2026-11-03): 387 client tests and 1,122 server
+tests passed; 68 opt-in server tests were skipped. Shared build and shared,
+client and server type checks passed, as did focused lint and formatting.
+Regressions verify prefixed/unprefixed accounts, zero padding, foreign and
+invalid IBANs, printed payment details and rendered HTML/plain-text emails.
+No real notification email was sent.

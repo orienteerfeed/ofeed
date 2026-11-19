@@ -5,6 +5,7 @@ import {
   listEventServiceSettings,
   saveCustomEventServiceForGraphQL,
   updateLateEntryFeePercentForGraphQL,
+  updateRegistrationFeeDiscountsForGraphQL,
   updateSystemEventServiceForGraphQL,
 } from '../event-services.service.js';
 
@@ -239,5 +240,50 @@ describe('event services settings', () => {
     ).rejects.toThrow('Custom event service not found');
 
     expect(prisma.eventService.delete).not.toHaveBeenCalled();
+  });
+});
+
+describe('registration discount settings', () => {
+  it('persists schema-normalized rules and supports clearing them', async () => {
+    const prisma = createPrismaMock();
+    await updateRegistrationFeeDiscountsForGraphQL(prisma as never, auth, 'event-1', [
+      { pattern: ' CHC* ', discountPercent: 100 },
+    ]);
+    expect(prisma.event.update).toHaveBeenCalledWith({
+      where: { id: 'event-1' },
+      data: { registrationFeeDiscounts: [{ pattern: 'CHC*', discountPercent: 100 }] },
+    });
+    await updateRegistrationFeeDiscountsForGraphQL(prisma as never, auth, 'event-1', []);
+    expect(prisma.event.update).toHaveBeenLastCalledWith({
+      where: { id: 'event-1' },
+      data: { registrationFeeDiscounts: [] },
+    });
+  });
+
+  it('rejects invalid discounts without writing', async () => {
+    const prisma = createPrismaMock();
+    await expect(
+      updateRegistrationFeeDiscountsForGraphQL(prisma as never, auth, 'event-1', [
+        { pattern: 'CHC*', discountPercent: 101 },
+      ]),
+    ).rejects.toThrow(/Invalid/);
+    expect(prisma.event.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects other event owners and unauthenticated callers without writing', async () => {
+    const prisma = createPrismaMock();
+    prisma.event.findUnique.mockResolvedValue({ id: 'event-1', authorId: 99 });
+    await expect(
+      updateRegistrationFeeDiscountsForGraphQL(prisma as never, auth, 'event-1', []),
+    ).rejects.toThrow();
+    await expect(
+      updateRegistrationFeeDiscountsForGraphQL(
+        prisma as never,
+        { isAuthenticated: false, type: null },
+        'event-1',
+        [],
+      ),
+    ).rejects.toThrow();
+    expect(prisma.event.update).not.toHaveBeenCalled();
   });
 });

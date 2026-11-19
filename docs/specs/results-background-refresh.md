@@ -13,6 +13,9 @@ within the viewport; the UI does not follow a particular runner.
 
 ## Acceptance criteria
 
+- In split tables, the rank and competitor-name columns remain pinned to the
+  left edge while scrolling horizontally, including their headers. Use opaque
+  backgrounds so passing split values do not show through the pinned cells.
 - Result and split table headers remain visible immediately below the navbar
   while scrolling through their table, including horizontal scrolling on mobile.
   Headers retain working sorting controls and stop at the end of their table.
@@ -30,6 +33,9 @@ within the viewport; the UI does not follow a particular runner.
 - Result rows retain their original compact padding and content-driven height,
   including on mobile. Scroll preservation must not impose oversized minimum
   row heights on results or splits.
+- The category table reserves a readable, visible desktop column for ranking
+  points whenever ranking is enabled, including when every desktop metadata
+  column and radio-control column is displayed.
 
 ## Edge cases and interfaces
 
@@ -122,10 +128,16 @@ live result views follow the same compact policy, with their own column budgets.
 Keep sticky headers, sorting and scroll preservation across polling intact.
 No API, database or dependency changes. This is a correction under issue #630.
 
-Validate actual table/client/scroll geometry at 320, 390 and 402px, ranking
-on/off, long names and hour-long times; include a small-width scrolling fallback,
-responsive resizing and desktop/mobile polling and sticky-header regressions in
-Chromium, Firefox and WebKit. Run client Vitest, types, lint and formatting.
+Club tables containing multiple categories must use the full table width at
+mobile and desktop sizes. Category separators must not create extra columns
+when the Start column is hidden. Check that the last header and result cell
+reach the table's right edge, including after resizing across the Start breakpoint.
+
+Validate actual table/client/scroll geometry at 320, 390, 402px and desktop,
+ranking on/off, long names and hour-long times; include a small-width scrolling
+fallback, a visible unclipped desktop ranking-points column, responsive resizing
+and desktop/mobile polling and sticky-header regressions in Chromium, Firefox
+and WebKit. Run client Vitest, types, lint and formatting.
 
 
 Compact mobile validation: 105 Playwright checks passed across Chromium,
@@ -136,3 +148,30 @@ non-clipped numeric cells, local small-screen scrolling, resizing, polling,
 sticky headers and desktop results. Screenshots at 402px were visually inspected
 in Chromium and WebKit; this is browser emulation, not a physical iPhone test.
 Client Vitest: 302 passed. Client type-check and lint passed.
+
+## Compact mobile split analysis (2026-11-05)
+
+Under issue #630, keep mobile split rank/name columns pinned at 32px/112px,
+with readable 96px data columns so two values fit a typical 390px display.
+Hide clubs by default below 640px; a Show clubs toggle expands names to 192px
+and restores clubs. A keyboard/touch name button opens full name and club in
+a dismissible popover. Desktop retains 48px/192px pinned columns and 128px
+split columns. Keep sorting controls compact on mobile with an accessible reset
+button. No API changes. Test toggling, full long names, dismissal, resizing,
+pinned header/body alignment and scrolling across Chromium, Firefox and WebKit;
+run client tests, types, focused lint and formatting.
+
+Mobile live results reserve enough category width for a four-character class
+badge (for example D35C), including badge padding and cell padding. Browser
+checks at 320/390/402px verify the whole badge fits inside its cell.
+
+## One-radio mobile results
+
+For a category with exactly one online control, mobile results fit the available
+viewport without horizontal scrolling. Stack finish loss beneath finish time
+and hide the separate loss column below 640px; use only Time as the mobile
+column heading. Keep radio time, rank and loss readable with wrapping, reserve
+a ranking column when enabled, and truncate only competitor identities. Desktop
+and multiple-radio tables retain separate loss columns and scrolling. No API
+changes. Validate padded 320/360/390/402px screens with ranking on/off, long
+identities and hour-long times/losses, plus resizing and all three browsers.

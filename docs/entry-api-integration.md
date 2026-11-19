@@ -81,6 +81,11 @@ For items in `POST /rest/v1/events/{eventId}/entries`:
   Registration uses three letters followed by four digits, for example `ABC9501`.
 - `card` and `cardRental` are optional. Omitting `cardRental` defaults it to false.
   When `cardRental` is true, card rental must be enabled for the event.
+- On creation, `license` is resolved server-side from the cached ORIS registration
+  for OB and the current year, using the normalized `registration` number. The
+  submitted `license` value is ignored. Missing matches or licenses produce null;
+  processing the order copies the stored license to the competitor. The same
+  behavior applies to GraphQL order creation.
 
 Normal field validation and class age, capacity, start-slot and rental availability
 checks still apply. Invalid input returns 422.
@@ -95,6 +100,15 @@ closed entry window, a full class or an unavailable start slot. Availability is 
 snapshot; creation can still reject a slot that another request has since taken.
 
 ## Fees and the late-entry surcharge
+
+If the final server-calculated order total is zero, creation immediately stores
+`paid: true` with an initial paid-state audit entry, regardless of the selected
+available payment method. The order remains `RECEIVED` for organizer processing.
+No zero-value receipt is recorded, no payment deadline is set, and the create
+response omits `qrPayment` and `paymentUrl`. GraphQL detail returns null QR
+instructions for zero-total orders. Confirmation emails and the web UI state
+that no payment is needed. Positive totals retain normal payment handling.
+Existing historical paid flags are not automatically changed.
 
 | Surface | Field | Shape and meaning |
 | --- | --- | --- |
@@ -174,3 +188,114 @@ returns 409. Keys are scoped to caller, event and endpoint; stay in the same
 authentication context when retrying. Failed requests can be corrected and
 retried; requests without the header can create duplicates. See the
 [specification](specs/create-idempotency.md) for expiry and concurrency details.
+
+## Registration-based entry fee discounts
+
+Entry availability includes `registrationFeeDiscounts`: rules with `pattern` and
+`discountPercent` (0–100, up to two decimals). Patterns match the entire trimmed
+registration case-insensitively; `*` matches any sequence and `?` one character.
+`ABC*` matches registrations beginning with ABC. Empty registrations never
+qualify. When multiple rules match, use the highest percentage without stacking.
+Apply it to the current gross class fee after surcharges and round to two
+decimals. Apply the same discount to the separate card rental fee. A 100%
+discount makes both entry and rental free.
+
+Clients can use the shared pricing helper for estimates; the server recalculates
+on creation and explicit order edits. Saving event rules does not reprice
+existing orders or payment receipts. Event owners/admins manage up to 30 rules
+via `eventServiceSettings.registrationFeeDiscounts` and the
+`updateRegistrationFeeDiscounts(eventId, rules)` GraphQL mutation.
+
+## Promo codes
+
+Create accepts optional `promoCode`, normalized case-insensitively within the event.
+Only the server selects the percentage and price. Invalid/revoked codes or no
+eligible positive subtotal fail validation; orders are never silently created
+without the requested discount. Responses include nullable `promoCode`,
+`promoPercent`, `promoEligibleAmount` and `promoDiscountAmount`; `totalAmount`
+is the payable amount after discount. Item fees remain before the order promo
+adjustment, so their sum can exceed `totalAmount`.
+
+GraphQL `entryPromoQuote(eventId, code, items)` returns server-priced subtotal,
+eligible amount, discount, final total, currency and excluded-item count. Owner/admin
+operations `eventPromoCodes`, `createEventPromoCode` and `revokeEventPromoCode`
+manage immutable event codes. Revocation affects future submissions only.
+GraphQL order edits accept optional `entryItemId` to preserve pricing snapshots
+of existing items whose registration is unchanged; a changed registration or an
+omitted ID uses the current rules. No expiry or usage limit.
+
+## Manual price adjustment (event staff)
+
+Create accepts optional `priceAdjustment` (signed, two decimals,
+|value| ≤ 99999999.99; negative = discount, positive = extra charge) and
+`priceAdjustmentReason` (trimmed, 1–191 characters, required when the adjustment is
+non-zero). The adjustment is added after the promo discount:
+`totalAmount = round2(promoTotal + priceAdjustment)`. Sending `priceAdjustment` on the
+otherwise public create endpoint requires a bearer token of the event owner or an
+admin; anonymous and other users get 403. A negative total returns 422 with
+`errors: "PRICE_ADJUSTMENT_NEGATIVE_TOTAL"`. Zero is stored as no adjustment.
+
+GraphQL `entryOrderUpdate(entryId, input: EntryOrderUpdateInput)` accepts
+`priceAdjustment: Float` and `priceAdjustmentReason: String`: omit the field to keep
+the stored adjustment (reapplied to the recomputed total), send `null` to clear it, or
+a number to replace it. Orders expose nullable `priceAdjustment` and
+`priceAdjustmentReason` (GraphQL `Entry`, REST create response). Marking a CASH order
+paid writes a receipt for the adjusted balance. Item fees stay unadjusted; report line
+prices distribute the adjustment so they sum to `totalAmount`. See the
+[specification](specs/entry-price-adjustment.md).
+
+```graphql
+mutation AdjustEntryPrice($entryId: String!, $input: EntryOrderUpdateInput!) {
+  entryOrderUpdate(entryId: $entryId, input: $input) {
+    id
+    totalAmount
+    priceAdjustment
+    priceAdjustmentReason
+  }
+}
+```
+
+## Cash settlement from web / ofeed-desk
+
+`entryOrderPaidUpdate(entryId: String!, paid: Boolean!, deviceId: String)` remains
+backward compatible. For a CASH order, `paid: true` now inserts a CASH receipt for
+the remaining balance, then derives paid status from the ledger in one locked
+transaction. Repeating settlement of a fully paid cash order adds no receipt.
+An optional nonblank deviceId (max 191 characters) identifies the POS/browser;
+omitting it uses `server:entry-paid-update`. Operator comes from the authenticated
+owner/admin and payment time is the current server time. CASH receipts are visible
+in GET payment reports immediately. No historical flags are bulk-converted.
+
+POS clients needing an offline time, explicit amount or retry identity should
+continue to use POST `/rest/v1/events/{eventId}/entries/{entryId}/payments` with
+`clientPaymentId`, `method: CASH`, amount, currency, paidAt and deviceId; this
+already sets paid status. Use one write path per physical payment: marking paid
+first and then independently posting that same receipt would count it twice.
+A POST receipt followed by the old cash paid=true call is harmless once the
+balance is fully covered. Clearing paid=false after any receipt is still 409 /
+GraphQL CONFLICT; no refund or receipt deletion is implied.
+
+
+```graphql
+mutation SettleCashEntry($entryId: String!, $deviceId: String) {
+  entryOrderPaidUpdate(entryId: $entryId, paid: true, deviceId: $deviceId) {
+    id
+    paid
+  }
+}
+```
+
+If an order selected QR but the customer actually pays cash, use the existing
+POST receipt endpoint with `method: CASH`; changing a non-cash paid flag does not
+assert a cash transaction. Existing history is never rewritten as a side effect.
+
+The entry list and order detail pass the configured payment device ID (or browser
+installation ID) when settling cash. GraphQL `Entry.paymentCount` lets clients
+distinguish a legacy paid flag from an actual receipt. The list offers an explicit
+record-confirmed-cash action for positive CASH orders marked paid without receipts;
+viewing an order never creates a receipt.
+
+The web report invalidates its receipt and report caches after successful web
+writes. While visible, the received-payments report also reloads every 15 seconds
+and on window focus to pick up external ofeed-desk writes. The POS payment payload
+and REST endpoint remain unchanged.

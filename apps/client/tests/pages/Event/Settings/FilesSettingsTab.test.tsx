@@ -127,7 +127,7 @@ describe('FilesSettingsTab', () => {
       configurable: true,
     });
   });
-  it('renders all three sections; courses upload is locked until startlist or results exist', async () => {
+  it('renders all three sections and one shared uploader before course prerequisites exist', async () => {
     render(
       <MockedProvider mocks={[statusMock(), importStatesMock()]}>
         <FilesSettingsTab t={t} eventId="event-1" />
@@ -146,14 +146,15 @@ describe('FilesSettingsTab', () => {
     expect(
       screen.getByText('Pages.Event.Settings.Files.Results')
     ).toBeInTheDocument();
-    // Courses upload is locked (no startlist/results yet) → only start list + results buttons.
-    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(2);
+    // The shared uploader stays available while the course prerequisite is explained.
+    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(1);
+    expect(screen.getAllByText('IOF XML v3')).toHaveLength(3);
     expect(
       screen.getByText('Pages.Event.Settings.Files.CoursesDisabledHint')
     ).toBeInTheDocument();
   });
 
-  it('shows courses upload once the start list is available', async () => {
+  it('keeps exactly one uploader once the start list is available', async () => {
     render(
       <MockedProvider
         mocks={[statusMock({ startListAvailable: true }), importStatesMock()]}
@@ -163,8 +164,8 @@ describe('FilesSettingsTab', () => {
     );
 
     await screen.findByText('Pages.Event.Settings.Files.StartList');
-    // All three sections have an upload button.
-    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(3);
+    // Uploading remains centralized after the prerequisite is met.
+    expect(screen.getAllByRole('button', { name: 'upload' })).toHaveLength(1);
   });
 
   it('shows the online split controls with their radio flags', async () => {
@@ -252,6 +253,7 @@ describe('FilesSettingsTab', () => {
           statusMock(),
           importStatesMock(),
           statusMock({ startListAvailable: true }),
+          importStatesMock(),
         ]}
       >
         <FilesSettingsTab t={t} eventId="event-1" />
@@ -310,6 +312,7 @@ describe('FilesSettingsTab', () => {
     const metaRow = hashBtn.parentElement!;
     expect(metaRow).toHaveTextContent('organizer@example.com');
     expect(metaRow).toHaveTextContent('42');
+    expect(screen.getAllByText('IOF XML v3')).toHaveLength(3);
   });
 
   it('shows a MeOS MOP import state on the start list and results sections, not on courses', async () => {
@@ -350,6 +353,9 @@ describe('FilesSettingsTab', () => {
     );
     // Start list + results show the newer MOP state; courses show nothing.
     expect(hashButtons).toHaveLength(2);
+    // Both badges follow MeOS; courses retain the IOF XML format.
+    expect(screen.getAllByText('MeOS MOP')).toHaveLength(2);
+    expect(screen.getAllByText('IOF XML v3')).toHaveLength(1);
     hashButtons.forEach(btn => {
       expect(btn).toHaveTextContent('bbbbbbbb…');
       expect(btn.parentElement).toHaveTextContent('MeOS MOP');

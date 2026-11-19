@@ -1,4 +1,8 @@
-import type { PaymentMethodType, QrPaymentInstruction } from '@repo/shared';
+import {
+  formatCzechBankAccount,
+  type PaymentMethodType,
+  type QrPaymentInstruction,
+} from '@repo/shared';
 import { Printer, QrCode, WalletCards } from 'lucide-react';
 import { useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -43,10 +47,21 @@ export function EntryPaymentSection({
   const paymentMethodName = paymentMethod
     ? t(`Pages.Checkout.PaymentMethods.Methods.${paymentMethod}`)
     : t('Pages.Event.EntriesManage.Detail.PaymentMethod.NotSpecified');
+  const domesticAccount = qrPayment
+    ? formatCzechBankAccount(qrPayment.bankAccountIban)
+    : null;
   const paymentRows: Array<[string, string]> = qrPayment
     ? [
+        ...(domesticAccount
+          ? [
+              [
+                t('Pages.Event.EntriesManage.Detail.Payment.Account'),
+                domesticAccount,
+              ] as [string, string],
+            ]
+          : []),
         [
-          t('Pages.Event.EntriesManage.Detail.Payment.Account'),
+          t('Pages.Event.EntriesManage.Detail.Payment.Iban'),
           qrPayment.bankAccountIban,
         ],
         [
@@ -115,7 +130,11 @@ export function EntryPaymentSection({
           </span>
           <span className="font-medium">{paymentMethodName}</span>
         </div>
-        {paymentMethod === 'QR_PAYMENT' ? (
+        {totalAmount === 0 ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            {t('Pages.Checkout.NoPaymentRequired')}
+          </p>
+        ) : paymentMethod === 'QR_PAYMENT' ? (
           qrPayment ? (
             <>
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">

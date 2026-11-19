@@ -1,10 +1,11 @@
 import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   ClassesSettingsTab,
   CLASS_UPDATE,
+  CLASS_DELETE,
   EVENT_CLASSES,
   LOAD_CLASS_DEFINITIONS_FROM_EXTERNAL_SYSTEM,
 } from '@/pages/Event/Settings/ClassesSettingsTab';
@@ -404,6 +405,132 @@ describe('ClassesSettingsTab', () => {
 
     await waitFor(() =>
       expect(screen.getByLabelText('H21 fee')).toHaveValue(150)
+    );
+  });
+});
+
+describe('class deletion', () => {
+  const openClassActions = async () => {
+    const trigger = await screen.findByRole('button', {
+      name: 'Pages.Event.Settings.Classes.ActionsMenu',
+    });
+    expect(trigger).toHaveClass('h-8', 'w-8', 'p-0');
+    expect(trigger).toHaveTextContent('');
+    expect(trigger.closest('td')).toHaveClass('whitespace-nowrap');
+    expect(trigger.parentElement).toHaveClass('flex-nowrap');
+    fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
+    return screen.findByRole('menuitem', {
+      name: 'Pages.Event.Settings.Classes.Delete.Action',
+    });
+  };
+
+  const renderClasses = (deletionMock?: {
+    request: {
+      query: typeof CLASS_DELETE;
+      variables: { eventId: string; classId: number };
+    };
+    result?: { data: { classDelete: { message: string; __typename: string } } };
+    error?: Error;
+  }) =>
+    render(
+      <MockedProvider
+        mocks={[
+          classesMock,
+          ...(deletionMock ? [deletionMock] : []),
+          {
+            request: classesMock.request,
+            result: { data: { eventClasses: [] } },
+          },
+        ]}
+      >
+        <ClassesSettingsTab
+          t={t}
+          eventId="event-1"
+          isRelay={false}
+          timezone="Europe/Prague"
+        />
+      </MockedProvider>
+    );
+  it('requires confirmation and cancels without deleting a populated class', async () => {
+    renderClasses();
+    fireEvent.click(await openClassActions());
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(
+      screen.getByText('Pages.Event.Settings.Classes.Delete.Description')
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Operations.Cancel' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('H21')).toBeInTheDocument();
+  });
+  it('deletes the confirmed category and removes it from the table', async () => {
+    const result = vi.fn(() => ({
+      data: {
+        classDelete: { message: 'Deleted', __typename: 'ResponseMessage' },
+      },
+    }));
+    render(
+      <MockedProvider
+        mocks={[
+          classesMock,
+          {
+            request: {
+              query: CLASS_DELETE,
+              variables: { eventId: 'event-1', classId: 1 },
+            },
+            result,
+          },
+          {
+            request: classesMock.request,
+            result: { data: { eventClasses: [] } },
+          },
+        ]}
+      >
+        <ClassesSettingsTab
+          t={t}
+          eventId="event-1"
+          isRelay={false}
+          timezone="Europe/Prague"
+        />
+      </MockedProvider>
+    );
+    fireEvent.click(await openClassActions());
+    expect(result).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Pages.Event.Settings.Classes.Delete.Confirm',
+      })
+    );
+    await waitFor(() => expect(result).toHaveBeenCalledOnce());
+    await waitFor(() =>
+      expect(screen.queryByText('H21')).not.toBeInTheDocument()
+    );
+  });
+  it('keeps the class visible when the server rejects deletion', async () => {
+    renderClasses({
+      request: {
+        query: CLASS_DELETE,
+        variables: { eventId: 'event-1', classId: 1 },
+      },
+      error: new Error('Not authorised'),
+    });
+    fireEvent.click(await openClassActions());
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Pages.Event.Settings.Classes.Delete.Confirm',
+      })
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('H21')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', {
+          name: 'Pages.Event.Settings.Classes.ActionsMenu',
+        })
+      ).toBeEnabled()
     );
   });
 });
