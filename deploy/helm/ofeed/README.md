@@ -114,6 +114,9 @@ through `api.envFrom`/Vault when credentials are included). Redis is not
 installed by this chart. Two API replicas need the same Redis to deliver live
 result and device notifications. Missing Redis degrades to device snapshot
 polling; SQL ingestion remains available. Do not put Redis credentials in public
-frontend configuration. Native YAROC needs Linux glibc x64/arm64 and a
-functional @lukasp47/yaroc 0.1.3 artifact. Published 0.1.3 currently lacks its
-entrypoints; verify native import before enabling reception.
+frontend configuration. Container-native YAROC needs Linux glibc x64/arm64 and
+@lukasp47/yaroc 0.1.4 with its platform optional dependency installed.
+Main-entry loading and local MQTT punch decoding were verified on Linux ARM64;
+verify the deployed architecture before enabling reception. IANA event zones are
+converted to a fixed offset; reception windows crossing a DST change remain
+unsupported.

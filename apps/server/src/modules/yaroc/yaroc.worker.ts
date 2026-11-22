@@ -385,7 +385,7 @@ export function startYarocWorker(db: AppPrismaClient, report: (error: unknown) =
             },
             data: {
               state: 'error',
-              error: 'YAROC native startup failed; verify the installed 0.1.3 package',
+              error: 'YAROC native startup failed; verify the installed 0.1.4 package',
             },
           });
         }

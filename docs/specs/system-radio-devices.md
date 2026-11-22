@@ -1,8 +1,9 @@
 # System radio devices
 
-Status: implemented; real native acceptance remains subject to upstream
-package/timezone fixes. Issue: https://github.com/orienteerfeed/ofeed/issues/435
-ADR: [System radio inventory](../architecture/adr/0014-system-radio-devices.md).
+Status: implemented; native 0.1.4 main loading and MQTT offset handling verified
+on macOS ARM64/Linux ARM64; real hardware acceptance remains separate. Issue:
+https://github.com/orienteerfeed/ofeed/issues/435 ADR:
+[System radio inventory](../architecture/adr/0014-system-radio-devices.md).
 
 ## Goal and acceptance
 
@@ -36,8 +37,9 @@ Separate event/system YAROC sessions and fencing. Worker groups system
 connections by profile/channel. Stop invalidates queued writes immediately;
 validate assignment again at commit and reject punches outside the current
 system collection window. Monitoring may be extended, never shortened by another
-collection. Native absence fails start explicitly. Upstream package/timezone
-fixes are outside this feature.
+collection. Native absence fails start explicitly. Fixed-offset reception is
+verified with 0.1.4; IANA-aware decoding and DST-crossing sessions remain future
+work.
 
 ## Validation
 

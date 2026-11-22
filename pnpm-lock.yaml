@@ -592,8 +592,8 @@ importers:
         version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@24.19.2)(@vitest/coverage-v8@4.1.12)(@vitest/ui@4.1.12)(jsdom@27.4.0)(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.23.15)(yaml@2.9.1))
     optionalDependencies:
       '@lukasp47/yaroc':
-        specifier: 0.1.3
-        version: 0.1.3
+        specifier: 0.1.4
+        version: 0.1.4
 
   packages/commentator:
     devDependencies:
@@ -2188,25 +2188,30 @@ packages:
     peerDependencies:
       solid-js: ^1.8.8
 
-  '@lukasp47/yaroc-linux-arm64-gnu@0.1.3':
-    resolution: {integrity: sha512-5QRRy4ssY5X5qxRH7N3jq6ziwaJMJljrSZQkLRQcTOoA2t4kNfsUO+YhgZwQzuj3EjoKdhkgT76jeDNHMKa4gA==}
+  '@lukasp47/yaroc-darwin-arm64@0.1.4':
+    resolution: {integrity: sha512-R73rhZLxgF8uAl8+SjHBzzBOewBuKOyNNgiSft8QjQkHnsQCItZzN7JeEIGrejx/V8Yag6WWrtLQOgg2lwn9sw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@lukasp47/yaroc-linux-arm64-gnu@0.1.4':
+    resolution: {integrity: sha512-U8gDhigFlVH/n54buTQoSaBUadAH2JygxXDlHprlz/QJRX2cjmCpfc7ee4e6P0OOQWyZcHOBLnjyATCEVvPFew==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@lukasp47/yaroc-linux-x64-gnu@0.1.3':
-    resolution: {integrity: sha512-Yy2Wsa0fCCCIsspUZNAJLeFaG2KpUzHay9N3/NyihPqliI8dHJxss5Z02QYXwM84OLjK+rQ+sM7MOSxgljB38w==}
+  '@lukasp47/yaroc-linux-x64-gnu@0.1.4':
+    resolution: {integrity: sha512-J0E/N1fc+Ktf4PPuCutg5gPwIIHJjv+o6XfEluTTDCdxJy3iBRXaw3GR7GEV3QFg++TGz4Ma3Iv6JVFe4AecMA==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@lukasp47/yaroc-win32-x64-msvc@0.1.3':
-    resolution: {integrity: sha512-a6sBeeaRrcHVVHFZ3MRXApD/0Gu4ccI4RYgmAUMnm7W9GHqBlYb7c+MfnS9g5fSNMvaMhrBzn+oy8R66rFNb0A==}
+  '@lukasp47/yaroc-win32-x64-msvc@0.1.4':
+    resolution: {integrity: sha512-CGD4iw9a3qJHvHCknxZxHSlQME9IaVtuuAU2qcwtRCf9VXsKb09TbKbeqpucCGFkEphkpHSM4nmnBrMfJfX6Dw==}
     cpu: [x64]
     os: [win32]
 
-  '@lukasp47/yaroc@0.1.3':
-    resolution: {integrity: sha512-DE+XKTFaQplVMfB9NpB3cuxTbOBarTjADD6funphbt/EQULSEHeYjtnwyxF0I1VBrC3SgH8CQZ5p2ea2hGXaJA==}
+  '@lukasp47/yaroc@0.1.4':
+    resolution: {integrity: sha512-QYw/7DUHfTXezNA2GeJBoyK1bcrcNyBN02lM7d40n5n+nE9ih8i/jLtGkDQig5W4A/7TcQjB5bRMpY+W4PdQ6Q==}
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     resolution: {integrity: sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==}
@@ -10959,20 +10964,24 @@ snapshots:
       '@solid-primitives/utils': 6.4.1(solid-js@1.9.17)
       solid-js: 1.9.17
 
-  '@lukasp47/yaroc-linux-arm64-gnu@0.1.3':
+  '@lukasp47/yaroc-darwin-arm64@0.1.4':
     optional: true
 
-  '@lukasp47/yaroc-linux-x64-gnu@0.1.3':
+  '@lukasp47/yaroc-linux-arm64-gnu@0.1.4':
     optional: true
 
-  '@lukasp47/yaroc-win32-x64-msvc@0.1.3':
+  '@lukasp47/yaroc-linux-x64-gnu@0.1.4':
     optional: true
 
-  '@lukasp47/yaroc@0.1.3':
+  '@lukasp47/yaroc-win32-x64-msvc@0.1.4':
+    optional: true
+
+  '@lukasp47/yaroc@0.1.4':
     optionalDependencies:
-      '@lukasp47/yaroc-linux-arm64-gnu': 0.1.3
-      '@lukasp47/yaroc-linux-x64-gnu': 0.1.3
-      '@lukasp47/yaroc-win32-x64-msvc': 0.1.3
+      '@lukasp47/yaroc-darwin-arm64': 0.1.4
+      '@lukasp47/yaroc-linux-arm64-gnu': 0.1.4
+      '@lukasp47/yaroc-linux-x64-gnu': 0.1.4
+      '@lukasp47/yaroc-win32-x64-msvc': 0.1.4
     optional: true
 
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
