@@ -163,3 +163,8 @@ describe('promo GraphQL contract', () => {
     ]);
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

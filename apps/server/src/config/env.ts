@@ -110,6 +110,17 @@ export function parseBooleanEnvValue(value: unknown) {
   return value;
 }
 
+const yarocBrokerProfiles = z.record(
+  z.string().regex(/^[a-zA-Z0-9_-]{1,50}$/),
+  z.object({
+    url: z.string().min(1).max(253),
+    port: z.number().int().min(1).max(65535).default(1883),
+    keepAliveSecs: z.number().int().min(5).max(300).default(15),
+    username: z.string().optional(),
+    password: z.string().optional(),
+  }),
+);
+
 function booleanEnv(defaultValue: boolean) {
   return z.preprocess(parseBooleanEnvValue, z.boolean()).default(defaultValue);
 }
@@ -183,6 +194,23 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(600),
   GRAPHQL_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(600),
   UPLOAD_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
+  YAROC_BROKER_PROFILES: z
+    .string()
+    .optional()
+    .transform((value, ctx) => {
+      try {
+        return yarocBrokerProfiles.parse(JSON.parse(value ?? '{}'));
+      } catch (error) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Invalid YAROC_BROKER_PROFILES: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        });
+        return z.NEVER;
+      }
+    }),
+  REDIS_URL: z.string().url().optional(),
   SESSION_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
   MAP_TILE_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
   MAP_TILE_RATE_LIMIT_MAX: z.coerce.number().default(2000),

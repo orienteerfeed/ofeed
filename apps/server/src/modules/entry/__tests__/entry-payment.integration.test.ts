@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import argon2 from 'argon2';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPrismaClient } from '../../../db/prisma-client.js';
 import { Prisma } from '../../../generated/prisma/client.js';
@@ -21,7 +22,21 @@ vi.mock('../../../utils/context.js', async () => {
 });
 import client from '../../../utils/context.js';
 import { listEntryPayments, recordEntryPayment } from '../entry-payment.service.js';
-import { updateEntryOrderForGraphQL, updateEntryOrderPaid } from '../entry.service.js';
+import {
+  createEntryOrder,
+  updateEntryOrderForGraphQL,
+  updateEntryOrderPaid,
+} from '../entry.service.js';
+import {
+  listNotifications,
+  markNotificationsRead,
+} from '../../notifications/notifications.service.js';
+import { enqueueUserNotification } from '../../notifications/notifications.write.js';
+import { anonymizeCurrentUserAccount } from '../../user/user.service.js';
+vi.mock('../entry.email.js', () => ({
+  notifyEntryOrderReceived: vi.fn(),
+  notifyEntryOrderProcessed: vi.fn(),
+}));
 import { deleteAllEventData } from '../../event/event.service.js';
 
 // This suite only creates/removes synthetic fixtures in an explicitly opted-in local DB.
@@ -131,6 +146,9 @@ describe.skipIf(!settings.url)('entry payments on disposable MariaDB', () => {
     await Promise.all([pay(100), pay(150, second)]);
     expect((await entry()).paid).toBe(true);
     expect(await client.entryPayment.count({ where: { entryId } })).toBe(2);
+    expect(
+      await client.userNotification.count({ where: { entryId, kind: 'ENTRY_PAYMENT_RECEIVED' } }),
+    ).toBe(2);
     expect(await client.entryStatusHistory.count({ where: { entryId, paymentState: true } })).toBe(
       1,
     );
@@ -142,6 +160,9 @@ describe.skipIf(!settings.url)('entry payments on disposable MariaDB', () => {
     );
     expect(results.map((r) => r.created).sort()).toEqual([false, true]);
     expect(results[0].payment.id).toBe(results[1].payment.id);
+    expect(
+      await client.userNotification.count({ where: { entryId, kind: 'ENTRY_PAYMENT_RECEIVED' } }),
+    ).toBe(1);
     const other = await client.entry.create({
       data: {
         eventId,
@@ -190,9 +211,12 @@ describe.skipIf(!settings.url)('entry payments on disposable MariaDB', () => {
     expect((await entry()).paid).toBe(true);
     const receipts = await client.entryPayment.findMany({ where: { eventId, entryId } });
     expect(receipts).toHaveLength(2);
-    expect(receipts.reduce((sum, receipt) => sum + receipt.amount.toNumber(), 0)).toBe(300);
+    expect(receipts.reduce((sum, receipt) => sum + receipt.amount.toNumber(), 0)).toBe(250);
     await updateEntryOrderPaid(client, { eventId, entryId, paid: true, changedById: userId });
     expect(await client.entryPayment.count({ where: { eventId, entryId } })).toBe(2);
+    expect(
+      await client.userNotification.count({ where: { entryId, kind: 'ENTRY_PAYMENT_RECEIVED' } }),
+    ).toBe(2);
     await expect(
       updateEntryOrderPaid(client, { eventId, entryId, paid: false, changedById: userId }),
     ).rejects.toThrow('managed by payment receipts');
@@ -241,7 +265,110 @@ describe.skipIf(!settings.url)('entry payments on disposable MariaDB', () => {
     });
     await expect(pay(250, proxy)).rejects.toThrow('synthetic audit failure');
     expect(await client.entryPayment.count({ where: { entryId } })).toBe(0);
+    expect(await client.userNotification.count({ where: { entryId } })).toBe(0);
     expect((await entry()).paid).toBe(false);
+  });
+  it('creates one owner inbox message for a guest order and rolls it back with the source', async () => {
+    await client.event.update({
+      where: { id: eventId },
+      data: { entriesOpenAt: new Date('2020-01-01T00:00:00Z') },
+    });
+    const input = {
+      contactEmail: 'guest@payment.invalid',
+      contactFirstname: 'Test',
+      contactLastname: 'Guest',
+      paymentMethod: 'CASH' as const,
+      items: [
+        {
+          classId,
+          firstname: 'Test',
+          lastname: 'Runner',
+          birthYear: 1990,
+          card: 55555,
+          cardRental: false,
+        },
+      ],
+    };
+    const order = await createEntryOrder(client, { eventId, userId: null }, input);
+    const page = await listNotifications(client, auth, { first: 20 });
+    expect(page.notifications).toMatchObject([
+      { kind: 'ENTRY_ORDER_RECEIVED', entryId: order.id, itemCount: 1 },
+    ]);
+    expect(page.unreadCount).toBe(1);
+    await expect(
+      client.$transaction(async (tx) => {
+        const pending = await createEntryOrder(
+          tx,
+          { eventId, userId: null },
+          {
+            ...input,
+            items: [{ ...input.items[0], card: 55556 }],
+          },
+          { tx, afterCommit: [] },
+        );
+        expect(await tx.userNotification.count({ where: { entryId: pending.id } })).toBe(1);
+        throw new Error('rollback order');
+      }),
+    ).rejects.toThrow('rollback order');
+    expect(await client.userNotification.count({ where: { eventId } })).toBe(1);
+  });
+  it('enforces physical deduplication, ownership, read state and retention', async () => {
+    const source = { kind: 'ENTRY_ORDER_RECEIVED' as const, entryId, itemCount: 1 };
+    await Promise.all(
+      [client, second].map((db) =>
+        db.$transaction((tx) => enqueueUserNotification(tx, eventId, source)),
+      ),
+    );
+    expect(await client.userNotification.count({ where: { eventId } })).toBe(1);
+    const firstPage = await listNotifications(client, auth, {});
+    await markNotificationsRead(client, auth, firstPage.notifications[0].id);
+    await markNotificationsRead(client, auth, firstPage.notifications[0].id);
+    expect((await listNotifications(client, auth, {})).unreadCount).toBe(0);
+    await client.event.update({ where: { id: eventId }, data: { authorId: null } });
+    expect((await listNotifications(client, auth, {})).notifications).toEqual([]);
+    await client.event.update({ where: { id: eventId }, data: { authorId: userId } });
+    await client.userNotification.updateMany({
+      where: { eventId },
+      data: { createdAt: new Date(Date.now() - 91 * 86_400_000) },
+    });
+    expect((await listNotifications(client, auth, {})).notifications).toEqual([]);
+  });
+  it('isolates other users and erases the inbox when its owner anonymizes the account', async () => {
+    await pay();
+    const outsider = await client.user.create({
+      data: {
+        email: `${randomUUID()}@notification.invalid`,
+        firstname: 'Other',
+        lastname: 'User',
+        password: 'not-a-real-credential',
+      },
+    });
+    try {
+      const otherAuth = { ...auth, userId: outsider.id };
+      expect((await listNotifications(client, otherAuth, {})).notifications).toEqual([]);
+      const own = await listNotifications(client, auth, {});
+      await markNotificationsRead(client, otherAuth, own.notifications[0].id);
+      expect((await listNotifications(client, auth, {})).unreadCount).toBe(1);
+      await client.user.update({
+        where: { id: userId },
+        data: { password: await argon2.hash('fixture-password') },
+      });
+      await anonymizeCurrentUserAccount(auth, {
+        currentPassword: 'fixture-password',
+        deleteEvents: false,
+      });
+      expect(await client.userNotification.count({ where: { userId } })).toBe(0);
+      await client.$transaction((tx) =>
+        enqueueUserNotification(tx, eventId, {
+          kind: 'ENTRY_ORDER_RECEIVED',
+          entryId,
+          itemCount: 1,
+        }),
+      );
+      expect(await client.userNotification.count({ where: { userId } })).toBe(0);
+    } finally {
+      await client.user.delete({ where: { id: outsider.id } });
+    }
   });
   it('filters late uploads by server recording time and distinguishes desks', async () => {
     const first = await recordEntryPayment(client, auth, eventId, entryId, input(100, 'desk-1'));

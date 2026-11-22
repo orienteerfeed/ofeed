@@ -10,6 +10,13 @@ import PATHNAMES from '@/lib/paths/pathnames';
 
 const insights = [
   {
+    id: 'devices',
+    title: 'Pages.Insights.Devices.Title',
+    description: 'Pages.Insights.Devices.Description',
+    path: '/events/$eventId/insights/devices',
+    icon: ChartLine,
+  },
+  {
     id: 'anomalies',
     title: 'Pages.Insights.Anomalies.Title',
     description: 'Pages.Insights.Anomalies.Description',

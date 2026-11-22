@@ -222,8 +222,90 @@ model User {
   bankConnections          BankConnection[]
   pushDevices              PushDevice[]
   bankPaymentNotifications BankPaymentNotification[]
+  notifications            UserNotification[]
+  competitorFavorites      CompetitorFavorite[]
+  athleteFollows           AthleteFollow[]
   // Per-status bank payment push switches, e.g. {"UNMATCHED": false}; missing keys are on.
   bankPushStatuses         Json?
+}
+
+enum NotificationKind {
+  ENTRY_ORDER_RECEIVED
+  ENTRY_PAYMENT_RECEIVED
+  COMPETITOR_STARTED
+  COMPETITOR_RADIO
+  COMPETITOR_FINISHED
+  COMPETITOR_READOUT
+  COMPETITOR_RESULT_CHANGED
+}
+
+// Durable inbox and transactional invalidation outbox.
+model UserNotification {
+  athleteFollowId String?
+  athleteFollow   AthleteFollow?   @relation(fields: [athleteFollowId], references: [id], onDelete: SetNull)
+  id              String           @id @default(cuid())
+  userId          Int              @db.UnsignedInt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId         String
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  entryId         String?
+  entry           Entry?           @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  competitorId    Int?             @db.UnsignedInt
+  competitor      Competitor?      @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  competitorName  String?          @db.VarChar(511)
+  status          ResultStatus?
+  raceTime        Int?
+  controlCode     Int?
+  splitTime       Int?
+  kind            NotificationKind
+  sourceKey       String           @db.VarChar(191)
+  eventName       String           @db.VarChar(255)
+  itemCount       Int?             @db.UnsignedInt
+  amount          Decimal?         @db.Decimal(10, 2)
+  currency        String?          @db.Char(3)
+  method          String?          @db.VarChar(32)
+  createdAt       DateTime         @default(now()) @db.DateTime(3)
+  readAt          DateTime?        @db.DateTime(3)
+  publishedAt     DateTime?        @db.DateTime(3)
+
+  @@unique([userId, sourceKey], map: "UserNotification_user_source_uq")
+  @@index([userId, createdAt, id], map: "UserNotification_user_created_idx")
+  @@index([userId, readAt], map: "UserNotification_unread_idx")
+  @@index([publishedAt, createdAt], map: "UserNotification_pending_idx")
+  @@index([createdAt], map: "UserNotification_created_idx")
+}
+
+enum AthleteFollowSource {
+  ORIS
+  EVENTOR
+  LOCAL
+}
+
+model AthleteFollow {
+  id            String              @id @default(cuid())
+  userId        Int                 @db.UnsignedInt
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  registration  String              @db.VarChar(10)
+  source        AthleteFollowSource
+  displayName   String              @db.VarChar(511)
+  pausedAt      DateTime?           @db.DateTime(3)
+  createdAt     DateTime            @default(now()) @db.DateTime(3)
+  updatedAt     DateTime            @updatedAt @db.DateTime(3)
+  notifications UserNotification[]
+
+  @@unique([userId, source, registration], map: "AthleteFollow_user_identity_uq")
+  @@index([source, registration, pausedAt], map: "AthleteFollow_identity_idx")
+}
+
+model CompetitorFavorite {
+  userId       Int        @db.UnsignedInt
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  competitorId Int        @db.UnsignedInt
+  competitor   Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @db.DateTime(3)
+
+  @@id([userId, competitorId])
+  @@index([competitorId], map: "CompetitorFavorite_competitor_idx")
 }
 
 model UserCard {
@@ -263,6 +345,11 @@ model Currency {
 }
 
 model Event {
+  yarocSettings                Json?
+  liveDevices                  LiveDevice[]
+  liveMonitoring               LiveMonitoring?
+  yarocSession                 YarocSession[]
+  systemRadioAssignments       SystemRadioAssignment[]
   promoCodes                   PromoCode[]
   punches                      Punch[]
   punchReceipts                PunchReceipt[]
@@ -314,6 +401,7 @@ model Event {
   classes                      Class[]
   protocols                    Protocol[]
   eventPasswords               EventPassword[]
+  notifications                UserNotification[]
   externalResultsSync          EventExternalResultsSyncState?
   organisations                Organisation[]
   importStates                 EventImportState[]
@@ -477,6 +565,7 @@ model Entry {
   items                 EntryItem[]
   addOnItems            EntryAddOnItem[]
   statusHistory         EntryStatusHistory[]
+  notifications         UserNotification[]
   payments              EntryPayment[]
   bankTransactions      BankTransaction[]
 
@@ -923,35 +1012,37 @@ model StartSlotVacancy {
 }
 
 model Competitor {
-  id                    Int           @id @default(autoincrement()) @db.UnsignedInt
-  class                 Class         @relation(fields: [classId], references: [id])
-  classId               Int           @db.UnsignedInt
+  id                    Int                  @id @default(autoincrement()) @db.UnsignedInt
+  class                 Class                @relation(fields: [classId], references: [id])
+  classId               Int                  @db.UnsignedInt
   firstname             String
   lastname              String
   bibNumber             Int?
-  nationality           String?       @db.Char(3)
-  registration          String        @db.VarChar(10)
-  license               String?       @db.Char(1)
-  rankingPoints         Int?          @db.UnsignedInt
-  rankingReferenceValue Int?          @db.UnsignedInt
-  organisationId        Int?          @db.UnsignedInt
-  organisation          Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
-  card                  Int?          @db.UnsignedInt
+  nationality           String?              @db.Char(3)
+  registration          String               @db.VarChar(10)
+  license               String?              @db.Char(1)
+  rankingPoints         Int?                 @db.UnsignedInt
+  rankingReferenceValue Int?                 @db.UnsignedInt
+  organisationId        Int?                 @db.UnsignedInt
+  organisation          Organisation?        @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  card                  Int?                 @db.UnsignedInt
   startTime             DateTime?
   finishTime            DateTime?
   time                  Int?
-  team                  Team?         @relation(fields: [teamId], references: [id])
-  teamId                Int?          @db.UnsignedInt
-  leg                   Int?          @db.UnsignedInt
-  status                ResultStatus  @default(Inactive)
-  lateStart             Boolean       @default(false)
+  team                  Team?                @relation(fields: [teamId], references: [id])
+  teamId                Int?                 @db.UnsignedInt
+  leg                   Int?                 @db.UnsignedInt
+  status                ResultStatus         @default(Inactive)
+  lateStart             Boolean              @default(false)
   note                  String?
-  updatedAt             DateTime      @default(now()) @updatedAt
+  updatedAt             DateTime             @default(now()) @updatedAt
   externalId            String?
   protocols             Protocol[]
   punches               Punch[]
   splits                Split[]
   entryItems            EntryItem[]
+  favorites             CompetitorFavorite[]
+  notifications         UserNotification[]
 
   @@unique([classId, externalId], map: "Competitor_class_external_uq")
   @@index([card, classId], map: "Competitor_card_class_idx")
@@ -1452,4 +1543,136 @@ model SessionRefreshToken {
   family        DeviceSession @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   @@unique([familyId, generation])
+}
+
+model LiveMonitoring {
+  eventId   String    @id
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  checkedAt DateTime? @db.DateTime(3)
+  startedAt DateTime  @db.DateTime(3)
+  until     DateTime  @db.DateTime(3)
+}
+
+model LiveDevice {
+  id                String                  @id @default(uuid()) @db.VarChar(36)
+  eventId           String
+  event             Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name              String                  @db.VarChar(100)
+  sourceType        String                  @db.VarChar(20)
+  sourceId          String?                 @db.VarChar(36)
+  macAddress        String?                 @db.VarChar(12)
+  intervalSeconds   Int                     @default(10)
+  tokenHash         String?                 @unique @db.Char(64)
+  revokedAt         DateTime?               @db.DateTime(3)
+  lastSeenAt        DateTime?               @db.DateTime(3)
+  measuredAt        DateTime?               @db.DateTime(3)
+  metrics           Json
+  version           Int                     @default(0)
+  samples           LiveDeviceSample[]
+  messages          LiveHeartbeatReceipt[]
+  outages           LiveDeviceOutage[]
+  systemDeviceId    String?                 @db.VarChar(36)
+  systemDevice      SystemRadioDevice?      @relation(fields: [systemDeviceId], references: [id], onDelete: Restrict)
+  systemAssignments SystemRadioAssignment[]
+
+  @@unique([eventId, systemDeviceId])
+  @@unique([eventId, sourceType, sourceId])
+  @@unique([eventId, name])
+  @@unique([eventId, macAddress])
+}
+
+model LiveDeviceSample {
+  deviceId String     @db.VarChar(36)
+  device   LiveDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  minute   DateTime   @db.DateTime(3)
+  count    Int
+  firstAt  DateTime   @db.DateTime(3)
+  lastAt   DateTime   @db.DateTime(3)
+  maxGapMs Int        @default(0)
+  metrics  Json
+  minimum  Json
+  maximum  Json
+
+  @@id([deviceId, minute])
+  @@index([minute])
+}
+
+model LiveHeartbeatReceipt {
+  deviceId   String     @db.VarChar(36)
+  device     LiveDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  messageId  String     @db.VarChar(36)
+  receivedAt DateTime   @db.DateTime(3)
+
+  @@id([deviceId, messageId])
+  @@index([receivedAt])
+}
+
+model LiveDeviceOutage {
+  id        String     @id @default(uuid()) @db.VarChar(36)
+  deviceId  String     @db.VarChar(36)
+  device    LiveDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  kind      String     @default("offline") @db.VarChar(10)
+  startedAt DateTime   @db.DateTime(3)
+  endedAt   DateTime?  @db.DateTime(3)
+
+  @@unique([deviceId, startedAt])
+}
+
+model YarocSession {
+  eventId    String
+  scope      String    @default("event") @db.VarChar(10)
+  startedAt  DateTime  @default(now()) @db.DateTime(3)
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  authorId   Int       @db.UnsignedInt
+  until      DateTime  @db.DateTime(3)
+  settings   Json
+  owner      String?   @db.VarChar(36)
+  generation Int       @default(0)
+  leaseUntil DateTime? @db.DateTime(3)
+  state      String    @db.VarChar(20)
+  error      String?   @db.VarChar(500)
+
+  @@id([eventId, scope])
+}
+
+// Serializes rare fleet registration/assignment changes across server replicas.
+model PlatformRadioLock {
+  id Int @id
+}
+
+model SystemRadioDevice {
+  id                  String                  @id @default(uuid()) @db.VarChar(36)
+  name                String                  @unique @db.VarChar(100)
+  sourceType          String                  @db.VarChar(20)
+  macAddress          String                  @unique @db.VarChar(12)
+  intervalSeconds     Int                     @default(60)
+  brokerProfile       String                  @default("default") @db.VarChar(50)
+  meshtasticChannel   String?                 @db.VarChar(100)
+  archivedAt          DateTime?               @db.DateTime(3)
+  createdAt           DateTime                @default(now()) @db.DateTime(3)
+  updatedAt           DateTime                @updatedAt @db.DateTime(3)
+  createdById         Int                     @db.UnsignedInt
+  updatedById         Int                     @db.UnsignedInt
+  currentAssignmentId String?                 @unique @db.VarChar(36)
+  currentAssignment   SystemRadioAssignment?  @relation("CurrentRadioAssignment", fields: [currentAssignmentId], references: [id], onDelete: SetNull)
+  assignments         SystemRadioAssignment[] @relation("RadioAssignments")
+  liveDevices         LiveDevice[]
+}
+
+model SystemRadioAssignment {
+  id             String             @id @default(uuid()) @db.VarChar(36)
+  systemDeviceId String             @db.VarChar(36)
+  systemDevice   SystemRadioDevice  @relation("RadioAssignments", fields: [systemDeviceId], references: [id], onDelete: Restrict)
+  currentFor     SystemRadioDevice? @relation("CurrentRadioAssignment")
+  eventId        String
+  event          Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  liveDeviceId   String             @db.VarChar(36)
+  liveDevice     LiveDevice         @relation(fields: [liveDeviceId], references: [id], onDelete: Cascade)
+  assignedAt     DateTime           @default(now()) @db.DateTime(3)
+  endedAt        DateTime?          @db.DateTime(3)
+  assignedById   Int                @db.UnsignedInt
+  endedById      Int?               @db.UnsignedInt
+
+  @@index([systemDeviceId, assignedAt])
+  @@index([eventId, endedAt])
 }

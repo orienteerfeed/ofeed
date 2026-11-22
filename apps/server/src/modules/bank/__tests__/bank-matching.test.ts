@@ -80,9 +80,15 @@ function mockDb({
     },
     entryPayment: {
       aggregate: vi.fn().mockResolvedValue({ _sum: { amount: received } }),
-      create: vi.fn(),
+      create: vi.fn(async ({ data }) => ({ ...data, id: 'receipt-1' })),
     },
     user: { findUnique: vi.fn().mockResolvedValue({ bankPushStatuses: null }) },
+    event: {
+      findUnique: vi
+        .fn()
+        .mockResolvedValue({ name: 'Race', authorId: 7, author: { deletedAt: null } }),
+    },
+    userNotification: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     bankPaymentNotification: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
   };
   return db;
@@ -106,6 +112,17 @@ describe('bank transaction ingestion', () => {
       matchedAmount: '1490.00',
     });
     expect(db.entryPayment.create).toHaveBeenCalledTimes(1);
+    expect(db.userNotification.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          userId: 7,
+          kind: 'ENTRY_PAYMENT_RECEIVED',
+          sourceKey: 'payment:receipt-1',
+          amount: D('1490.00'),
+        }),
+      ],
+      skipDuplicates: true,
+    });
     expect(db.entryPayment.create.mock.calls[0]![0].data).toMatchObject({
       eventId: 'race',
       entryId: 'entry-1',

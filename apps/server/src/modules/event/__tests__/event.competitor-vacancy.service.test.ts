@@ -84,7 +84,9 @@ describe('storeCompetitor start slot vacancy cleanup', () => {
       event: { defaultStartMode: 'FreeStart', date: new Date('2026-07-10T14:30:00.000Z') },
       _count: { competitors: 0, startSlotVacancies: 1 },
     });
-    (prismaMock.startSlotVacancy as { deleteMany: ReturnType<typeof vi.fn> }).deleteMany.mockResolvedValue({
+    (
+      prismaMock.startSlotVacancy as { deleteMany: ReturnType<typeof vi.fn> }
+    ).deleteMany.mockResolvedValue({
       count: 1,
     });
     const created = { id: 7, classId: 42, startTime: START_TIME };
@@ -204,7 +206,9 @@ describe('storeCompetitor start slot vacancy cleanup', () => {
         classId: 42,
         startTime: START_TIME,
       });
-      (prismaMock.competitor as { findUnique: ReturnType<typeof vi.fn> }).findUnique.mockResolvedValue({
+      (
+        prismaMock.competitor as { findUnique: ReturnType<typeof vi.fn> }
+      ).findUnique.mockResolvedValue({
         id: 7,
         classId: 42,
         startTime: START_TIME,
@@ -416,3 +420,8 @@ describe('competitor start-list moves', () => {
     });
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

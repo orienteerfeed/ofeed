@@ -66,28 +66,33 @@ PUNCH_TEST_DATABASE_URL='mysql://test-user:test-password@127.0.0.1:3306/ofeed_pu
   pnpm --filter ./apps/server exec vitest run src/modules/punch/__tests__/punch.integration.test.ts
 ```
 
-The suite refuses non-local databases and other database names, creates synthetic
-fixtures and removes them after each test. It verifies cross-connection locking,
-retry and physical uniqueness, atomic rollback, pending assignment, timing/status
-precedence, snapshots and deletion. Default server tests skip this suite when the
-variable is absent. Never point this suite at a production or shared development
-database. Prisma generation and applying migrations are separate prerequisites.
+The suite refuses non-local databases and other database names, creates
+synthetic fixtures and removes them after each test. It verifies
+cross-connection locking, retry and physical uniqueness, atomic rollback,
+pending assignment, timing/status precedence, snapshots and deletion. Default
+server tests skip this suite when the variable is absent. Never point this suite
+at a production or shared development database. Prisma generation and applying
+migrations are separate prerequisites.
+
 ## Payment concurrency integration tests
 
 Payment integration tests require a disposable local MariaDB database named
-`ofeed_payment_test` (or `ofeed_payment_test_*`) with current migrations applied.
-The suite rejects non-local hosts and other database names. It creates synthetic
-fixtures and removes them after each test; default server tests skip it.
+`ofeed_payment_test` (or `ofeed_payment_test_*`) with current migrations
+applied. The suite rejects non-local hosts and other database names. It creates
+synthetic fixtures and removes them after each test; default server tests skip
+it.
 
 ```bash
 PAYMENT_TEST_DATABASE_URL='mysql://test-user:test-password@127.0.0.1:13381/ofeed_payment_test' \
   pnpm --filter ./apps/server exec vitest run src/modules/entry/__tests__/entry-payment.integration.test.ts
 ```
 
-The suite verifies concurrent payments and retries, races with manual updates and
-repricing, currency protection, atomic rollback, report filters and database
-constraints. Never point it at a shared or production database. Prisma generation
-and migration deployment to the disposable database are separate prerequisites.
+The suite verifies concurrent payments and retries, races with manual updates
+and repricing, currency protection, atomic rollback, report filters and database
+constraints. Never point it at a shared or production database. Prisma
+generation and migration deployment to the disposable database are separate
+prerequisites.
+
 ## Create idempotency concurrency tests
 
 Use a disposable local MariaDB database named `ofeed_idempotency_test` (or
@@ -104,7 +109,8 @@ IDEMPOTENCY_TEST_DATABASE_URL='mysql://root@127.0.0.1:13382/ofeed_idempotency_te
 ## Device-session integration tests
 
 Use an explicitly opted-in disposable local MariaDB database named
-`ofeed_session_test` or `ofeed_session_test_*`, with repository migrations applied:
+`ofeed_session_test` or `ofeed_session_test_*`, with repository migrations
+applied:
 
 ```sh
 SESSION_TEST_DATABASE_URL='mysql://test-user:test-password@127.0.0.1:3306/ofeed_session_test' \
@@ -114,22 +120,61 @@ SESSION_TEST_DATABASE_URL='mysql://test-user:test-password@127.0.0.1:3306/ofeed_
 The suite verifies signin, GraphQL cookie delivery, refresh concurrency/replay,
 expiry, device ownership, password changes/reset and account deletion. Browser
 tests establish a fresh session per context: never reuse saved rotating refresh
-cookies across independent or parallel contexts. Native outbox and secure-storage
-checks belong to the external Electron/Expo applications.
-
+cookies across independent or parallel contexts. Native outbox and
+secure-storage checks belong to the external Electron/Expo applications.
 
 ## Start slot concurrency tests
 
 Use a disposable local MariaDB database named `ofeed_slot_test` or
-`ofeed_slot_test_*`, with existing migrations applied. Other hosts/database names
-are rejected; the suite removes its synthetic fixtures and is skipped by default.
+`ofeed_slot_test_*`, with existing migrations applied. Other hosts/database
+names are rejected; the suite removes its synthetic fixtures and is skipped by
+default.
 
 ```bash
 SLOT_TEST_DATABASE_URL='mysql://root@127.0.0.1:13383/ofeed_slot_test' \
   pnpm --filter ./apps/server exec vitest run src/modules/start-slot-vacancy/__tests__/start-slot-integrity.integration.test.ts
 ```
 
-Verifies independent connections racing for the same slot through order creation,
-order edits, competitor creation/PUT and processing; also rollback, cancellation,
-class-only PUT semantics and shared times outside StartList. Never use a shared
-or production database.
+Verifies independent connections racing for the same slot through order
+creation, order edits, competitor creation/PUT and processing; also rollback,
+cancellation, class-only PUT semantics and shared times outside StartList. Never
+use a shared or production database.
+
+## System radio inventory integration tests
+
+Use an explicitly opted-in disposable local MariaDB database named
+`ofeed_radio_test`, with all repository migrations applied:
+
+```bash
+SYSTEM_RADIO_TEST_DATABASE_URL='mysql://root@127.0.0.1:13405/ofeed_radio_test' \
+  pnpm --filter ./apps/server exec vitest run src/modules/system-radio/__tests__/system-radio.integration.test.ts
+```
+
+The suite rejects remote hosts and other database names, creates synthetic
+fixtures and removes them afterward. It verifies exclusive assignment,
+concurrent identity reservation, event history isolation, collection scopes,
+timeout/outage closure, admin authorization and stale worker rejection. Native
+loading is mocked; real hardware acceptance remains separate.
+
+Browser lifecycle regressions are in `apps/client/e2e/system-devices.spec.ts`,
+with real admin/event components and a deterministic GraphQL fixture. They cover
+desktop and mobile registration, assignment, start/stop, reuse, archive/restore
+and readonly event controls. They do not start a native receiver.
+
+## Native YAROC package acceptance
+
+Install optional dependencies on a supported platform, then run this suite
+directly so cached task output cannot stand in for native acceptance:
+
+```bash
+TZ=UTC YAROC_NATIVE_TEST=1 pnpm --filter ./apps/server exec vitest run src/modules/yaroc/__tests__/yaroc.native.integration.test.ts --maxWorkers=1
+TZ=Europe/Prague YAROC_NATIVE_TEST=1 pnpm --filter ./apps/server exec vitest run src/modules/yaroc/__tests__/yaroc.native.integration.test.ts --maxWorkers=1
+```
+
+The test loads the normal `@lukasp47/yaroc` entry point and sends a fixed
+reference SPORTident packet through a minimal localhost MQTT fixture. It
+verifies both +02:00 and -05:00 as actual UTC instants, start/stop cleanup, and
+the current rejection of IANA timezone names. It does not use production brokers
+or hardware. Default tests skip this suite; opting in on an unsupported/missing
+native install fails rather than silently skipping. Current runtime acceptance
+covers macOS ARM64 and Linux ARM64 on Node.js 24.15.0.

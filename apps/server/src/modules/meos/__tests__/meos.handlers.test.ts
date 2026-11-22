@@ -1,3 +1,7 @@
+vi.mock('../../live-status/live-status.meos.js', () => ({
+  noteMeosUpload: vi.fn().mockResolvedValue(undefined),
+}));
+import { noteMeosUpload } from '../../live-status/live-status.meos.js';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import zlib from 'node:zlib';
 import { ImportSourceType } from '../../../generated/prisma/enums.js';
@@ -71,6 +75,7 @@ const ACTIVE_EVENT_PASSWORD = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(noteMeosUpload).mockResolvedValue(undefined);
   mockPrisma.eventMeosBinding.findFirst.mockResolvedValue(null);
   mockPrisma.eventPassword.findFirst.mockResolvedValue(ACTIVE_EVENT_PASSWORD);
   mockPrisma.eventImportState.findFirst.mockResolvedValue(null);
@@ -395,5 +400,43 @@ describe('POST /rest/v1/meos/mop', () => {
 
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('status="ERROR"');
+  });
+});
+
+describe('additive MOP telemetry', () => {
+  it('reports processing and completion without changing the MOP XML response', async () => {
+    mockPrisma.eventMeosBinding.findFirst.mockResolvedValue(BINDING);
+    const res = await post(buildApp(), COMPLETE_XML, { competition: '42', pwd: 'secret' });
+    expect(await res.text()).toContain('status="OK"');
+    expect(vi.mocked(noteMeosUpload).mock.calls.map((call) => call[3])).toEqual([
+      'processing',
+      'completed',
+    ]);
+    expect(vi.mocked(noteMeosUpload).mock.calls[0][4]).toBe(Buffer.byteLength(COMPLETE_XML));
+  });
+  it('does not register or report progress when the event password is invalid', async () => {
+    mockPrisma.eventMeosBinding.findFirst.mockResolvedValue(BINDING);
+    const res = await post(buildApp(), COMPLETE_XML, { competition: '42', pwd: 'wrong' });
+    expect(await res.text()).toContain('status="BADPWD"');
+    expect(noteMeosUpload).not.toHaveBeenCalled();
+  });
+  it('reports identical payloads as unchanged while retaining OK', async () => {
+    mockPrisma.eventMeosBinding.findFirst.mockResolvedValue(BINDING);
+    mockPrisma.eventImportState.findFirst.mockResolvedValue({ id: 1 });
+    const res = await post(buildApp(), COMPLETE_XML, { competition: '42', pwd: 'secret' });
+    expect(await res.text()).toContain('status="OK"');
+    expect(vi.mocked(noteMeosUpload).mock.calls.map((call) => call[3])).toEqual([
+      'processing',
+      'skipped',
+    ]);
+  });
+  it('records failed parsing without changing the ERROR response', async () => {
+    mockPrisma.eventMeosBinding.findFirst.mockResolvedValue(BINDING);
+    const res = await post(buildApp(), '<bad', { competition: '42', pwd: 'secret' });
+    expect(await res.text()).toContain('status="ERROR"');
+    expect(vi.mocked(noteMeosUpload).mock.calls.map((call) => call[3])).toEqual([
+      'processing',
+      'failed',
+    ]);
   });
 });

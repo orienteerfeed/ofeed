@@ -53,6 +53,21 @@ enum AnomalyType {
   START_PUNCH
 }
 
+type AthleteFollow {
+  createdAt: String!
+  displayName: String!
+  id: ID!
+  pausedAt: String
+  registration: String!
+  source: AthleteFollowSource!
+}
+
+enum AthleteFollowSource {
+  EVENTOR
+  LOCAL
+  ORIS
+}
+
 type AuthPayload {
   accessToken: String!
   expiresIn: Int!
@@ -677,6 +692,21 @@ enum EventLifecycleStatus {
   UPCOMING
 }
 
+type EventLiveStatus {
+  brokerProfiles: [String!]!
+  devices: [LiveDeviceStatus!]!
+  monitoringStartedAt: String
+  monitoringUntil: String
+  sessionError: String
+  sessionState: String!
+  sessionUntil: String
+  systemSessionError: String
+  systemSessionState: String!
+  systemSessionUntil: String
+  yarocAvailable: Boolean!
+  yarocSettings: EventYarocSettings!
+}
+
 type EventMeosBinding {
   createdAt: DateTime!
   eventId: String!
@@ -799,6 +829,15 @@ type EventStatusSummary {
   resultsOfficialCheckedAt: DateTime
 }
 
+type EventYarocSettings {
+  brokerProfile: String!
+  checkCode: Int!
+  finishCode: Int!
+  hours: Float!
+  meshtasticChannel: String
+  startCode: Int!
+}
+
 input EventsInput {
   after: String
   filter: EventFilter
@@ -822,6 +861,62 @@ type LeafletCoursePoint {
   type: String!
 }
 
+type LiveDeviceHistory {
+  outages: [LiveDeviceOutage!]!
+  samples: [LiveDeviceSample!]!
+}
+
+type LiveDeviceOutage {
+  endedAt: String
+  kind: String!
+  startedAt: String!
+}
+
+type LiveDeviceRegistration {
+  deviceId: ID!
+  token: String!
+}
+
+type LiveDeviceSample {
+  batteryPercent: Float
+  count: Int!
+  gsmRsrpDbm: Float
+  gsmSnrDb: Float
+  loraRssiDbm: Float
+  loraSnrDb: Float
+  maxGapMs: Int!
+  minute: String!
+}
+
+type LiveDeviceStatus {
+  batteryPercent: Float
+  currentlyAssigned: Boolean!
+  errorMessage: String
+  gsmRsrpDbm: Float
+  gsmRssiDbm: Float
+  gsmSnrDb: Float
+  id: ID!
+  intervalSeconds: Int!
+  lastPunchAt: String
+  lastSeenAt: String
+  latitude: Float
+  longitude: Float
+  loraRssiDbm: Float
+  loraSnrDb: Float
+  macAddress: String
+  name: String!
+  positionAt: String
+  revoked: Boolean!
+  signalBars: Int
+  sourceType: String!
+  status: String!
+  systemDevice: Boolean!
+  uploadBytes: Float
+  uploadCompletedAt: String
+  uploadDurationMs: Float
+  uploadState: String
+}
+
 input LoginInput {
   deviceId: String!
   deviceName: String!
@@ -831,7 +926,9 @@ input LoginInput {
 
 type Mutation {
   _empty(nothing: String): String
+  archiveSystemRadioDevice(archived: Boolean!, id: String!): SystemRadioDevice!
   assignEntryItemRentalCard(cardNumber: Int!, entryItemId: Int!): Entry!
+  assignSystemRadioDevice(eventId: String, id: String!): SystemRadioDevice!
   changeCurrentUserPassword(input: ChangeCurrentUserPasswordInput!): ResetResponse!
   classDelete(classId: Int!, eventId: String!): ResponseMessage!
   classFeeUpdate(input: UpdateClassFeeInput!): ResponseMessage!
@@ -856,27 +953,61 @@ type Mutation {
   entryOrderStatusUpdate(entryId: String!, status: EntryStatus!): Entry!
   entryOrderUpdate(entryId: String!, input: EntryOrderUpdateInput!): Entry!
   loadClassDefinitionsFromExternalSystem(eventId: String!): ResponseMessage!
+  markAllNotificationsRead: Boolean!
   markChangelogProcessed(eventId: String!, processedBySource: String!, processedByType: ProtocolProcessedByType, protocolId: Int!): ChangelogProcessing!
+  markNotificationRead(id: ID!): Boolean!
+  registerLiveDevice(eventId: String!, intervalSeconds: Int, macAddress: String, name: String!, sourceType: String!): LiveDeviceRegistration!
+  removeAthleteFollow(id: ID!): Boolean!
   requestPasswordReset(email: String!): ResetResponse!
   resendEmailVerification: ResetResponse!
   resetPassword(newPassword: String!, token: String!): ResetResponse!
   revokeDevice(deviceId: String!): Boolean!
   revokeEventPromoCode(eventId: String!, id: String!): ResponseMessage!
+  revokeLiveDevice(deviceId: String!, eventId: String!): Boolean!
+  rotateLiveDeviceToken(deviceId: String!, eventId: String!): LiveDeviceRegistration!
   saveCustomEventService(input: SaveCustomEventServiceInput!): EventServiceSetting!
+  saveSystemRadioCollection(eventId: String!, input: SystemRadioCollectionInput!): SystemRadioCollection!
+  saveSystemRadioDevice(id: String, input: SystemRadioDeviceInput!): SystemRadioDevice!
+  setAthleteFollowPaused(id: ID!, paused: Boolean!): Boolean!
+  setCompetitorFavorite(competitorId: Int!, eventId: String!, favorite: Boolean!): Boolean!
   setDefaultUserCard(id: Int!): UserCard!
   signin(input: LoginInput): AuthPayload
   signup(input: UserInput): ResetResponse
+  startLiveMonitoring(eventId: String!, hours: Int): Boolean!
+  startSystemRadioCollection(eventId: String!, input: SystemRadioCollectionInput!): SystemRadioCollection!
+  startYaroc(brokerProfile: String, checkCode: Int!, eventId: String!, finishCode: Int!, hours: Int, meshtasticChannel: String, startCode: Int!): Boolean!
+  stopSystemRadioCollection(eventId: String!): SystemRadioCollection!
+  stopYaroc(eventId: String!): Boolean!
   updateControlRadioFlag(controlId: Int!, eventId: String!, radio: Boolean!): Control!
   updateCurrentUser(input: UpdateCurrentUserInput!): User!
   updateEventPaymentMethods(eventId: String!, input: UpdateEventPaymentMethodsInput!): EventPaymentMethodSettings!
   updateEventRentalCard(input: UpdateEventRentalCardInput!): EventRentalCard!
   updateEventVisibility(eventId: String!, published: Boolean!): EventResponse!
+  updateEventYarocSettings(brokerProfile: String, checkCode: Int!, eventId: String!, finishCode: Int!, hours: Int, meshtasticChannel: String, startCode: Int!): Boolean!
   updateLateEntryFeePercent(eventId: String!, lateEntryFeePercent: Float): ResponseMessage!
+  updateLiveDeviceInterval(deviceId: String!, eventId: String!, intervalSeconds: Int!): Boolean!
   updateRegistrationFeeDiscounts(eventId: String!, rules: [RegistrationFeeDiscountInput!]!): ResponseMessage!
   updateStartSlotVacancy(input: UpdateStartSlotVacancyInput!): ClassStartSlotVacancy!
   updateSystemEventService(input: UpdateSystemEventServiceInput!): ResponseMessage!
   updateUserCard(input: UpdateUserCardInput!): UserCard!
   verifyEmail(token: String!): ResetResponse!
+}
+
+enum NotificationKind {
+  COMPETITOR_FINISHED
+  COMPETITOR_RADIO
+  COMPETITOR_READOUT
+  COMPETITOR_RESULT_CHANGED
+  COMPETITOR_STARTED
+  ENTRY_ORDER_RECEIVED
+  ENTRY_PAYMENT_RECEIVED
+}
+
+type NotificationPage {
+  endCursor: String
+  hasNextPage: Boolean!
+  notifications: [UserNotification!]!
+  unreadCount: Int!
 }
 
 type Organisation {
@@ -947,6 +1078,9 @@ type QrPaymentInstruction {
 type Query {
   _empty: String
   activeSystemMessages: [SystemMessage!]!
+  adminSystemRadioCollection(eventId: String!): SystemRadioCollection!
+  adminSystemRadioEvents(search: String): [SystemRadioEventOption!]!
+  adminSystemRadios(search: String): SystemRadioInventory!
   changelogByEvent(classId: Int, eventId: String!, origin: String, since: DateTime): [Changelog!]
   classById(id: Int!): Class!
   classCompetitorStartTimes(classId: Int!): [ClassCompetitorStartTime!]!
@@ -978,10 +1112,13 @@ type Query {
   eventCardInsight(eventId: String!): EventCardInsight!
   eventClasses(eventId: String!): [Class!]
   eventClassesByIds(eventId: String!, ids: [Int!]): [Class!]
+  eventDeviceHistory(deviceId: String!, eventId: String!, from: String!, to: String!): LiveDeviceHistory!
   eventEntryAvailability(eventId: String!): EntryAvailability
   eventEntryTimeline(eventId: String!): EventEntryTimeline!
+  eventFavoriteCompetitors(competitorIds: [Int!]!, eventId: String!): [Competitor!]!
   eventFilesStatus(eventId: String!): EventFilesStatus!
   eventImportStates(eventId: String!): [EventImportState!]!
+  eventLiveStatus(eventId: String!): EventLiveStatus!
   eventPaymentMethods(eventId: String!): EventPaymentMethodSettings!
   eventPromoCodes(eventId: String!): [PromoCode!]!
   eventRentalCards(eventId: String!): [EventRentalCard!]!
@@ -989,7 +1126,10 @@ type Query {
   events(input: EventsInput): EventConnection!
   eventsBySport(sportId: Int!): [Event!]
   eventsByUser(userId: Int!): [Event!]
+  myAthleteFollows: [AthleteFollow!]!
+  myEventFavoriteCompetitorIds(eventId: String!): [Int!]!
   myEvents: [Event!]
+  myNotifications(after: String, first: Int = 20): NotificationPage!
   organisationNames(eventId: String!): [OrganisationName!]!
   organisations(eventId: String!): [Organisation!]!
   resultFeedByEvent(eventId: String!): [Competitor!]!
@@ -1141,6 +1281,8 @@ type Subscription {
   classesUpdated(eventId: String!): String!
   competitorUpdated(eventId: String!): Competitor!
   competitorsByClassUpdated(classId: Int!): [Competitor!]
+  eventLiveStatusChanged(eventId: String!): EventLiveStatus!
+  myNotificationsChanged: Boolean!
   splitCompetitorsByClassUpdated(classId: Int!): [Competitor!]
   winnerUpdated(eventId: String!): WinnerNotification
 }
@@ -1161,6 +1303,67 @@ enum SystemMessageSeverity {
   INFO
   SUCCESS
   WARNING
+}
+
+type SystemRadioCollection {
+  error: String
+  eventId: String!
+  settings: SystemRadioCollectionSettings!
+  state: String!
+  timezone: String!
+  until: String
+}
+
+input SystemRadioCollectionInput {
+  checkCode: Int!
+  finishCode: Int!
+  hours: Int
+  startCode: Int!
+}
+
+type SystemRadioCollectionSettings {
+  checkCode: Int!
+  finishCode: Int!
+  hours: Int!
+  startCode: Int!
+}
+
+type SystemRadioDevice {
+  archived: Boolean!
+  brokerProfile: String!
+  collectionError: String
+  collectionState: String!
+  eventDate: String
+  eventId: String
+  eventName: String
+  id: ID!
+  intervalSeconds: Int!
+  lastSeenAt: String
+  macAddress: String!
+  meshtasticChannel: String
+  name: String!
+  sourceType: String!
+}
+
+input SystemRadioDeviceInput {
+  brokerProfile: String
+  intervalSeconds: Int
+  macAddress: String!
+  meshtasticChannel: String
+  name: String!
+  sourceType: String!
+}
+
+type SystemRadioEventOption {
+  date: String!
+  id: String!
+  name: String!
+}
+
+type SystemRadioInventory {
+  available: Boolean!
+  brokerProfiles: [String!]!
+  devices: [SystemRadioDevice!]!
 }
 
 type Team {
@@ -1304,6 +1507,26 @@ input UserInput {
   lastname: lastname_String_NotNull_maxLength_255!
   organisation: organisation_String_maxLength_191
   password: password_String_NotNull_maxLength_255!
+}
+
+type UserNotification {
+  amount: String
+  competitorId: Int
+  competitorName: String
+  controlCode: Int
+  createdAt: String!
+  currency: String
+  entryId: String
+  eventId: String!
+  eventName: String!
+  id: ID!
+  itemCount: Int
+  kind: NotificationKind!
+  method: String
+  raceTime: Int
+  readAt: String
+  splitTime: Int
+  status: String
 }
 
 enum UserRole {

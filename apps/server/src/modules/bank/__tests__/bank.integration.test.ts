@@ -113,6 +113,9 @@ describe.skipIf(!settings.url)('bank import on disposable MariaDB', () => {
     expect(results.map(([result]) => result!.status).sort()).toEqual(['DUPLICATE', 'MATCHED']);
     expect(await client.bankTransaction.count({ where: { connectionId } })).toBe(1);
     expect(await client.entryPayment.count({ where: { entryId, source: 'BANK_IMPORT' } })).toBe(1);
+    expect(
+      await client.userNotification.count({ where: { entryId, kind: 'ENTRY_PAYMENT_RECEIVED' } }),
+    ).toBe(1);
     expect((await client.entry.findUniqueOrThrow({ where: { id: entryId } })).paid).toBe(true);
     // One push for the transaction, never a second one for the retry.
     expect(
@@ -128,11 +131,17 @@ describe.skipIf(!settings.url)('bank import on disposable MariaDB', () => {
       item('9002', '100.00'),
     ]);
     expect(first!.status).toBe('PARTIALLY_PAID');
+    expect(
+      await client.userNotification.count({ where: { entryId, kind: 'ENTRY_PAYMENT_RECEIVED' } }),
+    ).toBe(1);
     expect((await client.entry.findUniqueOrThrow({ where: { id: entryId } })).paid).toBe(false);
     const [rest] = await reportBankTransactions(client, userId, connectionId, device, [
       item('9003', '150.00'),
     ]);
     expect(rest!.status).toBe('MATCHED');
+    expect(
+      await client.userNotification.count({ where: { entryId, kind: 'ENTRY_PAYMENT_RECEIVED' } }),
+    ).toBe(2);
     expect((await client.entry.findUniqueOrThrow({ where: { id: entryId } })).paid).toBe(true);
   });
 });

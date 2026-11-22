@@ -198,3 +198,8 @@ describe('entryOrderStatusUpdateForGraphQL', () => {
     ).rejects.toThrow('Entry order entry-1 does not exist.');
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

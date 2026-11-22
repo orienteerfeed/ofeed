@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
   LanguageSelector,
+  NotificationBell,
   ThemeToggleButton,
   UserMenu,
 } from '@/components/molecules';
@@ -85,6 +86,7 @@ export function AdminHeader({ breadcrumbs }: AdminHeaderProps) {
       <div className="flex items-center gap-2">
         <LanguageSelector />
         <ThemeToggleButton />
+        {userWithInitials ? <NotificationBell /> : null}
         {userWithInitials ? <UserMenu user={userWithInitials} t={t} /> : null}
       </div>
     </header>

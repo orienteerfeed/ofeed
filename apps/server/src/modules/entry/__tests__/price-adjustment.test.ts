@@ -95,6 +95,7 @@ function makeDatabase(role = 'USER') {
     $queryRaw: vi.fn().mockResolvedValue([{ id: 'entry-1' }]),
     $transaction: vi.fn(),
     user: { findUnique: vi.fn().mockResolvedValue({ role }) },
+    registration: { findMany: vi.fn().mockResolvedValue([]) },
     event: {
       findUnique: vi.fn().mockResolvedValue(eventRecord()),
       findUniqueOrThrow: vi.fn().mockResolvedValue(eventRecord()),
@@ -434,3 +435,8 @@ describe('entry report line prices with a price adjustment', () => {
     ).toEqual([5]);
   });
 });
+
+vi.mock('../../favorites/favorites.notifications.js', () => ({
+  captureFavoriteCompetitors: vi.fn().mockResolvedValue([]),
+  enqueueFavoriteChanges: vi.fn(),
+}));

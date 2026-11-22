@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminDevicesRouteImport } from './routes/admin/devices'
 import { Route as AdminEventsRouteImport } from './routes/admin/events'
 import { Route as AdminRegistrationsRouteImport } from './routes/admin/registrations'
 import { Route as AdminSystemMessagesRouteImport } from './routes/admin/system-messages'
@@ -36,6 +38,7 @@ import { Route as EventsEventIdEntriesEntryIdRouteImport } from './routes/events
 import { Route as EventsEventIdInsightsIndexRouteImport } from './routes/events/$eventId/insights.index'
 import { Route as EventsEventIdInsightsAnomaliesRouteImport } from './routes/events/$eventId/insights.anomalies'
 import { Route as EventsEventIdInsightsCardsRouteImport } from './routes/events/$eventId/insights.cards'
+import { Route as EventsEventIdInsightsDevicesRouteImport } from './routes/events/$eventId/insights.devices'
 import { Route as EventsEventIdInsightsEntriesRouteImport } from './routes/events/$eventId/insights.entries'
 import { Route as EventsEventIdInsightsPaymentsRouteImport } from './routes/events/$eventId/insights.payments'
 import { Route as EventsEventIdEntriesEntryIdEditRouteImport } from './routes/events/$eventId/entries_.$entryId_.edit'
@@ -60,6 +63,11 @@ const MyEventsRoute = MyEventsRouteImport.update({
   path: '/my-events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -68,6 +76,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDevicesRoute = AdminDevicesRouteImport.update({
+  id: '/admin/devices',
+  path: '/admin/devices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminEventsRoute = AdminEventsRouteImport.update({
@@ -179,6 +192,12 @@ const EventsEventIdInsightsCardsRoute =
     path: '/cards',
     getParentRoute: () => EventsEventIdInsightsRoute,
   } as any)
+const EventsEventIdInsightsDevicesRoute =
+  EventsEventIdInsightsDevicesRouteImport.update({
+    id: '/devices',
+    path: '/devices',
+    getParentRoute: () => EventsEventIdInsightsRoute,
+  } as any)
 const EventsEventIdInsightsEntriesRoute =
   EventsEventIdInsightsEntriesRouteImport.update({
     id: '/entries',
@@ -203,7 +222,9 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/admin/devices': typeof AdminDevicesRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
@@ -225,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
   '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/devices': typeof EventsEventIdInsightsDevicesRoute
   '/events/$eventId/insights/entries': typeof EventsEventIdInsightsEntriesRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
@@ -235,7 +257,9 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/admin/devices': typeof AdminDevicesRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
@@ -256,6 +280,7 @@ export interface FileRoutesByTo {
   '/events/$eventId/entries/$entryId': typeof EventsEventIdEntriesEntryIdRoute
   '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/devices': typeof EventsEventIdInsightsDevicesRoute
   '/events/$eventId/insights/entries': typeof EventsEventIdInsightsEntriesRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights': typeof EventsEventIdInsightsIndexRoute
@@ -267,7 +292,9 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/checkout': typeof CheckoutRoute
   '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/admin/devices': typeof AdminDevicesRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/registrations': typeof AdminRegistrationsRoute
   '/admin/system-messages': typeof AdminSystemMessagesRoute
@@ -289,6 +316,7 @@ export interface FileRoutesById {
   '/events/$eventId/entries_/$entryId': typeof EventsEventIdEntriesEntryIdRoute
   '/events/$eventId/insights/anomalies': typeof EventsEventIdInsightsAnomaliesRoute
   '/events/$eventId/insights/cards': typeof EventsEventIdInsightsCardsRoute
+  '/events/$eventId/insights/devices': typeof EventsEventIdInsightsDevicesRoute
   '/events/$eventId/insights/entries': typeof EventsEventIdInsightsEntriesRoute
   '/events/$eventId/insights/payments': typeof EventsEventIdInsightsPaymentsRoute
   '/events/$eventId/insights/': typeof EventsEventIdInsightsIndexRoute
@@ -301,7 +329,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/my-events'
+    | '/notifications'
     | '/profile'
+    | '/admin/devices'
     | '/admin/events'
     | '/admin/registrations'
     | '/admin/system-messages'
@@ -323,6 +353,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/entries/$entryId'
     | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/devices'
     | '/events/$eventId/insights/entries'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
@@ -333,7 +364,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/my-events'
+    | '/notifications'
     | '/profile'
+    | '/admin/devices'
     | '/admin/events'
     | '/admin/registrations'
     | '/admin/system-messages'
@@ -354,6 +387,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/entries/$entryId'
     | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/devices'
     | '/events/$eventId/insights/entries'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights'
@@ -364,7 +398,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/checkout'
     | '/my-events'
+    | '/notifications'
     | '/profile'
+    | '/admin/devices'
     | '/admin/events'
     | '/admin/registrations'
     | '/admin/system-messages'
@@ -386,6 +422,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/entries_/$entryId'
     | '/events/$eventId/insights/anomalies'
     | '/events/$eventId/insights/cards'
+    | '/events/$eventId/insights/devices'
     | '/events/$eventId/insights/entries'
     | '/events/$eventId/insights/payments'
     | '/events/$eventId/insights/'
@@ -397,7 +434,9 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CheckoutRoute: typeof CheckoutRoute
   MyEventsRoute: typeof MyEventsRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  AdminDevicesRoute: typeof AdminDevicesRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminRegistrationsRoute: typeof AdminRegistrationsRoute
   AdminSystemMessagesRoute: typeof AdminSystemMessagesRoute
@@ -450,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -462,6 +508,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/devices': {
+      id: '/admin/devices'
+      path: '/admin/devices'
+      fullPath: '/admin/devices'
+      preLoaderRoute: typeof AdminDevicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/events': {
@@ -611,6 +664,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdInsightsCardsRouteImport
       parentRoute: typeof EventsEventIdInsightsRoute
     }
+    '/events/$eventId/insights/devices': {
+      id: '/events/$eventId/insights/devices'
+      path: '/devices'
+      fullPath: '/events/$eventId/insights/devices'
+      preLoaderRoute: typeof EventsEventIdInsightsDevicesRouteImport
+      parentRoute: typeof EventsEventIdInsightsRoute
+    }
     '/events/$eventId/insights/entries': {
       id: '/events/$eventId/insights/entries'
       path: '/entries'
@@ -638,6 +698,7 @@ declare module '@tanstack/react-router' {
 interface EventsEventIdInsightsRouteChildren {
   EventsEventIdInsightsAnomaliesRoute: typeof EventsEventIdInsightsAnomaliesRoute
   EventsEventIdInsightsCardsRoute: typeof EventsEventIdInsightsCardsRoute
+  EventsEventIdInsightsDevicesRoute: typeof EventsEventIdInsightsDevicesRoute
   EventsEventIdInsightsEntriesRoute: typeof EventsEventIdInsightsEntriesRoute
   EventsEventIdInsightsPaymentsRoute: typeof EventsEventIdInsightsPaymentsRoute
   EventsEventIdInsightsIndexRoute: typeof EventsEventIdInsightsIndexRoute
@@ -646,6 +707,7 @@ interface EventsEventIdInsightsRouteChildren {
 const EventsEventIdInsightsRouteChildren: EventsEventIdInsightsRouteChildren = {
   EventsEventIdInsightsAnomaliesRoute: EventsEventIdInsightsAnomaliesRoute,
   EventsEventIdInsightsCardsRoute: EventsEventIdInsightsCardsRoute,
+  EventsEventIdInsightsDevicesRoute: EventsEventIdInsightsDevicesRoute,
   EventsEventIdInsightsEntriesRoute: EventsEventIdInsightsEntriesRoute,
   EventsEventIdInsightsPaymentsRoute: EventsEventIdInsightsPaymentsRoute,
   EventsEventIdInsightsIndexRoute: EventsEventIdInsightsIndexRoute,
@@ -661,7 +723,9 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CheckoutRoute: CheckoutRoute,
   MyEventsRoute: MyEventsRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  AdminDevicesRoute: AdminDevicesRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminRegistrationsRoute: AdminRegistrationsRoute,
   AdminSystemMessagesRoute: AdminSystemMessagesRoute,

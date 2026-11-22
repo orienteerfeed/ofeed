@@ -1,3 +1,4 @@
+import { LIVE_STATUS_OPENAPI_PATHS } from '../modules/live-status/live-status.openapi.js';
 import { PUNCH_OPENAPI_PATHS } from '../modules/punch/punch.openapi.js';
 import { ENTRY_PAYMENT_OPENAPI_PATHS } from '../modules/entry/entry-payment.openapi.js';
 import { BANK_CONNECTION_OPENAPI, BANK_OPENAPI_PATHS } from '../modules/bank/bank.openapi.js';
@@ -44,6 +45,7 @@ export const OPENAPI_TAGS = [
 ] as const;
 
 export const OPENAPI_PATHS: Record<string, OpenApiPathItem> = {
+  ...LIVE_STATUS_OPENAPI_PATHS,
   '/doc': {
     get: {
       tags: ['Index'],

@@ -1,0 +1,196 @@
+# Device heartbeat integration
+
+Owners/admins configure devices, radio code mappings and YAROC under **Event
+settings → Devices & radios**. Radio flags remain in **Settings → Files**.
+**Insights → Device status** provides read-only monitoring and history. YAROC
+configuration can be saved independently of starting its native receiver.
+
+## Automatic application onboarding
+
+Use the existing event password via HTTP Basic auth: username = eventId,
+password = current event password. Password expiry and event scope are checked
+by the existing authentication layer. No user JWT or new per-device bearer token
+is required for these applications.
+
+Applications persist a UUID for each installation and send either:
+
+- `POST /rest/v1/events/{eventId}/live-status/devices` with
+  `{ "sourceType": "quickevent", "sourceId": "<installation-uuid>", "name": "Timing laptop" }`;
+- their first heartbeat to the existing heartbeat endpoint, including
+  `sourceType` (`quickevent`, `ochecklist`, `meos` or `uploader`) and `sourceId`
+  alongside its original fields;
+- a successful existing IOF upload with optional headers `X-OFeed-Source-Type`
+  and `X-OFeed-Source-Id` (installation UUID). The IOF XML creator can identify
+  the source type when the header is absent. An identical successful re-upload
+  also supports registration using stored import metadata.
+
+Registration is idempotent by event, application and sourceId. It does not
+reactivate revoked devices. Registration responds with identity only, never a
+bearer token. An app continues using the event password for heartbeats.
+Recognized legacy uploads without a UUID are grouped as one application source
+per event; distinct installations require stable source IDs. Upload registration
+is best-effort after success and never changes an upload payload or response.
+Failed or unauthorized uploads do not register sources. Upload-derived activity
+is recorded only during active monitoring; the explicit registration endpoint
+works before monitoring starts. A first heartbeat can register the source and
+still return the existing 409 if monitoring is inactive.
+
+## Existing scoped bearer clients
+
+Existing bearer-token heartbeat payloads and response envelopes remain
+supported. Manual registration and token management are in event settings. Start
+monitoring (default 24h, maximum 72h). A scoped token writes only telemetry for
+its device and event, never punches or results. Redis is internal to the API.
+
+Send `POST /rest/v1/events/{eventId}/live-status/heartbeat` with
+`Authorization: Bearer <device-token>` and `Content-Type: application/json`:
+
+```json
+{
+  "version": 1,
+  "messageId": "f9e5f5b0-5540-49e2-a719-6c7db9a36fed",
+  "measuredAt": "2026-11-10T10:00:00.000Z",
+  "metrics": {
+    "batteryPercent": 74,
+    "gsmRsrpDbm": -98,
+    "gsmSnrDb": 12,
+    "queueSize": 3,
+    "appVersion": "1.4.2"
+  }
+}
+```
+
+Use a new UUID for each measurement, retaining the same UUID and payload on
+retries. A successful response uses the existing envelope with
+`results.data = { duplicate, receivedAt }`. It confirms SQL commit. Retry 5xx
+and transient network failures with bounded exponential backoff and jitter;
+respect 429 Retry-After. A 400 means malformed JSON: correct it before retrying.
+A 401 needs a new token; 409 means monitoring is inactive. Measurement times
+require a UTC offset; clocks more than a minute in the future are rejected.
+Availability is calculated from measurement/activity time rather than delivery
+time, with tolerated future clock skew clamped to receipt time. Delayed readings
+can fill history without making an offline device appear online.
+
+Default cadence is 10 seconds for apps and 60 seconds for YAROC. Upload progress
+can be included in telemetry; throttle reports rather than sending every byte.
+All fields are optional; send absent values as omitted, not zero or null.
+RSRP/RSSI are in dBm, SNR in dB, battery in percent. The shared Zod schema is
+`packages/shared/src/models/live-status.ts`; `/doc` describes the REST boundary.
+
+History consists of minute aggregates and outage/unknown intervals, retained for
+30 days. It does not provide an audit record of every individual heartbeat.
+GraphQL subscriptions are notifications; clients reconcile snapshots every 30s.
+
+## YAROC
+
+### System units
+
+Application admins manage reusable YAROC/Meshtastic units at `/admin/devices`.
+`adminSystemRadios`, `adminSystemRadioEvents` and `adminSystemRadioCollection`
+are admin-only GraphQL queries. Mutations `saveSystemRadioDevice`,
+`archiveSystemRadioDevice`, `assignSystemRadioDevice`,
+`saveSystemRadioCollection`, `startSystemRadioCollection` and
+`stopSystemRadioCollection` manage the lifecycle. All mutations recheck admin
+authorization server-side.
+
+An inventory unit reserves its normalized MAC/ID across the platform, including
+while archived or unassigned. Assignment registers it in the event automatically
+but does not start reception. Stop collection before editing or reassigning
+units. Connection profile/channel belong to the unit; special station codes and
+1–72 hour duration belong to the event's system collection. Timeout stops
+collection but retains assignment. An unassigned unit can be archived/restored.
+
+`LiveDeviceStatus.systemDevice` marks centrally managed units and
+`currentlyAssigned` identifies their current event registration. Owners can read
+these units/history but cannot change intervals, revoke them or rotate tokens.
+No token is issued. `EventLiveStatus.systemSessionState`, `systemSessionUntil`
+and `systemSessionError` describe the separate system collection; existing
+session fields and start/stop mutations continue to control only personal units.
+
+Removing assignment retains event-local telemetry and punches. Reusing a unit in
+another event never moves that history. Inventory conflicts with manual
+registrations are rejected and require explicit resolution; no registration is
+silently adopted.
+
+The schema migration adds `YarocSession.scope` and changes its primary key to
+`(eventId, scope)`. Stop existing receivers before migration and update all
+server replicas before using system collection; do not run old and new workers
+together. Native 0.1.4 main-package loading, local MQTT decoding and
+fixed-offset handling have been verified on macOS ARM64 and Linux ARM64. Real
+hardware and broker acceptance remains a deployment check.
+
+### Personal units
+
+Register unique names and MACs (12 hex for YAROC, 8 for Meshtastic). Configure
+distinct Check/Start/Finish codes before reception. Default broker is public
+`broker.emqx.io:1883`; MAC allowlisting is not sender authentication. Use only
+non-sensitive test data for public-broker acceptance tests. Configure monitoring
+windows that do not cross a daylight-saving offset transition.
+
+The settings form accepts MAC separators and Meshtastic node IDs with a leading
+`!`, normalizing them before submission. A blank name is generated from the unit
+type and ID. Duration and interval menus include presets and custom values;
+intervals describe expected status cadence and do not reconfigure the device.
+MQTT profiles and optional heartbeat tokens are under advanced settings. The
+Meshtastic main channel is optional for punches and enables status reception
+when it matches the units. Starting reception also starts monitoring for its
+duration; monitoring can otherwise be started separately without radio
+reception.
+
+YAROC is a lazy optional dependency pinned to 0.1.4. Its main package includes
+the loader and type declarations, selecting optional native packages for Linux
+glibc x64/arm64, macOS ARM64 or Windows x64. Do not install with optional
+dependencies disabled. macOS ARM64 and Linux ARM64 main-entry imports and local
+MQTT punches have been runtime-verified; Linux x64/Windows x64 artifacts were
+inspected only. Unsupported platforms remain unavailable without disabling the
+rest of the API. The radio stream uses QoS 0; SQL deduplication protects
+committed retries but cannot recover packets lost before server receipt.
+Buffer/retry at the sending application when possible.
+
+Server administrators may set `YAROC_BROKER_PROFILES` to a JSON object of named
+profiles with `url`, `port`, optional `username`/`password` and `keepAliveSecs`.
+Only profile names are exposed to authorized users. Profiles must use a
+transport supported by YAROC; 0.1.4 does not expose TLS configuration. An
+authenticated plain TCP broker requires a trusted network or an appropriate
+transport proxy.
+
+The event stores an IANA timezone (for example `Europe/Prague`). YAROC 0.1.4
+accepts a fixed offset, not IANA names; OFeed converts the event zone at session
+start and stores that offset for the whole reception window. Sessions crossing a
+daylight-saving offset transition remain rejected. Supporting such races
+requires upstream IANA-aware decoding using the punch date, plus a defined
+policy for ambiguous/repeated and nonexistent local times and delayed punches.
+Changing the server process timezone is not a replacement for that support.
+
+## Automatic generic and MeOS import monitoring
+
+The manual settings form registers only YAROC and Meshtastic radio units.
+`uploader` remains a compatible wire value for generic integrations; it is not a
+user-selectable device type. Authenticated IOF uploads from other exporters
+register a source under their XML creator name. Generic applications can also
+self-register on their first event-password heartbeat with sourceType
+`uploader`, a stable sourceId and an optional name. Browser/JWT file imports do
+not create application instances.
+
+Existing MeOS MOP requests keep the `competition` and `pwd` headers and their
+XML responses. A validated binding/password creates one source per MeOS binding.
+Status updates report `uploadState` (processing/completed/skipped/failed),
+`uploadBytes`, `uploadCompletedAt` and `uploadDurationMs`. Monitoring must be
+active to retain these samples. Failed telemetry never changes the MOP result.
+Unauthorized requests do not create sources. Receiving the HTTP body precedes
+authentication in the existing MOP handler, so these states describe server
+import processing, not live network transfer percentages. No transfer
+percentages are inferred or fabricated.
+
+## Receiver action validation
+
+The UI enables saving only for valid changed settings while reception is
+stopped. Start requires an available native receiver, an active registered radio
+fleet, valid unit codes/broker/duration and a timezone window without an offset
+change. The UI refreshes state before Save/Start/Stop and prevents duplicate
+clicks. Stop remains available during startup/running even with invalid draft
+inputs. Server-side checks remain authoritative and serialize
+configuration/session changes under the event lock. The availability probe
+verifies the native MqttClient export; it does not establish an MQTT connection
+or prove broker reachability. Saving configuration does not require native
+receiver availability. Changing native artifacts requires a server restart.

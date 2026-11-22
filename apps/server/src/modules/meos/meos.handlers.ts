@@ -1,3 +1,4 @@
+import { noteMeosUpload } from '../live-status/live-status.meos.js';
 import zlib from 'node:zlib';
 
 import env from '../../config/env.js';
@@ -249,9 +250,27 @@ export function registerMeosHandler(router: AppOpenAPI): void {
       return meosStatusXml(passwordStatus);
     }
 
+    const processingStartedAt = Date.now();
+    await noteMeosUpload(
+      prisma,
+      eventId,
+      meosCompetitionId,
+      'processing',
+      payloadSizeBytes,
+      processingStartedAt,
+    );
+
     // XML parse
     const doc = parseMopDocument(xmlBody);
     if (!doc) {
+      await noteMeosUpload(
+        prisma,
+        eventId,
+        meosCompetitionId,
+        'failed',
+        payloadSizeBytes,
+        processingStartedAt,
+      );
       logger.error('MeOS MOP upload: XML parse failed or unsupported root', {
         eventId,
         meosCompetitionId,
@@ -287,6 +306,14 @@ export function registerMeosHandler(router: AppOpenAPI): void {
         payloadSizeBytes,
         rawHash,
       });
+      await noteMeosUpload(
+        prisma,
+        eventId,
+        meosCompetitionId,
+        'skipped',
+        payloadSizeBytes,
+        processingStartedAt,
+      );
       return meosStatusXml('OK');
     }
 
@@ -301,6 +328,14 @@ export function registerMeosHandler(router: AppOpenAPI): void {
         authorId: event.authorId,
       });
     } catch (err) {
+      await noteMeosUpload(
+        prisma,
+        eventId,
+        meosCompetitionId,
+        'failed',
+        payloadSizeBytes,
+        processingStartedAt,
+      );
       logger.error('MeOS MOP upload: processing error', {
         eventId,
         meosCompetitionId,
@@ -359,6 +394,14 @@ export function registerMeosHandler(router: AppOpenAPI): void {
       updatedCompetitorCount: processResult.updatedCompetitorIds.length,
     });
 
+    await noteMeosUpload(
+      prisma,
+      eventId,
+      meosCompetitionId,
+      'completed',
+      payloadSizeBytes,
+      processingStartedAt,
+    );
     return meosStatusXml('OK');
   });
 }

@@ -36,7 +36,16 @@ import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
-import { BadgeCheck, Blocks, Pencil, Shield, Trash2, User } from 'lucide-react';
+import {
+  BadgeCheck,
+  Blocks,
+  Pencil,
+  Shield,
+  Star,
+  Trash2,
+  User,
+} from 'lucide-react';
+import { AthleteFollows } from './AthleteFollows';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, EmailVerifiedBadge } from '../../components/atoms';
@@ -1125,7 +1134,7 @@ export const ProfilePage = () => {
           </div>
 
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-4">
               <TabsTrigger value="profile">
                 <User className="h-4 w-4 mr-2" />
                 {t('Pages.Profile.Tabs.Profile')}
@@ -1137,6 +1146,10 @@ export const ProfilePage = () => {
               <TabsTrigger value="security">
                 <Shield className="h-4 w-4 mr-2" />
                 {t('Pages.Profile.Tabs.Security')}
+              </TabsTrigger>
+              <TabsTrigger value="following">
+                <Star className="mr-2 h-4 w-4" />
+                {t('AthleteFollows.Tab')}
               </TabsTrigger>
               {/*<TabsTrigger value="notifications">
                 <Bell className="h-4 w-4 mr-2" />
@@ -1152,6 +1165,9 @@ export const ProfilePage = () => {
               </TabsTrigger>*/}
             </TabsList>
 
+            <TabsContent value="following" className="space-y-4">
+              <AthleteFollows />
+            </TabsContent>
             <TabsContent value="profile" className="space-y-4">
               <Card>
                 <CardHeader>

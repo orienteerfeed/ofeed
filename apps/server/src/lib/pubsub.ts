@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { PubSub } from 'graphql-subscriptions';
+import { logger } from './logging.js';
 
 // One listener per live subscriber on a topic, so popular classes legitimately exceed Node's default of 10.
 const eventEmitter = new EventEmitter();
@@ -7,6 +8,23 @@ eventEmitter.setMaxListeners(0);
 
 // Create PubSub instance (ensure you reuse this across your app)
 export const pubsub = new PubSub({ eventEmitter });
+const localPublish = pubsub.publish.bind(pubsub);
+let forward: ((topic: string, payload: unknown) => Promise<void>) | undefined;
+export function setPubSubForwarder(value: typeof forward) {
+  forward = value;
+}
+export const deliverRemotePublication = (topic: string, payload: unknown) =>
+  localPublish(topic, payload);
+pubsub.publish = async (topic: string, payload: unknown) => {
+  await localPublish(topic, payload);
+  // Cross-replica fan-out is best effort; it must never reject callers that fire-and-forget publish.
+  await forward?.(topic, payload).catch((error: unknown) => {
+    logger.warn('PubSub: remote forward failed', {
+      topic,
+      error: error instanceof Error ? { name: error.name, message: error.message } : String(error),
+    });
+  });
+};
 
 // Define the subscription topic constant
 export const COMPETITORS_BY_CLASS_UPDATED = 'COMPETITORS_BY_CLASS_UPDATED';

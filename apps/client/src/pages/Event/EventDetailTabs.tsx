@@ -1,7 +1,9 @@
 import { Event } from '@/types/event';
 import { useNavigate } from '@tanstack/react-router';
 import { TFunction } from 'i18next';
-import { Info, TrendingUp, Trophy } from 'lucide-react';
+import { Info, Star, TrendingUp, Trophy } from 'lucide-react';
+import { EventFavoritesProvider } from './EventFavoritesProvider';
+import { EventFavoritesView } from './EventFavoritesView';
 import { Tabs } from '../../components/molecules';
 import { EventInfoView } from './EventInfoView';
 import { EventResultsView } from './EventResultsView';
@@ -13,7 +15,15 @@ interface EventDetailTabsProps {
   defaultTab?: string | undefined;
 }
 
-export function EventDetailTabs({
+export function EventDetailTabs(props: EventDetailTabsProps) {
+  return (
+    <EventFavoritesProvider key={props.event.id} eventId={props.event.id}>
+      <EventDetailTabsContent {...props} />
+    </EventFavoritesProvider>
+  );
+}
+
+function EventDetailTabsContent({
   t,
   event,
   defaultTab = 'info',
@@ -33,6 +43,15 @@ export function EventDetailTabs({
 
   // Tabs definition
   const tabs = [
+    {
+      value: 'favorites',
+      label: (
+        <div className="flex items-center justify-center gap-2">
+          <Star className="hidden h-4 w-4 shrink-0 sm:block" />
+          <span>{t('Favorites.Title')}</span>
+        </div>
+      ),
+    },
     {
       value: 'info',
       label: (
@@ -71,6 +90,7 @@ export function EventDetailTabs({
 
   // Tabs content
   const tabContents = [
+    <EventFavoritesView key="favorites" />,
     <EventInfoView key="info" event={event} />,
     <EventResultsView key="results" t={t} event={event} />,
     <EventSplitsView key="splits" t={t} event={event} />,

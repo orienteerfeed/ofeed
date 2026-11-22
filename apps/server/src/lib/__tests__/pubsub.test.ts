@@ -44,3 +44,23 @@ describe('subscribeWithInitial', () => {
     expect(eventEmitter.listenerCount('T')).toBe(0);
   });
 });
+
+describe('pubsub.publish', () => {
+  it('delivers locally and does not reject when the remote forwarder fails', async () => {
+    const { pubsub, setPubSubForwarder } = await import('../pubsub.js');
+    const received: unknown[] = [];
+    const id = await pubsub.subscribe('FORWARD_FAIL', (payload: unknown) => {
+      received.push(payload);
+    });
+    setPubSubForwarder(async () => {
+      throw new Error('DataCloneError');
+    });
+    try {
+      await expect(pubsub.publish('FORWARD_FAIL', { a: 1 })).resolves.toBeUndefined();
+      expect(received).toEqual([{ a: 1 }]);
+    } finally {
+      setPubSubForwarder(undefined);
+      pubsub.unsubscribe(id);
+    }
+  });
+});

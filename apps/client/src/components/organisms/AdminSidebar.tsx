@@ -24,6 +24,7 @@ import {
   Megaphone,
   Shield,
   Users,
+  Radio,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -35,7 +36,9 @@ type AdminNavItemKey =
   | 'events'
   | 'systemMessages'
   | 'ranking'
-  | 'registrations';
+  | 'registrations'
+  | 'devices';
+// System inventory is independent from event-owned devices.
 
 type AdminSidebarProps = {
   activeItem: AdminNavItemKey;
@@ -77,6 +80,13 @@ export function AdminSidebar({ activeItem }: AdminSidebarProps) {
       label: t('Pages.Admin.Navigation.Events'),
       icon: CalendarDays,
       active: activeItem === 'events',
+    },
+    {
+      key: 'devices' as const,
+      to: PATHNAMES.adminDevices().to,
+      label: t('Pages.Admin.SystemDevices.Title'),
+      icon: Radio,
+      active: activeItem === 'devices',
     },
     {
       key: 'systemMessages' as const,

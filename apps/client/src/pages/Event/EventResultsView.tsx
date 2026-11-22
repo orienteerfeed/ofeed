@@ -33,6 +33,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge, Button, CountryFlag, Tooltip } from '../../components/atoms';
 import { Alert } from '../../components/organisms';
 import { CompetitorName, getMobileCompetitorName } from './CompetitorName';
+import { FavoriteCompetitorButton } from './FavoriteCompetitorButton';
 import { EventCategorySwitcher } from './EventCategorySwitcher';
 import { LiveResultsView } from './LiveResultsView';
 import { ResultsViewport } from './ResultsViewport';
@@ -1069,7 +1070,12 @@ const CategoryResultsView = ({
                   </TableCell>
                   <TableCell className="px-2 py-1 text-sm font-medium">
                     <div className="flex flex-col">
-                      <CompetitorName competitor={competitor} />
+                      <div className="flex min-w-0 items-center gap-1">
+                        <FavoriteCompetitorButton
+                          competitorId={competitor.id}
+                        />
+                        <CompetitorName competitor={competitor} />
+                      </div>
                       <MobileClubName
                         clubName={competitor.organisation}
                         referenceText={mobileClubWidthReference}
@@ -1742,12 +1748,12 @@ const ClubResultsView = ({
                                     </TableCell>
                                   )}
                                   <TableCell className="px-2 py-1 text-sm font-medium">
-                                    <CompetitorName
-                                      competitor={{
-                                        firstname: runner.firstname,
-                                        lastname: runner.lastname,
-                                      }}
-                                    />
+                                    <div className="flex min-w-0 items-center gap-1">
+                                      <FavoriteCompetitorButton
+                                        competitorId={runner.id}
+                                      />
+                                      <CompetitorName competitor={runner} />
+                                    </div>
                                   </TableCell>
                                   <TableCell className="px-2 py-1">
                                     <div className="flex items-center gap-1">
@@ -2077,7 +2083,12 @@ const RelayOverallView: React.FC<{ teams: TeamResult[]; t: TFunction }> = ({
                   >
                     <TableCell />
                     <TableCell className="px-2 py-0.5 text-xs">
-                      <CompetitorName competitor={leg.runner} />
+                      <div className="flex min-w-0 items-center gap-1">
+                        <FavoriteCompetitorButton
+                          competitorId={leg.runner.id}
+                        />
+                        <CompetitorName competitor={leg.runner} />
+                      </div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell" />
                     <TableCell className="px-2 py-0.5 text-right font-mono text-xs">
@@ -2619,7 +2630,12 @@ const RelayResultsView = ({
                         </TableCell>
                         <TableCell className="px-2 py-1 text-sm font-medium">
                           <div className="flex flex-col">
-                            <CompetitorName competitor={competitor} />
+                            <div className="flex min-w-0 items-center gap-1">
+                              <FavoriteCompetitorButton
+                                competitorId={competitor.id}
+                              />
+                              <CompetitorName competitor={competitor} />
+                            </div>
                             <MobileClubName
                               clubName={competitor.organisation}
                               referenceText={mobileClubWidthReference}

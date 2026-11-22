@@ -25,40 +25,55 @@ erDiagram
 
 ## Entity groups and invariants
 
-| Group               | Models / rules                                                                                                                    |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Identity            | `User`, `UserCard`, `DeviceSession`, `SessionRefreshToken`, OAuth clients/tokens and password-reset tokens; never expose stored password hashes                           |
-| Event setup         | `Event`, `Sport`, `Country`, `Currency`, `Class`; event datetime has an explicit timezone setting                                 |
-| Participation       | `Competitor`, `Team`, `Organisation`, `Split`; user accounts and competitors are separate concepts                                |
-| Checkout            | `Entry`, `EntryItem`, `EntryAddOnItem`, `EntryStatusHistory`; item prices are snapshots, payment reference is unique per event    |
-| Availability        | `StartSlotVacancy` plus occupied competitor times and pending entry reservations; a vacancy row alone does not prove availability |
-| Payments and rental | `EventPaymentMethod`, `EventService`, `EventRentalCard`; timing-card rental is separate from payment-method selection             |
-| Bank import         | `BankConnection`, `BankTransaction`, `BankSyncLog`; a match writes an `EntryPayment` with `source = BANK_IMPORT`, unique per bank transaction |
-| Push                | `PushDevice`, `BankPaymentNotification` (outbox, unique per transaction and status), `User.bankPushStatuses` |
-| Courses             | `Course`, `Control`, `CourseControl`, `CourseMap`; imports preserve unresolved control codes                                      |
-| Federation cache    | `Registration`, `Club`, sync-state and Czech ranking models; cache provenance must be preserved                                   |
-| Integration history | `Protocol`, `EventImportState`, `EventExternalResultsSyncState`, `EventMeosBinding`, `EventPassword`                              |
+| Group               | Models / rules                                                                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity            | `User`, `UserCard`, `DeviceSession`, `SessionRefreshToken`, OAuth clients/tokens and password-reset tokens; never expose stored password hashes |
+| Event setup         | `Event`, `Sport`, `Country`, `Currency`, `Class`; event datetime has an explicit timezone setting                                               |
+| Participation       | `Competitor`, `Team`, `Organisation`, `Split`; user accounts and competitors are separate concepts                                              |
+| Checkout            | `Entry`, `EntryItem`, `EntryAddOnItem`, `EntryStatusHistory`; item prices are snapshots, payment reference is unique per event                  |
+| Availability        | `StartSlotVacancy` plus occupied competitor times and pending entry reservations; a vacancy row alone does not prove availability               |
+| Payments and rental | `EventPaymentMethod`, `EventService`, `EventRentalCard`; timing-card rental is separate from payment-method selection                           |
+| Bank import         | `BankConnection`, `BankTransaction`, `BankSyncLog`; a match writes an `EntryPayment` with `source = BANK_IMPORT`, unique per bank transaction   |
+| Push                | `PushDevice`, `BankPaymentNotification` (outbox, unique per transaction and status), `User.bankPushStatuses`                                    |
+| Courses             | `Course`, `Control`, `CourseControl`, `CourseMap`; imports preserve unresolved control codes                                                    |
+| Federation cache    | `Registration`, `Club`, sync-state and Czech ranking models; cache provenance must be preserved                                                 |
+| Integration history | `Protocol`, `EventImportState`, `EventExternalResultsSyncState`, `EventMeosBinding`, `EventPassword`                                            |
 
 ## Punch observations
 
 `Punch` identifies a physical event/card/control/UTC-millisecond observation;
-`PunchReceipt` retains device retry identity, source, station, client receipt time,
-server storage time and author. Punches may remain unassigned. Matched observations
-project into existing splits and competitor timings. Authoritative competitor
-updates and snapshot imports supersede assigned observations and pending
-observations on the previous/current cards within the event. Superseded punches
-remain stored but cannot project again, including after a retry or source
-promotion. Competitor deletion retains observations without replay. Deleting an
-event cascades its punch ledger. See the [punch ingestion spec](../specs/punch-ingestion.md).
+`PunchReceipt` retains device retry identity, source, station, client receipt
+time, server storage time and author. Punches may remain unassigned. Matched
+observations project into existing splits and competitor timings. Authoritative
+competitor updates and snapshot imports supersede assigned observations and
+pending observations on the previous/current cards within the event. Superseded
+punches remain stored but cannot project again, including after a retry or
+source promotion. Competitor deletion retains observations without replay.
+Deleting an event cascades its punch ledger. See the
+[punch ingestion spec](../specs/punch-ingestion.md).
 
 ## Device sessions
 
-`DeviceSession` owns a device-bound refresh family, sliding/absolute deadlines and
-revocation state. `SessionRefreshToken` stores generation hashes and consumption
-metadata; consumed generations remain for replay detection until the family’s
-absolute expiry. A user-row lock serializes session issuance/rotation with
-credential changes and account deletion. Access JWTs remain stateless with respect
-to refresh families. See [session longevity](../specs/session-longevity.md).
+`DeviceSession` owns a device-bound refresh family, sliding/absolute deadlines
+and revocation state. `SessionRefreshToken` stores generation hashes and
+consumption metadata; consumed generations remain for replay detection until the
+family’s absolute expiry. A user-row lock serializes session issuance/rotation
+with credential changes and account deletion. Access JWTs remain stateless with
+respect to refresh families. See
+[session longevity](../specs/session-longevity.md).
+
+## System radio devices
+
+`SystemRadioDevice` is platform inventory. Its current assignment points to a
+`SystemRadioAssignment`, which records event, event-local `LiveDevice`, actor
+and assignment/end times. Event-local identities and observations never move
+between events; returning to an event reuses its identity. Event deletion clears
+current assignment through cascades while retaining the inventory unit.
+
+`YarocSession` is keyed by `(eventId, scope)` with independent `event` and
+`system` settings, ownership leases and fencing generations. `PlatformRadioLock`
+serializes inventory reservation and assignment with manual radio registration.
+See [system radio devices](../specs/system-radio-devices.md).
 
 ## Schema changes
 

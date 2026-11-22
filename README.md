@@ -42,6 +42,20 @@ We are using [Weblate](https://hosted.weblate.org/projects/ofeed/) free localiza
 
 ## Documentation
 
+The [user notification inbox](docs/specs/user-notifications.md) informs event
+owners of new entry orders and received payments. The bell and `/notifications`
+share read state across devices and retain history for 90 days. Live updates use
+the existing Redis fan-out, with periodic database reconciliation as a fallback.
+
+[Competitor favorites](docs/specs/competitor-favorites.md) add stars in result
+lists and a Favorites tab per event. Signed-in spectators save their selection
+across devices and receive observed start/radio/finish/readout and result changes
+in the inbox; guests keep their selection locally in the browser.
+
+Registered athlete selections also [persist across events](docs/specs/registration-follows.md)
+by registration number and source. Manage them under Profile → Following, where
+following can be paused, resumed or cancelled. Resuming sends only future changes.
+
 Start with the [documentation index](docs/README.md) for product scope,
 architecture decisions, feature specs, API contracts, development and operations.
 Agents start at [AGENTS.md](AGENTS.md); Claude Code imports the same entry point
@@ -435,3 +449,18 @@ HttpOnly cookies. Production requires a Vault-delivered ES256 signing-key file.
 This changes the signin contract and invalidates legacy user tokens at cutover.
 See the [integration contract](docs/entry-api-integration.md) and
 [device-session operations](docs/ops/runbooks/device-sessions.md).
+
+### Device telemetry
+
+Event owners and admins configure devices/YAROC in Event settings → Devices & radios,
+and use Insights → Device status for read-only monitoring. QuickEvent/oChecklist
+self-register using the event password on a successful IOF upload, first heartbeat
+or explicit registration request. Start monitoring (24 hours by default, maximum 72), and inspect 30-day telemetry.
+See [the live device status contract](docs/specs/live-device-status.md).
+Application admins can manage reusable YAROC/Meshtastic units in **Admin → System
+devices** (`/admin/devices`), assign them to an event and start a separate system
+collection. Event owners see these automatically assigned units read-only; their
+history stays with the event when the physical unit is reassigned. See
+[system radio devices](docs/specs/system-radio-devices.md).
+For local notification fan-out run `docker compose -f compose.redis.yaml up -d`
+and set the server-only `REDIS_URL`. MariaDB stores the durable status/history.

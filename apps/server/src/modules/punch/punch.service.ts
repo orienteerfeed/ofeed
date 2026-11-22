@@ -1,3 +1,4 @@
+import { sessionWhere, assertRadioFence, type RadioScope } from '../yaroc/yaroc.session.js';
 import type { AppPrismaClient } from '../../db/prisma-client.js';
 import type { Punch, PunchReceipt, ResultStatus } from '../../generated/prisma/client.js';
 import { resolveEffectiveStartMode } from '@repo/shared';
@@ -173,7 +174,7 @@ async function projectCompetitor(
   // Attribute each field to the observation responsible for it.
   for (const change of fieldChanges) {
     const observation =
-      change.type === 'start_time_change' ? startPunch : (finishPunch ?? startPunch);
+      change.type === 'start_time_change' ? startPunch : finishPunch ?? startPunch;
     const receipt = preferredReceipt(observation ?? punches[0]);
     await createCompetitorProtocolEntries(tx, {
       eventId,
@@ -248,8 +249,57 @@ export async function ingestPunches(
 ): Promise<PunchResult[]> {
   if (!auth?.isAuthenticated || auth.type !== 'jwt') throw new AuthzError('User JWT required', 401);
   const { userId } = await requireEventOwnerOrAdmin(client, auth, eventId);
+  return ingestAuthorizedPunches(client, userId!, eventId, input);
+}
+
+export async function ingestYarocPunches(
+  client: AppPrismaClient,
+  eventId: string,
+  owner: string,
+  generation: number,
+  input: PunchBatch,
+  scope: RadioScope = 'event',
+): Promise<PunchResult[]> {
+  const session = await client.yarocSession.findUniqueOrThrow({
+    where: sessionWhere(eventId, scope),
+  });
+  await requireEventOwnerOrAdmin(
+    client,
+    { isAuthenticated: true, type: 'jwt', userId: session.authorId },
+    eventId,
+  );
+  return ingestAuthorizedPunches(client, session.authorId, eventId, input, {
+    owner,
+    generation,
+    scope,
+  });
+}
+async function ingestAuthorizedPunches(
+  client: AppPrismaClient,
+  userId: number,
+  eventId: string,
+  input: PunchBatch,
+  fence?: { owner: string; generation: number; scope?: RadioScope },
+): Promise<PunchResult[]> {
   const batch = punchBatchSchema.parse(input);
   const { results, changes } = await eventPunchTransaction(client, eventId, async (tx) => {
+    if (fence) {
+      const active = await assertRadioFence(
+        tx,
+        eventId,
+        batch.deviceId.replace(/^yaroc:/, ''),
+        fence,
+      );
+      if (
+        fence.scope === 'system' &&
+        batch.punches.some(
+          (punch) =>
+            new Date(punch.punchTime) < active.startedAt ||
+            new Date(punch.punchTime) > new Date(Date.now() + 60_000),
+        )
+      )
+        throw new Error('Punch outside current system collection window');
+    }
     const results: Array<{ clientPunchId: string; punchId: number; duplicate: boolean }> = [];
     let newReceipts = false;
     for (const item of batch.punches) {
@@ -264,7 +314,7 @@ export async function ingestPunches(
         if (
           existing.source !== batch.source ||
           existing.stationSerial !== (item.stationSerial ?? null) ||
-          existing.receivedAt.getTime() !== receivedAt.getTime() ||
+          (!fence && existing.receivedAt.getTime() !== receivedAt.getTime()) ||
           existing.punch.card !== item.card ||
           existing.punch.controlCode !== item.controlCode ||
           existing.punch.punchTime.getTime() !== punchTime.getTime()
