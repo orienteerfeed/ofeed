@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const mockGenerateSettlement = vi.hoisted(() => vi.fn());
+vi.mock('../entry-settlement.service.js', () => ({
+  generateEntrySettlement: mockGenerateSettlement,
+}));
 const mockStoreCompetitor = vi.hoisted(() => vi.fn());
 const mockNotifyEntryOrderReceived = vi.hoisted(() => vi.fn());
 const mockNotifyEntryOrderProcessed = vi.hoisted(() => vi.fn());
@@ -444,6 +448,31 @@ describe('createEntryOrder', () => {
       },
       ORDER_INPUT,
     );
+
+  it('stores normalized optional payer details on new orders', async () => {
+    const payer = {
+      name: '  K.O.B. Choceň  ',
+      street: 'Main 1',
+      city: 'Choceň',
+      postalCode: '56501',
+      country: 'CZ',
+    };
+    prisma.event.findUnique.mockResolvedValue(makeEventRecord());
+    prisma.entry.create.mockResolvedValue(
+      makeStoredEntry({ payerDetails: { ...payer, name: 'K.O.B. Choceň' } }),
+    );
+    const result = await createEntryOrder(
+      prisma as never,
+      { eventId: 'event-1', userId: null, now: NOW },
+      { ...ORDER_INPUT, payerDetails: payer },
+    );
+    expect(prisma.entry.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ payerDetails: { ...payer, name: 'K.O.B. Choceň' } }),
+      }),
+    );
+    expect(result.payerDetails?.name).toBe('K.O.B. Choceň');
+  });
 
   it('creates an order with server-side prices and a payment reference', async () => {
     prisma.event.findUnique.mockResolvedValue(
@@ -1120,6 +1149,31 @@ describe('processEntryOrder', () => {
       expect.objectContaining({ id: 'event-1' }),
     );
   });
+
+  it.each([false, true])(
+    'builds the enabled PDF after commit and keeps processing successful if generation fails=%s',
+    async (fails) => {
+      prisma.entry.findFirst.mockResolvedValue(
+        makeStoredEntry({
+          status: 'APPROVED',
+          event: { ...makeEventRecord(), settlementEnabled: true },
+        }),
+      );
+      prisma.entry.update.mockResolvedValue(makeStoredEntry({ status: 'PROCESSED' }));
+      mockStoreCompetitor.mockResolvedValue({ competitor: { id: 555 } });
+      const pdf = { filename: 'settlement.pdf', content: Buffer.from('%PDF-test') };
+      if (fails) mockGenerateSettlement.mockRejectedValueOnce(new Error('PDF failed'));
+      else mockGenerateSettlement.mockResolvedValueOnce(pdf);
+      const order = await run();
+      expect(order.status).toBe('PROCESSED');
+      expect(mockGenerateSettlement).toHaveBeenCalledWith(prisma, 'event-1', 'entry-1');
+      expect(mockNotifyEntryOrderProcessed).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'entry-1' }),
+        expect.anything(),
+        fails ? null : pdf,
+      );
+    },
+  );
 
   it('skips items already linked to a competitor (idempotent retry)', async () => {
     const entry = makeStoredEntry({ status: 'APPROVED', event: makeEventRecord() }) as {

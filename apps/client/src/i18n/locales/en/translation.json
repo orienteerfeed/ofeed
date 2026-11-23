@@ -2532,5 +2532,30 @@
     "LocalSource": "Registration source unspecified",
     "ConfirmTitle": "Stop following this competitor?",
     "ConfirmDescription": "Stop following {{name}} ({{registration}}) in all events from the same registration source. You can follow them again from the results later."
+  },
+  "Billing": {
+    "Name": "Name / company name",
+    "Street": "Street and number",
+    "City": "City",
+    "PostalCode": "Postal code",
+    "Country": "Country",
+    "CompanyId": "Company ID",
+    "VatId": "VAT ID",
+    "OrganizerTitle": "Organizer details",
+    "PayerTitle": "Payer billing details",
+    "UsePayer": "Enter billing details",
+    "Save": "Save",
+    "Saved": "Details saved",
+    "Failed": "Operation failed",
+    "Invalid": "Enter a name and complete address; the organizer also needs a company ID.",
+    "Loading": "Loading…",
+    "Download": "Download settlement PDF",
+    "AresVerified": "Verified with ARES",
+    "AresLoading": "Searching ARES…",
+    "AresEmpty": "No matching organization found in ARES. You can enter details manually.",
+    "AresFailed": "ARES is currently unavailable. You can enter details manually.",
+    "AresHint": "Search by organization name or enter an eight-digit Czech company ID.",
+    "AresResults": "ARES organizations",
+    "CountriesFailed": "Unable to load countries. Please reload the page."
   }
 }

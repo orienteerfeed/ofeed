@@ -2532,5 +2532,30 @@
     "LocalSource": "Fuente de registro no indicada",
     "ConfirmTitle": "¿Dejar de seguir a este participante?",
     "ConfirmDescription": "Dejarás de seguir a {{name}} ({{registration}}) en todos los eventos de la misma fuente de registro. Puedes volver a seguirlo desde los resultados."
+  },
+  "Billing": {
+    "Name": "Nombre / razón social",
+    "Street": "Calle y número",
+    "City": "Ciudad",
+    "PostalCode": "Código postal",
+    "Country": "País",
+    "CompanyId": "Identificación fiscal",
+    "VatId": "N.º IVA",
+    "OrganizerTitle": "Datos del organizador",
+    "PayerTitle": "Datos de facturación del pagador",
+    "UsePayer": "Introducir datos de facturación",
+    "Save": "Guardar",
+    "Saved": "Datos guardados",
+    "Failed": "La operación ha fallado",
+    "Invalid": "Introduzca nombre y dirección completa; el organizador necesita identificación fiscal.",
+    "Loading": "Cargando…",
+    "Download": "Descargar liquidación PDF",
+    "AresVerified": "Verificado en ARES",
+    "AresLoading": "Buscando en ARES…",
+    "AresEmpty": "No se encontró ninguna organización en ARES. Puede introducir los datos manualmente.",
+    "AresFailed": "ARES no está disponible. Puede introducir los datos manualmente.",
+    "AresHint": "Busque por nombre o introduzca un identificador de empresa checo de ocho dígitos.",
+    "AresResults": "Organizaciones de ARES",
+    "CountriesFailed": "No se pudieron cargar los países. Recargue la página."
   }
 }

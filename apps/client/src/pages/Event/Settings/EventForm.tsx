@@ -1,3 +1,5 @@
+import { getCountryOptions } from '@/lib/countries';
+import { useTranslation } from 'react-i18next';
 import { ButtonWithSpinner } from '@/components/molecules';
 import { Field, type AnyReactFormApi } from '@/components/organisms';
 import { Input, Select } from '@/components/atoms';
@@ -193,6 +195,8 @@ export const EventForm: React.FC<EventFormProps> = ({
   showExternalImportSection = true,
   renderSubmitButton,
 }) => {
+  const { i18n } = useTranslation();
+  const countryLocale = i18n.resolvedLanguage ?? i18n.language;
   const navigate = useNavigate();
   const { post } = useApi();
   const request = useRequest();
@@ -1679,12 +1683,10 @@ export const EventForm: React.FC<EventFormProps> = ({
             placeholder={t('Pages.Event.Form.Placeholders.Country')}
             disabled={countriesLoading}
             className="w-full"
-            options={
-              countriesData?.countries?.map(country => ({
-                value: country.countryCode,
-                label: country.countryName,
-              })) || []
-            }
+            options={getCountryOptions(
+              countriesData?.countries ?? [],
+              countryLocale
+            )}
             validate={validateCountry}
           />
         </div>

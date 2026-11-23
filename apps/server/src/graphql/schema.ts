@@ -13,6 +13,7 @@ import '../modules/class/class.graphql.js';
 import '../modules/sport/sport.graphql.js';
 import '../modules/team/team.graphql.js';
 import '../modules/event/event.graphql.js';
+import '../modules/event/event-settlement.graphql.js';
 import '../modules/event/event-services.graphql.js';
 import '../modules/event/event-payment-methods.graphql.js';
 import '../modules/event/event-rental-cards.graphql.js';

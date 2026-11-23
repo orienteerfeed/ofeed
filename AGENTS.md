@@ -118,7 +118,15 @@ Details: [conventions](docs/dev/conventions.md),
   release semantics must update `.releaserc.json`,
   `.github/workflows/release.yaml` and README.
 - Respect tool-specific permission settings, including `.claude/settings.json`.
-  These docs do not authorize git mutation, deployment or external publication.
+  Agents may branch, commit, push feature branches, open/update/merge PRs and
+  run local Docker Compose as allowed there. Never push or force-push to
+  `main`/`develop`, bypass branch protection, deploy, or publish releases.
+- Parallel agents/worktrees (`claude --worktree`, subagent
+  `isolation: worktree`) live in `.claude/worktrees/` and branch from the
+  current `HEAD`; app `.env` files are copied via `.worktreeinclude`. Run
+  `pnpm install` first in a new worktree. All worktrees share the single `mysql`
+  container (port 3306): do not start a second DB, and coordinate Prisma
+  migrations across worktrees.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

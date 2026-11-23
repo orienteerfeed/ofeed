@@ -32,6 +32,15 @@ and this project adheres to
 
 ### Added
 
+- Organizer lookup and verification through ARES, country-directory selection
+  and simplified settlement settings. Saving complete organizer details automatically
+  enables settlement PDFs without a separate checkbox. Organizer name/autocomplete
+  comes first, followed by IČO. Country selection uses the shared form select with consistent localized
+  country names in event parameters and billing details.
+
+- Configure event organizer company and payer billing details; download current
+  settlement PDFs for processed entries and attach them to processing confirmation emails.
+
 - Admin-managed system radio inventory with reusable event assignments, independent
   system reception, preserved event history and read-only owner visibility. Refs #435.
 

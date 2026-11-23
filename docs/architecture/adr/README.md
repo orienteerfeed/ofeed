@@ -32,3 +32,7 @@ inventing approvers. Link replacement records in both directions.
 - [0012](0012-competitor-favorite-notifications.md): proposed event-scoped favorites and transactional result notifications.
 - [0013](0013-registration-follows.md): proposed cross-event registration follows with profile management and pause state.
 - [0014](0014-system-radio-devices.md): proposed system radio inventory, assignment history and isolated collection scopes.
+
+- [0015](0015-entry-settlement-pdf.md): proposed current server-generated entry settlement PDFs.
+
+- [0016](0016-organizer-ares-lookup.md): proposed server-owned organizer ARES lookup and verification.

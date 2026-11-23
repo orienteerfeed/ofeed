@@ -2536,5 +2536,30 @@
     "LocalSource": "Zdroj registrace neuveden",
     "ConfirmTitle": "Zrušit sledování závodníka?",
     "ConfirmDescription": "Přestanete sledovat {{name}} ({{registration}}) ve všech závodech ze stejného zdroje registrace. Později ho můžete znovu přidat ve výsledcích."
+  },
+  "Billing": {
+    "Name": "Název / jméno",
+    "Street": "Ulice a číslo",
+    "City": "Obec",
+    "PostalCode": "PSČ",
+    "Country": "Země",
+    "CompanyId": "IČO",
+    "VatId": "DIČ",
+    "OrganizerTitle": "Údaje organizátora",
+    "PayerTitle": "Fakturační údaje plátce",
+    "UsePayer": "Vyplnit fakturační údaje",
+    "Save": "Uložit",
+    "Saved": "Údaje uloženy",
+    "Failed": "Operace se nezdařila",
+    "Invalid": "Vyplňte název a úplnou adresu; pořadatel musí mít také IČO.",
+    "Loading": "Načítání…",
+    "Download": "Stáhnout vyúčtování v PDF",
+    "AresVerified": "Ověřeno z ARES",
+    "AresLoading": "Vyhledávání v ARES…",
+    "AresEmpty": "V ARES nebyl nalezen žádný subjekt. Údaje můžete vyplnit ručně.",
+    "AresFailed": "ARES je momentálně nedostupný. Údaje můžete vyplnit ručně.",
+    "AresHint": "Vyhledejte pořadatele podle názvu nebo zadejte osmimístné IČO.",
+    "AresResults": "Subjekty z ARES",
+    "CountriesFailed": "Číselník zemí se nepodařilo načíst. Zkuste stránku obnovit."
   }
 }

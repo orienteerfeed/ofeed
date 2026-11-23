@@ -1663,5 +1663,30 @@
     "LocalSource": "Source d’inscription non précisée",
     "ConfirmTitle": "Ne plus suivre ce participant ?",
     "ConfirmDescription": "Vous ne suivrez plus {{name}} ({{registration}}) dans les courses de la même source d’inscription. Vous pourrez le suivre à nouveau depuis les résultats."
+  },
+  "Billing": {
+    "Name": "Nom / raison sociale",
+    "Street": "Rue et numéro",
+    "City": "Ville",
+    "PostalCode": "Code postal",
+    "Country": "Pays",
+    "CompanyId": "Numéro d’entreprise",
+    "VatId": "N° de TVA",
+    "OrganizerTitle": "Coordonnées de l’organisateur",
+    "PayerTitle": "Coordonnées de facturation du payeur",
+    "UsePayer": "Saisir les coordonnées de facturation",
+    "Save": "Enregistrer",
+    "Saved": "Coordonnées enregistrées",
+    "Failed": "Échec de l’opération",
+    "Invalid": "Saisissez un nom et une adresse complète ; l’organisateur doit aussi avoir un numéro d’entreprise.",
+    "Loading": "Chargement…",
+    "Download": "Télécharger le décompte PDF",
+    "AresVerified": "Vérifié dans ARES",
+    "AresLoading": "Recherche dans ARES…",
+    "AresEmpty": "Aucune organisation trouvée dans ARES. Vous pouvez saisir les coordonnées manuellement.",
+    "AresFailed": "ARES est actuellement indisponible. Vous pouvez saisir les coordonnées manuellement.",
+    "AresHint": "Recherchez par nom ou saisissez un identifiant d’entreprise tchèque à huit chiffres.",
+    "AresResults": "Organisations ARES",
+    "CountriesFailed": "Impossible de charger les pays. Veuillez recharger la page."
   }
 }

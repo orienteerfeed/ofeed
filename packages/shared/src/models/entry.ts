@@ -1,3 +1,4 @@
+import { billingDetailsSchema } from './billing-details.js';
 import { promoCodeSchema } from './promo-code.js';
 import { z } from 'zod';
 import { registrationFeeDiscountsSchema } from './registration-fee-discount.js';
@@ -195,6 +196,7 @@ export const priceAdjustmentReasonSchema = z.string().trim().min(1).max(191);
 export const createEntryOrderInputSchema = z
   .object({
     promoCode: promoCodeSchema.optional(),
+    payerDetails: billingDetailsSchema.nullable().optional(),
     contactEmail: z.string().trim().email().max(254),
     contactFirstname: z.string().trim().min(1).max(191),
     contactLastname: z.string().trim().min(1).max(191),
@@ -279,6 +281,7 @@ export const entryOrderSchema = z.object({
   paymentMethod: paymentMethodTypeSchema.nullable(),
   paymentReference: z.string(),
   userId: z.number().int().nullable(),
+  payerDetails: billingDetailsSchema.nullable().optional(),
   contactEmail: z.string(),
   contactFirstname: z.string(),
   contactLastname: z.string(),

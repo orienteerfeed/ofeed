@@ -44,54 +44,180 @@
       "Write(./apps/**)",
       "Write(./packages/**)",
       "Edit(./apps/**)",
-      "Edit(./packages/**)"
+      "Edit(./packages/**)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git restore *)",
+      "Bash(git stash *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git revert *)",
+      "Bash(git remote -v)",
+      "Bash(git remote show *)",
+      "Bash(git worktree *)",
+      "Bash(git mv *)",
+      "Bash(git rm *)",
+      "Bash(git reset --soft *)",
+      "Bash(git reset HEAD *)",
+      "Bash(gh pr *)",
+      "Bash(gh issue *)",
+      "Bash(gh run *)",
+      "Bash(gh workflow view *)",
+      "Bash(gh workflow list *)",
+      "Bash(gh repo view *)",
+      "Bash(gh auth status *)",
+      "Bash(gh label list *)",
+      "Bash(gh search *)",
+      "Bash(gh api *)",
+      "Bash(docker compose *)",
+      "Bash(docker ps *)",
+      "Bash(docker logs *)",
+      "Bash(docker build *)",
+      "Bash(docker exec *)",
+      "Bash(docker inspect *)",
+      "Bash(docker images *)",
+      "Bash(docker image ls *)",
+      "Bash(docker stats *)",
+      "Bash(docker pull *)",
+      "Bash(docker run *)",
+      "Bash(docker stop *)",
+      "Bash(docker start *)",
+      "Bash(docker restart *)",
+      "Bash(docker *)",
+      "Bash(docker-compose *)",
+      "Bash(pnpm prisma migrate dev:*)",
+      "Bash(pnpm db:*)",
+      "Bash(pnpm type-check*)",
+      "Bash(pnpm --filter * exec prisma *)",
+      "Bash(node *)",
+      "Bash(npx vitest *)",
+      "Bash(corepack *)",
+      "Bash(make *)",
+      "Edit(./package.json)",
+      "Edit(./pnpm-workspace.yaml)",
+      "Edit(./turbo.json)",
+      "Edit(./docs/**)",
+      "Write(./docs/**)",
+      "Edit(./deploy/**)",
+      "Write(./deploy/**)",
+      "Edit(./.claude/hooks/**)",
+      "Edit(./CHANGELOG.md)",
+      "Edit(./README.md)",
+      "Read(./**/.env.example*)",
+      "Edit(./**/.env.example*)",
+      "Write(./**/.env.example*)"
     ],
     "ask": [
-      "Bash(pnpm prisma migrate dev:*)",
       "Bash(pnpm prisma migrate deploy)",
       "Bash(pnpm prisma migrate reset:*)",
       "Bash(pnpm publish:*)",
       "Bash(npm publish:*)",
       "Write(./.github/**)",
       "Edit(./.github/**)",
-      "Edit(./pnpm-workspace.yaml)",
-      "Edit(./package.json)"
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git branch -D *)",
+      "Bash(git tag *)",
+      "Bash(gh workflow run *)",
+      "Bash(gh api -X DELETE *)",
+      "Bash(gh api --method DELETE *)",
+      "Bash(docker compose down -v*)",
+      "Bash(docker compose down * -v*)",
+      "Bash(docker volume rm *)",
+      "Bash(docker volume prune *)",
+      "Bash(docker system prune *)",
+      "Bash(docker push *)"
     ],
     "deny": [
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git pull:*)",
-      "Bash(git merge:*)",
-      "Bash(git rebase:*)",
-      "Bash(git reset:*)",
-      "Bash(git checkout:*)",
-      "Bash(git switch:*)",
-      "Bash(git stash:*)",
-      "Bash(git tag:*)",
-      "Bash(git remote:*)",
-      "Bash(git clean:*)",
-      "Bash(git cherry-pick:*)",
-      "Bash(git revert:*)",
-      "Bash(git submodule:*)",
       "Bash(kubectl delete *)",
       "Bash(DROP DATABASE:*)",
       "Bash(DROP TABLE:*)",
-      "Read(.env)",
-      "Read(.env.*)",
       "Read(./secrets/**)",
-      "mcp__github"
+      "mcp__github",
+      "Bash(git push --force *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push -f *)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f *)",
+      "Bash(git push * -f)",
+      "Bash(git push --mirror *)",
+      "Bash(git push * --delete *)",
+      "Bash(git push origin main*)",
+      "Bash(git push origin HEAD:main*)",
+      "Bash(git push * main)",
+      "Bash(git push origin develop*)",
+      "Bash(git push origin HEAD:develop*)",
+      "Bash(git push * develop)",
+      "Bash(git filter-branch *)",
+      "Bash(git remote add *)",
+      "Bash(git remote set-url *)",
+      "Bash(git remote remove *)",
+      "Bash(git config --global *)",
+      "Bash(gh pr merge * --admin*)",
+      "Bash(gh repo delete *)",
+      "Bash(gh repo edit *)",
+      "Bash(gh secret *)",
+      "Bash(gh variable *)",
+      "Bash(gh release *)",
+      "Bash(gh ruleset *)",
+      "Bash(gh auth login *)",
+      "Bash(gh auth logout *)",
+      "Bash(gh auth token *)",
+      "Read(./**/.env)",
+      "Read(./**/.env.local)",
+      "Read(./**/.env.*.local)",
+      "Read(./**/.env.production)",
+      "Read(./**/.env.development)",
+      "Read(./**/.env.test)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Edit(./**/.env)",
+      "Edit(./**/.env.local)",
+      "Edit(./**/.env.*.local)",
+      "Edit(./**/.env.production)",
+      "Edit(./**/.env.development)",
+      "Edit(./**/.env.test)",
+      "Edit(./**/*.pem)",
+      "Edit(./**/*.key)",
+      "Write(./**/.env)",
+      "Write(./**/.env.local)",
+      "Write(./**/.env.*.local)",
+      "Write(./**/.env.production)",
+      "Write(./**/.env.development)",
+      "Write(./**/.env.test)",
+      "Write(./**/*.pem)",
+      "Write(./**/*.key)",
+      "Bash(cat *.env)",
+      "Bash(cat */.env)",
+      "Bash(printenv*)"
     ],
     "additionalDirectories": []
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Branch: $(git branch --show-current 2>/dev/null). Uncommitted files: $(git status --porcelain 2>/dev/null | wc -l | tr -d ' ').\""
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.command' | grep -qE '\\b(npm install|yarn add|yarn install|bun install)\\b' && { echo 'Use pnpm, not npm/yarn/bun'; exit 2; } || exit 0"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pnpm-only.sh",
+            "timeout": 10
           }
         ]
       }
@@ -102,35 +228,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"$CLAUDE_FILE_PATHS\" | tr ' ' '\\n' | grep -E '\\.(ts|tsx|js|jsx|mjs|cjs|json|md|css)$' | xargs -r pnpm exec prettier --write --ignore-unknown 2>/dev/null || true"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"$CLAUDE_FILE_PATHS\" | tr ' ' '\\n' | grep -E '\\.(ts|tsx)$' | xargs -r pnpm exec eslint --fix --no-warn-ignored 2>&1 | tail -20 || true"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"$CLAUDE_FILE_PATHS\" | grep -q 'schema\\.prisma$' && pnpm --filter @repo/db prisma format && pnpm --filter @repo/db prisma validate || true"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"{\\\"additionalContext\\\": \\\"Branch: $(git branch --show-current 2>/dev/null). Status: $(git status --porcelain | wc -l | tr -d ' ') changed files.\\\"}\""
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-edit.sh",
+            "timeout": 120
           }
         ]
       }
@@ -140,7 +239,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm typecheck 2>&1 | tail -5 || true"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-type-check.sh",
+            "timeout": 600
           }
         ]
       }
@@ -149,5 +249,8 @@
   "env": {
     "NODE_ENV": "development",
     "DISABLE_TELEMETRY": "1"
+  },
+  "worktree": {
+    "baseRef": "head"
   }
 }

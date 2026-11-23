@@ -1,0 +1,4 @@
+# Gitignored files Claude Code copies into every new worktree (.gitignore syntax).
+apps/client/.env
+apps/server/.env
+apps/board/.env

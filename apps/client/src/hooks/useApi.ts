@@ -165,7 +165,21 @@ export const useApi = () => {
     return result;
   };
 
+  const getBlob = async (
+    endpoint: string,
+    options?: { skipAuth?: boolean }
+  ): Promise<Blob> => {
+    const response = await fetch(`${config.BASE_API_URL}${endpoint}`, {
+      headers: createHeaders(options?.skipAuth),
+    });
+    if (!response.ok) {
+      await handleResponse(response);
+      throw new Error('Download failed');
+    }
+    return response.blob();
+  };
   return {
+    getBlob,
     get,
     post,
     put,

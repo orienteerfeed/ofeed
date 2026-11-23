@@ -1,3 +1,6 @@
+import { billingDetailsSchema } from '@repo/shared';
+import { BillingDetailsInputRef } from './billing.graphql-types.js';
+import { updateEntryPayerDetails } from './entry-billing.service.js';
 import { GraphQLError } from 'graphql';
 import { ConflictError } from '../../exceptions/index.js';
 import { builder } from '../../graphql/builder.js';
@@ -35,6 +38,7 @@ const EntryOrderUpdateItemInputRef = builder.inputType('EntryOrderUpdateItemInpu
 });
 const EntryOrderUpdateInputRef = builder.inputType('EntryOrderUpdateInput', {
   fields: (t) => ({
+    payerDetails: t.field({ type: BillingDetailsInputRef }),
     contactEmail: t.string({ required: true }),
     contactFirstname: t.string({ required: true }),
     contactLastname: t.string({ required: true }),
@@ -110,6 +114,28 @@ builder.queryFields((t) => ({
 }));
 
 builder.mutationFields((t) => ({
+  entryOrderPayerUpdate: t.prismaField({
+    type: EntryRef,
+    args: {
+      entryId: t.arg.string({ required: true }),
+      payer: t.arg({ type: BillingDetailsInputRef }),
+    },
+    resolve: async (query, _root, args, context) => {
+      await updateEntryPayerDetails(
+        context.prisma,
+        context.auth,
+        args.entryId,
+        args.payer
+          ? {
+              ...args.payer,
+              companyId: args.payer.companyId ?? undefined,
+              vatId: args.payer.vatId ?? undefined,
+            }
+          : null,
+      );
+      return context.prisma.entry.findUniqueOrThrow({ ...query, where: { id: args.entryId } });
+    },
+  }),
   entryOrderUpdate: t.prismaField({
     type: EntryRef,
     args: {
@@ -119,6 +145,17 @@ builder.mutationFields((t) => ({
     resolve: async (query, _root, args, context) => {
       await updateEntryOrderForGraphQL(context.prisma, context.auth, {
         entryId: args.entryId,
+        ...(args.input.payerDetails === undefined
+          ? {}
+          : {
+              payerDetails: args.input.payerDetails
+                ? billingDetailsSchema.parse({
+                    ...args.input.payerDetails,
+                    companyId: args.input.payerDetails.companyId ?? undefined,
+                    vatId: args.input.payerDetails.vatId ?? undefined,
+                  })
+                : null,
+            }),
         contactEmail: args.input.contactEmail,
         contactFirstname: args.input.contactFirstname,
         contactLastname: args.input.contactLastname,

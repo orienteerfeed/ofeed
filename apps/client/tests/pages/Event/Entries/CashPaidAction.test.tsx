@@ -66,6 +66,9 @@ vi.mock('@/pages/Event/Entries/entries.hooks', () => ({
     refetch: state.refetchPayments,
   }),
 }));
+vi.mock('@/pages/Event/Entries/EntryPayerCard', () => ({
+  EntryPayerCard: () => null,
+}));
 vi.mock('@/pages/Event/Entries/EntryPaymentLedger', () => ({
   EntryPaymentLedger: () => null,
 }));

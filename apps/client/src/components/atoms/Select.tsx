@@ -18,6 +18,7 @@ export type SelectProps = Omit<
   React.ComponentPropsWithoutRef<typeof ShadSelect>,
   'children' | 'value' | 'onValueChange' | 'defaultValue'
 > & {
+  id?: string;
   value?: string;
   onValueChange?: (value: string) => void;
   options?: SelectOption[];
@@ -32,6 +33,7 @@ export type SelectProps = Omit<
 export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
   (
     {
+      id,
       value,
       onValueChange,
       options = [],
@@ -52,6 +54,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
         {...(disabled !== undefined ? { disabled } : {})}
       >
         <SelectTrigger
+          id={id}
           ref={ref}
           className={cn(className)}
           {...(disabled !== undefined ? { disabled } : {})}

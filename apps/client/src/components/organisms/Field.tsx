@@ -4,7 +4,11 @@ import {
   useField,
 } from '@tanstack/react-form';
 import React from 'react';
-import { type CheckboxProps, type InputProps, type SelectProps } from '../atoms';
+import {
+  type CheckboxProps,
+  type InputProps,
+  type SelectProps,
+} from '../atoms';
 import {
   InputWithHelper,
   type CommonProps,
@@ -28,27 +32,34 @@ export type AnyReactFormApi<TFormData = unknown> = ReactFormExtendedApi<
 >;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+// Preserve select/checkbox-specific props when omitting the form binding.
+type FieldControlProps<T> = T extends unknown
+  ? Omit<T, 'name' | 'form'>
+  : never;
+
 export type FieldProps<TFormData = unknown> = {
   name: string;
   validate?: (value: string) => string | undefined;
   form: AnyReactFormApi<TFormData>;
-} & Omit<InputWithHelperProps, 'name' | 'form'>;
+} & FieldControlProps<InputWithHelperProps>;
 
 export const Field = <TFormData,>(
   props: FieldProps<TFormData>
 ): React.JSX.Element => {
   const { name, validate, type = 'text', form, ...inputProps } = props;
   const [localError, setLocalError] = React.useState<string | undefined>();
-  const validationTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
+  const validationTimeoutRef = React.useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   // Use the field without explicit typing UseFieldOptions
   const field = useField({
     name,
     form,
     validators: {
-      onBlur: validate ? ({ value }) => validate(String(value ?? '')) : undefined,
+      onBlur: validate
+        ? ({ value }) => validate(String(value ?? ''))
+        : undefined,
     },
   });
 
@@ -171,9 +182,7 @@ export const Field = <TFormData,>(
       error: displayError,
       ...checkboxProps,
     } as unknown as InputWithHelperProps;
-    return (
-      <InputWithHelper {...checkboxFieldProps} />
-    );
+    return <InputWithHelper {...checkboxFieldProps} />;
   }
 
   const inputPropsTyped = inputProps as Omit<

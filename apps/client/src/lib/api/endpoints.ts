@@ -29,6 +29,9 @@ interface PaginationParams extends QueryParams {
 
 // Strongly-typed route builders
 export const ENDPOINTS = {
+  entrySettlement: (eventId: string, entryId: string, access?: string) =>
+    `${apiPrefix}/events/${encodeURIComponent(eventId)}/entries/${encodeURIComponent(entryId)}/settlement.pdf${qs({ access })}`,
+
   // Auth endpoints
   signIn: (): string => `${apiPrefix}/auth/signin`,
   signUp: (): string => `${apiPrefix}/auth/signup`,

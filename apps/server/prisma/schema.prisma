@@ -345,6 +345,8 @@ model Currency {
 }
 
 model Event {
+  settlementEnabled            Boolean                        @default(false)
+  organizerDetails             Json?
   yarocSettings                Json?
   liveDevices                  LiveDevice[]
   liveMonitoring               LiveMonitoring?
@@ -532,6 +534,7 @@ model PromoCode {
 // entry shop. Competitors are propagated into `Competitor` only after the
 // order is approved and processed (see EntryItem.competitorId).
 model Entry {
+  payerDetails          Json?
   promoCodeId           String?
   appliedPromoCode      PromoCode?              @relation(fields: [eventId, promoCodeId], references: [eventId, id])
   promoCode             String?                 @db.VarChar(40)

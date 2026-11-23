@@ -253,3 +253,33 @@ describe('entry email notifications', () => {
     expect(sendEmailMock.mock.calls[0]![0].text).not.toContain('Číslo účtu:');
   });
 });
+
+describe('processed settlement attachment', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    ejsMock.renderFile.mockResolvedValue('<html>processed</html>');
+  });
+  it('attaches the generated PDF with a regular attachment MIME type', async () => {
+    await notifyEntryOrderProcessed(order, event, {
+      filename: 'vyuctovani-123.pdf',
+      content: Buffer.from('%PDF-test'),
+    });
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: [
+          {
+            filename: 'vyuctovani-123.pdf',
+            content: Buffer.from('%PDF-test').toString('base64'),
+            contentType: 'application/pdf',
+          },
+        ],
+      }),
+    );
+  });
+  it('still sends confirmation and detail link when PDF generation failed', async () => {
+    await notifyEntryOrderProcessed(order, event, null);
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('nepodařilo přiložit') }),
+    );
+  });
+});

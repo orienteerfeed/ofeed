@@ -279,3 +279,4 @@ mysql-data/
 # Keep configuration files
 !.vscode/settings.json.example
 !.vscode/extensions.json
+.claude/worktrees/

@@ -1,6 +1,8 @@
 import type { CreateTransaction } from '../idempotency/create-idempotency.js';
 import { enqueueUserNotification } from '../notifications/notifications.write.js';
 import crypto from 'node:crypto';
+import { billingDetailsSchema } from '@repo/shared';
+import { Prisma as PrismaValues } from '../../generated/prisma/client.js';
 
 import {
   PAYMENT_REFERENCE_RANDOM_LENGTH,
@@ -49,6 +51,8 @@ import {
   createEntryPaymentInTransaction,
 } from './entry-payment-write.js';
 import { createEntryOrderAccessToken } from './entry-public-access.js';
+import { generateEntrySettlement } from './entry-settlement.service.js';
+import { logger } from '../../lib/logging.js';
 import { notifyEntryOrderProcessed, notifyEntryOrderReceived } from './entry.email.js';
 
 const ACTIVE_UNPROCESSED_ENTRY_STATUSES: EntryStatus[] = ['RECEIVED', 'APPROVED'];
@@ -307,6 +311,7 @@ type EntryWithItems = {
   paymentMethod: string | null;
   paymentReference: string;
   userId: number | null;
+  payerDetails?: unknown;
   contactEmail: string;
   contactFirstname: string;
   contactLastname: string;
@@ -352,6 +357,8 @@ export function serializeEntryOrder(entry: EntryWithItems) {
     paymentMethod: entry.paymentMethod,
     paymentReference: entry.paymentReference,
     userId: entry.userId,
+    payerDetails:
+      entry.payerDetails == null ? null : billingDetailsSchema.parse(entry.payerDetails),
     contactEmail: entry.contactEmail,
     contactFirstname: entry.contactFirstname,
     contactLastname: entry.contactLastname,
@@ -701,6 +708,9 @@ export async function createEntryOrder(
           paymentMethod: input.paymentMethod,
           paymentReference,
           userId,
+          ...(input.payerDetails == null
+            ? {}
+            : { payerDetails: billingDetailsSchema.parse(input.payerDetails) }),
           contactEmail: input.contactEmail,
           contactFirstname: input.contactFirstname,
           contactLastname: input.contactLastname,
@@ -1013,6 +1023,9 @@ async function updateEntryOrderInTransaction(
   await prisma.entry.update({
     where: { id: input.entryId },
     data: {
+      ...(input.payerDetails === undefined
+        ? {}
+        : { payerDetails: parsed.data.payerDetails ?? PrismaValues.DbNull }),
       contactEmail: input.contactEmail,
       contactFirstname: input.contactFirstname,
       contactLastname: input.contactLastname,
@@ -1233,7 +1246,7 @@ export async function processEntryOrder(
   let effects: CreateTransaction['afterCommit'] = [];
   const result = await eventPunchTransaction(prisma, input.eventId, async (tx) => {
     effects = [];
-    return processEntryOrderInTransaction(tx, input, { tx, afterCommit: effects });
+    return processEntryOrderInTransaction(tx, input, { tx, afterCommit: effects }, prisma);
   });
   for (const effect of effects) await effect();
   return result;
@@ -1243,6 +1256,7 @@ async function processEntryOrderInTransaction(
   prisma: Prisma.TransactionClient,
   input: ProcessEntryOrderInput,
   transaction: CreateTransaction,
+  appPrisma: AppPrismaClient,
 ): Promise<SerializedEntryOrder> {
   const entry = await prisma.entry.findFirst({
     where: { id: input.entryId, eventId: input.eventId },
@@ -1250,6 +1264,7 @@ async function processEntryOrderInTransaction(
       items: true,
       event: {
         select: {
+          settlementEnabled: true,
           id: true,
           name: true,
           date: true,
@@ -1310,7 +1325,20 @@ async function processEntryOrderInTransaction(
     include: entryInclude,
   });
   const serialized = serializeEntryOrder(processed);
-  transaction.afterCommit.push(() => {
+  transaction.afterCommit.push(async () => {
+    let settlement: Awaited<ReturnType<typeof generateEntrySettlement>> | null | undefined;
+    if (entry.event.settlementEnabled) {
+      try {
+        settlement = await generateEntrySettlement(appPrisma, input.eventId, entry.id);
+      } catch (error) {
+        settlement = null;
+        logger.error('Failed to generate entry settlement PDF', {
+          action: 'entry-settlement-pdf',
+          entryId: entry.id,
+          error,
+        });
+      }
+    }
     void notifyEntryOrderProcessed(
       {
         ...serialized,
@@ -1320,6 +1348,7 @@ async function processEntryOrderInTransaction(
         ),
       },
       entry.event,
+      ...(settlement === undefined ? [] : [settlement]),
     );
   });
   return serialized;
