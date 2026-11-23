@@ -61,6 +61,64 @@ jobs:
       - name: Build
         run: pnpm build
 
+  migrations:
+    name: Migrations (MariaDB ${{ matrix.mariadb }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # The LTS line is the supported baseline and blocks the workflow. The latest
+    # release is an early warning and must not block unrelated changes.
+    continue-on-error: ${{ matrix.mariadb == 'latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        mariadb: ["11.4", "latest"]
+
+    services:
+      mariadb:
+        image: mariadb:${{ matrix.mariadb }}
+        env:
+          # Disposable service container without data; no credentials needed.
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "1"
+          MARIADB_DATABASE: ofeed
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: mysql://root@127.0.0.1:3306/ofeed
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply all migrations
+        run: pnpm --filter ./apps/server exec prisma migrate deploy
+
+      - name: Check schema drift against schema.prisma
+        run: >-
+          pnpm --filter ./apps/server exec prisma migrate diff
+          --from-config-datasource
+          --to-schema prisma/schema.prisma
+          --exit-code
+
   deployment-contract:
     name: Validate deployment contract
     runs-on: ubuntu-24.04

@@ -10,6 +10,13 @@ and this project adheres to
 
 ### Fixed
 
+- Run the local development database on MariaDB 11.4 (LTS) in a named Docker
+  volume instead of `mysql:latest` with a host bind mount, which failed
+  migrations on current MySQL (`MD5()` missing) and on case-insensitive macOS
+  and Windows file systems. Existing `./mysql-data` contents are not migrated.
+  CI now applies all migrations and checks schema drift on MariaDB 11.4 and
+  `mariadb:latest`.
+
 - Upgrade optional YAROC reception to 0.1.4 with a working main package loader,
   macOS ARM64 binaries and corrected MQTT timezone offsets. Keep DST-crossing
   sessions blocked until IANA-aware decoding is supported upstream. Refs #435.

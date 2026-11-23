@@ -1,20 +1,28 @@
 services:
   mysql:
     env_file: ./apps/server/.env
-    image: mysql:latest
+    # Pinned to the MariaDB LTS line used by integration tests. CI also checks
+    # migrations against mariadb:latest. MySQL is not supported.
+    image: mariadb:11.4
     container_name: mysql
     restart: unless-stopped
     ports:
       - "3306:3306"
+    # Named volume instead of a bind mount: macOS/Windows host file systems are
+    # case-insensitive, which makes MariaDB switch to lower_case_table_names=2
+    # and breaks migrations that reference `Event`, `Competitor`, ...
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+volumes:
+  mysql-data:
 
 networks:
   app-network:

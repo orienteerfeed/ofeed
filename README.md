@@ -115,7 +115,8 @@ pnpm setup:dev
 - creates `apps/client/.env` from `apps/client/.env.example` (if missing)
 - creates `apps/board/.env` from `apps/board/.env.example` (if missing)
 
-Then run:
+Fill the empty `MYSQL_*` values in `apps/server/.env` (local-only credentials;
+`DATABASE_URL` may stay empty and is derived from them), then run:
 
 ```bash
 docker compose -f compose.mysql.yaml up -d mysql
@@ -301,7 +302,7 @@ because `pnpm-workspace.yaml` declares patched dependencies even for filtered in
 
 Available compose overlays:
 
-- `compose.mysql.yaml` - local MySQL/MariaDB-compatible DB
+- `compose.mysql.yaml` - local MariaDB 11.4 (LTS) database in a named volume
 - `compose.minio.yaml` - local MinIO + init
 - `compose.traefik.yaml` - Traefik labels/integration
 - `compose.scaled.yaml` - static replicas for api/frontend
