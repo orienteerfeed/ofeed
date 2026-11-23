@@ -60,6 +60,8 @@ Start with the [documentation index](docs/README.md) for product scope,
 architecture decisions, feature specs, API contracts, development and operations.
 Agents start at [AGENTS.md](AGENTS.md); Claude Code imports the same entry point
 through [CLAUDE.md](CLAUDE.md).
+See [autonomous development](docs/dev/autonomous-development.md) for Git/GitHub
+permissions, worktrees and the remaining approval boundaries.
 
 ## Repository Layout
 

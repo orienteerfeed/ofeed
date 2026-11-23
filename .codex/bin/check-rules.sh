@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
 
-GIT_RULES=".codex/rules/git.readonly.rules"
-GH_RULES=".codex/rules/github.prompt.rules"
+GIT_RULES=".codex/rules/git.development.rules"
+GH_RULES=".codex/rules/github.development.rules"
 GL_RULES=".codex/rules/gitlab.prompt.rules"
 
 for cmd in codex node; do
@@ -93,47 +93,47 @@ assert_decision() {
   echo "PASS: $label -> $actual"
 }
 
-echo "Checking git.readonly.rules ..."
+echo "Checking git.development.rules ..."
 assert_decision allow     "git status"                 git status
 assert_decision allow     "git log"                    git log --oneline -n 5
 assert_decision allow     "git diff"                   git diff --stat
-assert_decision forbidden "git commit"                 git commit -m test
-assert_decision forbidden "git push"                   git push
-assert_decision forbidden "git fetch"                  git fetch
-assert_decision forbidden "git help"                   git help
+assert_decision allow "git commit"                 git commit -m test
+assert_decision allow "git push"                   git push
+assert_decision allow "git fetch"                  git fetch
+assert_decision allow "git help"                   git help
 
 echo
-echo "Checking github.prompt.rules ..."
-assert_decision prompt    "gh issue list"              gh issue list
-assert_decision prompt    "gh issue view"              gh issue view 123
-assert_decision prompt    "gh issue status"            gh issue status
-assert_decision prompt    "gh pr list"                 gh pr list
-assert_decision prompt    "gh pr view"                 gh pr view 123
-assert_decision prompt    "gh pr status"               gh pr status
-assert_decision prompt    "gh pr checks"               gh pr checks 123
-assert_decision prompt    "gh project list"            gh project list --owner acme
-assert_decision prompt    "gh project view"            gh project view 7 --owner acme
-assert_decision prompt    "gh project item-list"       gh project item-list 7 --owner acme
-assert_decision prompt    "gh workflow list"           gh workflow list
-assert_decision prompt    "gh workflow view"           gh workflow view ci.yml
-assert_decision prompt    "gh run list"                gh run list
-assert_decision prompt    "gh run view"                gh run view 123
-assert_decision prompt    "gh repo view"               gh repo view
-assert_decision prompt    "gh repo list"               gh repo list openai
-assert_decision prompt    "gh status"                  gh status
+echo "Checking github.development.rules ..."
+assert_decision allow    "gh issue list"              gh issue list
+assert_decision allow    "gh issue view"              gh issue view 123
+assert_decision allow    "gh issue status"            gh issue status
+assert_decision allow    "gh pr list"                 gh pr list
+assert_decision allow    "gh pr view"                 gh pr view 123
+assert_decision allow    "gh pr status"               gh pr status
+assert_decision allow    "gh pr checks"               gh pr checks 123
+assert_decision allow    "gh project list"            gh project list --owner acme
+assert_decision allow    "gh project view"            gh project view 7 --owner acme
+assert_decision allow     "gh project item-list"       gh project item-list 7 --owner acme
+assert_decision allow    "gh workflow list"           gh workflow list
+assert_decision allow    "gh workflow view"           gh workflow view ci.yml
+assert_decision allow    "gh run list"                gh run list
+assert_decision allow    "gh run view"                gh run view 123
+assert_decision allow    "gh repo view"               gh repo view
+assert_decision allow    "gh repo list"               gh repo list openai
+assert_decision allow    "gh status"                  gh status
 
-assert_decision forbidden "gh issue create"            gh issue create
-assert_decision forbidden "gh issue edit"              gh issue edit 123
-assert_decision forbidden "gh issue close"             gh issue close 123
-assert_decision forbidden "gh pr create"               gh pr create
-assert_decision forbidden "gh pr merge"                gh pr merge 123
-assert_decision forbidden "gh pr review"               gh pr review 123 --approve
-assert_decision forbidden "gh pr checkout"             gh pr checkout 123
-assert_decision forbidden "gh workflow run"            gh workflow run ci.yml
-assert_decision forbidden "gh workflow enable"         gh workflow enable ci.yml
-assert_decision forbidden "gh workflow disable"        gh workflow disable ci.yml
-assert_decision forbidden "gh project item-edit"       gh project item-edit --id PVT_xxx --project-id PVT_yyy
-assert_decision forbidden "gh project item-archive"    gh project item-archive 7 --id PVT_xxx --owner acme
+assert_decision allow "gh issue create"            gh issue create
+assert_decision allow "gh issue edit"              gh issue edit 123
+assert_decision prompt "gh issue close"             gh issue close 123
+assert_decision allow "gh pr create"               gh pr create
+assert_decision prompt "gh pr merge"                gh pr merge 123
+assert_decision prompt "gh pr review"               gh pr review 123 --approve
+assert_decision allow "gh pr checkout"             gh pr checkout 123
+assert_decision prompt "gh workflow run"            gh workflow run ci.yml
+assert_decision prompt "gh workflow enable"         gh workflow enable ci.yml
+assert_decision prompt "gh workflow disable"        gh workflow disable ci.yml
+assert_decision prompt "gh project item-edit"       gh project item-edit --id PVT_xxx --project-id PVT_yyy
+assert_decision prompt "gh project item-archive"    gh project item-archive 7 --id PVT_xxx --owner acme
 assert_decision forbidden "gh repo create"             gh repo create acme/test --private
 assert_decision forbidden "gh repo delete"             gh repo delete acme/test --yes
 assert_decision forbidden "gh repo edit"               gh repo edit acme/test --description "x"
@@ -182,4 +182,22 @@ assert_decision forbidden "glab release create"        glab release create v1.0.
 assert_decision forbidden "glab release delete"        glab release delete v1.0.0
 
 echo
+
+assert_decision allow "worktree creation" git worktree add .claude/worktrees/demo -b feature/demo HEAD
+assert_decision allow "stash save" git stash push -u -m task
+assert_decision allow "stash apply" git stash apply
+assert_decision allow "fast-forward pull" git pull --ff-only
+assert_decision allow "feature push" git push --set-upstream origin HEAD:refs/heads/feature/demo
+assert_decision prompt "stash deletion" git stash clear
+assert_decision prompt "worktree removal" git worktree remove .claude/worktrees/demo
+assert_decision prompt "hard reset" git reset --hard HEAD
+assert_decision prompt "discard files" git restore .
+assert_decision prompt "force switch" git switch --discard-changes feature/demo
+assert_decision prompt "force delete branch" git branch -D feature/demo
+assert_decision forbidden "force push" git push origin --force
+assert_decision forbidden "protected main" git push origin main
+assert_decision forbidden "protected develop refspec" git push --set-upstream origin HEAD:refs/heads/develop
+assert_decision prompt "generic GitHub API" gh api repos/acme/api
+assert_decision forbidden "release publishing" gh release create v1.0.0
+
 echo "All rules passed."

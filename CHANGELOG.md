@@ -32,6 +32,10 @@ and this project adheres to
 
 ### Added
 
+- Enable autonomous Codex Git/GitHub development and network access, including
+  feature commits, pushes, PR creation and worktrees, with approval boundaries
+  for destructive operations and PR merging.
+
 - Organizer lookup and verification through ARES, country-directory selection
   and simplified settlement settings. Saving complete organizer details automatically
   enables settlement PDFs without a separate checkbox. Organizer name/autocomplete

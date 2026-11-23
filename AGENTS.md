@@ -118,9 +118,18 @@ Details: [conventions](docs/dev/conventions.md),
   release semantics must update `.releaserc.json`,
   `.github/workflows/release.yaml` and README.
 - Respect tool-specific permission settings, including `.claude/settings.json`.
-  Agents may branch, commit, push feature branches, open/update/merge PRs and
-  run local Docker Compose as allowed there. Never push or force-push to
-  `main`/`develop`, bypass branch protection, deploy, or publish releases.
+  Routine feature work is authorized to stage its own files, commit, fetch,
+  create/switch branches, save/apply stashes, create worktrees, push feature
+  branches and create/update PRs without repeated confirmation. Inspect status
+  first and stage explicit paths; never include unrelated changes. Before a
+  push, verify the current branch uses an approved feature/bugfix/hotfix/release
+  prefix and push that branch with an explicit destination refspec. Do not use
+  bare `git push`, force flags, remote deletion or main/develop destinations.
+  Request approval for PR merging and destructive operations. See
+  [autonomous development](docs/dev/autonomous-development.md). Agents may
+  branch, commit, push feature branches, open/update/merge PRs and run local
+  Docker Compose as allowed there. Never push or force-push to `main`/`develop`,
+  bypass branch protection, deploy, or publish releases.
 - Parallel agents/worktrees (`claude --worktree`, subagent
   `isolation: worktree`) live in `.claude/worktrees/` and branch from the
   current `HEAD`; app `.env` files are copied via `.worktreeinclude`. Run

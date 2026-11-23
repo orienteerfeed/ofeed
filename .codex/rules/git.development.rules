@@ -1,0 +1,43 @@
+# Development workflow guardrails. See docs/dev/autonomous-development.md.
+# Prefix matching is not a substitute for server-side branch protection.
+
+prefix_rule(
+    pattern = ["git", ["status", "log", "diff", "show", "rev-parse", "ls-files", "ls-tree", "ls-remote", "cat-file", "describe", "grep", "blame", "help", "version", "rev-list", "for-each-ref", "merge-base", "shortlog", "reflog", "check-ignore", "check-ref-format"]],
+    decision = "allow",
+)
+prefix_rule(
+    pattern = ["git", ["add", "commit", "fetch", "switch", "branch", "stash", "worktree", "push", "mv"]],
+    decision = "allow",
+)
+prefix_rule(pattern = ["git", "pull", "--ff-only"], decision = "allow")
+prefix_rule(pattern = ["git", "remote", ["-v", "show", "get-url"]], decision = "allow")
+prefix_rule(pattern = ["git", "restore", "--staged"], decision = "allow")
+
+# Potential loss of local work or history requires review.
+prefix_rule(
+    pattern = ["git", ["reset", "clean", "checkout", "restore", "rebase", "merge", "cherry-pick", "revert", "rm", "tag", "config", "submodule"]],
+    decision = "prompt",
+)
+# restore --staged also prompts because the strictest matching decision wins.
+prefix_rule(pattern = ["git", "stash", ["drop", "clear"]], decision = "prompt")
+prefix_rule(pattern = ["git", "branch", ["-d", "-D", "--delete", "-f", "--force", "-m", "-M", "--move"]], decision = "prompt")
+prefix_rule(pattern = ["git", "worktree", ["remove", "prune", "move", "repair"]], decision = "prompt")
+prefix_rule(pattern = ["git", "worktree", "add", ["-f", "--force"]], decision = "prompt")
+prefix_rule(pattern = ["git", "switch", ["-C", "--force-create", "-f", "--force", "--discard-changes"]], decision = "prompt")
+prefix_rule(pattern = ["git", "commit", "--amend"], decision = "prompt")
+prefix_rule(pattern = ["git", "filter-branch"], decision = "forbidden", justification = "Use a feature branch without rewriting shared history.")
+
+# Catch common dangerous push forms. Other orderings are covered by AGENTS.md
+# and must be enforced remotely with GitHub rulesets.
+for prefix in [["git", "push"], ["git", "push", "origin"], ["git", "push", "-u", "origin"], ["git", "push", "--set-upstream", "origin"]]:
+    prefix_rule(
+        pattern = prefix + [["--force", "--force-with-lease", "-f", "--mirror", "--delete", "--all", "--tags"]],
+        decision = "forbidden",
+        justification = "Push only the current feature branch without force, deletion or release tags.",
+    )
+for prefix in [["git", "push", "origin"], ["git", "push", "-u", "origin"], ["git", "push", "--set-upstream", "origin"]]:
+    prefix_rule(
+        pattern = prefix + [["main", "develop", "HEAD:main", "HEAD:develop", "HEAD:refs/heads/main", "HEAD:refs/heads/develop", "refs/heads/main", "refs/heads/develop"]],
+        decision = "forbidden",
+        justification = "Push a feature branch and open a pull request.",
+    )

@@ -13,7 +13,7 @@ project_root_markers = [".git", "pnpm-workspace.yaml"]
 project_doc_max_bytes = 65536
 
 [sandbox_workspace_write]
-network_access = false
+network_access = true
 exclude_tmpdir_env_var = false
 exclude_slash_tmp = false
 writable_roots = []
