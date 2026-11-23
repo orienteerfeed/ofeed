@@ -249,5 +249,8 @@
   "env": {
     "NODE_ENV": "development",
     "DISABLE_TELEMETRY": "1"
+  },
+  "worktree": {
+    "baseRef": "head"
   }
 }

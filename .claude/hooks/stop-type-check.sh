@@ -5,7 +5,10 @@ input=$(cat)
 case "$input" in
   *'"stop_hook_active":true'* | *'"stop_hook_active": true'*) exit 0 ;;
 esac
-cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
+# cwd follows Claude into worktrees; CLAUDE_PROJECT_DIR stays at the main checkout.
+cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
+cd "${cwd:-${CLAUDE_PROJECT_DIR:-.}}" || exit 0
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" || exit 0
 
 changed=$( {
   git diff --name-only HEAD 2>/dev/null
